@@ -258,8 +258,15 @@ following guarantees:
   failure after the rename was issued but before confirmation), the service
   enters the ambiguous-readback state defined in
   [Runtime driver lifecycle](runtime-driver-lifecycle.md): it reads back the
-  namespace before the next admission, and admission reopens when the stored
-  state and the cached view agree.
+  namespace before the next admission. Two cases are distinct. A lost
+  acknowledgment after a commit whose directory durability was established
+  reopens admission once the stored state and the cached view agree. A failed
+  parent-directory fsync after a successful rename is not durable even when
+  readback shows the new bytes: the view stays unexposed and admission closed
+  until directory durability is established (the directory fsync retried to
+  success, or the namespace rewritten durably by temporary file, file fsync,
+  rename and directory fsync), and readback agreement alone never reopens
+  admission.
 
 The last valid file is preserved by rename atomicity. The gateway never
 truncates-in-place.

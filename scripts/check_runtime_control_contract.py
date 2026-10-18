@@ -28,7 +28,13 @@ REFUSAL_ORDER = [
     ("6", "`FAILED_PRECONDITION`"), ("7", "`FAILED_PRECONDITION`"),
     ("8", "`TRANSITION_BUSY`"), ("9", "`RESOURCE_EXHAUSTED`"), ("10", "`COUNTER_EXHAUSTED`"),
 ]
-CTL_IDS = ["CTL-01 / CTL-02"] + [f"CTL-{n:02d}" for n in range(3, 16)]
+CTL_IDS = ["CTL-01 / CTL-02"] + [f"CTL-{n:02d}" for n in range(3, 19)]
+MANAGER = "docs/platform/driver-runtime-manager-v1.md"
+# A configured-disabled driver is refused START (refusal order 4), so no start
+# transition out of DISABLED may appear in any arrow or textual transition form.
+DISABLED_START = re.compile(r"DISABLED`?\s*(?:-+\s*[\w ]*-+>|-+>|=+>|\u2192)\s*`?STARTING")
+# The startup bullet that sent every configured-enabled descriptor to STARTING.
+OLD_STARTUP = re.compile(r"configured-enabled descriptor enters\s+`STARTING`")
 # Request/result members that would reintroduce receipts or a lifecycle principal.
 FORBIDDEN_MEMBERS = {"idempotency_key", "request_id", "operation_id", "disposition",
                      "completed", "outcome", "principal", "authorization", "receipt"}
@@ -105,6 +111,10 @@ def validate(documents: dict[str, str]) -> list[str]:
         for required in rule["required"]:
             if normalize(required) not in present:
                 errors.append(f"{rule['path']}: changed obligation: {normalize(required)[:100]}")
+        section_text = normalize(text[starts[0].end():ends[0].start()])
+        for needle in rule.get("contains", []):
+            if normalize(needle) not in section_text:
+                errors.append(f"{rule['path']}: changed obligation: {normalize(needle)[:100]}")
 
     # Exactly one request/result pair, independent of whitespace/key order.
     api = documents[API]
@@ -140,6 +150,14 @@ def validate(documents: dict[str, str]) -> list[str]:
             assert not FORBIDDEN_MEMBERS & obj.keys()
         except (ValueError, TypeError, AssertionError, KeyError):
             errors.append(f"{API}: invalid revision example in {heading}")
+
+    # Startup follows durable desired state; DISABLED has no start transition.
+    manager_raw = normalize(documents[MANAGER])
+    for name, raw in ((MANAGER, manager_raw), (LIFECYCLE, normalize(documents[LIFECYCLE]))):
+        if DISABLED_START.search(raw):
+            errors.append(f"{name}: DISABLED to STARTING start transition reintroduced")
+    if OLD_STARTUP.search(manager_raw):
+        errors.append(f"{MANAGER}: startup sends every configured-enabled descriptor to STARTING")
 
     # Refusal table: exact row order and codes, no authorization refusal.
     lifecycle = prose(documents[LIFECYCLE])

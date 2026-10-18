@@ -481,6 +481,16 @@ transaction fails closed: it is refused with `UNAVAILABLE`, nothing is
 acknowledged and no mark or catalog revision is issued, so recovery can never
 load an older desired state while a revision believed issued is reused.
 
+Directory durability is established, never inferred. A failed parent-directory
+fsync after a successful rename leaves the rename not durable even though a
+readback observes the new bytes. Until directory durability is established
+(the directory fsync retried to success, or the namespace rewritten durably by
+temporary file, file fsync, rename and directory fsync) the new view is not
+exposed, nothing is acknowledged and admission stays closed. Readback agreement
+between the stored bytes and the cached view alone never reopens admission,
+because a power loss can still restore the previous mark and let a revision
+that was exposed be issued again after restart.
+
 In JSON, every revision in responses (desired revision, catalog revision and
 the current view returned with a refusal) is a canonical decimal string: ASCII
 digits only, no sign, no leading zero except `"0"`, at most the unsigned 64-bit
@@ -544,12 +554,15 @@ operation record exists. Semantic replay digests remain D5 recovery material.
    client) and the revision and mark are unchanged; the generic runtime-state
    retry-on-next-trigger behaviour does not apply to this namespace.
    Ambiguous persistence (a failure after the rename was issued but before
-   confirmation) fails admission closed: the control service itself
+   confirmation, including a failed parent-directory fsync after a successful
+   rename) fails admission closed: the control service itself
    reads back the committed namespace before admitting any further decision,
    for every driver because the mark is shared. Admission reopens only after
-   readback establishes whether the transaction committed and the cached views
-   and mark match the durable state; a failed readback applies the load-failure
-   rules below.
+   readback establishes whether the transaction committed, the cached views
+   and mark match the durable state and, when the new bytes are present,
+   parent-directory durability of them is established as the durability rules
+   above require; readback agreement alone never reopens admission. A failed
+   readback applies the load-failure rules below.
 
 Every refusal leaves durable state, the mark, both revisions and observations
 unchanged. Checks run in this fixed order and the first failing check decides:
@@ -805,8 +818,11 @@ Use synthetic IDs, fixed deadlines and explicit scheduling barriers.
 | CTL-11 | Same-desired requests during occupied slots remain no-ops with only desired/revision returned; no new durable record, wake or counter allocation |
 | CTL-12 | Hold a pre-repair START with `ExpectedRevision=1`; offline-reset with verified bound `H >= 1`, restart and clear recovery gates. Read back STOPPED at its repaired revision (`H + 1` for a single configured ID); submit the held two-field request and require REVISION_CONFLICT with no mutation, reconciliation wake or native open. With a retained in-flight START or RESTART in D5 at reset time, the first restart resumes only its cleanup and close obligations and performs no admission or native open until a post-reset decision is accepted. A fresh START using the read-back revision can proceed. Repeat repair after further decisions and with removed IDs in the revision coverage; all earlier revisions still conflict. An unvalidated mark, a D5 revision above the mark, an unverifiable D5 stream or `H + N` above the unsigned 64-bit maximum refuses reset without replacing any record; a successful reset leaves the D5 stream byte-identical. After visible observations and decisions, repair advances validated durable catalog revision `C` to `C + 1`; an invalid `C` or overflowing `C + 1` refuses without replacement |
 | CTL-13 | Two drivers A and B: accepted decisions interleave and each takes mark + 1, so no revision repeats across drivers. Remove B (record deleted, mark + 1 in the same transaction), then re-add B (mark + 1 again) with no decision for A in between: reads return STOPPED with `desired_revision` equal to the current mark, and a request held before the removal, carrying B's old revision or the mark current at that time, is refused with REVISION_CONFLICT with no mutation. Second line: repeat with an accepted decision for A between removal and re-add; the held request is refused likewise. START with `ExpectedRevision` equal to the read-back mark is accepted at mark + 1, above every earlier revision; a first START for a driver with no record whose `ExpectedRevision` differs from the mark conflicts, and a STOP carrying the mark is a no-op. Remove the namespace, or only its mark, while other control records, D5 material or a quarantine copy exist: load fails closed and nothing is seeded; only a GUID with no control material bootstraps at mark 0. All revisions encode as canonical decimal strings |
-| CTL-14 | Drive one request per refusal row, plus requests failing several checks at once; each returns the code of the earliest failing check in the refusal table with no mutation. A malformed driver record returns FAILED_PRECONDITION with that driver FAILED while an independent driver stays usable; ambiguous persistence returns UNAVAILABLE for every driver until the service's readback completes |
+| CTL-14 | Drive one request per refusal row, plus requests failing several checks at once; each returns the code of the earliest failing check in the refusal table with no mutation. A malformed driver record returns FAILED_PRECONDITION with that driver FAILED while an independent driver stays usable; ambiguous persistence returns UNAVAILABLE for every driver until the service's readback completes and directory durability is established |
 | CTL-15 | START carrying `ExpectedRevision` `"0"` is refused with INVALID_ARGUMENT; repeat with `"01"` (leading zero), `"+1"`, `" 1"` and `"1x"`. Each refusal is the first refusal-table row, with no mutation, no readback and no reconciliation wake |
+| CTL-16 | Fail the parent-directory fsync after a successful rename of an accepted START: no acknowledgment, no exposed view and admission closed with UNAVAILABLE for every driver. A readback that observes the new bytes matching the cached view does not reopen admission. After a simulated power loss that restores the previous mark, the revision first believed issued is issued again and a request holding it is not accepted on the strength of the earlier exposure. Admission reopens only after the directory fsync is retried to success or the namespace is rewritten durably (temporary file, file fsync, rename, directory fsync). A lost acknowledgment after a durable commit reopens by readback |
+| CTL-17 | Store desired STOPPED for a configured-enabled driver, restart the process: the driver starts in STOPPED with no endpoint opened and no provider call until a new START is accepted. A configured-enabled driver with stored desired RUNNING, or seeded RUNNING by first bootstrap, starts in STARTING. A driver added to configuration after bootstrap has no record and starts in STOPPED |
+| CTL-18 | START and RESTART for a configured-disabled driver are refused with FAILED_PRECONDITION under refusal-table order 4, with no mutation. The transition list has no start transition out of DISABLED; the driver leaves DISABLED only through a configuration change or reload
 
 Also prove disabled/deadline/shape refusals, storage exhaustion, every counter's
 overflow refusal, quarantine retention, offline-reset refusal on an active writer

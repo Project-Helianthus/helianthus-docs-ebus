@@ -75,10 +75,17 @@ driver-local. They are never promoted into that global-fatal boundary.
 ## Startup And State Transitions
 
 At process startup the manager creates all three catalog entries before it
-starts any provider. Each descriptor is then evaluated independently:
+starts any provider. Reconciliation derives from the durable desired state
+owned by the lifecycle page, not from configuration alone. Each descriptor is
+then evaluated independently:
 
 - a valid configured-disabled descriptor enters `DISABLED`;
-- a valid configured-enabled descriptor enters `STARTING`;
+- a valid configured-enabled descriptor whose durable desired state is
+  `RUNNING` (stored, or seeded `RUNNING` by first-time bootstrap) enters
+  `STARTING`;
+- a valid configured-enabled descriptor whose durable desired state is
+  `STOPPED` (stored, or no record for a driver added after bootstrap) enters
+  `STOPPED` and is not started until a new start decision is accepted;
 - a driver-local invalid descriptor enters `FAILED` with `CONFIG_INVALID` and
   does not block the other entries;
 - a missing or unavailable provider enters `FAILED` with
@@ -87,7 +94,6 @@ starts any provider. Each descriptor is then evaluated independently:
 The core transitions are:
 
 ```text
-DISABLED  --start-->    STARTING
 STOPPED   --start-->    STARTING
 STARTING  --ready-->    RUNNING
 STARTING  --usable-->   DEGRADED
@@ -104,6 +110,11 @@ STARTING  --stop-->     STOPPING
 FAILED    --stop-->     STOPPING
 STOPPING  --drained-->  STOPPED
 ```
+
+A `DISABLED` driver has no start transition: a start request for it is refused
+with `FAILED_PRECONDITION` (refusal-table order 4). It leaves `DISABLED` only
+through a configuration change or reload, after which it is a configured-enabled
+descriptor handled by the startup and reconciliation rules above.
 
 The normative textual forms include `STARTING -> RUNNING`,
 `STARTING -> BACKOFF`, `BACKOFF -> STARTING`, and `STOPPING -> STOPPED`.
@@ -216,7 +227,8 @@ override that does not survive restart, and an operator temporarily starting a
 configured-disabled driver, no longer apply.
 
 Persistent add-on configuration supplies eligibility and the baseline for a
-driver with no durable record. A runtime start or stop does not rewrite add-on
+driver with no durable record (first-time bootstrap seeds enabled drivers
+`RUNNING`; a driver added later has no record and reads `STOPPED`). A runtime start or stop does not rewrite add-on
 options and never persists credentials or endpoints. Persistent configuration
 changes remain an explicit add-on configuration operation outside
 DriverManager V1.
@@ -294,8 +306,9 @@ pair:
 - an unproven-close fixture enters process-epoch quarantine, invokes no new
   constructor through start, restart, or retry, and remains distinct from
   ordinary recoverable failure;
-- a process restart discards runtime overrides and restores configuration
-  intent;
+- a process restart preserves durable desired state: stored `STOPPED` stays
+  `STOPPED` with no provider started, and stored `RUNNING` for a configured-enabled
+  driver reconciles to `STARTING`;
 - MCP, GraphQL, Portal, and Home Assistant expose parity at their respective
   rollout gates; and
 - logs, snapshots, responses, and audits remain secret-free and
