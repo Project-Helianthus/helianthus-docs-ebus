@@ -141,9 +141,15 @@ ordering deterministic under the existing envelope contract.
 
 Preserve `state.system_off` and `state.maintenance_due` compatibility until a
 separate downstream cutover implements and reviews their retention/removal.
+For the [shared semantic-snapshot records](../api/semantic-snapshot-read.md),
 MCP and GraphQL must express the same values, absence, provenance, freshness,
-qualification and loss decisions through their existing fields/aliases; neither
-surface may silently invent a canonical substitute. Native retention plus
+qualification and loss decisions through the defined field-name mapping.
+The legacy GraphQL `SystemState.systemOff` and `SystemState.maintenanceDue`
+fields are nullable Booleans: they carry true, false or absence, but lose
+per-field provenance, freshness, qualification and loss metadata. Preserve their
+existing scalar shape; consumers needing those distinctions require the shared
+semantic-snapshot records. Neither surface may silently invent a canonical
+substitute. Native retention plus
 explicit withholding is this slice's acceptance, not a claim of implemented
 transport parity. A canonical-only consumer's lost indicators must be disclosed
 before legacy removal; missing maintenance representation is not repaired by
