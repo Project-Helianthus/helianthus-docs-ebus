@@ -35,9 +35,9 @@ qualifies an installation or establishes current SemReg publication.
 
 ## Finite inventory
 
-All three rows use `PB=0xB5, SB=0x24, OP=0x02, GG=0x02`, a separately
-qualified circuit instance `II`, and register `RR` as shown. OP=0x06 is a
-different namespace and cannot substitute. N scopes ordinary heating-circuit
+All three rows use `PB=0xB5, SB=0x24, OP=0x02, OT=0x00, GG=0x02` (reads), a
+separately qualified circuit instance `II`, and register `RR` as shown. OP=0x06
+is a different namespace and cannot substitute. N scopes ordinary heating-circuit
 candidates to II00..II08 for the VRC720 family; candidates are not presence
 proof. Other families require their own qualification. II09 is virtual
 native-water identity with no public presence predicate and is excluded from
@@ -78,12 +78,16 @@ The following are logical requirements for later implementation, not a new
 serialized schema or endpoint (N native selectors; L lifecycle precedent; T
 semantic vocabulary):
 
-1. Keep the full `(PB, SB, opcode, group, instance, register)` with initiator
-   and responder, direction, request/reply association, raw payload and value
-   bytes. Bind it to source identity and source epoch, device family/profile,
-   profile revision and decoder/semantic revision, qualified asset/service,
+1. Keep the full `(PB, SB, opcode, operation type, group, instance, register)`
+   with initiator and responder, direction, request/reply association, raw
+   payload and value bytes. Bind it to source identity and source epoch, device
+   family/profile, profile revision and decoder/semantic revision, qualified
+   asset/service,
    driver generation, and evidence reference. Retain available firmware context
    without inventing it. An address alone is not a profile or source identity.
+   Retain `OT=0x00` for these read observations; `OT=0x01` write-attempt evidence
+   belongs to a separate binding and cannot update or refresh retained reads
+   (see [B524 wire format](../protocols/vaillant/ebus-vaillant-B524.md#1-scope-and-framing)).
 2. Record original wall-clock receipt and monotonic receipt with its clock
    epoch. Evaluation time is separate. Cache retrieval, projection and another
    field's success must not replace receipt. Missing provenance or unknown
