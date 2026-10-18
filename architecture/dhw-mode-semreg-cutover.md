@@ -2,8 +2,11 @@
 
 This is the bounded gateway-to-SemReg migration acceptance contract for
 [docs-ebus #697](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/697),
-advancing [gateway #952](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/952)
-as a partial north-south MCP/GraphQL contract. It covers DHW operating mode,
+as a partial north-south MCP/GraphQL contract.
+[Gateway #952](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/952)
+owns only two system-temperature reads and excludes DHW migration. A successor
+gateway issue must own DHW implementation acceptance; its identity is **Unknown**
+here. This contract does not advance or close #952. It covers DHW operating mode,
 special-function inputs, time-program membership, boost and operation state.
 Measured temperature and setpoint, the broad Matter inventory, and downstream
 implementation are outside acceptance. This document proposes behavior; it does
@@ -36,7 +39,7 @@ instance is an identity-isolation requirement, not a claim of native support.
 
 | Input | Register, native type and evidence | Current behavior and loss risk |
 | --- | --- | --- |
-| Native configured mode | `RR=0x0003`, `u16`, native range 0..2; opmode DHW labels 0 off, 1 auto, 2 heat. The enum also lists 3 night, outside that row's range and not observed in practice in VRC720-family behaviour. | `refreshDHWSlowConfig` uses `readDhwUint16`, retains the decimal `ConfigurationDHWOperationMode` token, and derives mode/preset with cached special function. `deriveDhwModeAndPreset`: 0 → `off`, 1 → `auto`, 2 → `heat`; nil or other values default to `auto` inside the helper. Callers constrain when it runs; this is not proof that missing input is auto. |
+| Native configured mode | `RR=0x0003`, `u16`; the catalog's historical short-probe range hint is 0..2 (**Hypothesis** until a matching complete OP01/OP07 description qualifies it). The opmode DHW labels are 0 off, 1 auto, 2 heat; the enum also lists 3 night. Per-family support for code 3 is **Unknown**; the hint alone cannot exclude it. | `refreshDHWSlowConfig` uses `readDhwUint16`, retains the decimal `ConfigurationDHWOperationMode` token, and derives mode/preset with cached special function. `deriveDhwModeAndPreset`: 0 → `off`, 1 → `auto`, 2 → `heat`; nil or other values default to `auto` inside the helper. Callers constrain when it runs; this is not proof that missing input is auto. |
 | Special-function mode input | `RR=0x000D`, `u8`, observed one-byte reply width; normal code 0, DHW load code 6 in `sfmode`. The write/reaction descriptions for this register are candidate evidence only. | `dhw_special_function` points here, but `refreshDHW` calls `readDhwUint16`, which delegates through `readB524Uint16` to `decodeB524Uint16`. Keep the original one-byte/type evidence rather than asserting a two-byte native layout. The raw decimal token becomes `StateSpecialFunction`; helper normalization recognizes 2 as quickveto and 3/4 as away, but not 6 as load. Those generic helper labels do not establish DHW semantics. |
 | Special-function state | `RR=0x000F`, `u16` state, not gated by circuit type. Code 9 as one-time tank loading is explicitly candidate evidence. | `refreshDHW` reads `0x000D`, not this selector. The legacy mapping table's `state` from `0x000D` is not evidence that `0x000F` was acquired. No qualified active/loading interpretation follows. |
 | Time-program membership | No exact membership selector or Boolean derivation is established by these sources. | Preset `schedule` is selected from mode 1, or helper fallback for auto. It is not a read of current slot membership. No native membership fact may be reconstructed from that label. |
@@ -150,7 +153,7 @@ none grants a binding merely by supplying valid bytes.
 | --- | --- | --- |
 | Missing and unknown mode | Mode absent, then raw 7, special function 0 | Missing and unknown code remain distinct. Helper default auto is legacy code behavior only; neither permits an auto fact. Retain 7 without inventing its native meaning. |
 | Valid off / normal special function | Mode raw 0, special-function byte `00` | Retain valid off and normal-code evidence; neither missing nor false by default. DHW `off` and mirror `OFF` match only as legacy renderings of this same raw source; no system-off equivalence. |
-| Decoder conflict | Mode raw 1, then raw 2 | Preserve DHW auto/heat versus mirror ON/AUTO and native raw code for each. Mode raw 3 remains the native enum/range discrepancy, not a qualified night mode. |
+| Decoder conflict | Mode raw 1, then raw 2 | Preserve DHW auto/heat versus mirror ON/AUTO and native raw code for each. Mode raw 3 remains an enum/historical-range-hint discrepancy with per-family support Unknown; retain it without asserting night mode or rejecting it solely on that hint. |
 | Mode versus special function | Mode raw 0; `0x000D` byte `06`; independent `0x000F` raw state 9 candidate | Do not rewrite off into heat or action active. Keep all three selectors separate. Load/boost and state interpretation remain Hypothesis; the legacy helper does not recognize 6. One byte must not be silently documented as two. |
 | Legacy preset ambiguity | Mode 1 with special-function codes 2, 3 or 4 | Code helper yields quickveto/away; DHW native meaning is not qualified by those generic labels. No boost or operation equivalence. |
 | Two DHW identities | Qualified identity A at one source and identity B at a different source, each with local `II=0x00`; different mode values | Keep separate service identities, epochs and native evidence. Singleton legacy publication is not proof of multi-DHW aggregation. A synthetic `II=0x01` candidate remains unsupported until separately qualified; never collapse into A. |
@@ -175,5 +178,5 @@ DHW identity support, component freshness policy and replacement/arbitration
 runtime behavior. No command or writable capability follows from read metadata,
 raw zero, register flag values or candidate write descriptions. This contract does not
 qualify hardware, change polling or writes, implement a downstream projection,
-or close the parent issue. Independent review and applicable committed-head
+or close gateway #952 or a DHW successor issue. Independent review and applicable committed-head
 gates remain required for integration.
