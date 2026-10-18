@@ -3,7 +3,7 @@
 Status: proposed software 0.7 contract. This page specifies the selected D5
 epoch policy D1/A2 and D5 recovery mechanism for gateway issue
 [#1032](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1032),
-PRs 0a/0b and amendments A1/A2/A6, covering S0/S5, S1, S3, S4 and CTL-01–CTL-15. It does not claim
+PRs 0a/0b and amendments A1/A2/A6, covering S0/S5, S1, S3, S4 and CTL-01–CTL-19. It does not claim
 that the runtime control service or durable recovery is implemented. The G4 publication hub has
 an in-memory journal; that alone supplies no process-loss recovery.
 
@@ -523,8 +523,17 @@ operation record exists. Semantic replay digests remain D5 recovery material.
    for that driver, configured/enabled eligibility, then the finite unexpired
    deadline, in the check order of the refusal table below. No validation
    invokes a factory or endpoint.
-2. Under the per-driver decision serializer, compare expected revision with
-   current durable desired revision (the current mark for a driver with no record). Mismatch
+2. Take the single namespace-wide serialization point (the sole writer of the
+   control namespace, which is the shared-mark lock) for every request, never a
+   serializer scoped to one driver. Under it, read the mark, compare expected
+   revision with the current durable desired revision (the mark itself for a
+   driver with no record), allocate the next revision and durably write the
+   decision with the advanced mark (steps 3-5), without releasing it. A request
+   that waited for the point re-reads the mark after acquiring it and compares
+   against the re-read value, never an earlier read. Two concurrent requests
+   therefore cannot both observe the same mark: at most one allocates mark + 1
+   and the other receives `REVISION_CONFLICT`, or `TRANSITION_BUSY` in the
+   refusal-table order if the point is held beyond the bounded wait. Mismatch
    returns `REVISION_CONFLICT` and the current cached view without mutation,
    including for a would-be no-op. Recheck deadline before commit. Expiry before the commit point refuses the
    request; cancellation after commit cannot retract accepted intent.
@@ -544,7 +553,8 @@ operation record exists. Semantic replay digests remain D5 recovery material.
    BACKOFF or FAILED. Quarantine or unresolved recovery refuses only a
    changing request whose work would require unsafe admission (refusal-table
    order 7); it is never cleared by a request.
-5. Check transition capacity, storage and all required counter increments.
+5. Still under the step 2 serialization point, check transition capacity,
+   storage and all required counter increments.
    Atomically persist desired/revision, the advanced mark, typed in-flight work,
    its internal sequence/correlation and reservation before exposing acceptance
    or waking reconciliation; a driver's first accepted decision creates its
@@ -633,7 +643,7 @@ occupied returns retryable `TRANSITION_BUSY`, with no revision or state
 change. The caller reads current state and retries with its current revision
 after work settles; there is no server retry queue. This deliberately bounded
 refusal is separate from the same-desired no-op rule.
-Unrelated drivers and list/get remain responsive; decision serialization never holds hub or manager locks over disk
+List/get and observations of unrelated drivers remain responsive; the namespace-wide decision serialization point never holds hub or manager locks over disk
 I/O, native calls, cancellation or drain.
 
 Persist phase/observation updates before releasing the next slot. Native close
@@ -825,12 +835,14 @@ Use synthetic IDs, fixed deadlines and explicit scheduling barriers.
 | CTL-16 | Fail the parent-directory fsync after a successful rename of an accepted START: no acknowledgment, no exposed view and admission closed with UNAVAILABLE for every driver. A readback that observes the new bytes matching the cached view does not reopen admission. After a simulated power loss that restores the previous mark, the revision first believed issued is issued again and a request holding it is not accepted on the strength of the earlier exposure. Admission reopens only after the directory fsync is retried to success or the namespace is rewritten durably (temporary file, file fsync, rename, directory fsync). A lost acknowledgment after a durable commit reopens by readback |
 | CTL-17 | Store desired STOPPED for a configured-enabled driver, restart the process: the driver starts in STOPPED with no endpoint opened and no provider call until a new START is accepted. A configured-enabled driver with stored desired RUNNING, or seeded RUNNING by first bootstrap, starts in STARTING. A driver added to configuration after bootstrap has no record and starts in STOPPED |
 | CTL-18 | START and RESTART for a configured-disabled driver are refused with FAILED_PRECONDITION under refusal-table order 4, with no mutation. The transition list has no start transition out of DISABLED; the driver leaves DISABLED only through a configuration change or reload
+| CTL-19 | Two drivers A and B, B without a record, concurrent requests each carrying `ExpectedRevision=H` (the mark, which is also B's current revision), with both requests past validation before either commits. Exactly one is accepted and takes `H + 1`; the other is refused with REVISION_CONFLICT and no mutation, never accepted against the stale `H` and never persisting an already-computed `H + 1`. The mark advances once and no revision repeats. Repeat with each request first and with the wait held beyond the bound (refused TRANSITION_BUSY in refusal order, no mutation). The comparison, mark read, allocation and durable write happen under one namespace-wide serialization point, never a per-driver serializer alone |
 
 Also prove disabled/deadline/shape refusals, storage exhaustion, every counter's
 overflow refusal, quarantine retention, offline-reset refusal on an active writer
 or invalid base, exact quarantine preservation, GUID/meta/opaque round trips,
 and corrupt/unsupported loads without empty fallback. Two-driver fixtures must
-show B and list/get remain responsive while A blocks in persistence or cleanup.
+show B's reads and list/get remain responsive while A blocks in persistence or cleanup;
+a B decision waits at the namespace-wide serialization point and is never decided against a mark read before the wait.
 The committed `scripts/check_runtime_control_contract.py` gate and its mutation
 tests protect these documentation obligations and the closed API examples.
 They do not execute service/store/MCP behavior or prove recovery; implementation

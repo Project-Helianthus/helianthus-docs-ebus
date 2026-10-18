@@ -28,7 +28,7 @@ REFUSAL_ORDER = [
     ("6", "`FAILED_PRECONDITION`"), ("7", "`FAILED_PRECONDITION`"),
     ("8", "`TRANSITION_BUSY`"), ("9", "`RESOURCE_EXHAUSTED`"), ("10", "`COUNTER_EXHAUSTED`"),
 ]
-CTL_IDS = ["CTL-01 / CTL-02"] + [f"CTL-{n:02d}" for n in range(3, 19)]
+CTL_IDS = ["CTL-01 / CTL-02"] + [f"CTL-{n:02d}" for n in range(3, 20)]
 MANAGER = "docs/platform/driver-runtime-manager-v1.md"
 # A configured-disabled driver is refused START (refusal order 4), so no start
 # transition out of DISABLED may appear in any arrow or textual transition form.
