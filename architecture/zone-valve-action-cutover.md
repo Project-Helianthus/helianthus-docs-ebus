@@ -178,12 +178,13 @@ inputs, not the final merged snapshot after an acquisition failure.
 | Qualified native 0 versus absent source | 0 is a real code; absence is no observation | Do not coalesce them; neither admits a zone fact in the current pack. |
 | Another source projects a shared requested definition; this source is absent | Per-source absence | Preserve the shared projected disposition; one result per requested key, with per-source loss retained. |
 
-Exact equivalence is limited to replaying the same source identity, raw
-selector/value, circuit inputs and derivation rule for legacy compatibility.
-It does not equate a binary valve code with percentage travel, demand with
-action, circuit action with zone delivery, or a legacy zone label with a
-system action. Changed source, association, rule or stale input defeats that
-equivalence even if the label happens to match.
+Legacy compatibility requires the same source identity, raw selector/value,
+circuit inputs and derivation rule. Binary valve status, percentage travel,
+demand, circuit action, zone delivery and system action remain distinct facts;
+each requires its own qualified representation and binding. A matching legacy
+zone label alone establishes no system-action equivalence. A changed source,
+association or rule, or a stale input, invalidates compatibility even when the
+resulting label matches.
 
 Both MCP and GraphQL must preserve the same accepted facts, withholding
 reasons, native provenance and source-specific losses through their existing
