@@ -157,7 +157,7 @@ payload-to-field relationship; otherwise that relationship remains Unknown.
 Use the current MCP contract before GraphQL parity; do not add a second
 provider, fallback or API solely to make comparison succeed.
 
-## Synthetic case ledger
+## Synthetic comparison cases
 
 Each row expands into the per-field records above on both routes and both
 surfaces, including unchanged siblings. Expected decisions are independent of
