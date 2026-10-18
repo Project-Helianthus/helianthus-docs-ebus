@@ -115,6 +115,9 @@ def validate(documents: dict[str, str]) -> list[str]:
         for needle in rule.get("contains", []):
             if normalize(needle) not in section_text:
                 errors.append(f"{rule['path']}: changed obligation: {normalize(needle)[:100]}")
+        for pattern in rule.get("forbidden", []):
+            if re.search(pattern, section_text):
+                errors.append(f"{rule['path']}: forbidden classification: {pattern[:60]}")
 
     # Exactly one request/result pair, independent of whitespace/key order.
     api = documents[API]
