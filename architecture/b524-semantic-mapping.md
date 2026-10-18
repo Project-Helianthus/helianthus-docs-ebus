@@ -250,7 +250,7 @@ Source: `refreshDHW()` in `semantic_vaillant.go`
 
 Source: `refreshBoilerStatus()` in `semantic_vaillant.go`
 
-The current PASS-profile boiler status plane is no longer a B524-only composite. Helianthus now prefers direct BAI00 B509 reads for the boiler semantic surface and keeps only a small B524 fallback/mirror set in the controller path.
+The current PASS-profile boiler status plane is no longer a B524-only composite. Helianthus now prefers direct boiler-family B509 reads for the boiler semantic surface and keeps only a small B524 fallback/mirror set in the controller path.
 
 Authoritative direct-boiler mapping:
 - see [`../protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md`](../protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md)
@@ -259,9 +259,24 @@ The B524 contribution that still feeds the current boiler semantic contract is:
 
 | Semantic Path | B524 | Type | Notes |
 |---------------|------|------|-------|
+| `state.flowTemperatureC` | OP=0x02, GG=0x00, II=0x00, RR=0x004B | f32 | Age-bounded system-flow mirror from the same controller; a successful direct B509 flow read wins within the tick. This is implementation behavior, not native source equivalence. |
 | `state.dhwTemperatureC` | GG=0x01, RR=0x0005 | f32 | Controller mirror from DHW group |
 | `state.dhwTargetTemperatureC` | GG=0x01, RR=0x0004 | f32 | Controller mirror from DHW group |
 | `config.dhwOperatingMode` | GG=0x01, RR=0x0003 | u16 | Decoded into the public enum string |
+
+The [boiler temperature SemReg cutover slice](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/boiler-temperature-semreg-mapping.md)
+defines the proposed two-field equivalence and withholding contract. Excluding
+RR=0x004B from the proposed boiler-flow mapping is an intentional difference:
+its native identity remains controller system flow, not qualified B509 boiler
+flow or boiler return. The legacy mirror's retention/removal is a downstream
+cutover decision. No return fact is emitted and no separate return projection
+disposition is added. Flow and return share
+`thermal.measurement.water_temperature`, with one disposition per requested
+`(kind,item_id)`; absent return cannot make that item `withheld` when flow is
+projected. Return qualification remains `unknown`, and its missing-source reason
+describes legacy-field absence outside projection accounting; no return source
+is established by this mirror. Existing MCP field names and GraphQL aliases
+remain the compatibility boundary.
 
 The gateway currently mirrors the circuit 0 state (RR=0x001E) into
 `diagnostics.heatingStatusRaw`; that mirror is not part of this mapping, because
