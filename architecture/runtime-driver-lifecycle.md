@@ -3,7 +3,7 @@
 Status: proposed software 0.7 contract. This page specifies the selected D5
 epoch policy D1/A2 and D5 recovery mechanism for gateway issue
 [#1032](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1032),
-PRs 0a/0b and amendments A1/A2/A6, covering S0/S5, S1, S3, S4 and CTL-01–CTL-19. It does not claim
+PRs 0a/0b and amendments A1–A4/A6, covering S0/S5, S1, S3, S4/S6/S7 and CTL-01–CTL-19. It does not claim
 that the runtime control service or durable recovery is implemented. The G4 publication hub has
 an in-memory journal; that alone supplies no process-loss recovery.
 
@@ -245,6 +245,183 @@ unchanged last-known-good identity/provenance on unaffected assets, old-handle
 rejection after success, same-epoch manager retry with increasing native
 generation, and a generation-1 successor mapped to a strictly later native
 generation. LIFE-07–LIFE-10 late-result safeguards remain in force.
+
+## S4/A3/A4: lifecycle-only eBUS bridge
+
+This bridge companion is the partial slice tracked by
+[docs issue #692](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/692).
+Publish A3/A4 and S4/S6/S7 before gateway manager/composition changes. Final
+D1/D2/D3/D5 are settled as described on this page; they are not open choices
+from the earlier issue draft. **A5 remains proposed**: only the gateway
+composition implementation may change the companion's status to say the
+service is implemented for `ebus.primary`. Publishing this contract establishes
+neither that implementation nor a universal provider SPI.
+
+### Source ownership without semantic assets
+
+The bridge adapts the existing DriverManager and native runtime. The manager
+is the sole owner of native attempts, reconnect/backoff scheduling and native
+retry budgets; the control service owns durable decisions and ordered
+reconciliation. Semantic control retries keep their separate finite budgets
+and never start a second native retry loop. Admission-hold and close-result
+hooks must release manager locks before hub work, persistence or native I/O.
+
+A3 separates the companion's semantic `ObservedRecord.EffectiveCapabilities`
+(`CapabilityInstance` values) from a typed native effective-capability field.
+For `ebus.primary`, semantic effective capabilities remain empty until the
+family's semantic migration. Native effective capabilities report only the
+currently admitted native invocation gates and are withdrawn with native
+admission. In particular, the manager's `SEMANTIC_PROJECTION` gate for legacy
+consumers is a native invocation capability, not a semantic capability instance
+or a hub publication. The existing native snapshot `effective_capabilities`
+field in the [driver API](../api/driver-runtime-v1.md#field-invariants) retains
+that native meaning; it must not be populated with semantic instances.
+
+A4 is a bounded lifecycle-only exception to the companion's binding-bearing
+SPI. An asset-free source needs no semantic binding, capability instance,
+binding-bearing `ActivationProof`, or fabricated admission capability/binding.
+Do not manufacture an asset, validator or observation to fill those shapes.
+The bridge still requires exact lifecycle correlation, current native readiness,
+the source barrier and native admission checks. This exception confers no
+qualification, native write permission or semantic publication authority;
+a later family migration must satisfy its full semantic activation contract.
+
+### Shell and preparation order
+
+Compose the frozen registration and control service before eBUS reconciliation.
+Start HTTP, health, MCP, GraphQL and status independently of a driver reaching
+RUNNING; STOPPED, a slow/failing START or corrupt control state must not park
+shell startup behind `WaitRunning` or terminate the shared process. Stable
+process-owned active/passive handles survive stopped periods and expose truthful
+unavailability. Close mutation admission first on process exit, retaining reads
+until shell teardown. Shutdown does not rewrite durable desired intent.
+
+For a valid configured source, even when initially desired STOPPED, establish
+the stable `SourceID`, persist the lifecycle correlation, admit the inert source
+without declaring an asset, and complete its empty epoch barrier/reservation
+before any endpoint construction. This is hub source ownership, not current
+native I/O admission or observed RUNNING. Restore retained D5 material first
+when present. A control-load failure withholds preparation and admission rather
+than inventing a fresh source or RUNNING decision; the shell remains available.
+Persistent desired state, cached addresses and historical RUNNING are never
+current admission. The first START claims the initial inert reservation; later
+succession follows A2, including retirement before start and no overlapping
+native owner.
+
+### STOP and generation task ownership
+
+At the STOP/RESTART fence boundary immediately revoke new native leases, B503
+issuance, proxy readiness, the admitted bus source and old callback authority.
+Previously issued B503/proxy calls cannot retain old-generation authority.
+Then reconcile two independent obligations: fence the exact semantic generation
+and retire/settle its epoch, and cancel/drain/close native work. Semantic failure
+or blocked reprojection cannot delay native cancellation and close work; proven
+native close cannot erase unfinished semantic cleanup. STOPPED requires both
+obligations complete, including the asset-free source's retirement. Read the
+hub view for that source's lifecycle truth; its bounded, overflow-capable
+source-level retirement event is notification, not completion proof.
+
+Use the native close classification, not a nil manager return, as evidence.
+An independently proven close after drain timeout may be restartable;
+unconfirmed close retains quarantine, reports FAILED/CLOSE_UNCONFIRMED and
+blocks replacement preparation, activation and admission. An internal error is
+not close proof. Preserve exact pending cleanup, accepted prefixes, original
+correlation and budgets when either obligation fails. No epoch change or
+same-desired START clears uncertainty.
+
+Move the post-`WaitRunning` source validation, scan, semantic polling,
+revalidation and promotion orchestration into tasks owned by the full admitted
+generation correlation, including its explicit native-generation mapping.
+Cancel **and join** all such work before replacement; cancellation alone is not
+completion. A task that cannot join within its bound keeps replacement blocked
+and status truthful. Late callbacks, provider/health results and publications
+remain fenced at the serialization boundary. Do not install their results into
+a successor or relabel retained data as a current observation.
+
+Run current-session source validation and each configured startup task once per
+admitted generation, including a later START from STOPPED and a manager-driven
+replacement. Repeated wakes do not duplicate tasks, and admission is required
+before capture/acquisition tasks run. Polling loops may iterate within that one
+generation-owned task; once per generation describes task startup, not one poll.
+Keep stable process handles and reuse native scan/poll/revalidate/promote
+functions. This orchestration neither transfers their protocol ownership nor
+adds a retry owner. Native reconnect does not rotate the epoch; replacement
+within that epoch still fences and joins predecessor work.
+
+## S6: shell status and public parity
+
+Daemon status continues to describe the process. Adapter status must use current
+native admission, so retained firmware or cached identity cannot make a STOPPED
+or FAILED adapter appear running. Preserve readiness field names and the proxy
+DISABLED/DEGRADED/READY vocabulary, deriving proxy READY only from live
+admission. HTTP/process readiness remains available with intentionally stopped
+eBUS; no generic driver collection or eeBUS replacement is added to readiness.
+Status/list/get use cached coherent views, perform no endpoint I/O and stay
+responsive throughout preparation, backoff, cleanup and control-load failure.
+
+Full desired/observed lifecycle views use the ordinary MCP service surface;
+there is **no lifecycle GraphQL API**, resolver, mutation or subscription.
+Existing daemon/adapter MCP and GraphQL status remain equivalent, including
+unavailable cases. The intended payload differences are truthful gating of
+existing adapter running/admitted-address fields and proxy readiness after
+withdrawal, and retained evidence with original provenance/age while capture is
+paused. They are not evidence of new semantic capabilities or a new status
+schema. Document each actual difference and update deterministic envelope and
+schema/output goldens, with the reason in the implementation PR. Every MCP
+namespace is pre-stable before 1.0; neither an existing name nor a golden gives
+a stability promise, and no new major or experimental namespace is introduced.
+Final D4 removes lifecycle principal/authorization checks only; native-write
+safety and unrelated eeBUS safeguards keep their owners.
+
+## S7: retained eBUS evidence and deferred store move
+
+Bus observability, identification evidence and the active/passive deduplicator
+remain process-scoped. STOP, START and RESTART do not move, clear or reset those
+stores. Capture pauses while no generation is admitted; existing records and
+partial last-known-good state retain their native identity, provenance and age.
+A later START resumes capture under the new admitted correlation without
+rewriting old records as fresh or granting I/O from a cache. Evidence grades
+`Proven`, `Hypothesis` and `Unknown` remain separate from codec/profile
+qualification and current admission. G5 changes neither evidence semantics nor
+retention policy and supplies no new native wire claim.
+
+Characterize bus/identification-evidence MCP tools and GraphQL fields across
+STOP→START, preserving shapes, retained-record meaning and classification.
+There is no bus-tool reclassification or closure of
+[gateway #1020](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1020).
+The reserved `evidence` hook remains unimplemented and declaring it fails
+registration. This contract does not turn process stores into driver hooks.
+
+[gateway #1021](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1021)
+and DM-RAW retain the later move of stores, observers and deduplicator behind
+the eBUS driver, observer rewiring, contributed read views and metrics split.
+LEGACY-IDENTITY G2/G2c retains native raw identification acceptance and its
+passive/live evidence obligations before that move. G5 absorbs neither owner's
+implementation or acceptance evidence; filename gate classification does not
+waive those later behavior obligations.
+
+### S4/S6/S7 synthetic acceptance obligations
+
+These are gateway implementation vectors, not passing runtime tests from this
+prose-only slice. Use synthetic/public fixtures with fixed clocks and explicit
+barriers; keep native wire facts under their public native documentation owner.
+
+| Case | Required observation |
+|---|---|
+| Initially STOPPED; slow/failing START; corrupt/unreadable/unsupported control | HTTP/health/status and MCP/GraphQL reads stay responsive within a stated bound. Valid STOPPED prepares the inert source/barrier with zero endpoint construction; control failure stays FAILED without RUNNING fallback |
+| Lifecycle-only activation | No invented asset, binding, semantic capability or binding-bearing ActivationProof; semantic capabilities empty and native gates separately reported; no native admission before readiness |
+| STOP during STARTING, RUNNING or BACKOFF | Leases, B503, proxy and callbacks lose authority immediately; no stale-generation I/O. Block semantic cleanup and prove native cancellation progresses; then block close and prove semantic retirement progresses. STOPPED requires both |
+| Close uncertainty and late results | FAILED/CLOSE_UNCONFIRMED blocks replacement even after semantic success; late provider/health/publication results never install; proven close alone does not bypass pending cleanup |
+| STOP→START, RESTART and same-epoch manager replacement | All predecessor scan/poll/revalidate/promote tasks are cancelled and joined before replacement; current-session validation and configured tasks start once per admitted generation, with repeated wakes unable to duplicate them; manager remains sole native retry owner |
+| Cached status and retained evidence | STOPPED/FAILED has no admitted address or proxy READY and retained firmware cannot imply running. MCP/GraphQL daemon/adapter unavailable cases agree; evidence stores retain identity/provenance/age and partial last-known-good values with capture paused while unadmitted |
+
+Apply these alongside the amended A2 LIFE vectors, CTL-17/18 bootstrap/config
+vectors and the companion's applicable LIFE-01–LIFE-10 and LIFE-14–LIFE-32
+obligations. No close, replay, isolation or native-write safeguard is weakened.
+Intended output changes need characterization/goldens in the gateway slice;
+this page changes no executable payload, schema or golden. The docs gate checks
+documentation only; protocol/transport execution and physical acceptance are
+not supplied by this page.
 
 ## Ownership and durable scope
 
