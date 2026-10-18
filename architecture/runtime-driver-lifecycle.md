@@ -3,7 +3,7 @@
 Status: proposed software 0.7 contract. This page specifies the selected D5
 epoch policy D1/A2 and D5 recovery mechanism for gateway issue
 [#1032](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1032),
-PRs 0a/0b and amendments A1/A2/A6, covering S0/S5, S4 and S3.7–S3.9. It does not claim
+PRs 0a/0b and amendments A1/A2/A6, covering S0/S5, S1, S3, S4 and CTL-01–CTL-19. It does not claim
 that the runtime control service or durable recovery is implemented. The G4 publication hub has
 an in-memory journal; that alone supplies no process-loss recovery.
 
@@ -14,6 +14,10 @@ hooks, using SemReg's existing public `NewPublicationKernel` constructor and
 `Apply`. No SemReg API, dependency change or snapshot-import prerequisite is
 introduced. Earlier proposals for client command tracking and lifecycle
 authorization in that contract must be read with the final D3/D4 decisions below.
+Gateway J09/J10 must amend that companion accordingly: its idempotency key,
+receipt, `IDEMPOTENCY_CONFLICT`, `PERMISSION_DENIED` and persistent idempotency
+lookup are superseded by this page, and its control error enum gains
+`TRANSITION_BUSY`, `RESOURCE_EXHAUSTED` and `COUNTER_EXHAUSTED`.
 
 ## S0/A1: typed compiled-driver registration
 
@@ -414,21 +418,465 @@ or changes original publication instants. Historical replay still reproduces the
 pre-loss state; the first new `Apply`, including the epoch barrier, evaluates
 expiry at the advanced point using the existing kernel rules.
 
-## D3 retention and D4/public surface boundary
+## S1/D3: minimal durable control decisions
 
-Final D3 removes client-visible command receipts, idempotency keys,
-per-principal key spaces and stored completed-command records. START and STOP are
-idempotent by desired state; RESTART executes. Requests return accepted desired
-state and revision; completion is read from observed state. Durable lifecycle
-scope is desired state, the in-flight operation and D5 recovery material;
-completed commands survive only in a short diagnostic log.
+This amendment is the partial slice tracked by
+[docs issue #660](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/660).
+It replaces the companion's unimplemented receipt and idempotency-record design,
+including its request/result types, S1/S3 rules and CTL-03–CTL-11 expectations.
+It is the public prerequisite for the durable store, service and MCP slices;
+it does not claim those implementations have shipped. The choices below are
+selected implementation bounds, with no remaining operator checkpoint.
 
-Accepted kernel results and cursor replay records above are recovery material,
-not the deleted client receipt design. D3 does not delete them. Compact only at
-a verified restore point that reproduces snapshots, retained history and
-cursors and preserves all reachable pending and cleanup work. No arbitrary
-retention duration or capacity is specified here; at a bound, refuse new work
-rather than evict material still required for restoration.
+Desired state has exactly two values: `RUNNING`, `STOPPED`. Observed state has
+exactly eight: `DISABLED`, `STOPPED`, `STARTING`, `RUNNING`, `DEGRADED`, `BACKOFF`,
+`STOPPING`, `FAILED`. Desired state is intent; observations are runtime facts.
+The namespace holds one issued-revision high-water mark: the highest desired
+revision ever issued under this GUID, starting at 0 on bootstrap. Every
+accepted decision (including each bootstrap seed) and every repair writes the
+mark in the same atomic transaction as the records it changes. Each accepted
+decision takes mark + 1 as its driver's new desired revision and stores that
+value as the new mark, so desired revisions are unique across all drivers and
+all time within the namespace, and a driver's current desired revision is
+simply the number of its last accepted decision. A driver with no record has
+never been decided: reads return desired `STOPPED` with `desired_revision` equal to the
+current mark, which a client echoes, and its first accepted decision must carry
+`ExpectedRevision` equal to that mark, compared exactly like any other
+optimistic comparison, and takes mark + 1. Revision 0 is not a sentinel for "no
+record"; it is the mark only in a namespace where nothing has ever been
+decided. Removing a driver is a durable decision recorded as a mark-only write
+(the mark becomes mark + 1) in the same atomic transaction that deletes the
+driver's record, once it holds no in-flight work or reachable D5 material.
+Registering a driver into an existing namespace, on first appearance or
+re-add, is likewise a mark-only write in the same transaction that makes the
+driver visible, before any read of it returns the mark. A re-added ID therefore
+continues above every earlier revision, and a request held before a removal or
+a re-add always carries a mark lower than the current one and is refused with
+`REVISION_CONFLICT`, even when no other decision happened in between. Bootstrap
+seeds configured drivers as decisions, so registration there is not a separate
+mark-only write.
+
+Catalog revision starts at 1, advances once per accepted decision and once per
+externally visible observed-view transaction, and is distinct from desired,
+native and semantic revisions, lifecycle sequence and publication cursors. It
+is a view counter only: it orders cached list/get views, is never compared with
+a desired revision and is never used for optimistic control. Persist every catalog advance before exposing the new view;
+the durable catalog revision bounds every view issued under this GUID, survives
+restart and is never reused. Repair preserves it and advances it exactly once,
+from validated `C` to `C + 1`; it never regresses.
+List/get return coherent cached views; historical observations grant no startup or
+native admission authority.
+
+This durable write is not deferred to the periodic cadence of the
+[runtime state](runtime-state.md) page: every accepted decision with its mark
+advance, every mark-only write and every repair is written durably and
+atomically before the decision is acknowledged or its view exposed, and every
+catalog advance is written before its view is exposed, so a crash cannot lose
+an acknowledged intent or an issued revision.
+
+Durability here includes the rename: the parent-directory fsync error
+tolerance of the generic runtime-state namespaces does not apply to control
+transactions. If parent-directory durability cannot be established, the
+transaction fails closed: nothing is acknowledged, no view is exposed and no
+mark or catalog revision is issued, so recovery can never load an older desired
+state while a revision believed issued is reused. A failure before the rename
+is a pre-commit failure refused with `UNAVAILABLE`; a failed directory fsync
+after a successful rename is ambiguous persistence, handled below.
+
+Directory durability is established, never inferred. A failed parent-directory
+fsync after a successful rename leaves the rename not durable even though a
+readback observes the new bytes. Until directory durability is established
+(the directory fsync retried to success, or the namespace rewritten durably by
+temporary file, file fsync, rename and directory fsync) the new view is not
+exposed, nothing is acknowledged and admission stays closed. Readback agreement
+between the stored bytes and the cached view alone never reopens admission,
+because a power loss can still restore the previous mark and let a revision
+that was exposed be issued again after restart.
+
+In JSON, every revision in responses (desired revision, catalog revision and
+the current view returned with a refusal) is a canonical decimal string: ASCII
+digits only, no sign, no leading zero except `"0"`, at most the unsigned 64-bit
+maximum. `ExpectedRevision` in a request is stricter: a canonical decimal
+string of a nonzero unsigned 64-bit value, so `"0"`, leading zeros, signs,
+whitespace and non-digits fail shape validation with `INVALID_ARGUMENT` before
+any other check. Zero never needs to be sent: bootstrap seeds every configured
+driver as a decision at mark + 1, so the mark is at least 1 whenever any driver
+exists, and a driver with no record reads the nonzero mark, which is what its
+first decision must carry. Responses may show `"0"` only as the mark of a
+namespace in which nothing was ever decided (no driver configured), which no
+request can target. Internally revisions are unsigned 64-bit values; an
+increment that would exceed that maximum refuses with `COUNTER_EXHAUSTED`.
+
+### Validate, decide and commit
+
+The request contains only `DriverID` and `ExpectedRevision`; the method
+selects START, STOP or RESTART. This page supersedes the request-member rules
+of `api/driver-runtime-v1.md`: `idempotency_key`, `request_id` and any receipt
+or completed-operation member are not accepted, and a request carrying them is
+refused as `INVALID_ARGUMENT` like any additional member. A finite caller deadline comes from the call
+context. Closed decoding rejects unknown/missing fields, duplicate members,
+malformed revisions and trailing JSON. No lifecycle principal, authority,
+idempotency key, canonical request digest, key lookup, receipt or completed-
+operation record exists. Semantic replay digests remain D5 recovery material.
+
+1. Validate shape, canonical ID and registered identity, usable control state
+   for that driver, configured/enabled eligibility, then the finite unexpired
+   deadline, in the check order of the refusal table below. No validation
+   invokes a factory or endpoint.
+2. Take the single namespace-wide serialization point (the sole writer of the
+   control namespace, which is the shared-mark lock) for every request, never a
+   serializer scoped to one driver. The checks that do not need the point
+   (refusal-table rows 1-5: request shape, driver existence, control state,
+   configuration eligibility and the deadline) are completed in step 1 before
+   and independently of the wait. The wait is bounded and never outlasts the
+   deadline; a request whose deadline expires during the wait is refused with
+   `DEADLINE_EXCEEDED` (row 5). Immediately after acquiring the point, a
+   request first confirms that admission is open (a readback after ambiguous
+   persistence still pending refuses with `UNAVAILABLE`, row 3) and then
+   rechecks the deadline: an expired deadline is refused with
+   `DEADLINE_EXCEEDED` (row 5) before the revision comparison and before the
+   same-desired no-op path, so neither `REVISION_CONFLICT` nor a no-op success
+   is returned past the deadline. Under it, read the mark, compare expected
+   revision with the current durable desired revision (the mark itself for a
+   driver with no record), allocate the next revision and durably write the
+   decision with the advanced mark (steps 3-5), without releasing it. A request
+   that waited for the point re-reads the mark after acquiring it and compares
+   against the re-read value, never an earlier read. Two concurrent requests
+   therefore cannot both observe the same mark: at most one allocates mark + 1
+   and the other receives `REVISION_CONFLICT`, or the wait-timeout refusal
+   below if the point is held beyond the bounded wait. Mismatch
+   returns `REVISION_CONFLICT` and the current cached view without mutation,
+   including for a would-be no-op. Recheck deadline before commit. Expiry before the commit point refuses the
+   request; cancellation after commit cannot retract accepted intent.
+   If the bounded wait ends without acquiring the point, the request makes no
+   durable change and, after the same admission confirmation, performs one
+   read-only load of the current desired revision of its driver (the mark
+   itself for a driver with no record). An `ExpectedRevision`
+   below that value is conclusively stale, because desired revisions and the
+   mark only advance, and is refused with `REVISION_CONFLICT` and the current
+   cached view; otherwise it is refused with `TRANSITION_BUSY`. `TRANSITION_BUSY`
+   never reports an outcome of the revision comparison.
+3. After the step 2 deadline recheck and revision comparison, START while
+   desired RUNNING and STOP while desired STOPPED return the current
+   desired state/revision without writing, waking reconciliation or allocating
+   correlation. They do not reset retries/backoff, heal degraded generations,
+   clear quarantine, change observations or bump either revision or the mark.
+   A STOP for a driver with no record is such a no-op, returning STOPPED at the current mark.
+   START while desired RUNNING is a no-op even when the driver is observed
+   FAILED, quarantined or in BACKOFF: recovering a FAILED driver is the
+   reconciler's job under its native retry and recovery rules, and a manual
+   START is not a recovery path. This test
+   precedes capacity checks, so repeated same-desired requests remain no-ops
+   while bounded work or cleanup is outstanding.
+4. RESTART requires desired RUNNING. Every accepted RESTART keeps RUNNING and
+   takes a new desired revision (mark + 1), even if the observed driver is STARTING,
+   BACKOFF or FAILED. Quarantine or unresolved recovery refuses only a
+   changing request whose work would require unsafe admission (refusal-table
+   order 7); it is never cleared by a request.
+5. Still under the step 2 serialization point, check transition capacity,
+   storage and all required counter increments.
+   Atomically persist desired/revision, the advanced mark, typed in-flight work,
+   its internal sequence/correlation and reservation before exposing acceptance
+   or waking reconciliation; a driver's first accepted decision creates its
+   record in that transaction. Pre-commit failure exposes no staged decision;
+   periodic or cache/meta writes cannot later flush rejected staging.
+   A control transaction that fails before the commit point (marshal, write,
+   file fsync, rename refused) is discarded rather than retried: staging is
+   dropped, the decision is refused with `UNAVAILABLE` (retryable by the
+   client) and the revision and mark are unchanged; the generic runtime-state
+   retry-on-next-trigger behaviour does not apply to this namespace.
+   Ambiguous persistence (a failure after the rename was issued but before
+   confirmation, including a failed parent-directory fsync after a successful
+   rename) fails admission closed: the control service itself
+   reads back the committed namespace before admitting any further decision,
+   for every driver because the mark is shared. Admission reopens only after
+   readback establishes whether the transaction committed, the cached views
+   and mark match the durable state and, when the new bytes are present,
+   parent-directory durability of them is established as the durability rules
+   above require; readback agreement alone never reopens admission. A failed
+   readback applies the load-failure rules below.
+
+Every refusal leaves durable state, the mark, both revisions and observations
+unchanged. Checks run in this fixed order and the first failing check decides:
+
+| Order | Refusal | Code | Retryable |
+|---|---|---|---|
+| 1 | Unknown, missing or duplicate member, malformed revision string (including `"0"`, leading zeros, signs, whitespace, non-digits), trailing JSON | `INVALID_ARGUMENT` | No |
+| 2 | `DriverID` noncanonical or not registered | `NOT_FOUND` | No |
+| 3 | Driver record malformed or `runtime_control` failed to load; the driver reports `FAILED` | `FAILED_PRECONDITION` | No, until offline repair |
+| 3 | Readback after ambiguous persistence still pending | `UNAVAILABLE` | Yes |
+| 4 | Driver disabled by configuration | `FAILED_PRECONDITION` | No |
+| 5 | Call context has no finite deadline | `INVALID_ARGUMENT` | No |
+| 5 | Deadline expired, at validation, during the bounded serialization wait, immediately after acquiring the serialization point or at the pre-commit recheck | `DEADLINE_EXCEEDED` | Yes, with a new deadline |
+| 6 | `ExpectedRevision` differs from the current desired revision | `REVISION_CONFLICT` with current view | Yes, after readback |
+| 6 | RESTART while desired `STOPPED` (checked after the same-desired no-op test) | `FAILED_PRECONDITION` | No |
+| 7 | Quarantine or unresolved recovery blocks work that would require admission | `FAILED_PRECONDITION` | No, until recovery resolves |
+| 8 | The decision path is busy: the typed transition slot is full or the namespace-wide decision serialization point was held beyond the bounded wait | `TRANSITION_BUSY` | Yes |
+| 9 | Record limit, byte limit or bounded-outcome reservation cannot fit | `RESOURCE_EXHAUSTED` | Yes |
+| 10 | A required counter or mark increment would exceed the unsigned 64-bit maximum | `COUNTER_EXHAUSTED` | No |
+
+Two outcomes sit outside the ordered checks. A pre-commit write failure
+(step 5) follows every row above and returns `UNAVAILABLE`, retryable, with the
+revision and mark unchanged. A bounded-wait timeout at the serialization point
+(step 2) follows rows 1-5, which are completed without the point, and returns
+`REVISION_CONFLICT` (row 6) when the expectation is conclusively stale and
+otherwise `TRANSITION_BUSY` (row 8); `TRANSITION_BUSY` never reports an outcome
+of the revision comparison, and the request made no durable change.
+
+Both accepted and no-op responses contain **desired state and desired revision
+only**, as the two members `desired_state` and `desired_revision`. They contain no operation ID, sequence, disposition or completion claim.
+The ordinary deterministic MCP envelope remains; completion and failure are
+observed through list/get. A lost response is resolved by readback. A repeated
+RESTART with an updated expected revision is another requested restart; it is
+never deduplicated by a fabricated key. Retrying the old revision conflicts.
+Readback can show later intervening decisions and does not promise attribution
+of a completion to a particular client call.
+
+### Bounded typed transition and truthful completion
+
+Each driver has at most two typed work slots: one current transition (including
+its outstanding cancellation/native close and semantic cleanup), and one reserved
+next transition. The reserved slot holds at most one replacement and never a
+queue. Store the exact kind, accepted desired revision, lifecycle sequence,
+phase, full lifecycle correlation, old attempt, cleanup obligations and budgets;
+a replacement also retains its exact successor reservation. Internal sequences
+are not client operation handles and survive only while recovery needs them.
+No wake or recovery infers work from desired state alone.
+
+From stable STOPPED, a changing START occupies the current slot as typed START
+work, and the reserved slot stays free; that typed START persists so recovery
+resumes it. From a stable driver, STOP or RESTART occupies the current slot.
+During STOPPING (desired STOPPED, typed STOP in the current slot), a changing
+START takes the reserved slot as a typed START replacement when that slot is
+empty; it executes only after the STOP's cleanup and native close settle. During
+STARTING or BACKOFF, accept STOP or RESTART only if the reserved slot is empty and no
+accepted RESTART is still executing. The new request always takes the reserved
+slot. When the STARTING or BACKOFF attempt has no typed current operation (bootstrap
+or process-start reconciliation of stored RUNNING, or a manager retry), the
+acceptance transaction synthesizes the cancellation of that untyped attempt as
+the current slot, with its correlation, cleanup obligations and budgets. Acceptance immediately fences the old
+attempt's callbacks, publications and admission, cancels its preparation or
+scheduled retry, and retains the old correlation for late-result cleanup.
+The old START may terminate as canceled; its cleanup is never discarded. The
+reserved STOP completes only after cleanup and native close; reserved RESTART
+executes its own stop-then-start after those obligations settle. It cannot be
+replaced by a later STOP or RESTART. An accepted RESTART is never coalesced away.
+
+Precedence while a STOP is in flight: desired is already STOPPED, so STOP is a
+same-desired no-op, RESTART returns `FAILED_PRECONDITION` (desired RUNNING
+required) before capacity is checked, and START takes the reserved slot as
+above. After all earlier refusal checks and the same-desired no-op test pass,
+a changing request arriving during an executing RESTART or with both slots
+occupied returns retryable `TRANSITION_BUSY`, with no revision or state
+change. The caller reads current state and retries with its current revision
+after work settles; there is no server retry queue. This deliberately bounded
+refusal is separate from the same-desired no-op rule.
+List/get and observations of unrelated drivers remain responsive; the namespace-wide decision serialization point never holds hub or manager locks over disk
+I/O, native calls, cancellation or drain.
+
+Persist phase/observation updates before releasing the next slot. Native close
+and semantic cleanup are independent obligations. Publish STOPPED only when
+both complete; nil manager return alone proves neither. A proven drain timeout
+with subsequent close may be restartable; unconfirmed close reports
+`FAILED/CLOSE_UNCONFIRMED`, retains quarantine and blocks replacement. Semantic
+conflict/exhaustion preserves exact pending work and closed affected read gates
+regardless of native-close success. Late preparation/activation is never
+installed; independently bounded cleanup retains its original correlation.
+Retry ownership stays native; control no-ops cannot renew its budget.
+
+On component recovery resume exact work and reservations. After process loss,
+restore D5 first, fence historical correlations and reconcile each retained
+kind in order under the new incarnation. An unfinished RESTART still performs
+one replacement even though desired already says RUNNING; no old native-close
+proof authorizes current admission. Only after terminal obligations are durable
+may their operation slot be removed. Retain recovery-reachable correlation in
+D5, not in a completed-command record.
+
+## S3/D2: bootstrap, load failures and explicit repair
+
+Use the independently versioned `runtime_control` namespace, format version 1,
+under the sole runtime-state writer. Preserve GUID ownership, top-level/meta
+versions and unknown namespaces. Stage privately, serialize with all other
+runtime-state writes, use same-directory temporary output, required file fsync
+and atomic rename, then expose committed state; for this namespace the parent-directory fsync must succeed (no tolerated errors) before acknowledgment.
+No cross-filesystem fallback and no GUID generation/replacement is allowed.
+
+A fresh, readable, valid base whose GUID has no control material at all gets
+exactly one atomic seed. No control material means: no `runtime_control`
+namespace or part of one, no mark, no D5 recovery material and no quarantine
+copy for this GUID (the existence of a copy counts, never its content). The
+seed starts the mark at 0 and records each configured driver, in bytewise
+`DriverID` order, as one accepted decision at mark + 1: enabled drivers
+RUNNING, disabled drivers STOPPED and observed DISABLED. A missing namespace
+or mark while any such material exists is a load failure that requires repair,
+never a fresh start. A driver added to configuration after bootstrap has no
+record and stays STOPPED until its first accepted START; bootstrap never
+repeats. Bootstrap is not a user START; its
+RUNNING reconciliation happens despite subsequent START being a no-op. Once
+seeded, stored STOPPED survives restart with no endpoint opened. Disabled
+configuration always wins over stored RUNNING and prevents admission; it does
+not silently rewrite durable intent or permit START/RESTART to enable a driver.
+
+Missing, corrupt, unreadable and unsupported are distinct load dispositions.
+This fail-closed rule applies to the `runtime_control` namespace only; other
+namespaces keep the [runtime-state](runtime-state.md#failure-modes) cache
+behaviour (corrupt file renamed and loaded empty, unsupported plugin namespace
+dropped from the in-memory load). Corrupt/unreadable/unsupported control state
+starts the HTTP/API/health shell but withholds affected eBUS as FAILED; no
+empty-state or RUNNING fallback is allowed. Preserve bad bytes and quarantine
+before any repair. A malformed known
+driver record fails that driver closed while valid independent records remain
+usable. A malformed or missing mark or catalog revision fails the whole namespace
+closed, because decisions and coherent views depend on these durable bounds.
+Whole-file corruption/unreadability withholds all dependent drivers and must
+never create a new GUID or overwrite the unreadable bytes as a fresh base: the
+runtime-state `.corrupt-<ISO8601>` rename keeps the exact original bytes and
+counts as a quarantine copy, so control is unreadable, never missing, and no
+bootstrap seed follows.
+
+### Offline namespace-only reset
+
+The selected maintenance interface for the later store implementation is the
+standalone command below (a specified deliverable, not a shipped executable):
+
+```text
+gateway-runtime-control-reset --state-file <runtime-state-file> --namespace runtime_control --desired STOPPED
+```
+
+Run it only with the gateway process stopped. It takes the same exclusive store
+lock and refuses if a process/writer still owns the file. The namespace and
+STOPPED value are fixed accepted choices; there is no whole-file reset mode,
+gateway startup flag, MCP repair tool or online bypass.
+
+Validate readability, the entire base structure and the existing valid GUID
+before touching anything. Whole-file corruption/unreadability is refused until
+a valid GUID-preserving base is restored externally. Unsupported or malformed
+namespace records within an otherwise valid base may be reset only when the
+mark, durable catalog revision and the D5 recovery stream can be validated.
+First preserve an exclusive, non-overwriting quarantine copy of the exact original bytes and
+fsync it. Failure to preserve that copy aborts reset. Existing quarantine copies
+are never deleted or replaced. Copy GUID, meta and all other opaque namespaces
+unchanged. Quarantine copies are unvalidated diagnostics only; they never
+supply a revision bound, records or recovery material. Before replacement, read
+`H` from the validated mark: it bounds every desired revision previously issued
+under this GUID, including removed driver IDs and earlier repairs. Cross-check
+it against the verified D5 recovery stream; any desired revision recorded there
+above `H`, or a D5 stream that cannot be verified, refuses reset. If the mark
+cannot be validated, refuse. Read `C` from the validated durable catalog
+revision; if it cannot be validated, refuse. If `H + N` for `N` configured IDs
+or `C + 1` cannot be represented, refuse with `COUNTER_EXHAUSTED` before
+replacement; never wrap or choose a lower value. Every reset refusal exits nonzero with its named reason
+(`COUNTER_EXHAUSTED` for overflow, `FAILED_PRECONDITION` otherwise) and replaces
+nothing.
+
+Atomically replace only the desired, in-flight and catalog records: one
+version-1 STOPPED record per configured ID at desired revisions `H + 1` through
+`H + N` in bytewise `DriverID` order, the mark set to `H + N` in the same
+transaction, catalog revision `C + 1`, and no active operation. Resolve IDs
+from the installation’s existing read-only configuration; if that configuration cannot
+be validated, refuse rather than guess IDs. Subsequent changing decisions take
+mark + 1. `ExpectedRevision` remains the same single unsigned 64-bit value, with
+no additional request field. Every pre-repair expected revision therefore
+conflicts, including a stale START at revision 1 after all recovery gates clear.
+A fresh process incarnation separately fences old callbacks and reservations.
+
+Reset leaves the verified D5 recovery stream in place and untouched. It supplies
+no replay, semantic cleanup or native-close proof of its own; on the next start
+the ordinary restore path replays that stream and fences historical correlations.
+The reset durably cancels the admission-producing portion of every retained
+in-flight START or RESTART: the replayed stream resumes only cleanup and close
+obligations, and nothing admits or starts a driver after a reset until a new
+decision carries a post-reset revision. The unproven-close quarantine flag is a
+process-epoch value and is not restored as such; a new process starts without
+it, but an unresolved retained close obligation still blocks replacement
+admission until that obligation completes. A source with
+unresolved retained/indexed semantic state stays read-gated and FAILED until
+that restore resolves it; resetting cannot manufacture an empty successful
+snapshot. The lifecycle-only empty asset set may remain STOPPED after reset.
+No native start occurs as part of this command.
+
+## S3/D3: finite retention and D5 preservation
+
+Durable minimum is desired/revision, catalog revision, the bounded typed
+in-flight work and the complete D5 replay/recovery material specified above. Version 1 permits at most
+129 records (the one issued-revision mark plus at most 128 driver records) and a
+64 MiB encoded control namespace, including the mark, pending work and restore
+material. Mark-only writes count against these limits and follow the same readback rule as decisions. Reject registration beyond the driver limit before
+effects. Reserve space before accepting work for its bounded outcomes/cleanup;
+if the full reservation cannot fit, return retryable `RESOURCE_EXHAUSTED` before
+acceptance. Never evict reachable recovery material to admit a new request.
+Per-operation semantic attempts are limited to 8 and a 30-second overall budget;
+activation staging remains at most 128 unique-asset batches/8 MiB. Persist budgets
+and do not renew them on wakes, no-ops or component recovery. These service
+bounds do not change native retry, drain or close defaults, and expiry never
+asserts close or erases unfinished cleanup.
+
+The mark, desired/catalog revision, internal lifecycle sequence, WAL sequence,
+asset ordinal, epoch ordinal and generation counters are unsigned 64-bit values;
+the mark starts at 0, so the first issued desired revision is 1, and the others
+are initially 1 when first allocated. Check every increment and clock arithmetic;
+refuse before mutation at overflow with `COUNTER_EXHAUSTED`, never wrap or reuse.
+No-ops allocate no counters. Counter exhaustion does not prevent already
+reserved cleanup or falsify its status; if its next required increment cannot
+be represented, retain work and fail the affected path closed.
+
+Completed operations have no durable record. Diagnostics keep only a sanitized
+in-memory ring of at most 32 terminal summaries per driver, at most 512 bytes
+each, dropped on process exit and never used for admission, deduplication or
+recovery. No principal, request digest, endpoint or raw error is logged.
+Accepted kernel results and cursor replay records are recovery material, not
+client receipts. Compact only at a verified restore point that reproduces
+snapshots, retained history, cursors, ordering and clock continuity and preserves
+all reachable pending/cleanup work. Verify the new restore point before atomic
+replacement; failed verification preserves the old recovery stream.
+
+Process shutdown preserves desired intent and recovery material. Cleaning native
+resources is not an accepted STOP, desired-revision change or deletion of pending
+work; never copy the manager's shutdown-local STOPPED back into durable intent.
+A downgrade preserves the namespace opaquely but ignores intent and may start
+eBUS even when stored desired is STOPPED. Re-upgrade restores intent and D5
+recovery, not receipts; test that round trip with an unknown namespace and an
+unchanged GUID. D5 exact-byte write-ahead, two-step outcomes, gap resolution,
+verified compaction and independent cleanup remain mandatory.
+
+### Amended CTL acceptance vectors
+
+These replace receipt-specific expectations, not passing implementation results.
+Use synthetic IDs, fixed deadlines and explicit scheduling barriers.
+
+| Vector | Required D3 observation |
+|---|---|
+| CTL-01 / CTL-02 | Coherent sorted cached list/get; unknown ID returns NOT_FOUND with no factory calls |
+| CTL-03 | Stale expected revision conflicts even for a same-desired request; no mutation |
+| CTL-04 | Lose an accepted START response, restart the process and read back durable desired/revision; same-desired START is a no-op, without any key/receipt lookup. A changing START from stable STOPPED persists typed START in the current slot, which recovery resumes. Fail the temporary-file fsync and fail a rename before the commit point: the decision is refused with UNAVAILABLE, nothing is acknowledged, no mark or catalog revision is issued, staging is discarded and no later trigger flushes it. Fail the parent-directory fsync after a successful rename with a generic-tolerated error (for example ENOTSUP): the error is not tolerated, nothing is acknowledged and the case enters readback as ambiguous persistence; an unconfirmed rename never acknowledges and never issues a revision |
+| CTL-05 | Accept only `DriverID` and `ExpectedRevision` (a canonical decimal string); reject every additional request member as invalid shape; valid control uses only the validation and atomic decision steps defined above |
+| CTL-06 | START in desired RUNNING across DEGRADED/BACKOFF/FAILED (including quarantined FAILED) is a no-op and not a recovery path, and STOP in desired STOPPED with unconfirmed close preserve retry budget, quarantine, observations and both revisions |
+| CTL-07 | RESTART in desired STOPPED refuses; each accepted RESTART in RUNNING advances revision and executes one replacement; RESTART during STOPPING with desired STOPPED returns FAILED_PRECONDITION before TRANSITION_BUSY; STOP during STOPPING is a no-op; START during STOPPING takes the reserved slot as a typed START replacement that executes after the STOP's cleanup and native close, and a further changing request then gets TRANSITION_BUSY |
+| CTL-08 | Pause STARTING and separately BACKOFF, each with a typed current START and with an untyped attempt (bootstrap reconciliation or manager retry); STOP/RESTART fence/cancel the old attempt, retain cleanup correlation and always take the reserved slot with one exact next kind, the untyped case synthesizing the cancellation as the current slot; another changing request that passes earlier refusal checks gets TRANSITION_BUSY; no accepted RESTART disappears |
+| CTL-09 | Lose process memory during active RESTART; D5 restores pending work and the new incarnation performs its retained replacement before dropping the slot |
+| CTL-10 | Lost RESTART response is resolved by readback; old-revision retry conflicts and a fresh-revision retry after settlement executes another restart |
+| CTL-11 | Same-desired requests during occupied slots remain no-ops with only desired/revision returned; no new durable record, wake or counter allocation |
+| CTL-12 | Hold a pre-repair START with `ExpectedRevision=1`; offline-reset with verified bound `H >= 1`, restart and clear recovery gates. Read back STOPPED at its repaired revision (`H + 1` for a single configured ID); submit the held two-field request and require REVISION_CONFLICT with no mutation, reconciliation wake or native open. With a retained in-flight START or RESTART in D5 at reset time, the first restart resumes only its cleanup and close obligations and performs no admission or native open until a post-reset decision is accepted. A fresh START using the read-back revision can proceed. Repeat repair after further decisions and with removed IDs in the revision coverage; all earlier revisions still conflict. An unvalidated mark, a D5 revision above the mark, an unverifiable D5 stream or `H + N` above the unsigned 64-bit maximum refuses reset without replacing any record; a successful reset leaves the D5 stream byte-identical. After visible observations and decisions, repair advances validated durable catalog revision `C` to `C + 1`; an invalid `C` or overflowing `C + 1` refuses without replacement |
+| CTL-13 | Two drivers A and B: accepted decisions interleave and each takes mark + 1, so no revision repeats across drivers. Remove B (record deleted, mark + 1 in the same transaction), then re-add B (mark + 1 again) with no decision for A in between: reads return STOPPED with `desired_revision` equal to the current mark, and a request held before the removal, carrying B's old revision or the mark current at that time, is refused with REVISION_CONFLICT with no mutation. Second line: repeat with an accepted decision for A between removal and re-add; the held request is refused likewise. START with `ExpectedRevision` equal to the read-back mark is accepted at mark + 1, above every earlier revision; a first START for a driver with no record whose `ExpectedRevision` differs from the mark conflicts, and a STOP carrying the mark is a no-op. Remove the namespace, or only its mark, while other control records, D5 material or a quarantine copy exist: load fails closed and nothing is seeded; only a GUID with no control material bootstraps at mark 0. All revisions encode as canonical decimal strings |
+| CTL-14 | Drive one request per refusal row, plus requests failing several checks at once; each returns the code of the earliest failing check in the refusal table with no mutation. A malformed driver record returns FAILED_PRECONDITION with that driver FAILED while an independent driver stays usable; ambiguous persistence returns UNAVAILABLE for every driver until the service's readback completes and directory durability is established |
+| CTL-15 | START carrying `ExpectedRevision` `"0"` is refused with INVALID_ARGUMENT; repeat with `"01"` (leading zero), `"+1"`, `" 1"` and `"1x"`. Each refusal is the first refusal-table row, with no mutation, no readback and no reconciliation wake |
+| CTL-16 | Fail the parent-directory fsync after a successful rename of an accepted START: no acknowledgment, no exposed view and admission closed with UNAVAILABLE for every driver. A readback that observes the new bytes matching the cached view does not reopen admission. After a simulated power loss that restores the previous mark, the revision first believed issued is issued again and a request holding it is not accepted on the strength of the earlier exposure. Admission reopens only after the directory fsync is retried to success or the namespace is rewritten durably (temporary file, file fsync, rename, directory fsync). A lost acknowledgment after a durable commit reopens by readback |
+| CTL-17 | Store desired STOPPED for a configured-enabled driver, restart the process: the driver starts in STOPPED with no endpoint opened and no provider call until a new START is accepted. A configured-enabled driver with stored desired RUNNING, or seeded RUNNING by first bootstrap, starts in STARTING. A driver added to configuration after bootstrap has no record and starts in STOPPED |
+| CTL-18 | START and RESTART for a configured-disabled driver are refused with FAILED_PRECONDITION under refusal-table order 4, with no mutation. The transition list has no start transition out of DISABLED; the driver leaves DISABLED only through a configuration change or reload
+| CTL-19 | Two drivers A and B, B without a record, concurrent requests each carrying `ExpectedRevision=H` (the mark, which is also B's current revision), with both requests past validation before either commits. Exactly one is accepted and takes `H + 1`; the other is refused with REVISION_CONFLICT and no mutation, never accepted against the stale `H` and never persisting an already-computed `H + 1`. The mark advances once and no revision repeats. Repeat with each request first. Hold the point beyond the bounded wait with the holder's write blocked before its commit: a waiting request whose expectation is below its driver's current desired revision (the mark for a driver with no record) is refused with REVISION_CONFLICT, and one whose expectation is current is refused with TRANSITION_BUSY, each with no durable change and no mark advance, TRANSITION_BUSY never reporting a revision-comparison outcome. A request that acquires the point only after its deadline expired is refused with DEADLINE_EXCEEDED, whether its expectation would have conflicted or matched and whether it would have been a same-desired no-op, with no mutation. The comparison, mark read, allocation and durable write happen under one namespace-wide serialization point, never a per-driver serializer alone |
+
+Also prove disabled/deadline/shape refusals, storage exhaustion, every counter's
+overflow refusal, quarantine retention, offline-reset refusal on an active writer
+or invalid base, exact quarantine preservation, GUID/meta/opaque round trips,
+and corrupt/unsupported loads without empty fallback. Two-driver fixtures must
+show B's reads and list/get remain responsive while A blocks in persistence or cleanup;
+a B decision waits at the namespace-wide serialization point and is never decided against a mark read before the wait.
+The committed `scripts/check_runtime_control_contract.py` gate and its mutation
+tests protect these documentation obligations and the closed API examples.
+They do not execute service/store/MCP behavior or prove recovery; implementation
+tests and payload goldens must independently meet the vectors above.
+
+## D4/public surface boundary
 
 Final D4 removes G5 lifecycle principal/authorization checks and the proposed
 kernel operator boundary; lifecycle tools use ordinary MCP. It does not remove
@@ -470,8 +918,8 @@ current. Prove another family's admission reads remain responsive during a
 blocked durable write, using a stated bound.
 
 This covers S3.7–S3.9/A6 recovery obligations and the recovery aspects of
-LIFE-06, LIFE-19, LIFE-21, LIFE-23–LIFE-24 and LIFE-26–LIFE-30. Older
-receipt-specific CTL vectors require the D3 amendment; this page does not claim
+LIFE-06, LIFE-19, LIFE-21, LIFE-23–LIFE-24 and LIFE-26–LIFE-30. The amended
+CTL vectors above replace receipt-specific expectations; this page does not claim
 they pass. LIFE-22 source-isolation acceptance remains a separate prerequisite.
 PR 0a provides the prerequisite hooks and hub restoration proof without a
 production service caller; PR 1 supplies service persistence and end-to-end

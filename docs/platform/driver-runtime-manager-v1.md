@@ -75,10 +75,17 @@ driver-local. They are never promoted into that global-fatal boundary.
 ## Startup And State Transitions
 
 At process startup the manager creates all three catalog entries before it
-starts any provider. Each descriptor is then evaluated independently:
+starts any provider. Reconciliation derives from the durable desired state
+owned by the lifecycle page, not from configuration alone. Each descriptor is
+then evaluated independently:
 
 - a valid configured-disabled descriptor enters `DISABLED`;
-- a valid configured-enabled descriptor enters `STARTING`;
+- a valid configured-enabled descriptor whose durable desired state is
+  `RUNNING` (stored, or seeded `RUNNING` by first-time bootstrap) enters
+  `STARTING`;
+- a valid configured-enabled descriptor whose durable desired state is
+  `STOPPED` (stored, or no record for a driver added after bootstrap) enters
+  `STOPPED` and is not started until a new start decision is accepted;
 - a driver-local invalid descriptor enters `FAILED` with `CONFIG_INVALID` and
   does not block the other entries;
 - a missing or unavailable provider enters `FAILED` with
@@ -87,7 +94,6 @@ starts any provider. Each descriptor is then evaluated independently:
 The core transitions are:
 
 ```text
-DISABLED  --start-->    STARTING
 STOPPED   --start-->    STARTING
 STARTING  --ready-->    RUNNING
 STARTING  --usable-->   DEGRADED
@@ -104,6 +110,11 @@ STARTING  --stop-->     STOPPING
 FAILED    --stop-->     STOPPING
 STOPPING  --drained-->  STOPPED
 ```
+
+A `DISABLED` driver has no start transition: a start request for it is refused
+with `FAILED_PRECONDITION` (refusal-table order 4). It leaves `DISABLED` only
+through a configuration change or reload, after which it is a configured-enabled
+descriptor handled by the startup and reconciliation rules above.
 
 The normative textual forms include `STARTING -> RUNNING`,
 `STARTING -> BACKOFF`, `BACKOFF -> STARTING`, and `STOPPING -> STOPPED`.
@@ -125,9 +136,11 @@ counter. A failed construction that never admits a provider cannot advance
 generation. A terminal failure or exhausted retry budget enters `FAILED`.
 
 `BACKOFF` has no hidden work other than its scheduled attempt. Stop cancels the
-timer before teardown. Start from `FAILED` creates a fresh retry budget and, on
+timer before teardown. Recovery from `FAILED` creates a fresh retry budget and, on
 successful provider admission, a new generation; it never reuses a half-closed
-transport instance. An automatic retry and an operator operation linearize
+transport instance. Superseded by the D3 amendment: a manual START with the
+current revision while desired is RUNNING is a no-op, and recovering `FAILED`
+belongs to the reconciler. An automatic retry and an operator operation linearize
 under the same per-driver operation lock, so neither can resurrect a stopped
 driver. Every asynchronous callback carries its captured generation and
 operation ID. The manager discards a callback whose generation or operation is
@@ -183,11 +196,13 @@ restore an effective capability.
 
 An unproven-close safety quarantine is represented by observed `FAILED`, reason
 `CLOSE_UNCONFIRMED`, an empty effective set, the `safety_quarantined` flag, and
-operation outcome `SAFETY_QUARANTINED`. It blocks manual start/restart,
+and no operation result field. It blocks any start or restart that would
+change desired state or require admission (refused with `FAILED_PRECONDITION`),
 automatic retry, provider construction, and generation advance for the rest of
-the process epoch. It cannot be cleared by an API operation, configuration
+the process epoch; a START that is a same-desired no-op returns normally. It cannot be cleared by an API operation, configuration
 reload, timer, or late callback. Only process restart creates a manager without
-that in-memory quarantine.
+that in-memory flag; an unresolved retained close obligation still blocks
+replacement admission until it completes.
 
 This is distinct from ordinary recoverable `FAILED`, which does not set
 `safety_quarantined` and may admit a later manual start. A drain timeout whose
@@ -202,17 +217,21 @@ provider instance.
 
 ## Configuration And Runtime Overrides
 
-Persistent add-on configuration supplies the process-start baseline. A runtime
-start or stop changes the manager's desired state through a
-process-epoch-local override. The override does not rewrite add-on options,
-does not persist credentials or endpoints, and does not survive a gateway
-process restart. On the next process epoch, desired state is derived again
-from the admitted add-on configuration.
+Superseded by the D3 amendment: durable desired state, owned by
+[`../../architecture/runtime-driver-lifecycle.md`](../../architecture/runtime-driver-lifecycle.md),
+survives a gateway process restart and is not discarded or re-derived from
+configuration. A configured-disabled driver is not startable; START and RESTART
+for it are refused with `FAILED_PRECONDITION` under the disabled-by-configuration row (order 4) of the
+refusal table. The two earlier sentences describing a process-epoch-local
+override that does not survive restart, and an operator temporarily starting a
+configured-disabled driver, no longer apply.
 
-Consequently, an operator can temporarily start a configured-disabled driver
-or stop a configured-enabled driver without silently changing Supervisor
-configuration. Persistent changes remain an explicit add-on configuration
-operation outside DriverManager V1.
+Persistent add-on configuration supplies eligibility and the baseline for a
+driver with no durable record (first-time bootstrap seeds enabled drivers
+`RUNNING`; a driver added later has no record and reads `STOPPED`). A runtime start or stop does not rewrite add-on
+options and never persists credentials or endpoints. Persistent configuration
+changes remain an explicit add-on configuration operation outside
+DriverManager V1.
 
 ## Add-on Validation Boundary
 
@@ -230,17 +249,22 @@ snapshot, audit record, command response, or log.
 
 ## Operation And Audit Model
 
-Mutating requests are asynchronous, bounded at admission, and serialized per
-driver. Drivers may progress in parallel with each other. Exactly one operation
-is active per driver; commands are not silently queued. Idempotency binds the
-caller-supplied key to the normalized driver ID and intent for the process
-epoch. Replaying the same binding returns the same operation result without a
-second lifecycle effect. Reusing the key for different intent returns
-`CONFLICT`.
+Superseded by the D3 amendment: mutating requests carry only a driver ID and
+an expected revision and return `{desired_state, desired_revision}`. There are
+no caller idempotency keys, no `CONFLICT` replay, no request or operation IDs and
+no completed-operation record. Concurrency is one current typed slot plus at
+most one reserved successor per driver. `TRANSITION_BUSY` means the decision
+path is busy: the typed transition slot is full or the namespace-wide decision
+serialization point was held beyond the bounded wait; it never reports an
+outcome of the revision comparison. A request that acquires the serialization
+point after its deadline expired is refused with `DEADLINE_EXCEEDED` before the
+revision comparison and the same-desired no-op test. A lost response is resolved by readback. The contract is owned by
+[`../../architecture/runtime-driver-lifecycle.md`](../../architecture/runtime-driver-lifecycle.md).
+Drivers may progress in parallel with each other.
 
-Every admitted, replayed, rejected, completed, or failed command emits one
-categorical audit record with request ID, operation ID, driver ID, kind,
-disposition, before and after revision, and timestamps. Audit data never
+Every accepted or refused command may emit a categorical audit record with
+driver ID, kind, refusal code, before and after desired revision, and
+timestamps, without request or operation IDs. Audit data never
 contains an endpoint, credential, raw transport error, protocol payload,
 certificate identity, or device identity.
 
@@ -286,8 +310,9 @@ pair:
 - an unproven-close fixture enters process-epoch quarantine, invokes no new
   constructor through start, restart, or retry, and remains distinct from
   ordinary recoverable failure;
-- a process restart discards runtime overrides and restores configuration
-  intent;
+- a process restart preserves durable desired state: stored `STOPPED` stays
+  `STOPPED` with no provider started, and stored `RUNNING` for a configured-enabled
+  driver reconciles to `STARTING`;
 - MCP, GraphQL, Portal, and Home Assistant expose parity at their respective
   rollout gates; and
 - logs, snapshots, responses, and audits remain secret-free and

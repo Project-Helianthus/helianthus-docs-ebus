@@ -349,6 +349,8 @@ python3 -m pytest -q tests/test_eebus_operator_admin_contract.py
 python3 -m pytest -q tests/test_driver_runtime_manager_v1.py
 python3 scripts/check_runtime_driver_registration.py
 python3 -m pytest -q tests/test_runtime_driver_registration.py
+python3 scripts/check_runtime_control_contract.py
+python3 -m pytest -q tests/test_runtime_control_contract.py
 python3 -m pytest -q tests/test_runtime_driver_registration_rendered.py
 python3 -m pytest -q tests/test_fronius_sunspec_phase1_contract.py
 python3 -m pytest -q tests/test_sunspec_model_chain_contract.py
