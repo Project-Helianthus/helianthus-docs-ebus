@@ -103,17 +103,20 @@ rather than resolved first-wins or last-wins. The same compact deterministic
 JSON encoding used by conformance enforces the 16 KiB request-body and 1 MiB
 response-body limits.
 
-The logical client is the authenticated mTLS principal fingerprint. Admission
-uses an integer monotonic-millisecond clock and evaluates concurrency before a
-token bucket. A request is in flight from admission until its terminal response;
+The request budget is keyed by the remote transport host, excluding the source
+port; this key is not an authenticated identity or a client principal. Requests
+from the same host share a budget, including consumers behind a shared relay.
+Admission uses an integer monotonic-millisecond clock and evaluates concurrency
+before a token bucket. A request is in flight from admission until its terminal response;
 the bucket starts with two tokens, has capacity two, and refills one token every
 1000 ms. Fixture order breaks ties at the same timestamp. Rejected requests do
 not consume a token. The conformance fixture includes an overlapping request and
 a same-client burst/refill sequence, so concurrency and rate limits are
-executable contracts rather than prose-only limits. A two-principal sequence
-requires simultaneous admission for distinct mTLS identities, then admits the
-first principal after its overlap rejection to prove both client isolation and
-non-consumption of a rate token.
+executable contracts rather than prose-only limits. A two-host sequence
+requires simultaneous admission for distinct host keys, then admits the
+first host after its overlap rejection to prove both budget isolation and
+non-consumption of a rate token. Fixture host labels are synthetic opaque
+budget references, not network coordinates or credentials.
 
 The request fixture retains both the exact UTF-8 `rawBody` and its decoded
 object. The validator measures `rawBody` before parsing, applies depth and
@@ -122,27 +125,25 @@ the documented body. Whitespace or alternate encoding cannot bypass the 16 KiB
 wire limit.
 
 The route is registered only on a dedicated TLS listener; it is absent from the
-generic HTTP listener that serves `/graphql` and subscriptions. The channel
-requires HTTPS with verified server identity and mandatory per-client mTLS.
-The deployment/operator boundary owns the listener configuration, server
-identity, CA/trust root, client issuance, allowed assets, rotation, and
-revocation. Cookies, shared credentials, and interactive credentials are not
-accepted.
+generic HTTP listener that serves `/graphql` and subscriptions. It uses
+server-TLS-only transport: TLS 1.3 with verified server identity provides
+transport integrity. No client certificate is required and no client principal
+is derived. The deployment/operator boundary owns the listener configuration,
+server identity, CA/trust root, and publication asset allow-list. Cookies,
+shared credentials, and interactive credentials are not accepted as client
+authentication.
 
-Unknown, revoked, expired, or lost client certificates; server-identity
-failure; and contract incompatibility all fail closed. Reconnect retries are
-bounded, and a successful reconnect obtains a fresh full snapshot rather than
-merging a partial response into prior state. Monotonic receipt times are local
-to one process lifetime and are not comparable across restart.
+Server-identity failure and contract incompatibility fail closed. Reconnect
+retries are bounded, and a successful reconnect obtains a fresh full snapshot
+rather than merging a partial response into prior state. Monotonic receipt
+times are local to one process lifetime and are not comparable across restart.
 
-An invalid client certificate fails during the TLS handshake and receives no
-GraphQL response. For an authenticated principal, contract mismatch returns
-`CONTRACT_INCOMPATIBLE`, a disallowed asset returns `ASSET_FORBIDDEN`, an
-unknown allowed asset returns `ASSET_NOT_FOUND`, and a provider with no retained
-canonical snapshot returns `SOURCE_UNAVAILABLE`. These errors return no
-partial snapshot and never fall back to generic GraphQL. A retained stale or
-expired canonical snapshot is data, not a transport error, and keeps its
-canonical availability/freshness state.
+After TLS establishment, contract mismatch returns `CONTRACT_INCOMPATIBLE`, a
+disallowed asset returns `ASSET_FORBIDDEN`, an unknown allowed asset returns
+`ASSET_NOT_FOUND`, and a provider with no retained canonical snapshot returns
+`SOURCE_UNAVAILABLE`. These errors return no partial snapshot and never fall
+back to generic GraphQL. A retained stale or expired canonical snapshot is data,
+not a transport error, and keeps its canonical availability/freshness state.
 
 Semantic admission is ordered: contract compatibility, asset allowlist, asset
 existence, then source-snapshot availability. Conformance binds each of the four
@@ -153,16 +154,15 @@ binds every declared request-rejection category to an executable malformed
 body, envelope mutation, GraphQL AST mutation, wire-size stimulus, or logical
 client event sequence.
 
-The four authenticated semantic failures and eleven authenticated request
+The four semantic failures and eleven request
 rejections use HTTP status `200` and the same closed GraphQL error envelope:
 `data` is `null`; `errors` contains exactly one row with
 the constant message `M2M request failed`, path `m2mCurrentSnapshot`, and only
 the applicable code in `extensions.code`. This follows non-null root-field error
 propagation while preventing asset, source, or deployment details from leaking
-through messages. TLS/client-certificate rejection remains pre-HTTP and returns
-no GraphQL envelope.
+through messages. TLS failure remains pre-HTTP and returns no GraphQL envelope.
 
-Authenticated request admission failures use the same envelope and add three
+Request admission failures use the same envelope and add three
 closed codes. Malformed JSON, duplicate keys, raw JSON nesting above 64, and
 invalid HTTP envelopes map to `REQUEST_INVALID`; forbidden or non-canonical GraphQL query shapes map to
 `QUERY_REJECTED`; body/query/field/concurrency/rate bounds map to
@@ -182,11 +182,11 @@ envelopes: duplicate-key JSON to `REQUEST_INVALID`, an aliased query to
 `REQUEST_LIMIT_EXCEEDED`. Implementations must preserve these input-to-output
 bindings rather than validating request and error examples independently.
 
-Credential rotation permits only the predecessor and replacement certificate
-during one operator-bounded overlap: issue replacement, verify it on the
-dedicated listener, then revoke the predecessor. Revocation is checked before
-asset authorization on every request. A lost credential has no in-band reset;
-recovery is an operator-issued replacement through the deployment boundary.
+The 0.7 operator decision removes M2M client-certificate authentication; it
+does not change protocol-native trust. SHIP pairing, SKI allow-lists, SPINE
+bindings, and Matter ACLs remain owned by their native protocol contracts.
+This application transport contract supplies no device qualification or native
+wire evidence. The companion is [gateway #1127](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1127).
 
 This route is the only public semantic ingress permitted for future private
 eeBUS or Matter bindings. It grants neither a private binding implementation
@@ -194,22 +194,22 @@ nor access to canonical or source-owned internals.
 
 ## Portal BFF Consumer Target
 
-FMV3-M5-06 treats Portal as one fixed least-privilege M2M client. Browser code
-does not call this listener and never receives its client private key,
-certificate, CA material, listener address, or asset identity. Instead, the
-gateway Portal backend uses a distinct deployment-owned client certificate to
-send the exact canonical query over TLS 1.3 to the already-running dedicated
-listener. It verifies the configured server identity and fixes one configured
-asset reference server-side.
+FMV3-M5-06 treats Portal as one fixed M2M consumer. Browser code does not call
+this listener and never receives its server trust material, listener address,
+or asset identity. The gateway Portal backend sends the exact canonical query
+over TLS 1.3 to the already-running dedicated listener without requiring a
+client certificate or deriving a client principal. It verifies the configured
+server identity and fixes one configured asset reference server-side, subject
+to the publication asset allow-list.
 
 The backend forwards this contract's closed success or error envelope without
 a second semantic DTO, query rewrite, direct canonical-provider call, generic
-GraphQL fallback, or cache merge. Missing, untrusted, revoked, or denied client
-credentials and wrong server identity remain terminal M2M failures. The Portal
-panel surfaces those failures and canonical stale/unavailable values as-is.
+GraphQL fallback, or cache merge. Wrong server identity and disallowed assets
+remain terminal M2M failures. The Portal panel surfaces those failures and
+canonical stale/unavailable values as-is.
 
-This BFF is not another ingress to `PUBLIC_GRAPHQL_M2M_V1`: it is an mTLS client
-of the dedicated route. The generic Portal listener does not mount the M2M
+This BFF is not another ingress to `PUBLIC_GRAPHQL_M2M_V1`: it is a
+server-TLS-only consumer of the dedicated route. The generic Portal listener does not mount the M2M
 handler, accept arbitrary GraphQL, or proxy raw registers. Portal raw Modbus
 diagnostics remain a separate bounded MCP-backed route and cannot add fields,
 arguments, unions, errors, or capabilities to this SDL or manifest.

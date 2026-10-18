@@ -194,7 +194,7 @@ REQUIRED = (
     "`POST /graphql` endpoint. That endpoint is protected by the stable eBUS MCP\ngraduation/parity contract.",
     "exclusive operation-to-route\nsplit, not a fallback or compatibility shim.",
     "does not expand the\naccepted #974 catalog/action endpoint.",
-    "source contract commit `a39d43fbeaf8d745222b85649ebb8494203163f0` and current open\nevidence head `a39d43fbeaf8d745222b85649ebb8494203163f0`; #975 remains open,\nintermediate, and unmerged, and this documentation does not claim it is\nmerged.",
+    "linked source contract and current open evidence; #975 remains open,\nintermediate, and unmerged, and this documentation does not claim it is\nmerged.",
     "`M8-TGT-01`,\n`M8-TGT-02`, `M8-TGT-03`, and `M8-TGT-04`",
     "Changing target atomically invalidates the active target-bound presentation:\ncapability, current errors/service, history, live-monitor strip, and pending\ncompletion must not bleed into the new target.",
     "Any late enable completion after a switch follows the same prior-target cleanup\nand cannot mutate the new target.",
@@ -481,7 +481,7 @@ def _decode_css_escapes(value: str) -> str:
         if match.group(1) is None:
             return match.group(2)
         codepoint = int(match.group(1), 16)
-        if codepoint == 0 or 0xD800 <= codepoint <= 0xDFFF or codepoint > 0x10FFFF:
+        if codepoint == 0 or 0xD800 <= codepoint <= 0xDFFF or codepoint > sys.maxunicode:
             return "\N{REPLACEMENT CHARACTER}"
         return chr(codepoint)
 
@@ -871,7 +871,7 @@ def _decode_css_escapes(value: str) -> str:
         if hexadecimal is None:
             return match.group(2)
         codepoint = int(hexadecimal, 16)
-        if codepoint == 0 or codepoint > 0x10FFFF or 0xD800 <= codepoint <= 0xDFFF:
+        if codepoint == 0 or codepoint > sys.maxunicode or 0xD800 <= codepoint <= 0xDFFF:
             return "\uFFFD"
         return chr(codepoint)
 

@@ -13,9 +13,8 @@ Those documents alone own protocol routes, partner views, certificate and OOB
 identity, raw-tree traversal, error vocabulary, persistence, and coordinator
 state-machine semantics. This page must not restate them; if a shared consumer
 rule conflicts with either canonical document, the protocol repository wins for
-that protocol concern. The shared boundary recognizes canonical docs-eebus
-merge `6f8154011c36f4811db473fea03db8544ab488bc` for this correction without
-copying its protocol details here.
+that protocol concern. The shared boundary follows the linked canonical
+docs-eebus contracts without copying their protocol details here.
 
 For a stable external-integrator map of the already merged northbound boundary,
 see [eeBUS Northbound External-Integrator Boundary](./eebus-northbound-integrator-reference.md).
@@ -59,19 +58,14 @@ discovery to authorize a dial, automatic trust, implicit persistence, direct
 store access, or a second pairing FSM. Route and error-code definitions remain
 in the canonical protocol API.
 
-## Host-local HTTP Access
+## HTTP Access Boundary
 
-The credential-free operator-admin HTTP boundary accepts only a host-local
-transport peer. It rejects a non-local transport peer before it reads or
-invokes the typed coordinator boundary, including for status and inspection
-requests. This is a host-local transport boundary, not an eeBUS-specific
-authentication mechanism.
-
-A remote consumer does not call this HTTP boundary directly. A deployment that
-needs a remote consumer supplies a separately owned shared access boundary or
-host-local relay; its identity and authorization contract is outside this
-eeBUS-specific API. That boundary must not grant direct trust-store or
-operator-socket access.
+The credential-free operator-admin HTTP boundary does not enforce a host-local
+transport peer check. Gateway #818 removed that check; status, inspection, and
+action admission must not be described as restricted to local peers by the
+handler. Deployment network exposure belongs to the shared access boundary,
+not an eeBUS-specific authentication mechanism. This does not grant direct
+trust-store or operator-socket access or weaken the typed action checks above.
 
 Responses, audit data, logs, metrics, traces, crash data, URLs, and shareable
 evidence exclude private keys, tokens, private PEM, trust-store bytes,
