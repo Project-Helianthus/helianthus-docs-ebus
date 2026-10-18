@@ -1,0 +1,105 @@
+{
+  "evidence_status": "Hypothesis",
+  "scope": "synthetic_read_projection_contract",
+  "keys": [
+    {
+      "pack_id": "helianthus.pack.thermal",
+      "pack_version": "1.0.0",
+      "fact_id": "thermal.setpoint.dhw_temperature",
+      "dimensions": [
+        {
+          "id": "thermal.dimension.dhw",
+          "value": {
+            "kind": "text",
+            "text": "dhw:alpha"
+          }
+        },
+        {
+          "id": "thermal.dimension.temperature",
+          "value": {
+            "kind": "text",
+            "text": "temperature:dhw_requested"
+          }
+        }
+      ]
+    },
+    {
+      "pack_id": "helianthus.pack.thermal",
+      "pack_version": "1.0.0",
+      "fact_id": "thermal.setpoint.dhw_temperature",
+      "dimensions": [
+        {
+          "id": "thermal.dimension.dhw",
+          "value": {
+            "kind": "text",
+            "text": "dhw:beta"
+          }
+        },
+        {
+          "id": "thermal.dimension.temperature",
+          "value": {
+            "kind": "text",
+            "text": "temperature:dhw_requested"
+          }
+        }
+      ]
+    }
+  ],
+  "value": {
+    "kind": "quantity",
+    "quantity": {
+      "number": {
+        "coefficient": "5",
+        "exponent10": 1
+      },
+      "unit": "unit.celsius"
+    }
+  },
+  "projection_cases": [
+    {
+      "case": "two_services",
+      "requested": [
+        {
+          "kind": "fact",
+          "item_id": "thermal.setpoint.dhw_temperature"
+        }
+      ],
+      "dispositions": [
+        {
+          "kind": "fact",
+          "item_id": "thermal.setpoint.dhw_temperature",
+          "outcome": "withheld",
+          "source_keys": [],
+          "loss": [
+            "dhw_service_identity_unrepresentable"
+          ]
+        }
+      ],
+      "absent_services": []
+    },
+    {
+      "case": "partial_absence",
+      "requested": [
+        {
+          "kind": "fact",
+          "item_id": "thermal.setpoint.dhw_temperature"
+        }
+      ],
+      "dispositions": [
+        {
+          "kind": "fact",
+          "item_id": "thermal.setpoint.dhw_temperature",
+          "outcome": "withheld",
+          "source_keys": [],
+          "loss": [
+            "dhw_service_identity_unrepresentable"
+          ]
+        }
+      ],
+      "absent_services": [
+        "dhw:beta"
+      ]
+    }
+  ],
+  "current_pack_accepts_proposed_keys": false
+}
