@@ -45,10 +45,10 @@ def test_manifest_is_locked_to_canonical_catalog_and_closed_public_surface():
     assert manifest["max_provenance_per_snapshot"] == 256
     assert manifest["max_capabilities_per_snapshot"] == 1
     assert manifest["required_response_fields"] == ["contractId", "canonicalContractId", "assetRef", "generation", "producedAt", "evaluatedMonotonicNs", "sourceTimeState", "currentSourceOriginRef", "facts", "capabilities", "provenance", "requestedOutputs", "projectionReport"]
-    assert manifest["operator_authority"] == ["dedicated_listener", "server_identity", "ca_and_trust_root", "client_certificate_issuance", "asset_allowlist", "rotation", "revocation"]
+    assert manifest["operator_authority"] == ["dedicated_listener", "server_identity", "ca_and_trust_root", "asset_allowlist"]
     assert manifest["request_bounds"] == {"method": "POST", "operation_name": "M2MCurrentSnapshot", "max_body_bytes": 16384, "max_query_depth": 8, "max_selected_fields": 256, "max_concurrency_per_client": 1, "requests_per_second_per_client": 1, "burst_per_client": 2, "max_response_bytes": 1048576, "forbidden_graphql_features": ["batching", "aliases", "named_fragments", "directives", "schema_or_type_introspection", "get", "subscriptions", "multiple_operations"], "allowed_graphql_features": ["inline_type_conditions_for_closed_unions", "typename_for_closed_unions"]}
     assert manifest["error_contract"]["partial_snapshot_on_error"] is False
-    assert manifest["credential_rotation"]["maximum_simultaneously_valid_certificates_per_principal"] == 2
+    assert "credential_rotation" not in manifest
     assert manifest["forbidden_surface"] == ["raw_registers", "source_shadow", "endpoints", "mutations", "subscriptions", "history", "unbounded_lists", "generic_graphql_fallback"]
 
 
@@ -65,7 +65,7 @@ def test_sdl_is_structurally_query_only_and_has_no_generic_surface():
 def test_fixture_and_document_cover_security_recovery_and_private_ingress_boundary():
     validate(MANIFEST, CANONICAL, CASES)
     text = DOC.read_text(encoding="utf-8")
-    for phrase in ("dedicated TLS listener", "verified server identity", "per-client mTLS", "fails closed", "fresh full snapshot", "not comparable across restart", "only public semantic ingress"):
+    for phrase in ("dedicated TLS listener", "verified server identity", "server-TLS-only transport", "fails closed", "fresh full snapshot", "not comparable across restart", "only public semantic ingress"):
         assert phrase in text
 
 
@@ -447,7 +447,7 @@ def test_source_registry_fixture_path_is_manifest_authority():
     )
 
 
-def test_authenticated_errors_have_one_exact_graphql_envelope_each():
+def test_graphql_errors_have_one_exact_graphql_envelope_each():
     manifest, cases = load(MANIFEST), load(CASES)
     expected = {
         "CONTRACT_INCOMPATIBLE",
@@ -470,7 +470,7 @@ def test_authenticated_errors_have_one_exact_graphql_envelope_each():
                 "extensions": {"code": item["code"]},
             }
         ]
-    assert manifest["error_contract"]["authenticated_graphql_http_status"] == 200
+    assert manifest["error_contract"]["graphql_http_status"] == 200
 
 
 def test_mixed_retention_binds_one_current_source_origin():
@@ -743,15 +743,15 @@ def test_every_request_rejection_has_executable_stimulus_and_limit_sequence(tmp_
         if event["action"] == "START" and event["atMs"] == 0
     ]
     assert {(event["clientRef"], event["outcome"]) for event in starts_at_zero} == {
-        ("mtls-principal-a", "ADMIT"),
-        ("mtls-principal-b", "ADMIT"),
+        ("rate-limit-host-a", "ADMIT"),
+        ("rate-limit-host-b", "ADMIT"),
     }
     assert any(
-        event["clientRef"] == "mtls-principal-a"
+        event["clientRef"] == "rate-limit-host-a"
         and event["outcome"] == "REJECT"
         for event in isolation
     )
-    assert isolation[-2]["clientRef"] == "mtls-principal-a"
+    assert isolation[-2]["clientRef"] == "rate-limit-host-a"
     assert isolation[-2]["outcome"] == "ADMIT"
 
     for index in (1, len(isolation) - 2):
@@ -1025,13 +1025,13 @@ def test_query_authority_and_isolation_shape_are_independent_of_mutable_fixture(
 
     sequential = copy.deepcopy(cases)
     sequential["admission_sequences"]["client_isolation"]["events"] = [
-        {"clientRef": "mtls-principal-a", "requestId": "a1", "atMs": 0, "action": "START", "outcome": "ADMIT"},
-        {"clientRef": "mtls-principal-a", "requestId": "a2", "atMs": 1, "action": "START", "outcome": "REJECT", "code": "REQUEST_LIMIT_EXCEEDED"},
-        {"clientRef": "mtls-principal-a", "requestId": "a1", "atMs": 2, "action": "COMPLETE", "outcome": "COMPLETE"},
-        {"clientRef": "mtls-principal-a", "requestId": "a3", "atMs": 2, "action": "START", "outcome": "ADMIT"},
-        {"clientRef": "mtls-principal-a", "requestId": "a3", "atMs": 2, "action": "COMPLETE", "outcome": "COMPLETE"},
-        {"clientRef": "mtls-principal-b", "requestId": "b1", "atMs": 3, "action": "START", "outcome": "ADMIT"},
-        {"clientRef": "mtls-principal-b", "requestId": "b1", "atMs": 3, "action": "COMPLETE", "outcome": "COMPLETE"},
+        {"clientRef": "rate-limit-host-a", "requestId": "a1", "atMs": 0, "action": "START", "outcome": "ADMIT"},
+        {"clientRef": "rate-limit-host-a", "requestId": "a2", "atMs": 1, "action": "START", "outcome": "REJECT", "code": "REQUEST_LIMIT_EXCEEDED"},
+        {"clientRef": "rate-limit-host-a", "requestId": "a1", "atMs": 2, "action": "COMPLETE", "outcome": "COMPLETE"},
+        {"clientRef": "rate-limit-host-a", "requestId": "a3", "atMs": 2, "action": "START", "outcome": "ADMIT"},
+        {"clientRef": "rate-limit-host-a", "requestId": "a3", "atMs": 2, "action": "COMPLETE", "outcome": "COMPLETE"},
+        {"clientRef": "rate-limit-host-b", "requestId": "b1", "atMs": 3, "action": "START", "outcome": "ADMIT"},
+        {"clientRef": "rate-limit-host-b", "requestId": "b1", "atMs": 3, "action": "COMPLETE", "outcome": "COMPLETE"},
     ]
     sequential_path = tmp_path / "sequential-clients.json"
     sequential_path.write_text(json.dumps(sequential), encoding="utf-8")
@@ -1224,7 +1224,7 @@ def test_positive_fixture_is_an_executable_graphql_response():
     assert result.data == {"m2mCurrentSnapshot": payload}
 
 
-@pytest.mark.parametrize("legacy_address", ["2130706433", "0x7f000001", "0x7f.0.0.1"])
+@pytest.mark.parametrize("legacy_address", [str((127 << 24) | 1), format((127 << 24) | 1, "#x"), "0x7f.0.0.1"])
 def test_opaque_dimensions_reject_legacy_ipv4_forms(legacy_address):
     manifest, canonical, cases = load(MANIFEST), load(CANONICAL), load(CASES)
     candidate = copy.deepcopy(cases["positive"])
@@ -1238,3 +1238,87 @@ def test_opaque_dimensions_reject_legacy_ipv4_forms(legacy_address):
     report = payload["projectionReport"][0]
     report.update(factId="pv.dc.current", dimension={"inputId": legacy_address})
     assert "dimension_redaction" in validate_case(candidate, manifest, canonical)
+
+
+@pytest.mark.parametrize("field,value", [
+    ("https", "UNVERIFIED_SERVER_IDENTITY"),
+    ("minimum_tls_version", "1.2"),
+    ("client_authentication", "MTLS_PER_CLIENT_REQUIRED"),
+    ("client_principal", "CERTIFICATE_FINGERPRINT"),
+    ("forbidden_credentials", []),
+])
+def test_transport_manifest_rejects_security_drift(tmp_path, field, value):
+    manifest = load(MANIFEST)
+    manifest["transport_security"][field] = value
+    path = tmp_path / "transport-manifest.json"
+    path.write_text(json.dumps(manifest), encoding="utf-8")
+    with pytest.raises(ValidationError, match="transport_security"):
+        validate(path, CANONICAL, CASES)
+
+
+@pytest.mark.parametrize("field,value", [
+    ("serverIdentityVerified", False),
+    ("clientCertificatePresented", True),
+    ("clientPrincipal", "synthetic-principal"),
+])
+def test_transport_fixture_requires_success_without_client_principal(tmp_path, field, value):
+    cases = load(CASES)
+    cases["transport"][field] = value
+    path = tmp_path / "transport-case.json"
+    path.write_text(json.dumps(cases), encoding="utf-8")
+    with pytest.raises(ValidationError, match="transport_fixture"):
+        validate(MANIFEST, CANONICAL, path)
+
+
+@pytest.mark.parametrize("key", ["rate_limit_key", "concurrency_key"])
+@pytest.mark.parametrize("value", ["MTLS_PRINCIPAL_FINGERPRINT", "GLOBAL", None])
+def test_admission_keys_require_remote_host(tmp_path, key, value):
+    manifest = load(MANIFEST)
+    assert manifest["admission_model"][key] == "REMOTE_HOST"
+    if value is None:
+        del manifest["admission_model"][key]
+    else:
+        manifest["admission_model"][key] = value
+    path = tmp_path / "principal-budget.json"
+    path.write_text(json.dumps(manifest), encoding="utf-8")
+    with pytest.raises(ValidationError, match="admission_model"):
+        validate(path, CANONICAL, CASES)
+
+
+def test_semantic_state_rejects_restored_client_authentication(tmp_path):
+    cases = load(CASES)
+    for item in cases["semantic_rejections"]:
+        assert "authenticated" not in item["serverState"]
+    cases["semantic_rejections"][0]["serverState"]["authenticated"] = True
+    path = tmp_path / "authenticated-state.json"
+    path.write_text(json.dumps(cases), encoding="utf-8")
+    with pytest.raises(ValidationError, match="semantic_rejection_shape"):
+        validate(MANIFEST, CANONICAL, path)
+
+
+def test_portal_consumer_uses_server_tls_without_client_principal():
+    for path in (DOC, ROOT / "api/portal.md"):
+        text = " ".join(path.read_text(encoding="utf-8").split()).lower()
+        assert "server-tls-only transport" in text
+        assert "no client certificate is required and no client principal is derived" in text
+        assert "allow-list" in text
+        for forbidden in (
+            "mandatory per-client mtls", "distinct client certificate",
+            "authenticated mtls principal fingerprint", "revocation is checked",
+        ):
+            assert forbidden not in text
+
+
+@pytest.mark.parametrize("field,value", [
+    ("dedicated_tls_listener", False),
+    ("operator_authority", ["dedicated_listener", "server_identity", "ca_and_trust_root"]),
+    ("recovery", {"unknown_revoked_expired_or_lost_client_certificate": "FAIL_CLOSED"}),
+    ("credential_rotation", {}),
+])
+def test_transport_authority_and_recovery_cannot_restore_client_credentials(tmp_path, field, value):
+    manifest = load(MANIFEST)
+    manifest[field] = value
+    path = tmp_path / "transport-authority.json"
+    path.write_text(json.dumps(manifest), encoding="utf-8")
+    with pytest.raises(ValidationError, match="transport_security"):
+        validate(path, CANONICAL, CASES)
