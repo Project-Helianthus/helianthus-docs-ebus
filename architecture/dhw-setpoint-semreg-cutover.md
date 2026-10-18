@@ -99,10 +99,20 @@ For a qualified controller requested-target source only, propose:
 
 This is a **Hypothesis** for migration acceptance, not a new definition or a
 claim that these sources are qualified today. The current pack can express a
-DHW requested temperature, with numeric bounds -50..150 °C; those pack bounds
+DHW requested temperature with only `thermal.dimension.temperature`, with
+numeric bounds -50..150 °C; those pack bounds
 are representation limits, not equipment safety limits. The source binding
 must establish requested role, unit, profile, service owner, native domain and
-freshness. Absent that evidence, retain a candidate with `qualification`
+freshness. The current Thermal validator rejects the proposed additional
+`thermal.dimension.dhw` on this fact. **Proven** implementation constraint:
+this two-dimension binding is not currently representable. Withhold it with
+explicit service-identity loss until the pack supports the proposed key or a
+separately reviewed binding preserves service identity. Removing the service
+dimension merely to pass validation would lose identity. All `exact` results
+below are conditional acceptance requirements after that blocker is resolved;
+the current fixture expects one aggregate `withheld` disposition for both the
+two-service and partial-absence cases. Absent qualification evidence, retain a
+candidate with `qualification`
 `candidate`/`unknown` as appropriate and withhold consumer admission. Do not
 relabel it `qualified` because the pack accepts the number.
 
@@ -145,7 +155,15 @@ remain Helianthus 0.11 work.
 
 ## Proposed transitions and synthetic acceptance cases
 
-These are manual contract cases, not executed tests or native observations.
+These are proposed contract cases, not native observations. The
+[synthetic binding fixture](fixtures/dhw-setpoint-semreg-cutover-v1.json) is
+checked by `tests/test_dhw_setpoint_semreg_cutover.py` for binding and shared
+definition projection invariants, and by the existing Thermal contract Go
+test module against its declared dependency for rejection of the proposed
+two-dimension key and validity of the supported temperature-only form, unit
+and representation range. The fixture losses are synthetic contract summaries, not serialized
+SemReg `LossDetail` records. These checks do not implement a downstream
+projector or execute the remaining transition cases.
 Alpha/beta identify synthetic services; values carry no capture metadata.
 Every case preserves raw evidence separately from the canonical interpretation.
 
