@@ -11,7 +11,7 @@ not enable a binding. Nothing is stable before Helianthus 1.0.
 
 ## Evidence and source authority
 
-- [Native register catalog](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/vaillant/ebus-vaillant-B524-register-map.md): sections “GG=0x01 — Native Domestic Hot Water”, “opmode — Operation mode”, and “sfmode — Special function”. These are the public native contract first; candidate descriptions remain candidates.
+- [Native register map](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/vaillant/ebus-vaillant-B524-register-map.md): sections “GG=0x01 — Native Domestic Hot Water”, “opmode — Operation mode”, and “sfmode — Special function”. These are the public native contract first; candidate descriptions remain candidates.
 - [Legacy semantic mapping](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/b524-semantic-mapping.md): sections `ebus.v1.semantic.dhw.get`, `ebus.v1.semantic.boiler_status.get`, and “SemReg thermal v1 read-only Vaillant mapping”.
 - [Gateway implementation](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/cmd/gateway/semantic_vaillant.go): `refreshDHWSlowConfig`, `refreshDHW`, `cachedDHWDerivationInputs`, `readDhwUint16`, `readB524Uint16`, `deriveDhwModeAndPreset`, `derivePresetFromSpecialFunctionAndOpMode`, `normalizeSpecialFunctionToken`, `publishDHW`, `expireDHWIfStaleLocked`, `mergeBoilerDHWFieldsFromSnapshot`, and `decodeDhwMode`.
 - [Thermal definitions](https://github.com/Project-Helianthus/helianthus-semreg/blob/main/semreg/v1/packs/thermal/definitions.go): `fields`, `dimensions`, `services`, `capabilities`, `operations`, and `Metadata`.
@@ -31,19 +31,19 @@ Public main links identify source files, not immutable runtime evidence.
 The exact local DHW read namespace is `PB=0xB5, SB=0x24, OP=0x02,
 GG=0x01, II=0x00`, with the register below. The current poller fixes
 `dhwInstance=0x00`; `OP=0x06, GG=0x01` means primary heat sources and is never
-a DHW replacement. The catalog only establishes this local instance; a second
+a DHW replacement. The native register map only establishes this local instance; a second
 instance is an identity-isolation requirement, not a claim of native support.
 
 | Input | Register, native type and evidence | Current behavior and loss risk |
 | --- | --- | --- |
-| Native configured mode | `RR=0x0003`, `u16`, catalog range 0..2; opmode DHW labels 0 off, 1 auto, 2 heat. The enum also lists 3 night, outside that row's range and not observed in practice in the catalog's VRC720-family context. | `refreshDHWSlowConfig` uses `readDhwUint16`, retains the decimal `ConfigurationDHWOperationMode` token, and derives mode/preset with cached special function. `deriveDhwModeAndPreset`: 0 → `off`, 1 → `auto`, 2 → `heat`; nil or other values default to `auto` inside the helper. Callers constrain when it runs; this is not proof that missing input is auto. |
-| Special-function mode input | `RR=0x000D`, catalog `u8`, scan-validated one byte; normal code 0, DHW load code 6 in `sfmode`. The catalog's write/reaction descriptions are candidate evidence only. | `dhw_special_function` points here, but `refreshDHW` calls `readDhwUint16`, which delegates through `readB524Uint16` to `decodeB524Uint16`. Keep the original one-byte/type evidence rather than asserting a two-byte native layout. The raw decimal token becomes `StateSpecialFunction`; helper normalization recognizes 2 as quickveto and 3/4 as away, but not 6 as load. Those generic helper labels do not establish DHW semantics. |
-| Special-function state | `RR=0x000F`, catalog `u16` state, not gated by circuit type. Code 9 as one-time tank loading is explicitly candidate evidence. | `refreshDHW` reads `0x000D`, not this selector. The legacy mapping table's `state` from `0x000D` is not evidence that `0x000F` was acquired. No qualified active/loading interpretation follows. |
+| Native configured mode | `RR=0x0003`, `u16`, native range 0..2; opmode DHW labels 0 off, 1 auto, 2 heat. The enum also lists 3 night, outside that row's range and not observed in practice in VRC720-family behaviour. | `refreshDHWSlowConfig` uses `readDhwUint16`, retains the decimal `ConfigurationDHWOperationMode` token, and derives mode/preset with cached special function. `deriveDhwModeAndPreset`: 0 → `off`, 1 → `auto`, 2 → `heat`; nil or other values default to `auto` inside the helper. Callers constrain when it runs; this is not proof that missing input is auto. |
+| Special-function mode input | `RR=0x000D`, `u8`, observed one-byte reply width; normal code 0, DHW load code 6 in `sfmode`. The write/reaction descriptions for this register are candidate evidence only. | `dhw_special_function` points here, but `refreshDHW` calls `readDhwUint16`, which delegates through `readB524Uint16` to `decodeB524Uint16`. Keep the original one-byte/type evidence rather than asserting a two-byte native layout. The raw decimal token becomes `StateSpecialFunction`; helper normalization recognizes 2 as quickveto and 3/4 as away, but not 6 as load. Those generic helper labels do not establish DHW semantics. |
+| Special-function state | `RR=0x000F`, `u16` state, not gated by circuit type. Code 9 as one-time tank loading is explicitly candidate evidence. | `refreshDHW` reads `0x000D`, not this selector. The legacy mapping table's `state` from `0x000D` is not evidence that `0x000F` was acquired. No qualified active/loading interpretation follows. |
 | Time-program membership | No exact membership selector or Boolean derivation is established by these sources. | Preset `schedule` is selected from mode 1, or helper fallback for auto. It is not a read of current slot membership. No native membership fact may be reconstructed from that label. |
 | Boost | Candidate load code 6 at `0x000D` and candidate state 9 at `0x000F` are different inputs. | Neither is an acquired, qualified Boolean boost observation here; the preset helper does not turn 6 into boost. A configured special function does not prove that loading is active. |
-| Operation state | `RR=0x000F` remains raw special-function state. The separate catalog observations at `RR=0x0002` and `RR=0x0006` in this same DHW namespace do not establish a qualified equivalence to operation state. | No qualified whole-system action or active/idle operation follows from configured mode, schedule or special function. This slice adds no alternate acquisition path. |
+| Operation state | `RR=0x000F` remains raw special-function state. The separate DHW pump-active status registers at `RR=0x0002` (circulation pump) and `RR=0x0006` (DHW pump) in this same DHW namespace do not establish a qualified equivalence to operation state; such an equivalence stays a Hypothesis pending native correlation. | No qualified whole-system action or active/idle operation follows from configured mode, schedule or special function. This slice adds no alternate acquisition path. |
 
-For gated rows the catalog's discovery predicate is `RR=0x0001`, exact two-byte
+For gated rows the native discovery predicate is `RR=0x0001`, exact two-byte
 UIN, nonzero for presence; zero is `not_present`, and empty/wrong-width/NACK/
 decode failure/unmatched is `unknown`. That presence zero is distinct from
 mode zero, which is valid off. Ungated `0x000F` does not establish a DHW service
@@ -141,7 +141,7 @@ remains driver-owned. No new major or experimental namespace is introduced.
 
 ## Synthetic acceptance cases
 
-These are manual contract examples, not captures, executable fixtures, native
+These are manual contract examples, not observations, executable fixtures, native
 proof, or runtime tests. Codes are source values; identities A/B and epochs
 old/new are synthetic. Every row assumes independent qualification evaluation;
 none grants a binding merely by supplying valid bytes.
@@ -150,7 +150,7 @@ none grants a binding merely by supplying valid bytes.
 | --- | --- | --- |
 | Missing and unknown mode | Mode absent, then raw 7, special function 0 | Missing and unknown code remain distinct. Helper default auto is legacy code behavior only; neither permits an auto fact. Retain 7 without inventing its native meaning. |
 | Valid off / normal special function | Mode raw 0, special-function byte `00` | Retain valid off and normal-code evidence; neither missing nor false by default. DHW `off` and mirror `OFF` match only as legacy renderings of this same raw source; no system-off equivalence. |
-| Decoder conflict | Mode raw 1, then raw 2 | Preserve DHW auto/heat versus mirror ON/AUTO and native raw code for each. Mode raw 3 remains the catalog enum/range discrepancy, not a qualified night mode. |
+| Decoder conflict | Mode raw 1, then raw 2 | Preserve DHW auto/heat versus mirror ON/AUTO and native raw code for each. Mode raw 3 remains the native enum/range discrepancy, not a qualified night mode. |
 | Mode versus special function | Mode raw 0; `0x000D` byte `06`; independent `0x000F` raw state 9 candidate | Do not rewrite off into heat or action active. Keep all three selectors separate. Load/boost and state interpretation remain Hypothesis; the legacy helper does not recognize 6. One byte must not be silently documented as two. |
 | Legacy preset ambiguity | Mode 1 with special-function codes 2, 3 or 4 | Code helper yields quickveto/away; DHW native meaning is not qualified by those generic labels. No boost or operation equivalence. |
 | Two DHW identities | Qualified identity A at one source and identity B at a different source, each with local `II=0x00`; different mode values | Keep separate service identities, epochs and native evidence. Singleton legacy publication is not proof of multi-DHW aggregation. A synthetic `II=0x01` candidate remains unsupported until separately qualified; never collapse into A. |
@@ -173,7 +173,7 @@ Missing evidence includes qualified per-family decoding and reply widths,
 special-function mode/state correlation, membership/boost derivation, second
 DHW identity support, component freshness policy and replacement/arbitration
 runtime behavior. No command or writable capability follows from read metadata,
-raw zero, catalog flags or candidate write descriptions. This contract does not
+raw zero, register flag values or candidate write descriptions. This contract does not
 qualify hardware, change polling or writes, implement a downstream projection,
 or close the parent issue. Independent review and applicable committed-head
 gates remain required for integration.
