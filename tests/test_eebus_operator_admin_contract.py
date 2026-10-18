@@ -24,7 +24,7 @@ def test_shared_operator_boundary_has_no_eebus_specific_authentication() -> None
         "canonical protocol-specific contract remains exclusively in",
         "post-m9-operator-pairing-browsers-v1.md",
         "post-m9-operator-admin-v1.md",
-        "6f8154011c36f4811db473fea03db8544ab488bc",
+        "follows the linked canonical docs-eebus contracts",
         "Those documents alone own protocol routes",
         "`eebus.v1.*` remains the only eeBUS MCP namespace",
         "introduces no eeBUS-specific login, session, cookie, CSRF token, owner credential, Home Assistant credential, or eeBUS reauthentication",
@@ -50,15 +50,23 @@ def test_shared_operator_boundary_has_no_eebus_specific_authentication() -> None
         assert forbidden not in text
 
 
-def test_operator_admin_boundary_is_host_local_without_eebus_credentials() -> None:
+def test_operator_admin_boundary_has_no_host_local_peer_enforcement() -> None:
     text = _normalized(CONTRACT)
     for required in (
-        "host-local transport peer",
-        "rejects a non-local transport peer before it reads or invokes the typed coordinator boundary",
+        "does not enforce a host-local transport peer check",
+        "Gateway #818 removed that check",
+        "status, inspection, and action admission",
+        "Deployment network exposure belongs to the shared access boundary",
         "not an eeBUS-specific authentication mechanism",
-        "A remote consumer does not call this HTTP boundary directly",
+        "does not grant direct trust-store or operator-socket access",
     ):
         assert required in text
+    for forbidden in (
+        "accepts only a host-local transport peer",
+        "rejects a non-local transport peer",
+        "A remote consumer does not call this HTTP boundary directly",
+    ):
+        assert forbidden not in text
 
 
 def test_protocol_contract_is_linked_not_duplicated() -> None:

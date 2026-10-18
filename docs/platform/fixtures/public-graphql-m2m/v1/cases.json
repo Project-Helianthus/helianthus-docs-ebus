@@ -350,7 +350,6 @@
         "assetRef": "pv-asset-01"
       },
       "serverState": {
-        "authenticated": true,
         "allowedAssets": [
           "pv-asset-01"
         ],
@@ -372,7 +371,6 @@
         "assetRef": "pv-asset-02"
       },
       "serverState": {
-        "authenticated": true,
         "allowedAssets": [],
         "presentAssets": [
           "pv-asset-02"
@@ -392,7 +390,6 @@
         "assetRef": "pv-asset-03"
       },
       "serverState": {
-        "authenticated": true,
         "allowedAssets": [
           "pv-asset-03"
         ],
@@ -410,7 +407,6 @@
         "assetRef": "pv-asset-04"
       },
       "serverState": {
-        "authenticated": true,
         "allowedAssets": [
           "pv-asset-04"
         ],
@@ -431,7 +427,6 @@
         "assetRef": "pv-asset-05"
       },
       "serverState": {
-        "authenticated": true,
         "allowedAssets": [],
         "presentAssets": [],
         "snapshotAvailableAssets": []
@@ -447,7 +442,6 @@
         "assetRef": "pv-asset-06"
       },
       "serverState": {
-        "authenticated": true,
         "allowedAssets": [],
         "presentAssets": [],
         "snapshotAvailableAssets": []
@@ -463,7 +457,6 @@
         "assetRef": "pv-asset-07"
       },
       "serverState": {
-        "authenticated": true,
         "allowedAssets": [
           "pv-asset-07"
         ],
@@ -482,7 +475,7 @@
           "atMs": 0,
           "action": "START",
           "outcome": "ADMIT",
-          "clientRef": "mtls-principal-a"
+          "clientRef": "rate-limit-host-a"
         },
         {
           "requestId": "c2",
@@ -490,14 +483,14 @@
           "action": "START",
           "outcome": "REJECT",
           "code": "REQUEST_LIMIT_EXCEEDED",
-          "clientRef": "mtls-principal-a"
+          "clientRef": "rate-limit-host-a"
         },
         {
           "requestId": "c1",
           "atMs": 2,
           "action": "COMPLETE",
           "outcome": "COMPLETE",
-          "clientRef": "mtls-principal-a"
+          "clientRef": "rate-limit-host-a"
         }
       ]
     },
@@ -509,28 +502,28 @@
           "atMs": 0,
           "action": "START",
           "outcome": "ADMIT",
-          "clientRef": "mtls-principal-b"
+          "clientRef": "rate-limit-host-b"
         },
         {
           "requestId": "r1",
           "atMs": 0,
           "action": "COMPLETE",
           "outcome": "COMPLETE",
-          "clientRef": "mtls-principal-b"
+          "clientRef": "rate-limit-host-b"
         },
         {
           "requestId": "r2",
           "atMs": 0,
           "action": "START",
           "outcome": "ADMIT",
-          "clientRef": "mtls-principal-b"
+          "clientRef": "rate-limit-host-b"
         },
         {
           "requestId": "r2",
           "atMs": 0,
           "action": "COMPLETE",
           "outcome": "COMPLETE",
-          "clientRef": "mtls-principal-b"
+          "clientRef": "rate-limit-host-b"
         },
         {
           "requestId": "r3",
@@ -538,7 +531,7 @@
           "action": "START",
           "outcome": "REJECT",
           "code": "REQUEST_LIMIT_EXCEEDED",
-          "clientRef": "mtls-principal-b"
+          "clientRef": "rate-limit-host-b"
         },
         {
           "requestId": "r4",
@@ -546,43 +539,43 @@
           "action": "START",
           "outcome": "REJECT",
           "code": "REQUEST_LIMIT_EXCEEDED",
-          "clientRef": "mtls-principal-b"
+          "clientRef": "rate-limit-host-b"
         },
         {
           "requestId": "r5",
           "atMs": 1000,
           "action": "START",
           "outcome": "ADMIT",
-          "clientRef": "mtls-principal-b"
+          "clientRef": "rate-limit-host-b"
         },
         {
           "requestId": "r5",
           "atMs": 1000,
           "action": "COMPLETE",
           "outcome": "COMPLETE",
-          "clientRef": "mtls-principal-b"
+          "clientRef": "rate-limit-host-b"
         }
       ]
     },
     "client_isolation": {
-      "id": "two-principal-isolation-v1",
+      "id": "two-host-isolation-v1",
       "events": [
         {
-          "clientRef": "mtls-principal-a",
+          "clientRef": "rate-limit-host-a",
           "requestId": "i-a1",
           "atMs": 0,
           "action": "START",
           "outcome": "ADMIT"
         },
         {
-          "clientRef": "mtls-principal-b",
+          "clientRef": "rate-limit-host-b",
           "requestId": "i-b1",
           "atMs": 0,
           "action": "START",
           "outcome": "ADMIT"
         },
         {
-          "clientRef": "mtls-principal-a",
+          "clientRef": "rate-limit-host-a",
           "requestId": "i-a2",
           "atMs": 1,
           "action": "START",
@@ -590,28 +583,28 @@
           "code": "REQUEST_LIMIT_EXCEEDED"
         },
         {
-          "clientRef": "mtls-principal-a",
+          "clientRef": "rate-limit-host-a",
           "requestId": "i-a1",
           "atMs": 2,
           "action": "COMPLETE",
           "outcome": "COMPLETE"
         },
         {
-          "clientRef": "mtls-principal-b",
+          "clientRef": "rate-limit-host-b",
           "requestId": "i-b1",
           "atMs": 2,
           "action": "COMPLETE",
           "outcome": "COMPLETE"
         },
         {
-          "clientRef": "mtls-principal-a",
+          "clientRef": "rate-limit-host-a",
           "requestId": "i-a3",
           "atMs": 2,
           "action": "START",
           "outcome": "ADMIT"
         },
         {
-          "clientRef": "mtls-principal-a",
+          "clientRef": "rate-limit-host-a",
           "requestId": "i-a3",
           "atMs": 2,
           "action": "COMPLETE",
@@ -1085,5 +1078,10 @@
         }
       }
     ]
+  },
+  "transport": {
+    "serverIdentityVerified": true,
+    "clientCertificatePresented": false,
+    "clientPrincipal": null
   }
 }

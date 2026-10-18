@@ -499,8 +499,8 @@ def _looks_like_network_endpoint(value):
                 else:
                     parsed.append(int(component, 10))
             maxima = {
-                1: (0xFFFFFFFF,),
-                2: (0xFF, 0xFFFFFF),
+                1: ((1 << 32) - 1,),
+                2: (0xFF, (1 << 24) - 1),
                 3: (0xFF, 0xFF, 0xFFFF),
                 4: (0xFF, 0xFF, 0xFF, 0xFF),
             }[len(parsed)]
@@ -1208,15 +1208,15 @@ def validate_error_envelopes(cases, manifest):
             raise ValidationError("error_envelope_shape")
         response = item["response"]
         expected_error = {
-            "message": manifest["error_contract"]["authenticated_error_message"],
-            "path": manifest["error_contract"]["authenticated_error_path"],
+            "message": manifest["error_contract"]["error_message"],
+            "path": manifest["error_contract"]["error_path"],
             "extensions": {"code": item["code"]},
         }
         if (
             set(response) != {"status", "body"}
             or type(response["status"]) is not int
             or response["status"]
-            != manifest["error_contract"]["authenticated_graphql_http_status"]
+            != manifest["error_contract"]["graphql_http_status"]
             or response["body"]
             != {
                 "data": manifest["error_contract"]["data_on_error"],
@@ -1226,6 +1226,45 @@ def validate_error_envelopes(cases, manifest):
             > manifest["request_bounds"]["max_response_bytes"]
         ):
             raise ValidationError("error_envelope_shape")
+
+
+def validate_transport_contract(cases, manifest):
+    if (
+        manifest.get("dedicated_tls_listener") is not True
+        or manifest.get("transport_security") != {
+            "https": "VERIFIED_SERVER_IDENTITY_REQUIRED",
+            "minimum_tls_version": "1.3",
+            "client_authentication": "NONE",
+            "client_principal": "NONE",
+            "forbidden_credentials": [
+                "cookies", "shared_credentials", "interactive_credentials"
+            ],
+        }
+        or manifest.get("operator_authority") != [
+            "dedicated_listener", "server_identity", "ca_and_trust_root",
+            "asset_allowlist",
+        ]
+        or manifest.get("recovery") != {
+            "bad_server_identity": "FAIL_CLOSED",
+            "incompatible_contract": "FAIL_CLOSED",
+            "retry": "BOUNDED",
+            "after_reconnect": "FRESH_FULL_SNAPSHOT",
+            "monotonic_times_across_restart": "NOT_COMPARABLE",
+        }
+        or "credential_rotation" in manifest
+    ):
+        raise ValidationError("transport_security")
+    transport = cases.get("transport")
+    if (
+        not isinstance(transport, dict)
+        or set(transport) != {
+            "serverIdentityVerified", "clientCertificatePresented", "clientPrincipal"
+        }
+        or transport["serverIdentityVerified"] is not True
+        or transport["clientCertificatePresented"] is not False
+        or transport["clientPrincipal"] is not None
+    ):
+        raise ValidationError("transport_fixture")
 
 
 def validate_semantic_rejections(cases, manifest):
@@ -1275,12 +1314,10 @@ def validate_semantic_rejections(cases, manifest):
             or not isinstance(state, dict)
             or set(state)
             != {
-                "authenticated",
                 "allowedAssets",
                 "presentAssets",
                 "snapshotAvailableAssets",
             }
-            or state["authenticated"] is not True
             or any(
                 not isinstance(values, list)
                 or len(values) != len(set(values))
@@ -1337,7 +1374,7 @@ def validate_admission_sequences(cases, manifest):
     model = manifest["admission_model"]
     bounds = manifest["request_bounds"]
     if model != {
-        "logical_client_identity": "MTLS_PRINCIPAL_FINGERPRINT",
+        "rate_limit_key": "REMOTE_HOST",
         "clock": "MONOTONIC_INTEGER_MILLISECONDS",
         "same_timestamp_order": "FIXTURE_EVENT_ORDER",
         "evaluation_order": ["concurrency", "rate"],
@@ -1366,7 +1403,7 @@ def validate_admission_sequences(cases, manifest):
     expected_ids = {
         "concurrency": "same-client-overlap-v1",
         "rate": "same-client-token-bucket-v1",
-        "client_isolation": "two-principal-isolation-v1",
+        "client_isolation": "two-host-isolation-v1",
     }
     for category, sequence in sequences.items():
         if (
@@ -1451,20 +1488,20 @@ def validate_admission_sequences(cases, manifest):
             raise ValidationError("admission_sequence_mapping")
         if category == "client_isolation":
             expected = [
-                ("mtls-principal-a", "i-a1", 0, "START", "ADMIT", None),
-                ("mtls-principal-b", "i-b1", 0, "START", "ADMIT", None),
+                ("rate-limit-host-a", "i-a1", 0, "START", "ADMIT", None),
+                ("rate-limit-host-b", "i-b1", 0, "START", "ADMIT", None),
                 (
-                    "mtls-principal-a",
+                    "rate-limit-host-a",
                     "i-a2",
                     1,
                     "START",
                     "REJECT",
                     "REQUEST_LIMIT_EXCEEDED",
                 ),
-                ("mtls-principal-a", "i-a1", 2, "COMPLETE", "COMPLETE", None),
-                ("mtls-principal-b", "i-b1", 2, "COMPLETE", "COMPLETE", None),
-                ("mtls-principal-a", "i-a3", 2, "START", "ADMIT", None),
-                ("mtls-principal-a", "i-a3", 2, "COMPLETE", "COMPLETE", None),
+                ("rate-limit-host-a", "i-a1", 2, "COMPLETE", "COMPLETE", None),
+                ("rate-limit-host-b", "i-b1", 2, "COMPLETE", "COMPLETE", None),
+                ("rate-limit-host-a", "i-a3", 2, "START", "ADMIT", None),
+                ("rate-limit-host-a", "i-a3", 2, "COMPLETE", "COMPLETE", None),
             ]
             actual = [
                 (
@@ -1591,6 +1628,7 @@ def validate(manifest_path: Path, canonical_manifest_path: Path, cases_path: Pat
     max_depth = manifest["json_admission"]["max_depth"]
     canonical = load_json(canonical_manifest_path, max_depth=max_depth)
     cases = load_json(cases_path, max_depth=max_depth)
+    validate_transport_contract(cases, manifest)
     if manifest["source_contract"] != canonical["contract_id"] or manifest["catalog_fact_ids"] != [fact["id"] for fact in canonical["facts"]]:
         raise ValidationError("manifest_source_lock")
     validate_canonical_fixture_projection(cases, manifest)

@@ -30,8 +30,18 @@ class PortalPVModbusContractTests(unittest.TestCase):
             encoding="utf-8"
         )
         self.assertIn("Portal BFF Consumer Target", contract)
-        self.assertIn("never receives its client private key", contract)
-        self.assertIn("exact canonical query over TLS 1.3", contract)
+        normalized = " ".join(contract.split())
+        self.assertIn(
+            "Browser code does not call this listener and never receives its "
+            "server trust material, listener address, or asset identity.",
+            normalized,
+        )
+        self.assertIn("exact canonical query over TLS 1.3", normalized)
+        self.assertIn(
+            "without requiring a client certificate or deriving a client principal",
+            normalized,
+        )
+        self.assertIn("It verifies the configured server identity", normalized)
         self.assertIn("generic Portal listener does not mount the M2M", contract)
         self.assertIn("cannot add fields", contract)
 

@@ -65,6 +65,19 @@ def test_accepts_current_portal_ux_contract() -> None:
     CHECKER.validate_text(contract())
 
 
+@pytest.mark.parametrize(
+    "old,new",
+    (
+        ("linked source contract and current open evidence", "unspecified evidence"),
+        ("#975 remains open", "#975 is closed"),
+        ("intermediate, and unmerged", "final, and merged"),
+        ("this documentation does not claim it is\nmerged", "this documentation claims it is merged"),
+    ),
+)
+def test_rejects_weakened_source_evidence_or_merge_status(old: str, new: str) -> None:
+    rejects(old, new)
+
+
 def test_fenced_fake_target_end_cannot_truncate_later_dom_audit() -> None:
     text = contract().replace(
         CHECKER.TARGET_END,

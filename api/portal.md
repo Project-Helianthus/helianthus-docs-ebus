@@ -316,8 +316,7 @@ and production catalog/action admission
 [#974](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/974).
 The five-state session wording follows Gateway
 [#975](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/975)
-source contract commit `a39d43fbeaf8d745222b85649ebb8494203163f0` and current open
-evidence head `a39d43fbeaf8d745222b85649ebb8494203163f0`; #975 remains open,
+linked source contract and current open evidence; #975 remains open,
 intermediate, and unmerged, and this documentation does not claim it is
 merged.
 It does not close Gateway #552, the wider INT-10 parent, SemReg cutover, or
@@ -856,16 +855,16 @@ Example response:
   "plane": "Service",
   "nodes": [
     {
-      "id": "Service:/ebus/addr@16/device@BASV2",
-      "path": "Service:/ebus/addr@16/device@BASV2",
-      "canonical_path": "Service:/ebus/addr@16/device@BASV2"
+      "id": "Service:/ebus/addr@16/device@synthetic-family",
+      "path": "Service:/ebus/addr@16/device@synthetic-family",
+      "canonical_path": "Service:/ebus/addr@16/device@synthetic-family"
     }
   ],
   "edges": [
     {
-      "id": "Service:Service:/ebus/addr@16/device@BASV2->Service:/ebus/addr@16/device@BASV2/method@get_status",
-      "from": "Service:/ebus/addr@16/device@BASV2",
-      "to": "Service:/ebus/addr@16/device@BASV2/method@get_status"
+      "id": "Service:Service:/ebus/addr@16/device@synthetic-family->Service:/ebus/addr@16/device@synthetic-family/method@get_status",
+      "from": "Service:/ebus/addr@16/device@synthetic-family",
+      "to": "Service:/ebus/addr@16/device@synthetic-family/method@get_status"
     }
   ]
 }
@@ -1212,9 +1211,11 @@ Portal does not receive a second PV semantic model. The browser calls
 `GET /portal/api/v1/semantic/pv/current` with no query parameters or request
 body. A gateway-owned backend-for-frontend then sends the exact fixed
 `M2MCurrentSnapshot` POST to the dedicated `/graphql/m2m/v1` listener over
-TLS 1.3 with verified server identity and a distinct client certificate. The
-asset reference is deployment configuration, not browser input. The route
-forwards the closed GraphQL success or error envelope without falling back to
+TLS 1.3 with verified server identity. This is server-TLS-only transport:
+no client certificate is required and no client principal is derived. The
+asset reference and publication allow-list are deployment configuration, not
+browser input. The route forwards the closed GraphQL success or error envelope
+without falling back to
 the generic GraphQL route, a direct canonical provider, MCP, or Modbus.
 
 The browser never receives a private key, certificate bytes, CA bytes, M2M
