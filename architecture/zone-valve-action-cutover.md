@@ -178,13 +178,16 @@ inputs, not the final merged snapshot after an acquisition failure.
 | Qualified native 0 versus absent source | 0 is a real code; absence is no observation | Do not coalesce them; neither admits a zone fact in the current pack. |
 | Another source projects a shared requested definition; this source is absent | Per-source absence | Preserve the shared projected disposition; one result per requested key, with per-source loss retained. |
 
-Legacy compatibility requires the same source identity, raw selector/value,
-circuit inputs and derivation rule. Binary valve status, percentage travel,
-demand, circuit action, zone delivery and system action remain distinct facts;
-each requires its own qualified representation and binding. A matching legacy
-zone label alone establishes no system-action equivalence. A changed source,
-association or rule, or a stale input, invalidates compatibility even when the
-resulting label matches.
+The legacy zone snapshot retains its source identity, native valve selector
+and value, circuit context and `deriveZoneHvacAction` behavior during cutover.
+Consumers must continue to distinguish the raw closed/open status from the
+legacy percentage presentation. Neither member supplies a qualified travel
+measurement, demand value, circuit action, zone heat-delivery action or system
+action; each needs a separate supported representation and qualified binding.
+The legacy `heating` or `cooling` label cannot populate a system-action fact.
+A replacement source, changed zone-to-circuit association, changed helper
+behavior or stale valve/circuit input prevents reuse of the prior legacy action,
+even if the new label has the same spelling.
 
 Both MCP and GraphQL must preserve the same accepted facts, withholding
 reasons, native provenance and source-specific losses through their existing
