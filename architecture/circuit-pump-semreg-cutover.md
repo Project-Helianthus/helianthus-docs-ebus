@@ -22,12 +22,13 @@ describe only a zero-valued idle observation for RR=0x001B. There is no known
 observed nonzero raw code for that selector in this evidence set. A nonzero
 cloud state or RR=0x001E enum candidate is not such an observation.
 
-**Proven — software behavior** below means inspected implementation, not a
-native wire codebook. **Hypothesis — native meaning:** RR=0x001B is named as
-pump status; interpreting every nonzero value as active is unqualified. The
-documented zero observation is consistent with off/idle but does not resolve
-the competing state-enumeration interpretation. **Unknown:** nonzero codebook,
-cross-family applicability, physical on-state correlation, counter reset and
+**Proven — software behavior** below refers to the inspected implementation.
+The catalog labels RR=0x001B `circuit_pump_unknown_8`.
+**Hypothesis:** this register reports circuit pump status, and every nonzero
+value indicates active operation. That interpretation remains unqualified.
+The documented zero observation is consistent with off/idle but does not
+resolve the competing state-enumeration interpretation. **Unknown:** nonzero
+codebook, cross-family applicability, physical on-state correlation, counter reset and
 rollover semantics. Evidence grade is separate from acquisition success,
 qualification, freshness and admission: even a successful raw read cannot
 supply the missing qualification.
@@ -70,8 +71,8 @@ returns nil for nil, false for zero, true for every nonzero raw value. This is
 the current compatibility interpretation, explicitly a **Hypothesis** about
 native meaning, not an accepted Boolean codebook. The u32 reader requires at
 least four bytes, decodes the first four little-endian bytes and rejects
-`0xFFFFFFFF`; the numeric presentation helpers return nil for nil and convert
-present values, including zero. Sentinel rejection is implementation evidence,
+the four-byte value `FF FF FF FF`; the numeric presentation helpers return nil
+for nil and convert present values, including zero. Sentinel rejection is implementation evidence,
 not a newly established universal native rule.
 
 `refreshCircuits` discovers active circuit candidates using RR=0x0002 before
