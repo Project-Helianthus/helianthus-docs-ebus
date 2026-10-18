@@ -1270,10 +1270,15 @@ def test_transport_fixture_requires_success_without_client_principal(tmp_path, f
         validate(MANIFEST, CANONICAL, path)
 
 
-def test_rate_limit_key_cannot_be_replaced_by_client_identity(tmp_path):
+@pytest.mark.parametrize("key", ["rate_limit_key", "concurrency_key"])
+@pytest.mark.parametrize("value", ["MTLS_PRINCIPAL_FINGERPRINT", "GLOBAL", None])
+def test_admission_keys_require_remote_host(tmp_path, key, value):
     manifest = load(MANIFEST)
-    assert manifest["admission_model"]["rate_limit_key"] == "REMOTE_HOST"
-    manifest["admission_model"]["rate_limit_key"] = "MTLS_PRINCIPAL_FINGERPRINT"
+    assert manifest["admission_model"][key] == "REMOTE_HOST"
+    if value is None:
+        del manifest["admission_model"][key]
+    else:
+        manifest["admission_model"][key] = value
     path = tmp_path / "principal-budget.json"
     path.write_text(json.dumps(manifest), encoding="utf-8")
     with pytest.raises(ValidationError, match="admission_model"):

@@ -1375,6 +1375,7 @@ def validate_admission_sequences(cases, manifest):
     bounds = manifest["request_bounds"]
     if model != {
         "rate_limit_key": "REMOTE_HOST",
+        "concurrency_key": "REMOTE_HOST",
         "clock": "MONOTONIC_INTEGER_MILLISECONDS",
         "same_timestamp_order": "FIXTURE_EVENT_ORDER",
         "evaluation_order": ["concurrency", "rate"],
