@@ -96,9 +96,37 @@ owned by the target implementation, with one retry owner.
 | Activation | Admit only the exact current generation after lifecycle readiness and valid projection input; readiness alone publishes nothing |
 | Partial update or rejected input | Retain omitted last-known-good facts with their original aging policy; rejected publication changes nothing. Retained audit observations never become current output input |
 | STOP | Fence callbacks and output admission immediately, withdraw active contributions, cancel/drain work and prove native close independently of semantic cleanup; report STOPPED only after both obligations settle |
-| Explicit RESTART or START after completed STOP | D1 retires the predecessor and proves close before one successor epoch and generation-1 reservation; repeated reconciliation reuses the recorded successor |
+| Explicit RESTART or START after completed STOP | Retire the predecessor and prove close before one successor epoch and generation-1 reservation under D1 for sources or the proposed sink extension below; repeated reconciliation reuses the recorded successor |
 | Automatic replacement or native reconnect | Preserve D1 distinctions: replacement advances driver generation within the epoch; an internal connection retry need not replace the driver |
 | Failure, uncertain close or incomplete recovery | Keep affected admission closed and quarantine intact; do not reopen through a new epoch or cached projection. Unaffected assets retain their valid state |
+
+For source-less output drivers, the following **Hypothesis** extends D1 for
+this proposal only; the existing source-scoped D1 contract remains unchanged.
+Define `SinkLifecycleID = (DriverID, configured output binding identity)` in a
+disjoint sink namespace, never as a synthetic `SourceID`. Derive its epoch from
+`(process incarnation, SinkLifecycleID, admission ordinal)`, with a strictly
+advancing per-sink ordinal. Its generation key is
+`(SinkLifecycleID, epoch, driver generation)`, correlated to the accepted
+lifecycle operation and mapped to the process-monotonic native generation.
+A source-less descriptor without a stable configured output binding identity
+must refuse lifecycle admission before effects.
+
+Journal sink retirement, ordinal advancement and exactly one pending successor
+with its generation-1 reservation atomically before preparation; ambiguous or
+missing recovery material keeps that sink closed. Process start creates an
+inert reservation; first START claims it, and a same-desired START allocates
+nothing. STOP retires without allocating a successor; accepted RESTART or START
+after completed STOP records one successor only after settled retirement and
+proven native close. Repeated wakes and component recovery reuse that exact
+reservation and claim; automatic replacement advances generation in the same
+epoch. Process-loss recovery restores pending work and tombstones before a new
+incarnation admits work, treating old handles and native mappings as historical.
+Fence callbacks, queued projections and withdrawals by process incarnation,
+full sink generation key, admission identity and operation correlation at the
+publication boundary; old work cannot affect a successor. These are sink-owned
+lifecycle records, not source hub reservations or semantic publication cursors.
+For descriptors owning sources, D1 source keys remain authoritative and each
+output contribution must also retain its exact target binding identity.
 
 An output-only runtime can have an empty semantic barrier/cleanup set, but still
 owes cancellation, target withdrawal and independent close proof. A queued
@@ -120,7 +148,8 @@ RESTART keeps desired RUNNING. Lost responses use list/get readback, not client
 receipts or idempotency keys. D4 uses ordinary MCP without a new lifecycle
 principal or authorization gate; native-write safety and unrelated safeguards
 remain. D5 exact-byte recovery, pending work and tombstones must restore before
-admission. This design changes none of G5 D1–D5/O8.
+admission. The proposed sink extension does not alter existing G5 D1–D5/O8
+source behavior.
 
 ## Snapshot reads, selection and explicit publication
 
@@ -189,7 +218,7 @@ synthetic family peers and detached fixtures only, without native equipment.
 | --- | --- |
 | Registration and freeze | Exercise all three directions and disabled entries; invalid ownership, missing references and every unsupported hook yield zero factory/endpoint/publication calls. Caller mutation cannot change frozen registration |
 | Source/sink conflict | Vary source owner and target binding independently; reject actual collisions while distinct sinks and unaffected sources remain usable |
-| Lifecycle and D1 | START, same-desired START, STOP, START after STOP and RESTART; assert one successor per accepted replacement, old retirement and close before successor preparation, and no epoch allocation for a no-op |
+| Lifecycle and D1 | Exercise source-owning and source-less drivers separately, including refusal without a stable sink identity, persisted sink reservations and recovery. START, same-desired START, STOP, START after STOP and RESTART; assert one successor per accepted replacement, old retirement and close before successor preparation, and no epoch allocation for a no-op |
 | Late work and retirement | Hold an old callback and queued projection across epoch succession and generation reuse; neither can publish nor retire the new contribution. Unconfirmed close blocks replacement |
 | Partial state and loss | Omit one field, reject another batch and make one sibling unavailable; retain the correct original value/aging/provenance, preserve zero/false versus absent, and withhold gated current output with explicit loss |
 | Selection versus publication | Preview and change selection without output; explicit publication uses only validated detached input. Stale selection and lost response cannot silently republish or reroute |
@@ -197,9 +226,10 @@ synthetic family peers and detached fixtures only, without native equipment.
 | Recovery and isolation | Destroy service/hub memory, restore D5 pending work, retirement and tombstones before admission; corrupt affected material fails closed without erasing unrelated last-known-good state |
 | Ordinary surfaces and O8 | Preserve eBUS regression behavior and shared MCP/GraphQL detached-view parity; compiled registration remains the only package delivery path and no parallel service is constructed |
 
-Future identity tests must vary driver, source, epoch, driver generation, output
-binding and causal correlation/operation independently where claimed, with
-independent expected values and a named production mutation each variant catches.
+Future identity tests must vary driver, source, sink lifecycle identity, epoch,
+driver generation, output binding and causal correlation/operation independently
+where claimed, with independent expected values and a named production mutation
+each variant catches.
 No mutation kills, native qualification, runtime integration, transport, passive
 capture or physical acceptance are claimed by this documentation review.
 

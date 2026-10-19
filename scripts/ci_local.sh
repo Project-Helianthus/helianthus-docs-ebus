@@ -350,6 +350,8 @@ python3 -m pytest -q tests/test_eebus_operator_admin_contract.py
 python3 -m pytest -q tests/test_driver_runtime_manager_v1.py
 python3 scripts/check_runtime_driver_registration.py
 python3 -m pytest -q tests/test_runtime_driver_registration.py
+python3 scripts/check_bidirectional_registration.py
+python3 -m pytest -q tests/test_bidirectional_registration.py
 python3 scripts/check_runtime_control_contract.py
 python3 -m pytest -q tests/test_runtime_control_contract.py
 python3 -m pytest -q tests/test_runtime_driver_registration_rendered.py
