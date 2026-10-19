@@ -17,6 +17,7 @@ def test_bidirectional_registration_repository() -> None:
 
 
 @pytest.mark.parametrize("heading", [
+    "Sources and authority",
     "Snapshot reads, selection and explicit publication",
     "Synthetic-peer acceptance obligations",
 ])
