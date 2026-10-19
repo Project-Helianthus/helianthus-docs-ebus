@@ -22,8 +22,9 @@ def test_bidirectional_registration_repository() -> None:
 ])
 def test_bidirectional_registration_requires_normative_sections(heading) -> None:
     before, section = TEXT.split(f"## {heading}\n\n", 1)
-    _, separator, following = section.partition("\n## ")
-    assert checker.validate(before + separator + following)
+    parts = section.split("\n## ", 1)
+    remainder = "\n## " + parts[1] if len(parts) == 2 else ""
+    assert checker.validate(before + remainder)
 
 
 @pytest.mark.parametrize("block", BLOCKS)
