@@ -57,8 +57,8 @@ may have an empty source set; do not fabricate an acquisition source or semantic
 asset to register a sink. Driver, asset, source, source epoch, driver generation,
 native connection generation and target binding identities are distinct.
 
-The following are **proposed declaration concepts**, not accepted descriptor
-fields, API members or a new descriptor version:
+The following **proposed declaration concepts** describe future obligations only.
+The existing descriptor and public API remain unchanged:
 
 | Proposed concept | Boundary to preserve |
 | --- | --- |
