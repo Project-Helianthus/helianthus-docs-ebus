@@ -16,6 +16,16 @@ def test_bidirectional_registration_repository() -> None:
     assert checker.validate(TEXT) == []
 
 
+@pytest.mark.parametrize("heading", [
+    "Snapshot reads, selection and explicit publication",
+    "Synthetic-peer acceptance obligations",
+])
+def test_bidirectional_registration_requires_normative_sections(heading) -> None:
+    before, section = TEXT.split(f"## {heading}\n\n", 1)
+    _, separator, following = section.partition("\n## ")
+    assert checker.validate(before + separator + following)
+
+
 @pytest.mark.parametrize("block", BLOCKS)
 @pytest.mark.parametrize("change", ["missing", "optional", "example", "hidden", "relocated"])
 def test_bidirectional_registration_requires_visible_normative_blocks(block, change) -> None:
@@ -47,6 +57,13 @@ def test_bidirectional_registration_requires_visible_normative_blocks(block, cha
     ("at hop zero", "at hop one"),
     ("Egress changes neither path nor count", "Egress increments the count"),
     ("before hop-budget exhaustion", "after hop-budget exhaustion"),
+    ("must not implicitly publish", "may implicitly publish"),
+    ("it cannot\nsilently switch candidate or target", "it may\nsilently switch candidate or target"),
+    ("without native equipment", "with native equipment"),
+    ("Stale selection and lost response cannot silently republish or reroute",
+     "Stale selection and lost response may silently republish or reroute"),
+    ("with independent expected values and a named production mutation",
+     "without independent expected values or a named production mutation"),
 ])
 def test_bidirectional_registration_rejects_weakened_clauses(before, after) -> None:
     assert before in TEXT
