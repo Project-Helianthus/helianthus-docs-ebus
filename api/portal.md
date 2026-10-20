@@ -345,19 +345,23 @@ This page owns the frozen Portal-specific observe-first contract after merged
 
 ## Driver Runtime Control Target
 
-The generic runtime-control target is frozen in
-[`driver-runtime-v1.md`](./driver-runtime-v1.md). Portal is a consumer, not
-lifecycle authority: it renders gateway-owned `DriverSnapshotV1` records and
-invokes the gateway-owned start, stop, and restart operations only after their
-MCP contract is stable and GraphQL parity has merged. It does not create an
+The generic runtime-control target follows the
+[G5 MCP contract](./mcp.md#g5-runtime-lifecycle-mcp-contract-d4) and
+[lifecycle contract](../architecture/runtime-driver-lifecycle.md). Portal is a
+consumer, not lifecycle authority: its future GraphQL parity must preserve the
+G5 closed driver projection and registered-driver catalog. It invokes the
+gateway-owned start, stop, and restart operations only after their MCP contract
+is stable and GraphQL parity has merged. The historical `DriverSnapshotV1`
+proposal is not a consumer implementation target. Portal does not create an
 independent driver FSM, edit add-on options, retain endpoints or credentials,
 or call a protocol adapter directly.
 
 This is a post-MCP target and does not claim that driver-control Portal routes
 or controls are implemented in the current endpoint inventory below. When the
 consumer rollout occurs, capability discovery must hide unsupported controls
-without hiding the stable driver snapshot or its categorical unavailable
-state.
+without hiding a registered driver's cached status or its categorical
+unavailable state. The first MCP slice adds no Portal routes or controls and
+requires no placeholder entries for unregistered drivers.
 
 ## eeBUS Owner Workbench
 

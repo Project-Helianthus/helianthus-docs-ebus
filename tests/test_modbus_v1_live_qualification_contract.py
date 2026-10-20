@@ -156,7 +156,6 @@ class ModbusV1LiveQualificationContractTest(unittest.TestCase):
             {
                 "module": "github.com/Project-Helianthus/helianthus-modbusreg",
                 "version": "v0.1.0",
-                "merge": "0567cac9db3749086c46f05b2c4c0a24c2371763",
             },
         )
         self.assertEqual(

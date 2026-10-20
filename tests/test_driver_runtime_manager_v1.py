@@ -233,19 +233,42 @@ def test_rollout_is_mcp_first_and_one_release_acceptance_is_explicit() -> None:
         assert required in text
 
 
-def test_portal_and_platform_indexes_link_the_contract() -> None:
+def test_consumers_follow_g5_instead_of_the_historical_api() -> None:
     portal = _normalized(PORTAL)
     platform = _normalized(PLATFORM_INDEX)
+    addon = _normalized(MODBUS_ADDON)
+    for text, g5_link in (
+        (portal, "./mcp.md#g5-runtime-lifecycle-mcp-contract-d4"),
+        (platform, "../../api/mcp.md#g5-runtime-lifecycle-mcp-contract-d4"),
+        (addon, "./mcp.md#g5-runtime-lifecycle-mcp-contract-d4"),
+    ):
+        assert g5_link in text
     for required in (
-        "[`driver-runtime-v1.md`](./driver-runtime-v1.md)",
-        "Portal is a consumer, not lifecycle authority",
+        "consumer, not lifecycle authority",
+        "future GraphQL parity must preserve the G5 closed driver projection and registered-driver catalog",
+        "first MCP slice adds no Portal routes or controls",
+        "requires no placeholder entries for unregistered drivers",
+        "historical `DriverSnapshotV1` proposal is not a consumer implementation target",
     ):
         assert required in portal
     for required in (
         "[`driver-runtime-manager-v1.md`](./driver-runtime-manager-v1.md)",
-        "[`../../api/driver-runtime-v1.md`](../../api/driver-runtime-v1.md)",
+        "authoritative first external list/get/start/stop/restart surface",
+        "closed driver projection, and registered-driver catalog",
+        "superseded historical material, not an implementation or acceptance target",
     ):
         assert required in platform
+    for required in (
+        "../architecture/runtime-driver-lifecycle.md",
+        "../docs/platform/driver-runtime-manager-v1.md",
+        "categorical unavailable status for a registered Modbus driver",
+        "G5 lists only registered drivers using its closed wire projection",
+        "does not require a Modbus placeholder or the historical snapshot fields",
+    ):
+        assert required in addon
+    assert "renders gateway-owned `DriverSnapshotV1`" not in portal
+    assert "MCP-first `DriverSnapshotV1`" not in platform
+    assert "successor is frozen in [`driver-runtime-v1.md`]" not in addon
 
 
 def test_public_mcp_authority_supersedes_historical_inventory() -> None:
