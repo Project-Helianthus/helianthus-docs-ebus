@@ -21,23 +21,15 @@ INITIAL = (
     ("passive_observed", "corroborated_pending"),
     ("active_confirmed", "identity_confirmed"),
 )
-GATEWAY_REVIEWED_HEAD = "77b898633672e123a05d39a3cf46398cce2d72ab"
-GATEWAY_REVIEWED_MERGE_TREE = "bb8f59fed4be68104d8ab206f55f7f32ea33e031"
-GATEWAY_MAIN_MERGE = "f5cd9c51c60bdf422e8fc1b5690fbde52a393be3"
-REGISTRY_DEPENDENCY = "e24532a50caa00c113751b98b88239e045d731e8"
-PINS = (
-    GATEWAY_REVIEWED_HEAD,
-    GATEWAY_REVIEWED_MERGE_TREE,
-    GATEWAY_MAIN_MERGE,
-    REGISTRY_DEPENDENCY,
+SOURCE_LABEL = "gateway registry source"
+SOURCE_URL = "https://github.com/Project-Helianthus/helianthus-ebusgateway/tree/main/internal"
+SOURCE_REFERENCE = (
+    "The implementation and historical review records are owned by the "
+    "gateway registry source."
 )
 PROVEN_CONCLUSION = "Conclusion: Proven."
 MARKDOWN = MarkdownIt("commonmark")
 TABLE_MARKDOWN = MarkdownIt("commonmark").enable("table")
-AUDIT_MARKERS = frozenset((
-    "<!-- publication-audit: machine-checked-record start -->",
-    "<!-- publication-audit: machine-checked-record end -->",
-))
 INDEPENDENCE = (
     "Valid non-null values are the Cartesian product of the\n"
     "separately allowed source and state sets; no source label determines or\n"
@@ -70,7 +62,6 @@ MCP_SOURCE_RETENTION = (
     "      confirmation may advance it to `identity_confirmed`. Neither event\n"
     "      rewrites `discovery_source`."
 )
-
 
 
 class CheckError(ValueError):
@@ -341,10 +332,6 @@ def _visible_markdown_spans(
     """Return independent rendered prose spans so literal state cannot leak."""
     visible: list[str] = []
     for token in MARKDOWN.parse(text):
-        # These standalone comments carry no contract text. Match the complete
-        # block so a marker cannot conceal prose or introduce an HTML container.
-        if token.type == "html_block" and token.content.strip() in AUDIT_MARKERS:
-            continue
         if reject_html and token.type == "html_block":
             raise CheckError("public contract must not depend on raw HTML")
         if include_html_blocks and token.type == "html_block" and not token.content.lstrip().startswith("<!--"):
@@ -446,20 +433,34 @@ def _list_item(text: str, label: str, *, level: int) -> str:
     return matches[0]
 
 
-def _validate_pins(section: str, *, surface: str) -> None:
-    visible = section
-    if tuple(re.findall(r"(?<![0-9a-f])[0-9a-f]{40}(?![0-9a-f])", visible)) != PINS:
-        raise CheckError(f"{surface} provenance pins differ")
-    normalized = re.sub(r"\s+", " ", visible)
-    required = (
-        f"reviewed gateway HEAD `{GATEWAY_REVIEWED_HEAD}`",
-        f"reviewed and merge tree is identical at `{GATEWAY_REVIEWED_MERGE_TREE}`",
-        f"gateway `main` is `{GATEWAY_MAIN_MERGE}`",
-        f"accepted registry dependency is `{REGISTRY_DEPENDENCY}`",
-    )
-    for fragment in required:
-        if fragment not in normalized:
-            raise CheckError(f"{surface} provenance pin meaning missing: {fragment!r}")
+def _validate_source_reference(text: str, *, surface: str) -> None:
+    section = _visible_markdown_text(text, include_inline_code=True)
+    if not _contains_fragment(section, SOURCE_REFERENCE):
+        raise CheckError(f"{surface} provenance source ownership missing")
+    links = []
+    for token in MARKDOWN.parse(text):
+        children = token.children or ()
+        for index, child in enumerate(children):
+            if child.type != "link_open":
+                continue
+            label = []
+            for part in children[index + 1 :]:
+                if part.type == "link_close":
+                    break
+                if part.type in ("text", "code_inline"):
+                    label.append(part.content)
+            if "".join(label) == SOURCE_LABEL:
+                links.append(child.attrGet("href"))
+    if links != [SOURCE_URL]:
+        raise CheckError(f"{surface} provenance source reference differs")
+
+
+def _validate_publication(text: str) -> None:
+    # Inspect raw source, including comments, code and link destinations.
+    if re.search(r"(?i)(?<![0-9a-f])[0-9a-f]{40}(?![0-9a-f])", text):
+        raise CheckError("publication forbids commit identifiers")
+    if re.search(r"(?i)https?://[^\s)]+/(?:commit|blob|tree)/[0-9a-f]{7,40}(?:[/#?\s)]|$)", text):
+        raise CheckError("publication forbids pinned-revision links")
 
 
 def _contains_fragment(section: str, fragment: str) -> bool:
@@ -556,6 +557,7 @@ def _top_level_table_after(
 
 
 def validate_text(text: str, atr: str) -> None:
+    _validate_publication(text)
     # Public contract checks are source-stable only when visible prose is
     # represented by Markdown tokens rather than browser-decoded raw HTML.
     _visible_markdown_text(text, reject_html=True)
@@ -650,7 +652,7 @@ def validate_text(text: str, atr: str) -> None:
     if not _contains_fragment(section, "The current gateway schema exposes the nullable camel-case fields"):
         raise CheckError("current provenance status missing")
     _validate_proven_conclusion(section, surface="GraphQL")
-    _validate_pins(section, surface="GraphQL")
+    _validate_source_reference(_section(text), surface="GraphQL")
     source_section = _mask_markdown_fences(_section(visible_text))
     if _single_column(source_section, "discoverySource") != SOURCES:
         raise CheckError("discoverySource label set differs")
@@ -687,6 +689,7 @@ def validate_text(text: str, atr: str) -> None:
 
 
 def validate_mcp_text(text: str) -> None:
+    _validate_publication(text)
     _visible_markdown_text(text, reject_html=True)
     section = _visible_markdown_text(
         _mcp_device_section(text),
@@ -694,7 +697,7 @@ def validate_mcp_text(text: str) -> None:
         reject_html=True,
     )
     _validate_proven_conclusion(section, surface="MCP")
-    _validate_pins(section, surface="MCP")
+    _validate_source_reference(_mcp_device_section(text), surface="MCP")
     required = (
         "JSON response items carry `discovery_source` and\n      `verification_state` fields",
         "`passive_observed | static_seed | active_confirmed`",

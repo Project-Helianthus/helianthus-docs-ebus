@@ -271,7 +271,6 @@ snapshot, admit the complete capability, and match the exact observed flavor.
 
 ### Registry-Selected V2 Contract Record
 
-<!-- publication-audit: machine-checked-record start -->
 ```json
 {
   "contract": "helianthus.modbus-sunspec-live-qualification.v2",
@@ -281,7 +280,7 @@ snapshot, admit the complete capability, and match the exact observed flavor.
   "registry_dependency": {
     "module": "github.com/Project-Helianthus/helianthus-modbusreg",
     "version": "v0.1.0",
-    "merge": "0567cac9db3749086c46f05b2c4c0a24c2371763"
+    "source": "https://github.com/Project-Helianthus/helianthus-modbusreg/tree/main"
   },
   "activation": {
     "disabled_by_default": true,
@@ -345,7 +344,6 @@ snapshot, admit the complete capability, and match the exact observed flavor.
   "writes_permitted": false
 }
 ```
-<!-- publication-audit: machine-checked-record end -->
 
 ### V2 Activation, Recovery, And Evidence Boundary
 
