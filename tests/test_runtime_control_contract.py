@@ -446,3 +446,49 @@ def test_runtime_control_contract_rejects_lifecycle_status_drift(before, after) 
     assert before in documents[checker.LIFECYCLE]
     documents[checker.LIFECYCLE] = documents[checker.LIFECYCLE].replace(before, after, 1)
     assert any(checker.LIFECYCLE in error for error in checker.validate(documents))
+
+
+@pytest.mark.parametrize(("before", "after"), [
+    ("each accepted `RESTART` advances desired revision",
+     "each accepted `RESTART` may reuse desired revision"),
+    ("increments generation exactly once", "increments generation at least once"),
+    ("retrying the old expected revision returns\n  `REVISION_CONFLICT`",
+     "retrying the old expected revision succeeds"),
+    ("a valid fresh-revision `RESTART` after settlement\n  requests another replacement and is never deduplicated",
+     "a valid fresh-revision `RESTART` after settlement may be deduplicated"),
+    ("they allocate no revision or work and do not reset retry budgets or quarantine",
+     "they may allocate work or reset retry budgets or quarantine"),
+    ("There is no lifecycle GraphQL API, resolver, mutation or subscription.",
+     "A later gate adds equivalent lifecycle GraphQL snapshots and mutations."),
+    ("this\n   page requires no downstream lifecycle routes or controls",
+     "this page requires downstream lifecycle routes and controls"),
+    ("no lifecycle GraphQL surface is added", "lifecycle GraphQL parity is required"),
+    ("including untyped bootstrap\nreconciliation and manager retry attempts",
+     "only for typed transitions"),
+])
+def test_runtime_control_contract_rejects_manager_acceptance_drift(before, after) -> None:
+    documents = dict(DOCUMENTS)
+    assert before in documents[checker.MANAGER]
+    documents[checker.MANAGER] = documents[checker.MANAGER].replace(before, after, 1)
+    assert any(checker.MANAGER in error for error in checker.validate(documents))
+
+
+@pytest.mark.parametrize("field", [
+    "incarnation", "source", "epoch", "generation", "admission identity", "operation correlation",
+])
+@pytest.mark.parametrize("section", ["## Retry And Recovery", "## Stop, Drain, And Restart"])
+def test_runtime_control_contract_requires_full_callback_correlation(field, section) -> None:
+    documents = dict(DOCUMENTS)
+    before, body = documents[checker.MANAGER].split(section, 1)
+    body, after = body.split("\n## ", 1)
+    assert field in body
+    documents[checker.MANAGER] = before + section + body.replace(field, "omitted") + "\n## " + after
+    assert any(checker.MANAGER in error for error in checker.validate(documents))
+
+
+def test_runtime_control_contract_acceptance_cannot_move_before_heading() -> None:
+    documents = dict(DOCUMENTS)
+    heading = "## One-release Acceptance"
+    before, acceptance = documents[checker.MANAGER].split(heading, 1)
+    documents[checker.MANAGER] = before + acceptance + heading + "\n"
+    assert any(checker.MANAGER in error for error in checker.validate(documents))

@@ -292,7 +292,7 @@
     "end": "## One-release Acceptance",
     "required": [
       "The implementation follows the platform delivery pipeline:",
-      "1. **MCP prototype**: implement and stabilize exactly\n   `helianthus.runtime.{list,get,start,stop,restart}` under the\n   [G5 contract](../../api/mcp.md#g5-runtime-lifecycle-mcp-contract-d4).\n   The historical `drivers.v1.*` tools are not delivery requirements.\n2. **GraphQL parity**: a later consumer gate freezes the equivalent snapshot\n   and mutations without replacing MCP ownership; PR 2 adds no lifecycle GraphQL.\n3. **Portal rollout**: render driver cards and lifecycle controls from the\n   gateway APIs; Portal remains a consumer.\n4. **Home Assistant rollout**: expose native entities/actions after GraphQL is\n   stable; Home Assistant remains a consumer.",
+      "1. **MCP prototype**: implement and stabilize exactly\n   `helianthus.runtime.{list,get,start,stop,restart}` under the\n   [G5 contract](../../api/mcp.md#g5-runtime-lifecycle-mcp-contract-d4).\n   The historical `drivers.v1.*` tools are not delivery requirements.\n2. **Status parity**: preserve existing MCP/GraphQL daemon and adapter status\n   parity. There is no lifecycle GraphQL API, resolver, mutation or subscription.\n3. **Portal rollout** and **Home Assistant rollout**: any later lifecycle\n   consumer work requires a separately scoped contract consistent with D4; this\n   page requires no downstream lifecycle routes or controls.",
       "No consumer may shape protocol-specific exceptions into this V1 contract.\nProtocol-specific status remains reachable through its existing diagnostics\nsurface and correlates by the stable driver ID."
     ],
     "exact": true
@@ -328,5 +328,33 @@
     "required": [
       "The single-process packaging contract on this page remains the implemented\nFMV3-M4-03 baseline. Its generic runtime successor follows the\n[lifecycle contract](../architecture/runtime-driver-lifecycle.md) and\n[`DriverManager V1 proposal`](../docs/platform/driver-runtime-manager-v1.md).\nThe first external surface is owned by the\n[G5 MCP contract](./mcp.md#g5-runtime-lifecycle-mcp-contract-d4); the older\n`driver-runtime-v1.md` API proposal is superseded historical material, not an\nimplementation or acceptance target.\nUnder that pending DriverManager V1 successor, a driver-local Modbus validation\nfailure must not prevent the gateway process from starting. The add-on will\nclassify the Modbus descriptor independently and the gateway will retain a\ncategorical unavailable status for a registered Modbus driver while eBUS,\neeBUS, HTTP, and MCP continue. G5 lists only registered drivers using its\nclosed wire projection; it does not require a Modbus placeholder or the\nhistorical snapshot fields in the first external slice."
     ]
+  },
+  {
+    "path": "docs/platform/driver-runtime-manager-v1.md",
+    "start": "## Retry And Recovery",
+    "end": "## Stop, Drain, And Restart",
+    "required": [
+      "`BACKOFF` has no hidden work other than its scheduled attempt. Stop cancels the\ntimer before teardown. Recovery from `FAILED` creates a fresh retry budget and, on\nsuccessful provider admission, a new generation; it never reuses a half-closed\ntransport instance. Superseded by the D3 amendment: a manual START with the\ncurrent revision while desired is RUNNING is a no-op, and recovering `FAILED`\nbelongs to the reconciler. Automatic retry and operator lifecycle work obey the\nlifecycle contract's namespace-wide decision serialization and full lifecycle\nfencing, so neither can resurrect a stopped driver. Every asynchronous callback\nretains its full lifecycle correlation: incarnation, source, epoch, generation,\nadmission identity and operation correlation, including untyped bootstrap\nreconciliation and manager retry attempts. Superseding an attempt fences\nits callbacks, publications and admission immediately while retaining the old\ncorrelation for late-result cleanup. A stale callback cannot restore admission;\nits outstanding cleanup obligations are preserved."
+    ]
+  },
+  {
+    "path": "docs/platform/driver-runtime-manager-v1.md",
+    "start": "## Stop, Drain, And Restart",
+    "end": "## Configuration And Runtime Overrides",
+    "required": [
+      "Stop and restart perform atomic effective-capability withdrawal under the same\nlock used by every provider invocation. The manager empties the effective set\nbefore it publishes `STOPPING`; work racing after that point is blocked before\nprovider invocation, while work admitted earlier belongs to the bounded drain.\nProvider callbacks are fenced at the admission/publication serialization\nboundary using incarnation, source, epoch, generation, admission identity and\noperation correlation. A stale callback cannot restore an effective capability,\neven when driver generation resets to 1 in a successor epoch or the attempt\nhas no typed transition."
+    ]
+  },
+  {
+    "path": "docs/platform/driver-runtime-manager-v1.md",
+    "start": "## One-release Acceptance",
+    "end": null,
+    "required": [
+      "Repository work may proceed in parallel only through disjoint file ownership\nand normal dependency order. Public runtime acceptance is bundled into one\nconsolidated add-on release, one multi-architecture build, and one CI/CD\npublication. Intermediate dependency merges are not separate live releases.",
+      "The release gate must demonstrate, from the exact packaged gateway/add-on\npair:",
+      "- all three driver IDs are always listed with the closed V1 shape;\n- configured-enabled, healthy drivers with durable desired `RUNNING` reconcile\n  through `STARTING` to `RUNNING` without duplicate instances; configured-enabled\n  drivers with durable desired `STOPPED` remain stopped with no provider started,\n  and configured-disabled drivers remain `DISABLED`;\n- startup failure injection for each driver is protocol-local while the\n  process remains ready and the other drivers remain operable;\n- stop, start, and restart work for each driver without gateway restart;\n- each accepted `RESTART` advances desired revision and, on successful replacement,\n  increments generation exactly once; retrying the old expected revision returns\n  `REVISION_CONFLICT`, while a valid fresh-revision `RESTART` after settlement\n  requests another replacement and is never deduplicated;\n- `START` while desired `RUNNING` and `STOP` while desired `STOPPED`, with the\n  current expected revision and all earlier refusal checks satisfied, are no-ops:\n  they allocate no revision or work and do not reset retry budgets or quarantine;\n- retry budget, drain timeout, stable unavailable-provider, and stale callback\n  races behave as specified;\n- a deterministic stop/restart withdrawal race proves that post-withdrawal\n  work is blocked before provider invocation and no stale callback restores\n  admission;\n- an unproven-close fixture enters process-epoch quarantine, invokes no new\n  constructor through start, restart, or retry, and remains distinct from\n  ordinary recoverable failure;\n- a process restart preserves durable desired state: stored `STOPPED` stays\n  `STOPPED` with no provider started, and stored `RUNNING` for a configured-enabled\n  driver reconciles to `STARTING`;\n- the G5 MCP lifecycle surface obeys its closed contract, existing MCP/GraphQL\n  status parity is preserved, and no lifecycle GraphQL surface is added; and\n- logs, snapshots, responses, and audits remain secret-free and\n  endpoint-free.",
+      "Real-device absence or a physically disconnected bus may produce an expected\ndriver-local unavailable/degraded result. It does not waive API, isolation,\nredaction, concurrency, or rollback evidence."
+    ],
+    "exact": true
   }
 ]
