@@ -48,6 +48,27 @@ def test_runtime_control_contract_quarantine_directory_prerequisite(change) -> N
     assert any(error.startswith(RESET_PATH + ": ") for error in errors)
 
 
+@pytest.mark.parametrize("location", ["before", "within", "after"])
+@pytest.mark.parametrize("addition", [
+    "Order 4 may be skipped.",
+    "| 8 | Quarantine directory fsync is optional. | Continue replacement. |",
+    QUARANTINE_DIRECTORY_ROW,
+])
+def test_runtime_control_contract_rejects_added_reset_units(location, addition) -> None:
+    documents = dict(DOCUMENTS)
+    text = documents[RESET_PATH]
+    if location == "before":
+        text = text.replace(RESET_START, RESET_START + "\n\n" + addition, 1)
+    elif location == "within":
+        text = text.replace(QUARANTINE_DIRECTORY_ROW,
+                            addition + "\n\n" + QUARANTINE_DIRECTORY_ROW, 1)
+    else:
+        text = text.replace(RESET_RULE["end"], addition + "\n\n" + RESET_RULE["end"], 1)
+    documents[RESET_PATH] = text
+    assert (f"{RESET_PATH}: unexpected contract content in {RESET_START}"
+            in checker.validate(documents))
+
+
 def test_runtime_control_contract_requires_reset_supplement(tmp_path: Path) -> None:
     for path, text in DOCUMENTS.items():
         if path == RESET_PATH:

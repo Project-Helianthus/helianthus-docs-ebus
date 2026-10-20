@@ -187,6 +187,8 @@
     "required": [
       "Keep the existing offline, exclusive-writer and valid-base prerequisites.\nQuarantine must preserve the **exact original whole-file bytes**, including\nmalformed control material and opaque retained members, rather than a decoded\nand reserialized approximation. An unreadable or invalid base is refused under\nthe existing repair contract; preservation does not authorize repairing it by\nguessing. Never overwrite an existing quarantine copy.",
       "All quarantine prerequisites must succeed before live replacement begins,\nincluding before creating the temporary replacement file. File fsync alone\ndoes not establish durability of the newly created quarantine directory entry.\nThe quarantine parent-directory fsync must succeed; unsupported operations and\nother errors are failures, not tolerated durability evidence.",
+      "| Order | Required operation / boundary | Failure outcome |",
+      "|---|---|---|",
       "| 1 | Under the exclusive store lock, read the original bytes and validate the existing reset plan and preserved base. | Refuse before replacement; live bytes remain unchanged. No fresh base or identity is invented. |",
       "| 2 | Exclusively create a non-overwriting quarantine file and copy all exact original bytes, completing partial writes. A name collision may select another unused name, never truncate a copy. | If no exclusive copy can be completed, refuse; live bytes remain unchanged. An incomplete artifact is not a preserved copy. |",
       "| 3 | Successfully fsync the quarantine file, then successfully close it. | Any write, file-fsync or close failure refuses before replacement; live bytes remain unchanged. |",
@@ -197,7 +199,8 @@
       "The tool maps quarantine and confirmed pre-replacement failures to\n`FAILED_PRECONDITION` (exit 3). After replacement, a failed directory fsync or\nfailed/disagreeing readback is `AMBIGUOUS` (exit 5). No success may be inferred\nfrom rename alone, a visible file, or readback agreement without established\ndirectory durability. Ambiguity supplies no start, cleanup, native-close or\nadmission proof; the canonical recovery rules continue to fail admission closed.",
       "Namespace-only replacement retains GUID ownership, meta, eBUS cache, unknown\nnamespaces and the verified D5 recovery material under the existing contract.\nReset does not erase independent valid state or discharge retained cleanup and\nclose obligations. It never starts a driver."
     ],
-    "ordered": true
+    "ordered": true,
+    "exact": true
   },
   {
     "path": "api/mcp.md",
