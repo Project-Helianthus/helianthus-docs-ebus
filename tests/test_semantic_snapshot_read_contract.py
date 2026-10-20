@@ -1,6 +1,7 @@
 """Guard the target documentation contract, not runtime adapter acceptance."""
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 import re
@@ -123,7 +124,36 @@ def validate_contract(text: str) -> None:
         {"kind": "quantity", "quantity": {"number": {"coefficient": "0", "exponent10": 0}, "unit": "unit.watt"}},
         {"kind": "boolean", "boolean": False}, {"kind": "text", "text": ""},
     ]
-    assert len(examples) == 6
+    assert len(examples) == 8
+    success_data = {"assets": [
+        {"asset_id": "asset:missing", "selections": [],
+         "unavailable_reason": "semantic.read.reason.asset_unknown"},
+        {"asset_id": "asset:withheld", "selections": [],
+         "unavailable_reason": "semantic.read.reason.publication_withheld"},
+    ]}
+    overflow_error = {
+        "code": "RESOURCE_EXHAUSTED",
+        "message": "semantic snapshot read exceeds bounds",
+        "retriable": False, "source_layer": "gateway",
+    }
+    for example, data, error in (
+        (examples[6], success_data, None),
+        (examples[7], None, overflow_error),
+    ):
+        # Compare the complete body: unavailable entries omit the snapshot
+        # triplet, errors have no partial data, and metadata has no legacy
+        # snapshot ID or Modbus limits. Derive hashes rather than trusting the
+        # published digest or copying it into the expected value.
+        serialized = json.dumps(data, sort_keys=True, separators=(",", ":"))
+        assert example == {
+            "data": data, "error": error,
+            "meta": {
+                "contract": {"name": "helianthus-ebus-mcp", "major": 1, "minor": 0},
+                "consistency": {"mode": "EVALUATED_SEMREG_PUBLICATION"},
+                "data_timestamp": "1970-01-01T00:00:00Z",
+                "data_hash": hashlib.sha256(serialized.encode("utf-8")).hexdigest(),
+            },
+        }
 
 
 def test_semantic_snapshot_read_contract() -> None:
@@ -167,3 +197,44 @@ def test_semantic_snapshot_read_rejects_example_drift(old: str, new: str) -> Non
 def test_semantic_snapshot_read_registered_in_local_gate() -> None:
     gate = (ROOT / "scripts/ci_local.sh").read_text(encoding="utf-8")
     assert "python3 -m pytest -q tests/test_semantic_snapshot_read_contract.py\n" in gate
+
+
+@pytest.mark.parametrize("example_index", (6, 7))
+@pytest.mark.parametrize("mutation", (
+    "hash", "contract", "consistency", "timestamp", "limits", "snapshot_id",
+    "data", "error", "extra_member",
+))
+def test_semantic_snapshot_read_rejects_complete_envelope_drift(
+    example_index: int, mutation: str,
+) -> None:
+    text = DOCUMENT.read_text(encoding="utf-8")
+    fences = list(re.finditer(r"```json\n(.*?)\n```", text, re.S))
+    fence = fences[example_index]
+    example = json.loads(fence[1])
+    if mutation == "hash":
+        example["meta"]["data_hash"] = "wrong-digest"
+    elif mutation == "contract":
+        example["meta"]["contract"]["name"] = "helianthus-modbus-mcp"
+    elif mutation == "consistency":
+        example["meta"]["consistency"]["mode"] = "LIVE"
+    elif mutation == "timestamp":
+        del example["meta"]["data_timestamp"]
+    elif mutation == "limits":
+        example["meta"]["limits"] = {}
+    elif mutation == "snapshot_id":
+        example["meta"]["consistency"]["snapshot_id"] = "synthetic-snapshot"
+    elif mutation == "data":
+        if example_index == 6:
+            example["data"]["assets"][0]["snapshot"] = {}
+        else:
+            example["data"] = {"assets": []}
+    elif mutation == "error":
+        if example_index == 6:
+            example["error"] = {}
+        else:
+            example["error"]["retriable"] = True
+    else:
+        example["extra"] = None
+    mutated = text[:fence.start(1)] + json.dumps(example) + text[fence.end(1):]
+    with pytest.raises(AssertionError):
+        validate_contract(mutated)
