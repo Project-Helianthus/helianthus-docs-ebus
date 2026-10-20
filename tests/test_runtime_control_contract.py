@@ -19,6 +19,38 @@ def test_runtime_control_contract_repository() -> None:
     assert checker.validate(DOCUMENTS) == []
 
 
+EXAMPLE_SECTIONS = [
+    (checker.MCP, "### Read and mutation data",
+     "### Envelope, lifecycle errors and acceptance vectors", "invalid G5 closed data examples"),
+    (checker.API, "## Mutating Tools", "### Unproven-close",
+     "invalid closed request/result examples"),
+    (checker.API, "## `DriverSnapshotV1`", "### Field Invariants",
+     "invalid revision example in ## `DriverSnapshotV1`"),
+    (checker.API, "## `drivers.v1.list`", "## Mutating Tools",
+     "invalid revision example in ## `drivers.v1.list`"),
+]
+
+
+@pytest.mark.parametrize(("path", "start", "end", "error"), EXAMPLE_SECTIONS)
+@pytest.mark.parametrize("info", ["json", "json example", "text", ""])
+@pytest.mark.parametrize("fence", ["```", "~~~"])
+def test_runtime_control_contract_rejects_extra_fences(path, start, end, error, info, fence) -> None:
+    documents = dict(DOCUMENTS)
+    documents[path] = documents[path].replace(
+        start, start + f'\n\n{fence}{info}\n{{"receipt":"unexpected"}}\n{fence}', 1)
+    assert f"{path}: {error}" in checker.validate(documents)
+
+
+@pytest.mark.parametrize(("path", "start", "end", "error"), EXAMPLE_SECTIONS)
+@pytest.mark.parametrize("info", ["json example", "json\texample", " json "])
+def test_runtime_control_contract_accepts_json_info_variants(path, start, end, error, info) -> None:
+    documents = dict(DOCUMENTS)
+    before, section = documents[path].split(start, 1)
+    section, after = section.split(end, 1)
+    documents[path] = before + start + section.replace("```json", "```" + info) + end + after
+    assert checker.validate(documents) == []
+
+
 @pytest.mark.parametrize("clause", BRIDGE_RULE["required"])
 @pytest.mark.parametrize("change", ["weakened", "before", "after"])
 def test_runtime_control_contract_bridge_obligation_scope(clause, change) -> None:
@@ -225,3 +257,192 @@ def test_runtime_control_contract_registered_in_local_gate() -> None:
     gate = (checker.ROOT / "scripts/ci_local.sh").read_text(encoding="utf-8")
     assert "python3 scripts/check_runtime_control_contract.py\n" in gate
     assert "python3 -m pytest -q tests/test_runtime_control_contract.py\n" in gate
+
+
+@pytest.mark.parametrize(("before", "after"), [
+    ("helianthus.runtime.list` |", "helianthus.runtime.enumerate` |"),
+    ("`List()`", "`ListDrivers()`"),
+    ('`{"DriverID":"ebus.primary"}`', '`{"driver_id":"ebus.primary"}`'),
+    ("Detect duplicates before decoding can discard them.", "Ignore duplicates."),
+    ("Normally `data` is null", "Normally `data` is empty"),
+    ("`isError: true`", "`isError: false`"),
+    ("| `UNAVAILABLE` | Persistence failure", "| `INTERNAL` | Persistence failure"),
+    ('"catalog_revision": "29"', '"catalog_revision": 29'),
+    ('"revision": "29"', '"revision": "28"'),
+    ('"enabled": true', '"enabled": 1'),
+    ('"reason": "RETRY_SCHEDULED",', '"reason": "RETRY_SCHEDULED", "extra": true,'),
+    ('{"desired_state":"RUNNING","desired_revision":"8"}',
+     '{"desired_state":"RUNNING","desired_revision":8}'),
+    ('{"desired_state":"RUNNING","desired_revision":"8"}',
+     '{"desired_state":"RUNNING","desired_revision":"8","receipt":"x"}'),
+    ('{"desired_state":"RUNNING","desired_revision":"8"}',
+     '{"desired_state":"RUNNING","desired_revision":"8","desired_revision":"9"}'),
+])
+def test_runtime_control_contract_mcp_rejects_wire_drift(before, after) -> None:
+    documents = dict(DOCUMENTS)
+    assert before in documents[checker.MCP]
+    documents[checker.MCP] = documents[checker.MCP].replace(before, after, 1)
+    assert any(checker.MCP in error for error in checker.validate(documents))
+
+
+def test_runtime_control_contract_mcp_rejects_extra_tool() -> None:
+    documents = dict(DOCUMENTS)
+    row = '| `helianthus.runtime.list` | `{}` | `List()` |'
+    documents[checker.MCP] = documents[checker.MCP].replace(
+        row, row + '\n| `helianthus.runtime.delete` | `{}` | `Delete()` |')
+    assert any("unexpected contract content" in error for error in checker.validate(documents))
+
+
+@pytest.mark.parametrize(("path", "clause"), [
+    (rule["path"], clause)
+    for rule in checker.RULES if rule.get("exact")
+    for clause in rule["required"]
+])
+@pytest.mark.parametrize("whitespace_variant", [False, True])
+def test_runtime_control_contract_rejects_duplicate_exact_units(path, clause, whitespace_variant) -> None:
+    documents = dict(DOCUMENTS)
+    duplicate = checker.normalize(clause).replace(" ", "  ") if whitespace_variant else clause
+    separator = "\n" if clause.startswith("|") else "\n\n"
+    documents[path] = documents[path].replace(clause, clause + separator + duplicate, 1)
+    assert any("unexpected contract content" in error for error in checker.validate(documents))
+
+
+@pytest.mark.parametrize(("path", "row"), [
+    (rule["path"], clause)
+    for rule in checker.RULES
+    for clause in rule["required"] if clause.startswith("|")
+])
+@pytest.mark.parametrize("indent", ["    ", "\t"])
+def test_runtime_control_contract_rejects_indented_table_rows(path, row, indent) -> None:
+    documents = dict(DOCUMENTS)
+    documents[path] = documents[path].replace(row, indent + row, 1)
+    assert checker.validate(documents)
+
+
+@pytest.mark.parametrize("value", ["0", "1", "18446744073709551615"])
+def test_runtime_control_contract_mcp_issued_catalog_revision(value) -> None:
+    documents = dict(DOCUMENTS)
+    documents[checker.MCP] = documents[checker.MCP].replace(
+        '"catalog_revision": "29"', f'"catalog_revision": "{value}"', 1).replace(
+        '"revision": "29"', f'"revision": "{value}"', 1)
+    errors = checker.validate(documents)
+    if value == "0":
+        assert f"{checker.MCP}: invalid G5 closed data examples" in errors
+    else:
+        assert errors == []
+
+
+def test_runtime_control_contract_mcp_allows_reordered_json_members() -> None:
+    documents = dict(DOCUMENTS)
+    documents[checker.MCP] = documents[checker.MCP].replace(
+        '{"desired_state":"RUNNING","desired_revision":"8"}',
+        '{"desired_revision": "8", "desired_state": "RUNNING"}')
+    assert checker.validate(documents) == []
+
+
+@pytest.mark.parametrize(("path", "first", "second"), [
+    (rule["path"], first, second)
+    for rule in checker.RULES if rule.get("exact")
+    for first, second in zip(rule["required"], rule["required"][1:])
+])
+def test_runtime_control_contract_rejects_reordered_exact_units(path, first, second) -> None:
+    documents = dict(DOCUMENTS)
+    text = documents[path]
+    first_at = text.index(first)
+    second_at = text.index(second, first_at + len(first))
+    documents[path] = (text[:first_at] + second + text[first_at + len(first):second_at]
+                       + first + text[second_at + len(second):])
+    assert any("unexpected contract content" in error for error in checker.validate(documents))
+
+
+@pytest.mark.parametrize(("before", "after"), [
+    ("every ordinary MCP transport the gateway offers (HTTP today)",
+     "ordinary MCP HTTP and stdio transports"),
+    ("every ordinary MCP transport the gateway offers (HTTP\ntoday)",
+     "HTTP/stdio"),
+    ("members, non-object inputs and non-string values with",
+     "members, non-object inputs, non-string values and trailing JSON with"),
+    ("transport-level rejection of trailing data", "trailing JSON refusal"),
+    ("A request body with trailing data is rejected at the transport as an invalid\n"
+     "request before any tool runs; `arguments` cannot carry trailing data.", ""),
+])
+def test_runtime_control_contract_mcp_rejects_transport_drift(before, after) -> None:
+    documents = dict(DOCUMENTS)
+    assert before in documents[checker.MCP]
+    documents[checker.MCP] = documents[checker.MCP].replace(before, after, 1)
+    assert any(checker.MCP in error for error in checker.validate(documents))
+
+
+def test_runtime_control_contract_lifecycle_offered_transports() -> None:
+    text = checker.normalize(DOCUMENTS[checker.LIFECYCLE])
+    assert ("Discover and dispatch all five through every ordinary MCP transport the gateway "
+            "offers (HTTP today) with eeBUS disabled or absent") in text
+
+
+@pytest.mark.parametrize(("path", "before", "after"), [
+    (checker.API, "It is not an implementation or acceptance target.",
+     "It is the implementation and acceptance target."),
+    (checker.MANAGER, "`helianthus.runtime.{list,get,start,stop,restart}`",
+     "`drivers.v1.{list,start,stop,restart}`"),
+    (checker.MANAGER, "The historical `drivers.v1.*` tools are not delivery requirements.",
+     "The `drivers.v1.*` tools are delivery requirements."),
+    (checker.LIFECYCLE, "duplicate member rejection and finite context",
+     "duplicate/trailing JSON rejection and finite context"),
+    (checker.LIFECYCLE, "outside the service refusal sequence",
+     "inside the service refusal sequence"),
+    (checker.LIFECYCLE, "non-digits) | `INVALID_ARGUMENT`",
+     "non-digits), trailing JSON | `INVALID_ARGUMENT`"),
+])
+def test_runtime_control_contract_rejects_obsolete_authority_and_body_refusal(path, before, after) -> None:
+    documents = dict(DOCUMENTS)
+    assert before in documents[path]
+    documents[path] = documents[path].replace(before, after, 1)
+    assert any(path in error for error in checker.validate(documents))
+
+
+@pytest.mark.parametrize("replacement", [
+    "", "## Renamed G5 contract", "### G5 runtime lifecycle MCP contract (D4)",
+    "## G5 runtime lifecycle MCP contract (D4) renamed",
+    "<!--\n## G5 runtime lifecycle MCP contract (D4)\n-->",
+    "```text\n## G5 runtime lifecycle MCP contract (D4)\n```",
+    "## G5 runtime lifecycle MCP contract (D4)\n\n## G5 runtime lifecycle MCP contract (D4)",
+])
+def test_runtime_control_contract_requires_g5_owning_heading(replacement) -> None:
+    documents = dict(DOCUMENTS)
+    documents[checker.MCP] = documents[checker.MCP].replace(
+        "## G5 runtime lifecycle MCP contract (D4)", replacement, 1)
+    assert any("invalid owning section" in error for error in checker.validate(documents))
+
+
+@pytest.mark.parametrize("subsection", [
+    "### Ordinary discovery and dispatch",
+    "### Closed inputs and exact service delegation",
+    "### Read and mutation data",
+    "### Envelope, lifecycle errors and acceptance vectors",
+])
+def test_runtime_control_contract_g5_subsections_stay_under_owner(subsection) -> None:
+    documents = dict(DOCUMENTS)
+    documents[checker.MCP] = documents[checker.MCP].replace(
+        subsection, "## Unrelated contract\n\n" + subsection, 1)
+    assert any("invalid owning section" in error for error in checker.validate(documents))
+
+
+def test_runtime_control_contract_lifecycle_implementation_status() -> None:
+    opening = checker.normalize(DOCUMENTS[checker.LIFECYCLE].split("\n## ", 1)[0])
+    assert "A5 is implemented as an internal service for lifecycle-only `ebus.primary` only" in opening
+    assert "The first external ordinary-MCP contract below is pending gateway PR 2." in opening
+    assert "This page claims no hardware validation or universal provider SPI." in opening
+
+
+@pytest.mark.parametrize(("before", "after"), [
+    ("A5 is implemented as an internal service for `ebus.primary` only",
+     "A5 is not implemented as an internal service"),
+    ("not a\nuniversal provider SPI", "a universal provider SPI"),
+    ("the external ordinary-MCP slice remains pending",
+     "the external ordinary-MCP slice has shipped"),
+])
+def test_runtime_control_contract_rejects_lifecycle_status_drift(before, after) -> None:
+    documents = dict(DOCUMENTS)
+    assert before in documents[checker.LIFECYCLE]
+    documents[checker.LIFECYCLE] = documents[checker.LIFECYCLE].replace(before, after, 1)
+    assert any(checker.LIFECYCLE in error for error in checker.validate(documents))

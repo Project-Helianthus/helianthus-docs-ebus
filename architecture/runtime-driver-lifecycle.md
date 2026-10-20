@@ -3,9 +3,13 @@
 Status: proposed software 0.7 contract. This page specifies the selected D5
 epoch policy D1/A2 and D5 recovery mechanism for gateway issue
 [#1032](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1032),
-PRs 0a/0b and amendments A1–A4/A6, covering S0/S5, S1, S3, S4/S6/S7 and CTL-01–CTL-19. It does not claim
-that the runtime control service or durable recovery is implemented. The G4 publication hub has
-an in-memory journal; that alone supplies no process-loss recovery.
+PRs 0a/0b and amendments A1–A6, covering S0/S5, S1/S2, S3, S4/S6/S7 and CTL-01–CTL-19.
+A5 is implemented as an internal service for lifecycle-only `ebus.primary` only by
+[gateway PR #1241](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/1241).
+The first external ordinary-MCP contract below is pending gateway PR 2.
+Internal service/write-ahead recovery exists; direct G4 publishers still have
+an in-memory journal, which alone supplies no process-loss recovery. This page
+claims no hardware validation or universal provider SPI.
 
 The companion [gateway runtime/driver contract](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/docs/architecture/runtime-driver-provider-contract-v1.md)
 owns the provider SPI and CTL/LIFE vectors. The final G5 operator decisions
@@ -14,9 +18,9 @@ hooks, using SemReg's existing public `NewPublicationKernel` constructor and
 `Apply`. No SemReg API, dependency change or snapshot-import prerequisite is
 introduced. Earlier proposals for client command tracking and lifecycle
 authorization in that contract must be read with the final D3/D4 decisions below.
-Gateway J09/J10 must amend that companion accordingly: its idempotency key,
+The companion's historical idempotency key,
 receipt, `IDEMPOTENCY_CONFLICT`, `PERMISSION_DENIED` and persistent idempotency
-lookup are superseded by this page, and its control error enum gains
+lookup are superseded by this page; the amended control error enum includes
 `TRANSITION_BUSY`, `RESOURCE_EXHAUSTED` and `COUNTER_EXHAUSTED`.
 
 ## S0/A1: typed compiled-driver registration
@@ -73,7 +77,7 @@ get returns the corresponding coherent cached entry and `NOT_FOUND` for an
 unknown ID. Neither operation constructs a driver, probes an endpoint, refreshes
 native state or performs discovery.
 
-### First production registration and dispatch evidence
+### First production registration and historical dispatch evidence
 
 `ebus.primary` is the only production registration in this slice. It is
 southbound, configured/enabled and lifecycle-only. It owns one stable configured
@@ -81,6 +85,10 @@ source and declares no hooks, semantic assets, bindings, capability instances or
 semantic publications. Native invocation capabilities remain separate from
 semantic capability instances. The empty barrier and cleanup set are valid;
 never fabricate semantic material to satisfy a binding-bearing provider SPI.
+
+The following paragraph preserves the original registration dispatch evidence,
+before production composition landed; its Unknown/blocker statements describe
+that earlier supplied material. Current A5 composition status follows it.
 
 The native owner is
 [`github.com/Project-Helianthus/helianthus-ebusgo`](https://github.com/Project-Helianthus/helianthus-ebusgo),
@@ -95,6 +103,14 @@ descriptor `v1` must not substitute for a native contract version. Do not instal
 a placeholder reference, derive identity from an endpoint or admit this driver
 until the exact supported native contract and configured source are supplied
 and validated. This page does not claim that production registration has passed.
+
+Current A5 composition derives the configured source from DriverID and the
+persisted instance GUID before endpoint work. Its native reference names the
+public transport module, `transport.DriverRuntime` and the exact linked module
+version; a workspace/replacement build reports `devel` verbatim. A missing GUID
+withholds the driver as FAILED without a placeholder. This is software
+composition evidence from the companion's S4/S6/S7 section, not native wire
+proof, profile qualification or a concrete device identity published here.
 
 ### S0/CTL-01 synthetic acceptance obligations
 
@@ -252,10 +268,10 @@ This bridge companion is the partial slice tracked by
 [docs issue #692](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/692).
 Publish A3/A4 and S4/S6/S7 before gateway manager/composition changes. Final
 D1/D2/D3/D5 are settled as described on this page; they are not open choices
-from the earlier issue draft. **A5 remains proposed**: only the gateway
-composition implementation may change the companion's status to say the
-service is implemented for `ebus.primary`. Publishing this contract establishes
-neither that implementation nor a universal provider SPI.
+from the earlier issue draft. **A5 is implemented internally** for
+`ebus.primary` by the merged gateway composition. Public lifecycle tools remain
+pending PR 2 under [the D4 MCP contract](../api/mcp.md#g5-runtime-lifecycle-mcp-contract-d4).
+That status supplies no universal provider SPI or hardware-validation claim.
 
 ### Source ownership without semantic assets
 
@@ -273,9 +289,12 @@ family's semantic migration. Native effective capabilities report only the
 currently admitted native invocation gates and are withdrawn with native
 admission. In particular, the manager's `SEMANTIC_PROJECTION` gate for legacy
 consumers is a native invocation capability, not a semantic capability instance
-or a hub publication. The existing native snapshot `effective_capabilities`
-field in the [driver API](../api/driver-runtime-v1.md#field-invariants) retains
-that native meaning; it must not be populated with semantic instances.
+or a hub publication. The historical `DriverSnapshotV1` proposal's
+`effective_capabilities` field in the [retired driver API](../api/driver-runtime-v1.md#field-invariants)
+retains that native meaning; it must not be populated with semantic instances.
+The first external five-tool [G5 MCP contract](../api/mcp.md#g5-runtime-lifecycle-mcp-contract-d4)
+uses its closed driver projection without capability fields; the historical
+snapshot is not an implementation or acceptance target.
 
 A4 is a bounded lifecycle-only exception to the companion's binding-bearing
 SPI. An asset-free source needs no semantic binding, capability instance,
@@ -601,8 +620,9 @@ This amendment is the partial slice tracked by
 [docs issue #660](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/660).
 It replaces the companion's unimplemented receipt and idempotency-record design,
 including its request/result types, S1/S3 rules and CTL-03–CTL-11 expectations.
-It is the public prerequisite for the durable store, service and MCP slices;
-it does not claim those implementations have shipped. The choices below are
+A5 is implemented as an internal service for `ebus.primary` only, not a
+universal provider SPI; the external ordinary-MCP slice remains pending.
+The choices below are
 selected implementation bounds, with no remaining operator checkpoint.
 
 Desired state has exactly two values: `RUNNING`, `STOPPED`. Observed state has
@@ -692,7 +712,7 @@ of `api/driver-runtime-v1.md`: `idempotency_key`, `request_id` and any receipt
 or completed-operation member are not accepted, and a request carrying them is
 refused as `INVALID_ARGUMENT` like any additional member. A finite caller deadline comes from the call
 context. Closed decoding rejects unknown/missing fields, duplicate members,
-malformed revisions and trailing JSON. No lifecycle principal, authority,
+malformed revisions. No lifecycle principal, authority,
 idempotency key, canonical request digest, key lookup, receipt or completed-
 operation record exists. Semantic replay digests remain D5 recovery material.
 
@@ -780,7 +800,7 @@ unchanged. Checks run in this fixed order and the first failing check decides:
 
 | Order | Refusal | Code | Retryable |
 |---|---|---|---|
-| 1 | Unknown, missing or duplicate member, malformed revision string (including `"0"`, leading zeros, signs, whitespace, non-digits), trailing JSON | `INVALID_ARGUMENT` | No |
+| 1 | Unknown, missing or duplicate member, malformed revision string (including `"0"`, leading zeros, signs, whitespace, non-digits) | `INVALID_ARGUMENT` | No |
 | 2 | `DriverID` noncanonical or not registered | `NOT_FOUND` | No |
 | 3 | Driver record malformed or `runtime_control` failed to load; the driver reports `FAILED` | `FAILED_PRECONDITION` | No, until offline repair |
 | 3 | Readback after ambiguous persistence still pending | `UNAVAILABLE` | Yes |
@@ -1055,6 +1075,38 @@ tests protect these documentation obligations and the closed API examples.
 They do not execute service/store/MCP behavior or prove recovery; implementation
 tests and payload goldens must independently meet the vectors above.
 
+## S2/D4: ordinary MCP external control
+
+[The exact wire contract](../api/mcp.md#g5-runtime-lifecycle-mcp-contract-d4)
+selects `helianthus.runtime.list`, `helianthus.runtime.get`,
+`helianthus.runtime.start`, `helianthus.runtime.stop` and
+`helianthus.runtime.restart` for PR 2. It replaces revision 9's S2 kernel
+operator boundary and experimental-tool proposal. The five tools delegate to
+one ControlService: cached List/Get and Decide with the exact START/STOP/RESTART
+method. They never bypass durable decisions through DriverManager.
+
+Discover and dispatch all five through every ordinary MCP transport the gateway
+offers (HTTP today) with eeBUS disabled or absent, and retain registration while
+eBUS is STOPPED or FAILED.
+There is no lifecycle principal/authority adapter, authorization check before
+0.9, new socket or operator-only registration. Closed two-field mutations,
+canonical IDs/revisions, duplicate member rejection and finite context
+deadlines retain S1/D3's ordered refusals. Whole-body trailing data is rejected
+by the transport as an invalid request before any tool or service call; it is
+outside the service refusal sequence and never produces the lifecycle
+`INVALID_ARGUMENT` envelope. Accepted/no-op data contains only
+desired state and revision; results are observed through coherent sorted
+list/get, never a receipt. After a lost RESTART response, read back: an
+old-revision retry conflicts, while a fresh-revision retry after settlement
+requests another restart.
+
+The MCP adapter must preserve amended CTL-01–CTL-19 above, the existing
+deterministic meta/data/error envelope and data_hash, and A2 LIFE fencing and
+independent-close obligations. PR 2 owns synthetic transport-dispatch coverage
+and schema/output goldens; this documentation does not claim those tests pass.
+No public lifecycle GraphQL fields are added. Existing eBUS status parity,
+partial last-known-good evidence/provenance and fail-closed admission remain.
+
 ## D4/public surface boundary
 
 Final D4 removes G5 lifecycle principal/authorization checks and the proposed
@@ -1064,7 +1116,8 @@ pre-stable until 1.0, including existing eBUS namespaces: no new major or
 experimental namespace is introduced. Intentional payload changes require
 documentation, deterministic envelopes, schema/output goldens and PR
 explanation. Preserve existing eBUS MCP/GraphQL parity; this recovery seam adds
-no lifecycle GraphQL surface and no new public tool payload.
+no lifecycle GraphQL surface. The S2/D4 contract above defines the first public
+lifecycle tool payloads without claiming their implementation.
 
 ## Required synthetic restoration proof
 
