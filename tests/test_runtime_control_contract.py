@@ -19,6 +19,68 @@ def test_runtime_control_contract_repository() -> None:
     assert checker.validate(DOCUMENTS) == []
 
 
+UNAVAILABLE_RULE = next(r for r in checker.RULES if r["start"] == "## Unavailable Reads (D3)")
+
+
+@pytest.mark.parametrize("clause", UNAVAILABLE_RULE["required"])
+@pytest.mark.parametrize("change", ["weakened", "before", "after"])
+def test_runtime_control_contract_unavailable_obligation_scope(clause, change) -> None:
+    documents = dict(DOCUMENTS)
+    text = documents[checker.API]
+    assert clause in text
+    if change == "weakened":
+        text = text.replace(clause, clause + " Optional.")
+    else:
+        text = text.replace(clause, "")
+        marker = UNAVAILABLE_RULE["start"] if change == "before" else UNAVAILABLE_RULE["end"]
+        text = text.replace(marker, clause + "\n\n" + marker if change == "before"
+                            else marker + "\n\n" + clause)
+    documents[checker.API] = text
+    assert checker.validate(documents)
+
+
+@pytest.mark.parametrize(("before", "after"), [
+    ('("list", "issued-revision bound"),', ''),
+    ('("get ebus.primary", "catalog revision"),', ''),
+    ('"data": None', '"data": {}'),
+    ('"data": None', '"data": {"drivers": []}'),
+    ('"data": None', '"data": {"desired_revision": "0"}'),
+    ('"data": None', '"data": {"revision": "0", "manager_revision": "0"}'),
+    ('"code": "UNAVAILABLE"', '"code": "FAILED_PRECONDITION"'),
+    ('"retriable": False', '"retriable": True'),
+    ('"source_layer": "gateway",', ''),
+    ('"message": "Durable revision bounds unavailable; offline repair required",', ''),
+    ('hashlib.sha256(b"null")', 'hashlib.sha256(b"{}")'),
+    ('"consistency": {"mode": "LIVE"},', ''),
+    ('"data_timestamp": "2000-01-01T00:00:00Z",', ''),
+    ('"contract": {"name": "helianthus-ebus-mcp", "major": 1, "minor": 0},', ''),
+    ('"data": None', '"data":'),
+])
+def test_runtime_control_contract_unavailable_envelope_regressions(before, after) -> None:
+    documents = dict(DOCUMENTS)
+    example = UNAVAILABLE_RULE["python_example"]
+    assert before in example
+    documents[checker.API] = documents[checker.API].replace(example, example.replace(before, after))
+    assert any("changed unavailable-read envelope example" in error
+               for error in checker.validate(documents))
+
+
+@pytest.mark.parametrize("change", ["missing", "duplicate", "non_python", "formatting"])
+def test_runtime_control_contract_unavailable_example_fence(change) -> None:
+    documents = dict(DOCUMENTS)
+    example = UNAVAILABLE_RULE["python_example"]
+    fence = "```python\n" + example + "```"
+    replacement = {
+        "missing": "",
+        "duplicate": fence + "\n\n" + fence,
+        "non_python": "```text\n" + example + "```",
+        "formatting": "```python\n# Formatting does not change the envelope.\n" + example + "```",
+    }[change]
+    assert fence in documents[checker.API]
+    documents[checker.API] = documents[checker.API].replace(fence, replacement)
+    assert bool(checker.validate(documents)) == (change != "formatting")
+
+
 @pytest.mark.parametrize("clause", BRIDGE_RULE["required"])
 @pytest.mark.parametrize("change", ["weakened", "before", "after"])
 def test_runtime_control_contract_bridge_obligation_scope(clause, change) -> None:

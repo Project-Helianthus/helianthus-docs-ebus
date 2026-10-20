@@ -382,9 +382,9 @@ MCP uses its existing deterministic `meta`, `data`, `error` convention with the
 categorical error members `code`, `message`, `retriable`, `source_layer`.
 For invalid durable bounds, `retriable` is false because explicit repair is
 required. Error metadata must not imply a validated lifecycle revision.
-GraphQL preserves the same failure meaning through its existing error mapping
-and a null affected root, never a successful stale view. This clarification
-adds no public schema, receipt, idempotency store or authority boundary.
+This clarification applies only to MCP/manager reads; there is no lifecycle
+GraphQL API, resolver, mutation or subscription. It adds no public schema,
+receipt, idempotency store or authority boundary.
 
 The following standard-library example generates two complete proposed failure
 envelopes: list with an invalid issued bound, and get of `ebus.primary` with an
