@@ -270,6 +270,31 @@ def test_runtime_control_contract_rejects_duplicate_exact_units(path, clause, wh
     assert any("unexpected contract content" in error for error in checker.validate(documents))
 
 
+@pytest.mark.parametrize(("path", "row"), [
+    (rule["path"], clause)
+    for rule in checker.RULES
+    for clause in rule["required"] if clause.startswith("|")
+])
+@pytest.mark.parametrize("indent", ["    ", "\t"])
+def test_runtime_control_contract_rejects_indented_table_rows(path, row, indent) -> None:
+    documents = dict(DOCUMENTS)
+    documents[path] = documents[path].replace(row, indent + row, 1)
+    assert checker.validate(documents)
+
+
+@pytest.mark.parametrize("value", ["0", "1", "18446744073709551615"])
+def test_runtime_control_contract_mcp_issued_catalog_revision(value) -> None:
+    documents = dict(DOCUMENTS)
+    documents[checker.MCP] = documents[checker.MCP].replace(
+        '"catalog_revision": "29"', f'"catalog_revision": "{value}"', 1).replace(
+        '"revision": "29"', f'"revision": "{value}"', 1)
+    errors = checker.validate(documents)
+    if value == "0":
+        assert f"{checker.MCP}: invalid G5 closed data examples" in errors
+    else:
+        assert errors == []
+
+
 def test_runtime_control_contract_mcp_allows_reordered_json_members() -> None:
     documents = dict(DOCUMENTS)
     documents[checker.MCP] = documents[checker.MCP].replace(

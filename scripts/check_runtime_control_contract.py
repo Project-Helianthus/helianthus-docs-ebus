@@ -73,9 +73,11 @@ def prose(text: str) -> str:
 
 def units(text: str) -> list[str]:
     result = []
-    for block in re.split(r"\n\s*\n", text.strip()):
-        for unit in block.splitlines() if block.startswith("|") else [block]:
-            result.append(normalize(unit))
+    for block in re.split(r"\n\s*\n", text.strip("\n")):
+        for unit in block.splitlines() if block.lstrip().startswith("|") else [block]:
+            # Keep indented table rows unequal to the frozen, unindented rows.
+            result.append(unit if unit.lstrip().startswith("|") and not unit.startswith("|")
+                          else normalize(unit))
     return result
 
 
@@ -141,7 +143,7 @@ def validate(documents: dict[str, str]) -> list[str]:
     try:
         listing, decision = [json.loads(s, object_pairs_hook=closed_object) for s in examples]
         assert isinstance(listing, dict) and listing.keys() == {"catalog_revision", "drivers"}
-        assert revision(listing["catalog_revision"])
+        assert revision(listing["catalog_revision"]) and listing["catalog_revision"] != "0"
         assert isinstance(listing["drivers"], list) and len(listing["drivers"]) == 1
         driver = listing["drivers"][0]
         assert driver == {
