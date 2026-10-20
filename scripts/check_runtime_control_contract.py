@@ -20,6 +20,7 @@ from markdown_it import MarkdownIt
 ROOT = Path(__file__).resolve().parents[1]
 RULES = json.loads(Path(__file__).with_name("runtime_control_contract.json").read_text())
 API = "api/driver-runtime-v1.md"
+MCP = "api/mcp.md"
 LIFECYCLE = "architecture/runtime-driver-lifecycle.md"
 REFUSAL_ORDER = [
     ("1", "`INVALID_ARGUMENT`"), ("2", "`NOT_FOUND`"), ("3", "`FAILED_PRECONDITION`"),
@@ -70,11 +71,13 @@ def prose(text: str) -> str:
     return re.sub(r"<!--.*?-->", "", "".join(lines), flags=re.DOTALL)
 
 
-def units(text: str) -> set[str]:
-    result = set()
-    for block in re.split(r"\n\s*\n", text.strip()):
-        for unit in block.splitlines() if block.startswith("|") else [block]:
-            result.add(normalize(unit))
+def units(text: str) -> list[str]:
+    result = []
+    for block in re.split(r"\n\s*\n", text.strip("\n")):
+        for unit in block.splitlines() if block.lstrip().startswith("|") else [block]:
+            # Keep indented table rows unequal to the frozen, unindented rows.
+            result.append(unit if unit.lstrip().startswith("|") and not unit.startswith("|")
+                          else normalize(unit))
     return result
 
 
@@ -100,18 +103,33 @@ def validate(documents: dict[str, str]) -> list[str]:
     for rule in RULES:
         text = prose(documents[rule["path"]])
         start, end = rule["start"], rule["end"]
-        # A start/end marker must be an actual, unique section heading.
+        # Markers must be actual, unique section headings; a null end freezes
+        # the final section through EOF.
         headings = list(re.finditer(r"^ {0,3}#{2,3} .+$", text, re.MULTILINE))
         starts = [m for m in headings if m.group().lstrip().startswith(start)]
-        ends = [m for m in headings if m.group().lstrip().startswith(end)]
-        if len(starts) != 1 or len(ends) != 1 or starts[0].end() >= ends[0].start():
+        ends = [m for m in headings if end and m.group().lstrip().startswith(end)]
+        section_end = ends[0].start() if len(ends) == 1 else len(text)
+        if (len(starts) != 1 or (end is not None and len(ends) != 1)
+                or starts[0].end() >= section_end):
             errors.append(f"{rule['path']}: invalid section {start}")
             continue
-        present = units(text[starts[0].end():ends[0].start()])
+        if parent := rule.get("parent"):
+            owners = [m for m in headings
+                      if m.group().lstrip().startswith("## ")
+                      and m.start() < starts[0].start()]
+            matches = [m for m in headings if m.group().lstrip() == parent]
+            if (len(matches) != 1 or not owners or owners[-1] != matches[0]
+                    or any(m.group().lstrip().startswith("## ")
+                           for m in headings
+                           if starts[0].end() < m.start() < section_end)):
+                errors.append(f"{rule['path']}: invalid owning section {parent}")
+        present = units(text[starts[0].end():section_end])
         for required in rule["required"]:
             if normalize(required) not in present:
                 errors.append(f"{rule['path']}: changed obligation: {normalize(required)[:100]}")
-        section_text = normalize(text[starts[0].end():ends[0].start()])
+        if rule.get("exact") and present != [normalize(s) for s in rule["required"]]:
+            errors.append(f"{rule['path']}: unexpected contract content in {start}")
+        section_text = normalize(text[starts[0].end():section_end])
         if rule.get("ordered"):
             positions = [section_text.find(normalize(clause)) for clause in rule["required"]]
             if positions != sorted(positions):
@@ -123,11 +141,38 @@ def validate(documents: dict[str, str]) -> list[str]:
             if re.search(pattern, section_text):
                 errors.append(f"{rule['path']}: forbidden classification: {pattern[:60]}")
 
-    # Exactly one request/result pair, independent of whitespace/key order.
+    # G5 examples are separate from normative prose and use the closed wire
+    # projection, not the older DriverSnapshotV1 proposal. Count every fence,
+    # regardless of info string, so unexpected rendered examples cannot hide.
+    mcp_section = documents[MCP].split("### Read and mutation data", 1)[-1].split(
+        "### Envelope, lifecycle errors and acceptance vectors", 1)[0]
+    examples = [t.content for t in MarkdownIt().parse(mcp_section)
+                if t.type == "fence"]
+    try:
+        listing, decision = [json.loads(s, object_pairs_hook=closed_object) for s in examples]
+        assert isinstance(listing, dict) and listing.keys() == {"catalog_revision", "drivers"}
+        assert revision(listing["catalog_revision"]) and listing["catalog_revision"] != "0"
+        assert isinstance(listing["drivers"], list) and len(listing["drivers"]) == 1
+        driver = listing["drivers"][0]
+        assert driver == {
+            "driver_id": "ebus.primary", "enabled": True,
+            "desired_state": "RUNNING", "desired_revision": "7",
+            "observed_state": "BACKOFF", "reason": "RETRY_SCHEDULED",
+            "safety_quarantined": False, "revision": listing["catalog_revision"],
+        }
+        assert type(driver["enabled"]) is bool and type(driver["safety_quarantined"]) is bool
+        assert isinstance(decision, dict) and decision.keys() == {"desired_state", "desired_revision"}
+        assert decision["desired_state"] in {"RUNNING", "STOPPED"}
+        assert revision(decision["desired_revision"]) and decision["desired_revision"] != "0"
+    except (ValueError, TypeError, AssertionError, KeyError):
+        errors.append(f"{MCP}: invalid G5 closed data examples")
+
+    # Historical proposal consistency only; G5 above owns public acceptance.
+    # Exactly one archived request/result pair, independent of whitespace/key order.
     api = documents[API]
     section = api.split("## Mutating Tools", 1)[-1].split("### Unproven-close", 1)[0]
     examples = [t.content for t in MarkdownIt().parse(section)
-                if t.type == "fence" and t.info.strip() == "json"]
+                if t.type == "fence"]
     try:
         request, result = [json.loads(s, object_pairs_hook=closed_object) for s in examples]
         assert set(request) == {"DriverID", "ExpectedRevision"}
@@ -145,7 +190,7 @@ def validate(documents: dict[str, str]) -> list[str]:
     ):
         section = api.split(heading, 1)[-1].split(following, 1)[0]
         examples = [t.content for t in MarkdownIt().parse(section)
-                    if t.type == "fence" and t.info.strip() == "json"]
+                    if t.type == "fence"]
         try:
             assert len(examples) == 1
             obj = json.loads(examples[0], object_pairs_hook=closed_object)
