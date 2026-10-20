@@ -1,6 +1,6 @@
 """Guard the proposed operation contract; this does not qualify an executor.
 
-The reviewed fixture freezes visible normative blocks and complete examples.
+The reviewed fixture freezes block structure, visible rules and complete examples.
 Intentional contract changes require a reviewed fixture update. Whitespace and
 JSON member ordering are immaterial; hidden prose cannot satisfy an obligation.
 """
@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import copy
 import json
+import re
 from pathlib import Path
 
 from markdown_it import MarkdownIt
@@ -34,10 +35,12 @@ def closed_object(pairs: list[tuple[str, object]]) -> dict:
 def validate_contract(text: str) -> None:
     blocks = []
     examples = []
+    structure = []
     for token in MarkdownIt("commonmark").parse(text):
         assert token.type not in {"html_block", "code_block"}, (
             "Raw HTML blocks and indented code blocks are not allowed in this contract"
         )
+        structure.append(f"{token.type}:{token.tag}:{token.nesting}")
         if token.type == "inline":
             assert all(child.type != "html_inline" for child in token.children or []), (
                 "Inline HTML is not allowed in this contract"
@@ -54,6 +57,8 @@ def validate_contract(text: str) -> None:
     # every no-send rule, causal readback requirements and the rule trace.
     assert blocks == CONTRACT["visible_blocks"], "Visible contract blocks changed"
     assert examples == CONTRACT["examples"], "Operation examples changed"
+    # Type, HTML tag and nesting preserve list containers and heading levels.
+    assert structure == CONTRACT["block_structure"], "Contract block structure changed"
 
 
 def replace_token(token, replacement: str) -> str:
@@ -160,6 +165,30 @@ def test_rejects_semantic_weakening(before: str, after: str) -> None:
 def test_requires_every_example(token) -> None:
     with pytest.raises(AssertionError, match="Operation examples changed"):
         validate_contract(replace_token(token, ""))
+
+
+@pytest.mark.parametrize("token", [token for token in TOKENS if token.type == "ordered_list_open"])
+def test_rejects_unordered_admission_steps(token) -> None:
+    lines = TEXT.splitlines(keepends=True)
+    start, end = token.map
+    replacement = re.sub(r"^( *)([0-9]+)\. ", r"\1-  ", "".join(lines[start:end]), flags=re.MULTILINE)
+    changed = replace_token(token, replacement)
+    assert [t.content for t in MarkdownIt("commonmark").parse(changed) if t.type == "inline"] == [
+        t.content for t in BLOCKS
+    ]
+    with pytest.raises(AssertionError, match="Contract block structure changed"):
+        validate_contract(changed)
+
+
+@pytest.mark.parametrize("token", [
+    token for token in TOKENS if token.type == "heading_open" and token.tag == "h2"
+])
+def test_rejects_demoted_section(token) -> None:
+    lines = TEXT.splitlines(keepends=True)
+    start, end = token.map
+    changed = replace_token(token, "#" + "".join(lines[start:end]))
+    with pytest.raises(AssertionError, match="Contract block structure changed"):
+        validate_contract(changed)
 
 
 def test_semantic_operation_route_registered_in_local_gate() -> None:
