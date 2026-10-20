@@ -5,8 +5,14 @@
 This page freezes the target protocol-neutral lifecycle architecture for the
 first Helianthus `DriverManager`. It is a pre-implementation contract, not a
 claim that every API or consumer described here is present in a released
-gateway. The public MCP shape is owned by
-[`../../api/driver-runtime-v1.md`](../../api/driver-runtime-v1.md).
+gateway. The public MCP shape is owned by the
+[G5 contract in mcp.md](../../api/mcp.md#g5-runtime-lifecycle-mcp-contract-d4).
+The older [runtime API proposal](../../api/driver-runtime-v1.md), including its
+inventory, fixed catalog and snapshot projection, is superseded historical
+material. The catalog and consumer acceptance below describe the broader
+manager proposal; they must not add tools, placeholder drivers or public fields
+to the first external MCP slice. That slice lists registered drivers and uses
+only the G5 wire projection.
 
 V1 manages exactly these stable driver instances:
 
@@ -47,7 +53,7 @@ document, or maintain an independent lifecycle FSM.
 
 Process readiness is not driver readiness. The process is ready after its
 mandatory control plane is serving, the driver catalog exists, configuration
-classification has completed, and `drivers.v1.list` can return a coherent
+classification has completed, and `helianthus.runtime.list` can return a coherent
 snapshot. At least one failed driver does not make process readiness fail.
 
 A protocol-local startup failure never terminates the shared gateway. HTTP,
@@ -272,10 +278,12 @@ certificate identity, or device identity.
 
 The implementation follows the platform delivery pipeline:
 
-1. **MCP prototype**: implement and stabilize `drivers.v1.list`,
-   `drivers.v1.start`, `drivers.v1.stop`, and `drivers.v1.restart`.
-2. **GraphQL parity**: freeze the equivalent snapshot and mutations without
-   replacing MCP ownership.
+1. **MCP prototype**: implement and stabilize exactly
+   `helianthus.runtime.{list,get,start,stop,restart}` under the
+   [G5 contract](../../api/mcp.md#g5-runtime-lifecycle-mcp-contract-d4).
+   The historical `drivers.v1.*` tools are not delivery requirements.
+2. **GraphQL parity**: a later consumer gate freezes the equivalent snapshot
+   and mutations without replacing MCP ownership; PR 2 adds no lifecycle GraphQL.
 3. **Portal rollout**: render driver cards and lifecycle controls from the
    gateway APIs; Portal remains a consumer.
 4. **Home Assistant rollout**: expose native entities/actions after GraphQL is

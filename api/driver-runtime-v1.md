@@ -2,10 +2,22 @@
 
 ## Status And Authority
 
-This page freezes the target MCP-first public contract for the generic gateway
-driver lifecycle. It is pending implementation. The process and provider
-ownership model is defined in
+Superseded: [runtime-driver-lifecycle.md](../architecture/runtime-driver-lifecycle.md)
+now owns the runtime lifecycle contract: durable decisions, refusal order,
+request members and control semantics; where the pages differ, the lifecycle
+page governs.
+
+The public API proposal below is superseded historical material in its entirety,
+including the `drivers.v1.*` inventory, fixed three-driver catalog and richer
+`DriverSnapshotV1` projection. It is not an implementation or acceptance target.
+The authoritative first external MCP surface is the five-tool
+[G5 contract in mcp.md](./mcp.md#g5-runtime-lifecycle-mcp-contract-d4);
+this historical proposal must not create extra tools, placeholder drivers or
+additional public fields. Validators retaining examples below check historical
+consistency only. The process and provider ownership model is defined in
 [`../docs/platform/driver-runtime-manager-v1.md`](../docs/platform/driver-runtime-manager-v1.md).
+
+## Historical Public API Proposal
 
 The V1 MCP namespace contains exactly:
 
