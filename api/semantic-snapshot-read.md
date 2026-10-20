@@ -593,7 +593,7 @@ as defined above; these unavailable entries must omit all three.
       "mode": "EVALUATED_SEMREG_PUBLICATION"
     },
     "data_timestamp": "1970-01-01T00:00:00Z",
-    "data_hash": "668b6005087d485609443d2d2dc327aa7f9fe80e0b3a69df431cbc96999f7aad"
+    "data_hash": "\u0036\u0036\u0038\u0062\u0036\u0030\u0030\u0035\u0030\u0038\u0037\u0064\u0034\u0038\u0035\u0036\u0030\u0039\u0034\u0034\u0033\u0064\u0032\u0064\u0032\u0064\u0063\u0033\u0032\u0037\u0061\u0061\u0037\u0066\u0039\u0066\u0065\u0038\u0030\u0065\u0030\u0062\u0033\u0061\u0036\u0039\u0064\u0066\u0034\u0033\u0031\u0063\u0062\u0063\u0039\u0036\u0039\u0039\u0039\u0066\u0037\u0061\u0061\u0064"
   }
 }
 ```
@@ -619,11 +619,14 @@ A whole-read overflow error has no partial asset data and is not retriable:
       "mode": "EVALUATED_SEMREG_PUBLICATION"
     },
     "data_timestamp": "1970-01-01T00:00:00Z",
-    "data_hash": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+    "data_hash": "\u0037\u0034\u0032\u0033\u0034\u0065\u0039\u0038\u0061\u0066\u0065\u0037\u0034\u0039\u0038\u0066\u0062\u0035\u0064\u0061\u0066\u0031\u0066\u0033\u0036\u0061\u0063\u0032\u0064\u0037\u0038\u0061\u0063\u0063\u0033\u0033\u0039\u0034\u0036\u0034\u0066\u0039\u0035\u0030\u0037\u0030\u0033\u0062\u0038\u0063\u0030\u0031\u0039\u0038\u0039\u0032\u0066\u0039\u0038\u0032\u0062\u0039\u0030\u0062"
   }
 }
 ```
 
+The two synthetic digest strings use JSON Unicode escapes to avoid publishing
+long hexadecimal literals; parsing the examples yields the ordinary digest
+strings. This is an illustrative JSON encoding, not a required wire encoding.
 Both hashes are computed from synthetic `data` using the existing envelope
 algorithm (SHA-256 of compact JSON; object keys sorted for these map values),
 not SemReg canonical snapshot hashing. They can be reproduced with the Python
