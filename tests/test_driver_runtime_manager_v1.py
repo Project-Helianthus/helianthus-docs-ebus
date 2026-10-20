@@ -221,7 +221,7 @@ def test_rollout_is_mcp_first_and_one_release_acceptance_is_explicit() -> None:
     text = _normalized(ARCHITECTURE)
     for required in (
         "MCP prototype",
-        "GraphQL parity",
+        "Status parity",
         "Portal rollout",
         "Home Assistant rollout",
         "one consolidated add-on release",
@@ -293,7 +293,19 @@ def test_public_mcp_authority_supersedes_historical_inventory() -> None:
         "`helianthus.runtime.list` can return a coherent snapshot",
         "`helianthus.runtime.{list,get,start,stop,restart}`",
         "historical `drivers.v1.*` tools are not delivery requirements",
-        "PR 2 adds no lifecycle GraphQL",
+        "There is no lifecycle GraphQL API, resolver, mutation or subscription.",
     ):
         assert required in architecture
     assert "implement and stabilize `drivers.v1.list`" not in architecture
+
+
+def test_restart_acceptance_requires_revision_conflict_and_fresh_replacement() -> None:
+    text = _normalized(ARCHITECTURE).split("## One-release Acceptance", 1)[1]
+    for required in (
+        "each accepted `RESTART` advances desired revision",
+        "on successful replacement, increments generation exactly once",
+        "retrying the old expected revision returns `REVISION_CONFLICT`",
+        "a valid fresh-revision `RESTART` after settlement requests another replacement and is never deduplicated",
+        "they allocate no revision or work and do not reset retry budgets or quarantine",
+    ):
+        assert required in text
