@@ -259,7 +259,7 @@ claiming that it satisfies a capability. If no candidate has a value, use
 Preserve all reason codes in source quality. For `fact_unavailable`,
 `capability_unavailable` and `capability_unqualified`, first identify the exact
 source keys that causally withhold this item. Intersect native reasons across
-**all candidates of all those causal keys**, not across every supporting key.
+all candidates of all those causal keys, not across every supporting key.
 An available sibling key is non-causal and cannot erase the explanation of an
 unavailable key. Every candidate on a causal key must itself explain the
 selected outcome through its original quality: unavailable/withdrawn for

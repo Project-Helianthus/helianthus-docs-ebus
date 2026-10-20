@@ -36,6 +36,28 @@ CLAUSES = (
     capability or a cached evaluation into a superficially consistent response.""",
     """An unwired provider fails the whole request with `UNAVAILABLE`, rather than
     fabricating empty snapshots.""",
+    """Preserve all reason codes in source quality. For `fact_unavailable`,
+    `capability_unavailable` and `capability_unqualified`, first identify the exact
+    source keys that causally withhold this item. Intersect native reasons across
+    all candidates of all those causal keys, not across every supporting key.
+    An available sibling key is non-causal and cannot erase the explanation of an
+    unavailable key.""",
+    """Every candidate on a causal key must itself explain the
+    selected outcome through its original quality: unavailable/withdrawn for
+    availability, or candidate/rejected qualification for unqualified capability
+    support (a fact's admission also considers promotion and validity).""",
+    """A candidate
+    on a causal key without explanatory quality or without the common reason
+    prevents a fabricated native explanation; keep the surface fallback instead.""",
+    """Never join candidates using a fact ID alone: match the complete `FactKey`,
+    including pack ID/version and every dimension ID, value kind and value.""",
+    """Expiry-only evaluation cannot manufacture a native availability reason, and an
+    instance-only qualification/availability failure cannot borrow unrelated fact
+    reasons. With no causal fact explanation, retain the existing surface fallback.""",
+    """When that intersection contains several codes, use the lexically first one for
+    the disposition's single `reason`. For other outcomes retain the applicable
+    owner reasons with the same lexical tie-break.""",
+    """The STD-01 rule below takes precedence for affected eeBUS items.""",
     """Sort assets by `asset_id`, not request order. Preserve the kernel's canonical
     array orders: facts by canonical `FactKey` bytes; candidates by `candidate_id`;
     conflicts by `conflict_id`; bindings/instances by primary ID; source paths by
@@ -172,6 +194,24 @@ def test_semantic_snapshot_read_rejects_missing_or_hidden_clause(clause: str, re
     assert match is not None
     with pytest.raises(AssertionError, match="Missing contract clause"):
         validate_contract(text[:match.start()] + replacement.format(clause=normalized(clause)) + text[match.end():])
+
+
+@pytest.mark.parametrize("old,new", (
+    (
+        "Never join candidates using a fact ID alone: match the complete `FactKey`,\n"
+        "including pack ID/version and every dimension ID, value kind and value.",
+        "Join candidates using a fact ID alone; matching the complete `FactKey` is optional.",
+    ),
+    (
+        "Intersect native reasons across\nall candidates of all those causal keys, not across every supporting key.",
+        "Intersect native reasons across\nsome candidates of some causal keys, not across every supporting key.",
+    ),
+))
+def test_semantic_snapshot_read_rejects_causal_selection_weakening(old: str, new: str) -> None:
+    text = DOCUMENT.read_text(encoding="utf-8")
+    assert old in text
+    with pytest.raises(AssertionError, match="Missing contract clause"):
+        validate_contract(text.replace(old, new, 1))
 
 
 @pytest.mark.parametrize("source,target", tuple(MAPPINGS.items()))
