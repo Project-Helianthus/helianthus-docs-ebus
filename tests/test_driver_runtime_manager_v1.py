@@ -7,13 +7,14 @@ API = ROOT / "api" / "driver-runtime-v1.md"
 PORTAL = ROOT / "api" / "portal.md"
 MODBUS_ADDON = ROOT / "api" / "modbus-v1-addon-runtime.md"
 PLATFORM_INDEX = ROOT / "docs" / "platform" / "README.md"
+LIFECYCLE = ROOT / "architecture" / "runtime-driver-lifecycle.md"
 
 
 def _normalized(path: Path) -> str:
     return " ".join(path.read_text(encoding="utf-8").split())
 
 
-def test_closed_driver_snapshot_v1_vocabulary() -> None:
+def test_historical_driver_snapshot_v1_vocabulary() -> None:
     text = _normalized(API)
     for required in (
         "DriverSnapshotV1",
@@ -117,7 +118,7 @@ def test_active_callback_timeout_never_closes_beneath_raw_transport() -> None:
         assert required in architecture
 
 
-def test_operation_concurrency_readback_and_diagnostics() -> None:
+def test_historical_operation_concurrency_readback_and_diagnostics() -> None:
     text = _normalized(API)
     for required in (
         "`drivers.v1.list`",
@@ -233,16 +234,66 @@ def test_rollout_is_mcp_first_and_one_release_acceptance_is_explicit() -> None:
         assert required in text
 
 
-def test_portal_and_platform_indexes_link_the_contract() -> None:
+def test_consumers_follow_g5_instead_of_the_historical_api() -> None:
     portal = _normalized(PORTAL)
     platform = _normalized(PLATFORM_INDEX)
+    addon = _normalized(MODBUS_ADDON)
+    lifecycle = _normalized(LIFECYCLE)
+    for text, g5_link in (
+        (portal, "./mcp.md#g5-runtime-lifecycle-mcp-contract-d4"),
+        (platform, "../../api/mcp.md#g5-runtime-lifecycle-mcp-contract-d4"),
+        (addon, "./mcp.md#g5-runtime-lifecycle-mcp-contract-d4"),
+        (lifecycle, "../api/mcp.md#g5-runtime-lifecycle-mcp-contract-d4"),
+    ):
+        assert g5_link in text
     for required in (
-        "[`driver-runtime-v1.md`](./driver-runtime-v1.md)",
-        "Portal is a consumer, not lifecycle authority",
+        "consumer, not lifecycle authority",
+        "future GraphQL parity must preserve the G5 closed driver projection and registered-driver catalog",
+        "first MCP slice adds no Portal routes or controls",
+        "requires no placeholder entries for unregistered drivers",
+        "historical `DriverSnapshotV1` proposal is not a consumer implementation target",
     ):
         assert required in portal
     for required in (
         "[`driver-runtime-manager-v1.md`](./driver-runtime-manager-v1.md)",
-        "[`../../api/driver-runtime-v1.md`](../../api/driver-runtime-v1.md)",
+        "authoritative first external list/get/start/stop/restart surface",
+        "closed driver projection, and registered-driver catalog",
+        "superseded historical material, not an implementation or acceptance target",
     ):
         assert required in platform
+    for required in (
+        "../architecture/runtime-driver-lifecycle.md",
+        "../docs/platform/driver-runtime-manager-v1.md",
+        "categorical unavailable status for a registered Modbus driver",
+        "G5 lists only registered drivers using its closed wire projection",
+        "does not require a Modbus placeholder or the historical snapshot fields",
+    ):
+        assert required in addon
+    assert "historical `DriverSnapshotV1` proposal's `effective_capabilities`" in lifecycle
+    assert "closed driver projection without capability fields" in lifecycle
+    assert "snapshot is not an implementation or acceptance target" in lifecycle
+    assert "field in the [driver API]" not in lifecycle
+    assert "renders gateway-owned `DriverSnapshotV1`" not in portal
+    assert "MCP-first `DriverSnapshotV1`" not in platform
+    assert "successor is frozen in [`driver-runtime-v1.md`]" not in addon
+
+
+def test_public_mcp_authority_supersedes_historical_inventory() -> None:
+    api = _normalized(API)
+    architecture = _normalized(ARCHITECTURE)
+    for required in (
+        "superseded historical material in its entirety",
+        "It is not an implementation or acceptance target",
+        "Validators retaining examples below check historical consistency only",
+        "./mcp.md#g5-runtime-lifecycle-mcp-contract-d4",
+    ):
+        assert required in api
+    for required in (
+        "../../api/mcp.md#g5-runtime-lifecycle-mcp-contract-d4",
+        "`helianthus.runtime.list` can return a coherent snapshot",
+        "`helianthus.runtime.{list,get,start,stop,restart}`",
+        "historical `drivers.v1.*` tools are not delivery requirements",
+        "PR 2 adds no lifecycle GraphQL",
+    ):
+        assert required in architecture
+    assert "implement and stabilize `drivers.v1.list`" not in architecture
