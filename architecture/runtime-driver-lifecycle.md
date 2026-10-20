@@ -812,6 +812,12 @@ unchanged. Checks run in this fixed order and the first failing check decides:
 | 9 | Record limit, byte limit or bounded-outcome reservation cannot fit | `RESOURCE_EXHAUSTED` | Yes |
 | 10 | A required counter or mark increment would exceed the unsigned 64-bit maximum | `COUNTER_EXHAUSTED` | No |
 
+This ordered table governs mutations: invalid durable revision bounds remain
+unusable control under order 3, returning `FAILED_PRECONDITION` until offline
+repair. List/get instead use the unavailable-read rule below, returning
+non-retriable `UNAVAILABLE` with null data; they perform no revision comparison
+and cannot return a current-view conflict payload.
+
 Two outcomes sit outside the ordered checks. A pre-commit write failure
 (step 5) follows every row above and returns `UNAVAILABLE`, retryable, with the
 revision and mark unchanged. A bounded-wait timeout at the serialization point
@@ -930,6 +936,44 @@ never create a new GUID or overwrite the unreadable bytes as a fresh base: the
 runtime-state `.corrupt-<ISO8601>` rename keeps the exact original bytes and
 counts as a quarantine copy, so control is unreadable, never missing, and no
 bootstrap seed follows.
+
+### Unavailable reads with invalid durable bounds
+
+If either the namespace issued-revision high-water mark or the durable catalog
+revision cannot be validated, list/get refuse with `UNAVAILABLE` and `data: null`.
+Missing, malformed, unreadable, unsupported and overflowing bounds all refuse;
+a missing bound with existing control material is never bootstrap. Neither read
+returns a driver snapshot, success catalog or usable revision. Never substitute
+zero, a sentinel, stale cached state or corrupt values for either revision,
+even when the other bound remains valid; neither an empty success list nor a
+fabricated all-`FAILED` catalog encodes this refusal.
+
+With both counters valid and coherent cached records, one or all drivers may
+be `FAILED` while list/get still return ordinary coherent snapshots. Preserve
+all registered entries in bytewise driver-ID order, each validated durable
+`desired_revision`, and one catalog revision equal to every entry's view
+`revision`. A malformed driver record remains isolated under the load rules;
+it does not invalidate independent records or authorize invented fields.
+Unvalidated namespace-wide bounds instead prevent every successful list/get
+view, including a view of a previously healthy driver.
+
+Keep the HTTP/API/health shell and tool registration available. Namespace
+mutations remain refused under the ordered mutation refusal table until explicit
+GUID-preserving offline repair restores validated durable bounds. Retry, process
+restart, provider recovery and configuration reload cannot synthesize bounds or
+treat unreadable control as a fresh namespace. Preserve bad bytes, native
+evidence, provenance and unaffected partial last-known-good state; retained
+state supplies neither current revision authority nor provider admission.
+The offline namespace-only reset below itself refuses unvalidated bounds:
+this read refusal grants no repair bypass or new online repair operation.
+
+Synthetic read acceptance must test each bound independently, holding the other
+valid, with missing control bounds despite existing material, malformed values
+and values above the unsigned 64-bit maximum. Each case requires `UNAVAILABLE`,
+null data and no usable revision for both list and get. Also test valid counters
+with one and with all drivers `FAILED`, retaining coherent ordinary snapshots,
+deterministic ordering and revisions. These are documentation acceptance
+obligations, not executed runtime tests.
 
 ### Offline namespace-only reset
 

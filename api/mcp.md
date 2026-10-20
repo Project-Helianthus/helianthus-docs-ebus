@@ -133,6 +133,16 @@ These G5 shapes supersede the older proposed `drivers.v1.*` inventory and richer
 for this first external slice; that older proposal must not create extra tools,
 fixed placeholder drivers or invented observations in PR 2.
 
+The list/get data shapes above describe successful reads with validated durable
+revision bounds. If either the issued-revision high-water mark or durable catalog
+revision is missing with existing control material, malformed, unreadable,
+unsupported or overflowing, both `helianthus.runtime.list` and
+`helianthus.runtime.get` refuse with `UNAVAILABLE` and `data: null`. Return no
+driver snapshot, success catalog or usable revision; never substitute zero,
+a sentinel, stale cached state or corrupt values, even if the other bound is
+valid. With both counters valid and coherent cached records, one or all drivers
+may be `FAILED` while reads retain the ordinary sorted, coherent projection.
+
 Synthetic list `data` example (not a live observation):
 
 ```json
@@ -199,6 +209,16 @@ lifecycle codes rather than collapsing them into generic transport errors:
 | `TRANSITION_BUSY` | Typed slot full or namespace decision wait exceeded; bounded retry, no revision-comparison outcome implied |
 | `RESOURCE_EXHAUSTED` | Bounded storage/reservation cannot fit; retry after capacity is available |
 | `COUNTER_EXHAUSTED` | Required unsigned counter cannot advance; no wrap or retry loop |
+
+For list/get, the `UNAVAILABLE` row also covers invalid or unvalidatable durable
+revision bounds: set `isError: true`, `data: null` and `retriable: false`, using
+the existing categorical error members and envelope. Hash JSON null as usual;
+metadata must not imply a validated lifecycle revision. Explicit GUID-preserving
+offline repair is required; retry, restart, provider recovery and configuration
+reload cannot repair the bounds. Keep the shell and tools available. The ordered
+refusal table still governs mutations, where unusable control remains
+`FAILED_PRECONDITION`; the read error grants no online repair or bypass of the
+offline reset's own requirement for validated bounds.
 
 The [ordered lifecycle refusal table](../architecture/runtime-driver-lifecycle.md#validate-decide-and-commit)
 is authoritative when several checks fail. `CLOSE_UNCONFIRMED` is an observed

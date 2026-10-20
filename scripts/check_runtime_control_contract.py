@@ -9,7 +9,6 @@ substitute for normative prose; request/result examples are checked separately.
 from __future__ import annotations
 
 import argparse
-import ast
 import json
 from pathlib import Path
 import re
@@ -134,18 +133,6 @@ def validate(documents: dict[str, str]) -> list[str]:
         for pattern in rule.get("forbidden", []):
             if re.search(pattern, section_text):
                 errors.append(f"{rule['path']}: forbidden classification: {pattern[:60]}")
-        if "python_example" in rule:
-            # Compare syntax without executing documentation-supplied code. This
-            # freezes both generated cases and the complete null-data envelope.
-            raw = documents[rule["path"]].split(start, 1)[-1].split(end, 1)[0]
-            examples = [t.content for t in MarkdownIt().parse(raw)
-                        if t.type == "fence" and t.info.strip() == "python"]
-            try:
-                assert len(examples) == 1
-                assert ast.dump(ast.parse(examples[0])) == ast.dump(
-                    ast.parse(rule["python_example"]))
-            except (SyntaxError, AssertionError):
-                errors.append(f"{rule['path']}: changed unavailable-read envelope example")
 
     # G5 examples are separate from normative prose and use the closed wire
     # projection, not the older DriverSnapshotV1 proposal. Count every fence,

@@ -27,9 +27,7 @@ The V1 MCP namespace contains exactly:
 - `drivers.v1.restart`
 
 Tools stay registered for the process lifetime. Missing, disabled, failed, or
-unavailable providers return typed snapshots when the durable revision bounds
-can be validated; otherwise reads follow [Unavailable Reads](#unavailable-reads-d3).
-A mutation returns either the
+unavailable providers return typed snapshots; a mutation returns either the
 desired-state result or a code from the lifecycle refusal table. Tool
 disappearance and protocol-specific ad-hoc errors are forbidden.
 
@@ -52,7 +50,7 @@ in place of a catalog ID.
 
 ## `DriverSnapshotV1`
 
-Every successful list/get snapshot uses the following closed shape. Mutation results use
+Every list/get snapshot uses the following closed shape. Mutation results use
 the smaller desired-state result defined under Mutating Tools:
 
 The lifecycle evidence fields are `reason`, `retry`, `generation`,
@@ -207,9 +205,7 @@ not retry a close send in a background goroutine.
 
 `drivers.v1.list` accepts no arguments and returns all three snapshots ordered
 by driver ID. It is available whenever the gateway process is ready, including
-when every protocol provider failed, provided the durable revision bounds can
-be validated. Otherwise it returns the explicit error defined under
-[Unavailable Reads](#unavailable-reads-d3). The list is one coherent manager revision;
+when every protocol provider failed. The list is one coherent manager revision;
 it is not assembled by independently querying transports.
 
 Example result envelope:
@@ -345,108 +341,10 @@ operation to a terminal categorical result.
 ### Stable Unavailable Providers
 
 All four tools remain registered even if a driver provider cannot be built or
-started. With validated durable revision bounds, `list` returns its catalog
-snapshot. A mutation against that
+started. `list` returns its stable catalog snapshot. A mutation against that
 entry follows the ordinary decision rules: an accepted decision returns only
 desired state and desired revision, and the snapshot reports the categorical
 reason `PROVIDER_UNAVAILABLE`. It never returns a raw construction or transport error.
-
-## Unavailable Reads (D3)
-
-This is a proposed D3 clarification of the API mirror. Ordinary-MCP integration
-belongs to the companion implementation; these examples do not claim shipped
-list/get behavior. Here, get means the corresponding manager registry read; it
-does not add a fifth tool to the closed V1 MCP namespace.
-
-If either the namespace issued-revision high-water mark or the durable catalog
-revision cannot be validated, list/get return an explicit `UNAVAILABLE` error.
-This includes a missing, malformed, unreadable, unsupported or overflowing
-bound; a missing bound is not bootstrap when control material already exists.
-There is no conforming `DriverSnapshotV1` or successful list in this state.
-The error has `data: null`: it contains no driver entry, `drivers` array,
-`desired_revision`, view `revision` or `manager_revision`. Never substitute
-zero, a sentinel, a stale cached value or a corrupt value for either desired
-or catalog revision, even when the other bound remains valid. An empty success
-list or a fabricated all-`FAILED` catalog is not an unavailable-read encoding.
-
-Provider-local failure is different. With valid counters and coherent cached
-records, one or all providers may be `FAILED` and ordinary deterministic
-snapshots remain possible: the list retains every catalog entry in driver-ID
-order, one catalog revision equal to every entry's view `revision`, and each
-entry's validated durable `desired_revision`. Failure alone neither resets nor
-invents a revision. A malformed driver record stays isolated under the lifecycle
-load rules; it does not make valid independent records unreadable or authorize
-invented fields for the affected entry. Unreadable namespace-wide counter
-authority instead prevents any successful list/get view, even of a previously
-healthy provider.
-
-Keep the HTTP/API/health shell and tool registration available. Namespace
-mutations remain refused under the lifecycle refusal order until explicit
-GUID-preserving offline repair restores validated durable bounds; neither
-retry, process restart, provider recovery nor a configuration reload may
-synthesize bounds or treat unreadable control as a fresh namespace. Preserve
-bad bytes, native evidence, provenance and unaffected partial last-known-good
-state. Retained state is not current revision authority or provider admission.
-The existing reset procedure itself refuses unvalidated bounds; this read error
-grants no repair bypass and no new online repair operation.
-
-MCP uses its existing deterministic `meta`, `data`, `error` convention with the
-categorical error members `code`, `message`, `retriable`, `source_layer`.
-For invalid durable bounds, `retriable` is false because explicit repair is
-required. Error metadata must not imply a validated lifecycle revision.
-This clarification applies only to MCP/manager reads; there is no lifecycle
-GraphQL API, resolver, mutation or subscription. It adds no public schema,
-receipt, idempotency store or authority boundary.
-
-The following standard-library example generates two complete proposed failure
-envelopes: list with an invalid issued bound, and get of `ebus.primary` with an
-invalid catalog revision. The clock is synthetic, and the ordinary data hash
-is computed over JSON `null`; neither is revision authority. Missing,
-malformed and overflowing values use these same categorical envelopes without
-exposing the invalid value. The get label identifies the manager read, not a
-new MCP tool. Running the example prints one JSON object per case.
-
-```python
-import hashlib
-import json
-
-for read, invalid_bound in (
-    ("list", "issued-revision bound"),
-    ("get ebus.primary", "catalog revision"),
-):
-    envelope = {
-        "meta": {
-            "contract": {"name": "helianthus-ebus-mcp", "major": 1, "minor": 0},
-            "consistency": {"mode": "LIVE"},
-            "data_timestamp": "2000-01-01T00:00:00Z",
-            "data_hash": hashlib.sha256(b"null").hexdigest(),
-        },
-        "data": None,
-        "error": {
-            "code": "UNAVAILABLE",
-            "message": "Durable revision bounds unavailable; offline repair required",
-            "retriable": False,
-            "source_layer": "gateway",
-        },
-    }
-    print(json.dumps(envelope, sort_keys=True, separators=(",", ":")))
-```
-
-### Independent Documentation Cases
-
-Each invalid case below holds the other counter valid and applies to both list
-and get. These are proposed acceptance obligations, not executed runtime tests.
-
-| Case | Required read result |
-| --- | --- |
-| Issued bound missing with existing control material | `UNAVAILABLE`, null data, no usable revision; no bootstrap |
-| Issued bound malformed | `UNAVAILABLE`, null data, no usable revision |
-| Issued bound above the unsigned 64-bit maximum | `UNAVAILABLE`, null data, no usable revision; no wrap |
-| Catalog revision missing with existing control material | `UNAVAILABLE`, null data, no usable revision; no bootstrap |
-| Catalog revision malformed | `UNAVAILABLE`, null data, no usable revision |
-| Catalog revision above the unsigned 64-bit maximum | `UNAVAILABLE`, null data, no usable revision; no wrap |
-| Both counters valid; one provider `FAILED` | Coherent ordinary snapshot/list, unaffected entries retained, deterministic ordering and revisions |
-| Both counters valid; all providers `FAILED` | Coherent ordinary snapshot/list with all catalog entries, deterministic ordering and revisions |
 
 ## Audit Contract
 
