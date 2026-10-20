@@ -30,6 +30,189 @@ merges after the documentation gate; an older or missing
 `vaillant_regulator_capability` member maps to consumer `UNKNOWN`. It does not
 imply a gateway-wide or cross-protocol result.
 
+## G5 runtime lifecycle MCP contract (D4)
+
+This is the first external control contract for
+[docs issue #717](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/717),
+a partial slice of [gateway #1032](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1032).
+It is the prerequisite for gateway PR 2; the tools are **pending implementation**
+and are not part of the implemented inventory below. A5's internal service for
+`ebus.primary` is implemented by the merged
+[gateway PR #1241](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/1241).
+That software status establishes neither hardware validation nor a universal
+provider SPI. The [lifecycle contract](../architecture/runtime-driver-lifecycle.md)
+owns durable decisions, refusal order and CTL/LIFE semantics.
+
+### Ordinary discovery and dispatch
+
+The exact tool family is `helianthus.runtime.{list,get,start,stop,restart}`.
+All five tools must appear in ordinary `tools/list` and dispatch through
+ordinary MCP HTTP and stdio transports, including with eeBUS disabled or absent.
+Registration lasts for the shell's lifetime, independently of driver startup,
+STOPPED/FAILED state and eeBUS provider availability. A disabled driver remains
+visible; tool disappearance is not an unavailable-state signal.
+
+Final D4 requires no lifecycle principal checks, authority adapter or
+authorization before 0.9. No owner-only kernel socket, separate listener,
+operator-boundary-only registration or eeBUS dependency is introduced. Existing
+native-write checks and unrelated eeBUS security boundaries keep their current
+owners. Driver contribution hooks remain unimplemented; these are host tools.
+Every namespace, including `ebus.v1.*`, remains pre-stable until 1.0. Intentional
+changes require documentation, deterministic envelopes, schema/output goldens
+and PR explanation; neither a compatibility veto nor promotion to a new major
+or experimental namespace applies before 1.0.
+
+### Closed inputs and exact service delegation
+
+The MCP adapter is a thin `ControlService` delegate. The companion's conceptual
+`ListDrivers`/`GetDriver`/`StartDriver`/`StopDriver`/`RestartDriver` operations map
+to the landed internal `Service` methods as follows:
+
+| Wire tool | Complete arguments object | Internal service call |
+|---|---|---|
+| `helianthus.runtime.list` | `{}` | `List()` |
+| `helianthus.runtime.get` | `{"DriverID":"ebus.primary"}` | `Get(DriverID)` |
+| `helianthus.runtime.start` | `{"DriverID":"ebus.primary","ExpectedRevision":"7"}` | `Decide(ctx, MethodStart, request)` |
+| `helianthus.runtime.stop` | `{"DriverID":"ebus.primary","ExpectedRevision":"7"}` | `Decide(ctx, MethodStop, request)` |
+| `helianthus.runtime.restart` | `{"DriverID":"ebus.primary","ExpectedRevision":"7"}` | `Decide(ctx, MethodRestart, request)` |
+
+These are closed, case-sensitive objects: reject missing, additional or duplicate
+members, non-object inputs, non-string values and trailing JSON with
+`INVALID_ARGUMENT`. Detect duplicates before decoding can discard them. List
+has no members; get has exactly `DriverID`; each mutation has exactly the two
+shown members. No idempotency key, request digest, receipt, principal, authority,
+operation handle or caller-selected deadline member is accepted or returned.
+This removes lifecycle command tracking entirely; `meta.data_hash` and internal
+semantic replay digests retain their separate purposes.
+
+`DriverID` matches `^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$`, at most 128 bytes,
+and must identify a registered driver. A noncanonical or unregistered ID is
+`NOT_FOUND`, without construction or endpoint access. `ExpectedRevision` echoes
+the read-back `desired_revision`, never the catalog/view revision: a canonical
+nonzero unsigned 64-bit decimal JSON string. Reject `"0"`, `"01"`, signs,
+whitespace, numbers and overflow. Response revisions are canonical unsigned
+64-bit decimal strings and may be `"0"` only for a withheld/unissued view.
+
+Every call uses a finite context deadline. The transport adapter supplies a
+bounded deadline when the transport has none and preserves an earlier caller
+deadline; this adds no argument field. Mutations retain the service's fixed
+refusal order, bounded namespace-wide serialization wait, deadline recheck
+after acquiring it and pre-commit recheck. Neither same-desired requests nor
+retries renew operation budgets. The adapter must not call DriverManager,
+construct a provider, open an endpoint, reconcile or poll in place of the service.
+
+### Read and mutation data
+
+List `data` has exactly `catalog_revision` and `drivers`. Get `data` has exactly
+`catalog_revision` and `driver`. Each driver object projects the landed cached
+`DriverStatus` with exactly these fields:
+
+| Wire field | Internal field / meaning |
+|---|---|
+| `driver_id` | `DriverID`, canonical configured identity |
+| `enabled` | `Enabled`, configuration eligibility |
+| `desired_state` | `DesiredState`, `RUNNING` or `STOPPED` |
+| `desired_revision` | `DesiredRevision`, durable optimistic revision string |
+| `observed_state` | `ObservedState`, `DISABLED`, `STOPPED`, `STARTING`, `RUNNING`, `DEGRADED`, `BACKOFF`, `STOPPING` or `FAILED` |
+| `reason` | `Reason`, categorical manager reason string, never a raw error |
+| `safety_quarantined` | `SafetyQuarantined`, unproven native close |
+| `revision` | `Revision`, catalog/view revision string |
+
+List includes every registered driver, sorted bytewise by `driver_id`, with
+`drivers: []` for an empty catalog. Entries and `catalog_revision` come from
+one coherent cached service read; every entry's `revision` equals that catalog
+revision. Get uses its one cached entry's revision as `catalog_revision`.
+Do not assemble a list with repeated get calls. Reads perform no endpoint I/O
+and remain responsive while another driver is starting, stopping or blocked in
+persistence. Internal event cursors and typed work slots are not public fields.
+These G5 shapes supersede the older proposed `drivers.v1.*` inventory and richer
+`DriverSnapshotV1` projection in [driver-runtime-v1.md](./driver-runtime-v1.md)
+for this first external slice; that older proposal must not create extra tools,
+fixed placeholder drivers or invented observations in PR 2.
+
+Synthetic list `data` example (not a live observation):
+
+```json
+{
+  "catalog_revision": "29",
+  "drivers": [
+    {
+      "driver_id": "ebus.primary",
+      "enabled": true,
+      "desired_state": "RUNNING",
+      "desired_revision": "7",
+      "observed_state": "BACKOFF",
+      "reason": "RETRY_SCHEDULED",
+      "safety_quarantined": false,
+      "revision": "29"
+    }
+  ]
+}
+```
+
+Accepted mutations and same-desired no-ops return only this `data` shape:
+
+```json
+{"desired_state":"RUNNING","desired_revision":"8"}
+```
+
+Acceptance acknowledges durable intent, not native completion. Observe progress
+and failure through list/get. START while desired RUNNING and STOP while desired
+STOPPED are no-ops only after the revision comparison: they change no revision,
+retry budget, observation or quarantine. RESTART requires desired RUNNING,
+keeps it RUNNING and accepts a new replacement/revision each time. After a lost
+RESTART response, read back before retrying: an old-revision retry conflicts;
+a fresh-revision retry after settlement performs **another restart**. Readback
+does not attribute completion to a particular call. No completed-call lookup
+or replay result exists.
+
+### Envelope, lifecycle errors and acceptance vectors
+
+All five tools use the existing `meta`, `data`, `error` envelope, including
+`meta.contract` (`name: helianthus-ebus-mcp`, `major: 1`, `minor: 0`),
+`meta.consistency` (`mode: LIVE`), `meta.data_timestamp` and `meta.data_hash`.
+Lifecycle tools accept no snapshot/consistency argument and do not read an eBUS
+snapshot. `data_timestamp` is UTC RFC3339Nano response metadata, not a native
+capture time. `data_hash` is the existing lowercase SHA-256 of the JSON-marshaled
+`data` alone: stable member encoding and sorted lists produce the same hash for
+the same data even when response metadata changes. Compute hashes in goldens;
+do not make a literal digest a contract field. Success has `error: null`.
+
+Refusals set MCP `isError: true` and use the existing error object members
+`code`, `message`, `retriable`, `source_layer` (`gateway`). Messages are bounded,
+categorical and sanitized. Normally `data` is null; `REVISION_CONFLICT` carries
+only the current cached `{desired_state, desired_revision}` view, matching the
+landed service refusal, without an observed completion claim. Preserve these
+lifecycle codes rather than collapsing them into generic transport errors:
+
+| Code | Meaning / retry |
+|---|---|
+| `INVALID_ARGUMENT` | Closed-shape/revision error or no finite service deadline; correct the call |
+| `NOT_FOUND` | Noncanonical or unregistered ID; no effects |
+| `FAILED_PRECONDITION` | Disabled configuration, unusable control, RESTART while STOPPED, quarantine or unresolved recovery; resolve the precondition |
+| `UNAVAILABLE` | Persistence failure or pending ambiguous readback; retry only after resolution/readback |
+| `DEADLINE_EXCEEDED` | Deadline expired before decision; use a new deadline and read back if delivery was uncertain |
+| `REVISION_CONFLICT` | Stale desired revision; read back before deciding again |
+| `TRANSITION_BUSY` | Typed slot full or namespace decision wait exceeded; bounded retry, no revision-comparison outcome implied |
+| `RESOURCE_EXHAUSTED` | Bounded storage/reservation cannot fit; retry after capacity is available |
+| `COUNTER_EXHAUSTED` | Required unsigned counter cannot advance; no wrap or retry loop |
+
+The [ordered lifecycle refusal table](../architecture/runtime-driver-lifecycle.md#validate-decide-and-commit)
+is authoritative when several checks fail. `CLOSE_UNCONFIRMED` is an observed
+reason, not a request error. Semantic `ErrorID` values remain unchanged in their
+own domain. No lifecycle GraphQL field, resolver, mutation or subscription is
+introduced; existing eBUS MCP/GraphQL status parity remains required.
+
+PR 2 must supply deterministic schema/output goldens and synthetic HTTP/stdio
+discovery/dispatch with eeBUS disabled; verify exact closed fields, duplicate
+and trailing JSON refusal, sorted coherent reads and every error mapping.
+Apply amended CTL-01/02 (reads), CTL-03/05/14/15/19 (validation, refusal order and
+deadlines), CTL-04/06/10/11 (no-op and lost responses), CTL-07/08/09 (serialized
+replacement/recovery), CTL-12/13/16 (revision/durability) and CTL-17/18
+(bootstrap/disabled configuration). Preserve A2 LIFE close-before-replacement
+and late-result fences. This page supplies documentation acceptance only;
+transport execution, smoke tests and hardware qualification remain unverified.
+
 ## Observe-First Bus MCP Contract (`DOC-06`)
 
 ### Scope
@@ -255,20 +438,13 @@ MCP-specific invariants:
 
 - Runtime lane: [Project-Helianthus/helianthus-ebusgateway#376](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/376)
 - Merged implementation PR: [Project-Helianthus/helianthus-ebusgateway#377](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/377)
-- Merge commit: `3daf4beed9d6406f7af52869eea1c53ef14f2f62`
-- Gateway workspace proof artifact (outside this docs repo; from a `Project-Helianthus/helianthus-ebusgateway` checkout):
-  `helianthus-ebusgateway/results-matrix-ha/20260312T175648Z-pr377-gw04-26ee758-passive-p01-p06-recovery/index.json`
-  with `P01..P06 = pass`
-- Gateway workspace recovery probe reference (outside this docs repo; from the same `helianthus-ebusgateway` checkout):
-  `helianthus-ebusgateway/results-matrix-ha/20260312T175250Z-pr377-gw04-26ee758-recovery/full88-probe-t01-after-adapter-reboot/index.json`
-  remained `blocked-infra` with `infra_reason=adapter_no_signal`, and the PR
-  merged under explicit owner override after the official addon/runtime restore
-  was re-verified cleanly
-- Gateway repo code/test proof references (external to this docs repo, at merge commit `3daf4beed9d6406f7af52869eea1c53ef14f2f62`):
+- Historical offline and recovery evidence is recorded in the linked implementation
+  PR; it is not hardware evidence for the G5 lifecycle tools.
+- Gateway code/test references (branch links, not immutable evidence coordinates):
   - MCP tool inventory and provider wiring:
-    [Project-Helianthus/helianthus-ebusgateway/cmd/gateway/mcp_bus_observability_integration_test.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/3daf4beed9d6406f7af52869eea1c53ef14f2f62/cmd/gateway/mcp_bus_observability_integration_test.go)
+    [Project-Helianthus/helianthus-ebusgateway/cmd/gateway/mcp_bus_observability_integration_test.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/cmd/gateway/mcp_bus_observability_integration_test.go)
   - MCP payload shape and limit/snapshot behavior:
-    [Project-Helianthus/helianthus-ebusgateway/mcp/server_test.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/3daf4beed9d6406f7af52869eea1c53ef14f2f62/mcp/server_test.go)
+    [Project-Helianthus/helianthus-ebusgateway/mcp/server_test.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/mcp/server_test.go)
 
 ### Falsification Cases
 
@@ -364,12 +540,8 @@ Note: This inventory reflects the current known tool surface. The gateway may ex
       `passive_observed | static_seed | active_confirmed`;
       `verification_state` is one of
       `candidate | corroborated_pending | identity_confirmed`.
-      This current MCP provenance contract is implemented at reviewed gateway
-      HEAD `77b898633672e123a05d39a3cf46398cce2d72ab`. The reviewed and merge
-      tree is identical at `bb8f59fed4be68104d8ab206f55f7f32ea33e031`; the
-      accepted squash merge on gateway `main` is
-      `f5cd9c51c60bdf422e8fc1b5690fbde52a393be3`; and the accepted registry
-      dependency is `e24532a50caa00c113751b98b88239e045d731e8`.
+      The implementation and historical review records are owned by the
+      [gateway registry source](https://github.com/Project-Helianthus/helianthus-ebusgateway/tree/main/internal).
       Both are omitted when the registry has no slot record for the
       address. For `devices.list` the labels reflect the entry's
       canonical primary address; for `devices.get(address=X)` the labels
