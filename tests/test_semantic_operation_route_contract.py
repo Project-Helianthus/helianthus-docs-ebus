@@ -36,6 +36,9 @@ def validate_contract(text: str) -> None:
     blocks = []
     examples = []
     for token in MarkdownIt("commonmark").parse(text):
+        assert token.type not in {"html_block", "code_block"}, (
+            "Raw HTML blocks and indented code blocks are not allowed in this contract"
+        )
         if token.type == "inline":
             # Preserve inline code syntax, but exclude comments and other HTML.
             visible = re.sub(r"<!--.*?-->|<[^>]*>", "", token.content, flags=re.S)
@@ -78,7 +81,7 @@ def test_rejects_relocated_rule(token) -> None:
         validate_contract(relocated)
 
 
-@pytest.mark.parametrize("index", range(7))
+@pytest.mark.parametrize("index", range(len(CONTRACT["examples"][2]["body"])))
 @pytest.mark.parametrize("member", (
     "status", "kernelOutcome", "delivery", "acknowledgement", "readbackRelation", "reason",
 ))
@@ -123,6 +126,12 @@ def test_rejects_duplicate_json_members() -> None:
      "Any kernel outcome with an accepted or"),
     ("strictly after completed\ndispatch", "before completed dispatch"),
     ("1–5000 milliseconds", "1–60000 milliseconds"),
+    ("`String!`; exact existing SemReg `AssetID`", "`ID!`; exact existing SemReg `AssetID`"),
+    ("numeric inputs are rejected", "numeric inputs are coerced"),
+    ("before JSON parsing or GraphQL coercion", "after GraphQL coercion"),
+    ("65,536", "131,072"),
+    ("`readbackRelation` is `inconclusive` when evidenced, otherwise null",
+     "`readbackRelation` is null"),
     ("complete capability collection revision", "optional capability collection revision"),
 ))
 def test_rejects_semantic_weakening(before: str, after: str) -> None:
@@ -140,3 +149,15 @@ def test_requires_every_example(token) -> None:
 def test_semantic_operation_route_registered_in_local_gate() -> None:
     gate = (ROOT / "scripts/ci_local.sh").read_text(encoding="utf-8")
     assert "python3 -m pytest -q tests/test_semantic_operation_route_contract.py\n" in gate
+
+
+@pytest.mark.parametrize("addition", (
+    '<div>Additional admission rule.</div>\n',
+    '<script type="application/json">{"input": {}}</script>\n',
+    '    {"input": {}}\n',
+))
+@pytest.mark.parametrize("position", ("before", "after"))
+def test_rejects_untracked_rendered_blocks(addition: str, position: str) -> None:
+    changed = addition + "\n" + TEXT if position == "before" else TEXT + "\n" + addition
+    with pytest.raises(AssertionError, match="Raw HTML blocks and indented code blocks"):
+        validate_contract(changed)

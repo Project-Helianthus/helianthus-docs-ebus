@@ -42,21 +42,23 @@ machine-to-machine schema. The following is the closed input member set:
 
 | Member | Type and meaning |
 | --- | --- |
-| `assetId` | `ID!`; exact existing SemReg `AssetID`. |
-| `bindingId` | `ID!`; expected existing `NativeBindingID`, checked against the admitted route. It is a match constraint, never a native locator or route override. |
-| `capabilityInstanceId` | `ID!`; exact existing capability instance, mapped to `Intent.RequiredCapability.InstanceID`. |
+| `assetId` | `String!`; exact existing SemReg `AssetID`. |
+| `bindingId` | `String!`; expected existing `NativeBindingID`, checked against the admitted route. It is a match constraint, never a native locator or route override. |
+| `capabilityInstanceId` | `String!`; exact existing capability instance, mapped to `Intent.RequiredCapability.InstanceID`. |
 | `operation` | `SemanticDefinitionRefInput!`; existing pack-owned operation definition, including `pack { id version }`, `id` and `version`. Maps to `Intent.Kind`. |
 | `arguments` | `[SemanticTypedFieldInput!]!`; existing `TypedField` records with `id` and tagged `value`. No free-form native payload. |
 | `expectedSemanticRevision` | `String!`; maps to the intent's semantic revision. |
 | `expectedCapabilityRevision` | `String!`; complete capability collection revision. |
 | `expectedCapabilityInstanceRevision` | `String!`; revision of the one instance, distinct from the collection revision. |
-| `expectedSourceEpochId` | `ID!`; exact expected source epoch. |
+| `expectedSourceEpochId` | `String!`; exact expected source epoch. |
 | `expectedDriverGeneration` | `String!`; exact expected driver generation. |
 | `preconditions` | `[SemanticPreconditionInput!]!`; existing `Precondition` records: full fact key, candidate ID/revision, operator and expected typed value. Empty only when the pack permits it. |
 | `timeoutMs` | `Int!`; request budget, 1–5000 milliseconds, capped by the server's remaining budget. Never extends an owner deadline. |
 
 Referenced input records mirror the existing SemReg records using the recursive
-snake_case to camelCase mapping in the shared read contract. IDs compare
+snake_case to camelCase mapping in the shared read contract. Every opaque ID,
+including IDs in nested input records, uses string-only GraphQL `String` input
+with the existing nullability; numeric inputs are rejected. IDs compare
 byte-for-byte, without trimming, case folding, decoding or reconstruction.
 Revision/generation values are canonical unsigned decimal strings within the
 existing 64-bit type, never GraphQL `Int` or floating-point numbers. Values retain
@@ -65,8 +67,12 @@ their one matching tagged arm, exact decimal coefficient/exponent and unit.
 Bound this target API before admission: at most one `semanticOperation` field
 per GraphQL request, including aliases/fragments; no batched operation requests.
 Reject additional input members, null required members and malformed types.
-Limit the complete input to 64 KiB of UTF-8 JSON, each opaque ID to 256 UTF-8
-bytes, and arguments and preconditions to 64 entries each. Existing SemReg
+Require a single UTF-8 JSON HTTP request body. Limit that entire body, after
+HTTP content decoding and before JSON parsing or GraphQL coercion, to 65,536
+bytes (64 KiB), including query text, variables, metadata, whitespace and JSON
+escapes. This same byte limit covers inline literals and variable inputs; no
+reserialization is measured. Limit each opaque ID to 256 UTF-8 bytes, and
+arguments and preconditions to 64 entries each. Existing SemReg
 type/collection bounds also apply. Arguments are sorted by field ID; preconditions
 by `(canonical fact key, candidate ID, candidate revision)` with no duplicate
 tuple. Reject duplicate arguments and unsupported value arms. Overflow and
@@ -129,7 +135,7 @@ new SemReg outcome enum values:
 | API `status` | Existing evidence and meaning |
 | --- | --- |
 | `accepted` | SemReg admission and executor match succeeded. `kernelOutcome`, `delivery`, `acknowledgement` and `readbackRelation` are null. This reports admission only: it never means executed, sent, protocol ACK or readback-confirmed. `Admission` is not a terminal `ExecutionRecord`. |
-| `protocol_ack` | `kernelOutcome=acknowledged_unverified`, `delivery=sent`, and native `Acknowledgement.state=accepted` or `provisional`. No confirming readback; `readbackRelation` is null. The protocol's accepted ACK is distinct from API admission. |
+| `protocol_ack` | `kernelOutcome=acknowledged_unverified`, `delivery=sent`, and native `Acknowledgement.state=accepted` or `provisional`. No confirming readback; `readbackRelation` is `inconclusive` when evidenced, otherwise null. The protocol's accepted ACK is distinct from API admission. |
 | `readback_confirmed` | `kernelOutcome=applied`, `delivery=sent`, `readbackRelation=confirms`. A native ACK is retained if supplied, but never invented for a protocol without one. |
 | `failed` | Preserve `rejected`, `failed_no_contact`, `no_effect` or `conflict` separately in `kernelOutcome`. Admission rejection has `delivery=not_sent` as an API no-send statement, and no ACK/readback; its kernel record has no route/dispatch. `failed_no_contact` requires dispatch evidence of not-sent and no possible side effect. `no_effect` and `conflict` require their existing post-dispatch evidence, so failed does not generally imply no-send. |
 | `unknown` | `kernelOutcome=indeterminate`; dispatch may have occurred and evidence cannot establish effect. Preserve evidenced delivery (`sent` or `unknown`) and ACK/readback relation if present. A timeout or lost response cannot establish not-sent or failure without effect. No blind retry or fallback route is allowed. |
@@ -138,7 +144,8 @@ Validated terminal outcomes take precedence over ACK-only classification.
 Validated `no_effect` or `conflict` remains `failed` even with an accepted or
 provisional native ACK. Only `acknowledged_unverified` with an accepted or
 provisional native ACK and no confirming readback maps to `protocol_ack`,
-including when the bounded wait expires. A timeout with ambiguous delivery and
+including when the bounded wait expires. Preserve an evidenced `inconclusive`
+readback relation on this result. A timeout with ambiguous delivery and
 no sufficient ACK evidence is `unknown`. A rejected native ACK is not
 `protocol_ack`; classification requires the native owner's failure/effect
 evidence, otherwise it remains unknown. An inconclusive readback cannot become
@@ -227,7 +234,8 @@ Variables (synthetic):
 
 Alternative GraphQL responses for independent offline scenarios, in order:
 admission only, native ACK only, confirming readback, absent qualified executor,
-stale epoch, unsupported capability, and ambiguous delivery. These are projections
+stale epoch, unsupported capability, ambiguous delivery, and native ACK with
+inconclusive readback. These are projections
 of evidence, not complete kernel records or a series rewriting one record.
 The `fixture.reason.*` codes are synthetic owner reasons only.
 
@@ -239,7 +247,8 @@ The `fixture.reason.*` codes are synthetic owner reasons only.
   {"data":{"semanticOperation":{"status":"failed","kernelOutcome":"rejected","delivery":"not_sent","acknowledgement":null,"readbackRelation":null,"reason":"fixture.reason.executor_missing"}}},
   {"data":{"semanticOperation":{"status":"failed","kernelOutcome":"rejected","delivery":"not_sent","acknowledgement":null,"readbackRelation":null,"reason":"stale_source_epoch"}}},
   {"data":{"semanticOperation":{"status":"failed","kernelOutcome":"rejected","delivery":"not_sent","acknowledgement":null,"readbackRelation":null,"reason":"fixture.reason.capability_unsupported"}}},
-  {"data":{"semanticOperation":{"status":"unknown","kernelOutcome":"indeterminate","delivery":"unknown","acknowledgement":null,"readbackRelation":null,"reason":"fixture.reason.delivery_uncertain"}}}
+  {"data":{"semanticOperation":{"status":"unknown","kernelOutcome":"indeterminate","delivery":"unknown","acknowledgement":null,"readbackRelation":null,"reason":"fixture.reason.delivery_uncertain"}}},
+  {"data":{"semanticOperation":{"status":"protocol_ack","kernelOutcome":"acknowledged_unverified","delivery":"sent","acknowledgement":"provisional","readbackRelation":"inconclusive","reason":null}}}
 ]
 ```
 
