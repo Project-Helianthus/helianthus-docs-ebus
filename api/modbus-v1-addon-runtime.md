@@ -279,7 +279,8 @@ snapshot, admit the complete capability, and match the exact observed flavor.
   "supersedes_for_new_runs": "helianthus.modbus-sunspec-live-qualification.v1",
   "registry_dependency": {
     "module": "github.com/Project-Helianthus/helianthus-modbusreg",
-    "version": "v0.1.0"
+    "version": "v0.1.0",
+    "merge": "0567cac9db3749086c46f05b2c4c0a24c2371763"
   },
   "activation": {
     "disabled_by_default": true,
