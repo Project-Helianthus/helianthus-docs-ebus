@@ -134,10 +134,13 @@ new SemReg outcome enum values:
 | `failed` | Preserve `rejected`, `failed_no_contact`, `no_effect` or `conflict` separately in `kernelOutcome`. Admission rejection has `delivery=not_sent` as an API no-send statement, and no ACK/readback; its kernel record has no route/dispatch. `failed_no_contact` requires dispatch evidence of not-sent and no possible side effect. `no_effect` and `conflict` require their existing post-dispatch evidence, so failed does not generally imply no-send. |
 | `unknown` | `kernelOutcome=indeterminate`; dispatch may have occurred and evidence cannot establish effect. Preserve evidenced delivery (`sent` or `unknown`) and ACK/readback relation if present. A timeout or lost response cannot establish not-sent or failure without effect. No blind retry or fallback route is allowed. |
 
-An accepted or provisional native ACK with no confirming readback remains
-`protocol_ack`, including when the bounded wait expires. A timeout with ambiguous
-delivery and no sufficient ACK evidence is `unknown`. A rejected native ACK is
-not `protocol_ack`; classification requires the native owner's failure/effect
+Validated terminal outcomes take precedence over ACK-only classification.
+Validated `no_effect` or `conflict` remains `failed` even with an accepted or
+provisional native ACK. Only `acknowledged_unverified` with an accepted or
+provisional native ACK and no confirming readback maps to `protocol_ack`,
+including when the bounded wait expires. A timeout with ambiguous delivery and
+no sufficient ACK evidence is `unknown`. A rejected native ACK is not
+`protocol_ack`; classification requires the native owner's failure/effect
 evidence, otherwise it remains unknown. An inconclusive readback cannot become
 `readback_confirmed`.
 
