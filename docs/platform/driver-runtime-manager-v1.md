@@ -5,10 +5,14 @@
 This page freezes the target protocol-neutral lifecycle architecture for the
 first Helianthus `DriverManager`. It is a pre-implementation contract, not a
 claim that every API or consumer described here is present in a released
-gateway. The public MCP shape is owned by
-[`../../api/driver-runtime-v1.md`](../../api/driver-runtime-v1.md).
+gateway. The merged
+[lifecycle contract](../../architecture/runtime-driver-lifecycle.md) is normative
+for durable decisions, typed transitions and recovery (D1-D5). The historical
+[public MCP shape](../../api/driver-runtime-v1.md) is subordinate to that contract
+where they differ. These amendments do not claim implementation delivery or
+runtime qualification. No interface is stable before Helianthus 1.0.
 
-V1 manages exactly these stable driver instances:
+V1 manages exactly these configured driver instances:
 
 | Driver ID | Protocol family | Initial provider |
 | --- | --- | --- |
@@ -140,11 +144,14 @@ timer before teardown. Recovery from `FAILED` creates a fresh retry budget and, 
 successful provider admission, a new generation; it never reuses a half-closed
 transport instance. Superseded by the D3 amendment: a manual START with the
 current revision while desired is RUNNING is a no-op, and recovering `FAILED`
-belongs to the reconciler. An automatic retry and an operator operation linearize
-under the same per-driver operation lock, so neither can resurrect a stopped
-driver. Every asynchronous callback carries its captured generation and
-operation ID. The manager discards a callback whose generation or operation is
-no longer current.
+belongs to the reconciler. Automatic retry and operator lifecycle work obey the
+lifecycle contract's namespace-wide decision serialization and typed-transition
+fencing, so neither can resurrect a stopped driver. Every asynchronous callback retains its captured generation and the
+existing lifecycle correlation of its typed transition or reconciliation
+attempt, as defined by the lifecycle contract. Superseding an attempt fences
+its callbacks, publications and admission immediately while retaining the old
+correlation for late-result cleanup. A stale callback cannot restore admission;
+its outstanding cleanup obligations are preserved.
 
 ## Stop, Drain, And Restart
 
@@ -191,12 +198,12 @@ Stop and restart perform atomic effective-capability withdrawal under the same
 lock used by every provider invocation. The manager empties the effective set
 before it publishes `STOPPING`; work racing after that point is blocked before
 provider invocation, while work admitted earlier belongs to the bounded drain.
-Provider callbacks with stale generation or operation correlation cannot
+Provider callbacks with stale generation or typed-transition correlation cannot
 restore an effective capability.
 
 An unproven-close safety quarantine is represented by observed `FAILED`, reason
-`CLOSE_UNCONFIRMED`, an empty effective set, the `safety_quarantined` flag, and
-and no operation result field. It blocks any start or restart that would
+`CLOSE_UNCONFIRMED`, an empty effective set and the `safety_quarantined` flag.
+There is no operation result field. It blocks any start or restart that would
 change desired state or require admission (refused with `FAILED_PRECONDITION`),
 automatic retry, provider construction, and generation advance for the rest of
 the process epoch; a START that is a same-desired no-op returns normally. It cannot be cleared by an API operation, configuration
@@ -205,7 +212,9 @@ that in-memory flag; an unresolved retained close obligation still blocks
 replacement admission until it completes.
 
 This is distinct from ordinary recoverable `FAILED`, which does not set
-`safety_quarantined` and may admit a later manual start. A drain timeout whose
+`safety_quarantined` and may admit a later changing START from desired `STOPPED`
+under the lifecycle contract's admission checks. A same-desired START while
+desired `RUNNING` remains a no-op even for ordinary `FAILED`. A drain timeout whose
 adapter-owned close worker proves closure may reach `STOPPED` with
 `STOP_TIMEOUT`; it does not falsely enter quarantine.
 
@@ -296,12 +305,20 @@ The release gate must demonstrate, from the exact packaged gateway/add-on
 pair:
 
 - all three driver IDs are always listed with the closed V1 shape;
-- all configured healthy drivers reach `RUNNING` without duplicate instances;
+- configured-enabled, healthy drivers with durable desired `RUNNING` reconcile
+  through `STARTING` to `RUNNING` without duplicate instances; configured-enabled
+  drivers with durable desired `STOPPED` remain stopped with no provider started,
+  and configured-disabled drivers remain `DISABLED`;
 - startup failure injection for each driver is protocol-local while the
   process remains ready and the other drivers remain operable;
 - stop, start, and restart work for each driver without gateway restart;
-- restart increments generation exactly once and command replay has no second
-  effect;
+- each accepted `RESTART` advances desired revision and, on successful replacement,
+  increments generation exactly once; retrying the old expected revision returns
+  `REVISION_CONFLICT`, while a valid fresh-revision `RESTART` after settlement
+  requests another replacement and is never deduplicated;
+- `START` while desired `RUNNING` and `STOP` while desired `STOPPED`, with the
+  current expected revision and all earlier refusal checks satisfied, are no-ops:
+  they allocate no revision or work and do not reset retry budgets or quarantine;
 - retry budget, drain timeout, stable unavailable-provider, and stale callback
   races behave as specified;
 - a deterministic stop/restart withdrawal race proves that post-withdrawal
