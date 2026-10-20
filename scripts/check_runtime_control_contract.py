@@ -112,6 +112,10 @@ def validate(documents: dict[str, str]) -> list[str]:
             if normalize(required) not in present:
                 errors.append(f"{rule['path']}: changed obligation: {normalize(required)[:100]}")
         section_text = normalize(text[starts[0].end():ends[0].start()])
+        if rule.get("ordered"):
+            positions = [section_text.find(normalize(clause)) for clause in rule["required"]]
+            if positions != sorted(positions):
+                errors.append(f"{rule['path']}: obligation order changed")
         for needle in rule.get("contains", []):
             if normalize(needle) not in section_text:
                 errors.append(f"{rule['path']}: changed obligation: {normalize(needle)[:100]}")

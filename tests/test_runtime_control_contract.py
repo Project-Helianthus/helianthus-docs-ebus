@@ -13,10 +13,54 @@ DOCUMENTS = {r["path"]: (checker.ROOT / r["path"]).read_text(encoding="utf-8")
 OBLIGATIONS = [(r["path"], clause) for r in checker.RULES for clause in r["required"]]
 BRIDGE_START = "### S4/S6/S7 synthetic acceptance obligations"
 BRIDGE_RULE = next(r for r in checker.RULES if r["start"] == BRIDGE_START)
+RESET_PATH = "architecture/runtime-control-reset-durability.md"
+RESET_START = "## Required ordering and failure outcomes"
+RESET_RULE = next(r for r in checker.RULES if r["path"] == RESET_PATH)
+QUARANTINE_DIRECTORY_ROW = next(
+    line for line in DOCUMENTS[RESET_PATH].splitlines() if line.startswith("| 4 |")
+)
 
 
 def test_runtime_control_contract_repository() -> None:
     assert checker.validate(DOCUMENTS) == []
+
+
+@pytest.mark.parametrize("change", ["removed", "weakened", "before", "after", "reordered"])
+def test_runtime_control_contract_quarantine_directory_prerequisite(change) -> None:
+    documents = dict(DOCUMENTS)
+    text = documents[RESET_PATH]
+    row = QUARANTINE_DIRECTORY_ROW
+    assert row in RESET_RULE["required"]
+    if change == "weakened":
+        text = text.replace(row, row.replace("Successfully fsync", "Optionally fsync"))
+    elif change == "reordered":
+        following = next(line for line in text.splitlines() if line.startswith("| 5 |"))
+        assert row + "\n" + following in text
+        text = text.replace(row + "\n" + following, following + "\n" + row)
+    else:
+        text = text.replace(row, "")
+        if change == "before":
+            text = text.replace(RESET_START, row + "\n\n" + RESET_START)
+        elif change == "after":
+            text += "\n\n" + row
+    documents[RESET_PATH] = text
+    errors = checker.validate(documents)
+    assert any(error.startswith(RESET_PATH + ": ") for error in errors)
+
+
+def test_runtime_control_contract_requires_reset_supplement(tmp_path: Path) -> None:
+    for path, text in DOCUMENTS.items():
+        if path == RESET_PATH:
+            continue
+        target = tmp_path / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(text, encoding="utf-8")
+    result = subprocess.run(
+        [sys.executable, str(checker.ROOT / "scripts/check_runtime_control_contract.py"),
+         "--root", str(tmp_path)], capture_output=True, text=True,
+    )
+    assert result.returncode == 1
+    assert RESET_PATH in result.stderr
 
 
 @pytest.mark.parametrize("clause", BRIDGE_RULE["required"])

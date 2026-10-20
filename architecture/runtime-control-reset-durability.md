@@ -3,8 +3,8 @@
 Status: normative clarification supplement for [issue #691](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/691), **awaiting canonical integration**.
 This supplement does not change the canonical
 [offline namespace-only reset contract](runtime-driver-lifecycle.md#offline-namespace-only-reset)
-or its checker. It specifies the preservation prerequisite that must be carried
-into that contract and any manager-page restatement after the lifecycle work
+itself. Its normative ordering is enforced by the contract checker. It specifies
+the preservation prerequisite that must be carried into that contract and any manager-page restatement after the lifecycle work
 merges. It adds no reset mode, flag or API surface.
 
 ## Scope and evidence
@@ -85,25 +85,26 @@ the offline reset section and align any manager-page restatement:
 > unchanged. A failure after live rename is a distinct ambiguous-durability
 > outcome and must not be described as an unchanged refusal.
 
-The contract/checker owner must then require that clause in
+The supplement's required ordering and failure outcomes are frozen in
 [`runtime_control_contract.json`](../scripts/runtime_control_contract.json)
-and enforce its normative placement with
+and checked in their normative section and order by
 [`check_runtime_control_contract.py`](../scripts/check_runtime_control_contract.py)
 and focused [contract tests](../tests/test_runtime_control_contract.py).
-Manager cross-document integration and checker/fixture enforcement remain
-outstanding; this supplement does not claim to supply them.
+Canonical lifecycle and manager cross-document integration remain outstanding;
+checker enforcement of this supplement does not claim to supply them.
 
 The discriminating counterexample keeps exclusive creation, exact copying,
 file fsync and close, but omits **only the quarantine parent-directory fsync**
 before replacement. It violates order 4 even when every other step succeeds.
-The future checker regression must reject removal, weakening or relocation of
+The checker regressions reject removal, weakening or relocation of
 that prerequisite outside the normative reset section. A separate replacement
 directory fsync after rename cannot satisfy the earlier prerequisite.
 
-These are reasoned mutation requirements, not executed mutation kills or
-runtime tests. Independent checks for creation, copy, file-fsync, close and
-quarantine-directory failure must each establish unchanged live bytes and no
+The focused documentation mutations exercise checker enforcement, not gateway
+runtime behavior. Independent implementation checks for creation, copy,
+file-fsync, close and quarantine-directory failure must each establish unchanged live bytes and no
 replacement call; the positive control must reach replacement only after all
 quarantine steps succeed. Post-rename failure must instead establish the
 ambiguous outcome and retained quarantine. Those implementation checks belong
-to the gateway owner; this document adds no fixtures or implementation changes.
+to the gateway owner; this supplement adds no gateway fixtures or implementation
+changes.
