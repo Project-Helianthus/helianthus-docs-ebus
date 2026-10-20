@@ -55,7 +55,7 @@ withdrawal of one contribution cannot make a different admitted contribution
 disappear.
 
 The gateway catalog carries a `catalog_revision`, `catalog_digest`,
-`evaluation_instant`, and caller `authorization_scope`. It binds each accepted
+and `evaluation_instant`. It binds each accepted
 contribution to its descriptor digest, lifecycle/source generation, installation
 and resource context, capability, SemReg snapshot and semantic revision. These
 are presentation inputs, not proof that the browser qualified a device or read
