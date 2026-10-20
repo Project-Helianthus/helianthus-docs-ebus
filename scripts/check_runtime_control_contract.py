@@ -20,6 +20,7 @@ from markdown_it import MarkdownIt
 ROOT = Path(__file__).resolve().parents[1]
 RULES = json.loads(Path(__file__).with_name("runtime_control_contract.json").read_text())
 API = "api/driver-runtime-v1.md"
+MCP = "api/mcp.md"
 LIFECYCLE = "architecture/runtime-driver-lifecycle.md"
 REFUSAL_ORDER = [
     ("1", "`INVALID_ARGUMENT`"), ("2", "`NOT_FOUND`"), ("3", "`FAILED_PRECONDITION`"),
@@ -111,6 +112,8 @@ def validate(documents: dict[str, str]) -> list[str]:
         for required in rule["required"]:
             if normalize(required) not in present:
                 errors.append(f"{rule['path']}: changed obligation: {normalize(required)[:100]}")
+        if rule.get("exact") and present != {normalize(s) for s in rule["required"]}:
+            errors.append(f"{rule['path']}: unexpected contract content in {start}")
         section_text = normalize(text[starts[0].end():ends[0].start()])
         for needle in rule.get("contains", []):
             if normalize(needle) not in section_text:
@@ -118,6 +121,31 @@ def validate(documents: dict[str, str]) -> list[str]:
         for pattern in rule.get("forbidden", []):
             if re.search(pattern, section_text):
                 errors.append(f"{rule['path']}: forbidden classification: {pattern[:60]}")
+
+    # G5 examples are separate from normative prose and use the closed wire
+    # projection, not the older DriverSnapshotV1 proposal.
+    mcp_section = documents[MCP].split("### Read and mutation data", 1)[-1].split(
+        "### Envelope, lifecycle errors and acceptance vectors", 1)[0]
+    examples = [t.content for t in MarkdownIt().parse(mcp_section)
+                if t.type == "fence" and t.info.strip() == "json"]
+    try:
+        listing, decision = [json.loads(s, object_pairs_hook=closed_object) for s in examples]
+        assert isinstance(listing, dict) and listing.keys() == {"catalog_revision", "drivers"}
+        assert revision(listing["catalog_revision"])
+        assert isinstance(listing["drivers"], list) and len(listing["drivers"]) == 1
+        driver = listing["drivers"][0]
+        assert driver == {
+            "driver_id": "ebus.primary", "enabled": True,
+            "desired_state": "RUNNING", "desired_revision": "7",
+            "observed_state": "BACKOFF", "reason": "RETRY_SCHEDULED",
+            "safety_quarantined": False, "revision": listing["catalog_revision"],
+        }
+        assert type(driver["enabled"]) is bool and type(driver["safety_quarantined"]) is bool
+        assert isinstance(decision, dict) and decision.keys() == {"desired_state", "desired_revision"}
+        assert decision["desired_state"] in {"RUNNING", "STOPPED"}
+        assert revision(decision["desired_revision"]) and decision["desired_revision"] != "0"
+    except (ValueError, TypeError, AssertionError, KeyError):
+        errors.append(f"{MCP}: invalid G5 closed data examples")
 
     # Exactly one request/result pair, independent of whitespace/key order.
     api = documents[API]

@@ -220,3 +220,45 @@ def test_runtime_control_contract_registered_in_local_gate() -> None:
     gate = (checker.ROOT / "scripts/ci_local.sh").read_text(encoding="utf-8")
     assert "python3 scripts/check_runtime_control_contract.py\n" in gate
     assert "python3 -m pytest -q tests/test_runtime_control_contract.py\n" in gate
+
+
+@pytest.mark.parametrize(("before", "after"), [
+    ("helianthus.runtime.list` |", "helianthus.runtime.enumerate` |"),
+    ("`List()`", "`ListDrivers()`"),
+    ('`{"DriverID":"ebus.primary"}`', '`{"driver_id":"ebus.primary"}`'),
+    ("Detect duplicates before decoding can discard them.", "Ignore duplicates."),
+    ("Normally `data` is null", "Normally `data` is empty"),
+    ("`isError: true`", "`isError: false`"),
+    ("| `UNAVAILABLE` | Persistence failure", "| `INTERNAL` | Persistence failure"),
+    ('"catalog_revision": "29"', '"catalog_revision": 29'),
+    ('"revision": "29"', '"revision": "28"'),
+    ('"enabled": true', '"enabled": 1'),
+    ('"reason": "RETRY_SCHEDULED",', '"reason": "RETRY_SCHEDULED", "extra": true,'),
+    ('{"desired_state":"RUNNING","desired_revision":"8"}',
+     '{"desired_state":"RUNNING","desired_revision":8}'),
+    ('{"desired_state":"RUNNING","desired_revision":"8"}',
+     '{"desired_state":"RUNNING","desired_revision":"8","receipt":"x"}'),
+    ('{"desired_state":"RUNNING","desired_revision":"8"}',
+     '{"desired_state":"RUNNING","desired_revision":"8","desired_revision":"9"}'),
+])
+def test_runtime_control_contract_mcp_rejects_wire_drift(before, after) -> None:
+    documents = dict(DOCUMENTS)
+    assert before in documents[checker.MCP]
+    documents[checker.MCP] = documents[checker.MCP].replace(before, after, 1)
+    assert any(checker.MCP in error for error in checker.validate(documents))
+
+
+def test_runtime_control_contract_mcp_rejects_extra_tool() -> None:
+    documents = dict(DOCUMENTS)
+    row = '| `helianthus.runtime.list` | `{}` | `List()` |'
+    documents[checker.MCP] = documents[checker.MCP].replace(
+        row, row + '\n| `helianthus.runtime.delete` | `{}` | `Delete()` |')
+    assert any("unexpected contract content" in error for error in checker.validate(documents))
+
+
+def test_runtime_control_contract_mcp_allows_reordered_json_members() -> None:
+    documents = dict(DOCUMENTS)
+    documents[checker.MCP] = documents[checker.MCP].replace(
+        '{"desired_state":"RUNNING","desired_revision":"8"}',
+        '{"desired_revision": "8", "desired_state": "RUNNING"}')
+    assert checker.validate(documents) == []

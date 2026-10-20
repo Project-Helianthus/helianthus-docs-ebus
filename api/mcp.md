@@ -438,8 +438,13 @@ MCP-specific invariants:
 
 - Runtime lane: [Project-Helianthus/helianthus-ebusgateway#376](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/376)
 - Merged implementation PR: [Project-Helianthus/helianthus-ebusgateway#377](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/377)
-- Historical offline and recovery evidence is recorded in the linked implementation
-  PR; it is not hardware evidence for the G5 lifecycle tools.
+- Unknown: recovery validation. The historical recovery probe remained
+  `blocked-infra` with `infra_reason=adapter_no_signal`; the implementation PR
+  merged under explicit owner override after the official add-on/runtime restore
+  was re-verified cleanly. The probe artifact is identified in that PR by the
+  path suffix `full88-probe-t01-after-adapter-reboot/index.json`; its full workspace
+  path is omitted under publication policy. This is not hardware evidence for
+  the G5 lifecycle tools.
 - Gateway code/test references (branch links, not immutable evidence coordinates):
   - MCP tool inventory and provider wiring:
     [Project-Helianthus/helianthus-ebusgateway/cmd/gateway/mcp_bus_observability_integration_test.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/cmd/gateway/mcp_bus_observability_integration_test.go)
