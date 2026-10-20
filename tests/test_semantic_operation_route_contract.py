@@ -9,7 +9,6 @@ from __future__ import annotations
 import copy
 import json
 from pathlib import Path
-import re
 
 from markdown_it import MarkdownIt
 import pytest
@@ -40,9 +39,11 @@ def validate_contract(text: str) -> None:
             "Raw HTML blocks and indented code blocks are not allowed in this contract"
         )
         if token.type == "inline":
-            # Preserve inline code syntax, but exclude comments and other HTML.
-            visible = re.sub(r"<!--.*?-->|<[^>]*>", "", token.content, flags=re.S)
-            blocks.append(" ".join(visible.split()))
+            assert all(child.type != "html_inline" for child in token.children or []), (
+                "Inline HTML is not allowed in this contract"
+            )
+            # Preserve inline code syntax without discarding rendered markup.
+            blocks.append(" ".join(token.content.split()))
         elif token.type == "fence":
             examples.append({
                 "language": token.info,
@@ -70,6 +71,21 @@ def test_semantic_operation_route_contract() -> None:
 def test_rejects_missing_hidden_or_weakened_rule(token, wrapper: str) -> None:
     with pytest.raises(AssertionError):
         validate_contract(replace_token(token, wrapper.format(token.content)))
+
+
+@pytest.mark.parametrize("token", BLOCKS, ids=lambda token: token.content[:60])
+@pytest.mark.parametrize("wrapper", (
+    '<span hidden>{}</span>',
+    '<span style="display:none">{}</span>',
+    '<span>{}</span>',
+    '{}<!-- hidden rule -->',
+))
+def test_rejects_inline_html(token, wrapper: str) -> None:
+    first_line = token.content.splitlines()[0]
+    assert first_line in TEXT
+    changed = TEXT.replace(first_line, wrapper.format(first_line), 1)
+    with pytest.raises(AssertionError, match="Inline HTML is not allowed"):
+        validate_contract(changed)
 
 
 @pytest.mark.parametrize("token", BLOCKS, ids=lambda token: token.content[:60])
