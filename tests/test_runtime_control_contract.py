@@ -363,3 +363,24 @@ def test_runtime_control_contract_g5_subsections_stay_under_owner(subsection) ->
     documents[checker.MCP] = documents[checker.MCP].replace(
         subsection, "## Unrelated contract\n\n" + subsection, 1)
     assert any("invalid owning section" in error for error in checker.validate(documents))
+
+
+def test_runtime_control_contract_lifecycle_implementation_status() -> None:
+    opening = checker.normalize(DOCUMENTS[checker.LIFECYCLE].split("\n## ", 1)[0])
+    assert "A5 is implemented as an internal service for lifecycle-only `ebus.primary` only" in opening
+    assert "The first external ordinary-MCP contract below is pending gateway PR 2." in opening
+    assert "This page claims no hardware validation or universal provider SPI." in opening
+
+
+@pytest.mark.parametrize(("before", "after"), [
+    ("A5 is implemented as an internal service for `ebus.primary` only",
+     "A5 is not implemented as an internal service"),
+    ("not a\nuniversal provider SPI", "a universal provider SPI"),
+    ("the external ordinary-MCP slice remains pending",
+     "the external ordinary-MCP slice has shipped"),
+])
+def test_runtime_control_contract_rejects_lifecycle_status_drift(before, after) -> None:
+    documents = dict(DOCUMENTS)
+    assert before in documents[checker.LIFECYCLE]
+    documents[checker.LIFECYCLE] = documents[checker.LIFECYCLE].replace(before, after, 1)
+    assert any(checker.LIFECYCLE in error for error in checker.validate(documents))

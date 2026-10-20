@@ -4,7 +4,7 @@ Status: proposed software 0.7 contract. This page specifies the selected D5
 epoch policy D1/A2 and D5 recovery mechanism for gateway issue
 [#1032](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1032),
 PRs 0a/0b and amendments A1–A6, covering S0/S5, S1/S2, S3, S4/S6/S7 and CTL-01–CTL-19.
-A5 is implemented as an internal service for lifecycle-only `ebus.primary` by
+A5 is implemented as an internal service for lifecycle-only `ebus.primary` only by
 [gateway PR #1241](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/1241).
 The first external ordinary-MCP contract below is pending gateway PR 2.
 Internal service/write-ahead recovery exists; direct G4 publishers still have
@@ -620,8 +620,9 @@ This amendment is the partial slice tracked by
 [docs issue #660](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/660).
 It replaces the companion's unimplemented receipt and idempotency-record design,
 including its request/result types, S1/S3 rules and CTL-03–CTL-11 expectations.
-It is the public prerequisite for the durable store, service and MCP slices;
-it does not claim those implementations have shipped. The choices below are
+A5 is implemented as an internal service for `ebus.primary` only, not a
+universal provider SPI; the external ordinary-MCP slice remains pending.
+The choices below are
 selected implementation bounds, with no remaining operator checkpoint.
 
 Desired state has exactly two values: `RUNNING`, `STOPPED`. Observed state has
