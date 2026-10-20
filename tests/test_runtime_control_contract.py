@@ -256,6 +256,20 @@ def test_runtime_control_contract_mcp_rejects_extra_tool() -> None:
     assert any("unexpected contract content" in error for error in checker.validate(documents))
 
 
+@pytest.mark.parametrize(("path", "clause"), [
+    (rule["path"], clause)
+    for rule in checker.RULES if rule.get("exact")
+    for clause in rule["required"]
+])
+@pytest.mark.parametrize("whitespace_variant", [False, True])
+def test_runtime_control_contract_rejects_duplicate_exact_units(path, clause, whitespace_variant) -> None:
+    documents = dict(DOCUMENTS)
+    duplicate = checker.normalize(clause).replace(" ", "  ") if whitespace_variant else clause
+    separator = "\n" if clause.startswith("|") else "\n\n"
+    documents[path] = documents[path].replace(clause, clause + separator + duplicate, 1)
+    assert any("unexpected contract content" in error for error in checker.validate(documents))
+
+
 def test_runtime_control_contract_mcp_allows_reordered_json_members() -> None:
     documents = dict(DOCUMENTS)
     documents[checker.MCP] = documents[checker.MCP].replace(

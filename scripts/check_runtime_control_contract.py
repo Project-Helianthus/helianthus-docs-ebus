@@ -71,11 +71,11 @@ def prose(text: str) -> str:
     return re.sub(r"<!--.*?-->", "", "".join(lines), flags=re.DOTALL)
 
 
-def units(text: str) -> set[str]:
-    result = set()
+def units(text: str) -> list[str]:
+    result = []
     for block in re.split(r"\n\s*\n", text.strip()):
         for unit in block.splitlines() if block.startswith("|") else [block]:
-            result.add(normalize(unit))
+            result.append(normalize(unit))
     return result
 
 
@@ -112,7 +112,7 @@ def validate(documents: dict[str, str]) -> list[str]:
         for required in rule["required"]:
             if normalize(required) not in present:
                 errors.append(f"{rule['path']}: changed obligation: {normalize(required)[:100]}")
-        if rule.get("exact") and present != {normalize(s) for s in rule["required"]}:
+        if rule.get("exact") and sorted(present) != sorted(normalize(s) for s in rule["required"]):
             errors.append(f"{rule['path']}: unexpected contract content in {start}")
         section_text = normalize(text[starts[0].end():ends[0].start()])
         for needle in rule.get("contains", []):
