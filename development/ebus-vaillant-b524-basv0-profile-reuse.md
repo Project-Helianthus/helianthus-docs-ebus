@@ -66,8 +66,10 @@ change. Explorer `/v1` exports must pass
 
 **Proven** (against the retained fixture, and enforced by the validator in both
 directions): `validation_scope` is a field of the source installation's
-interpretation, kept only so the classification stays identical to the copy
-bundled with the source application. It lives in the application overlay
+interpretation, kept only so its classification values agree with those in the
+source application's bundled copy. This agreement concerns classification
+values, not equality of the overlay with the complete bundled evidence file.
+It lives in the application overlay
 [b524-basv0-validation-scope-v1.json][source-4] (schema
 [b524-basv0-validation-scope-schema-v1.json][source-5]), keyed by selector, and
 no longer in the CC0 description fixture. The validator loads the overlay when
