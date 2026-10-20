@@ -19,6 +19,38 @@ def test_runtime_control_contract_repository() -> None:
     assert checker.validate(DOCUMENTS) == []
 
 
+EXAMPLE_SECTIONS = [
+    (checker.MCP, "### Read and mutation data",
+     "### Envelope, lifecycle errors and acceptance vectors", "invalid G5 closed data examples"),
+    (checker.API, "## Mutating Tools", "### Unproven-close",
+     "invalid closed request/result examples"),
+    (checker.API, "## `DriverSnapshotV1`", "### Field Invariants",
+     "invalid revision example in ## `DriverSnapshotV1`"),
+    (checker.API, "## `drivers.v1.list`", "## Mutating Tools",
+     "invalid revision example in ## `drivers.v1.list`"),
+]
+
+
+@pytest.mark.parametrize(("path", "start", "end", "error"), EXAMPLE_SECTIONS)
+@pytest.mark.parametrize("info", ["json", "json example", "text", ""])
+@pytest.mark.parametrize("fence", ["```", "~~~"])
+def test_runtime_control_contract_rejects_extra_fences(path, start, end, error, info, fence) -> None:
+    documents = dict(DOCUMENTS)
+    documents[path] = documents[path].replace(
+        start, start + f'\n\n{fence}{info}\n{{"receipt":"unexpected"}}\n{fence}', 1)
+    assert f"{path}: {error}" in checker.validate(documents)
+
+
+@pytest.mark.parametrize(("path", "start", "end", "error"), EXAMPLE_SECTIONS)
+@pytest.mark.parametrize("info", ["json example", "json\texample", " json "])
+def test_runtime_control_contract_accepts_json_info_variants(path, start, end, error, info) -> None:
+    documents = dict(DOCUMENTS)
+    before, section = documents[path].split(start, 1)
+    section, after = section.split(end, 1)
+    documents[path] = before + start + section.replace("```json", "```" + info) + end + after
+    assert checker.validate(documents) == []
+
+
 @pytest.mark.parametrize("clause", BRIDGE_RULE["required"])
 @pytest.mark.parametrize("change", ["weakened", "before", "after"])
 def test_runtime_control_contract_bridge_obligation_scope(clause, change) -> None:

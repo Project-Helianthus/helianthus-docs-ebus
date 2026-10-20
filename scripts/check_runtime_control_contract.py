@@ -135,11 +135,12 @@ def validate(documents: dict[str, str]) -> list[str]:
                 errors.append(f"{rule['path']}: forbidden classification: {pattern[:60]}")
 
     # G5 examples are separate from normative prose and use the closed wire
-    # projection, not the older DriverSnapshotV1 proposal.
+    # projection, not the older DriverSnapshotV1 proposal. Count every fence,
+    # regardless of info string, so unexpected rendered examples cannot hide.
     mcp_section = documents[MCP].split("### Read and mutation data", 1)[-1].split(
         "### Envelope, lifecycle errors and acceptance vectors", 1)[0]
     examples = [t.content for t in MarkdownIt().parse(mcp_section)
-                if t.type == "fence" and t.info.strip() == "json"]
+                if t.type == "fence"]
     try:
         listing, decision = [json.loads(s, object_pairs_hook=closed_object) for s in examples]
         assert isinstance(listing, dict) and listing.keys() == {"catalog_revision", "drivers"}
@@ -164,7 +165,7 @@ def validate(documents: dict[str, str]) -> list[str]:
     api = documents[API]
     section = api.split("## Mutating Tools", 1)[-1].split("### Unproven-close", 1)[0]
     examples = [t.content for t in MarkdownIt().parse(section)
-                if t.type == "fence" and t.info.strip() == "json"]
+                if t.type == "fence"]
     try:
         request, result = [json.loads(s, object_pairs_hook=closed_object) for s in examples]
         assert set(request) == {"DriverID", "ExpectedRevision"}
@@ -182,7 +183,7 @@ def validate(documents: dict[str, str]) -> list[str]:
     ):
         section = api.split(heading, 1)[-1].split(following, 1)[0]
         examples = [t.content for t in MarkdownIt().parse(section)
-                    if t.type == "fence" and t.info.strip() == "json"]
+                    if t.type == "fence"]
         try:
             assert len(examples) == 1
             obj = json.loads(examples[0], object_pairs_hook=closed_object)
