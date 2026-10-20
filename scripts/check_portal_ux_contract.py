@@ -177,7 +177,7 @@ REQUIRED = (
     "`Thermal/HVAC`, `PV`, `Storage/BMS`, `EVSE`, and\n`Infrastructure`",
     "must not require a vendor switch, a product branch, or compatibility logic in\ncentral bootstrap or rendering code.",
     "`(driver_id, manifest_id, manifest_version)`",
-    "`catalog_revision`, `catalog_digest`,\n`evaluation_instant`, and caller `authorization_scope`",
+    "`catalog_revision`, `catalog_digest`,\nand `evaluation_instant`",
     "lifecycle, freshness, projection-loss, quality, and provenance",
     "Accepted source records and accepted semantic records remain distinct from the\nbrowser presentation state.",
     "Discovery\npermission controls visibility",
