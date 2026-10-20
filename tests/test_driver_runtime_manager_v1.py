@@ -13,7 +13,7 @@ def _normalized(path: Path) -> str:
     return " ".join(path.read_text(encoding="utf-8").split())
 
 
-def test_closed_driver_snapshot_v1_vocabulary() -> None:
+def test_historical_driver_snapshot_v1_vocabulary() -> None:
     text = _normalized(API)
     for required in (
         "DriverSnapshotV1",
@@ -117,7 +117,7 @@ def test_active_callback_timeout_never_closes_beneath_raw_transport() -> None:
         assert required in architecture
 
 
-def test_operation_concurrency_readback_and_diagnostics() -> None:
+def test_historical_operation_concurrency_readback_and_diagnostics() -> None:
     text = _normalized(API)
     for required in (
         "`drivers.v1.list`",
@@ -246,3 +246,24 @@ def test_portal_and_platform_indexes_link_the_contract() -> None:
         "[`../../api/driver-runtime-v1.md`](../../api/driver-runtime-v1.md)",
     ):
         assert required in platform
+
+
+def test_public_mcp_authority_supersedes_historical_inventory() -> None:
+    api = _normalized(API)
+    architecture = _normalized(ARCHITECTURE)
+    for required in (
+        "superseded historical material in its entirety",
+        "It is not an implementation or acceptance target",
+        "Validators retaining examples below check historical consistency only",
+        "./mcp.md#g5-runtime-lifecycle-mcp-contract-d4",
+    ):
+        assert required in api
+    for required in (
+        "../../api/mcp.md#g5-runtime-lifecycle-mcp-contract-d4",
+        "`helianthus.runtime.list` can return a coherent snapshot",
+        "`helianthus.runtime.{list,get,start,stop,restart}`",
+        "historical `drivers.v1.*` tools are not delivery requirements",
+        "PR 2 adds no lifecycle GraphQL",
+    ):
+        assert required in architecture
+    assert "implement and stabilize `drivers.v1.list`" not in architecture

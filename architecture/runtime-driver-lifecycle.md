@@ -708,7 +708,7 @@ of `api/driver-runtime-v1.md`: `idempotency_key`, `request_id` and any receipt
 or completed-operation member are not accepted, and a request carrying them is
 refused as `INVALID_ARGUMENT` like any additional member. A finite caller deadline comes from the call
 context. Closed decoding rejects unknown/missing fields, duplicate members,
-malformed revisions and trailing JSON. No lifecycle principal, authority,
+malformed revisions. No lifecycle principal, authority,
 idempotency key, canonical request digest, key lookup, receipt or completed-
 operation record exists. Semantic replay digests remain D5 recovery material.
 
@@ -794,7 +794,7 @@ unchanged. Checks run in this fixed order and the first failing check decides:
 
 | Order | Refusal | Code | Retryable |
 |---|---|---|---|
-| 1 | Unknown, missing or duplicate member, malformed revision string (including `"0"`, leading zeros, signs, whitespace, non-digits), trailing JSON | `INVALID_ARGUMENT` | No |
+| 1 | Unknown, missing or duplicate member, malformed revision string (including `"0"`, leading zeros, signs, whitespace, non-digits) | `INVALID_ARGUMENT` | No |
 | 2 | `DriverID` noncanonical or not registered | `NOT_FOUND` | No |
 | 3 | Driver record malformed or `runtime_control` failed to load; the driver reports `FAILED` | `FAILED_PRECONDITION` | No, until offline repair |
 | 3 | Readback after ambiguous persistence still pending | `UNAVAILABLE` | Yes |
@@ -1084,8 +1084,11 @@ offers (HTTP today) with eeBUS disabled or absent, and retain registration while
 eBUS is STOPPED or FAILED.
 There is no lifecycle principal/authority adapter, authorization check before
 0.9, new socket or operator-only registration. Closed two-field mutations,
-canonical IDs/revisions, duplicate/trailing JSON rejection and finite context
-deadlines retain S1/D3's ordered refusals. Accepted/no-op data contains only
+canonical IDs/revisions, duplicate member rejection and finite context
+deadlines retain S1/D3's ordered refusals. Whole-body trailing data is rejected
+by the transport as an invalid request before any tool or service call; it is
+outside the service refusal sequence and never produces the lifecycle
+`INVALID_ARGUMENT` envelope. Accepted/no-op data contains only
 desired state and revision; results are observed through coherent sorted
 list/get, never a receipt. After a lost RESTART response, read back: an
 old-revision retry conflicts, while a fresh-revision retry after settlement

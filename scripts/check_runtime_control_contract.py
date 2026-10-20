@@ -147,7 +147,8 @@ def validate(documents: dict[str, str]) -> list[str]:
     except (ValueError, TypeError, AssertionError, KeyError):
         errors.append(f"{MCP}: invalid G5 closed data examples")
 
-    # Exactly one request/result pair, independent of whitespace/key order.
+    # Historical proposal consistency only; G5 above owns public acceptance.
+    # Exactly one archived request/result pair, independent of whitespace/key order.
     api = documents[API]
     section = api.split("## Mutating Tools", 1)[-1].split("### Unproven-close", 1)[0]
     examples = [t.content for t in MarkdownIt().parse(section)

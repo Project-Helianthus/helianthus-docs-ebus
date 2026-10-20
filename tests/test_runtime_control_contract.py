@@ -315,3 +315,24 @@ def test_runtime_control_contract_lifecycle_offered_transports() -> None:
     text = checker.normalize(DOCUMENTS[checker.LIFECYCLE])
     assert ("Discover and dispatch all five through every ordinary MCP transport the gateway "
             "offers (HTTP today) with eeBUS disabled or absent") in text
+
+
+@pytest.mark.parametrize(("path", "before", "after"), [
+    (checker.API, "It is not an implementation or acceptance target.",
+     "It is the implementation and acceptance target."),
+    (checker.MANAGER, "`helianthus.runtime.{list,get,start,stop,restart}`",
+     "`drivers.v1.{list,start,stop,restart}`"),
+    (checker.MANAGER, "The historical `drivers.v1.*` tools are not delivery requirements.",
+     "The `drivers.v1.*` tools are delivery requirements."),
+    (checker.LIFECYCLE, "duplicate member rejection and finite context",
+     "duplicate/trailing JSON rejection and finite context"),
+    (checker.LIFECYCLE, "outside the service refusal sequence",
+     "inside the service refusal sequence"),
+    (checker.LIFECYCLE, "non-digits) | `INVALID_ARGUMENT`",
+     "non-digits), trailing JSON | `INVALID_ARGUMENT`"),
+])
+def test_runtime_control_contract_rejects_obsolete_authority_and_body_refusal(path, before, after) -> None:
+    documents = dict(DOCUMENTS)
+    assert before in documents[path]
+    documents[path] = documents[path].replace(before, after, 1)
+    assert any(path in error for error in checker.validate(documents))
