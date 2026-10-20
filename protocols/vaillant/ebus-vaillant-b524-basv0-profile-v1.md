@@ -3,10 +3,15 @@
 This profile is a sanitized, read-only metadata observation for the native B524
 selector namespace. It is identified as `basv0_sw0217_hw8803_api1`; its local
 identity is EID `BASV0`, software raw `0217`, hardware raw `8803`, API version
-raw `1` and API revision raw `1`. The API values are retained separately as read
-from system-information registers `0006h` and `0007h`, respectively. These
-fields identify the observation context. They do not identify a product article,
-installation, or every controller carrying an EID `BASV0`.
+raw `1` and API revision raw `1`. **Hypothesis (derived):** `software_raw`,
+`hardware_raw`, `api_version_raw`, and `api_revision_raw` come from the
+acquisition session, not the retained description bytes. The API values are
+recorded separately as read from system-information registers `0006h` and
+`0007h`, respectively; those read bytes are not retained. These identity claims
+cannot be re-derived from the retained artifact; falsifying them requires a new
+acquisition. They identify the observation context, not a product article,
+installation, or every controller carrying an EID `BASV0`, and do not establish
+codec qualification.
 
 The machine-readable record is
 [b524-basv0-description-profile-v1.json][source-1]. It retains `(OP, GG, II,
@@ -84,10 +89,10 @@ The fixture records the raw three spans even when no codec is qualified. A
 decoded record with `codec_provenance: selector_qualified` can be marked
 `qualified`; a length-inferred codec remains `unqualified`. Selector-qualified
 codec acceptance is validator vocabulary, distinct from the evidence grade of
-the codec basis or decoded limits. Each codec has a fixed span width (UCH 1, UIN
-2, U32 4, EXP 4, DATE_DMY_U8X3 3, TIME_HMS_U8X3 3 bytes) that must equal the
-description payload length divided by three; a decoded record that disagrees is
-rejected.
+the codec basis or decoded limits. Each codec has a fixed span width (`UCH` 1,
+`UIN` 2, `U32` 4, `EXP` 4, `DATE_DMY_U8X3` 3, `TIME_HMS_U8X3` 3 bytes) that
+must equal the description payload length divided by three; a decoded record
+that disagrees is rejected.
 
 ### Basis of the codec labels
 
@@ -122,15 +127,33 @@ unqualified record that claims selector provenance. A
 `public_local_constraint_codec` must equal the register map's Wire column for
 that `(OP, GG, RR)` (u8 UCH, u16 UIN, u32 U32, f32 EXP) and a selector with no
 Wire entry is rejected; an exact-selector-schema codec must equal the codec the
-calendar/clock selector list implies (date DATE_DMY_U8X3, time TIME_HMS_U8X3).
-Eight of the fourteen exact-schema selectors (`GG00 RR002C`, `RR00F2..RR00F5`,
-`GG01 RR0010/RR0011`, and the U32 `GG04 RR000B`) are not in that list; for them
-the register map's Wire column is the pin. The validator accepts the
-exact-selector-schema basis only for these fourteen selectors, requires every
-one of them to keep it, and rejects it anywhere else; decoded numeric limits
-must be numbers, never booleans. A calendar value must be a valid date (year
-offset 0-99 from 2000) and a clock value a valid time (hour 0-23, minute and
-second 0-59) before `qualified` is kept.
+calendar/clock selector list implies (date `DATE_DMY_U8X3`, time
+`TIME_HMS_U8X3`). The fourteen exact-schema selectors are listed below as
+`(OP, GG, II, RR)`; OP02 and OP06 remain distinct namespaces:
+
+- `(02, 00, 00, 002C)`
+- `(02, 00, 00, 0034)`
+- `(02, 00, 00, 0035)`
+- `(02, 00, 00, 00DA)`
+- `(02, 00, 00, 00DB)`
+- `(02, 00, 00, 00F2)`
+- `(02, 00, 00, 00F3)`
+- `(02, 00, 00, 00F4)`
+- `(02, 00, 00, 00F5)`
+- `(02, 01, 00, 0009)`
+- `(02, 01, 00, 000A)`
+- `(02, 01, 00, 0010)`
+- `(02, 01, 00, 0011)`
+- `(02, 04, 00, 000B)`
+
+Eight of these selectors (`GG00 RR002C`, `RR00F2..RR00F5`,
+`GG01 RR0010/RR0011`, and the U32 `GG04 RR000B`) are absent from the
+calendar/clock list; for them the register map's Wire column is the pin. The
+validator accepts the exact-selector-schema basis only for these fourteen
+selectors, requires every one of them to keep it, and rejects it anywhere else;
+decoded numeric limits must be numbers, never booleans. A calendar value must
+be a valid date (year offset 0-99 from 2000) and a clock value a valid time
+(hour 0-23, minute and second 0-59) before `qualified` is kept.
 
 **Hypothesis (candidate layouts).** Each calendar or clock byte is a plain
 unsigned integer. The codec names describe the retained layouts:
@@ -225,8 +248,8 @@ parameter or a text codec.
 ventilation `OP02/GG09/II00..II0A/RR0001`, the observed read body has width two
 for all eleven instances. Native headers and response payloads were not
 retained, so falsifying that width requires a new acquisition. **Proven (within
-the retained description bytes):** the description spans are two bytes wide. The
-profile-qualified UIN decoding is consistent with the derived response width
+the retained description bytes):** the description spans are two bytes wide.
+The profile-qualified UIN decoding is consistent with the derived response width
 (**Hypothesis** codec basis, see above). A UCH-sized interpretation is rejected
 for this profile.
 
