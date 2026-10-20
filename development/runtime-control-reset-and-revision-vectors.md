@@ -112,8 +112,9 @@ allocator is not a global expected-revision comparison for recorded drivers.
 
 Assume enabled synthetic drivers A (`family.a`) and B (`family.b`), each with
 a changing START request carrying `ExpectedRevision=H`. Initially A has a
-STOPPED record at `H`, B has no record, and the namespace mark is `H`. Assume
-validation, deadlines, capacity, recovery and persistence allow the decisions.
+STOPPED record at `H`, B has no record, and the namespace mark is `H`, where
+`H <= 2^64 - 3` leaves room for two increments. Assume validation, deadlines,
+capacity, recovery and persistence allow the decisions.
 Each ordering begins from that same initial state.
 
 | Serialized order | Comparison and decision | Mark afterward |

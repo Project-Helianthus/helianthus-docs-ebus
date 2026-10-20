@@ -169,6 +169,8 @@ def test_runtime_control_contract_missing_or_non_normative(path, clause, wrapper
     ("| CTL-19 |", "| CTL-18 |"),
     ("only a driver with no record compares against\n   the re-read mark", "every driver compares against the re-read mark"),
     ("and is accepted at `H + 2`", "and is refused with REVISION_CONFLICT"),
+    (", where `H <= 2^64 - 3` leaves room for two increments", ""),
+    ("`H <= 2^64 - 3`", "`H <= 2^64 - 2`"),
     ("If A commits first, A is accepted at `H + 1` and B is refused with REVISION_CONFLICT and no mutation.",
      "If A commits first, both requests are accepted at `H + 1`."),
     ("conflicts before the same-desired no-op check", "returns a same-desired no-op"),
