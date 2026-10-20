@@ -3,8 +3,9 @@
 Status: bounded clarification supplement for [#693](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/693),
 following [#666](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/666)
 and [gateway #1157](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1157).
-The canonical lifecycle correction and checker vectors remain pending. This
-supplement does not close the issue or change the public control API.
+The canonical lifecycle decision procedure, CTL-19 vector and frozen checker
+rules now carry the per-driver comparison correction described below. This
+supplement does not change the public control API.
 
 ## Evidence and scope
 
@@ -23,7 +24,7 @@ transport and physical acceptance in any installation. Source agreement does
 not establish qualification, evidence freshness or an executed reset. Nothing
 here declares a stable contract before Helianthus 1.0.
 
-## Offline operator reference
+## Offline synthetic preview reference
 
 The [lifecycle reset section](../architecture/runtime-driver-lifecycle.md#offline-namespace-only-reset)
 still presents a conceptual command. The implemented offline script accepts
@@ -36,9 +37,14 @@ python3 scripts/reset_runtime_control.py --state-file <synthetic-state-file> --n
 
 `--driver-id` is repeated once for each configured driver ID. There is no driver
 configuration-file argument or automatic configuration discovery in this
-interface. The caller supplies the complete validated set; the tool must not
-guess IDs. IDs must be canonical and unique, with a nonempty set within the
-record bound. Repeating the flag with different IDs supplies multiple drivers;
+interface. It therefore cannot prove that supplied IDs match the complete
+configured installation set. This reference is limited to synthetic preview:
+apply to installation state through this interface is non-conformant with the
+canonical reset contract, even with both write flags. A conforming apply path
+must resolve the complete ID set from validated read-only installation
+configuration and refuse when it cannot validate it; caller-supplied IDs alone
+are insufficient. Preview IDs must be canonical and unique, with a nonempty
+set within the record bound. Repeating the flag with different IDs supplies multiple drivers;
 repeating the same ID is refused. Assignment uses bytewise `DriverID` order,
 not argument order. The only namespace is `runtime_control`, and the only
 desired value is `STOPPED`.
@@ -48,9 +54,10 @@ desired value is `STOPPED`.
 | absent | absent | Preview; no state replacement or quarantine copy |
 | absent | present | Preview; the assertion alone does not apply a reset |
 | present | absent | `FAILED_PRECONDITION`; no replacement |
-| present | present | Eligible for validated offline replacement; all other checks still apply |
+| present | present | Implementation write path; non-conformant for installation reset because configuration cannot be validated |
 
-Preview is the default. Both flags are required to write a replacement.
+Preview is the default. The implementation requires both flags to write a
+replacement; that condition does not establish reset conformance.
 `--gateway-stopped` is an operator assertion, not proof that the writer stopped;
 the exclusive store lock must also be acquired. Preview also acquires that
 lock and may create its sidecar file, although it does not replace state.
@@ -58,7 +65,10 @@ Neither mode is an online bypass, gateway startup option or MCP repair tool.
 No reset was executed to produce this reference, and no native start is part
 of the offline command.
 
-### Bounds, preservation and refusal
+### Implementation bounds, preservation and refusal
+
+The following describes implementation behavior, not approval to use its
+non-conformant apply path on installation state.
 
 The validated issued-revision mark `H` bounds earlier desired revisions,
 including removed IDs and previous repairs. The durable catalog revision `C`
@@ -67,7 +77,7 @@ unverifiable D5 recovery envelope, or a validated driver/recovery revision
 above `H` refuses replacement. Unknown namespace material is not decoded as
 empty. Whole-file damage requires a valid GUID-preserving base first.
 
-For `N` supplied configured IDs, successful replacement assigns STOPPED at
+For `N` supplied IDs, the implementation replacement assigns STOPPED at
 `H + 1` through `H + N`, advances the mark to `H + N` and catalog revision to
 `C + 1`, and removes active work from the desired-control records. If either
 `H + N` or `C + 1` exceeds the unsigned 64-bit maximum, it refuses with
@@ -124,18 +134,15 @@ record at `H + 1`. The second then compares against B's own `H + 1`, conflicts
 and does not become a same-desired no-op: comparison precedes the no-op check.
 Exactly one acceptance applies to this same-driver trace.
 
-### Pending canonical replacement
+### Canonical contract and regression guards
 
-The exactly-one sentence in the current
-[CTL-19 row](../architecture/runtime-driver-lifecycle.md#amended-ctl-acceptance-vectors)
-is a pending correction for the cross-driver case. The explanatory paragraph
-in decision step 2 also needs to distinguish the comparison operand from the
-allocator. Record this exact replacement prose for the cross-driver claim:
-
-> Two drivers A and B, A with a durable desired revision H and B without a record, begin with namespace mark H and concurrent changing requests each carrying ExpectedRevision=H, with both requests past validation before either commits. If A commits first, A is accepted at H + 1 and B is refused with REVISION_CONFLICT and no mutation. If B commits first, B is accepted at H + 1 and A still compares against its own durable desired revision H and is accepted at H + 2. The no-record request is refused with REVISION_CONFLICT when it loses the race; the recorded driver's request is accepted in either order. Accepted revisions remain unique and the namespace mark advances once per acceptance. Comparison, mark read, allocation and durable write remain under one namespace-wide serialization point; no request persists a precomputed revision after waiting.
-
-This supplement leaves the canonical page, checker vectors and links from
-reserved pages unchanged. Their coordinated correction remains after J17.
+The [decision procedure](../architecture/runtime-driver-lifecycle.md#validate-decide-and-commit)
+and [CTL-19 row](../architecture/runtime-driver-lifecycle.md#amended-ctl-acceptance-vectors)
+require these two cross-driver orderings and the same-driver conflict. The
+frozen rules in `scripts/runtime_control_contract.json` and mutation fixtures
+in `tests/test_runtime_control_contract.py` guard the distinction between a
+recorded driver's comparison revision and the shared allocation mark. These
+checks protect documentation; they do not execute the gateway races.
 
 ### Timeout and refusal ordering remain unchanged
 
