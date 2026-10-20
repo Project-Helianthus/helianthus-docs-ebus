@@ -147,10 +147,11 @@ successful provider admission, a new generation; it never reuses a half-closed
 transport instance. Superseded by the D3 amendment: a manual START with the
 current revision while desired is RUNNING is a no-op, and recovering `FAILED`
 belongs to the reconciler. Automatic retry and operator lifecycle work obey the
-lifecycle contract's namespace-wide decision serialization and typed-transition
-fencing, so neither can resurrect a stopped driver. Every asynchronous callback retains its captured generation and the
-existing lifecycle correlation of its typed transition or reconciliation
-attempt, as defined by the lifecycle contract. Superseding an attempt fences
+lifecycle contract's namespace-wide decision serialization and full lifecycle
+fencing, so neither can resurrect a stopped driver. Every asynchronous callback
+retains its full lifecycle correlation: incarnation, source, epoch, generation,
+admission identity and operation correlation, including untyped bootstrap
+reconciliation and manager retry attempts. Superseding an attempt fences
 its callbacks, publications and admission immediately while retaining the old
 correlation for late-result cleanup. A stale callback cannot restore admission;
 its outstanding cleanup obligations are preserved.
@@ -200,8 +201,11 @@ Stop and restart perform atomic effective-capability withdrawal under the same
 lock used by every provider invocation. The manager empties the effective set
 before it publishes `STOPPING`; work racing after that point is blocked before
 provider invocation, while work admitted earlier belongs to the bounded drain.
-Provider callbacks with stale generation or typed-transition correlation cannot
-restore an effective capability.
+Provider callbacks are fenced at the admission/publication serialization
+boundary using incarnation, source, epoch, generation, admission identity and
+operation correlation. A stale callback cannot restore an effective capability,
+even when driver generation resets to 1 in a successor epoch or the attempt
+has no typed transition.
 
 An unproven-close safety quarantine is represented by observed `FAILED`, reason
 `CLOSE_UNCONFIRMED`, an empty effective set and the `safety_quarantined` flag.
@@ -287,12 +291,11 @@ The implementation follows the platform delivery pipeline:
    `helianthus.runtime.{list,get,start,stop,restart}` under the
    [G5 contract](../../api/mcp.md#g5-runtime-lifecycle-mcp-contract-d4).
    The historical `drivers.v1.*` tools are not delivery requirements.
-2. **GraphQL parity**: a later consumer gate freezes the equivalent snapshot
-   and mutations without replacing MCP ownership; PR 2 adds no lifecycle GraphQL.
-3. **Portal rollout**: render driver cards and lifecycle controls from the
-   gateway APIs; Portal remains a consumer.
-4. **Home Assistant rollout**: expose native entities/actions after GraphQL is
-   stable; Home Assistant remains a consumer.
+2. **Status parity**: preserve existing MCP/GraphQL daemon and adapter status
+   parity. There is no lifecycle GraphQL API, resolver, mutation or subscription.
+3. **Portal rollout** and **Home Assistant rollout**: any later lifecycle
+   consumer work requires a separately scoped contract consistent with D4; this
+   page requires no downstream lifecycle routes or controls.
 
 No consumer may shape protocol-specific exceptions into this V1 contract.
 Protocol-specific status remains reachable through its existing diagnostics
@@ -334,8 +337,8 @@ pair:
 - a process restart preserves durable desired state: stored `STOPPED` stays
   `STOPPED` with no provider started, and stored `RUNNING` for a configured-enabled
   driver reconciles to `STARTING`;
-- MCP, GraphQL, Portal, and Home Assistant expose parity at their respective
-  rollout gates; and
+- the G5 MCP lifecycle surface obeys its closed contract, existing MCP/GraphQL
+  status parity is preserved, and no lifecycle GraphQL surface is added; and
 - logs, snapshots, responses, and audits remain secret-free and
   endpoint-free.
 
