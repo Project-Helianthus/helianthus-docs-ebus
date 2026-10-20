@@ -7,6 +7,7 @@ API = ROOT / "api" / "driver-runtime-v1.md"
 PORTAL = ROOT / "api" / "portal.md"
 MODBUS_ADDON = ROOT / "api" / "modbus-v1-addon-runtime.md"
 PLATFORM_INDEX = ROOT / "docs" / "platform" / "README.md"
+LIFECYCLE = ROOT / "architecture" / "runtime-driver-lifecycle.md"
 
 
 def _normalized(path: Path) -> str:
@@ -237,10 +238,12 @@ def test_consumers_follow_g5_instead_of_the_historical_api() -> None:
     portal = _normalized(PORTAL)
     platform = _normalized(PLATFORM_INDEX)
     addon = _normalized(MODBUS_ADDON)
+    lifecycle = _normalized(LIFECYCLE)
     for text, g5_link in (
         (portal, "./mcp.md#g5-runtime-lifecycle-mcp-contract-d4"),
         (platform, "../../api/mcp.md#g5-runtime-lifecycle-mcp-contract-d4"),
         (addon, "./mcp.md#g5-runtime-lifecycle-mcp-contract-d4"),
+        (lifecycle, "../api/mcp.md#g5-runtime-lifecycle-mcp-contract-d4"),
     ):
         assert g5_link in text
     for required in (
@@ -266,6 +269,10 @@ def test_consumers_follow_g5_instead_of_the_historical_api() -> None:
         "does not require a Modbus placeholder or the historical snapshot fields",
     ):
         assert required in addon
+    assert "historical `DriverSnapshotV1` proposal's `effective_capabilities`" in lifecycle
+    assert "closed driver projection without capability fields" in lifecycle
+    assert "snapshot is not an implementation or acceptance target" in lifecycle
+    assert "field in the [driver API]" not in lifecycle
     assert "renders gateway-owned `DriverSnapshotV1`" not in portal
     assert "MCP-first `DriverSnapshotV1`" not in platform
     assert "successor is frozen in [`driver-runtime-v1.md`]" not in addon

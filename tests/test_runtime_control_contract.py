@@ -336,3 +336,30 @@ def test_runtime_control_contract_rejects_obsolete_authority_and_body_refusal(pa
     assert before in documents[path]
     documents[path] = documents[path].replace(before, after, 1)
     assert any(path in error for error in checker.validate(documents))
+
+
+@pytest.mark.parametrize("replacement", [
+    "", "## Renamed G5 contract", "### G5 runtime lifecycle MCP contract (D4)",
+    "## G5 runtime lifecycle MCP contract (D4) renamed",
+    "<!--\n## G5 runtime lifecycle MCP contract (D4)\n-->",
+    "```text\n## G5 runtime lifecycle MCP contract (D4)\n```",
+    "## G5 runtime lifecycle MCP contract (D4)\n\n## G5 runtime lifecycle MCP contract (D4)",
+])
+def test_runtime_control_contract_requires_g5_owning_heading(replacement) -> None:
+    documents = dict(DOCUMENTS)
+    documents[checker.MCP] = documents[checker.MCP].replace(
+        "## G5 runtime lifecycle MCP contract (D4)", replacement, 1)
+    assert any("invalid owning section" in error for error in checker.validate(documents))
+
+
+@pytest.mark.parametrize("subsection", [
+    "### Ordinary discovery and dispatch",
+    "### Closed inputs and exact service delegation",
+    "### Read and mutation data",
+    "### Envelope, lifecycle errors and acceptance vectors",
+])
+def test_runtime_control_contract_g5_subsections_stay_under_owner(subsection) -> None:
+    documents = dict(DOCUMENTS)
+    documents[checker.MCP] = documents[checker.MCP].replace(
+        subsection, "## Unrelated contract\n\n" + subsection, 1)
+    assert any("invalid owning section" in error for error in checker.validate(documents))

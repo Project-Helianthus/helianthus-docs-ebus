@@ -187,7 +187,8 @@
       "The exact tool family is `helianthus.runtime.{list,get,start,stop,restart}`.\nAll five tools must appear in ordinary `tools/list` and dispatch through\nevery ordinary MCP transport the gateway offers (HTTP today), including with\neeBUS disabled or absent.\nRegistration lasts for the shell's lifetime, independently of driver startup,\nSTOPPED/FAILED state and eeBUS provider availability. A disabled driver remains\nvisible; tool disappearance is not an unavailable-state signal.",
       "Final D4 requires no lifecycle principal checks, authority adapter or\nauthorization before 0.9. No owner-only kernel socket, separate listener,\noperator-boundary-only registration or eeBUS dependency is introduced. Existing\nnative-write checks and unrelated eeBUS security boundaries keep their current\nowners. Driver contribution hooks remain unimplemented; these are host tools.\nEvery namespace, including `ebus.v1.*`, remains pre-stable until 1.0. Intentional\nchanges require documentation, deterministic envelopes, schema/output goldens\nand PR explanation; neither a compatibility veto nor promotion to a new major\nor experimental namespace applies before 1.0."
     ],
-    "exact": true
+    "exact": true,
+    "parent": "## G5 runtime lifecycle MCP contract (D4)"
   },
   {
     "path": "api/mcp.md",
@@ -206,7 +207,8 @@
       "`DriverID` matches `^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$`, at most 128 bytes,\nand must identify a registered driver. A noncanonical or unregistered ID is\n`NOT_FOUND`, without construction or endpoint access. `ExpectedRevision` echoes\nthe read-back `desired_revision`, never the catalog/view revision: a canonical\nnonzero unsigned 64-bit decimal JSON string. Reject `\"0\"`, `\"01\"`, signs,\nwhitespace, numbers and overflow. Response revisions are canonical unsigned\n64-bit decimal strings and may be `\"0\"` only for a withheld/unissued view.",
       "Every call uses a finite context deadline. The transport adapter supplies a\nbounded deadline when the transport has none and preserves an earlier caller\ndeadline; this adds no argument field. Mutations retain the service's fixed\nrefusal order, bounded namespace-wide serialization wait, deadline recheck\nafter acquiring it and pre-commit recheck. Neither same-desired requests nor\nretries renew operation budgets. The adapter must not call DriverManager,\nconstruct a provider, open an endpoint, reconcile or poll in place of the service."
     ],
-    "exact": true
+    "exact": true,
+    "parent": "## G5 runtime lifecycle MCP contract (D4)"
   },
   {
     "path": "api/mcp.md",
@@ -229,7 +231,8 @@
       "Accepted mutations and same-desired no-ops return only this `data` shape:",
       "Acceptance acknowledges durable intent, not native completion. Observe progress\nand failure through list/get. START while desired RUNNING and STOP while desired\nSTOPPED are no-ops only after the revision comparison: they change no revision,\nretry budget, observation or quarantine. RESTART requires desired RUNNING,\nkeeps it RUNNING and accepts a new replacement/revision each time. After a lost\nRESTART response, read back before retrying: an old-revision retry conflicts;\na fresh-revision retry after settlement performs **another restart**. Readback\ndoes not attribute completion to a particular call. No completed-call lookup\nor replay result exists."
     ],
-    "exact": true
+    "exact": true,
+    "parent": "## G5 runtime lifecycle MCP contract (D4)"
   },
   {
     "path": "api/mcp.md",
@@ -252,7 +255,8 @@
       "The [ordered lifecycle refusal table](../architecture/runtime-driver-lifecycle.md#validate-decide-and-commit)\nis authoritative when several checks fail. `CLOSE_UNCONFIRMED` is an observed\nreason, not a request error. Semantic `ErrorID` values remain unchanged in their\nown domain. No lifecycle GraphQL field, resolver, mutation or subscription is\nintroduced; existing eBUS MCP/GraphQL status parity remains required.",
       "PR 2 must supply deterministic schema/output goldens and synthetic\ndiscovery/dispatch over every ordinary MCP transport the gateway offers (HTTP\ntoday) with eeBUS disabled; verify exact closed fields, duplicate member refusal,\ntransport-level rejection of trailing data, sorted coherent reads and every\nerror mapping.\nApply amended CTL-01/02 (reads), CTL-03/05/14/15/19 (validation, refusal order and\ndeadlines), CTL-04/06/10/11 (no-op and lost responses), CTL-07/08/09 (serialized\nreplacement/recovery), CTL-12/13/16 (revision/durability) and CTL-17/18\n(bootstrap/disabled configuration). Preserve A2 LIFE close-before-replacement\nand late-result fences. This page supplies documentation acceptance only;\ntransport execution, smoke tests and hardware qualification remain unverified."
     ],
-    "exact": true
+    "exact": true,
+    "parent": "## G5 runtime lifecycle MCP contract (D4)"
   },
   {
     "path": "api/driver-runtime-v1.md",
@@ -298,6 +302,30 @@
     "end": "## D4/public surface boundary",
     "required": [
       "Discover and dispatch all five through every ordinary MCP transport the gateway\noffers (HTTP today) with eeBUS disabled or absent, and retain registration while\neBUS is STOPPED or FAILED.\nThere is no lifecycle principal/authority adapter, authorization check before\n0.9, new socket or operator-only registration. Closed two-field mutations,\ncanonical IDs/revisions, duplicate member rejection and finite context\ndeadlines retain S1/D3's ordered refusals. Whole-body trailing data is rejected\nby the transport as an invalid request before any tool or service call; it is\noutside the service refusal sequence and never produces the lifecycle\n`INVALID_ARGUMENT` envelope. Accepted/no-op data contains only\ndesired state and revision; results are observed through coherent sorted\nlist/get, never a receipt. After a lost RESTART response, read back: an\nold-revision retry conflicts, while a fresh-revision retry after settlement\nrequests another restart."
+    ]
+  },
+  {
+    "path": "architecture/runtime-driver-lifecycle.md",
+    "start": "### Source ownership without semantic assets",
+    "end": "### Shell and preparation order",
+    "required": [
+      "A3 separates the companion's semantic `ObservedRecord.EffectiveCapabilities`\n(`CapabilityInstance` values) from a typed native effective-capability field.\nFor `ebus.primary`, semantic effective capabilities remain empty until the\nfamily's semantic migration. Native effective capabilities report only the\ncurrently admitted native invocation gates and are withdrawn with native\nadmission. In particular, the manager's `SEMANTIC_PROJECTION` gate for legacy\nconsumers is a native invocation capability, not a semantic capability instance\nor a hub publication. The historical `DriverSnapshotV1` proposal's\n`effective_capabilities` field in the [retired driver API](../api/driver-runtime-v1.md#field-invariants)\nretains that native meaning; it must not be populated with semantic instances.\nThe first external five-tool [G5 MCP contract](../api/mcp.md#g5-runtime-lifecycle-mcp-contract-d4)\nuses its closed driver projection without capability fields; the historical\nsnapshot is not an implementation or acceptance target."
+    ]
+  },
+  {
+    "path": "api/portal.md",
+    "start": "## Driver Runtime Control Target",
+    "end": "## eeBUS Owner Workbench",
+    "required": [
+      "The generic runtime-control target follows the\n[G5 MCP contract](./mcp.md#g5-runtime-lifecycle-mcp-contract-d4) and\n[lifecycle contract](../architecture/runtime-driver-lifecycle.md). Portal is a\nconsumer, not lifecycle authority: its future GraphQL parity must preserve the\nG5 closed driver projection and registered-driver catalog. It invokes the\ngateway-owned start, stop, and restart operations only after their MCP contract\nis stable and GraphQL parity has merged. The historical `DriverSnapshotV1`\nproposal is not a consumer implementation target. Portal does not create an\nindependent driver FSM, edit add-on options, retain endpoints or credentials,\nor call a protocol adapter directly."
+    ]
+  },
+  {
+    "path": "api/modbus-v1-addon-runtime.md",
+    "start": "### DriverManager V1 Successor Boundary",
+    "end": "## Closed Configuration",
+    "required": [
+      "The single-process packaging contract on this page remains the implemented\nFMV3-M4-03 baseline. Its generic runtime successor follows the\n[lifecycle contract](../architecture/runtime-driver-lifecycle.md) and\n[`DriverManager V1 proposal`](../docs/platform/driver-runtime-manager-v1.md).\nThe first external surface is owned by the\n[G5 MCP contract](./mcp.md#g5-runtime-lifecycle-mcp-contract-d4); the older\n`driver-runtime-v1.md` API proposal is superseded historical material, not an\nimplementation or acceptance target.\nUnder that pending DriverManager V1 successor, a driver-local Modbus validation\nfailure must not prevent the gateway process from starting. The add-on will\nclassify the Modbus descriptor independently and the gateway will retain a\ncategorical unavailable status for a registered Modbus driver while eBUS,\neeBUS, HTTP, and MCP continue. G5 lists only registered drivers using its\nclosed wire projection; it does not require a Modbus placeholder or the\nhistorical snapshot fields in the first external slice."
     ]
   }
 ]

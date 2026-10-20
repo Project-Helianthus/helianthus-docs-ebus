@@ -289,9 +289,12 @@ family's semantic migration. Native effective capabilities report only the
 currently admitted native invocation gates and are withdrawn with native
 admission. In particular, the manager's `SEMANTIC_PROJECTION` gate for legacy
 consumers is a native invocation capability, not a semantic capability instance
-or a hub publication. The existing native snapshot `effective_capabilities`
-field in the [driver API](../api/driver-runtime-v1.md#field-invariants) retains
-that native meaning; it must not be populated with semantic instances.
+or a hub publication. The historical `DriverSnapshotV1` proposal's
+`effective_capabilities` field in the [retired driver API](../api/driver-runtime-v1.md#field-invariants)
+retains that native meaning; it must not be populated with semantic instances.
+The first external five-tool [G5 MCP contract](../api/mcp.md#g5-runtime-lifecycle-mcp-contract-d4)
+uses its closed driver projection without capability fields; the historical
+snapshot is not an implementation or acceptance target.
 
 A4 is a bounded lifecycle-only exception to the companion's binding-bearing
 SPI. An asset-free source needs no semantic binding, capability instance,

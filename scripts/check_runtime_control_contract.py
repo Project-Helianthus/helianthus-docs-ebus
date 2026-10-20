@@ -108,6 +108,16 @@ def validate(documents: dict[str, str]) -> list[str]:
         if len(starts) != 1 or len(ends) != 1 or starts[0].end() >= ends[0].start():
             errors.append(f"{rule['path']}: invalid section {start}")
             continue
+        if parent := rule.get("parent"):
+            owners = [m for m in headings
+                      if m.group().lstrip().startswith("## ")
+                      and m.start() < starts[0].start()]
+            matches = [m for m in headings if m.group().lstrip() == parent]
+            if (len(matches) != 1 or not owners or owners[-1] != matches[0]
+                    or any(m.group().lstrip().startswith("## ")
+                           for m in headings
+                           if starts[0].end() < m.start() < ends[0].start())):
+                errors.append(f"{rule['path']}: invalid owning section {parent}")
         present = units(text[starts[0].end():ends[0].start()])
         for required in rule["required"]:
             if normalize(required) not in present:
