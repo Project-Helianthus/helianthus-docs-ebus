@@ -142,8 +142,11 @@ def validate_contract(text: str) -> None:
     ):
         # Compare the complete body: unavailable entries omit the snapshot
         # triplet, errors have no partial data, and metadata has no legacy
-        # snapshot ID or Modbus limits. Derive hashes rather than trusting the
-        # published digest or copying it into the expected value.
+        # snapshot ID or Modbus limits. Require publication placeholders and
+        # hydrate only in memory, hashing actual and expected data independently.
+        assert example["meta"]["data_hash"] == "<computed-data-hash>"
+        actual_serialized = json.dumps(example["data"], sort_keys=True, separators=(",", ":"))
+        example["meta"]["data_hash"] = hashlib.sha256(actual_serialized.encode("utf-8")).hexdigest()
         serialized = json.dumps(data, sort_keys=True, separators=(",", ":"))
         assert example == {
             "data": data, "error": error,
@@ -236,5 +239,23 @@ def test_semantic_snapshot_read_rejects_complete_envelope_drift(
     else:
         example["extra"] = None
     mutated = text[:fence.start(1)] + json.dumps(example) + text[fence.end(1):]
+    with pytest.raises(AssertionError):
+        validate_contract(mutated)
+
+
+@pytest.mark.parametrize("example_index", (6, 7))
+@pytest.mark.parametrize("escaped", (False, True))
+def test_semantic_snapshot_read_rejects_published_digest(example_index: int, escaped: bool) -> None:
+    text = DOCUMENT.read_text(encoding="utf-8")
+    fences = list(re.finditer(r"```json\n(.*?)\n```", text, re.S))
+    fence = fences[example_index]
+    example = json.loads(fence[1])
+    serialized = json.dumps(example["data"], sort_keys=True, separators=(",", ":"))
+    digest = hashlib.sha256(serialized.encode("utf-8")).hexdigest()
+    published = "".join(f"\\u{ord(char):04x}" for char in digest) if escaped else digest
+    body = fence[1].replace("<computed-data-hash>", published)
+    # Both encodings recover the correct digest, but neither may be published.
+    assert json.loads(body)["meta"]["data_hash"] == digest
+    mutated = text[:fence.start(1)] + body + text[fence.end(1):]
     with pytest.raises(AssertionError):
         validate_contract(mutated)

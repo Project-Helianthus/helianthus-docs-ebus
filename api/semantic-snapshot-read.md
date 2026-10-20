@@ -593,7 +593,7 @@ as defined above; these unavailable entries must omit all three.
       "mode": "EVALUATED_SEMREG_PUBLICATION"
     },
     "data_timestamp": "1970-01-01T00:00:00Z",
-    "data_hash": "\u0036\u0036\u0038\u0062\u0036\u0030\u0030\u0035\u0030\u0038\u0037\u0064\u0034\u0038\u0035\u0036\u0030\u0039\u0034\u0034\u0033\u0064\u0032\u0064\u0032\u0064\u0063\u0033\u0032\u0037\u0061\u0061\u0037\u0066\u0039\u0066\u0065\u0038\u0030\u0065\u0030\u0062\u0033\u0061\u0036\u0039\u0064\u0066\u0034\u0033\u0031\u0063\u0062\u0063\u0039\u0036\u0039\u0039\u0039\u0066\u0037\u0061\u0061\u0064"
+    "data_hash": "<computed-data-hash>"
   }
 }
 ```
@@ -619,17 +619,16 @@ A whole-read overflow error has no partial asset data and is not retriable:
       "mode": "EVALUATED_SEMREG_PUBLICATION"
     },
     "data_timestamp": "1970-01-01T00:00:00Z",
-    "data_hash": "\u0037\u0034\u0032\u0033\u0034\u0065\u0039\u0038\u0061\u0066\u0065\u0037\u0034\u0039\u0038\u0066\u0062\u0035\u0064\u0061\u0066\u0031\u0066\u0033\u0036\u0061\u0063\u0032\u0064\u0037\u0038\u0061\u0063\u0063\u0033\u0033\u0039\u0034\u0036\u0034\u0066\u0039\u0035\u0030\u0037\u0030\u0033\u0062\u0038\u0063\u0030\u0031\u0039\u0038\u0039\u0032\u0066\u0039\u0038\u0032\u0062\u0039\u0030\u0062"
+    "data_hash": "<computed-data-hash>"
   }
 }
 ```
 
-The two synthetic digest strings use JSON Unicode escapes to avoid publishing
-long hexadecimal literals; parsing the examples yields the ordinary digest
-strings. This is an illustrative JSON encoding, not a required wire encoding.
-Both hashes are computed from synthetic `data` using the existing envelope
-algorithm (SHA-256 of compact JSON; object keys sorted for these map values),
-not SemReg canonical snapshot hashing. They can be reproduced with the Python
+The `data_hash` values are publication placeholders, not wire values. Validation
+replaces them in memory with hashes derived from each example's synthetic `data`;
+no concrete digests are published. Use the existing envelope algorithm (SHA-256
+of compact JSON; object keys sorted for these map values), not SemReg canonical
+snapshot hashing. The hashes can be derived with the Python
 standard library: `hashlib.sha256(json.dumps(data, sort_keys=True,
 separators=(",", ":")).encode("utf-8")).hexdigest()`. Error hashing includes
 JSON `null`. No `snapshot_id` or Modbus limits are added to consistency metadata.
