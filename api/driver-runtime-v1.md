@@ -2,6 +2,11 @@
 
 ## Status And Authority
 
+Superseded: [runtime-driver-lifecycle.md](../architecture/runtime-driver-lifecycle.md)
+now owns the runtime lifecycle contract: durable decisions, refusal order,
+request members and control semantics; where the pages differ, the lifecycle
+page governs.
+
 This page freezes the target MCP-first public contract for the generic gateway
 driver lifecycle. It is pending implementation. The process and provider
 ownership model is defined in

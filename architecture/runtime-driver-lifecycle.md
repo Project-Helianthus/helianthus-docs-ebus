@@ -1079,8 +1079,9 @@ operator boundary and experimental-tool proposal. The five tools delegate to
 one ControlService: cached List/Get and Decide with the exact START/STOP/RESTART
 method. They never bypass durable decisions through DriverManager.
 
-Discover and dispatch all five through ordinary MCP HTTP and stdio with eeBUS
-disabled or absent, and retain registration while eBUS is STOPPED or FAILED.
+Discover and dispatch all five through every ordinary MCP transport the gateway
+offers (HTTP today) with eeBUS disabled or absent, and retain registration while
+eBUS is STOPPED or FAILED.
 There is no lifecycle principal/authority adapter, authorization check before
 0.9, new socket or operator-only registration. Closed two-field mutations,
 canonical IDs/revisions, duplicate/trailing JSON rejection and finite context

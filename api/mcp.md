@@ -47,7 +47,8 @@ owns durable decisions, refusal order and CTL/LIFE semantics.
 
 The exact tool family is `helianthus.runtime.{list,get,start,stop,restart}`.
 All five tools must appear in ordinary `tools/list` and dispatch through
-ordinary MCP HTTP and stdio transports, including with eeBUS disabled or absent.
+every ordinary MCP transport the gateway offers (HTTP today), including with
+eeBUS disabled or absent.
 Registration lasts for the shell's lifetime, independently of driver startup,
 STOPPED/FAILED state and eeBUS provider availability. A disabled driver remains
 visible; tool disappearance is not an unavailable-state signal.
@@ -77,13 +78,15 @@ to the landed internal `Service` methods as follows:
 | `helianthus.runtime.restart` | `{"DriverID":"ebus.primary","ExpectedRevision":"7"}` | `Decide(ctx, MethodRestart, request)` |
 
 These are closed, case-sensitive objects: reject missing, additional or duplicate
-members, non-object inputs, non-string values and trailing JSON with
+members, non-object inputs and non-string values with
 `INVALID_ARGUMENT`. Detect duplicates before decoding can discard them. List
 has no members; get has exactly `DriverID`; each mutation has exactly the two
 shown members. No idempotency key, request digest, receipt, principal, authority,
 operation handle or caller-selected deadline member is accepted or returned.
 This removes lifecycle command tracking entirely; `meta.data_hash` and internal
 semantic replay digests retain their separate purposes.
+A request body with trailing data is rejected at the transport as an invalid
+request before any tool runs; `arguments` cannot carry trailing data.
 
 `DriverID` matches `^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$`, at most 128 bytes,
 and must identify a registered driver. A noncanonical or unregistered ID is
@@ -203,9 +206,11 @@ reason, not a request error. Semantic `ErrorID` values remain unchanged in their
 own domain. No lifecycle GraphQL field, resolver, mutation or subscription is
 introduced; existing eBUS MCP/GraphQL status parity remains required.
 
-PR 2 must supply deterministic schema/output goldens and synthetic HTTP/stdio
-discovery/dispatch with eeBUS disabled; verify exact closed fields, duplicate
-and trailing JSON refusal, sorted coherent reads and every error mapping.
+PR 2 must supply deterministic schema/output goldens and synthetic
+discovery/dispatch over every ordinary MCP transport the gateway offers (HTTP
+today) with eeBUS disabled; verify exact closed fields, duplicate member refusal,
+transport-level rejection of trailing data, sorted coherent reads and every
+error mapping.
 Apply amended CTL-01/02 (reads), CTL-03/05/14/15/19 (validation, refusal order and
 deadlines), CTL-04/06/10/11 (no-op and lost responses), CTL-07/08/09 (serialized
 replacement/recovery), CTL-12/13/16 (revision/durability) and CTL-17/18

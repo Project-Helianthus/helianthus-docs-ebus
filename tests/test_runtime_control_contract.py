@@ -276,3 +276,42 @@ def test_runtime_control_contract_mcp_allows_reordered_json_members() -> None:
         '{"desired_state":"RUNNING","desired_revision":"8"}',
         '{"desired_revision": "8", "desired_state": "RUNNING"}')
     assert checker.validate(documents) == []
+
+
+@pytest.mark.parametrize(("path", "first", "second"), [
+    (rule["path"], first, second)
+    for rule in checker.RULES if rule.get("exact")
+    for first, second in zip(rule["required"], rule["required"][1:])
+])
+def test_runtime_control_contract_rejects_reordered_exact_units(path, first, second) -> None:
+    documents = dict(DOCUMENTS)
+    text = documents[path]
+    first_at = text.index(first)
+    second_at = text.index(second, first_at + len(first))
+    documents[path] = (text[:first_at] + second + text[first_at + len(first):second_at]
+                       + first + text[second_at + len(second):])
+    assert any("unexpected contract content" in error for error in checker.validate(documents))
+
+
+@pytest.mark.parametrize(("before", "after"), [
+    ("every ordinary MCP transport the gateway offers (HTTP today)",
+     "ordinary MCP HTTP and stdio transports"),
+    ("every ordinary MCP transport the gateway offers (HTTP\ntoday)",
+     "HTTP/stdio"),
+    ("members, non-object inputs and non-string values with",
+     "members, non-object inputs, non-string values and trailing JSON with"),
+    ("transport-level rejection of trailing data", "trailing JSON refusal"),
+    ("A request body with trailing data is rejected at the transport as an invalid\n"
+     "request before any tool runs; `arguments` cannot carry trailing data.", ""),
+])
+def test_runtime_control_contract_mcp_rejects_transport_drift(before, after) -> None:
+    documents = dict(DOCUMENTS)
+    assert before in documents[checker.MCP]
+    documents[checker.MCP] = documents[checker.MCP].replace(before, after, 1)
+    assert any(checker.MCP in error for error in checker.validate(documents))
+
+
+def test_runtime_control_contract_lifecycle_offered_transports() -> None:
+    text = checker.normalize(DOCUMENTS[checker.LIFECYCLE])
+    assert ("Discover and dispatch all five through every ordinary MCP transport the gateway "
+            "offers (HTTP today) with eeBUS disabled or absent") in text
