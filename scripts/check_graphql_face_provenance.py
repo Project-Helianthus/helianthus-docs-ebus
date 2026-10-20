@@ -457,9 +457,9 @@ def _validate_source_reference(text: str, *, surface: str) -> None:
 
 def _validate_publication(text: str) -> None:
     # Inspect raw source, including comments, code and link destinations.
-    if re.search(r"(?i)(?<![0-9a-f])[0-9a-f]{40}(?![0-9a-f])", text):
+    if re.search(r"(?i)(?<![0-9a-f])[0-9a-f]{7,64}(?![0-9a-f])", text):
         raise CheckError("publication forbids commit identifiers")
-    if re.search(r"(?i)https?://[^\s)]+/(?:commit|blob|tree)/[0-9a-f]{7,40}(?:[/#?\s)]|$)", text):
+    if re.search(r"(?i)https?://[^\s)]+/(?:commit|blob|tree)/[0-9a-f]{7,64}(?:[/#?\s)]|$)", text):
         raise CheckError("publication forbids pinned-revision links")
 
 

@@ -1022,3 +1022,14 @@ def test_rejects_unpublished_revision_content(surface: str, content: str) -> Non
     text = texts()[0] if surface == "GraphQL" else mcp_text()
     with pytest.raises(CHECKER.CheckError, match="publication forbids"):
         validate_surface(surface, text + "\n" + content + "\n")
+
+
+@pytest.mark.parametrize("surface", ("GraphQL", "MCP"))
+@pytest.mark.parametrize("length", (7, 8, 12, 39, 40, 41, 63, 64))
+@pytest.mark.parametrize("wrapper", ("{}", "<!-- {} -->", '```json\n{{"revision": "{}"}}\n```'))
+def test_rejects_abbreviated_and_long_revision_content(surface: str, length: int, wrapper: str) -> None:
+    # Construct synthetic identifiers at runtime; do not publish revision pins.
+    identifier = ("aB3" * length)[:length]
+    text = texts()[0] if surface == "GraphQL" else mcp_text()
+    with pytest.raises(CHECKER.CheckError, match="publication forbids"):
+        validate_surface(surface, text + "\n" + wrapper.format(identifier) + "\n")
