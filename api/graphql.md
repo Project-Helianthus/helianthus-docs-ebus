@@ -24,10 +24,11 @@ This page owns the GraphQL-specific observe-first parity contract that is
 currently merged on `main`.
 
 - The merged M3 bus-observability fields `busSummary`, `busMessages`, and
-  `busPeriodicity` are frozen below against gateway `main`
+  `busPeriodicity` are frozen below against gateway `main` at mainline commit
+  `83e9c7b1ba927a282d87599269e91be817ff3582`
   ([Project-Helianthus/helianthus-ebusgateway#379](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/379)).
 - The merged M5 watch-summary root field `watchSummary` is frozen below against
-  gateway `main`
+  gateway `main` at mainline commit `92b3576c9203bf5a02a45494e935041961044600`
   ([Project-Helianthus/helianthus-ebusgateway#393](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/393)).
 - `ISSUE-GW-05` / [Project-Helianthus/helianthus-ebusgateway#378](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/378)
   is the runtime-owning lane for the M3 bus-observability GraphQL parity
@@ -576,8 +577,11 @@ label dimensions. Valid non-null values are the Cartesian product of the
 separately allowed source and state sets; no source label determines or
 restricts the state label.
 
-The implementation and historical review records are owned by the
-[gateway registry source](https://github.com/Project-Helianthus/helianthus-ebusgateway/tree/main/internal).
+This current contract is implemented at reviewed gateway HEAD
+`77b898633672e123a05d39a3cf46398cce2d72ab`. The reviewed and merge tree is
+identical at `bb8f59fed4be68104d8ab206f55f7f32ea33e031`; the accepted squash
+merge on gateway `main` is `f5cd9c51c60bdf422e8fc1b5690fbde52a393be3`; and the
+accepted registry dependency is `e24532a50caa00c113751b98b88239e045d731e8`.
 
 Allowed `discoverySource` labels:
 

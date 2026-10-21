@@ -68,6 +68,10 @@ def test_accepts_current_independent_label_contract() -> None:
         ("A slotless entry remains visible through\n`devices` and `device(address:)`", "A slotless entry is excluded."),
         ("This matches MCP, which omits both\nsnake-case provenance members for the same slotless condition.", "MCP behavior is unrelated."),
         ("The current gateway schema exposes", "The future gateway schema will expose"),
+        (CHECKER.GATEWAY_REVIEWED_HEAD, "0" * 40),
+        (CHECKER.GATEWAY_REVIEWED_MERGE_TREE, "1" * 40),
+        (CHECKER.GATEWAY_MAIN_MERGE, "2" * 40),
+        (CHECKER.REGISTRY_DEPENDENCY, "3" * 40),
     ),
 )
 def test_rejects_document_contract_mutations(old: str, new: str) -> None:
@@ -110,6 +114,61 @@ def test_rejects_nullable_spelling_hidden_in_description() -> None:
         "  discoverySource: String!\n"
     )
     rejects(doc_old="  discoverySource: String\n", doc_new=replacement)
+
+
+def hide_pin_paragraph(text: str) -> str:
+    first = text.index(CHECKER.GATEWAY_REVIEWED_HEAD)
+    start = text.rfind("\n", 0, first) + 1
+    last = text.index(CHECKER.REGISTRY_DEPENDENCY)
+    end = text.find("\n", last)
+    end = len(text) if end < 0 else end + 1
+    return text[:start] + "<!--\n" + text[start:end] + "-->\n" + text[end:]
+
+
+def test_rejects_graphql_pins_hidden_in_html_comment() -> None:
+    doc, atr = texts()
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_text(hide_pin_paragraph(doc), atr)
+
+
+def test_rejects_mcp_pins_hidden_in_html_comment() -> None:
+    text = mcp_text()
+    CHECKER.validate_mcp_text(text)
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_mcp_text(hide_pin_paragraph(text))
+
+
+def test_audit_markers_have_no_rendered_contract_content() -> None:
+    text = mcp_text()
+    unmarked = "\n".join(
+        line for line in text.splitlines() if line.strip() not in CHECKER.AUDIT_MARKERS
+    ) + "\n"
+    assert unmarked != text
+    CHECKER.validate_mcp_text(text)
+    CHECKER.validate_mcp_text(unmarked)
+    assert CHECKER._visible_markdown_text(text, reject_html=True) == (
+        CHECKER._visible_markdown_text(unmarked, reject_html=True)
+    )
+
+
+@pytest.mark.parametrize(
+    "replacement",
+    (
+        "<!-- publication-audit: machine-checked-record start",
+        "<!-- publication-audit: machine-checked-record start --> <!-- extra -->",
+        "<!-- publication-audit: machine-checked-record start --> <div hidden>",
+        "<!-- publication-audit: machine-checked-record start\nconcealed prose -->",
+        "<!-- unrelated comment -->",
+        "prose <!-- publication-audit: machine-checked-record start -->",
+    ),
+)
+def test_rejects_html_disguised_as_audit_marker(replacement: str) -> None:
+    text = mcp_text()
+    CHECKER.validate_mcp_text(text)
+    marker = "<!-- publication-audit: machine-checked-record start -->"
+    assert text.count(marker) == 1
+    with pytest.raises(CHECKER.CheckError, match="raw HTML"):
+        CHECKER.validate_mcp_text(text.replace(marker, replacement, 1))
 
 
 def test_rejects_mcp_rule_hidden_in_html_comment() -> None:
@@ -443,6 +502,24 @@ def test_rejects_whitespace_variant_mcp_source_rewrite() -> None:
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_mcp_text(text)
 
+
+@pytest.mark.parametrize(
+    ("pin", "alternative"),
+    (
+        (CHECKER.GATEWAY_REVIEWED_HEAD, "0" * 40),
+        (CHECKER.GATEWAY_REVIEWED_MERGE_TREE, "1" * 40),
+        (CHECKER.GATEWAY_MAIN_MERGE, "2" * 40),
+        (CHECKER.REGISTRY_DEPENDENCY, "3" * 40),
+    ),
+)
+def test_rejects_wrong_mcp_runtime_or_dependency_pin(pin: str, alternative: str) -> None:
+    text = mcp_text()
+    CHECKER.validate_mcp_text(text)
+    assert text.count(pin) == 1
+    assert alternative != pin
+    mutated = text.replace(pin, alternative, 1)
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_mcp_text(mutated)
 
 def test_ignores_historical_device_outside_current_sdl_fence() -> None:
     doc, atr = texts()
@@ -970,66 +1047,3 @@ def test_rejects_escaped_pipe_label_paragraph(title: str) -> None:
     escaped = table.replace("|", r"\|")
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_text(doc[:table_start] + escaped + doc[table_end:], atr)
-
-
-@pytest.mark.parametrize("surface", ("GraphQL", "MCP"))
-@pytest.mark.parametrize("replacement", (
-    "", CHECKER.SOURCE_LABEL,
-    f"[{CHECKER.SOURCE_LABEL}](https://example.invalid/internal)",
-    f"[other source]({CHECKER.SOURCE_URL})",
-    f"`[{CHECKER.SOURCE_LABEL}]({CHECKER.SOURCE_URL})`",
-    f"![{CHECKER.SOURCE_LABEL}]({CHECKER.SOURCE_URL})",
-    f"<!-- [{CHECKER.SOURCE_LABEL}]({CHECKER.SOURCE_URL}) -->",
-))
-def test_rejects_missing_or_disguised_source_reference(surface: str, replacement: str) -> None:
-    text = texts()[0] if surface == "GraphQL" else mcp_text()
-    reference = f"[{CHECKER.SOURCE_LABEL}]({CHECKER.SOURCE_URL})"
-    assert text.count(reference) == 1
-    with pytest.raises(CHECKER.CheckError):
-        validate_surface(surface, text.replace(reference, replacement, 1))
-
-
-def validate_surface(surface: str, text: str) -> None:
-    if surface == "GraphQL":
-        CHECKER.validate_text(text, texts()[1])
-    else:
-        CHECKER.validate_mcp_text(text)
-
-
-@pytest.mark.parametrize("surface", ("GraphQL", "MCP"))
-@pytest.mark.parametrize("mutation", ("move", "duplicate", "ownership"))
-def test_rejects_misplaced_or_duplicate_source_reference(surface: str, mutation: str) -> None:
-    text = texts()[0] if surface == "GraphQL" else mcp_text()
-    reference = f"[{CHECKER.SOURCE_LABEL}]({CHECKER.SOURCE_URL})"
-    if mutation == "move":
-        text = text.replace(reference, CHECKER.SOURCE_LABEL, 1) + f"\n## Unrelated\n\n{reference}\n"
-    elif mutation == "duplicate":
-        text = text.replace(reference, f"{reference} {reference}", 1)
-    else:
-        text = text.replace("The implementation and historical review records are owned by the", "See the", 1)
-    with pytest.raises(CHECKER.CheckError):
-        validate_surface(surface, text)
-
-
-@pytest.mark.parametrize("surface", ("GraphQL", "MCP"))
-@pytest.mark.parametrize("content", (
-    "a" * 40,
-    "<!-- " + "b" * 40 + " -->",
-    '```json\n{"revision": "' + "c" * 40 + '"}\n```',
-    "[source](https://github.com/example/source/tree/" + "d" * 12 + "/internal)",
-))
-def test_rejects_unpublished_revision_content(surface: str, content: str) -> None:
-    text = texts()[0] if surface == "GraphQL" else mcp_text()
-    with pytest.raises(CHECKER.CheckError, match="publication forbids"):
-        validate_surface(surface, text + "\n" + content + "\n")
-
-
-@pytest.mark.parametrize("surface", ("GraphQL", "MCP"))
-@pytest.mark.parametrize("length", (7, 8, 12, 39, 40, 41, 63, 64))
-@pytest.mark.parametrize("wrapper", ("{}", "<!-- {} -->", '```json\n{{"revision": "{}"}}\n```'))
-def test_rejects_abbreviated_and_long_revision_content(surface: str, length: int, wrapper: str) -> None:
-    # Construct synthetic identifiers at runtime; do not publish revision pins.
-    identifier = ("aB3" * length)[:length]
-    text = texts()[0] if surface == "GraphQL" else mcp_text()
-    with pytest.raises(CHECKER.CheckError, match="publication forbids"):
-        validate_surface(surface, text + "\n" + wrapper.format(identifier) + "\n")
