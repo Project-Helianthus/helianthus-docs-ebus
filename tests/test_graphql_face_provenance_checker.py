@@ -132,8 +132,43 @@ def test_rejects_graphql_pins_hidden_in_html_comment() -> None:
 
 
 def test_rejects_mcp_pins_hidden_in_html_comment() -> None:
+    text = mcp_text()
+    CHECKER.validate_mcp_text(text)
     with pytest.raises(CHECKER.CheckError):
-        CHECKER.validate_mcp_text(hide_pin_paragraph(mcp_text()))
+        CHECKER.validate_mcp_text(hide_pin_paragraph(text))
+
+
+def test_audit_markers_have_no_rendered_contract_content() -> None:
+    text = mcp_text()
+    unmarked = "\n".join(
+        line for line in text.splitlines() if line.strip() not in CHECKER.AUDIT_MARKERS
+    ) + "\n"
+    assert unmarked != text
+    CHECKER.validate_mcp_text(text)
+    CHECKER.validate_mcp_text(unmarked)
+    assert CHECKER._visible_markdown_text(text, reject_html=True) == (
+        CHECKER._visible_markdown_text(unmarked, reject_html=True)
+    )
+
+
+@pytest.mark.parametrize(
+    "replacement",
+    (
+        "<!-- publication-audit: machine-checked-record start",
+        "<!-- publication-audit: machine-checked-record start --> <!-- extra -->",
+        "<!-- publication-audit: machine-checked-record start --> <div hidden>",
+        "<!-- publication-audit: machine-checked-record start\nconcealed prose -->",
+        "<!-- unrelated comment -->",
+        "prose <!-- publication-audit: machine-checked-record start -->",
+    ),
+)
+def test_rejects_html_disguised_as_audit_marker(replacement: str) -> None:
+    text = mcp_text()
+    CHECKER.validate_mcp_text(text)
+    marker = "<!-- publication-audit: machine-checked-record start -->"
+    assert text.count(marker) == 1
+    with pytest.raises(CHECKER.CheckError, match="raw HTML"):
+        CHECKER.validate_mcp_text(text.replace(marker, replacement, 1))
 
 
 def test_rejects_mcp_rule_hidden_in_html_comment() -> None:
@@ -469,17 +504,20 @@ def test_rejects_whitespace_variant_mcp_source_rewrite() -> None:
 
 
 @pytest.mark.parametrize(
-    "pin",
+    ("pin", "alternative"),
     (
-        CHECKER.GATEWAY_REVIEWED_HEAD,
-        CHECKER.GATEWAY_REVIEWED_MERGE_TREE,
-        CHECKER.GATEWAY_MAIN_MERGE,
-        CHECKER.REGISTRY_DEPENDENCY,
+        (CHECKER.GATEWAY_REVIEWED_HEAD, "0" * 40),
+        (CHECKER.GATEWAY_REVIEWED_MERGE_TREE, "1" * 40),
+        (CHECKER.GATEWAY_MAIN_MERGE, "2" * 40),
+        (CHECKER.REGISTRY_DEPENDENCY, "3" * 40),
     ),
 )
-def test_rejects_wrong_mcp_runtime_or_dependency_pin(pin: str) -> None:
+def test_rejects_wrong_mcp_runtime_or_dependency_pin(pin: str, alternative: str) -> None:
     text = mcp_text()
-    mutated = text.replace(pin, "f" * 40, 1)
+    CHECKER.validate_mcp_text(text)
+    assert text.count(pin) == 1
+    assert alternative != pin
+    mutated = text.replace(pin, alternative, 1)
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_mcp_text(mutated)
 

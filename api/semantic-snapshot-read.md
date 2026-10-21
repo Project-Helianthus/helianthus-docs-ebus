@@ -24,8 +24,17 @@ The ordinary GraphQL root is camelCase and additive to the schema described in
 [machine-to-machine contract](../docs/platform/public-graphql-m2m-v1.md).
 Neither new entry point is implemented merely by publishing this page.
 
-Existing PV and legacy eBUS semantic tools, their envelopes, names and behavior
-remain until their separately reviewed migration. This contract introduces no
+The existing SemReg-backed tools are `semantic.v1.pv.current.get`,
+`semantic.v1.evse.current.get` and `semantic.v1.storage.growatt.current.get`
+(PV/inverter, EVSE and Growatt storage/BMS families). Their names are established
+by the gateway's [PV registration](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/mcp/modbus_v1.go),
+[EVSE registration](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/mcp/tesla_gen3_evse_semantic.go)
+and [storage registration](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/mcp/growatt_storage_semantic.go).
+These tools and the legacy eBUS semantic tools, their envelopes, names and
+behavior remain until their separately reviewed migration. This inventory does
+not establish exposure through the shared endpoint. The inventory and
+`EVALUATED_SEMREG_PUBLICATION` are not yet documented in api/mcp.md; that page's
+inventory integration is separate work. This contract introduces no
 authorization gate, namespace graduation or stability promise.
 
 The semantic owner is the public
@@ -69,6 +78,13 @@ documentation; these API records neither decode nor strengthen it.
    fails the whole read with `RESOURCE_EXHAUSTED`; no truncation, pagination
    across changing snapshots or successful partial dump is allowed. Clients
    can explicitly request fewer assets in a new request.
+
+The 32-source-key limit is the present bounded **all-or-error** contract, even
+when only one disposition exceeds it. The complete accounting must fit the
+projection contract; returning the first 32 keys would hide alternatives or
+join dimensions incorrectly. An asset-unavailable entry or `INTERNAL` would be
+a different wire error policy, not a clarification. Reducing selected assets
+can resolve aggregate size overflow but cannot repair one over-bound asset.
 
 Within one asset, snapshot, evaluation, projection and any selection must bind
 the identical snapshot ID and complete revision vector. Candidate references
@@ -129,6 +145,14 @@ underlying material. Native raw evidence stays with its owner beside the
 interpretation. Opaque identifiers and dimensions must themselves be public-safe.
 
 Validate the whole source snapshot for public exposure before serializing it.
+Apply the [kernel snapshot rules](https://github.com/Project-Helianthus/helianthus-docs-semantic/blob/main/api/v1/kernel.md#type-snapshot)
+(`Snapshot.Validate()`), including references, revisions, evidence access and
+redaction; in particular, restricted evidence with `redaction: "none"` cannot
+appear in a public snapshot. Then check every opaque ID and dimension for
+public safety: syntactic validity alone does not prove that a string conceals
+no serial, private address or private text. The provider must establish these
+checks before capture; the pure shared-view builder assumes public-safe input.
+This is an exposure requirement, not a claim that the builder discovers secrets.
 If it cannot be exposed intact, withhold the **whole asset entry** with
 `semantic.read.reason.publication_withheld`, the same shape as other unavailable
 entries. Do not strip records, rewrite evidence or recompute an ID and claim it
@@ -232,8 +256,25 @@ only as original audit evidence, not as a currently available measurement.
 A fact can be represented exactly as candidate audit evidence without
 claiming that it satisfies a capability. If no candidate has a value, use
 `unknown`, or the stronger explicitly evidenced unsupported/withheld outcome.
-Where several reason codes apply, preserve them all in source quality and use
-the lexically first applicable code for the disposition's single `reason`.
+Preserve all reason codes in source quality. For `fact_unavailable`,
+`capability_unavailable` and `capability_unqualified`, first identify the exact
+source keys that causally withhold this item. Intersect native reasons across
+all candidates of all those causal keys, not across every supporting key.
+An available sibling key is non-causal and cannot erase the explanation of an
+unavailable key. Every candidate on a causal key must itself explain the
+selected outcome through its original quality: unavailable/withdrawn for
+availability, or candidate/rejected qualification for unqualified capability
+support (a fact's admission also considers promotion and validity). A candidate
+on a causal key without explanatory quality or without the common reason
+prevents a fabricated native explanation; keep the surface fallback instead.
+Never join candidates using a fact ID alone: match the complete `FactKey`,
+including pack ID/version and every dimension ID, value kind and value.
+Expiry-only evaluation cannot manufacture a native availability reason, and an
+instance-only qualification/availability failure cannot borrow unrelated fact
+reasons. With no causal fact explanation, retain the existing surface fallback.
+When that intersection contains several codes, use the lexically first one for
+the disposition's single `reason`. For other outcomes retain the applicable
+owner reasons with the same lexical tie-break.
 The STD-01 rule below takes precedence for affected eeBUS items.
 Selections, when
 supplied by an existing policy, preserve their policy ID/version, exact key,
@@ -251,6 +292,16 @@ selections by `(canonical key,policy_id,policy_version)`. Reject duplicates.
 Object field order is not semantic. The same capture, evaluation context and
 mapping/policy versions produce the same shared-view data and array order on
 both surfaces after the field-name mapping below.
+
+The [derived five-pack availability view](https://github.com/Project-Helianthus/helianthus-docs-semantic/blob/main/api/v1/pack-availability-view.md)
+and [`DerivePackAvailability`](https://github.com/Project-Helianthus/helianthus-semreg/blob/main/semreg/v1/projection/availability.go)
+provide the smaller underlying pure view: five pack rows with separate services,
+capabilities, current fact alternatives/evaluations and retained observations,
+joined to the exact snapshot and evaluation. The shared read is a superset in
+scope: it also preserves the complete source snapshot, per-target projection
+accounting, selections and per-asset unavailability across the selected assets.
+It is not a serialization of that helper's rows, and the helper establishes no
+pack endpoint exposure, runtime qualification or operation admission.
 
 ## GraphQL and MCP mapping
 
@@ -283,6 +334,26 @@ already single-word members unchanged. Representative normative mappings:
 | `source_keys`, `source_items`, `presentation_only` | `sourceKeys`, `sourceItems`, `presentationOnly` |
 | `exponent10`, `known`, `revisions.semantic` | `exponent10`, `known`, `revisions.semantic` |
 
+The supplied [GraphQL adapter](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/graphql/semantic_snapshot.go)
+constructs object names as `Semantic` plus the concrete Go struct name, with
+two wrapper exceptions. This is the source-derived type-name mapping for schema
+selection and fragments; it does not establish current public root wiring:
+
+| Go record | GraphQL object name |
+| --- | --- |
+| `semanticview.View`, `semanticview.Asset` | `SemanticSnapshotRead`, `AssetSnapshotRead` |
+| `Snapshot`, `RevisionVector` | `SemanticSnapshot`, `SemanticRevisionVector` |
+| `EvaluationView`, `EvaluationContext`, `EvaluatedFact` | `SemanticEvaluationView`, `SemanticEvaluationContext`, `SemanticEvaluatedFact` |
+| `FactEnvelope`, `FactKey`, `FactCandidate`, `Conflict` | `SemanticFactEnvelope`, `SemanticFactKey`, `SemanticFactCandidate`, `SemanticConflict` |
+| `Value`, `Quantity`, `Decimal`, `Symbol`, `Dimension` | `SemanticValue`, `SemanticQuantity`, `SemanticDecimal`, `SemanticSymbol`, `SemanticDimension` |
+| `Quality`, `Times`, `TimePoint`, `MonotonicPoint`, `FreshnessPolicy` | `SemanticQuality`, `SemanticTimes`, `SemanticTimePoint`, `SemanticMonotonicPoint`, `SemanticFreshnessPolicy` |
+| `RetainedObservationRecord`, `EvaluatedRetainedObservation` | `SemanticRetainedObservationRecord`, `SemanticEvaluatedRetainedObservation` |
+| `ProjectionReport`, `ProjectionManifest`, `RequestedItem`, `ProjectionDisposition`, `LossDetail` | `SemanticProjectionReport`, `SemanticProjectionManifest`, `SemanticRequestedItem`, `SemanticProjectionDisposition`, `SemanticLossDetail` |
+| `Selection` | `SemanticSelection` |
+
+Other reachable struct records follow the same prefix rule; ID, digest,
+revision and code aliases are string scalars, not object types.
+
 MCP returns the existing Helianthus envelope described in
 [mcp.md](mcp.md#shared-request-and-envelope-rules):
 `meta.contract` is `{name: "helianthus-ebus-mcp", major: 1, minor: 0}`;
@@ -291,6 +362,13 @@ SemReg-backed PV tool. This tool takes only `asset_ids`: it does not accept the
 legacy `LIVE`/`SNAPSHOT` consistency selector or a replay snapshot ID. Do not
 put a per-asset ID into envelope `meta.consistency.snapshot_id` for a multi-asset
 read. The per-asset identities live inside `data.assets[].snapshot`.
+
+Only the consistency mode is shared with those existing tools. The proposed
+shared envelope deliberately uses `helianthus-ebus-mcp` and error
+`source_layer: "gateway"`, without Modbus `meta.limits`. The existing siblings
+use `helianthus-modbus-mcp`, error `source_layer: "modbus"`, and `meta.limits`
+from [their envelope constructor](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/mcp/modbus_v1.go).
+Do not migrate or relabel those envelopes through this contract.
 
 `meta.data_timestamp` is the request evaluation wall time in RFC3339Nano;
 SemReg `TimePoint` remains exact inside `data`. `meta.data_hash` is computed by
@@ -450,9 +528,17 @@ projection disposition; no pack-specific zero/false/empty fallback is allowed.
 
 Native wire semantics belong to the
 [eeBUS protocol documentation](https://github.com/Project-Helianthus/helianthus-docs-eebus).
-Unresolved STD-01 revisions do not establish native mappings. The semantic
-[family catalog](https://github.com/Project-Helianthus/helianthus-docs-semantic/blob/main/api/v1/family-catalog-v1.md)
+Unresolved STD-01 revisions do not establish native mappings. The SemReg
+[family-catalog fixture](https://github.com/Project-Helianthus/helianthus-semreg/blob/main/fixtures/v1/family-catalog-v1.json)
 keeps `eebus-inbound` at `unknown` with reason `unknown_pending_std_01`.
+
+The current [shared-view source](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/internal/semanticview/view.go)
+recognizes an affected item by the exact `unknown_pending_std_01` token in a
+contributing candidate's `quality.reasons`; it gives that signal precedence and
+sets the disposition to `unknown` with that reason. The catalog is provenance
+for the family state, not an observation lookup or an automatic protocol/name
+heuristic. How an inbound producer assigns that token without it already being
+present is **Unknown** here; no new signal or decoder is defined.
 
 Affected inbound observations remain `candidate` or `unknown`, unpromoted and
 non-actionable, preserving that reason and native evidence references. Expose
@@ -470,3 +556,79 @@ revision rejection and private-data withholding. Multiple GraphQL aliases must
 capture once, and a concurrent publication must not change that detached view.
 Legacy tool compatibility requires separate regression coverage. Publishing
 this contract proves neither that runtime parity nor hardware acceptance.
+
+## Complete MCP envelope examples
+
+These are complete tool-result envelope bodies, before MCP text-content or
+JSON-RPC wrapping. The epoch timestamp is a synthetic evaluation constant,
+not a capture time. The success includes two sorted unavailable entries; it is
+success at the request level, not evidence of a readable or qualified device.
+Readable entries instead carry all three snapshot/evaluation/projection members
+as defined above; these unavailable entries must omit all three.
+
+```json
+{
+  "data": {
+    "assets": [
+      {
+        "asset_id": "asset:missing",
+        "selections": [],
+        "unavailable_reason": "semantic.read.reason.asset_unknown"
+      },
+      {
+        "asset_id": "asset:withheld",
+        "selections": [],
+        "unavailable_reason": "semantic.read.reason.publication_withheld"
+      }
+    ]
+  },
+  "error": null,
+  "meta": {
+    "contract": {
+      "name": "helianthus-ebus-mcp",
+      "major": 1,
+      "minor": 0
+    },
+    "consistency": {
+      "mode": "EVALUATED_SEMREG_PUBLICATION"
+    },
+    "data_timestamp": "1970-01-01T00:00:00Z",
+    "data_hash": "<computed-data-hash>"
+  }
+}
+```
+
+A whole-read overflow error has no partial asset data and is not retriable:
+
+```json
+{
+  "data": null,
+  "error": {
+    "code": "RESOURCE_EXHAUSTED",
+    "message": "semantic snapshot read exceeds bounds",
+    "retriable": false,
+    "source_layer": "gateway"
+  },
+  "meta": {
+    "contract": {
+      "name": "helianthus-ebus-mcp",
+      "major": 1,
+      "minor": 0
+    },
+    "consistency": {
+      "mode": "EVALUATED_SEMREG_PUBLICATION"
+    },
+    "data_timestamp": "1970-01-01T00:00:00Z",
+    "data_hash": "<computed-data-hash>"
+  }
+}
+```
+
+The `data_hash` values are publication placeholders, not wire values. Validation
+replaces them in memory with hashes derived from each example's synthetic `data`;
+no concrete digests are published. Use the existing envelope algorithm (SHA-256
+of compact JSON; object keys sorted for these map values), not SemReg canonical
+snapshot hashing. The hashes can be derived with the Python
+standard library: `hashlib.sha256(json.dumps(data, sort_keys=True,
+separators=(",", ":")).encode("utf-8")).hexdigest()`. Error hashing includes
+JSON `null`. No `snapshot_id` or Modbus limits are added to consistency metadata.

@@ -55,7 +55,7 @@ withdrawal of one contribution cannot make a different admitted contribution
 disappear.
 
 The gateway catalog carries a `catalog_revision`, `catalog_digest`,
-`evaluation_instant`, and caller `authorization_scope`. It binds each accepted
+and `evaluation_instant`. It binds each accepted
 contribution to its descriptor digest, lifecycle/source generation, installation
 and resource context, capability, SemReg snapshot and semantic revision. These
 are presentation inputs, not proof that the browser qualified a device or read
@@ -316,8 +316,7 @@ and production catalog/action admission
 [#974](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/974).
 The five-state session wording follows Gateway
 [#975](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/975)
-source contract commit `a39d43fbeaf8d745222b85649ebb8494203163f0` and current open
-evidence head `a39d43fbeaf8d745222b85649ebb8494203163f0`; #975 remains open,
+linked source contract and current open evidence; #975 remains open,
 intermediate, and unmerged, and this documentation does not claim it is
 merged.
 It does not close Gateway #552, the wider INT-10 parent, SemReg cutover, or
@@ -346,19 +345,23 @@ This page owns the frozen Portal-specific observe-first contract after merged
 
 ## Driver Runtime Control Target
 
-The generic runtime-control target is frozen in
-[`driver-runtime-v1.md`](./driver-runtime-v1.md). Portal is a consumer, not
-lifecycle authority: it renders gateway-owned `DriverSnapshotV1` records and
-invokes the gateway-owned start, stop, and restart operations only after their
-MCP contract is stable and GraphQL parity has merged. It does not create an
+The generic runtime-control target follows the
+[G5 MCP contract](./mcp.md#g5-runtime-lifecycle-mcp-contract-d4) and
+[lifecycle contract](../architecture/runtime-driver-lifecycle.md). Portal is a
+consumer, not lifecycle authority: its future GraphQL parity must preserve the
+G5 closed driver projection and registered-driver catalog. It invokes the
+gateway-owned start, stop, and restart operations only after their MCP contract
+is stable and GraphQL parity has merged. The historical `DriverSnapshotV1`
+proposal is not a consumer implementation target. Portal does not create an
 independent driver FSM, edit add-on options, retain endpoints or credentials,
 or call a protocol adapter directly.
 
 This is a post-MCP target and does not claim that driver-control Portal routes
 or controls are implemented in the current endpoint inventory below. When the
 consumer rollout occurs, capability discovery must hide unsupported controls
-without hiding the stable driver snapshot or its categorical unavailable
-state.
+without hiding a registered driver's cached status or its categorical
+unavailable state. The first MCP slice adds no Portal routes or controls and
+requires no placeholder entries for unregistered drivers.
 
 ## eeBUS Owner Workbench
 
@@ -856,16 +859,16 @@ Example response:
   "plane": "Service",
   "nodes": [
     {
-      "id": "Service:/ebus/addr@16/device@BASV2",
-      "path": "Service:/ebus/addr@16/device@BASV2",
-      "canonical_path": "Service:/ebus/addr@16/device@BASV2"
+      "id": "Service:/ebus/addr@16/device@synthetic-family",
+      "path": "Service:/ebus/addr@16/device@synthetic-family",
+      "canonical_path": "Service:/ebus/addr@16/device@synthetic-family"
     }
   ],
   "edges": [
     {
-      "id": "Service:Service:/ebus/addr@16/device@BASV2->Service:/ebus/addr@16/device@BASV2/method@get_status",
-      "from": "Service:/ebus/addr@16/device@BASV2",
-      "to": "Service:/ebus/addr@16/device@BASV2/method@get_status"
+      "id": "Service:Service:/ebus/addr@16/device@synthetic-family->Service:/ebus/addr@16/device@synthetic-family/method@get_status",
+      "from": "Service:/ebus/addr@16/device@synthetic-family",
+      "to": "Service:/ebus/addr@16/device@synthetic-family/method@get_status"
     }
   ]
 }
@@ -1212,9 +1215,11 @@ Portal does not receive a second PV semantic model. The browser calls
 `GET /portal/api/v1/semantic/pv/current` with no query parameters or request
 body. A gateway-owned backend-for-frontend then sends the exact fixed
 `M2MCurrentSnapshot` POST to the dedicated `/graphql/m2m/v1` listener over
-TLS 1.3 with verified server identity and a distinct client certificate. The
-asset reference is deployment configuration, not browser input. The route
-forwards the closed GraphQL success or error envelope without falling back to
+TLS 1.3 with verified server identity. This is server-TLS-only transport:
+no client certificate is required and no client principal is derived. The
+asset reference and publication allow-list are deployment configuration, not
+browser input. The route forwards the closed GraphQL success or error envelope
+without falling back to
 the generic GraphQL route, a direct canonical provider, MCP, or Modbus.
 
 The browser never receives a private key, certificate bytes, CA bytes, M2M

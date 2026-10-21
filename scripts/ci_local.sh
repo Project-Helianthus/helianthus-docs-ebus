@@ -210,6 +210,7 @@ python3 -m pytest -q tests/test_prometheus_semantic_coverage.py
 echo "==> check Vaillant SemReg thermal mapping contract"
 python3 scripts/validate_vaillant_semreg_thermal_map.py
 python3 -m pytest -q tests/test_vaillant_semreg_thermal_map.py
+python3 -m pytest -q tests/test_dhw_setpoint_semreg_cutover.py
 (
   cd tests/semreg_thermal_map_contract
   GOWORK=off go test -mod=readonly ./...
@@ -237,6 +238,7 @@ python3 scripts/check_graphql_face_provenance.py
 python3 -m pytest -q tests/test_graphql_face_provenance_checker.py
 python3 -m pytest -q -p no:cacheprovider tests/test_system_config_bound_contract.py
 python3 -m pytest -q tests/test_semantic_snapshot_read_contract.py
+python3 -m pytest -q tests/test_semantic_operation_route_contract.py
 
 echo "==> check contribution-driven Portal UX contract"
 python3 scripts/check_portal_ux_contract.py
@@ -349,6 +351,11 @@ python3 -m pytest -q tests/test_eebus_operator_admin_contract.py
 python3 -m pytest -q tests/test_driver_runtime_manager_v1.py
 python3 scripts/check_runtime_driver_registration.py
 python3 -m pytest -q tests/test_runtime_driver_registration.py
+python3 scripts/check_bidirectional_registration.py
+python3 -m pytest -q tests/test_bidirectional_registration.py
+python3 scripts/check_runtime_control_contract.py
+python3 -m pytest -q tests/test_runtime_control_contract.py
+python3 -m pytest -q tests/test_runtime_driver_registration_rendered.py
 python3 -m pytest -q tests/test_fronius_sunspec_phase1_contract.py
 python3 -m pytest -q tests/test_sunspec_model_chain_contract.py
 python3 -m pytest -q tests/test_sunspec_model_123_fronius_v3_contract.py

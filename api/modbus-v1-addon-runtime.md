@@ -22,13 +22,20 @@ belong to `helianthus-modbusreg`.
 ### DriverManager V1 Successor Boundary
 
 The single-process packaging contract on this page remains the implemented
-FMV3-M4-03 baseline. Its generic runtime successor is frozen in
-[`driver-runtime-v1.md`](./driver-runtime-v1.md) and
-[`../docs/platform/driver-runtime-manager-v1.md`](../docs/platform/driver-runtime-manager-v1.md).
+FMV3-M4-03 baseline. Its generic runtime successor follows the
+[lifecycle contract](../architecture/runtime-driver-lifecycle.md) and
+[`DriverManager V1 proposal`](../docs/platform/driver-runtime-manager-v1.md).
+The first external surface is owned by the
+[G5 MCP contract](./mcp.md#g5-runtime-lifecycle-mcp-contract-d4); the older
+`driver-runtime-v1.md` API proposal is superseded historical material, not an
+implementation or acceptance target.
 Under that pending DriverManager V1 successor, a driver-local Modbus validation
 failure must not prevent the gateway process from starting. The add-on will
 classify the Modbus descriptor independently and the gateway will retain a
-stable unavailable snapshot while eBUS, eeBUS, HTTP, and MCP continue.
+categorical unavailable status for a registered Modbus driver while eBUS,
+eeBUS, HTTP, and MCP continue. G5 lists only registered drivers using its
+closed wire projection; it does not require a Modbus placeholder or the
+historical snapshot fields in the first external slice.
 
 This successor wording does not retroactively claim that current released
 wrappers accept invalid active Modbus options, and it does not weaken endpoint
@@ -264,6 +271,7 @@ snapshot, admit the complete capability, and match the exact observed flavor.
 
 ### Registry-Selected V2 Contract Record
 
+<!-- publication-audit: machine-checked-record start -->
 ```json
 {
   "contract": "helianthus.modbus-sunspec-live-qualification.v2",
@@ -337,6 +345,7 @@ snapshot, admit the complete capability, and match the exact observed flavor.
   "writes_permitted": false
 }
 ```
+<!-- publication-audit: machine-checked-record end -->
 
 ### V2 Activation, Recovery, And Evidence Boundary
 

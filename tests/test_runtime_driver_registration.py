@@ -167,3 +167,4 @@ def test_runtime_driver_registration_registered_in_local_gate() -> None:
     gate = (ROOT / "scripts/ci_local.sh").read_text(encoding="utf-8")
     assert "python3 scripts/check_runtime_driver_registration.py\n" in gate
     assert "python3 -m pytest -q tests/test_runtime_driver_registration.py\n" in gate
+    assert "python3 -m pytest -q tests/test_runtime_driver_registration_rendered.py\n" in gate

@@ -34,6 +34,10 @@ PINS = (
 PROVEN_CONCLUSION = "Conclusion: Proven."
 MARKDOWN = MarkdownIt("commonmark")
 TABLE_MARKDOWN = MarkdownIt("commonmark").enable("table")
+AUDIT_MARKERS = frozenset((
+    "<!-- publication-audit: machine-checked-record start -->",
+    "<!-- publication-audit: machine-checked-record end -->",
+))
 INDEPENDENCE = (
     "Valid non-null values are the Cartesian product of the\n"
     "separately allowed source and state sets; no source label determines or\n"
@@ -66,6 +70,7 @@ MCP_SOURCE_RETENTION = (
     "      confirmation may advance it to `identity_confirmed`. Neither event\n"
     "      rewrites `discovery_source`."
 )
+
 
 
 class CheckError(ValueError):
@@ -336,6 +341,10 @@ def _visible_markdown_spans(
     """Return independent rendered prose spans so literal state cannot leak."""
     visible: list[str] = []
     for token in MARKDOWN.parse(text):
+        # These standalone comments carry no contract text. Match the complete
+        # block so a marker cannot conceal prose or introduce an HTML container.
+        if token.type == "html_block" and token.content.strip() in AUDIT_MARKERS:
+            continue
         if reject_html and token.type == "html_block":
             raise CheckError("public contract must not depend on raw HTML")
         if include_html_blocks and token.type == "html_block" and not token.content.lstrip().startswith("<!--"):

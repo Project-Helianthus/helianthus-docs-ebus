@@ -33,8 +33,11 @@ Current platform contracts:
 - [`driver-runtime-manager-v1.md`](./driver-runtime-manager-v1.md) - target
   protocol-neutral lifecycle, readiness, retry, isolation, add-on validation,
   and one-release acceptance contract for eBUS, Modbus TCP, and eeBUS
-- [`../../api/driver-runtime-v1.md`](../../api/driver-runtime-v1.md) - target
-  MCP-first `DriverSnapshotV1` and list/start/stop/restart operation contract
+- [G5 runtime lifecycle MCP contract](../../api/mcp.md#g5-runtime-lifecycle-mcp-contract-d4) -
+  authoritative first external list/get/start/stop/restart surface, closed driver
+  projection, and registered-driver catalog; the older
+  [`runtime API proposal`](../../api/driver-runtime-v1.md) is superseded
+  historical material, not an implementation or acceptance target
 - [`fronius-sunspec-evidence-v1.md`](./fronius-sunspec-evidence-v1.md) -
   FMV3-M3-01 evidence packet and FMV3-M3-03 `STANDARD_ONLY` completion for
   bounded synthetic fixtures and the Fronius SunSpec admission boundary
