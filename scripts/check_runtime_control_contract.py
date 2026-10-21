@@ -103,11 +103,14 @@ def validate(documents: dict[str, str]) -> list[str]:
     for rule in RULES:
         text = prose(documents[rule["path"]])
         start, end = rule["start"], rule["end"]
-        # A start/end marker must be an actual, unique section heading.
+        # Markers must be actual, unique section headings; a null end freezes
+        # the final section through EOF.
         headings = list(re.finditer(r"^ {0,3}#{2,3} .+$", text, re.MULTILINE))
         starts = [m for m in headings if m.group().lstrip().startswith(start)]
-        ends = [m for m in headings if m.group().lstrip().startswith(end)]
-        if len(starts) != 1 or len(ends) != 1 or starts[0].end() >= ends[0].start():
+        ends = [m for m in headings if end and m.group().lstrip().startswith(end)]
+        section_end = ends[0].start() if len(ends) == 1 else len(text)
+        if (len(starts) != 1 or (end is not None and len(ends) != 1)
+                or starts[0].end() >= section_end):
             errors.append(f"{rule['path']}: invalid section {start}")
             continue
         if parent := rule.get("parent"):
@@ -118,15 +121,19 @@ def validate(documents: dict[str, str]) -> list[str]:
             if (len(matches) != 1 or not owners or owners[-1] != matches[0]
                     or any(m.group().lstrip().startswith("## ")
                            for m in headings
-                           if starts[0].end() < m.start() < ends[0].start())):
+                           if starts[0].end() < m.start() < section_end)):
                 errors.append(f"{rule['path']}: invalid owning section {parent}")
-        present = units(text[starts[0].end():ends[0].start()])
+        present = units(text[starts[0].end():section_end])
         for required in rule["required"]:
             if normalize(required) not in present:
                 errors.append(f"{rule['path']}: changed obligation: {normalize(required)[:100]}")
         if rule.get("exact") and present != [normalize(s) for s in rule["required"]]:
             errors.append(f"{rule['path']}: unexpected contract content in {start}")
-        section_text = normalize(text[starts[0].end():ends[0].start()])
+        section_text = normalize(text[starts[0].end():section_end])
+        if rule.get("ordered"):
+            positions = [section_text.find(normalize(clause)) for clause in rule["required"]]
+            if positions != sorted(positions):
+                errors.append(f"{rule['path']}: obligation order changed")
         for needle in rule.get("contains", []):
             if normalize(needle) not in section_text:
                 errors.append(f"{rule['path']}: changed obligation: {normalize(needle)[:100]}")

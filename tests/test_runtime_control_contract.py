@@ -13,6 +13,12 @@ DOCUMENTS = {r["path"]: (checker.ROOT / r["path"]).read_text(encoding="utf-8")
 OBLIGATIONS = [(r["path"], clause) for r in checker.RULES for clause in r["required"]]
 BRIDGE_START = "### S4/S6/S7 synthetic acceptance obligations"
 BRIDGE_RULE = next(r for r in checker.RULES if r["start"] == BRIDGE_START)
+RESET_PATH = "architecture/runtime-control-reset-durability.md"
+RESET_START = "## Required ordering and failure outcomes"
+RESET_RULE = next(r for r in checker.RULES if r["path"] == RESET_PATH)
+QUARANTINE_DIRECTORY_ROW = next(
+    line for line in DOCUMENTS[RESET_PATH].splitlines() if line.startswith("| 4 |")
+)
 
 
 def test_runtime_control_contract_repository() -> None:
@@ -43,6 +49,65 @@ def test_runtime_control_contract_unavailable_obligation_scope(path, start, end,
         after = "\n\n" + clause + after
     documents[path] = before + start + section + end + after
     assert checker.validate(documents)
+
+
+@pytest.mark.parametrize("change", ["removed", "weakened", "before", "after", "reordered"])
+def test_runtime_control_contract_quarantine_directory_prerequisite(change) -> None:
+    documents = dict(DOCUMENTS)
+    text = documents[RESET_PATH]
+    row = QUARANTINE_DIRECTORY_ROW
+    assert row in RESET_RULE["required"]
+    if change == "weakened":
+        text = text.replace(row, row.replace("Successfully fsync", "Optionally fsync"))
+    elif change == "reordered":
+        following = next(line for line in text.splitlines() if line.startswith("| 5 |"))
+        assert row + "\n" + following in text
+        text = text.replace(row + "\n" + following, following + "\n" + row)
+    else:
+        text = text.replace(row, "")
+        if change == "before":
+            text = text.replace(RESET_START, row + "\n\n" + RESET_START)
+        elif change == "after":
+            text += "\n\n" + row
+    documents[RESET_PATH] = text
+    errors = checker.validate(documents)
+    assert any(error.startswith(RESET_PATH + ": ") for error in errors)
+
+
+@pytest.mark.parametrize("location", ["before", "within", "after"])
+@pytest.mark.parametrize("addition", [
+    "Order 4 may be skipped.",
+    "| 8 | Quarantine directory fsync is optional. | Continue replacement. |",
+    QUARANTINE_DIRECTORY_ROW,
+])
+def test_runtime_control_contract_rejects_added_reset_units(location, addition) -> None:
+    documents = dict(DOCUMENTS)
+    text = documents[RESET_PATH]
+    if location == "before":
+        text = text.replace(RESET_START, RESET_START + "\n\n" + addition, 1)
+    elif location == "within":
+        text = text.replace(QUARANTINE_DIRECTORY_ROW,
+                            addition + "\n\n" + QUARANTINE_DIRECTORY_ROW, 1)
+    else:
+        text = text.replace(RESET_RULE["end"], addition + "\n\n" + RESET_RULE["end"], 1)
+    documents[RESET_PATH] = text
+    assert (f"{RESET_PATH}: unexpected contract content in {RESET_START}"
+            in checker.validate(documents))
+
+
+def test_runtime_control_contract_requires_reset_supplement(tmp_path: Path) -> None:
+    for path, text in DOCUMENTS.items():
+        if path == RESET_PATH:
+            continue
+        target = tmp_path / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(text, encoding="utf-8")
+    result = subprocess.run(
+        [sys.executable, str(checker.ROOT / "scripts/check_runtime_control_contract.py"),
+         "--root", str(tmp_path)], capture_output=True, text=True,
+    )
+    assert result.returncode == 1
+    assert RESET_PATH in result.stderr
 
 
 EXAMPLE_SECTIONS = [
@@ -193,11 +258,18 @@ def test_runtime_control_contract_missing_or_non_normative(path, clause, wrapper
      "The normative textual forms include `DISABLED` -> `STARTING`, `STARTING -> RUNNING`"),
     ("| CTL-17 |", "| CTL-16 |"),
     ("| CTL-19 |", "| CTL-18 |"),
+    ("only a driver with no record compares against\n   the re-read mark", "every driver compares against the re-read mark"),
+    ("and is accepted at `H + 2`", "and is refused with REVISION_CONFLICT"),
+    (", where `H <= 2^64 - 3` leaves room for two increments", ""),
+    ("`H <= 2^64 - 3`", "`H <= 2^64 - 2`"),
+    ("If A commits first, A is accepted at `H + 1` and B is refused with REVISION_CONFLICT and no mutation.",
+     "If A commits first, both requests are accepted at `H + 1`."),
+    ("conflicts before the same-desired no-op check", "returns a same-desired no-op"),
     ("Take the single namespace-wide serialization point (the sole writer of the\n   control namespace, which is the shared-mark lock) for every request, never a\n   serializer scoped to one driver.",
      "Under the per-driver decision serializer,"),
     ("Take the single namespace-wide serialization point (the sole writer of the\n   control namespace, which is the shared-mark lock) for every request, never a\n   serializer scoped to one driver.",
      "Take a per-driver serialization lock for each request."),
-    ("A request\n   that waited for the point re-reads the mark after acquiring it and compares\n   against the re-read value, never an earlier read.",
+    ("A request\n   that waited for the point re-reads the mark after acquiring it for allocation,\n   never using an earlier read.",
      "A request that waited compares against the mark it read earlier."),
     ("Still under the step 2 serialization point, check transition capacity,",
      "Check transition capacity,"),
@@ -470,3 +542,49 @@ def test_runtime_control_contract_rejects_lifecycle_status_drift(before, after) 
     assert before in documents[checker.LIFECYCLE]
     documents[checker.LIFECYCLE] = documents[checker.LIFECYCLE].replace(before, after, 1)
     assert any(checker.LIFECYCLE in error for error in checker.validate(documents))
+
+
+@pytest.mark.parametrize(("before", "after"), [
+    ("each accepted `RESTART` advances desired revision",
+     "each accepted `RESTART` may reuse desired revision"),
+    ("increments generation exactly once", "increments generation at least once"),
+    ("retrying the old expected revision returns\n  `REVISION_CONFLICT`",
+     "retrying the old expected revision succeeds"),
+    ("a valid fresh-revision `RESTART` after settlement\n  requests another replacement and is never deduplicated",
+     "a valid fresh-revision `RESTART` after settlement may be deduplicated"),
+    ("they allocate no revision or work and do not reset retry budgets or quarantine",
+     "they may allocate work or reset retry budgets or quarantine"),
+    ("There is no lifecycle GraphQL API, resolver, mutation or subscription.",
+     "A later gate adds equivalent lifecycle GraphQL snapshots and mutations."),
+    ("this\n   page requires no downstream lifecycle routes or controls",
+     "this page requires downstream lifecycle routes and controls"),
+    ("no lifecycle GraphQL surface is added", "lifecycle GraphQL parity is required"),
+    ("including untyped bootstrap\nreconciliation and manager retry attempts",
+     "only for typed transitions"),
+])
+def test_runtime_control_contract_rejects_manager_acceptance_drift(before, after) -> None:
+    documents = dict(DOCUMENTS)
+    assert before in documents[checker.MANAGER]
+    documents[checker.MANAGER] = documents[checker.MANAGER].replace(before, after, 1)
+    assert any(checker.MANAGER in error for error in checker.validate(documents))
+
+
+@pytest.mark.parametrize("field", [
+    "incarnation", "source", "epoch", "generation", "admission identity", "operation correlation",
+])
+@pytest.mark.parametrize("section", ["## Retry And Recovery", "## Stop, Drain, And Restart"])
+def test_runtime_control_contract_requires_full_callback_correlation(field, section) -> None:
+    documents = dict(DOCUMENTS)
+    before, body = documents[checker.MANAGER].split(section, 1)
+    body, after = body.split("\n## ", 1)
+    assert field in body
+    documents[checker.MANAGER] = before + section + body.replace(field, "omitted") + "\n## " + after
+    assert any(checker.MANAGER in error for error in checker.validate(documents))
+
+
+def test_runtime_control_contract_acceptance_cannot_move_before_heading() -> None:
+    documents = dict(DOCUMENTS)
+    heading = "## One-release Acceptance"
+    before, acceptance = documents[checker.MANAGER].split(heading, 1)
+    documents[checker.MANAGER] = before + acceptance + heading + "\n"
+    assert any(checker.MANAGER in error for error in checker.validate(documents))
