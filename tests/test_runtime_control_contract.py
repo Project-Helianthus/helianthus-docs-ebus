@@ -588,3 +588,139 @@ def test_runtime_control_contract_acceptance_cannot_move_before_heading() -> Non
     before, acceptance = documents[checker.MANAGER].split(heading, 1)
     documents[checker.MANAGER] = before + acceptance + heading + "\n"
     assert any(checker.MANAGER in error for error in checker.validate(documents))
+
+
+UNAVAILABLE_SECTION = "### Envelope, lifecycle errors and acceptance vectors"
+UNAVAILABLE_PRECEDENCE = next(
+    clause for rule in checker.RULES if rule["path"] == checker.MCP
+    for clause in rule["required"] if clause.startswith("For get, the existing driver-ID")
+)
+UNAVAILABLE_CASE_RULE = next(
+    rule for rule in checker.RULES
+    if rule["start"] == "### Unavailable reads with invalid durable bounds"
+)
+UNAVAILABLE_CASE_ROWS = [
+    clause for clause in UNAVAILABLE_CASE_RULE["required"]
+    if clause.startswith("| ") and not clause.startswith("| Case |")
+]
+
+
+def unavailable_examples(text):
+    section = text.split(UNAVAILABLE_SECTION, 1)[1].split("\n## ", 1)[0]
+    return [token.content for token in checker.MarkdownIt().parse(section)
+            if token.type == "fence"]
+
+
+@pytest.mark.parametrize("index", [0, 1])
+@pytest.mark.parametrize("change", [
+    "is_error", "retriable", "data", "success_catalog", "code", "hash",
+    "extra", "removed", "nested_revision", "duplicate_member", "source_layer",
+    "meta_extra", "error_extra", "contract_extra", "consistency_extra", "clock",
+    "invalid_json", "hash_missing", "hash_string", "hash_concrete",
+])
+def test_runtime_control_contract_unavailable_envelope_mutations(index, change) -> None:
+    documents = dict(DOCUMENTS)
+    examples = unavailable_examples(documents[checker.MCP])
+    assert len(examples) == 2
+    original = examples[index]
+    envelope = json.loads(original)
+    if change == "is_error":
+        envelope["isError"] = False
+    elif change == "retriable":
+        envelope["error"]["retriable"] = True
+    elif change == "data":
+        envelope["data"] = {}
+    elif change == "success_catalog":
+        envelope["data"] = {"catalog_revision": "0", "drivers": [
+            {"desired_revision": "0", "revision": "0", "manager_revision": "0"}
+        ]}
+    elif change == "code":
+        envelope["error"]["code"] = "FAILED_PRECONDITION"
+    elif change == "hash":
+        envelope["meta"]["data_hash"] = "0" * 64
+    elif change == "hash_missing":
+        del envelope["meta"]["data_hash"]
+    elif change == "hash_string":
+        envelope["meta"]["data_hash"] = "invalid"
+    elif change == "hash_concrete":
+        envelope["meta"]["data_hash"] = checker.hashlib.sha256(b"null").hexdigest()
+    elif change == "extra":
+        envelope["extra"] = None
+    elif change == "nested_revision":
+        envelope["meta"]["consistency"]["revision"] = "0"
+    elif change == "source_layer":
+        envelope["error"]["source_layer"] = "provider"
+    elif change == "meta_extra":
+        envelope["meta"]["extra"] = None
+    elif change == "error_extra":
+        envelope["error"]["extra"] = None
+    elif change == "contract_extra":
+        envelope["meta"]["contract"]["extra"] = None
+    elif change == "consistency_extra":
+        envelope["meta"]["consistency"]["extra"] = None
+    elif change == "clock":
+        envelope["meta"]["data_timestamp"] = "invalid"
+    replacement = json.dumps(envelope, indent=2) + "\n"
+    if change == "removed":
+        replacement = ""
+    elif change == "duplicate_member":
+        replacement = replacement.replace('"isError": true', '"isError": false, "isError": true')
+    elif change == "invalid_json":
+        replacement = "{invalid JSON}\n"
+    # Replace only the selected identical envelope, preserving its label.
+    before, section = documents[checker.MCP].split(UNAVAILABLE_SECTION, 1)
+    offset = section.index(original)
+    if index == 1:
+        offset = section.index(original, offset + len(original))
+    section = section[:offset] + replacement + section[offset + len(original):]
+    documents[checker.MCP] = before + UNAVAILABLE_SECTION + section
+    assert checker.validate(documents)
+    assert (f"{checker.MCP}: invalid unavailable-read failure envelopes"
+            in checker.validate(documents))
+
+
+@pytest.mark.parametrize("row", UNAVAILABLE_CASE_ROWS)
+@pytest.mark.parametrize("change", ["removed", "weakened", "duplicated"])
+def test_runtime_control_contract_unavailable_case_mutations(row, change) -> None:
+    documents = dict(DOCUMENTS)
+    assert documents[checker.LIFECYCLE].count(row) == 1
+    replacement = {"removed": "", "weakened": row.rsplit("|", 2)[0] + "| Optional result |",
+                   "duplicated": row + "\n" + row}[change]
+    documents[checker.LIFECYCLE] = documents[checker.LIFECYCLE].replace(row, replacement, 1)
+    assert checker.validate(documents)
+    assert (f"{checker.LIFECYCLE}: invalid unavailable-read case table"
+            in checker.validate(documents))
+
+
+@pytest.mark.parametrize("row", [row for row in UNAVAILABLE_CASE_ROWS if row.startswith("| Get of")])
+def test_runtime_control_contract_unavailable_collision_refusal(row) -> None:
+    documents = dict(DOCUMENTS)
+    documents[checker.LIFECYCLE] = documents[checker.LIFECYCLE].replace(
+        row, row.split("| `NOT_FOUND`", 1)[0] + "| `UNAVAILABLE`, null data |", 1)
+    assert checker.validate(documents)
+    assert (f"{checker.LIFECYCLE}: invalid unavailable-read case table"
+            in checker.validate(documents))
+
+
+@pytest.mark.parametrize("path", [checker.MCP, checker.LIFECYCLE])
+def test_runtime_control_contract_unavailable_precedence_removed(path) -> None:
+    documents = dict(DOCUMENTS)
+    assert documents[path].count(UNAVAILABLE_PRECEDENCE) == 1
+    documents[path] = documents[path].replace(UNAVAILABLE_PRECEDENCE, "", 1)
+    assert checker.validate(documents)
+
+
+def test_runtime_control_contract_unavailable_envelopes_allow_json_formatting() -> None:
+    documents = dict(DOCUMENTS)
+    for example in unavailable_examples(documents[checker.MCP]):
+        documents[checker.MCP] = documents[checker.MCP].replace(
+            example, json.dumps(json.loads(example), sort_keys=True) + "\n", 1)
+    assert checker.validate(documents) == []
+
+
+@pytest.mark.parametrize("member", sorted(checker.UNAVAILABLE_VIEW_MEMBERS))
+def test_runtime_control_contract_unavailable_forbids_nested_read_members(member) -> None:
+    envelope = json.loads(unavailable_examples(DOCUMENTS[checker.MCP])[0])
+    envelope["meta"]["consistency"]["nested"] = [{member: "0"}]
+    assert checker.contains_read_view(envelope)
+    assert not checker.unavailable_envelope(envelope)

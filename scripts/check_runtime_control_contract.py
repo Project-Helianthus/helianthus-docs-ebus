@@ -9,6 +9,7 @@ substitute for normative prose; request/result examples are checked separately.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from pathlib import Path
 import re
@@ -46,6 +47,47 @@ SNAPSHOT_MEMBERS = {
 }
 REASON_MEMBERS = {"code", "retryable"}
 RETRY_MEMBERS = {"eligible", "budget_remaining", "not_before_utc"}
+UNAVAILABLE_SECTION = "### Envelope, lifecycle errors and acceptance vectors"
+UNAVAILABLE_CASE_SECTION = "### Unavailable reads with invalid durable bounds"
+UNAVAILABLE_VIEW_MEMBERS = {
+    "success_catalog", "catalog_revision", "drivers", "desired_revision",
+    "revision", "manager_revision",
+}
+
+
+def contains_read_view(value: object) -> bool:
+    if isinstance(value, dict):
+        return bool(UNAVAILABLE_VIEW_MEMBERS & value.keys()) or any(
+            contains_read_view(child) for child in value.values()
+        )
+    if isinstance(value, list):
+        return any(contains_read_view(child) for child in value)
+    return False
+
+
+def unavailable_envelope(value: object) -> bool:
+    if not isinstance(value, dict) or value.keys() != {"isError", "meta", "data", "error"}:
+        return False
+    meta, error = value["meta"], value["error"]
+    return (
+        value["isError"] is True and value["data"] is None
+        and not contains_read_view(value)
+        and isinstance(meta, dict)
+        and meta.keys() == {"contract", "consistency", "data_timestamp", "data_hash"}
+        and isinstance(meta["contract"], dict)
+        and meta["contract"].keys() == {"name", "major", "minor"}
+        and meta["contract"]["name"] == "helianthus-ebus-mcp"
+        and type(meta["contract"]["major"]) is int and meta["contract"]["major"] == 1
+        and type(meta["contract"]["minor"]) is int and meta["contract"]["minor"] == 0
+        and meta["consistency"] == {"mode": "LIVE"}
+        and meta["data_timestamp"] == "2000-01-01T00:00:00Z"
+        and meta["data_hash"] == hashlib.sha256(b"null").hexdigest()
+        and isinstance(error, dict)
+        and error.keys() == {"code", "message", "retriable", "source_layer"}
+        and error["code"] == "UNAVAILABLE"
+        and error["message"] == "Durable revision bounds unavailable; offline repair required"
+        and error["retriable"] is False and error["source_layer"] == "gateway"
+    )
 
 
 def snapshot_shape(value: object) -> bool:
@@ -166,6 +208,36 @@ def validate(documents: dict[str, str]) -> list[str]:
         assert revision(decision["desired_revision"]) and decision["desired_revision"] != "0"
     except (ValueError, TypeError, AssertionError, KeyError):
         errors.append(f"{MCP}: invalid G5 closed data examples")
+
+    # Both categorical failures are complete, closed envelopes. Parse every
+    # fence in the owning section, rejecting duplicate JSON members as well.
+    failure_section = documents[MCP].split(UNAVAILABLE_SECTION, 1)[-1].split("\n## ", 1)[0]
+    examples = [t.content for t in MarkdownIt().parse(failure_section)
+                if t.type == "fence"]
+    try:
+        assert len(examples) == 2
+        for example in examples:
+            envelope = json.loads(example, object_pairs_hook=closed_object)
+            assert envelope["meta"]["data_hash"] == "<computed-data-hash>"
+            envelope["meta"]["data_hash"] = hashlib.sha256(b"null").hexdigest()
+            assert unavailable_envelope(envelope)
+    except (ValueError, TypeError, AssertionError, KeyError):
+        errors.append(f"{MCP}: invalid unavailable-read failure envelopes")
+
+    # Check the table's closed row structure and outcomes independently of the
+    # prose freeze, including the two input/registry refusal collisions.
+    case_rule = next(r for r in RULES if r["start"] == UNAVAILABLE_CASE_SECTION)
+    case_section = prose(documents[LIFECYCLE]).split(UNAVAILABLE_CASE_SECTION, 1)[-1].split(
+        case_rule["end"], 1)[0]
+    case_rows = [line for line in case_section.splitlines() if line.lstrip().startswith("|")]
+    expected_rows = [line for line in case_rule["required"] if line.startswith("|")]
+    cells = [[cell.strip() for cell in row.strip().strip("|").split("|")]
+             for row in case_rows]
+    expected_cells = [[cell.strip() for cell in row.strip("|").split("|")]
+                      for row in expected_rows]
+    if (len(cells) != 12 or any(len(row) != 2 for row in cells)
+            or cells != expected_cells):
+        errors.append(f"{LIFECYCLE}: invalid unavailable-read case table")
 
     # Historical proposal consistency only; G5 above owns public acceptance.
     # Exactly one archived request/result pair, independent of whitespace/key order.

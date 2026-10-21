@@ -143,6 +143,8 @@ a sentinel, stale cached state or corrupt values, even if the other bound is
 valid. With both counters valid and coherent cached records, one or all drivers
 may be `FAILED` while reads retain the ordinary sorted, coherent projection.
 
+For get, the existing driver-ID input checks and registry-membership refusal are decided first, because they need no durable state: a noncanonical or unregistered `DriverID` returns `NOT_FOUND`, without construction or endpoint access; only a canonical, registered driver ID proceeds to the durable-bounds check and its `UNAVAILABLE` refusal; list has no driver ID.
+
 Synthetic list `data` example (not a live observation):
 
 ```json
@@ -219,6 +221,64 @@ reload cannot repair the bounds. Keep the shell and tools available. The ordered
 refusal table still governs mutations, where unusable control remains
 `FAILED_PRECONDITION`; the read error grants no online repair or bypass of the
 offline reset's own requirement for validated bounds.
+
+Synthetic failure envelopes below use a deterministic synthetic clock and hash the JSON text `null`; neither metadata value is revision authority. Missing, malformed and overflowing bounds use the same categorical envelope without exposing the invalid value. The get label identifies the manager registry read, not a new tool.
+
+The `data_hash` values are publication placeholders, not wire values. Validation requires `<computed-data-hash>` and replaces it in memory with the lowercase SHA-256 digest of the JSON text `null`; no concrete digest is published.
+
+Synthetic list failure with an invalid issued bound:
+
+```json
+{
+  "isError": true,
+  "meta": {
+    "contract": {
+      "name": "helianthus-ebus-mcp",
+      "major": 1,
+      "minor": 0
+    },
+    "consistency": {
+      "mode": "LIVE"
+    },
+    "data_timestamp": "2000-01-01T00:00:00Z",
+    "data_hash": "<computed-data-hash>"
+  },
+  "data": null,
+  "error": {
+    "code": "UNAVAILABLE",
+    "message": "Durable revision bounds unavailable; offline repair required",
+    "retriable": false,
+    "source_layer": "gateway"
+  }
+}
+```
+
+Synthetic get of `ebus.primary` failure with an invalid catalog revision:
+
+```json
+{
+  "isError": true,
+  "meta": {
+    "contract": {
+      "name": "helianthus-ebus-mcp",
+      "major": 1,
+      "minor": 0
+    },
+    "consistency": {
+      "mode": "LIVE"
+    },
+    "data_timestamp": "2000-01-01T00:00:00Z",
+    "data_hash": "<computed-data-hash>"
+  },
+  "data": null,
+  "error": {
+    "code": "UNAVAILABLE",
+    "message": "Durable revision bounds unavailable; offline repair required",
+    "retriable": false,
+    "source_layer": "gateway"
+  }
+}
+```
 
 The [ordered lifecycle refusal table](../architecture/runtime-driver-lifecycle.md#validate-decide-and-commit)
 is authoritative when several checks fail. `CLOSE_UNCONFIRMED` is an observed

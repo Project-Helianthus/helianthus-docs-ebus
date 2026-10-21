@@ -950,6 +950,8 @@ zero, a sentinel, stale cached state or corrupt values for either revision,
 even when the other bound remains valid; neither an empty success list nor a
 fabricated all-`FAILED` catalog encodes this refusal.
 
+For get, the existing driver-ID input checks and registry-membership refusal are decided first, because they need no durable state: a noncanonical or unregistered `DriverID` returns `NOT_FOUND`, without construction or endpoint access; only a canonical, registered driver ID proceeds to the durable-bounds check and its `UNAVAILABLE` refusal; list has no driver ID.
+
 With both counters valid and coherent cached records, one or all drivers may
 be `FAILED` while list/get still return ordinary coherent snapshots. Preserve
 all registered entries in bytewise driver-ID order, each validated durable
@@ -976,6 +978,21 @@ null data and no usable revision for both list and get. Also test valid counters
 with one and with all drivers `FAILED`, retaining coherent ordinary snapshots,
 deterministic ordering and revisions. These are documentation acceptance
 obligations, not executed runtime tests.
+
+Each of the six invalid-bound cases holds the other counter valid and requires the stated result for list and get of a canonical, registered driver ID; the last two rows test get refusal precedence.
+
+| Case | Required read result |
+| --- | --- |
+| Issued bound missing with existing control material | `UNAVAILABLE`, null data, no usable revision; no bootstrap |
+| Issued bound malformed | `UNAVAILABLE`, null data, no usable revision |
+| Issued bound above the unsigned 64-bit maximum | `UNAVAILABLE`, null data, no usable revision; no wrap |
+| Catalog revision missing with existing control material | `UNAVAILABLE`, null data, no usable revision; no bootstrap |
+| Catalog revision malformed | `UNAVAILABLE`, null data, no usable revision |
+| Catalog revision above the unsigned 64-bit maximum | `UNAVAILABLE`, null data, no usable revision; no wrap |
+| Both counters valid; one driver `FAILED` | Coherent ordinary snapshot/list, unaffected entries retained, deterministic ordering and revisions |
+| Both counters valid; all drivers `FAILED` | Coherent ordinary snapshot/list with all catalog entries, deterministic ordering and revisions |
+| Get of a noncanonical driver ID with an invalid durable bound | `NOT_FOUND`, without construction or endpoint access; never `UNAVAILABLE` |
+| Get of a canonical but unregistered driver ID with an invalid durable bound | `NOT_FOUND`, without construction or endpoint access; never `UNAVAILABLE` |
 
 ### Offline namespace-only reset
 
