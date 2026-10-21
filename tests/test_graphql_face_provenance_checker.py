@@ -131,12 +131,44 @@ def test_rejects_graphql_pins_hidden_in_html_comment() -> None:
         CHECKER.validate_text(hide_pin_paragraph(doc), atr)
 
 
-def test_rejects_mcp_source_reference_hidden_in_html_comment() -> None:
+def test_rejects_mcp_pins_hidden_in_html_comment() -> None:
     text = mcp_text()
-    reference = f"[{CHECKER.MCP_SOURCE_LABEL}]({CHECKER.MCP_SOURCE_URL})"
-    assert reference in text
+    CHECKER.validate_mcp_text(text)
     with pytest.raises(CHECKER.CheckError):
-        CHECKER.validate_mcp_text(text.replace(reference, f"<!--{reference}-->", 1))
+        CHECKER.validate_mcp_text(hide_pin_paragraph(text))
+
+
+def test_audit_markers_have_no_rendered_contract_content() -> None:
+    text = mcp_text()
+    unmarked = "\n".join(
+        line for line in text.splitlines() if line.strip() not in CHECKER.AUDIT_MARKERS
+    ) + "\n"
+    assert unmarked != text
+    CHECKER.validate_mcp_text(text)
+    CHECKER.validate_mcp_text(unmarked)
+    assert CHECKER._visible_markdown_text(text, reject_html=True) == (
+        CHECKER._visible_markdown_text(unmarked, reject_html=True)
+    )
+
+
+@pytest.mark.parametrize(
+    "replacement",
+    (
+        "<!-- publication-audit: machine-checked-record start",
+        "<!-- publication-audit: machine-checked-record start --> <!-- extra -->",
+        "<!-- publication-audit: machine-checked-record start --> <div hidden>",
+        "<!-- publication-audit: machine-checked-record start\nconcealed prose -->",
+        "<!-- unrelated comment -->",
+        "prose <!-- publication-audit: machine-checked-record start -->",
+    ),
+)
+def test_rejects_html_disguised_as_audit_marker(replacement: str) -> None:
+    text = mcp_text()
+    CHECKER.validate_mcp_text(text)
+    marker = "<!-- publication-audit: machine-checked-record start -->"
+    assert text.count(marker) == 1
+    with pytest.raises(CHECKER.CheckError, match="raw HTML"):
+        CHECKER.validate_mcp_text(text.replace(marker, replacement, 1))
 
 
 def test_rejects_mcp_rule_hidden_in_html_comment() -> None:
@@ -472,53 +504,22 @@ def test_rejects_whitespace_variant_mcp_source_rewrite() -> None:
 
 
 @pytest.mark.parametrize(
-    "replacement",
+    ("pin", "alternative"),
     (
-        "",
-        CHECKER.MCP_SOURCE_LABEL,
-        f"[{CHECKER.MCP_SOURCE_LABEL}](https://example.invalid/internal)",
-        f"[other source]({CHECKER.MCP_SOURCE_URL})",
-        f"`[{CHECKER.MCP_SOURCE_LABEL}]({CHECKER.MCP_SOURCE_URL})`",
-        f"![{CHECKER.MCP_SOURCE_LABEL}]({CHECKER.MCP_SOURCE_URL})",
+        (CHECKER.GATEWAY_REVIEWED_HEAD, "0" * 40),
+        (CHECKER.GATEWAY_REVIEWED_MERGE_TREE, "1" * 40),
+        (CHECKER.GATEWAY_MAIN_MERGE, "2" * 40),
+        (CHECKER.REGISTRY_DEPENDENCY, "3" * 40),
     ),
 )
-def test_rejects_missing_or_wrong_mcp_source_reference(replacement: str) -> None:
+def test_rejects_wrong_mcp_runtime_or_dependency_pin(pin: str, alternative: str) -> None:
     text = mcp_text()
     CHECKER.validate_mcp_text(text)
-    reference = f"[{CHECKER.MCP_SOURCE_LABEL}]({CHECKER.MCP_SOURCE_URL})"
-    assert reference in text
-    mutated = text.replace(reference, replacement, 1)
+    assert text.count(pin) == 1
+    assert alternative != pin
+    mutated = text.replace(pin, alternative, 1)
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_mcp_text(mutated)
-
-
-def test_rejects_mcp_source_reference_outside_owning_inventory_item() -> None:
-    text = mcp_text()
-    CHECKER.validate_mcp_text(text)
-    reference = f"[{CHECKER.MCP_SOURCE_LABEL}]({CHECKER.MCP_SOURCE_URL})"
-    assert reference in text
-    moved = text.replace(reference, CHECKER.MCP_SOURCE_LABEL, 1) + f"\n{reference}\n"
-    with pytest.raises(CHECKER.CheckError):
-        CHECKER.validate_mcp_text(moved)
-
-
-def test_rejects_duplicate_mcp_source_reference() -> None:
-    text = mcp_text()
-    CHECKER.validate_mcp_text(text)
-    reference = f"[{CHECKER.MCP_SOURCE_LABEL}]({CHECKER.MCP_SOURCE_URL})"
-    assert reference in text
-    with pytest.raises(CHECKER.CheckError):
-        CHECKER.validate_mcp_text(text.replace(reference, f"{reference} {reference}", 1))
-
-
-def test_rejects_missing_mcp_source_ownership_statement() -> None:
-    text = mcp_text()
-    CHECKER.validate_mcp_text(text)
-    statement = "The implementation and historical review records are owned by the"
-    assert statement in text
-    with pytest.raises(CHECKER.CheckError):
-        CHECKER.validate_mcp_text(text.replace(statement, "See the", 1))
-
 
 def test_ignores_historical_device_outside_current_sdl_fence() -> None:
     doc, atr = texts()
