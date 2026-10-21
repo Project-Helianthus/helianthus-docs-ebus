@@ -34,6 +34,10 @@ PINS = (
 PROVEN_CONCLUSION = "Conclusion: Proven."
 MARKDOWN = MarkdownIt("commonmark")
 TABLE_MARKDOWN = MarkdownIt("commonmark").enable("table")
+AUDIT_MARKERS = frozenset((
+    "<!-- publication-audit: machine-checked-record start -->",
+    "<!-- publication-audit: machine-checked-record end -->",
+))
 INDEPENDENCE = (
     "Valid non-null values are the Cartesian product of the\n"
     "separately allowed source and state sets; no source label determines or\n"
@@ -66,12 +70,7 @@ MCP_SOURCE_RETENTION = (
     "      confirmation may advance it to `identity_confirmed`. Neither event\n"
     "      rewrites `discovery_source`."
 )
-MCP_SOURCE_REFERENCE = (
-    "The implementation and historical review records are owned by the\n"
-    "      gateway registry source."
-)
-MCP_SOURCE_LABEL = "gateway registry source"
-MCP_SOURCE_URL = "https://github.com/Project-Helianthus/helianthus-ebusgateway/tree/main/internal"
+
 
 
 class CheckError(ValueError):
@@ -342,6 +341,10 @@ def _visible_markdown_spans(
     """Return independent rendered prose spans so literal state cannot leak."""
     visible: list[str] = []
     for token in MARKDOWN.parse(text):
+        # These standalone comments carry no contract text. Match the complete
+        # block so a marker cannot conceal prose or introduce an HTML container.
+        if token.type == "html_block" and token.content.strip() in AUDIT_MARKERS:
+            continue
         if reject_html and token.type == "html_block":
             raise CheckError("public contract must not depend on raw HTML")
         if include_html_blocks and token.type == "html_block" and not token.content.lstrip().startswith("<!--"):
@@ -685,34 +688,14 @@ def validate_text(text: str, atr: str) -> None:
 
 def validate_mcp_text(text: str) -> None:
     _visible_markdown_text(text, reject_html=True)
-    device_section = _mcp_device_section(text)
     section = _visible_markdown_text(
-        device_section,
+        _mcp_device_section(text),
         include_inline_code=True,
         reject_html=True,
     )
     _validate_proven_conclusion(section, surface="MCP")
-    # MCP publication uses a branch source reference, not immutable review
-    # coordinates. Require an actual rendered link in the owning inventory item;
-    # a matching URL in code, image alt text or another item is not evidence.
-    source_links = []
-    for token in MARKDOWN.parse(device_section):
-        children = token.children or ()
-        for index, child in enumerate(children):
-            if child.type != "link_open":
-                continue
-            label = []
-            for part in children[index + 1 :]:
-                if part.type == "link_close":
-                    break
-                if part.type in ("text", "code_inline"):
-                    label.append(part.content)
-            if "".join(label) == MCP_SOURCE_LABEL:
-                source_links.append(child.attrGet("href"))
-    if source_links != [MCP_SOURCE_URL]:
-        raise CheckError("MCP provenance source reference differs")
+    _validate_pins(section, surface="MCP")
     required = (
-        MCP_SOURCE_REFERENCE,
         "JSON response items carry `discovery_source` and\n      `verification_state` fields",
         "`passive_observed | static_seed | active_confirmed`",
         "`candidate | corroborated_pending | identity_confirmed`",
