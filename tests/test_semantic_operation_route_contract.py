@@ -19,7 +19,8 @@ ROOT = Path(__file__).resolve().parents[1]
 DOCUMENT = ROOT / "api/semantic-operation-route.md"
 CONTRACT = json.loads(Path(__file__).with_name("semantic_operation_route_contract.json").read_text())
 TEXT = DOCUMENT.read_text(encoding="utf-8")
-TOKENS = MarkdownIt("commonmark").parse(TEXT)
+MARKDOWN = MarkdownIt("commonmark").enable("table")
+TOKENS = MARKDOWN.parse(TEXT)
 BLOCKS = [token for token in TOKENS if token.type == "inline"]
 FENCES = [token for token in TOKENS if token.type == "fence"]
 
@@ -36,7 +37,7 @@ def validate_contract(text: str) -> None:
     blocks = []
     examples = []
     structure = []
-    for token in MarkdownIt("commonmark").parse(text):
+    for token in MARKDOWN.parse(text):
         assert token.type not in {"html_block", "code_block"}, (
             "Raw HTML blocks and indented code blocks are not allowed in this contract"
         )
@@ -176,7 +177,7 @@ def test_rejects_unordered_admission_steps(token) -> None:
     start, end = token.map
     replacement = re.sub(r"^( *)([0-9]+)\. ", r"\1-  ", "".join(lines[start:end]), flags=re.MULTILINE)
     changed = replace_token(token, replacement)
-    assert [t.content for t in MarkdownIt("commonmark").parse(changed) if t.type == "inline"] == [
+    assert [t.content for t in MARKDOWN.parse(changed) if t.type == "inline"] == [
         t.content for t in BLOCKS
     ]
     with pytest.raises(AssertionError, match="Contract block structure changed"):
@@ -194,7 +195,7 @@ def test_rejects_changed_ordered_list_start(token, start: int) -> None:
     assert count == 1
     changed = "".join(lines)
     assert changed != TEXT
-    assert [t.content for t in MarkdownIt("commonmark").parse(changed) if t.type == "inline"] == [
+    assert [t.content for t in MARKDOWN.parse(changed) if t.type == "inline"] == [
         t.content for t in BLOCKS
     ]
     with pytest.raises(AssertionError, match="Contract block structure changed"):
@@ -209,6 +210,28 @@ def test_rejects_demoted_section(token) -> None:
     start, end = token.map
     changed = replace_token(token, "#" + "".join(lines[start:end]))
     with pytest.raises(AssertionError, match="Contract block structure changed"):
+        validate_contract(changed)
+
+
+@pytest.mark.parametrize("token", [token for token in TOKENS if token.type == "table_open"])
+def test_rejects_flattened_table(token) -> None:
+    start, end = token.map
+    flattened = " ".join(TEXT.splitlines()[start:end]) + "\n"
+    with pytest.raises(AssertionError):
+        validate_contract(replace_token(token, flattened))
+
+
+@pytest.mark.parametrize("row", [
+    row
+    for token in TOKENS if token.type == "table_open"
+    for row in range(token.map[0], token.map[1] - 1)
+])
+def test_rejects_merged_table_rows(row: int) -> None:
+    lines = TEXT.splitlines(keepends=True)
+    lines[row] = lines[row].rstrip("\n") + " "
+    changed = "".join(lines)
+    assert changed != TEXT
+    with pytest.raises(AssertionError):
         validate_contract(changed)
 
 
