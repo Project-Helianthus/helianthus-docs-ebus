@@ -130,6 +130,10 @@ def validate(documents: dict[str, str]) -> list[str]:
         if rule.get("exact") and present != [normalize(s) for s in rule["required"]]:
             errors.append(f"{rule['path']}: unexpected contract content in {start}")
         section_text = normalize(text[starts[0].end():section_end])
+        if rule.get("ordered"):
+            positions = [section_text.find(normalize(clause)) for clause in rule["required"]]
+            if positions != sorted(positions):
+                errors.append(f"{rule['path']}: obligation order changed")
         for needle in rule.get("contains", []):
             if normalize(needle) not in section_text:
                 errors.append(f"{rule['path']}: changed obligation: {normalize(needle)[:100]}")
