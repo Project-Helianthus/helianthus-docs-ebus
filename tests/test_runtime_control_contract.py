@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+import re
 import subprocess
 import sys
 
@@ -23,6 +24,31 @@ QUARANTINE_DIRECTORY_ROW = next(
 
 def test_runtime_control_contract_repository() -> None:
     assert checker.validate(DOCUMENTS) == []
+
+
+TABLE_GAPS = [
+    (table, boundary, error)
+    for marker, error in (
+        ("| Case | Required read result |", "invalid unavailable-read case table"),
+        ("| 1 |", "refusal table order or codes changed"),
+        ("| CTL-01 / CTL-02 |", "CTL vector ids changed:"),
+    )
+    for table in re.findall(r"^\|.*(?:\n\|.*)*", DOCUMENTS[checker.LIFECYCLE], re.MULTILINE)
+    if marker in table
+    for boundary in range(1, len(table.splitlines()))
+]
+
+
+@pytest.mark.parametrize(("table", "boundary", "error"), TABLE_GAPS)
+@pytest.mark.parametrize("blank", ["", " \t"])
+def test_runtime_control_contract_rejects_table_gaps(table, boundary, error, blank) -> None:
+    documents = dict(DOCUMENTS)
+    lines = table.splitlines()
+    lines.insert(boundary, blank)
+    documents[checker.LIFECYCLE] = documents[checker.LIFECYCLE].replace(
+        table, "\n".join(lines), 1)
+    assert any(message.startswith(f"{checker.LIFECYCLE}: {error}")
+               for message in checker.validate(documents))
 
 
 UNAVAILABLE_CLAUSES = [

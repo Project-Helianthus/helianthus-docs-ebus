@@ -104,6 +104,13 @@ def normalize(text: str) -> str:
     return " ".join(text.split())
 
 
+def table_blocks(text: str) -> list[list[str]]:
+    lines = text.splitlines()
+    return [lines[token.map[0]:token.map[1]]
+            for token in MarkdownIt().enable("table").parse(text)
+            if token.type == "table_open" and token.map]
+
+
 def prose(text: str) -> str:
     lines = text.splitlines(keepends=True)
     for token in MarkdownIt().parse(text):
@@ -235,7 +242,8 @@ def validate(documents: dict[str, str]) -> list[str]:
              for row in case_rows]
     expected_cells = [[cell.strip() for cell in row.strip("|").split("|")]
                       for row in expected_rows]
-    if (len(cells) != 12 or any(len(row) != 2 for row in cells)
+    if (table_blocks(case_section) != [case_rows]
+            or len(cells) != 12 or any(len(row) != 2 for row in cells)
             or cells != expected_cells):
         errors.append(f"{LIFECYCLE}: invalid unavailable-read case table")
 
@@ -285,14 +293,19 @@ def validate(documents: dict[str, str]) -> list[str]:
 
     # Refusal table: exact row order and codes, no authorization refusal.
     lifecycle = prose(documents[LIFECYCLE])
+    tables = table_blocks(lifecycle)
+    refusal_rows = [line for line in lifecycle.splitlines()
+                    if re.match(r"^\|\s*\d+\s*\|", line)]
     rows = [[c.strip() for c in line.strip().strip("|").split("|")]
-            for line in lifecycle.splitlines()
-            if re.match(r"^\|\s*\d+\s*\|", line)]
-    if [(r[0], r[2]) for r in rows if len(r) == 4] != REFUSAL_ORDER or len(rows) != len(REFUSAL_ORDER):
+            for line in refusal_rows]
+    if (not any(table[2:] == refusal_rows for table in tables)
+            or [(r[0], r[2]) for r in rows if len(r) == 4] != REFUSAL_ORDER
+            or len(rows) != len(REFUSAL_ORDER)):
         errors.append(f"{LIFECYCLE}: refusal table order or codes changed")
     # CTL vectors: every id exactly once, in order.
     ctl = [m.group(1).strip() for m in re.finditer(r"^\| (CTL-[^|]+?) \|", lifecycle, re.MULTILINE)]
-    if ctl != CTL_IDS:
+    ctl_rows = [line for line in lifecycle.splitlines() if re.match(r"^\| CTL-", line)]
+    if ctl != CTL_IDS or not any(table[2:] == ctl_rows for table in tables):
         errors.append(f"{LIFECYCLE}: CTL vector ids changed: {ctl}")
     # D4: no lifecycle principal or authorization refusal anywhere in the API.
     if "PERMISSION_DENIED" in prose(api) or "PERMISSION_DENIED" in "".join("|".join(r) for r in rows):
