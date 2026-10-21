@@ -41,7 +41,7 @@ jobs:
     name: Docs Checks
     # fork pull requests never run on the persistent runners
     runs-on: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository) && 'ubuntu-latest' || 'synology' }}
-    timeout-minutes: 45
+    timeout-minutes: 90
     steps:
       - name: Checkout PR head
         if: github.event_name == 'pull_request'
