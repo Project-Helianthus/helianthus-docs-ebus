@@ -631,6 +631,15 @@ UNAVAILABLE_CASE_ROWS = [
 ]
 
 
+@pytest.mark.parametrize("bound", ["Issued bound", "Catalog revision"])
+@pytest.mark.parametrize("disposition", ["unreadable", "unsupported"])
+def test_runtime_control_contract_unavailable_load_dispositions(bound, disposition) -> None:
+    row = (f"| {bound} {disposition} | "
+           "`UNAVAILABLE`, null data, no usable revision |")
+    assert row in UNAVAILABLE_CASE_ROWS
+    assert DOCUMENTS[checker.LIFECYCLE].count(row) == 1
+
+
 def unavailable_examples(text):
     section = text.split(UNAVAILABLE_SECTION, 1)[1].split("\n## ", 1)[0]
     return [token.content for token in checker.MarkdownIt().parse(section)

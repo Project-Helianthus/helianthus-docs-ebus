@@ -222,7 +222,7 @@ refusal table still governs mutations, where unusable control remains
 `FAILED_PRECONDITION`; the read error grants no online repair or bypass of the
 offline reset's own requirement for validated bounds.
 
-Synthetic failure envelopes below use a deterministic synthetic clock and hash the JSON text `null`; neither metadata value is revision authority. Missing, malformed and overflowing bounds use the same categorical envelope without exposing the invalid value. The get label identifies the manager registry read, not a new tool. The outer MCP tool result must set `isError: true`; the payload envelopes below contain exactly `meta`, `data`, and `error`.
+Synthetic failure envelopes below use a deterministic synthetic clock and hash the JSON text `null`; neither metadata value is revision authority. Missing, malformed, unreadable, unsupported and overflowing bounds use the same categorical envelope without exposing the invalid value. The get label identifies the manager registry read, not a new tool. The outer MCP tool result must set `isError: true`; the payload envelopes below contain exactly `meta`, `data`, and `error`.
 
 The `data_hash` values are publication placeholders, not wire values. Validation requires `<computed-data-hash>` and replaces it in memory with the lowercase SHA-256 digest of the JSON text `null`; no concrete digest is published.
 
