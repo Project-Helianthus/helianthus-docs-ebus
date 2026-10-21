@@ -210,7 +210,7 @@
     "heading_open:h2:1",
     "inline::0",
     "heading_close:h2:-1",
-    "ordered_list_open:ol:1",
+    "ordered_list_open:ol:1:start=1",
     "list_item_open:li:1",
     "paragraph_open:p:1",
     "inline::0",

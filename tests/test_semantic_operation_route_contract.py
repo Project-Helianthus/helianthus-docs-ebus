@@ -40,7 +40,10 @@ def validate_contract(text: str) -> None:
         assert token.type not in {"html_block", "code_block"}, (
             "Raw HTML blocks and indented code blocks are not allowed in this contract"
         )
-        structure.append(f"{token.type}:{token.tag}:{token.nesting}")
+        entry = f"{token.type}:{token.tag}:{token.nesting}"
+        if token.type == "ordered_list_open":
+            entry += f":start={token.attrs.get('start', 1)}"
+        structure.append(entry)
         if token.type == "inline":
             assert all(child.type != "html_inline" for child in token.children or []), (
                 "Inline HTML is not allowed in this contract"
@@ -57,7 +60,7 @@ def validate_contract(text: str) -> None:
     # every no-send rule, causal readback requirements and the rule trace.
     assert blocks == CONTRACT["visible_blocks"], "Visible contract blocks changed"
     assert examples == CONTRACT["examples"], "Operation examples changed"
-    # Type, HTML tag and nesting preserve list containers and heading levels.
+    # Type, HTML tag, nesting and list starts preserve containers and numbering.
     assert structure == CONTRACT["block_structure"], "Contract block structure changed"
 
 
@@ -173,6 +176,24 @@ def test_rejects_unordered_admission_steps(token) -> None:
     start, end = token.map
     replacement = re.sub(r"^( *)([0-9]+)\. ", r"\1-  ", "".join(lines[start:end]), flags=re.MULTILINE)
     changed = replace_token(token, replacement)
+    assert [t.content for t in MarkdownIt("commonmark").parse(changed) if t.type == "inline"] == [
+        t.content for t in BLOCKS
+    ]
+    with pytest.raises(AssertionError, match="Contract block structure changed"):
+        validate_contract(changed)
+
+
+@pytest.mark.parametrize("token", [
+    token for token in TOKENS if token.type == "ordered_list_open"
+])
+@pytest.mark.parametrize("start", (0, 2, 9, 999999999))
+def test_rejects_changed_ordered_list_start(token, start: int) -> None:
+    lines = TEXT.splitlines(keepends=True)
+    first_line = token.map[0]
+    lines[first_line], count = re.subn(r"^( *)([0-9]+)([.)] )", rf"\g<1>{start}\3", lines[first_line], count=1)
+    assert count == 1
+    changed = "".join(lines)
+    assert changed != TEXT
     assert [t.content for t in MarkdownIt("commonmark").parse(changed) if t.type == "inline"] == [
         t.content for t in BLOCKS
     ]
