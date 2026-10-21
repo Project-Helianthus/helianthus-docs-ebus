@@ -66,11 +66,11 @@ def contains_read_view(value: object) -> bool:
 
 
 def unavailable_envelope(value: object) -> bool:
-    if not isinstance(value, dict) or value.keys() != {"isError", "meta", "data", "error"}:
+    if not isinstance(value, dict) or value.keys() != {"meta", "data", "error"}:
         return False
     meta, error = value["meta"], value["error"]
     return (
-        value["isError"] is True and value["data"] is None
+        value["data"] is None
         and not contains_read_view(value)
         and isinstance(meta, dict)
         and meta.keys() == {"contract", "consistency", "data_timestamp", "data_hash"}

@@ -613,7 +613,7 @@ def unavailable_examples(text):
 
 @pytest.mark.parametrize("index", [0, 1])
 @pytest.mark.parametrize("change", [
-    "is_error", "retriable", "data", "success_catalog", "code", "hash",
+    "is_error_true", "is_error_false", "retriable", "data", "success_catalog", "code", "hash",
     "extra", "removed", "nested_revision", "duplicate_member", "source_layer",
     "meta_extra", "error_extra", "contract_extra", "consistency_extra", "clock",
     "invalid_json", "hash_missing", "hash_string", "hash_concrete",
@@ -624,8 +624,8 @@ def test_runtime_control_contract_unavailable_envelope_mutations(index, change) 
     assert len(examples) == 2
     original = examples[index]
     envelope = json.loads(original)
-    if change == "is_error":
-        envelope["isError"] = False
+    if change in {"is_error_true", "is_error_false"}:
+        envelope["isError"] = change == "is_error_true"
     elif change == "retriable":
         envelope["error"]["retriable"] = True
     elif change == "data":
@@ -664,7 +664,7 @@ def test_runtime_control_contract_unavailable_envelope_mutations(index, change) 
     if change == "removed":
         replacement = ""
     elif change == "duplicate_member":
-        replacement = replacement.replace('"isError": true', '"isError": false, "isError": true')
+        replacement = replacement.replace('"data": null', '"data": {}, "data": null')
     elif change == "invalid_json":
         replacement = "{invalid JSON}\n"
     # Replace only the selected identical envelope, preserving its label.
