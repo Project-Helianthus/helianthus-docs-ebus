@@ -1,8 +1,7 @@
-"""Run the production cleanup/lint fragment with cheap, synthetic phase signals."""
+"""Run the complete production gate with cheap, synthetic phase signals."""
 
 import os
 from pathlib import Path
-import shlex
 import signal
 import subprocess
 import sys
@@ -10,23 +9,23 @@ import sys
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-START = 'gate_temp_dir="$(mktemp -d '
-END = 'echo "Pinned workflow/schema gate tools passed."\n'
+LINT_BOUNDARY = 'echo "Pinned workflow/schema gate tools passed."\n'
 BEGIN_FRAGMENT = "# BEGIN unchanged production fragment\n"
 END_FRAGMENT = "# END unchanged production fragment\n"
 
 
 def production_fragment():
-    source = (ROOT / "scripts/ci_local.sh").read_text()
-    assert source.count(START) == source.count(END) == 1
-    return source[source.index(START):source.index(END) + len(END)]
+    return (ROOT / "scripts/ci_local.sh").read_text()
 
 
-# Only the lint/later entry points used by the fragment are accepted.
+# Keep the complete gate tail cheap while executing its real shell control flow.
 # Bash builtins avoid starting a Python interpreter for each synthetic tool.
 STUBS = r'''
 python3() {
   case "$*" in
+    'scripts/check_workflow_shells.py actionlint-version')
+      printf 'v1.7.7\n'
+      ;;
     'scripts/check_workflow_shells.py actionlint')
       printf 'actionlint\n' >> "$CALL_LOG"
       if [ "$CLEANUP_CASE" = actionlint ]; then return 17; fi
@@ -56,16 +55,42 @@ python3() {
     '-m pytest -q tests/test_workflow_lint_cleanup.py')
       printf 'cleanup-tests\n' >> "$CALL_LOG"
       ;;
+    scripts/*.py*|'-m pytest -q '*|'-') ;;
     *) printf 'Unexpected synthetic tool call: %s\n' "$*" >&2; return 98 ;;
   esac
   return 0
+}
+git() {
+  case "$1" in
+    ls-files) printf 'synthetic.md\n' ;;
+    grep) return 1 ;;
+    *) return 98 ;;
+  esac
+}
+actionlint() { :; }
+shellcheck() { :; }
+jv() {
+  if [ "$*" = --version ]; then
+    printf 'github.com/santhosh-tekuri/jsonschema/cmd/jv v0.7.0\n'
+  fi
+}
+go() { :; }
+bash() {
+  case "$*" in
+    scripts/check_address_table_taxonomy_hash.sh) ;;
+    scripts/check_runtime_state_schema.sh)
+      printf 'runtime-schema\n' >> "$CALL_LOG"
+      if [ "$CLEANUP_CASE" = runtime-schema ]; then return 31; fi
+      ;;
+    *) return 98 ;;
+  esac
 }
 '''
 
 
 def run_case(tmp_path, mode, inherited_traps=False, mutation=None):
     repo = tmp_path / "repo"
-    repo.mkdir()
+    (repo / "tests/semreg_thermal_map_contract").mkdir(parents=True)
     caller = tmp_path / "caller"
     caller.mkdir()
     sentinel = caller / "sentinel"
@@ -77,12 +102,10 @@ def run_case(tmp_path, mode, inherited_traps=False, mutation=None):
     outside.write_text("unrelated")
     log = tmp_path / "phases"
     owned_path = tmp_path / "owned-path"
-    entry = tmp_path / "harness.bash"
+    (repo / "scripts").mkdir()
+    entry = repo / "scripts/ci_local.sh"
     fragment = production_fragment()
-    entry.write_text("set -euo pipefail\n"
-                     f"repo_root={shlex.quote(str(repo))}\n"
-                     'cd "$repo_root"\n' + STUBS + BEGIN_FRAGMENT
-                     + fragment + END_FRAGMENT)
+    entry.write_text(STUBS + BEGIN_FRAGMENT + fragment + END_FRAGMENT)
     # Check the actual executable file, not a transformed or hand-copied model.
     assembled = entry.read_text().split(BEGIN_FRAGMENT, 1)[1].split(END_FRAGMENT, 1)[0]
     assert assembled == production_fragment()
@@ -98,7 +121,9 @@ def run_case(tmp_path, mode, inherited_traps=False, mutation=None):
                          "trap 'echo previous-int' INT\n")
     env = dict(os.environ, BASH_ENV=str(inherited) if inherited_traps else "",
                TMPDIR=str(caller), CALL_LOG=str(log), OWNED_PATH=str(owned_path),
-               CLEANUP_CASE=mode)
+               CLEANUP_CASE=mode,
+               PLATFORM_M625_DOCS_EEBUS_ROOT=str(repo),
+               PLATFORM_M625_EXECUTION_PLANS_ROOT=str(repo))
     # A background runner can inherit ignored INT; normalize before exec.
     launcher = ("import os, signal, sys; "
                 "signal.signal(signal.SIGINT, signal.SIG_DFL); "
@@ -121,9 +146,12 @@ def assert_case(run, mode, expected, inherited_traps=False):
     result, log, owned_path, caller, sentinel, other, outside = run
     phases = log.read_text().splitlines()
     assert phases[:2] == ["actionlint", "shellcheck"], "lint phase order"
-    assert ("later" in phases) == (mode in ("success", "later")), "later reachability"
-    assert ("cleanup-tests" in phases) == (mode == "success"), "cleanup-test reachability"
-    assert len(phases) == (4 if mode == "success" else 3 if mode == "later" else 2)
+    assert ("later" in phases) == (mode in ("success", "later", "runtime-schema")), "later reachability"
+    assert ("cleanup-tests" in phases) == (mode in ("success", "runtime-schema")), "cleanup-test reachability"
+    assert ("runtime-schema" in phases) == (mode in ("success", "runtime-schema")), "tail reachability"
+    assert len(phases) == (5 if mode in ("success", "runtime-schema") else 3 if mode == "later" else 2)
+    if mode == "success":
+        assert "==> check NM 07FE/07FF service names\n" in result.stdout, "final gate reachability"
     assert result.returncode == expected, "exit status: " + result.stdout + result.stderr
     if inherited_traps:
         assert f"previous-exit:{expected}\n" in result.stdout
@@ -159,13 +187,17 @@ def assert_case(run, mode, expected, inherited_traps=False):
 @pytest.mark.parametrize("inherited_traps", [False, True])
 @pytest.mark.parametrize(("mode", "expected"), [
     ("success", 0), ("actionlint", 17), ("shellcheck", 23),
-    ("later", 29), ("TERM", 143), ("INT", 130),
+    ("later", 29), ("runtime-schema", 31), ("TERM", 143), ("INT", 130),
 ])
 def test_invocation_cleanup(tmp_path, mode, expected, inherited_traps):
     assert_case(run_case(tmp_path, mode, inherited_traps), mode, expected, inherited_traps)
 
 
 @pytest.mark.parametrize(("mode", "expected", "mutation", "failure"), [
+    pytest.param("success", 0, (LINT_BOUNDARY, LINT_BOUNDARY + "exit 0\n"),
+                 "tail reachability", id="exit-before-gate-tail"),
+    pytest.param("success", 0, (LINT_BOUNDARY, LINT_BOUNDARY + "trap : EXIT\n"),
+                 "invocation cleanup", id="overwrite-cleanup-in-gate-tail"),
     pytest.param("success", 0, ("install_workflow_cleanup_trap EXIT ''\n", ""),
                  "invocation cleanup", id="remove-cleanup-trap"),
     pytest.param("actionlint", 17, ('exit "$workflow_lint_status"', "exit 0"),
