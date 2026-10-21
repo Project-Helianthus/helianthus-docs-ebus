@@ -137,6 +137,25 @@ def test_rejects_duplicate_json_members() -> None:
         validate_contract(TEXT.replace('"timeoutMs": 1000', '"timeoutMs": 1000, "timeoutMs": 1000'))
 
 
+@pytest.mark.parametrize("wrapper", (
+    '{}',
+    '{{"variables": {}}}',
+    '{{"variables": {{"input": {}}}}}',
+    '{{"variables": {{"input": {{"operation": {{"pack": {}}}}}}}}}',
+    '{{"variables": {{"input": {{"arguments": [{}]}}}}}}',
+))
+@pytest.mark.parametrize("second_name", ('bindingId', r'\u0062indingId'))
+@pytest.mark.parametrize("second_value", ('binding:synthetic', 'binding:other'))
+def test_rejects_duplicate_members_at_every_object_level(
+    wrapper: str, second_name: str, second_value: str,
+) -> None:
+    members = ('{"bindingId": "binding:synthetic", '
+               f'"{second_name}": "{second_value}"}}')
+    body = wrapper.format(members)
+    with pytest.raises(AssertionError, match="Duplicate JSON member: bindingId"):
+        validate_contract(replace_token(FENCES[1], "```json\n" + body + "\n```\n"))
+
+
 @pytest.mark.parametrize("before,after", (
     ("all mean **no-send**", "may use a fallback executor"),
     ("A concurrent retirement or change causes\n   no-send.", "A concurrent retirement permits dispatch."),
@@ -153,6 +172,12 @@ def test_rejects_duplicate_json_members() -> None:
     ("1–5000 milliseconds", "1–60000 milliseconds"),
     ("`String!`; exact existing SemReg `AssetID`", "`ID!`; exact existing SemReg `AssetID`"),
     ("numeric inputs are rejected", "numeric inputs are coerced"),
+    ("duplicate member names at every object level", "duplicate member names only in input records"),
+    ("before constructing objects that discard\nduplicates or performing GraphQL coercion",
+     "after constructing objects that discard duplicates and performing GraphQL coercion"),
+    ("Compare names after JSON escape\ndecoding", "Compare names before JSON escape decoding"),
+    ("reject duplicates even when their values are identical",
+     "allow duplicates when their values are identical"),
     ("before JSON parsing or GraphQL coercion", "after GraphQL coercion"),
     ("65,536", "131,072"),
     ("`readbackRelation` is `inconclusive` when evidenced, otherwise null",

@@ -67,8 +67,13 @@ their one matching tagged arm, exact decimal coefficient/exponent and unit.
 Bound this target API before admission: at most one `semanticOperation` field
 per GraphQL request, including aliases/fragments; no batched operation requests.
 Reject additional input members, null required members and malformed types.
-Require a single UTF-8 JSON HTTP request body. Limit that entire body, after
-HTTP content decoding and before JSON parsing or GraphQL coercion, to 65,536
+Require a single UTF-8 JSON HTTP request body. During JSON parsing, reject
+duplicate member names at every object level, including the request envelope,
+variables and nested input records, before constructing objects that discard
+duplicates or performing GraphQL coercion. Compare names after JSON escape
+decoding; reject duplicates even when their values are identical. Limit that
+entire body, after HTTP content decoding and
+before JSON parsing or GraphQL coercion, to 65,536
 bytes (64 KiB), including query text, variables, metadata, whitespace and JSON
 escapes. This same byte limit covers inline literals and variable inputs; no
 reserialization is measured. Limit each opaque ID to 256 UTF-8 bytes, and
