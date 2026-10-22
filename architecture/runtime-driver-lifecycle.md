@@ -814,6 +814,12 @@ unchanged. Checks run in this fixed order and the first failing check decides:
 | 9 | Record limit, byte limit or bounded-outcome reservation cannot fit | `RESOURCE_EXHAUSTED` | Yes |
 | 10 | A required counter or mark increment would exceed the unsigned 64-bit maximum | `COUNTER_EXHAUSTED` | No |
 
+This ordered table governs mutations: invalid durable revision bounds remain
+unusable control under order 3, returning `FAILED_PRECONDITION` until offline
+repair. List/get instead use the unavailable-read rule below, returning
+non-retriable `UNAVAILABLE` with null data; they perform no revision comparison
+and cannot return a current-view conflict payload.
+
 Two outcomes sit outside the ordered checks. A pre-commit write failure
 (step 5) follows every row above and returns `UNAVAILABLE`, retryable, with the
 revision and mark unchanged. A bounded-wait timeout at the serialization point
@@ -932,6 +938,158 @@ never create a new GUID or overwrite the unreadable bytes as a fresh base: the
 runtime-state `.corrupt-<ISO8601>` rename keeps the exact original bytes and
 counts as a quarantine copy, so control is unreadable, never missing, and no
 bootstrap seed follows.
+
+### Unavailable reads with invalid durable bounds
+
+If either the namespace issued-revision high-water mark or the durable catalog
+revision cannot be validated, list/get refuse with `UNAVAILABLE` and `data: null`.
+Missing, malformed, unreadable, unsupported and overflowing bounds all refuse;
+a missing bound with existing control material is never bootstrap. Neither read
+returns a driver snapshot, success catalog or usable revision. Never substitute
+zero, a sentinel, stale cached state or corrupt values for either revision,
+even when the other bound remains valid; neither an empty success list nor a
+fabricated all-`FAILED` catalog encodes this refusal.
+
+A zero-valued catalog revision always refuses, including for an empty registry.
+With existing control material that includes a registered driver, a zero-valued
+issued mark also refuses. Both use the same non-retriable read envelope with
+the categorical message `Durable control state unavailable; offline repair required`.
+These zero values cannot supply revision authority even when the other counter
+is valid. An empty registry in which nothing was ever decided may retain issued
+mark 0, but its catalog revision must still start at 1. Preserve the record under
+the load rules; no bootstrap seed follows.
+
+Whole-file corrupt control state leaves both durable bounds unvalidated: list
+and get refuse with `UNAVAILABLE`, null data and no usable revision. Preserve
+the bad bytes under the load rules; no bootstrap seed follows.
+
+The issued mark must also bound every desired revision in the verified retained
+D5 recovery stream. If any such revision exceeds the mark, or the retained D5
+stream cannot be verified, the shared issued bound is unvalidated even when
+all current records are at or below it. After the existing get identity checks,
+every registered get and the entire list return non-retriable `UNAVAILABLE`
+with `data: null` and no usable revision. Preserve the mark, records and D5
+material; do not advance the mark, discard recovery evidence or bootstrap to
+make reads succeed.
+
+For get, the existing driver-ID input checks and registry-membership refusal are decided first, because they need no durable state: a noncanonical or unregistered `DriverID` returns `NOT_FOUND`, without construction or endpoint access; only a canonical, registered driver ID proceeds to the durable-bounds check and its `UNAVAILABLE` refusal; list has no driver ID.
+
+With both shared counters valid, a registered driver whose existing durable
+record has a missing or malformed `desired_revision` has no authoritative read
+revision. After the existing get identity checks, get of that driver and the
+entire list refuse with `UNAVAILABLE` and `data: null`, using the same
+non-retriable read envelope as invalid shared bounds. Do not omit the driver,
+substitute the current mark, or use stale cached fields. Get of an independent
+driver with a validated coherent record remains usable. The current-mark
+fallback applies only when the driver's record is absent, never when an
+existing record is malformed; preserve that record under the load rules.
+
+The same refusal applies when both shared counters and `desired_revision`
+are valid but the existing registered record has a missing or invalid
+`desired_state` (a present value other than exactly `RUNNING` or `STOPPED`).
+After the existing get identity checks, the affected get and the entire list
+return `UNAVAILABLE` with `data: null` and no usable revision in the same
+non-retriable read envelope. An independent valid get remains usable. Preserve
+the record under the load rules; no current-mark fallback, invented intent or
+omission of the driver is allowed.
+
+With both shared counters individually valid, an existing registered record
+must satisfy `0 < desired_revision <= issued mark`. A canonical zero revision
+or a revision above the issued mark is incoherent and receives the same refusal:
+after the existing get identity checks, the affected get and the entire list
+return non-retriable `UNAVAILABLE` with `data: null` and no usable revision.
+An independent get with a coherent record remains usable. Preserve the record;
+never substitute the mark, omit the driver, clamp the revision or advance the
+mark to make the read succeed. For example, with issued mark `7`, record
+revisions `0` and `8` refuse; distinct revisions `6` and `7` satisfy this bound.
+The catalog revision is a separate view counter, never a desired-revision bound.
+
+Existing registered records must also have distinct desired revisions across
+drivers. If two records share a revision, both affected gets and the entire
+list return non-retriable `UNAVAILABLE` with `data: null` and no usable revision
+after the existing get identity checks; an independent get with a coherent,
+noncolliding record remains usable. For example, two registered records at
+revision `6` under issued mark `7` both refuse. Preserve both records; do not
+choose a winner, renumber either record or use the absent-record mark fallback.
+This uniqueness check applies to stored record revisions, not the current-mark
+projection for an absent record.
+
+For invalid shared bounds, unverified retained D5 material, or missing, malformed
+or incoherent durable record fields (including revision collisions), use
+the categorical message `Durable control state unavailable; offline repair required`.
+
+With both counters valid and coherent cached records, one or all drivers may
+be `FAILED` while list/get still return ordinary coherent snapshots. Preserve
+all registered entries in bytewise driver-ID order, each validated durable
+`desired_revision`, and one catalog revision equal to every entry's view
+`revision`. A malformed driver record remains isolated under the load rules;
+it does not invalidate independent records or authorize invented fields.
+Unvalidated namespace-wide bounds instead prevent every successful list/get
+view, including a view of a previously healthy driver.
+
+Keep the HTTP/API/health shell and tool registration available. Namespace
+mutations remain refused under the ordered mutation refusal table until explicit
+GUID-preserving offline repair restores validated durable bounds. Retry, process
+restart, provider recovery and configuration reload cannot synthesize bounds or
+treat unreadable control as a fresh namespace. Preserve bad bytes, native
+evidence, provenance and unaffected partial last-known-good state; retained
+state supplies neither current revision authority nor provider admission.
+The offline namespace-only reset below itself refuses unvalidated bounds:
+this read refusal grants no repair bypass or new online repair operation.
+
+Synthetic read acceptance must test each bound independently, holding the other
+valid, with missing control bounds despite existing material, malformed values
+and values above the unsigned 64-bit maximum, plus zero values with existing
+control material that includes a registered driver. Test corrupt control state,
+unreadable control state and unsupported control namespace state as separate
+namespace-wide load failures,
+without assuming either bound remains valid. Each case requires `UNAVAILABLE`,
+null data and no usable revision for both list and get. Also test list with an
+empty registry, issued mark 0 and catalog revision 0: it requires the same
+refusal. Also test canonical record revisions above the issued mark and zero
+record revisions with a nonzero mark, requiring the affected get and entire list
+to refuse while independent coherent gets remain usable. Also test two registered
+records at revision `6` under issued mark `7`: both affected gets and the entire
+list refuse, while an independent noncolliding get remains usable. Test a
+retained D5 revision above mark `7` with all current records at or below `7`,
+and separately an unverifiable retained D5 stream: each invalidates the shared
+bound and refuses every registered get and the entire list. Distinct record
+revisions equal to or below the mark and greater than zero satisfy the record
+checks only when the retained D5 cross-check also succeeds; do not compare them
+with the catalog revision. Also test valid counters
+with one and with all drivers `FAILED`, retaining coherent ordinary snapshots,
+deterministic ordering and revisions. These are documentation acceptance
+obligations, not executed runtime tests.
+
+Each of the eight per-bound cases holds the other counter valid; the three namespace-wide load-failure cases assume neither bound is valid. All eleven cases require the stated result for list and get of a canonical, registered driver ID. The next row tests list-only refusal for an empty registry with issued mark 0 and catalog revision 0. The next two rows test the shared issued bound against retained D5 material. The next seven rows cover malformed or incoherent registered records, the following two cover coherent `FAILED` records, and the last two test get refusal precedence.
+
+| Case | Required read result |
+| --- | --- |
+| Issued bound missing with existing control material | `UNAVAILABLE`, null data, no usable revision; no bootstrap |
+| Issued bound malformed | `UNAVAILABLE`, null data, no usable revision |
+| Issued bound above the unsigned 64-bit maximum | `UNAVAILABLE`, null data, no usable revision; no wrap |
+| Issued bound zero with existing control material including a registered driver | `UNAVAILABLE`, null data, no usable revision; no bootstrap |
+| Catalog revision missing with existing control material | `UNAVAILABLE`, null data, no usable revision; no bootstrap |
+| Catalog revision malformed | `UNAVAILABLE`, null data, no usable revision |
+| Catalog revision above the unsigned 64-bit maximum | `UNAVAILABLE`, null data, no usable revision; no wrap |
+| Catalog revision zero with existing control material including a registered driver | `UNAVAILABLE`, null data, no usable revision; no bootstrap |
+| Control namespace corrupt | `UNAVAILABLE`, null data, no usable revision |
+| Control namespace unreadable | `UNAVAILABLE`, null data, no usable revision |
+| Control namespace unsupported | `UNAVAILABLE`, null data, no usable revision |
+| Empty registry; issued mark 0; catalog revision 0 | List: `UNAVAILABLE`, null data, no usable revision; no bootstrap |
+| Current records at or below issued mark `7`; verified retained D5 contains desired revision `8` | Every registered get and entire list: `UNAVAILABLE`, null data, no usable revision; preserve mark, records and D5 material |
+| Current records at or below issued mark; retained D5 stream cannot be verified | Every registered get and entire list: `UNAVAILABLE`, null data, no usable revision; preserve mark, records and D5 material |
+| Both counters valid; registered record has missing `desired_revision` | Affected get and entire list: `UNAVAILABLE`, null data, no usable revision; independent valid get remains usable; preserve record, no mark fallback |
+| Both counters valid; registered record has malformed `desired_revision` | Affected get and entire list: `UNAVAILABLE`, null data, no usable revision; independent valid get remains usable; preserve record, no mark fallback |
+| Both counters valid; registered record has missing `desired_state` | Affected get and entire list: `UNAVAILABLE`, null data, no usable revision; independent valid get remains usable; preserve record, no mark fallback |
+| Both counters valid; registered record has invalid `desired_state` | Affected get and entire list: `UNAVAILABLE`, null data, no usable revision; independent valid get remains usable; preserve record, no mark fallback |
+| Both counters valid; registered record has canonical `desired_revision` above issued mark | Affected get and entire list: `UNAVAILABLE`, null data, no usable revision; independent valid get remains usable; preserve record, no mark fallback |
+| Both counters valid; registered record has zero `desired_revision` with nonzero issued mark | Affected get and entire list: `UNAVAILABLE`, null data, no usable revision; independent valid get remains usable; preserve record, no mark fallback |
+| Issued mark `7`; two registered records share desired revision `6` | Both affected gets and entire list: `UNAVAILABLE`, null data, no usable revision; independent noncolliding get remains usable; preserve both records, no mark fallback |
+| Both counters valid; one driver `FAILED` | Coherent ordinary snapshot/list, unaffected entries retained, deterministic ordering and revisions |
+| Both counters valid; all drivers `FAILED` | Coherent ordinary snapshot/list with all catalog entries, deterministic ordering and revisions |
+| Get of a noncanonical driver ID with an invalid durable bound | `NOT_FOUND`, without construction or endpoint access; never `UNAVAILABLE` |
+| Get of a canonical but unregistered driver ID with an invalid durable bound | `NOT_FOUND`, without construction or endpoint access; never `UNAVAILABLE` |
 
 ### Offline namespace-only reset
 

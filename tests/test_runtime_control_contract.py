@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+import re
 import subprocess
 import sys
 
@@ -23,6 +24,59 @@ QUARANTINE_DIRECTORY_ROW = next(
 
 def test_runtime_control_contract_repository() -> None:
     assert checker.validate(DOCUMENTS) == []
+
+
+TABLE_GAPS = [
+    (table, boundary, error)
+    for marker, error in (
+        ("| Case | Required read result |", "invalid unavailable-read case table"),
+        ("| 1 |", "refusal table order or codes changed"),
+        ("| CTL-01 / CTL-02 |", "CTL vector ids changed:"),
+    )
+    for table in re.findall(r"^\|.*(?:\n\|.*)*", DOCUMENTS[checker.LIFECYCLE], re.MULTILINE)
+    if marker in table
+    for boundary in range(1, len(table.splitlines()))
+]
+
+
+@pytest.mark.parametrize(("table", "boundary", "error"), TABLE_GAPS)
+@pytest.mark.parametrize("blank", ["", " \t"])
+def test_runtime_control_contract_rejects_table_gaps(table, boundary, error, blank) -> None:
+    documents = dict(DOCUMENTS)
+    lines = table.splitlines()
+    lines.insert(boundary, blank)
+    documents[checker.LIFECYCLE] = documents[checker.LIFECYCLE].replace(
+        table, "\n".join(lines), 1)
+    assert any(message.startswith(f"{checker.LIFECYCLE}: {error}")
+               for message in checker.validate(documents))
+
+
+UNAVAILABLE_CLAUSES = [
+    (rule["path"], rule["start"], rule["end"], clause)
+    for rule in checker.RULES for clause in rule["required"]
+    if clause.startswith(("If either the namespace issued-revision", "With both counters valid",
+                          "Keep the HTTP/API/health shell", "Synthetic read acceptance",
+                          "This ordered table governs mutations", "The list/get data shapes above",
+                          "For list/get, the `UNAVAILABLE` row",
+                          "The issued mark must also bound",
+                          "Existing registered records must also have distinct"))
+]
+
+
+@pytest.mark.parametrize(("path", "start", "end", "clause"), UNAVAILABLE_CLAUSES)
+@pytest.mark.parametrize("change", ["weakened", "before", "after"])
+def test_runtime_control_contract_unavailable_obligation_scope(path, start, end, clause, change) -> None:
+    documents = dict(DOCUMENTS)
+    before, section = documents[path].split(start, 1)
+    section, after = section.split(end, 1)
+    assert clause in section
+    section = section.replace(clause, clause + " Optional." if change == "weakened" else "")
+    if change == "before":
+        before += clause + "\n\n"
+    elif change == "after":
+        after = "\n\n" + clause + after
+    documents[path] = before + start + section + end + after
+    assert checker.validate(documents)
 
 
 @pytest.mark.parametrize("change", ["removed", "weakened", "before", "after", "reordered"])
@@ -374,15 +428,18 @@ def test_runtime_control_contract_rejects_duplicate_exact_units(path, clause, wh
     assert any("unexpected contract content" in error for error in checker.validate(documents))
 
 
-@pytest.mark.parametrize(("path", "row"), [
-    (rule["path"], clause)
+@pytest.mark.parametrize(("path", "start", "end", "row"), [
+    (rule["path"], rule["start"], rule["end"], clause)
     for rule in checker.RULES
     for clause in rule["required"] if clause.startswith("|")
 ])
 @pytest.mark.parametrize("indent", ["    ", "\t"])
-def test_runtime_control_contract_rejects_indented_table_rows(path, row, indent) -> None:
+def test_runtime_control_contract_rejects_indented_table_rows(path, start, end, row, indent) -> None:
     documents = dict(DOCUMENTS)
-    documents[path] = documents[path].replace(row, indent + row, 1)
+    before, section = documents[path].split(start, 1)
+    section, after = section.split(end, 1)
+    assert row in section
+    documents[path] = before + start + section.replace(row, indent + row, 1) + end + after
     assert checker.validate(documents)
 
 
@@ -559,3 +616,414 @@ def test_runtime_control_contract_acceptance_cannot_move_before_heading() -> Non
     before, acceptance = documents[checker.MANAGER].split(heading, 1)
     documents[checker.MANAGER] = before + acceptance + heading + "\n"
     assert any(checker.MANAGER in error for error in checker.validate(documents))
+
+
+UNAVAILABLE_SECTION = "### Envelope, lifecycle errors and acceptance vectors"
+UNAVAILABLE_PRECEDENCE = next(
+    clause for rule in checker.RULES if rule["path"] == checker.MCP
+    for clause in rule["required"] if clause.startswith("For get, the existing driver-ID")
+)
+UNAVAILABLE_CASE_RULE = next(
+    rule for rule in checker.RULES
+    if rule["start"] == "### Unavailable reads with invalid durable bounds"
+)
+UNAVAILABLE_CASE_ROWS = [
+    clause for clause in UNAVAILABLE_CASE_RULE["required"]
+    if clause.startswith("| ") and not clause.startswith("| Case |")
+]
+
+
+@pytest.mark.parametrize("case", [
+    "Current records at or below issued mark `7`; verified retained D5 contains desired revision `8`",
+    "Current records at or below issued mark; retained D5 stream cannot be verified",
+    "Issued mark `7`; two registered records share desired revision `6`",
+])
+@pytest.mark.parametrize("change", ["removed", "weakened", "duplicated"])
+def test_runtime_control_contract_revision_authority_cases(case, change) -> None:
+    row = next(row for row in UNAVAILABLE_CASE_ROWS if row.startswith(f"| {case} |"))
+    documents = dict(DOCUMENTS)
+    assert documents[checker.LIFECYCLE].count(row) == 1
+    replacement = {
+        "removed": "",
+        "weakened": row.replace("`UNAVAILABLE`, null data, no usable revision",
+                                "Successful read with usable revision"),
+        "duplicated": row + "\n" + row,
+    }[change]
+    documents[checker.LIFECYCLE] = documents[checker.LIFECYCLE].replace(row, replacement, 1)
+    assert (f"{checker.LIFECYCLE}: invalid unavailable-read case table"
+            in checker.validate(documents))
+
+
+@pytest.mark.parametrize("change", ["removed", "weakened"])
+def test_runtime_control_contract_corrupt_control_case_mutations(change) -> None:
+    row = ("| Control namespace corrupt | "
+           "`UNAVAILABLE`, null data, no usable revision |")
+    assert row in UNAVAILABLE_CASE_ROWS
+    documents = dict(DOCUMENTS)
+    assert documents[checker.LIFECYCLE].count(row) == 1
+    replacement = "" if change == "removed" else row.replace(
+        "`UNAVAILABLE`, null data, no usable revision", "Successful all-`FAILED` catalog")
+    documents[checker.LIFECYCLE] = documents[checker.LIFECYCLE].replace(row, replacement, 1)
+    assert (f"{checker.LIFECYCLE}: invalid unavailable-read case table"
+            in checker.validate(documents))
+
+
+def test_runtime_control_contract_corrupt_control_acceptance_removed() -> None:
+    clause = next(clause for clause in UNAVAILABLE_CASE_RULE["required"]
+                  if clause.startswith("Synthetic read acceptance"))
+    assert "Test corrupt control state," in clause
+    documents = dict(DOCUMENTS)
+    documents[checker.LIFECYCLE] = documents[checker.LIFECYCLE].replace(
+        clause, clause.replace("Test corrupt control state,", "Test"), 1)
+    assert any(error.startswith(f"{checker.LIFECYCLE}: changed obligation: Synthetic read acceptance")
+               for error in checker.validate(documents))
+
+
+@pytest.mark.parametrize("bound", ["Issued bound", "Catalog revision"])
+@pytest.mark.parametrize("change", ["removed", "weakened"])
+def test_runtime_control_contract_zero_bound_case_mutations(bound, change) -> None:
+    row = (f"| {bound} zero with existing control material including a registered driver | "
+           "`UNAVAILABLE`, null data, no usable revision; no bootstrap |")
+    assert row in UNAVAILABLE_CASE_ROWS
+    documents = dict(DOCUMENTS)
+    assert documents[checker.LIFECYCLE].count(row) == 1
+    replacement = "" if change == "removed" else row.replace(
+        "`UNAVAILABLE`, null data, no usable revision", "Usable revision `0`")
+    documents[checker.LIFECYCLE] = documents[checker.LIFECYCLE].replace(row, replacement, 1)
+    assert (f"{checker.LIFECYCLE}: invalid unavailable-read case table"
+            in checker.validate(documents))
+
+
+@pytest.mark.parametrize("path", [checker.MCP, checker.LIFECYCLE])
+def test_runtime_control_contract_zero_bound_refusal_removed(path) -> None:
+    clause = """A zero-valued catalog revision always refuses, including for an empty registry.
+With existing control material that includes a registered driver, a zero-valued
+issued mark also refuses. Both use the same non-retriable read envelope with
+the categorical message `Durable control state unavailable; offline repair required`.
+These zero values cannot supply revision authority even when the other counter
+is valid. An empty registry in which nothing was ever decided may retain issued
+mark 0, but its catalog revision must still start at 1. Preserve the record under
+the load rules; no bootstrap seed follows."""
+    documents = dict(DOCUMENTS)
+    assert documents[path].count(clause) == 1
+    documents[path] = documents[path].replace(clause, "", 1)
+    assert any(error.startswith(f"{path}: changed obligation:")
+               for error in checker.validate(documents))
+
+
+@pytest.mark.parametrize("change", ["removed", "weakened", "qualified"])
+def test_runtime_control_contract_empty_registry_zero_catalog_case_mutations(change) -> None:
+    row = ("| Empty registry; issued mark 0; catalog revision 0 | "
+           "List: `UNAVAILABLE`, null data, no usable revision; no bootstrap |")
+    assert row in UNAVAILABLE_CASE_ROWS
+    documents = dict(DOCUMENTS)
+    assert documents[checker.LIFECYCLE].count(row) == 1
+    replacement = {
+        "removed": "",
+        "weakened": row.replace("`UNAVAILABLE`, null data, no usable revision", "Successful empty catalog"),
+        "qualified": row.replace("Empty registry", "Registry with a registered driver"),
+    }[change]
+    documents[checker.LIFECYCLE] = documents[checker.LIFECYCLE].replace(row, replacement, 1)
+    assert (f"{checker.LIFECYCLE}: invalid unavailable-read case table"
+            in checker.validate(documents))
+
+
+@pytest.mark.parametrize("path", [checker.MCP, checker.LIFECYCLE])
+def test_runtime_control_contract_zero_catalog_refusal_cannot_be_qualified(path) -> None:
+    clause = "A zero-valued catalog revision always refuses, including for an empty registry."
+    documents = dict(DOCUMENTS)
+    assert documents[path].count(clause) == 1
+    documents[path] = documents[path].replace(
+        clause, "A zero-valued catalog revision refuses only with a registered driver.", 1)
+    assert any(error.startswith(f"{path}: changed obligation:")
+               for error in checker.validate(documents))
+
+
+@pytest.mark.parametrize("disposition", ["corrupt", "unreadable", "unsupported"])
+def test_runtime_control_contract_unavailable_load_dispositions(disposition) -> None:
+    row = (f"| Control namespace {disposition} | "
+           "`UNAVAILABLE`, null data, no usable revision |")
+    assert row in UNAVAILABLE_CASE_ROWS
+    assert DOCUMENTS[checker.LIFECYCLE].count(row) == 1
+    for bound in ("Issued bound", "Catalog revision"):
+        impossible_row = f"| {bound} {disposition} |"
+        assert not any(clause.startswith(impossible_row) for clause in UNAVAILABLE_CASE_ROWS)
+        documents = dict(DOCUMENTS)
+        documents[checker.LIFECYCLE] = documents[checker.LIFECYCLE].replace(
+            row, row.replace("Control namespace", bound), 1)
+        assert (f"{checker.LIFECYCLE}: invalid unavailable-read case table"
+                in checker.validate(documents))
+
+
+@pytest.mark.parametrize("bound", ["Issued bound", "Catalog revision"])
+@pytest.mark.parametrize(("disposition", "suffix"), [
+    ("missing with existing control material", "; no bootstrap"),
+    ("malformed", ""),
+    ("above the unsigned 64-bit maximum", "; no wrap"),
+    ("zero with existing control material including a registered driver", "; no bootstrap"),
+])
+def test_runtime_control_contract_unavailable_per_bound_cases(bound, disposition, suffix) -> None:
+    row = (f"| {bound} {disposition} | "
+           f"`UNAVAILABLE`, null data, no usable revision{suffix} |")
+    assert row in UNAVAILABLE_CASE_ROWS
+    assert DOCUMENTS[checker.LIFECYCLE].count(row) == 1
+
+
+def unavailable_examples(text):
+    section = text.split(UNAVAILABLE_SECTION, 1)[1].split("\n## ", 1)[0]
+    return [token.content for token in checker.MarkdownIt().parse(section)
+            if token.type == "fence"]
+
+
+@pytest.mark.parametrize("index", [0, 1])
+@pytest.mark.parametrize("change", [
+    "is_error_true", "is_error_false", "retriable", "data", "success_catalog", "code", "hash",
+    "extra", "removed", "nested_revision", "duplicate_member", "source_layer",
+    "meta_extra", "error_extra", "contract_extra", "consistency_extra", "clock",
+    "invalid_json", "hash_missing", "hash_string", "hash_concrete",
+    "bounds_only_message", "generic_message",
+])
+def test_runtime_control_contract_unavailable_envelope_mutations(index, change) -> None:
+    documents = dict(DOCUMENTS)
+    examples = unavailable_examples(documents[checker.MCP])
+    assert len(examples) == 2
+    original = examples[index]
+    envelope = json.loads(original)
+    if change in {"is_error_true", "is_error_false"}:
+        envelope["isError"] = change == "is_error_true"
+    elif change == "retriable":
+        envelope["error"]["retriable"] = True
+    elif change == "data":
+        envelope["data"] = {}
+    elif change == "success_catalog":
+        envelope["data"] = {"catalog_revision": "0", "drivers": [
+            {"desired_revision": "0", "revision": "0", "manager_revision": "0"}
+        ]}
+    elif change == "code":
+        envelope["error"]["code"] = "FAILED_PRECONDITION"
+    elif change == "bounds_only_message":
+        envelope["error"]["message"] = "Durable revision bounds unavailable; offline repair required"
+    elif change == "generic_message":
+        envelope["error"]["message"] = "Unavailable"
+    elif change == "hash":
+        envelope["meta"]["data_hash"] = "0" * 64
+    elif change == "hash_missing":
+        del envelope["meta"]["data_hash"]
+    elif change == "hash_string":
+        envelope["meta"]["data_hash"] = "invalid"
+    elif change == "hash_concrete":
+        envelope["meta"]["data_hash"] = checker.hashlib.sha256(b"null").hexdigest()
+    elif change == "extra":
+        envelope["extra"] = None
+    elif change == "nested_revision":
+        envelope["meta"]["consistency"]["revision"] = "0"
+    elif change == "source_layer":
+        envelope["error"]["source_layer"] = "provider"
+    elif change == "meta_extra":
+        envelope["meta"]["extra"] = None
+    elif change == "error_extra":
+        envelope["error"]["extra"] = None
+    elif change == "contract_extra":
+        envelope["meta"]["contract"]["extra"] = None
+    elif change == "consistency_extra":
+        envelope["meta"]["consistency"]["extra"] = None
+    elif change == "clock":
+        envelope["meta"]["data_timestamp"] = "invalid"
+    replacement = json.dumps(envelope, indent=2) + "\n"
+    if change == "removed":
+        replacement = ""
+    elif change == "duplicate_member":
+        replacement = replacement.replace('"data": null', '"data": {}, "data": null')
+    elif change == "invalid_json":
+        replacement = "{invalid JSON}\n"
+    # Replace only the selected identical envelope, preserving its label.
+    before, section = documents[checker.MCP].split(UNAVAILABLE_SECTION, 1)
+    offset = section.index(original)
+    if index == 1:
+        offset = section.index(original, offset + len(original))
+    section = section[:offset] + replacement + section[offset + len(original):]
+    documents[checker.MCP] = before + UNAVAILABLE_SECTION + section
+    assert checker.validate(documents)
+    assert (f"{checker.MCP}: invalid unavailable-read failure envelopes"
+            in checker.validate(documents))
+
+
+@pytest.mark.parametrize("row", UNAVAILABLE_CASE_ROWS)
+@pytest.mark.parametrize("change", ["removed", "weakened", "duplicated"])
+def test_runtime_control_contract_unavailable_case_mutations(row, change) -> None:
+    documents = dict(DOCUMENTS)
+    assert documents[checker.LIFECYCLE].count(row) == 1
+    replacement = {"removed": "", "weakened": row.rsplit("|", 2)[0] + "| Optional result |",
+                   "duplicated": row + "\n" + row}[change]
+    documents[checker.LIFECYCLE] = documents[checker.LIFECYCLE].replace(row, replacement, 1)
+    assert checker.validate(documents)
+    assert (f"{checker.LIFECYCLE}: invalid unavailable-read case table"
+            in checker.validate(documents))
+
+
+@pytest.mark.parametrize("row", [row for row in UNAVAILABLE_CASE_ROWS if row.startswith("| Get of")])
+def test_runtime_control_contract_unavailable_collision_refusal(row) -> None:
+    documents = dict(DOCUMENTS)
+    documents[checker.LIFECYCLE] = documents[checker.LIFECYCLE].replace(
+        row, row.split("| `NOT_FOUND`", 1)[0] + "| `UNAVAILABLE`, null data |", 1)
+    assert checker.validate(documents)
+    assert (f"{checker.LIFECYCLE}: invalid unavailable-read case table"
+            in checker.validate(documents))
+
+
+@pytest.mark.parametrize("path", [checker.MCP, checker.LIFECYCLE])
+def test_runtime_control_contract_unavailable_precedence_removed(path) -> None:
+    documents = dict(DOCUMENTS)
+    assert documents[path].count(UNAVAILABLE_PRECEDENCE) == 1
+    documents[path] = documents[path].replace(UNAVAILABLE_PRECEDENCE, "", 1)
+    assert checker.validate(documents)
+
+
+def test_runtime_control_contract_unavailable_envelopes_allow_json_formatting() -> None:
+    documents = dict(DOCUMENTS)
+    for example in unavailable_examples(documents[checker.MCP]):
+        documents[checker.MCP] = documents[checker.MCP].replace(
+            example, json.dumps(json.loads(example), sort_keys=True) + "\n", 1)
+    assert checker.validate(documents) == []
+
+
+@pytest.mark.parametrize("member", sorted(checker.UNAVAILABLE_VIEW_MEMBERS))
+def test_runtime_control_contract_unavailable_forbids_nested_read_members(member) -> None:
+    envelope = json.loads(unavailable_examples(DOCUMENTS[checker.MCP])[0])
+    envelope["meta"]["consistency"]["nested"] = [{member: "0"}]
+    assert checker.contains_read_view(envelope)
+    assert not checker.unavailable_envelope(envelope)
+
+
+MALFORMED_RECORD_READ_RULE = """With both shared counters valid, a registered driver whose existing durable
+record has a missing or malformed `desired_revision` has no authoritative read
+revision. After the existing get identity checks, get of that driver and the
+entire list refuse with `UNAVAILABLE` and `data: null`, using the same
+non-retriable read envelope as invalid shared bounds. Do not omit the driver,
+substitute the current mark, or use stale cached fields. Get of an independent
+driver with a validated coherent record remains usable. The current-mark
+fallback applies only when the driver's record is absent, never when an
+existing record is malformed; preserve that record under the load rules."""
+
+
+@pytest.mark.parametrize("path", [checker.MCP, checker.LIFECYCLE])
+def test_runtime_control_contract_malformed_record_read_rule(path) -> None:
+    assert DOCUMENTS[path].count(MALFORMED_RECORD_READ_RULE) == 1
+    assert any(MALFORMED_RECORD_READ_RULE in rule["required"]
+               for rule in checker.RULES if rule["path"] == path)
+
+
+@pytest.mark.parametrize("path", [checker.MCP, checker.LIFECYCLE])
+@pytest.mark.parametrize("change", ["removed", "mark fallback", "partial list", "global refusal"])
+def test_runtime_control_contract_malformed_record_read_mutations(path, change) -> None:
+    documents = dict(DOCUMENTS)
+    assert documents[path].count(MALFORMED_RECORD_READ_RULE) == 1
+    replacement = {
+        "removed": "",
+        "mark fallback": MALFORMED_RECORD_READ_RULE.replace(
+            "substitute the current mark", "reject the current mark"),
+        "partial list": MALFORMED_RECORD_READ_RULE.replace(
+            "entire list refuse", "partial list succeeds"),
+        "global refusal": MALFORMED_RECORD_READ_RULE.replace(
+            "record remains usable", "record also refuses"),
+    }[change]
+    documents[path] = documents[path].replace(MALFORMED_RECORD_READ_RULE, replacement, 1)
+    assert checker.validate(documents)
+
+
+@pytest.mark.parametrize("disposition", ["missing", "malformed"])
+def test_runtime_control_contract_malformed_record_read_cases(disposition) -> None:
+    row = (f"| Both counters valid; registered record has {disposition} `desired_revision` | "
+           "Affected get and entire list: `UNAVAILABLE`, null data, no usable revision; "
+           "independent valid get remains usable; preserve record, no mark fallback |")
+    assert DOCUMENTS[checker.LIFECYCLE].count(row) == 1
+    assert row in UNAVAILABLE_CASE_ROWS
+
+
+MALFORMED_DESIRED_STATE_READ_RULE = """The same refusal applies when both shared counters and `desired_revision`
+are valid but the existing registered record has a missing or invalid
+`desired_state` (a present value other than exactly `RUNNING` or `STOPPED`).
+After the existing get identity checks, the affected get and the entire list
+return `UNAVAILABLE` with `data: null` and no usable revision in the same
+non-retriable read envelope. An independent valid get remains usable. Preserve
+the record under the load rules; no current-mark fallback, invented intent or
+omission of the driver is allowed."""
+
+
+@pytest.mark.parametrize("disposition,change", [("missing", "removed"), ("invalid", "weakened")])
+def test_runtime_control_contract_desired_state_case_mutations(disposition, change) -> None:
+    row = (f"| Both counters valid; registered record has {disposition} `desired_state` | "
+           "Affected get and entire list: `UNAVAILABLE`, null data, no usable revision; "
+           "independent valid get remains usable; preserve record, no mark fallback |")
+    assert row in UNAVAILABLE_CASE_ROWS
+    documents = dict(DOCUMENTS)
+    assert documents[checker.LIFECYCLE].count(row) == 1
+    replacement = "" if change == "removed" else row.replace(
+        "`UNAVAILABLE`, null data, no usable revision", "Successful all-`FAILED` catalog")
+    documents[checker.LIFECYCLE] = documents[checker.LIFECYCLE].replace(row, replacement, 1)
+    assert (f"{checker.LIFECYCLE}: invalid unavailable-read case table"
+            in checker.validate(documents))
+
+
+@pytest.mark.parametrize("path", [checker.MCP, checker.LIFECYCLE])
+def test_runtime_control_contract_desired_state_refusal_mutation(path) -> None:
+    documents = dict(DOCUMENTS)
+    assert documents[path].count(MALFORMED_DESIRED_STATE_READ_RULE) == 1
+    assert any(MALFORMED_DESIRED_STATE_READ_RULE in rule["required"]
+               for rule in checker.RULES if rule["path"] == path)
+    documents[path] = documents[path].replace(
+        MALFORMED_DESIRED_STATE_READ_RULE,
+        MALFORMED_DESIRED_STATE_READ_RULE.replace("`desired_state`", "`other_field`"), 1)
+    assert checker.validate(documents)
+
+
+INCOHERENT_RECORD_READ_RULE = """With both shared counters individually valid, an existing registered record
+must satisfy `0 < desired_revision <= issued mark`. A canonical zero revision
+or a revision above the issued mark is incoherent and receives the same refusal:
+after the existing get identity checks, the affected get and the entire list
+return non-retriable `UNAVAILABLE` with `data: null` and no usable revision.
+An independent get with a coherent record remains usable. Preserve the record;
+never substitute the mark, omit the driver, clamp the revision or advance the
+mark to make the read succeed. For example, with issued mark `7`, record
+revisions `0` and `8` refuse; distinct revisions `6` and `7` satisfy this bound.
+The catalog revision is a separate view counter, never a desired-revision bound."""
+
+
+@pytest.mark.parametrize("path", [checker.MCP, checker.LIFECYCLE])
+@pytest.mark.parametrize("change", ["removed", "above mark", "zero", "partial list",
+                                     "global refusal", "mark repair", "catalog bound"])
+def test_runtime_control_contract_incoherent_record_read_mutations(path, change) -> None:
+    documents = dict(DOCUMENTS)
+    assert documents[path].count(INCOHERENT_RECORD_READ_RULE) == 1
+    assert any(INCOHERENT_RECORD_READ_RULE in rule["required"]
+               for rule in checker.RULES if rule["path"] == path)
+    replacement = {
+        "removed": "",
+        "above mark": INCOHERENT_RECORD_READ_RULE.replace(
+            "desired_revision <= issued mark", "desired_revision"),
+        "zero": INCOHERENT_RECORD_READ_RULE.replace("0 < desired_revision", "0 <= desired_revision"),
+        "partial list": INCOHERENT_RECORD_READ_RULE.replace("entire list", "partial list"),
+        "global refusal": INCOHERENT_RECORD_READ_RULE.replace("remains usable", "also refuses"),
+        "mark repair": INCOHERENT_RECORD_READ_RULE.replace("never substitute", "substitute"),
+        "catalog bound": INCOHERENT_RECORD_READ_RULE.replace(
+            "never a desired-revision bound", "also a desired-revision bound"),
+    }[change]
+    documents[path] = documents[path].replace(INCOHERENT_RECORD_READ_RULE, replacement, 1)
+    assert checker.validate(documents)
+
+
+@pytest.mark.parametrize("case", ["canonical `desired_revision` above issued mark",
+                                  "zero `desired_revision` with nonzero issued mark"])
+@pytest.mark.parametrize("change", ["removed", "weakened"])
+def test_runtime_control_contract_incoherent_record_case_mutations(case, change) -> None:
+    row = (f"| Both counters valid; registered record has {case} | "
+           "Affected get and entire list: `UNAVAILABLE`, null data, no usable revision; "
+           "independent valid get remains usable; preserve record, no mark fallback |")
+    assert row in UNAVAILABLE_CASE_ROWS
+    documents = dict(DOCUMENTS)
+    assert documents[checker.LIFECYCLE].count(row) == 1
+    replacement = "" if change == "removed" else row.replace(
+        "`UNAVAILABLE`, null data, no usable revision", "Coherent ordinary snapshot/list")
+    documents[checker.LIFECYCLE] = documents[checker.LIFECYCLE].replace(row, replacement, 1)
+    assert (f"{checker.LIFECYCLE}: invalid unavailable-read case table"
+            in checker.validate(documents))

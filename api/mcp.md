@@ -133,6 +133,80 @@ These G5 shapes supersede the older proposed `drivers.v1.*` inventory and richer
 for this first external slice; that older proposal must not create extra tools,
 fixed placeholder drivers or invented observations in PR 2.
 
+The list/get data shapes above describe successful reads with validated durable
+revision bounds. If either the issued-revision high-water mark or durable catalog
+revision is missing with existing control material, malformed, unreadable,
+unsupported or overflowing, both `helianthus.runtime.list` and
+`helianthus.runtime.get` refuse with `UNAVAILABLE` and `data: null`. Return no
+driver snapshot, success catalog or usable revision; never substitute zero,
+a sentinel, stale cached state or corrupt values, even if the other bound is
+valid. With both counters valid and coherent cached records, one or all drivers
+may be `FAILED` while reads retain the ordinary sorted, coherent projection.
+
+A zero-valued catalog revision always refuses, including for an empty registry.
+With existing control material that includes a registered driver, a zero-valued
+issued mark also refuses. Both use the same non-retriable read envelope with
+the categorical message `Durable control state unavailable; offline repair required`.
+These zero values cannot supply revision authority even when the other counter
+is valid. An empty registry in which nothing was ever decided may retain issued
+mark 0, but its catalog revision must still start at 1. Preserve the record under
+the load rules; no bootstrap seed follows.
+
+The issued mark must also bound every desired revision in the verified retained
+D5 recovery stream. If any such revision exceeds the mark, or the retained D5
+stream cannot be verified, the shared issued bound is unvalidated even when
+all current records are at or below it. After the existing get identity checks,
+every registered get and the entire list return non-retriable `UNAVAILABLE`
+with `data: null` and no usable revision. Preserve the mark, records and D5
+material; do not advance the mark, discard recovery evidence or bootstrap to
+make reads succeed.
+
+For get, the existing driver-ID input checks and registry-membership refusal are decided first, because they need no durable state: a noncanonical or unregistered `DriverID` returns `NOT_FOUND`, without construction or endpoint access; only a canonical, registered driver ID proceeds to the durable-bounds check and its `UNAVAILABLE` refusal; list has no driver ID.
+
+With both shared counters valid, a registered driver whose existing durable
+record has a missing or malformed `desired_revision` has no authoritative read
+revision. After the existing get identity checks, get of that driver and the
+entire list refuse with `UNAVAILABLE` and `data: null`, using the same
+non-retriable read envelope as invalid shared bounds. Do not omit the driver,
+substitute the current mark, or use stale cached fields. Get of an independent
+driver with a validated coherent record remains usable. The current-mark
+fallback applies only when the driver's record is absent, never when an
+existing record is malformed; preserve that record under the load rules.
+
+The same refusal applies when both shared counters and `desired_revision`
+are valid but the existing registered record has a missing or invalid
+`desired_state` (a present value other than exactly `RUNNING` or `STOPPED`).
+After the existing get identity checks, the affected get and the entire list
+return `UNAVAILABLE` with `data: null` and no usable revision in the same
+non-retriable read envelope. An independent valid get remains usable. Preserve
+the record under the load rules; no current-mark fallback, invented intent or
+omission of the driver is allowed.
+
+With both shared counters individually valid, an existing registered record
+must satisfy `0 < desired_revision <= issued mark`. A canonical zero revision
+or a revision above the issued mark is incoherent and receives the same refusal:
+after the existing get identity checks, the affected get and the entire list
+return non-retriable `UNAVAILABLE` with `data: null` and no usable revision.
+An independent get with a coherent record remains usable. Preserve the record;
+never substitute the mark, omit the driver, clamp the revision or advance the
+mark to make the read succeed. For example, with issued mark `7`, record
+revisions `0` and `8` refuse; distinct revisions `6` and `7` satisfy this bound.
+The catalog revision is a separate view counter, never a desired-revision bound.
+
+Existing registered records must also have distinct desired revisions across
+drivers. If two records share a revision, both affected gets and the entire
+list return non-retriable `UNAVAILABLE` with `data: null` and no usable revision
+after the existing get identity checks; an independent get with a coherent,
+noncolliding record remains usable. For example, two registered records at
+revision `6` under issued mark `7` both refuse. Preserve both records; do not
+choose a winner, renumber either record or use the absent-record mark fallback.
+This uniqueness check applies to stored record revisions, not the current-mark
+projection for an absent record.
+
+For invalid shared bounds, unverified retained D5 material, or missing, malformed
+or incoherent durable record fields (including revision collisions), use
+the categorical message `Durable control state unavailable; offline repair required`.
+
 Synthetic list `data` example (not a live observation):
 
 ```json
@@ -199,6 +273,72 @@ lifecycle codes rather than collapsing them into generic transport errors:
 | `TRANSITION_BUSY` | Typed slot full or namespace decision wait exceeded; bounded retry, no revision-comparison outcome implied |
 | `RESOURCE_EXHAUSTED` | Bounded storage/reservation cannot fit; retry after capacity is available |
 | `COUNTER_EXHAUSTED` | Required unsigned counter cannot advance; no wrap or retry loop |
+
+For list/get, the `UNAVAILABLE` row also covers invalid or unvalidatable durable
+revision bounds (including the retained D5 cross-check) and incoherent or colliding record revisions: set `isError: true`, `data: null` and `retriable: false`, using
+the existing categorical error members and envelope. Hash JSON null as usual;
+metadata must not imply a validated lifecycle revision. Explicit GUID-preserving
+offline repair is required; retry, restart, provider recovery and configuration
+reload cannot repair the bounds. Keep the shell and tools available. The ordered
+refusal table still governs mutations, where unusable control remains
+`FAILED_PRECONDITION`; the read error grants no online repair or bypass of the
+offline reset's own requirement for validated bounds.
+
+Synthetic failure envelopes below use a deterministic synthetic clock and hash the JSON text `null`; neither metadata value is revision authority. Missing, malformed, unreadable, unsupported and overflowing bounds, retained D5 verification failures or revisions above the mark, and incoherent or colliding record revisions, use the same categorical envelope without exposing the invalid value. The get label identifies the manager registry read, not a new tool. The outer MCP tool result must set `isError: true`; the payload envelopes below contain exactly `meta`, `data`, and `error`.
+
+The `data_hash` values are publication placeholders, not wire values. Validation requires `<computed-data-hash>` and replaces it in memory with the lowercase SHA-256 digest of the JSON text `null`; no concrete digest is published.
+
+Synthetic list failure with an invalid issued bound:
+
+```json
+{
+  "meta": {
+    "contract": {
+      "name": "helianthus-ebus-mcp",
+      "major": 1,
+      "minor": 0
+    },
+    "consistency": {
+      "mode": "LIVE"
+    },
+    "data_timestamp": "2000-01-01T00:00:00Z",
+    "data_hash": "<computed-data-hash>"
+  },
+  "data": null,
+  "error": {
+    "code": "UNAVAILABLE",
+    "message": "Durable control state unavailable; offline repair required",
+    "retriable": false,
+    "source_layer": "gateway"
+  }
+}
+```
+
+Synthetic get of `ebus.primary` failure with an invalid catalog revision:
+
+```json
+{
+  "meta": {
+    "contract": {
+      "name": "helianthus-ebus-mcp",
+      "major": 1,
+      "minor": 0
+    },
+    "consistency": {
+      "mode": "LIVE"
+    },
+    "data_timestamp": "2000-01-01T00:00:00Z",
+    "data_hash": "<computed-data-hash>"
+  },
+  "data": null,
+  "error": {
+    "code": "UNAVAILABLE",
+    "message": "Durable control state unavailable; offline repair required",
+    "retriable": false,
+    "source_layer": "gateway"
+  }
+}
+```
 
 The [ordered lifecycle refusal table](../architecture/runtime-driver-lifecycle.md#validate-decide-and-commit)
 is authoritative when several checks fail. `CLOSE_UNCONFIRMED` is an observed
