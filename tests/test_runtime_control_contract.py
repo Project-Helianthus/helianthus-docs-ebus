@@ -656,6 +656,34 @@ def test_runtime_control_contract_corrupt_control_acceptance_removed() -> None:
                for error in checker.validate(documents))
 
 
+@pytest.mark.parametrize("bound", ["Issued bound", "Catalog revision"])
+@pytest.mark.parametrize("change", ["removed", "weakened"])
+def test_runtime_control_contract_zero_bound_case_mutations(bound, change) -> None:
+    row = (f"| {bound} zero with existing control material including a registered driver | "
+           "`UNAVAILABLE`, null data, no usable revision; no bootstrap |")
+    assert row in UNAVAILABLE_CASE_ROWS
+    documents = dict(DOCUMENTS)
+    assert documents[checker.LIFECYCLE].count(row) == 1
+    replacement = "" if change == "removed" else row.replace(
+        "`UNAVAILABLE`, null data, no usable revision", "Usable revision `0`")
+    documents[checker.LIFECYCLE] = documents[checker.LIFECYCLE].replace(row, replacement, 1)
+    assert (f"{checker.LIFECYCLE}: invalid unavailable-read case table"
+            in checker.validate(documents))
+
+
+@pytest.mark.parametrize("path", [checker.MCP, checker.LIFECYCLE])
+def test_runtime_control_contract_zero_bound_refusal_removed(path) -> None:
+    clause = ("With existing control material that includes a registered driver, a\n"
+              "zero-valued issued mark or catalog revision also refuses in the same\n"
+              "non-retriable read envelope with the categorical message\n"
+              "`Durable control state unavailable; offline repair required`.")
+    documents = dict(DOCUMENTS)
+    assert documents[path].count(clause) == 1
+    documents[path] = documents[path].replace(clause, "", 1)
+    assert any(error.startswith(f"{path}: changed obligation:")
+               for error in checker.validate(documents))
+
+
 @pytest.mark.parametrize("disposition", ["corrupt", "unreadable", "unsupported"])
 def test_runtime_control_contract_unavailable_load_dispositions(disposition) -> None:
     row = (f"| Control namespace {disposition} | "
@@ -677,6 +705,7 @@ def test_runtime_control_contract_unavailable_load_dispositions(disposition) -> 
     ("missing with existing control material", "; no bootstrap"),
     ("malformed", ""),
     ("above the unsigned 64-bit maximum", "; no wrap"),
+    ("zero with existing control material including a registered driver", "; no bootstrap"),
 ])
 def test_runtime_control_contract_unavailable_per_bound_cases(bound, disposition, suffix) -> None:
     row = (f"| {bound} {disposition} | "
