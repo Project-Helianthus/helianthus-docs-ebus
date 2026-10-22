@@ -982,28 +982,27 @@ The offline namespace-only reset below itself refuses unvalidated bounds:
 this read refusal grants no repair bypass or new online repair operation.
 
 Synthetic read acceptance must test each bound independently, holding the other
-valid, with missing control bounds despite existing material, malformed values,
-unreadable state, unsupported namespace state and values above the unsigned
-64-bit maximum. Each case requires `UNAVAILABLE`,
+valid, with missing control bounds despite existing material, malformed values
+and values above the unsigned 64-bit maximum. Test unreadable control state and
+unsupported control namespace state as separate namespace-wide load failures,
+without assuming either bound remains valid. Each case requires `UNAVAILABLE`,
 null data and no usable revision for both list and get. Also test valid counters
 with one and with all drivers `FAILED`, retaining coherent ordinary snapshots,
 deterministic ordering and revisions. These are documentation acceptance
 obligations, not executed runtime tests.
 
-Each of the ten invalid-bound cases holds the other counter valid and requires the stated result for list and get of a canonical, registered driver ID; the last two rows test get refusal precedence.
+Each of the six per-bound cases holds the other counter valid; the two namespace-wide load-failure cases assume neither bound is valid. All eight cases require the stated result for list and get of a canonical, registered driver ID; the last two rows test get refusal precedence.
 
 | Case | Required read result |
 | --- | --- |
 | Issued bound missing with existing control material | `UNAVAILABLE`, null data, no usable revision; no bootstrap |
 | Issued bound malformed | `UNAVAILABLE`, null data, no usable revision |
-| Issued bound unreadable | `UNAVAILABLE`, null data, no usable revision |
-| Issued bound unsupported | `UNAVAILABLE`, null data, no usable revision |
 | Issued bound above the unsigned 64-bit maximum | `UNAVAILABLE`, null data, no usable revision; no wrap |
 | Catalog revision missing with existing control material | `UNAVAILABLE`, null data, no usable revision; no bootstrap |
 | Catalog revision malformed | `UNAVAILABLE`, null data, no usable revision |
-| Catalog revision unreadable | `UNAVAILABLE`, null data, no usable revision |
-| Catalog revision unsupported | `UNAVAILABLE`, null data, no usable revision |
 | Catalog revision above the unsigned 64-bit maximum | `UNAVAILABLE`, null data, no usable revision; no wrap |
+| Control namespace unreadable | `UNAVAILABLE`, null data, no usable revision |
+| Control namespace unsupported | `UNAVAILABLE`, null data, no usable revision |
 | Both counters valid; registered record has missing `desired_revision` | Affected get and entire list: `UNAVAILABLE`, null data, no usable revision; independent valid get remains usable; preserve record, no mark fallback |
 | Both counters valid; registered record has malformed `desired_revision` | Affected get and entire list: `UNAVAILABLE`, null data, no usable revision; independent valid get remains usable; preserve record, no mark fallback |
 | Both counters valid; one driver `FAILED` | Coherent ordinary snapshot/list, unaffected entries retained, deterministic ordering and revisions |

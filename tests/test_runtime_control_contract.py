@@ -631,11 +631,31 @@ UNAVAILABLE_CASE_ROWS = [
 ]
 
 
-@pytest.mark.parametrize("bound", ["Issued bound", "Catalog revision"])
 @pytest.mark.parametrize("disposition", ["unreadable", "unsupported"])
-def test_runtime_control_contract_unavailable_load_dispositions(bound, disposition) -> None:
-    row = (f"| {bound} {disposition} | "
+def test_runtime_control_contract_unavailable_load_dispositions(disposition) -> None:
+    row = (f"| Control namespace {disposition} | "
            "`UNAVAILABLE`, null data, no usable revision |")
+    assert row in UNAVAILABLE_CASE_ROWS
+    assert DOCUMENTS[checker.LIFECYCLE].count(row) == 1
+    for bound in ("Issued bound", "Catalog revision"):
+        impossible_row = f"| {bound} {disposition} |"
+        assert not any(clause.startswith(impossible_row) for clause in UNAVAILABLE_CASE_ROWS)
+        documents = dict(DOCUMENTS)
+        documents[checker.LIFECYCLE] = documents[checker.LIFECYCLE].replace(
+            row, row.replace("Control namespace", bound), 1)
+        assert (f"{checker.LIFECYCLE}: invalid unavailable-read case table"
+                in checker.validate(documents))
+
+
+@pytest.mark.parametrize("bound", ["Issued bound", "Catalog revision"])
+@pytest.mark.parametrize(("disposition", "suffix"), [
+    ("missing with existing control material", "; no bootstrap"),
+    ("malformed", ""),
+    ("above the unsigned 64-bit maximum", "; no wrap"),
+])
+def test_runtime_control_contract_unavailable_per_bound_cases(bound, disposition, suffix) -> None:
+    row = (f"| {bound} {disposition} | "
+           f"`UNAVAILABLE`, null data, no usable revision{suffix} |")
     assert row in UNAVAILABLE_CASE_ROWS
     assert DOCUMENTS[checker.LIFECYCLE].count(row) == 1
 
