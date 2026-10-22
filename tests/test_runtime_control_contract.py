@@ -673,13 +673,45 @@ def test_runtime_control_contract_zero_bound_case_mutations(bound, change) -> No
 
 @pytest.mark.parametrize("path", [checker.MCP, checker.LIFECYCLE])
 def test_runtime_control_contract_zero_bound_refusal_removed(path) -> None:
-    clause = ("With existing control material that includes a registered driver, a\n"
-              "zero-valued issued mark or catalog revision also refuses in the same\n"
-              "non-retriable read envelope with the categorical message\n"
-              "`Durable control state unavailable; offline repair required`.")
+    clause = """A zero-valued catalog revision always refuses, including for an empty registry.
+With existing control material that includes a registered driver, a zero-valued
+issued mark also refuses. Both use the same non-retriable read envelope with
+the categorical message `Durable control state unavailable; offline repair required`.
+These zero values cannot supply revision authority even when the other counter
+is valid. An empty registry in which nothing was ever decided may retain issued
+mark 0, but its catalog revision must still start at 1. Preserve the record under
+the load rules; no bootstrap seed follows."""
     documents = dict(DOCUMENTS)
     assert documents[path].count(clause) == 1
     documents[path] = documents[path].replace(clause, "", 1)
+    assert any(error.startswith(f"{path}: changed obligation:")
+               for error in checker.validate(documents))
+
+
+@pytest.mark.parametrize("change", ["removed", "weakened", "qualified"])
+def test_runtime_control_contract_empty_registry_zero_catalog_case_mutations(change) -> None:
+    row = ("| Empty registry; issued mark 0; catalog revision 0 | "
+           "List: `UNAVAILABLE`, null data, no usable revision; no bootstrap |")
+    assert row in UNAVAILABLE_CASE_ROWS
+    documents = dict(DOCUMENTS)
+    assert documents[checker.LIFECYCLE].count(row) == 1
+    replacement = {
+        "removed": "",
+        "weakened": row.replace("`UNAVAILABLE`, null data, no usable revision", "Successful empty catalog"),
+        "qualified": row.replace("Empty registry", "Registry with a registered driver"),
+    }[change]
+    documents[checker.LIFECYCLE] = documents[checker.LIFECYCLE].replace(row, replacement, 1)
+    assert (f"{checker.LIFECYCLE}: invalid unavailable-read case table"
+            in checker.validate(documents))
+
+
+@pytest.mark.parametrize("path", [checker.MCP, checker.LIFECYCLE])
+def test_runtime_control_contract_zero_catalog_refusal_cannot_be_qualified(path) -> None:
+    clause = "A zero-valued catalog revision always refuses, including for an empty registry."
+    documents = dict(DOCUMENTS)
+    assert documents[path].count(clause) == 1
+    documents[path] = documents[path].replace(
+        clause, "A zero-valued catalog revision refuses only with a registered driver.", 1)
     assert any(error.startswith(f"{path}: changed obligation:")
                for error in checker.validate(documents))
 

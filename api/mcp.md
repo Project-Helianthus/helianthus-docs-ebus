@@ -143,13 +143,14 @@ a sentinel, stale cached state or corrupt values, even if the other bound is
 valid. With both counters valid and coherent cached records, one or all drivers
 may be `FAILED` while reads retain the ordinary sorted, coherent projection.
 
-With existing control material that includes a registered driver, a
-zero-valued issued mark or catalog revision also refuses in the same
-non-retriable read envelope with the categorical message
-`Durable control state unavailable; offline repair required`.
-Neither bound may be accepted as revision authority when zero, even when the
-other counter is valid. Preserve the record under the load rules; no bootstrap
-seed follows.
+A zero-valued catalog revision always refuses, including for an empty registry.
+With existing control material that includes a registered driver, a zero-valued
+issued mark also refuses. Both use the same non-retriable read envelope with
+the categorical message `Durable control state unavailable; offline repair required`.
+These zero values cannot supply revision authority even when the other counter
+is valid. An empty registry in which nothing was ever decided may retain issued
+mark 0, but its catalog revision must still start at 1. Preserve the record under
+the load rules; no bootstrap seed follows.
 
 For get, the existing driver-ID input checks and registry-membership refusal are decided first, because they need no durable state: a noncanonical or unregistered `DriverID` returns `NOT_FOUND`, without construction or endpoint access; only a canonical, registered driver ID proceeds to the durable-bounds check and its `UNAVAILABLE` refusal; list has no driver ID.
 

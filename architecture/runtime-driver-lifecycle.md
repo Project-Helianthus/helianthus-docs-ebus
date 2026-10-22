@@ -950,13 +950,14 @@ zero, a sentinel, stale cached state or corrupt values for either revision,
 even when the other bound remains valid; neither an empty success list nor a
 fabricated all-`FAILED` catalog encodes this refusal.
 
-With existing control material that includes a registered driver, a
-zero-valued issued mark or catalog revision also refuses in the same
-non-retriable read envelope with the categorical message
-`Durable control state unavailable; offline repair required`.
-Neither bound may be accepted as revision authority when zero, even when the
-other counter is valid. Preserve the record under the load rules; no bootstrap
-seed follows.
+A zero-valued catalog revision always refuses, including for an empty registry.
+With existing control material that includes a registered driver, a zero-valued
+issued mark also refuses. Both use the same non-retriable read envelope with
+the categorical message `Durable control state unavailable; offline repair required`.
+These zero values cannot supply revision authority even when the other counter
+is valid. An empty registry in which nothing was ever decided may retain issued
+mark 0, but its catalog revision must still start at 1. Preserve the record under
+the load rules; no bootstrap seed follows.
 
 Whole-file corrupt control state leaves both durable bounds unvalidated: list
 and get refuse with `UNAVAILABLE`, null data and no usable revision. Preserve
@@ -1012,12 +1013,14 @@ control material that includes a registered driver. Test corrupt control state,
 unreadable control state and unsupported control namespace state as separate
 namespace-wide load failures,
 without assuming either bound remains valid. Each case requires `UNAVAILABLE`,
-null data and no usable revision for both list and get. Also test valid counters
+null data and no usable revision for both list and get. Also test list with an
+empty registry, issued mark 0 and catalog revision 0: it requires the same
+refusal. Also test valid counters
 with one and with all drivers `FAILED`, retaining coherent ordinary snapshots,
 deterministic ordering and revisions. These are documentation acceptance
 obligations, not executed runtime tests.
 
-Each of the eight per-bound cases holds the other counter valid; the three namespace-wide load-failure cases assume neither bound is valid. All eleven cases require the stated result for list and get of a canonical, registered driver ID. The next four rows cover malformed registered records, the following two cover coherent `FAILED` records, and the last two test get refusal precedence.
+Each of the eight per-bound cases holds the other counter valid; the three namespace-wide load-failure cases assume neither bound is valid. All eleven cases require the stated result for list and get of a canonical, registered driver ID. The next row tests list-only refusal for an empty registry with issued mark 0 and catalog revision 0. The next four rows cover malformed registered records, the following two cover coherent `FAILED` records, and the last two test get refusal precedence.
 
 | Case | Required read result |
 | --- | --- |
@@ -1032,6 +1035,7 @@ Each of the eight per-bound cases holds the other counter valid; the three names
 | Control namespace corrupt | `UNAVAILABLE`, null data, no usable revision |
 | Control namespace unreadable | `UNAVAILABLE`, null data, no usable revision |
 | Control namespace unsupported | `UNAVAILABLE`, null data, no usable revision |
+| Empty registry; issued mark 0; catalog revision 0 | List: `UNAVAILABLE`, null data, no usable revision; no bootstrap |
 | Both counters valid; registered record has missing `desired_revision` | Affected get and entire list: `UNAVAILABLE`, null data, no usable revision; independent valid get remains usable; preserve record, no mark fallback |
 | Both counters valid; registered record has malformed `desired_revision` | Affected get and entire list: `UNAVAILABLE`, null data, no usable revision; independent valid get remains usable; preserve record, no mark fallback |
 | Both counters valid; registered record has missing `desired_state` | Affected get and entire list: `UNAVAILABLE`, null data, no usable revision; independent valid get remains usable; preserve record, no mark fallback |

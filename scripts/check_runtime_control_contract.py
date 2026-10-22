@@ -243,7 +243,7 @@ def validate(documents: dict[str, str]) -> list[str]:
     expected_cells = [[cell.strip() for cell in row.strip("|").split("|")]
                       for row in expected_rows]
     if (table_blocks(case_section) != [case_rows]
-            or len(cells) != 21 or any(len(row) != 2 for row in cells)
+            or len(cells) != 22 or any(len(row) != 2 for row in cells)
             or cells != expected_cells):
         errors.append(f"{LIFECYCLE}: invalid unavailable-read case table")
 
