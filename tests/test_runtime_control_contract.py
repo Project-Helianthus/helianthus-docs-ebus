@@ -57,7 +57,9 @@ UNAVAILABLE_CLAUSES = [
     if clause.startswith(("If either the namespace issued-revision", "With both counters valid",
                           "Keep the HTTP/API/health shell", "Synthetic read acceptance",
                           "This ordered table governs mutations", "The list/get data shapes above",
-                          "For list/get, the `UNAVAILABLE` row"))
+                          "For list/get, the `UNAVAILABLE` row",
+                          "The issued mark must also bound",
+                          "Existing registered records must also have distinct"))
 ]
 
 
@@ -631,6 +633,27 @@ UNAVAILABLE_CASE_ROWS = [
 ]
 
 
+@pytest.mark.parametrize("case", [
+    "Current records at or below issued mark `7`; verified retained D5 contains desired revision `8`",
+    "Current records at or below issued mark; retained D5 stream cannot be verified",
+    "Issued mark `7`; two registered records share desired revision `6`",
+])
+@pytest.mark.parametrize("change", ["removed", "weakened", "duplicated"])
+def test_runtime_control_contract_revision_authority_cases(case, change) -> None:
+    row = next(row for row in UNAVAILABLE_CASE_ROWS if row.startswith(f"| {case} |"))
+    documents = dict(DOCUMENTS)
+    assert documents[checker.LIFECYCLE].count(row) == 1
+    replacement = {
+        "removed": "",
+        "weakened": row.replace("`UNAVAILABLE`, null data, no usable revision",
+                                "Successful read with usable revision"),
+        "duplicated": row + "\n" + row,
+    }[change]
+    documents[checker.LIFECYCLE] = documents[checker.LIFECYCLE].replace(row, replacement, 1)
+    assert (f"{checker.LIFECYCLE}: invalid unavailable-read case table"
+            in checker.validate(documents))
+
+
 @pytest.mark.parametrize("change", ["removed", "weakened"])
 def test_runtime_control_contract_corrupt_control_case_mutations(change) -> None:
     row = ("| Control namespace corrupt | "
@@ -962,7 +985,7 @@ return non-retriable `UNAVAILABLE` with `data: null` and no usable revision.
 An independent get with a coherent record remains usable. Preserve the record;
 never substitute the mark, omit the driver, clamp the revision or advance the
 mark to make the read succeed. For example, with issued mark `7`, record
-revisions `0` and `8` refuse; revisions `6` and `7` satisfy this bound.
+revisions `0` and `8` refuse; distinct revisions `6` and `7` satisfy this bound.
 The catalog revision is a separate view counter, never a desired-revision bound."""
 
 
