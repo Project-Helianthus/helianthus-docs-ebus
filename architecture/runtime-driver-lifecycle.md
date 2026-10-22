@@ -950,6 +950,10 @@ zero, a sentinel, stale cached state or corrupt values for either revision,
 even when the other bound remains valid; neither an empty success list nor a
 fabricated all-`FAILED` catalog encodes this refusal.
 
+Whole-file corrupt control state leaves both durable bounds unvalidated: list
+and get refuse with `UNAVAILABLE`, null data and no usable revision. Preserve
+the bad bytes under the load rules; no bootstrap seed follows.
+
 For get, the existing driver-ID input checks and registry-membership refusal are decided first, because they need no durable state: a noncanonical or unregistered `DriverID` returns `NOT_FOUND`, without construction or endpoint access; only a canonical, registered driver ID proceeds to the durable-bounds check and its `UNAVAILABLE` refusal; list has no driver ID.
 
 With both shared counters valid, a registered driver whose existing durable
@@ -983,15 +987,16 @@ this read refusal grants no repair bypass or new online repair operation.
 
 Synthetic read acceptance must test each bound independently, holding the other
 valid, with missing control bounds despite existing material, malformed values
-and values above the unsigned 64-bit maximum. Test unreadable control state and
-unsupported control namespace state as separate namespace-wide load failures,
+and values above the unsigned 64-bit maximum. Test corrupt control state,
+unreadable control state and unsupported control namespace state as separate
+namespace-wide load failures,
 without assuming either bound remains valid. Each case requires `UNAVAILABLE`,
 null data and no usable revision for both list and get. Also test valid counters
 with one and with all drivers `FAILED`, retaining coherent ordinary snapshots,
 deterministic ordering and revisions. These are documentation acceptance
 obligations, not executed runtime tests.
 
-Each of the six per-bound cases holds the other counter valid; the two namespace-wide load-failure cases assume neither bound is valid. All eight cases require the stated result for list and get of a canonical, registered driver ID; the last two rows test get refusal precedence.
+Each of the six per-bound cases holds the other counter valid; the three namespace-wide load-failure cases assume neither bound is valid. All nine cases require the stated result for list and get of a canonical, registered driver ID; the last two rows test get refusal precedence.
 
 | Case | Required read result |
 | --- | --- |
@@ -1001,6 +1006,7 @@ Each of the six per-bound cases holds the other counter valid; the two namespace
 | Catalog revision missing with existing control material | `UNAVAILABLE`, null data, no usable revision; no bootstrap |
 | Catalog revision malformed | `UNAVAILABLE`, null data, no usable revision |
 | Catalog revision above the unsigned 64-bit maximum | `UNAVAILABLE`, null data, no usable revision; no wrap |
+| Control namespace corrupt | `UNAVAILABLE`, null data, no usable revision |
 | Control namespace unreadable | `UNAVAILABLE`, null data, no usable revision |
 | Control namespace unsupported | `UNAVAILABLE`, null data, no usable revision |
 | Both counters valid; registered record has missing `desired_revision` | Affected get and entire list: `UNAVAILABLE`, null data, no usable revision; independent valid get remains usable; preserve record, no mark fallback |

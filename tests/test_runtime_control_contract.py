@@ -631,7 +631,32 @@ UNAVAILABLE_CASE_ROWS = [
 ]
 
 
-@pytest.mark.parametrize("disposition", ["unreadable", "unsupported"])
+@pytest.mark.parametrize("change", ["removed", "weakened"])
+def test_runtime_control_contract_corrupt_control_case_mutations(change) -> None:
+    row = ("| Control namespace corrupt | "
+           "`UNAVAILABLE`, null data, no usable revision |")
+    assert row in UNAVAILABLE_CASE_ROWS
+    documents = dict(DOCUMENTS)
+    assert documents[checker.LIFECYCLE].count(row) == 1
+    replacement = "" if change == "removed" else row.replace(
+        "`UNAVAILABLE`, null data, no usable revision", "Successful all-`FAILED` catalog")
+    documents[checker.LIFECYCLE] = documents[checker.LIFECYCLE].replace(row, replacement, 1)
+    assert (f"{checker.LIFECYCLE}: invalid unavailable-read case table"
+            in checker.validate(documents))
+
+
+def test_runtime_control_contract_corrupt_control_acceptance_removed() -> None:
+    clause = next(clause for clause in UNAVAILABLE_CASE_RULE["required"]
+                  if clause.startswith("Synthetic read acceptance"))
+    assert "Test corrupt control state," in clause
+    documents = dict(DOCUMENTS)
+    documents[checker.LIFECYCLE] = documents[checker.LIFECYCLE].replace(
+        clause, clause.replace("Test corrupt control state,", "Test"), 1)
+    assert any(error.startswith(f"{checker.LIFECYCLE}: changed obligation: Synthetic read acceptance")
+               for error in checker.validate(documents))
+
+
+@pytest.mark.parametrize("disposition", ["corrupt", "unreadable", "unsupported"])
 def test_runtime_control_contract_unavailable_load_dispositions(disposition) -> None:
     row = (f"| Control namespace {disposition} | "
            "`UNAVAILABLE`, null data, no usable revision |")
