@@ -975,6 +975,9 @@ non-retriable read envelope. An independent valid get remains usable. Preserve
 the record under the load rules; no current-mark fallback, invented intent or
 omission of the driver is allowed.
 
+For invalid shared bounds or missing or malformed durable record fields, use
+the categorical message `Durable control state unavailable; offline repair required`.
+
 With both counters valid and coherent cached records, one or all drivers may
 be `FAILED` while list/get still return ordinary coherent snapshots. Preserve
 all registered entries in bytewise driver-ID order, each validated durable

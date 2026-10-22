@@ -164,6 +164,9 @@ non-retriable read envelope. An independent valid get remains usable. Preserve
 the record under the load rules; no current-mark fallback, invented intent or
 omission of the driver is allowed.
 
+For invalid shared bounds or missing or malformed durable record fields, use
+the categorical message `Durable control state unavailable; offline repair required`.
+
 Synthetic list `data` example (not a live observation):
 
 ```json
@@ -264,7 +267,7 @@ Synthetic list failure with an invalid issued bound:
   "data": null,
   "error": {
     "code": "UNAVAILABLE",
-    "message": "Durable revision bounds unavailable; offline repair required",
+    "message": "Durable control state unavailable; offline repair required",
     "retriable": false,
     "source_layer": "gateway"
   }
@@ -290,7 +293,7 @@ Synthetic get of `ebus.primary` failure with an invalid catalog revision:
   "data": null,
   "error": {
     "code": "UNAVAILABLE",
-    "message": "Durable revision bounds unavailable; offline repair required",
+    "message": "Durable control state unavailable; offline repair required",
     "retriable": false,
     "source_layer": "gateway"
   }

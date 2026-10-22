@@ -697,6 +697,7 @@ def unavailable_examples(text):
     "extra", "removed", "nested_revision", "duplicate_member", "source_layer",
     "meta_extra", "error_extra", "contract_extra", "consistency_extra", "clock",
     "invalid_json", "hash_missing", "hash_string", "hash_concrete",
+    "bounds_only_message", "generic_message",
 ])
 def test_runtime_control_contract_unavailable_envelope_mutations(index, change) -> None:
     documents = dict(DOCUMENTS)
@@ -716,6 +717,10 @@ def test_runtime_control_contract_unavailable_envelope_mutations(index, change) 
         ]}
     elif change == "code":
         envelope["error"]["code"] = "FAILED_PRECONDITION"
+    elif change == "bounds_only_message":
+        envelope["error"]["message"] = "Durable revision bounds unavailable; offline repair required"
+    elif change == "generic_message":
+        envelope["error"]["message"] = "Unavailable"
     elif change == "hash":
         envelope["meta"]["data_hash"] = "0" * 64
     elif change == "hash_missing":

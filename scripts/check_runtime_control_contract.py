@@ -85,7 +85,7 @@ def unavailable_envelope(value: object) -> bool:
         and isinstance(error, dict)
         and error.keys() == {"code", "message", "retriable", "source_layer"}
         and error["code"] == "UNAVAILABLE"
-        and error["message"] == "Durable revision bounds unavailable; offline repair required"
+        and error["message"] == "Durable control state unavailable; offline repair required"
         and error["retriable"] is False and error["source_layer"] == "gateway"
     )
 
