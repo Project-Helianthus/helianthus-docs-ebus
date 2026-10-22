@@ -966,6 +966,15 @@ driver with a validated coherent record remains usable. The current-mark
 fallback applies only when the driver's record is absent, never when an
 existing record is malformed; preserve that record under the load rules.
 
+The same refusal applies when both shared counters and `desired_revision`
+are valid but the existing registered record has a missing or invalid
+`desired_state` (a present value other than exactly `RUNNING` or `STOPPED`).
+After the existing get identity checks, the affected get and the entire list
+return `UNAVAILABLE` with `data: null` and no usable revision in the same
+non-retriable read envelope. An independent valid get remains usable. Preserve
+the record under the load rules; no current-mark fallback, invented intent or
+omission of the driver is allowed.
+
 With both counters valid and coherent cached records, one or all drivers may
 be `FAILED` while list/get still return ordinary coherent snapshots. Preserve
 all registered entries in bytewise driver-ID order, each validated durable
@@ -996,7 +1005,7 @@ with one and with all drivers `FAILED`, retaining coherent ordinary snapshots,
 deterministic ordering and revisions. These are documentation acceptance
 obligations, not executed runtime tests.
 
-Each of the six per-bound cases holds the other counter valid; the three namespace-wide load-failure cases assume neither bound is valid. All nine cases require the stated result for list and get of a canonical, registered driver ID; the last two rows test get refusal precedence.
+Each of the six per-bound cases holds the other counter valid; the three namespace-wide load-failure cases assume neither bound is valid. All nine cases require the stated result for list and get of a canonical, registered driver ID. The next four rows cover malformed registered records, the following two cover coherent `FAILED` records, and the last two test get refusal precedence.
 
 | Case | Required read result |
 | --- | --- |
@@ -1011,6 +1020,8 @@ Each of the six per-bound cases holds the other counter valid; the three namespa
 | Control namespace unsupported | `UNAVAILABLE`, null data, no usable revision |
 | Both counters valid; registered record has missing `desired_revision` | Affected get and entire list: `UNAVAILABLE`, null data, no usable revision; independent valid get remains usable; preserve record, no mark fallback |
 | Both counters valid; registered record has malformed `desired_revision` | Affected get and entire list: `UNAVAILABLE`, null data, no usable revision; independent valid get remains usable; preserve record, no mark fallback |
+| Both counters valid; registered record has missing `desired_state` | Affected get and entire list: `UNAVAILABLE`, null data, no usable revision; independent valid get remains usable; preserve record, no mark fallback |
+| Both counters valid; registered record has invalid `desired_state` | Affected get and entire list: `UNAVAILABLE`, null data, no usable revision; independent valid get remains usable; preserve record, no mark fallback |
 | Both counters valid; one driver `FAILED` | Coherent ordinary snapshot/list, unaffected entries retained, deterministic ordering and revisions |
 | Both counters valid; all drivers `FAILED` | Coherent ordinary snapshot/list with all catalog entries, deterministic ordering and revisions |
 | Get of a noncanonical driver ID with an invalid durable bound | `NOT_FOUND`, without construction or endpoint access; never `UNAVAILABLE` |

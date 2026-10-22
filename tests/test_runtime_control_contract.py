@@ -849,3 +849,40 @@ def test_runtime_control_contract_malformed_record_read_cases(disposition) -> No
            "independent valid get remains usable; preserve record, no mark fallback |")
     assert DOCUMENTS[checker.LIFECYCLE].count(row) == 1
     assert row in UNAVAILABLE_CASE_ROWS
+
+
+MALFORMED_DESIRED_STATE_READ_RULE = """The same refusal applies when both shared counters and `desired_revision`
+are valid but the existing registered record has a missing or invalid
+`desired_state` (a present value other than exactly `RUNNING` or `STOPPED`).
+After the existing get identity checks, the affected get and the entire list
+return `UNAVAILABLE` with `data: null` and no usable revision in the same
+non-retriable read envelope. An independent valid get remains usable. Preserve
+the record under the load rules; no current-mark fallback, invented intent or
+omission of the driver is allowed."""
+
+
+@pytest.mark.parametrize("disposition,change", [("missing", "removed"), ("invalid", "weakened")])
+def test_runtime_control_contract_desired_state_case_mutations(disposition, change) -> None:
+    row = (f"| Both counters valid; registered record has {disposition} `desired_state` | "
+           "Affected get and entire list: `UNAVAILABLE`, null data, no usable revision; "
+           "independent valid get remains usable; preserve record, no mark fallback |")
+    assert row in UNAVAILABLE_CASE_ROWS
+    documents = dict(DOCUMENTS)
+    assert documents[checker.LIFECYCLE].count(row) == 1
+    replacement = "" if change == "removed" else row.replace(
+        "`UNAVAILABLE`, null data, no usable revision", "Successful all-`FAILED` catalog")
+    documents[checker.LIFECYCLE] = documents[checker.LIFECYCLE].replace(row, replacement, 1)
+    assert (f"{checker.LIFECYCLE}: invalid unavailable-read case table"
+            in checker.validate(documents))
+
+
+@pytest.mark.parametrize("path", [checker.MCP, checker.LIFECYCLE])
+def test_runtime_control_contract_desired_state_refusal_mutation(path) -> None:
+    documents = dict(DOCUMENTS)
+    assert documents[path].count(MALFORMED_DESIRED_STATE_READ_RULE) == 1
+    assert any(MALFORMED_DESIRED_STATE_READ_RULE in rule["required"]
+               for rule in checker.RULES if rule["path"] == path)
+    documents[path] = documents[path].replace(
+        MALFORMED_DESIRED_STATE_READ_RULE,
+        MALFORMED_DESIRED_STATE_READ_RULE.replace("`desired_state`", "`other_field`"), 1)
+    assert checker.validate(documents)

@@ -155,6 +155,15 @@ driver with a validated coherent record remains usable. The current-mark
 fallback applies only when the driver's record is absent, never when an
 existing record is malformed; preserve that record under the load rules.
 
+The same refusal applies when both shared counters and `desired_revision`
+are valid but the existing registered record has a missing or invalid
+`desired_state` (a present value other than exactly `RUNNING` or `STOPPED`).
+After the existing get identity checks, the affected get and the entire list
+return `UNAVAILABLE` with `data: null` and no usable revision in the same
+non-retriable read envelope. An independent valid get remains usable. Preserve
+the record under the load rules; no current-mark fallback, invented intent or
+omission of the driver is allowed.
+
 Synthetic list `data` example (not a live observation):
 
 ```json
