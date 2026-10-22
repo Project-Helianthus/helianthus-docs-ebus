@@ -173,7 +173,18 @@ non-retriable read envelope. An independent valid get remains usable. Preserve
 the record under the load rules; no current-mark fallback, invented intent or
 omission of the driver is allowed.
 
-For invalid shared bounds or missing or malformed durable record fields, use
+With both shared counters individually valid, an existing registered record
+must satisfy `0 < desired_revision <= issued mark`. A canonical zero revision
+or a revision above the issued mark is incoherent and receives the same refusal:
+after the existing get identity checks, the affected get and the entire list
+return non-retriable `UNAVAILABLE` with `data: null` and no usable revision.
+An independent get with a coherent record remains usable. Preserve the record;
+never substitute the mark, omit the driver, clamp the revision or advance the
+mark to make the read succeed. For example, with issued mark `7`, record
+revisions `0` and `8` refuse; revisions `6` and `7` satisfy this bound.
+The catalog revision is a separate view counter, never a desired-revision bound.
+
+For invalid shared bounds or missing, malformed or incoherent durable record fields, use
 the categorical message `Durable control state unavailable; offline repair required`.
 
 Synthetic list `data` example (not a live observation):
@@ -244,7 +255,7 @@ lifecycle codes rather than collapsing them into generic transport errors:
 | `COUNTER_EXHAUSTED` | Required unsigned counter cannot advance; no wrap or retry loop |
 
 For list/get, the `UNAVAILABLE` row also covers invalid or unvalidatable durable
-revision bounds: set `isError: true`, `data: null` and `retriable: false`, using
+revision bounds and incoherent record revisions: set `isError: true`, `data: null` and `retriable: false`, using
 the existing categorical error members and envelope. Hash JSON null as usual;
 metadata must not imply a validated lifecycle revision. Explicit GUID-preserving
 offline repair is required; retry, restart, provider recovery and configuration
@@ -253,7 +264,7 @@ refusal table still governs mutations, where unusable control remains
 `FAILED_PRECONDITION`; the read error grants no online repair or bypass of the
 offline reset's own requirement for validated bounds.
 
-Synthetic failure envelopes below use a deterministic synthetic clock and hash the JSON text `null`; neither metadata value is revision authority. Missing, malformed, unreadable, unsupported and overflowing bounds use the same categorical envelope without exposing the invalid value. The get label identifies the manager registry read, not a new tool. The outer MCP tool result must set `isError: true`; the payload envelopes below contain exactly `meta`, `data`, and `error`.
+Synthetic failure envelopes below use a deterministic synthetic clock and hash the JSON text `null`; neither metadata value is revision authority. Missing, malformed, unreadable, unsupported and overflowing bounds, and incoherent record revisions, use the same categorical envelope without exposing the invalid value. The get label identifies the manager registry read, not a new tool. The outer MCP tool result must set `isError: true`; the payload envelopes below contain exactly `meta`, `data`, and `error`.
 
 The `data_hash` values are publication placeholders, not wire values. Validation requires `<computed-data-hash>` and replaces it in memory with the lowercase SHA-256 digest of the JSON text `null`; no concrete digest is published.
 

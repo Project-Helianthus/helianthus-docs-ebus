@@ -952,3 +952,55 @@ def test_runtime_control_contract_desired_state_refusal_mutation(path) -> None:
         MALFORMED_DESIRED_STATE_READ_RULE,
         MALFORMED_DESIRED_STATE_READ_RULE.replace("`desired_state`", "`other_field`"), 1)
     assert checker.validate(documents)
+
+
+INCOHERENT_RECORD_READ_RULE = """With both shared counters individually valid, an existing registered record
+must satisfy `0 < desired_revision <= issued mark`. A canonical zero revision
+or a revision above the issued mark is incoherent and receives the same refusal:
+after the existing get identity checks, the affected get and the entire list
+return non-retriable `UNAVAILABLE` with `data: null` and no usable revision.
+An independent get with a coherent record remains usable. Preserve the record;
+never substitute the mark, omit the driver, clamp the revision or advance the
+mark to make the read succeed. For example, with issued mark `7`, record
+revisions `0` and `8` refuse; revisions `6` and `7` satisfy this bound.
+The catalog revision is a separate view counter, never a desired-revision bound."""
+
+
+@pytest.mark.parametrize("path", [checker.MCP, checker.LIFECYCLE])
+@pytest.mark.parametrize("change", ["removed", "above mark", "zero", "partial list",
+                                     "global refusal", "mark repair", "catalog bound"])
+def test_runtime_control_contract_incoherent_record_read_mutations(path, change) -> None:
+    documents = dict(DOCUMENTS)
+    assert documents[path].count(INCOHERENT_RECORD_READ_RULE) == 1
+    assert any(INCOHERENT_RECORD_READ_RULE in rule["required"]
+               for rule in checker.RULES if rule["path"] == path)
+    replacement = {
+        "removed": "",
+        "above mark": INCOHERENT_RECORD_READ_RULE.replace(
+            "desired_revision <= issued mark", "desired_revision"),
+        "zero": INCOHERENT_RECORD_READ_RULE.replace("0 < desired_revision", "0 <= desired_revision"),
+        "partial list": INCOHERENT_RECORD_READ_RULE.replace("entire list", "partial list"),
+        "global refusal": INCOHERENT_RECORD_READ_RULE.replace("remains usable", "also refuses"),
+        "mark repair": INCOHERENT_RECORD_READ_RULE.replace("never substitute", "substitute"),
+        "catalog bound": INCOHERENT_RECORD_READ_RULE.replace(
+            "never a desired-revision bound", "also a desired-revision bound"),
+    }[change]
+    documents[path] = documents[path].replace(INCOHERENT_RECORD_READ_RULE, replacement, 1)
+    assert checker.validate(documents)
+
+
+@pytest.mark.parametrize("case", ["canonical `desired_revision` above issued mark",
+                                  "zero `desired_revision` with nonzero issued mark"])
+@pytest.mark.parametrize("change", ["removed", "weakened"])
+def test_runtime_control_contract_incoherent_record_case_mutations(case, change) -> None:
+    row = (f"| Both counters valid; registered record has {case} | "
+           "Affected get and entire list: `UNAVAILABLE`, null data, no usable revision; "
+           "independent valid get remains usable; preserve record, no mark fallback |")
+    assert row in UNAVAILABLE_CASE_ROWS
+    documents = dict(DOCUMENTS)
+    assert documents[checker.LIFECYCLE].count(row) == 1
+    replacement = "" if change == "removed" else row.replace(
+        "`UNAVAILABLE`, null data, no usable revision", "Coherent ordinary snapshot/list")
+    documents[checker.LIFECYCLE] = documents[checker.LIFECYCLE].replace(row, replacement, 1)
+    assert (f"{checker.LIFECYCLE}: invalid unavailable-read case table"
+            in checker.validate(documents))

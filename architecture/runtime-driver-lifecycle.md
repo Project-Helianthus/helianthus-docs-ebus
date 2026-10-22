@@ -984,7 +984,18 @@ non-retriable read envelope. An independent valid get remains usable. Preserve
 the record under the load rules; no current-mark fallback, invented intent or
 omission of the driver is allowed.
 
-For invalid shared bounds or missing or malformed durable record fields, use
+With both shared counters individually valid, an existing registered record
+must satisfy `0 < desired_revision <= issued mark`. A canonical zero revision
+or a revision above the issued mark is incoherent and receives the same refusal:
+after the existing get identity checks, the affected get and the entire list
+return non-retriable `UNAVAILABLE` with `data: null` and no usable revision.
+An independent get with a coherent record remains usable. Preserve the record;
+never substitute the mark, omit the driver, clamp the revision or advance the
+mark to make the read succeed. For example, with issued mark `7`, record
+revisions `0` and `8` refuse; revisions `6` and `7` satisfy this bound.
+The catalog revision is a separate view counter, never a desired-revision bound.
+
+For invalid shared bounds or missing, malformed or incoherent durable record fields, use
 the categorical message `Durable control state unavailable; offline repair required`.
 
 With both counters valid and coherent cached records, one or all drivers may
@@ -1015,12 +1026,16 @@ namespace-wide load failures,
 without assuming either bound remains valid. Each case requires `UNAVAILABLE`,
 null data and no usable revision for both list and get. Also test list with an
 empty registry, issued mark 0 and catalog revision 0: it requires the same
-refusal. Also test valid counters
+refusal. Also test canonical record revisions above the issued mark and zero
+record revisions with a nonzero mark, requiring the affected get and entire list
+to refuse while independent coherent gets remain usable. Record revisions equal
+to or below the mark and greater than zero remain coherent; do not compare them
+with the catalog revision. Also test valid counters
 with one and with all drivers `FAILED`, retaining coherent ordinary snapshots,
 deterministic ordering and revisions. These are documentation acceptance
 obligations, not executed runtime tests.
 
-Each of the eight per-bound cases holds the other counter valid; the three namespace-wide load-failure cases assume neither bound is valid. All eleven cases require the stated result for list and get of a canonical, registered driver ID. The next row tests list-only refusal for an empty registry with issued mark 0 and catalog revision 0. The next four rows cover malformed registered records, the following two cover coherent `FAILED` records, and the last two test get refusal precedence.
+Each of the eight per-bound cases holds the other counter valid; the three namespace-wide load-failure cases assume neither bound is valid. All eleven cases require the stated result for list and get of a canonical, registered driver ID. The next row tests list-only refusal for an empty registry with issued mark 0 and catalog revision 0. The next six rows cover malformed or incoherent registered records, the following two cover coherent `FAILED` records, and the last two test get refusal precedence.
 
 | Case | Required read result |
 | --- | --- |
@@ -1040,6 +1055,8 @@ Each of the eight per-bound cases holds the other counter valid; the three names
 | Both counters valid; registered record has malformed `desired_revision` | Affected get and entire list: `UNAVAILABLE`, null data, no usable revision; independent valid get remains usable; preserve record, no mark fallback |
 | Both counters valid; registered record has missing `desired_state` | Affected get and entire list: `UNAVAILABLE`, null data, no usable revision; independent valid get remains usable; preserve record, no mark fallback |
 | Both counters valid; registered record has invalid `desired_state` | Affected get and entire list: `UNAVAILABLE`, null data, no usable revision; independent valid get remains usable; preserve record, no mark fallback |
+| Both counters valid; registered record has canonical `desired_revision` above issued mark | Affected get and entire list: `UNAVAILABLE`, null data, no usable revision; independent valid get remains usable; preserve record, no mark fallback |
+| Both counters valid; registered record has zero `desired_revision` with nonzero issued mark | Affected get and entire list: `UNAVAILABLE`, null data, no usable revision; independent valid get remains usable; preserve record, no mark fallback |
 | Both counters valid; one driver `FAILED` | Coherent ordinary snapshot/list, unaffected entries retained, deterministic ordering and revisions |
 | Both counters valid; all drivers `FAILED` | Coherent ordinary snapshot/list with all catalog entries, deterministic ordering and revisions |
 | Get of a noncanonical driver ID with an invalid durable bound | `NOT_FOUND`, without construction or endpoint access; never `UNAVAILABLE` |
