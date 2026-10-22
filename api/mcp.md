@@ -145,6 +145,16 @@ may be `FAILED` while reads retain the ordinary sorted, coherent projection.
 
 For get, the existing driver-ID input checks and registry-membership refusal are decided first, because they need no durable state: a noncanonical or unregistered `DriverID` returns `NOT_FOUND`, without construction or endpoint access; only a canonical, registered driver ID proceeds to the durable-bounds check and its `UNAVAILABLE` refusal; list has no driver ID.
 
+With both shared counters valid, a registered driver whose existing durable
+record has a missing or malformed `desired_revision` has no authoritative read
+revision. After the existing get identity checks, get of that driver and the
+entire list refuse with `UNAVAILABLE` and `data: null`, using the same
+non-retriable read envelope as invalid shared bounds. Do not omit the driver,
+substitute the current mark, or use stale cached fields. Get of an independent
+driver with a validated coherent record remains usable. The current-mark
+fallback applies only when the driver's record is absent, never when an
+existing record is malformed; preserve that record under the load rules.
+
 Synthetic list `data` example (not a live observation):
 
 ```json

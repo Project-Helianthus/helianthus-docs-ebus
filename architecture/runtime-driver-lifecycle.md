@@ -952,6 +952,16 @@ fabricated all-`FAILED` catalog encodes this refusal.
 
 For get, the existing driver-ID input checks and registry-membership refusal are decided first, because they need no durable state: a noncanonical or unregistered `DriverID` returns `NOT_FOUND`, without construction or endpoint access; only a canonical, registered driver ID proceeds to the durable-bounds check and its `UNAVAILABLE` refusal; list has no driver ID.
 
+With both shared counters valid, a registered driver whose existing durable
+record has a missing or malformed `desired_revision` has no authoritative read
+revision. After the existing get identity checks, get of that driver and the
+entire list refuse with `UNAVAILABLE` and `data: null`, using the same
+non-retriable read envelope as invalid shared bounds. Do not omit the driver,
+substitute the current mark, or use stale cached fields. Get of an independent
+driver with a validated coherent record remains usable. The current-mark
+fallback applies only when the driver's record is absent, never when an
+existing record is malformed; preserve that record under the load rules.
+
 With both counters valid and coherent cached records, one or all drivers may
 be `FAILED` while list/get still return ordinary coherent snapshots. Preserve
 all registered entries in bytewise driver-ID order, each validated durable
@@ -994,6 +1004,8 @@ Each of the ten invalid-bound cases holds the other counter valid and requires t
 | Catalog revision unreadable | `UNAVAILABLE`, null data, no usable revision |
 | Catalog revision unsupported | `UNAVAILABLE`, null data, no usable revision |
 | Catalog revision above the unsigned 64-bit maximum | `UNAVAILABLE`, null data, no usable revision; no wrap |
+| Both counters valid; registered record has missing `desired_revision` | Affected get and entire list: `UNAVAILABLE`, null data, no usable revision; independent valid get remains usable; preserve record, no mark fallback |
+| Both counters valid; registered record has malformed `desired_revision` | Affected get and entire list: `UNAVAILABLE`, null data, no usable revision; independent valid get remains usable; preserve record, no mark fallback |
 | Both counters valid; one driver `FAILED` | Coherent ordinary snapshot/list, unaffected entries retained, deterministic ordering and revisions |
 | Both counters valid; all drivers `FAILED` | Coherent ordinary snapshot/list with all catalog entries, deterministic ordering and revisions |
 | Get of a noncanonical driver ID with an invalid durable bound | `NOT_FOUND`, without construction or endpoint access; never `UNAVAILABLE` |

@@ -759,3 +759,48 @@ def test_runtime_control_contract_unavailable_forbids_nested_read_members(member
     envelope["meta"]["consistency"]["nested"] = [{member: "0"}]
     assert checker.contains_read_view(envelope)
     assert not checker.unavailable_envelope(envelope)
+
+
+MALFORMED_RECORD_READ_RULE = """With both shared counters valid, a registered driver whose existing durable
+record has a missing or malformed `desired_revision` has no authoritative read
+revision. After the existing get identity checks, get of that driver and the
+entire list refuse with `UNAVAILABLE` and `data: null`, using the same
+non-retriable read envelope as invalid shared bounds. Do not omit the driver,
+substitute the current mark, or use stale cached fields. Get of an independent
+driver with a validated coherent record remains usable. The current-mark
+fallback applies only when the driver's record is absent, never when an
+existing record is malformed; preserve that record under the load rules."""
+
+
+@pytest.mark.parametrize("path", [checker.MCP, checker.LIFECYCLE])
+def test_runtime_control_contract_malformed_record_read_rule(path) -> None:
+    assert DOCUMENTS[path].count(MALFORMED_RECORD_READ_RULE) == 1
+    assert any(MALFORMED_RECORD_READ_RULE in rule["required"]
+               for rule in checker.RULES if rule["path"] == path)
+
+
+@pytest.mark.parametrize("path", [checker.MCP, checker.LIFECYCLE])
+@pytest.mark.parametrize("change", ["removed", "mark fallback", "partial list", "global refusal"])
+def test_runtime_control_contract_malformed_record_read_mutations(path, change) -> None:
+    documents = dict(DOCUMENTS)
+    assert documents[path].count(MALFORMED_RECORD_READ_RULE) == 1
+    replacement = {
+        "removed": "",
+        "mark fallback": MALFORMED_RECORD_READ_RULE.replace(
+            "substitute the current mark", "reject the current mark"),
+        "partial list": MALFORMED_RECORD_READ_RULE.replace(
+            "entire list refuse", "partial list succeeds"),
+        "global refusal": MALFORMED_RECORD_READ_RULE.replace(
+            "record remains usable", "record also refuses"),
+    }[change]
+    documents[path] = documents[path].replace(MALFORMED_RECORD_READ_RULE, replacement, 1)
+    assert checker.validate(documents)
+
+
+@pytest.mark.parametrize("disposition", ["missing", "malformed"])
+def test_runtime_control_contract_malformed_record_read_cases(disposition) -> None:
+    row = (f"| Both counters valid; registered record has {disposition} `desired_revision` | "
+           "Affected get and entire list: `UNAVAILABLE`, null data, no usable revision; "
+           "independent valid get remains usable; preserve record, no mark fallback |")
+    assert DOCUMENTS[checker.LIFECYCLE].count(row) == 1
+    assert row in UNAVAILABLE_CASE_ROWS
