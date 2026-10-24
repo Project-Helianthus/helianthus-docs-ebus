@@ -84,11 +84,13 @@ an endpoints-document entry, with the same names, types and bounds.
 The gateway applies the same exclusivity. `-modbus-tcp-endpoints-file` together
 with any of `-modbus-tcp-enabled`, `-modbus-tcp-endpoint`,
 `-modbus-tcp-endpoint-file` or `-modbus-tcp-dial-timeout` is rejected as
-`MIXED_CONFIGURATION` before anything is registered. For enabled startup the
-add-on verifies that the gateway advertises `modbus-tcp-endpoints-file` before
-it launches the gateway; absent support fails closed, as partial v1 flag
-support does today. Disabled startup inspects no Modbus flag support. These
-selection rules are a Hypothesis.
+`MIXED_CONFIGURATION` before anything is registered. When the selection is v2
+the add-on verifies that the gateway advertises `modbus-tcp-endpoints-file`
+before it launches the gateway; absent support fails closed. A v1 selection
+requires only the frozen v1 flags and never inspects support for the v2 flag,
+so a v1-only configuration still starts against a gateway without it. Disabled
+startup inspects no Modbus flag support. These selection rules are a
+Hypothesis.
 
 ## Endpoints document
 
@@ -170,7 +172,7 @@ and any data after the object. All of this is a Hypothesis.
 
 | `family` | Driver ID base | Native qualification | Admission in the gateway composition | Grade |
 | --- | --- | --- | --- | --- |
-| `sunspec` | `modbus.sunspec` | The registry-selected SunSpec qualification (record V3 on the single-endpoint page) | Composed: one worker per instance | Proven |
+| `sunspec` | `modbus.sunspec` | The registry-selected SunSpec qualification (record V3 on the single-endpoint page) | Composed: one worker per instance. The existing single-endpoint worker is Proven; the per-instance composition is not implemented. | Proven for the single-endpoint worker, Hypothesis for one worker per instance |
 | `huawei.smartlogger` | `modbus.huawei.smartlogger` | The family's own native contract | Withheld until that contract admits a qualification | Proven that the table withholds it, Unknown for the qualification |
 | `huawei.emma` | `modbus.huawei.emma` | The family's own native contract | Withheld until that contract admits a qualification | Proven that the table withholds it, Unknown for the qualification |
 | `huawei.sdongle` | `modbus.huawei.sdongle` | The family's own native contract | Withheld until that contract admits a qualification | Proven that the table withholds it, Unknown for the qualification |

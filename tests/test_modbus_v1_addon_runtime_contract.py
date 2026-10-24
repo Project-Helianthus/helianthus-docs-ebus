@@ -210,6 +210,8 @@ class ReferenceValidator:
             return invalid
         if "null" in re.findall(r'"(?:[^"\\]|\\.)*"|\bnull\b', text):
             return invalid
+        if self._has_control_character(document):
+            return invalid
         if not isinstance(document, dict):
             return invalid
         for member in ("contract", "endpoints"):
@@ -238,6 +240,16 @@ class ReferenceValidator:
         if len(set(ids)) != len(ids):
             return "DUPLICATE_DRIVER_ID", None
         return None
+
+    @classmethod
+    def _has_control_character(cls, value: object) -> bool:
+        if isinstance(value, str):
+            return any(ord(char) < 0x20 or ord(char) == 0x7F for char in value)
+        if isinstance(value, dict):
+            return any(cls._has_control_character(item) for pair in value.items() for item in pair)
+        if isinstance(value, list):
+            return any(cls._has_control_character(item) for item in value)
+        return False
 
     def _entry(self, entry: object):
         if not isinstance(entry, dict):
@@ -387,6 +399,8 @@ class ModbusMultiEndpointRuntimeContractTest(unittest.TestCase):
             self.example_bytes.replace(b'"gap_ms": 200', b'"gap_ms": null'),
             self.example_bytes.replace(b'"label": "roof"', b'"label": "default", "label": "roof"'),
             b"x" * (MAX_DOCUMENT_BYTES + 1),
+            self.example_bytes.replace(b'"label": "roof"', b'"label": "ro\\u0001of"'),
+            b'{"contract": "' + DOCUMENT_CONTRACT.encode() + b'", "endpoints": [], "a\\u0001": 1}',
         )
         for raw in invalid_documents:
             with self.subTest(raw=raw[:40]):
@@ -424,6 +438,11 @@ class ModbusMultiEndpointRuntimeContractTest(unittest.TestCase):
         )
         self.assertEqual(select_gateway_flags(["-modbus-tcp-endpoints-file"]), "v2")
         self.assertEqual(select_gateway_flags(["-modbus-tcp-endpoint-file"]), "v1")
+        self.assertEqual(select_gateway_flags([]), "v1")
+        self.assertIn(
+            "never inspects support for the v2 flag",
+            " ".join(self.sections["Selecting configuration v1 or v2"].split()),
+        )
         for flag in V1_GATEWAY_FLAGS:
             self.assertEqual(
                 select_gateway_flags(["-modbus-tcp-endpoints-file", flag]), "MIXED_CONFIGURATION"
