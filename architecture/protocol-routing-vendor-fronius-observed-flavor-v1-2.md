@@ -20,7 +20,13 @@ this versioned contract; it is not completion evidence for any live
 qualification.
 
 No endpoint, serial, raw register payload, private capture, capture time,
-vendor register row, or SunSpec table is reproduced here. The native geometry
+vendor register row, or SunSpec table is reproduced here. The sanitized
+observation record is published separately under
+[`docs/platform/live/fronius-observed-flavor-1.2.0/`](../docs/platform/live/fronius-observed-flavor-1.2.0/):
+the exact Common identity tuple, the ordered chain headers, the acquisition
+parameters, and the registry outcomes, with no register words. That record is
+the falsifiable artifact for the `Proven` labels below, and a disagreement
+between it and this page is a defect in this contract. The native geometry
 of this ordered chain is recorded in the
 [Modbus-family Fronius flavor reference](https://github.com/Project-Helianthus/helianthus-docs-modbus/blob/main/protocols/fronius/sunspec-float-v1.md);
 this AGPL contract owns only the Helianthus exact-admission tuple and outcomes
@@ -31,8 +37,8 @@ below.
 Labels follow the repository evidence rules and are scoped to this exact tuple.
 They describe documentary evidence and are not a qualification result.
 
-`Proven`, established by the one sanitized walk within its stated acquisition
-context:
+`Proven`, established by the one sanitized walk recorded in that artifact
+within its stated acquisition context:
 
 - Common `Mn`, `Md`, and `Vr` decoded to `Fronius`, `Symo GEN24 10.0`, and
   `1.42.9-1`. The fixed-width Common strings are NUL-padded on the wire; the
