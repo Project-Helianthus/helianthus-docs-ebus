@@ -176,6 +176,8 @@ FORBIDDEN_COMPARISONS = [
 MATCH_RULE = "exact string match"
 ARTIFACT_DIR = "docs/platform/live/fronius-observed-flavor-1.2.0"
 ARTIFACT_LINK = f"](../{ARTIFACT_DIR}/)"
+SIDECAR_FILE = "common-block.json"
+SIDECAR_LINK = f"](../{ARTIFACT_DIR}/{SIDECAR_FILE})"
 V12_PAGE_LINK = "(protocol-routing-vendor-fronius-observed-flavor-v1-2.md)"
 PLATFORM_ENTRY_LINK = "(./live/fronius-observed-flavor-1.2.0/)"
 
@@ -376,6 +378,27 @@ def assert_v12_contract(docs: Docs) -> None:
     assert "That record is the falsifiable artifact for the `Proven` labels below" in status
     assert ARTIFACT_LINK in page
     assert (FLAVOR_V12.parent / f"../{ARTIFACT_DIR}").resolve().is_dir()
+    # The one sidecar: Common block words only, serial field zeroed, cited and
+    # bounded on the page.
+    assert SIDECAR_LINK in page
+    assert (FLAVOR_V12.parent / f"../{ARTIFACT_DIR}/{SIDECAR_FILE}").resolve().is_file()
+    assert "this page carries no register word" in status
+    assert "with no register words in `evidence.json`" in status
+    assert (
+        "lists the sanitized register words of the Common block (Model 1) alone, "
+        "from the SunSpec signature through the device-address register, with "
+        "the serial-number field zeroed and no word of any other model"
+    ) in status
+    assert "it names the packet's own label as its provenance reference" in status
+    assert (
+        "The sidecar covers Model 1 only: the other chain entries and the "
+        "capability outcome are recorded as headers and outcomes without "
+        "register words."
+    ) in status
+    assert (
+        "The sanitized Common block register words in the sidecar decode to the "
+        "same three strings and carry the Model 1 header `1/65`"
+    ) in evidence
     assert f"]{V12_PAGE_LINK}" in docs.overview
     assert f"]{V12_PAGE_LINK}" in docs.chain_doc
     assert (FLAVOR_V12.parent / V12_PAGE_LINK.strip("()")).is_file()
@@ -666,7 +689,17 @@ def test_v12_contract_rejects_a_dropped_comparison_prohibition(kind: str) -> Non
 
 @pytest.mark.parametrize(
     "field",
-    ["overview", "chain_doc", "platform_index", "page_link", "page_claim"],
+    [
+        "overview",
+        "chain_doc",
+        "platform_index",
+        "page_link",
+        "page_claim",
+        "sidecar_link",
+        "sidecar_scope",
+        "sidecar_serial",
+        "sidecar_decoding",
+    ],
 )
 def test_v12_contract_rejects_missing_index_links(field: str) -> None:
     docs = load_docs()
@@ -681,6 +714,27 @@ def test_v12_contract_rejects_missing_index_links(field: str) -> None:
     elif field == "page_link":
         weakened = docs._replace(
             page=replace_once(docs.page, ARTIFACT_LINK, "](../docs/platform/live/removed/)")
+        )
+    elif field == "sidecar_link":
+        weakened = docs._replace(
+            page=replace_once(docs.page, SIDECAR_LINK, "](../docs/platform/live/removed.json)")
+        )
+    elif field == "sidecar_scope":
+        weakened = docs._replace(
+            page=re.sub(r"\s+and\s+no\s+word\s+of\s+any\s+other\s+model", "", docs.page, count=1)
+        )
+    elif field == "sidecar_serial":
+        weakened = docs._replace(
+            page=re.sub(r"with\s+the\s+serial-number\s+field\s+zeroed", "as captured", docs.page, count=1)
+        )
+    elif field == "sidecar_decoding":
+        weakened = docs._replace(
+            page=re.sub(
+                r"The\s+sanitized\s+Common\s+block\s+register\s+words\s+in\s+the\s+sidecar",
+                "A summary of the sidecar",
+                docs.page,
+                count=1,
+            )
         )
     else:
         weakened = docs._replace(

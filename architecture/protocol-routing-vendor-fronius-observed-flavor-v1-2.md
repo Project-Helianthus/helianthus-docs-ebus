@@ -19,14 +19,22 @@ and the version string did not. That designed fail-closed result motivates
 this versioned contract; it is not completion evidence for any live
 qualification.
 
-No endpoint, serial, raw register payload, private capture, capture time,
-vendor register row, or SunSpec table is reproduced here. The sanitized
-observation record is published separately under
+No endpoint, serial, private capture, capture time, vendor register row, or
+SunSpec table is reproduced here, and this page carries no register word. The
+sanitized observation record is published separately under
 [`docs/platform/live/fronius-observed-flavor-1.2.0/`](../docs/platform/live/fronius-observed-flavor-1.2.0/):
 the exact Common identity tuple, the ordered chain headers, the acquisition
-parameters, and the registry outcomes, with no register words. That record is
-the falsifiable artifact for the `Proven` labels below, and a disagreement
-between it and this page is a defect in this contract. The native geometry
+parameters, and the registry outcomes, with no register words in
+`evidence.json`. That record is the falsifiable artifact for the `Proven`
+labels below, and a disagreement between it and this page is a defect in this
+contract. One sidecar in the same directory,
+[`common-block.json`](../docs/platform/live/fronius-observed-flavor-1.2.0/common-block.json),
+lists the sanitized register words of the Common block (Model 1) alone, from
+the SunSpec signature through the device-address register, with the
+serial-number field zeroed and no word of any other model; it names the
+packet's own label as its provenance reference. The sidecar covers Model 1
+only: the other chain entries and the capability outcome are recorded as
+headers and outcomes without register words. The native geometry
 of this ordered chain is recorded in the
 [Modbus-family Fronius flavor reference](https://github.com/Project-Helianthus/helianthus-docs-modbus/blob/main/protocols/fronius/sunspec-float-v1.md);
 this AGPL contract owns only the Helianthus exact-admission tuple and outcomes
@@ -43,7 +51,9 @@ within its stated acquisition context:
 - Common `Mn`, `Md`, and `Vr` decoded to `Fronius`, `Symo GEN24 10.0`, and
   `1.42.9-1`. The fixed-width Common strings are NUL-padded on the wire; the
   tuple values are the decoded strings, and the padding is not part of the
-  identity.
+  identity. The sanitized Common block register words in the sidecar decode to
+  the same three strings and carry the Model 1 header `1/65`, so this decoding
+  can be checked against an observed register dump.
 - The walk followed the chain from the SunSpec signature through the
   consuming `FFFF/0` terminal and found, in order,
   `1/65, 113/60, 120/26, 121/30, 122/44, 123/24, 160/88, 124/24, FFFF/0`.
@@ -114,7 +124,7 @@ The three identifiers stay mutually exclusive:
 
 V1.1 and V1.2 share one ordered chain and differ only in the exact Common
 version string, so no snapshot can match both. A different tuple or chain needs
-separate evidence and a new versioned contract.
+separate evidence and its own versioned contract.
 
 ## Outcomes and ownership
 

@@ -1,0 +1,18 @@
+{
+  "label": "fronius-observed-flavor-1.2.0",
+  "function_code": 3,
+  "unit_id": 1,
+  "base_offset": 40000,
+  "redaction": "model 1 serial-number field (16 registers) zeroed; no endpoint, date, time or digest",
+  "registers": [
+    21365, 28243, 1, 65, 18034, 28526, 26997, 29440,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 21369, 28015, 8263, 17742,
+    12852, 8241, 12334, 12288, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 12590, 13362, 11833, 11569,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 1
+  ]
+}
