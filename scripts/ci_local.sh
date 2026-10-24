@@ -327,6 +327,7 @@ python3 -m pytest -q \
   tests/test_modbus_v1_live_qualification_contract.py \
   tests/test_fronius_m4_05_live_evidence.py \
   tests/test_fronius_m4_05_0651_go.py \
+  tests/test_fronius_flavor_v1_2_walk_evidence.py \
   tests/test_fronius_m5_continuous_acquisition.py \
   tests/test_modbus_vendor_evidence_v1.py \
   tests/test_canonical_pv_semantics_v1.py \
