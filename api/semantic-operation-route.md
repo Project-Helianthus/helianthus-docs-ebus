@@ -64,25 +64,36 @@ Revision/generation values are canonical unsigned decimal strings within the
 existing 64-bit type, never GraphQL `Int` or floating-point numbers. Values retain
 their one matching tagged arm, exact decimal coefficient/exponent and unit.
 
-Bound this target API before admission: at most one `semanticOperation` field
-per GraphQL request, including aliases/fragments; no batched operation requests.
-Reject additional input members, null required members and malformed types.
-Require a single UTF-8 JSON HTTP request body. During JSON parsing, reject
-duplicate member names at every object level, including the request envelope,
-variables and nested input records, before constructing objects that discard
-duplicates or performing GraphQL coercion. Compare names after JSON escape
-decoding; reject duplicates even when their values are identical. Limit that
-entire body, after HTTP content decoding and
-before JSON parsing or GraphQL coercion, to 65,536
-bytes (64 KiB), including query text, variables, metadata, whitespace and JSON
-escapes. This same byte limit covers inline literals and variable inputs; no
-reserialization is measured. Limit each opaque ID to 256 UTF-8 bytes, and
-arguments and preconditions to 64 entries each. Existing SemReg
-type/collection bounds also apply. Arguments are sorted by field ID; preconditions
-by `(canonical fact key, candidate ID, candidate revision)` with no duplicate
+Bound this target API on the parsed operation, before admission. The
+`semanticOperation` resolver enforces every limit in this paragraph on the
+operation the stock GraphQL handler has already parsed, so a refused request
+captures, admits and sends nothing. Allow at most one `semanticOperation`
+selection in the executing operation, counted on the parsed document through
+aliases, inline fragments and fragment spreads, including a selection that a
+directive would skip; a second selection is `INVALID_ARGUMENT`, and there are no
+batched operation requests. Reject additional input members, null required
+members and malformed types. Require a single UTF-8 JSON HTTP request body,
+judged from the request line and headers alone: a POST with no non-empty `query`
+URL parameter, an `application/json` media type whose only parameter, if any, is
+a UTF-8 charset, and no content encoding other than identity. Any other
+transport is `INVALID_ARGUMENT`. Limit the total input to 65,536 bytes (64 KiB),
+measured on the parsed `input` value as the length of its compact JSON encoding
+without insignificant whitespace; an input over the limit is
+`RESOURCE_EXHAUSTED`. This same byte limit covers inline literals and variable
+inputs; query text, other variables, metadata and padding outside the input do
+not count. Limit each opaque ID to 256 UTF-8 bytes, and arguments and
+preconditions to 64 entries each. Existing SemReg type/collection bounds also
+apply. Arguments are sorted by field ID; preconditions by
+`(canonical fact key, candidate ID, candidate revision)` with no duplicate
 tuple. Reject duplicate arguments and unsupported value arms. Overflow and
 invalid input fail before any executor invocation; do not truncate or coerce.
 These are API resource bounds, not native control ranges.
+
+A request that does not select `semanticOperation` is handled exactly as by the
+stock GraphQL handler, whatever its size or content: no limit above applies to
+it. The route scans no request body as bytes, adds no byte limit on the whole
+body and rejects no duplicate JSON member name of its own; the operation is what
+the stock handler decoded.
 
 ## Admission and native execution
 
