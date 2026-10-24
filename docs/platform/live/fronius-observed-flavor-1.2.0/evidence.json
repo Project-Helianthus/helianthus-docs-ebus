@@ -12,6 +12,7 @@
     "transport": "modbus_tcp",
     "unit_id": 1,
     "function_code": 3,
+    "signature_pdu_offset": 40000,
     "writes_permitted": false
   },
   "observation": {

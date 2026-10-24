@@ -70,6 +70,7 @@ PUBLIC_TYPE_SCHEMA = {
         "transport": str,
         "unit_id": int,
         "function_code": int,
+        "signature_pdu_offset": int,
         "writes_permitted": bool,
     },
     "observation": {
@@ -162,6 +163,7 @@ def assert_record_contract(record: dict[str, object]) -> None:
         "transport": "modbus_tcp",
         "unit_id": 1,
         "function_code": 3,
+        "signature_pdu_offset": 40000,
         "writes_permitted": False,
     }
 
@@ -239,7 +241,7 @@ def assert_readme_matches(readme: str, record: dict[str, object]) -> None:
     assert f"`{observation['extent_words']}`" in squashed
     assert f"unit ID `{acquisition['unit_id']}`" in squashed
     assert f"FC0{acquisition['function_code']}" in squashed
-    assert "`40000`" in squashed
+    assert f"normalized PDU offset `{acquisition['signature_pdu_offset']}`" in squashed
     assert "`ADMITTED`" in squashed
     assert squashed.count("`FIRMWARE_MISMATCH`") == 1
     assert "holds no `MATCHED` result" in squashed
@@ -297,7 +299,7 @@ def test_record_directory_holds_exactly_the_readme_and_the_record() -> None:
 def test_every_field_of_the_record_is_pinned() -> None:
     record = load_evidence()
     paths = leaf_paths(record)
-    assert len(paths) == 40
+    assert len(paths) == 41
     for path in paths:
         weakened = copy.deepcopy(record)
         parent = walk(weakened, path[:-1])
