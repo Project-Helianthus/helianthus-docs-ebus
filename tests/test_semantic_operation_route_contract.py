@@ -80,14 +80,42 @@ def test_semantic_operation_route_contract() -> None:
      "Whenever the parsed operation selects `semanticOperation`,"),
     ("If every `semanticOperation` selection is skipped by `@skip(if: true)` or\n"
      "`@include(if: false)`, the stock GraphQL executor never invokes the resolver;\n"
-     "these limits are not evaluated and a second skipped selection does not produce\n"
-     "`INVALID_ARGUMENT`.",
+     "only resolver-owned checks are bypassed, and a second skipped selection does not\n"
+     "produce `INVALID_ARGUMENT`.",
      "Every second skipped selection produces `INVALID_ARGUMENT`."),
 ))
 def test_rejects_unconditional_skipped_selection_validation(before: str, after: str) -> None:
     assert before in TEXT
     with pytest.raises(AssertionError, match="Visible contract blocks changed"):
         validate_contract(TEXT.replace(before, after, 1))
+
+
+@pytest.mark.parametrize("rule", (
+    "only resolver-owned checks are bypassed",
+    "Stock GraphQL document validation and variable coercion still run before",
+    "missing non-null variables even when every selection is skipped",
+))
+def test_preserves_stock_validation_for_skipped_selections(rule: str) -> None:
+    assert rule in TEXT
+    with pytest.raises(AssertionError, match="Visible contract blocks changed"):
+        validate_contract(TEXT.replace(rule, "validation is bypassed", 1))
+
+
+@pytest.mark.parametrize("rule", (
+    "Go's `encoding/json.Marshal` with its default HTML escaping enabled",
+    "UTF-8, without insignificant whitespace or a trailing newline",
+    "Object keys are sorted",
+    "non-ASCII characters are emitted directly except U+2028 and U+2029",
+    r'`\u2028` and `\u2029`',
+    r'`<`, `>` and `&` use `\u003c`, `\u003e` and `\u0026`',
+    "solidus `/` is not escaped",
+    r'quotation marks and backslashes use `\"` and `\\`',
+    r'`\b`, `\f`, `\n`, `\r`, `\t` or lowercase `\u00xx` escapes',
+))
+def test_pins_input_size_serialization(rule: str) -> None:
+    assert rule in TEXT
+    with pytest.raises(AssertionError, match="Visible contract blocks changed"):
+        validate_contract(TEXT.replace(rule, "any compact JSON encoding", 1))
 
 
 @pytest.mark.parametrize("token", BLOCKS, ids=lambda token: token.content[:60])

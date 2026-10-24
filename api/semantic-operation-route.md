@@ -66,7 +66,7 @@ their one matching tagged arm, exact decimal coefficient/exponent and unit.
 
 Bound this target API on the parsed operation, before admission.
 When at least one `semanticOperation` selection reaches its resolver,
-the resolver enforces every limit in this paragraph on the
+the resolver enforces the resolver-owned limits in this paragraph on the
 operation the stock GraphQL handler has already parsed, so a refused request
 captures, admits and sends nothing. Allow at most one `semanticOperation`
 selection in the executing operation, counted on the parsed document through
@@ -75,15 +75,29 @@ directive would skip; a second selection is `INVALID_ARGUMENT`, and there are no
 batched operation requests.
 If every `semanticOperation` selection is skipped by `@skip(if: true)` or
 `@include(if: false)`, the stock GraphQL executor never invokes the resolver;
-these limits are not evaluated and a second skipped selection does not produce
-`INVALID_ARGUMENT`. Reject additional input members, null required
-members and malformed types. Require a single UTF-8 JSON HTTP request body,
+only resolver-owned checks are bypassed, and a second skipped selection does not
+produce `INVALID_ARGUMENT`.
+Stock GraphQL document validation and variable coercion still run before
+directive execution: they reject additional input members, null required
+members, malformed literals/types and
+missing non-null variables even when every selection is skipped.
+Require a single UTF-8 JSON HTTP request body,
 judged from the request line and headers alone: a POST with no non-empty `query`
 URL parameter, an `application/json` media type whose only parameter, if any, is
 a UTF-8 charset, and no content encoding other than identity. Any other
 transport is `INVALID_ARGUMENT`. Limit the total input to 65,536 bytes (64 KiB),
 measured on the parsed `input` value as the length of its compact JSON encoding
-without insignificant whitespace; an input over the limit is
+produced by Go's `encoding/json.Marshal` with its default HTML escaping enabled:
+UTF-8, without insignificant whitespace or a trailing newline.
+Object keys are sorted; array order is preserved. In strings,
+non-ASCII characters are emitted directly except U+2028 and U+2029,
+which use `\u2028` and `\u2029`;
+`<`, `>` and `&` use `\u003c`, `\u003e` and `\u0026`;
+solidus `/` is not escaped;
+quotation marks and backslashes use `\"` and `\\`;
+control characters use `\b`, `\f`, `\n`, `\r`, `\t` or lowercase `\u00xx` escapes.
+These rules apply after parsing, independently of the source spelling or escapes.
+With this encoding, an input over the limit is
 `RESOURCE_EXHAUSTED`. This same byte limit covers inline literals and variable
 inputs; query text, other variables, metadata and padding outside the input do
 not count. Limit each opaque ID to 256 UTF-8 bytes, and arguments and
