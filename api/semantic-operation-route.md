@@ -64,14 +64,19 @@ Revision/generation values are canonical unsigned decimal strings within the
 existing 64-bit type, never GraphQL `Int` or floating-point numbers. Values retain
 their one matching tagged arm, exact decimal coefficient/exponent and unit.
 
-Bound this target API on the parsed operation, before admission. The
-`semanticOperation` resolver enforces every limit in this paragraph on the
+Bound this target API on the parsed operation, before admission.
+When at least one `semanticOperation` selection reaches its resolver,
+the resolver enforces every limit in this paragraph on the
 operation the stock GraphQL handler has already parsed, so a refused request
 captures, admits and sends nothing. Allow at most one `semanticOperation`
 selection in the executing operation, counted on the parsed document through
 aliases, inline fragments and fragment spreads, including a selection that a
 directive would skip; a second selection is `INVALID_ARGUMENT`, and there are no
-batched operation requests. Reject additional input members, null required
+batched operation requests.
+If every `semanticOperation` selection is skipped by `@skip(if: true)` or
+`@include(if: false)`, the stock GraphQL executor never invokes the resolver;
+these limits are not evaluated and a second skipped selection does not produce
+`INVALID_ARGUMENT`. Reject additional input members, null required
 members and malformed types. Require a single UTF-8 JSON HTTP request body,
 judged from the request line and headers alone: a POST with no non-empty `query`
 URL parameter, an `application/json` media type whose only parameter, if any, is

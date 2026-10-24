@@ -75,6 +75,21 @@ def test_semantic_operation_route_contract() -> None:
     validate_contract(TEXT)
 
 
+@pytest.mark.parametrize("before,after", (
+    ("When at least one `semanticOperation` selection reaches its resolver,",
+     "Whenever the parsed operation selects `semanticOperation`,"),
+    ("If every `semanticOperation` selection is skipped by `@skip(if: true)` or\n"
+     "`@include(if: false)`, the stock GraphQL executor never invokes the resolver;\n"
+     "these limits are not evaluated and a second skipped selection does not produce\n"
+     "`INVALID_ARGUMENT`.",
+     "Every second skipped selection produces `INVALID_ARGUMENT`."),
+))
+def test_rejects_unconditional_skipped_selection_validation(before: str, after: str) -> None:
+    assert before in TEXT
+    with pytest.raises(AssertionError, match="Visible contract blocks changed"):
+        validate_contract(TEXT.replace(before, after, 1))
+
+
 @pytest.mark.parametrize("token", BLOCKS, ids=lambda token: token.content[:60])
 @pytest.mark.parametrize("wrapper", ("", "<!--\n{}\n-->\n", "```text\n{}\n```\n", "{} weakened\n"))
 def test_rejects_missing_hidden_or_weakened_rule(token, wrapper: str) -> None:
