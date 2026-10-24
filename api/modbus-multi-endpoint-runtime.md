@@ -65,6 +65,7 @@ not observations.
 | The SunSpec runtime publishes one PV asset per endpoint; its identifier follows the existing PV publication rule. | Proven by [the PV publication core](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/internal/modbusadapter/semreg_pv_publication_core.go) |
 | The gateway's provider table contains the family identifiers `huawei.smartlogger`, `huawei.emma` and `huawei.sdongle` in the withheld state. | Proven by [the provider table](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/cmd/gateway/modbus_provider_registry.go) |
 | The three vendor status tools `modbus.v1.huawei.smartlogger.status.get`, `modbus.v1.huawei.emma.identity.get` and `modbus.v1.huawei.sdongle.status.get` accept an empty argument object and resolve to one provider per server. | Proven by [the tool registrations](https://github.com/Project-Helianthus/helianthus-ebusgateway/tree/main/mcp) |
+| The existing SunSpec status tool `modbus.v1.fronius.sunspec.status.get` accepts an empty argument object, resolves to one provider per server and reports that provider's qualification outcome. | Proven by [the tool registrations](https://github.com/Project-Helianthus/helianthus-ebusgateway/tree/main/mcp) |
 | `modbus.v1.raw.read` and `modbus.v1.profile.observation.get` address the one configured endpoint; raw reads share a quota of four per one-second window. | Proven by [the Modbus MCP page](./modbus-v1-mcp.md) |
 | Registration validates a complete descriptor set, disabled entries included, before any factory call, and a duplicate driver or source refuses the set without hub mutation. | Proven by [the registration contract](../architecture/runtime-driver-lifecycle.md#s0a1-typed-compiled-driver-registration) |
 
@@ -153,7 +154,10 @@ describes an installation.
 The document is a single UTF-8 JSON object without a byte-order mark. The
 decoder rejects duplicate keys at any depth, unknown members at any depth,
 `null` values, fractional or exponent numbers, control characters in strings
-and any data after the object. All of this is a Hypothesis.
+and any data after the object. Byte bounds count the UTF-8 bytes of Unicode
+scalar values. An escaped lone surrogate is not a scalar value: in `label` or
+`endpoint` it is rejected by that member's own category without raising. All of
+this is a Hypothesis.
 
 ### Members and bounds
 
@@ -197,8 +201,8 @@ relies on the add-on. The check order is:
    the entry count.
 4. Each entry in document order: required members, unknown members at any depth
    inside the entry, label, family, endpoint, dial timeout, allowlist, pacing.
-5. Across entries, after every entry passed: duplicate label, duplicate
-   endpoint, duplicate driver ID.
+5. Across entries, after every entry passed: duplicate label, then duplicate
+   endpoint.
 
 A rejection names one static category and, for an entry-local case, the
 zero-based entry position. It never echoes a document value, endpoint, label or
@@ -219,15 +223,19 @@ Rejection table:
 | List too long | `TOO_MANY_ENTRIES` | Nine entries | Hypothesis |
 | Missing field | `MISSING_FIELD` | An entry without `endpoint`, or a document without `endpoints` | Hypothesis |
 | v1 and v2 mixed | `MIXED_CONFIGURATION` | The list option together with a scalar endpoint, or the endpoints flag together with a v1 flag | Hypothesis |
-| Label not matching the driver ID pattern | `INVALID_LABEL` | `Roof_1`, `1roof`, `roof-`, `a.b`, an empty label, or a label longer than 32 bytes | Hypothesis |
+| Label not matching the driver ID pattern | `INVALID_LABEL` | `Roof_1`, `1roof`, `roof-`, `a.b`, an empty label, a label longer than 32 bytes, or a label with an escaped lone surrogate | Hypothesis |
 | Empty list | `EMPTY_LIST` | `"endpoints": []` | Hypothesis |
 | Unknown member | `UNKNOWN_MEMBER` | `"enabled": true` in an entry, or an unlisted member inside `pacing` | Hypothesis |
 | Unreadable or unsafe document | `INVALID_DOCUMENT` | Wrong mode, a link, a size outside the bound, invalid syntax, a duplicate key, a null value, a fractional or exponent number, trailing data, or a `contract` value other than the stated one | Hypothesis |
-| Invalid endpoint | `INVALID_ENDPOINT` | A path, userinfo or a missing port | Hypothesis |
+| Invalid endpoint | `INVALID_ENDPOINT` | A path, userinfo, a missing port, or an escaped lone surrogate | Hypothesis |
 | Invalid dial timeout | `INVALID_TIMEOUT` | `50ms` or `45s` | Hypothesis |
 | Invalid allowlist | `INVALID_UNITS` | `[0]`, a repeated unit, or `[2]` for `sunspec` | Hypothesis |
 | Invalid pacing | `INVALID_PACING` | A value outside its bound, or a floor above the ceiling | Hypothesis |
-| Duplicate driver ID | `DUPLICATE_DRIVER_ID` | Defense in depth: a derived ID that equals another | Hypothesis |
+
+The table has no separate category for a duplicate driver ID. Labels are unique
+in a validated document and the derivation in the driver ID section is
+injective, so such an ID cannot arise from a validated document; a duplicate
+label is the rejection. This is a Hypothesis.
 
 ### Migration table
 
@@ -237,11 +245,11 @@ Rejection table:
 | One endpoint through `modbus_tcp_endpoint` or a single-line endpoint file | One entry with label `default`, family `sunspec` and that endpoint | The same entry written in `modbus_tcp_endpoints` | Same driver ID `modbus.sunspec`, same source, same durable desired state and revision, same PV asset rule, same tools | Hypothesis |
 | `modbus_tcp_dial_timeout` | `dial_timeout` of that entry | `dial_timeout` | Same grammar and bounds | Hypothesis |
 | Fixed unit 1 and FC03 | `units` absent, meaning `[1]` | `units` absent or `[1]` | No difference | Hypothesis |
-| Transport limits, 15 s cycle, 1 s to 30 s reconnect backoff | Kept as they are today | An entry without `pacing` takes the production defaults below, except that the `sunspec` cycle stays 15 s | The one intended behavior difference of an operator move to v2: one request in flight and a gap between requests. An operator who needs the v1 transport limits stays on v1. | Hypothesis |
+| Transport limits, 15 s cycle, 1 s to 30 s reconnect backoff | Kept as they are today | An entry without `pacing` takes the production defaults below, except that the `sunspec` cycle stays 15 s | Pacing is not equivalent across the move. The intended differences of an operator move to v2 are in pacing only: one request in flight instead of up to four, a gap between requests and a settle wait after each connect (the v1 transport row states neither), and a reconnect backoff of 5 s to 300 s instead of 1 s to 30 s. The 15 s cycle is kept. An operator who needs the v1 transport limits stays on v1. | Hypothesis |
 | Single-line endpoint file and its flag | Unchanged: same checks, same flag, same driver | Not applicable: v2 uses the endpoints document | A single-line file behaves exactly as today | Hypothesis |
 | `modbus.v1.raw.read` and `modbus.v1.profile.observation.get` | Address the instance of the v1 slot | Address the instance with family `sunspec` and label `default` while it is configured; otherwise `UNAVAILABLE` as for any unconfigured provider | No difference while that entry exists | Hypothesis |
 | Portal driver selection and runtime-control durable state, keyed by driver ID | Keyed by `modbus.sunspec` | Same key for the `default` entry; every other label is a new driver with no record | Existing state is kept for the migrated entry | Hypothesis |
-| Reverse move | Not automated | A document with exactly one `default` entry for `sunspec`, default allowlist and default pacing is equivalent to v1 | Other instances are removed under the lifecycle contract's removal rule | Hypothesis |
+| Reverse move | Not automated | A document with exactly one `default` entry for `sunspec` and the default allowlist | Equivalent to v1 in identity (driver ID `modbus.sunspec`, same source), in state (same durable desired state and revision, same PV asset rule) and in tool behavior (same tools, same arguments). Not equivalent in pacing: v1 allows up to four requests in flight, v2 allows one request in flight plus a gap, so endpoint load and timing change on the move. Moving back to v1 restores the four-request transport limit and the 1 s to 30 s reconnect backoff, and it drops the gap, the settle wait and every `pacing` value; no pacing value is translated, because v1 has no option for it. A migration test asserts identity, state and tool behavior and never pacing. Other instances are removed under the lifecycle contract's removal rule. | Hypothesis |
 
 ## Driver instances
 
@@ -282,7 +290,7 @@ format and the registration clauses are unchanged.
 
 | Registration rule | Grade |
 | --- | --- |
-| All Modbus TCP instances are validated and registered as one set before any factory call. A duplicate label, endpoint or driver ID, or a source collision, refuses the set with zero factory calls and no hub mutation. | Hypothesis |
+| All Modbus TCP instances are validated and registered as one set before any factory call. A duplicate label or endpoint is rejected at validation, and a source collision refuses the set with zero factory calls and no hub mutation. | Hypothesis |
 | Disabled and withheld entries stay registered and listed. A disabled instance constructs and dials nothing. | Proven for disabled listing, Hypothesis for the instance set |
 | `helianthus.runtime.list` returns instances sorted bytewise by DriverID, independent of document order. | Proven |
 | Registration of the Modbus TCP set is independent of `ebus.primary`, `eebus.primary` and the serial Growatt driver: a refusal of the set withholds only the set. | Hypothesis |
@@ -442,7 +450,7 @@ gateway. The requirement is a Hypothesis.
 | --- | --- | --- |
 | `helianthus.runtime.list` and `get` | Every instance appears, disabled and withheld ones included, with the closed G5 driver projection and no new field | Hypothesis |
 | `modbus.v1.huawei.smartlogger.status.get`, `modbus.v1.huawei.emma.identity.get`, `modbus.v1.huawei.sdongle.status.get` | Gain the optional string argument `instance`, described below. A pre-1.0 schema change with updated goldens. | Hypothesis |
-| `modbus.v1.sunspec.status.get` (new) | A cached, read-only status tool for the `sunspec` family with the same optional `instance` argument. It reports, for the selected `sunspec` instance, the qualification posture with its closed reason, the child routing and the published asset IDs, so a second `sunspec` instance is observable without the single-slot retained-observation tool or the closed G5 projection. Pre-stable, with goldens. | Hypothesis |
+| `modbus.v1.fronius.sunspec.status.get`, the existing SunSpec status tool | Gains the same optional string argument `instance`, with the same semantics as on the three vendor tools. For the selected `sunspec` instance it reports, from cached state, the qualification posture with its closed reason, the child routing and the published asset IDs. Every `sunspec` instance, withheld ones included, is listed by `helianthus.runtime.list` and observed with its closed reason (`TUPLE_NOT_ADMITTED`, `AMBIGUOUS_RESULT` and the others of the posture table) through this tool, without the single-slot retained-observation tool. The lifecycle projection stays unchanged. A pre-1.0 schema change with updated goldens. | Proven for the tool, Hypothesis for the argument |
 | `semantic.v1.snapshot.get` and GraphQL `semanticSnapshot` | The semantic reads for every multi-asset instance, by opaque asset ID, as in the [shared snapshot contract](./semantic-snapshot-read.md). A deployment may publish more than 32 assets; consumers select in groups of at most 32. | Hypothesis, building on a Proven contract |
 | `semantic.v1.pv.current.get` | Remains the single-asset SunSpec projection, serving the asset of the v1 slot only; it answers as an unavailable provider when no such entry exists | Hypothesis |
 | Canonical PV M2M projection and the Portal semantic PV panel | Keep addressing their one configured asset reference | Hypothesis |
@@ -456,12 +464,20 @@ The `instance` argument:
 | Rule | Grade |
 | --- | --- |
 | It is a string with the label grammar and names the entry's label. | Hypothesis |
-| It applies to the three vendor status tools and to `modbus.v1.sunspec.status.get`. It is optional. When omitted it resolves to the only configured instance of the tool's family; with none the tool answers `UNAVAILABLE` as for an unconfigured provider, and with more than one it answers `INVALID_ARGUMENT`. | Hypothesis |
+| It applies to the three vendor status tools and to `modbus.v1.fronius.sunspec.status.get`. It is optional. When omitted it resolves to the only configured instance of the tool's family; with none the tool answers `UNAVAILABLE` as for an unconfigured provider, and with more than one it answers `INVALID_ARGUMENT`. | Hypothesis |
 | A label that names no configured instance of the tool's family is `INVALID_ARGUMENT` with a static message that does not reveal whether the label exists for another family. | Hypothesis |
 | The tool reads cached state and performs no wire I/O. | Hypothesis |
 | For the selected instance it reports the child routing and the published asset IDs, and the posture with its closed reason. The member names and shape are owned by the gateway golden envelopes of those tools. | Hypothesis |
-| The golden envelopes cover omitted instance, valid instance, wrong family, unknown label, a disabled instance and a withheld instance, each with two instances configured. | Hypothesis |
-| Every other `modbus.v1` tool, apart from the new SunSpec status tool, is unchanged by this contract. Raw reads and retained observations address the v1 slot only, because a raw read bypasses family qualification and would bypass a vendor family's pacing. Whether a raw read may select an instance is not decided here. | Hypothesis, Unknown for the open question |
+| The golden envelopes cover omitted instance, valid instance, wrong family, unknown label, a disabled instance and a withheld instance, each with two instances configured. For the SunSpec tool the withheld cases cover each closed reason that the `sunspec` mapping can produce: `TUPLE_NOT_ADMITTED`, `AMBIGUOUS_RESULT`, `INSUFFICIENT_EVIDENCE` and `ASSET_CONFLICT`. | Hypothesis |
+| Every other `modbus.v1` tool is unchanged by this contract. Raw reads and retained observations address the v1 slot only, because a raw read bypasses family qualification and would bypass a vendor family's pacing. Whether a raw read may select an instance is not decided here. | Hypothesis, Unknown for the open question |
+
+The gateway implements the `instance` argument of the SunSpec status tool in
+the second phase of
+[gateway issue #1362](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1362),
+or in
+[gateway issue #1364](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1364)
+when the first pull request for gateway issue #1362 is too large. This
+sequencing is a Hypothesis.
 
 ## Acceptance obligations
 
@@ -471,15 +487,16 @@ tests. Every obligation is a Hypothesis.
 | Obligation | Section | Grade |
 | --- | --- | --- |
 | A v1 configuration is golden-equivalent to today's behavior, including driver ID, source and durable state | Migration table | Hypothesis |
+| A one-entry `default` document and the v1 configuration give the same driver ID, source, durable state and tool behavior, and their pacing is asserted to differ as the migration table states | Migration table | Hypothesis |
 | A `sunspec` entry and a vendor entry register two instances | Registration | Hypothesis |
-| Each rejection category is produced by its case with zero factory calls, in the stated order | Rejection table | Hypothesis |
+| Every category of the rejection table is produced by a test case, with zero factory calls and in the stated order; a lone surrogate in `label` or `endpoint` yields that member's category | Rejection table | Hypothesis |
 | A dial failure on one instance leaves the other running, with eBUS, eeBUS, HTTP and MCP unaffected | Failure isolation | Hypothesis |
 | Restarting one instance leaves the other's generation unchanged | Lifecycle | Hypothesis |
 | An endpoint appears in no log, error, argument, environment variable or status | Protected materialization | Hypothesis |
 | A withheld instance is listed with its closed reason, sends nothing when `FAMILY_NOT_ADMITTED`, and publishes nothing | Qualification | Hypothesis |
 | Under concurrent callers, one instance never has more than one request in flight and honors the gap and the settle wait | Pacing profile | Hypothesis |
 | Asset IDs change when, and only when, the label, class or routed unit changes | Asset and publication keying | Hypothesis |
-| The status tools answer for each `instance` case listed above | Observability | Hypothesis |
+| The four status tools answer for each `instance` case listed above, and a withheld `sunspec` instance reports its closed reason through the SunSpec tool | Observability | Hypothesis |
 | The add-on emits exact document content and modes for a valid list, rejects each invalid case with a redacted message, rejects a mixed configuration, and produces byte-identical v1 arguments for a v1-only configuration | Selection and document | Hypothesis |
 
 ## Open questions

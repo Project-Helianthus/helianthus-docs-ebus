@@ -152,8 +152,18 @@ class ReferenceValidator:
             low, high = map(int, re.findall(r"\d+", row[2]))
             self.pacing[row[0].strip("`")] = (low, high, first_int(row[3]))
 
+    @staticmethod
+    def utf8_size(value: str):
+        """UTF-8 length of a string of Unicode scalar values; None when it holds a lone surrogate."""
+        if any(0xD800 <= ord(char) <= 0xDFFF for char in value):
+            return None
+        return len(value.encode("utf-8"))
+
     def endpoint(self, value: object):
-        if not isinstance(value, str) or len(value.encode()) > MAX_ENDPOINT_BYTES:
+        if not isinstance(value, str):
+            return None
+        size = self.utf8_size(value)
+        if size is None or size > MAX_ENDPOINT_BYTES:
             return None
         if value != value.strip() or any(ord(char) < 32 for char in value):
             return None
@@ -236,9 +246,6 @@ class ReferenceValidator:
         endpoints = [self.endpoint(entry["endpoint"]) for entry in entries]
         if len(set(endpoints)) != len(endpoints):
             return "DUPLICATE_ENDPOINT", None
-        ids = [self.driver_id(entry["family"], entry["label"]) for entry in entries]
-        if len(set(ids)) != len(ids):
-            return "DUPLICATE_DRIVER_ID", None
         return None
 
     @classmethod
@@ -262,7 +269,8 @@ class ReferenceValidator:
         if set(entry) - known or (isinstance(pacing, dict) and set(pacing) - set(self.pacing)):
             return "UNKNOWN_MEMBER"
         label = entry["label"]
-        if not isinstance(label, str) or len(label.encode()) > 32 or not self.label.fullmatch(label):
+        label_size = self.utf8_size(label) if isinstance(label, str) else None
+        if label_size is None or label_size > 32 or not self.label.fullmatch(label):
             return "INVALID_LABEL"
         if not isinstance(entry["family"], str) or entry["family"] not in self.families:
             return "UNKNOWN_FAMILY"
@@ -387,9 +395,11 @@ class ModbusMultiEndpointRuntimeContractTest(unittest.TestCase):
             "INVALID_PACING": with_entry(pacing={"backoff_floor_s": 400}),
         }
         cases["MISSING_FIELD"] = self.document(endpoints=[{k: v for k, v in entry.items() if k != "endpoint"}])
+        produced = set()
         for category, document in cases.items():
             with self.subTest(category=category):
                 self.assertEqual(self.check(document)[0], category)
+                produced.add(self.check(document)[0])
         invalid_documents = (
             b"",
             b"\xef\xbb\xbf{}",
@@ -404,10 +414,63 @@ class ModbusMultiEndpointRuntimeContractTest(unittest.TestCase):
         )
         for raw in invalid_documents:
             with self.subTest(raw=raw[:40]):
-                self.assertEqual(self.validator.validate(raw), ("INVALID_DOCUMENT", None))
+                result = self.validator.validate(raw)
+                self.assertEqual(result, ("INVALID_DOCUMENT", None))
+                produced.add(result[0])
         self.assertEqual(self.check(self.document(extra=1))[0], "UNKNOWN_MEMBER")
-        selection_level = {"MIXED_CONFIGURATION", "DUPLICATE_DRIVER_ID", "INVALID_DOCUMENT"}
-        self.assertEqual(documented, set(cases) | selection_level)
+        produced.add(
+            select_configuration(
+                enabled=True, endpoints=[{"label": "default"}], scalar_endpoint="tcp://x:1"
+            )
+        )
+        # Every category that remains in the table is produced by a case above;
+        # none is exempt, and the table lists no category that no case can reach.
+        self.assertEqual(documented, produced)
+        self.assertNotIn("DUPLICATE_DRIVER_ID", self.text)
+        obligation = " ".join(self.sections["Acceptance obligations"].split())
+        self.assertIn("Every category of the rejection table is produced by a test case", obligation)
+        check_order = " ".join(self.sections["Endpoints document"].split())
+        self.assertIn("duplicate label, then duplicate endpoint.", check_order)
+        self.assertIn("a duplicate label is the rejection", check_order)
+
+    def test_lone_surrogates_in_byte_limited_strings_yield_the_member_category(self) -> None:
+        # Fields covered: the two strings with a byte limit.
+        #   label    - a validator that measures len(label.encode()) before it checks
+        #              for scalar values raises UnicodeEncodeError; one that swallows
+        #              the error and reports INVALID_DOCUMENT gives another category.
+        #   endpoint - the same two mutations on the endpoint length check.
+        # Each form below (high alone, low alone, high before an ordinary
+        # character, reversed pair, inside a valid value) is a separate case.
+        entry = self.example["endpoints"][1]
+        surrogates = {
+            "high alone": "\\ud800",
+            "low alone": "\\udfff",
+            "high before an ordinary character": "\\ud83dx",
+            "low before high": "\\ude00\\ud83d",
+            "inside an otherwise valid value": "ro\\ud800of",
+        }
+        template = {
+            "label": ("label", "INVALID_LABEL", lambda escaped: escaped),
+            "endpoint": (
+                "endpoint",
+                "INVALID_ENDPOINT",
+                lambda escaped: f"tcp://{escaped}.example.invalid:1502",
+            ),
+        }
+        base = json.dumps(self.document(endpoints=[entry]))
+        for field, (member, category, build) in template.items():
+            current = json.dumps(entry[member])
+            self.assertIn(current, base)
+            for name, escaped in surrogates.items():
+                with self.subTest(field=field, surrogate=name):
+                    raw = base.replace(current, '"' + build(escaped) + '"').encode()
+                    self.assertEqual(self.validator.validate(raw), (category, 0))
+        # A valid escaped pair is one scalar value; it must not raise either and
+        # is refused by the member grammar, which is ASCII only.
+        pair = base.replace(json.dumps(entry["label"]), '"\\ud83d\\ude00"').encode()
+        self.assertEqual(self.validator.validate(pair), ("INVALID_LABEL", 0))
+        self.assertEqual(ReferenceValidator.utf8_size("\U0001f600"), 4)
+        self.assertIsNone(ReferenceValidator.utf8_size("\ud800"))
 
     def test_mandatory_rejection_cases_are_listed(self) -> None:
         rows = table_with(self.sections["Endpoints document"], "Case")
@@ -581,6 +644,31 @@ class ModbusMultiEndpointRuntimeContractTest(unittest.TestCase):
         ):
             self.assertIn(required, migration)
 
+    def test_reverse_move_is_equivalent_in_identity_state_and_tools_but_not_pacing(self) -> None:
+        rows = table_with(self.sections["Endpoints document"], "v1 input")
+        reverse = [row for row in rows if row[0] == "Reverse move"]
+        self.assertEqual(len(reverse), 1)
+        self.assertNotIn("default pacing", reverse[0][2])
+        outcome = " ".join(reverse[0][3].split())
+        for required in (
+            "Equivalent to v1 in identity",
+            "in state",
+            "in tool behavior",
+            "Not equivalent in pacing",
+            "up to four requests in flight",
+            "one request in flight plus a gap",
+            "endpoint load and timing change on the move",
+            "no pacing value is translated",
+            "never pacing",
+        ):
+            self.assertIn(required, outcome)
+        forward = [row for row in rows if row[0].startswith("Transport limits")]
+        self.assertEqual(len(forward), 1)
+        self.assertIn("Pacing is not equivalent across the move", forward[0][3])
+        self.assertNotIn("The one intended behavior difference", forward[0][3])
+        obligations = " ".join(self.sections["Acceptance obligations"].split())
+        self.assertIn("their pacing is asserted to differ as the migration table states", obligations)
+
     def test_qualification_never_falls_back_across_families(self) -> None:
         qualification = " ".join(self.text.split())
         for required in (
@@ -599,12 +687,39 @@ class ModbusMultiEndpointRuntimeContractTest(unittest.TestCase):
 
     def test_sunspec_instances_have_a_selectable_cached_status_surface(self) -> None:
         rows = table_with(self.sections["Observability"], "Surface")
-        sunspec = [row for row in rows if "modbus.v1.sunspec.status.get" in row[0]]
+        sunspec = [row for row in rows if "modbus.v1.fronius.sunspec.status.get" in row[0]]
         self.assertEqual(len(sunspec), 1)
-        for required in ("`instance`", "qualification posture", "closed reason", "asset IDs", "cached"):
+        self.assertIn("existing SunSpec status tool", sunspec[0][0])
+        for required in (
+            "`instance`",
+            "qualification posture",
+            "closed reason",
+            "asset IDs",
+            "cached",
+            "withheld ones included",
+            "`helianthus.runtime.list`",
+            "The lifecycle projection stays unchanged",
+        ):
             self.assertIn(required, sunspec[0][1])
-        rules = " ".join(self.sections["Observability"].split())
-        self.assertIn("applies to the three vendor status tools and to `modbus.v1.sunspec.status.get`", rules)
+        self.assertNotIn("modbus.v1.sunspec.status.get", self.text)
+        baseline = table_with(self.sections["Baseline: configuration v1"], "Statement")
+        existing = [row for row in baseline if "modbus.v1.fronius.sunspec.status.get" in row[0]]
+        self.assertEqual(len(existing), 1)
+        self.assertTrue(existing[0][1].startswith("Proven"))
+        observability = " ".join(self.sections["Observability"].split())
+        self.assertIn(
+            "applies to the three vendor status tools and to `modbus.v1.fronius.sunspec.status.get`",
+            observability,
+        )
+        self.assertIn("in the second phase of [gateway issue #1362]", observability)
+        self.assertIn("helianthus-ebusgateway/issues/1362", observability)
+        self.assertIn("[gateway issue #1364]", observability)
+        self.assertIn("helianthus-ebusgateway/issues/1364", observability)
+        posture = table_with(self.sections["Driver instances"], "Posture")
+        reasons = {row[1].strip("`") for row in posture}
+        for reason in ("TUPLE_NOT_ADMITTED", "AMBIGUOUS_RESULT", "INSUFFICIENT_EVIDENCE", "ASSET_CONFLICT"):
+            self.assertIn(reason, reasons)
+            self.assertIn(f"`{reason}`", observability)
 
     def test_examples_hold_no_endpoint_address_serial_or_pin(self) -> None:
         for uri in re.findall(r"tcp://[^\s\"`]+", self.text):
@@ -627,6 +742,7 @@ class ModbusMultiEndpointRuntimeContractTest(unittest.TestCase):
         mcp = (ROOT / "api" / "mcp.md").read_text(encoding="utf-8")
         platform = (ROOT / "docs" / "platform" / "README.md").read_text(encoding="utf-8")
         self.assertIn("modbus-multi-endpoint-runtime.md", mcp)
+        self.assertIn("the existing SunSpec status tool", " ".join(mcp.split()))
         self.assertIn("../../api/modbus-multi-endpoint-runtime.md", platform)
         self.assertIn("modbus-v1-addon-runtime.md", self.text)
 
