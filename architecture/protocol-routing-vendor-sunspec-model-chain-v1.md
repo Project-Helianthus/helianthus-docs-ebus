@@ -226,9 +226,13 @@ observation to define an exact, experimental flavor after capability admission.
 The versioned
 [`fronius-observed-flavor-v1-1.md`](protocol-routing-vendor-fronius-observed-flavor-v1-1.md)
 successor records a second exact chain that includes standard Model `123/L24`;
-it does not reinterpret or widen V1. This model-chain contract does not itself
-activate either flavor, and none of these contracts records a completed live
-qualification or broad Fronius support result.
+it does not reinterpret or widen V1. The further
+[`fronius-observed-flavor-v1-2.md`](protocol-routing-vendor-fronius-observed-flavor-v1-2.md)
+successor keeps that ordered chain and admits one different exact Common
+firmware string; it does not reinterpret or widen V1 or V1.1. This model-chain
+contract does not itself activate any of these flavors, and none of these
+contracts records a completed live qualification or broad Fronius support
+result.
 
 ## Read/write boundary
 

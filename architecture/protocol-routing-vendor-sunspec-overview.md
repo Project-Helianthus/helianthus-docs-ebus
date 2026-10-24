@@ -12,6 +12,10 @@ Implementation-neutral wire references remain separately under CC0-1.0 in
 - [`fronius-observed-flavor-v1-1.md`](protocol-routing-vendor-fronius-observed-flavor-v1-1.md)
   defines a separate exact successor for the observed chain that includes
   standard Model `123/L24`; it does not replace or widen V1.
+- [`fronius-observed-flavor-v1-2.md`](protocol-routing-vendor-fronius-observed-flavor-v1-2.md)
+  defines a further exact successor that keeps the V1.1 ordered chain and
+  admits one different exact Common firmware string; it does not replace or
+  widen V1 or V1.1.
 - [`additional-model-evidence-v1.md`](protocol-routing-vendor-sunspec-additional-model-evidence-v1.md)
   records the FMV3-M7-01 manufacturer-neutral candidate sets and read-only
   admission boundary for later standard-model expansion.
