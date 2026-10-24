@@ -479,3 +479,18 @@ operator-controlled rollback. FMV3-M4-05 remains the owner of sanitized live
 evidence. M5 remains blocked until the deployed exact gateway and registry
 combination returns `GO`; a preliminary or deployed `NO_GO` remains evidence
 but does not authorize semantic publication.
+
+## Multi-Endpoint Successor
+
+This page stays the frozen contract of the three scalar options and the
+single-line endpoint file. A gateway that monitors several installations uses a
+second, mutually exclusive configuration shape specified in
+[`modbus-multi-endpoint-runtime.md`](./modbus-multi-endpoint-runtime.md): a
+bounded list of endpoints in which each entry is bound to one declared family,
+qualified independently and registered as its own managed driver instance.
+
+A configuration that uses only the options and the endpoint file defined above
+behaves exactly as this page states, with the same gateway arguments, the same
+driver identity and the same durable state. The successor page defines the
+migration table, the rejection table, the per-instance failure isolation and the
+pacing profile. It adds no write function and no stability promise before 1.0.

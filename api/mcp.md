@@ -9,6 +9,12 @@ single direct gateway process lifecycle are specified in
 [`modbus-v1-addon-runtime.md`](./modbus-v1-addon-runtime.md). It does not
 qualify a live device or extend the MCP schema.
 
+Several Modbus TCP endpoints, each a separately qualified managed driver
+instance with its own status, are specified in
+[`modbus-multi-endpoint-runtime.md`](./modbus-multi-endpoint-runtime.md). That
+page adds one optional `instance` argument to three vendor status tools and
+defines no other tool or field.
+
 ## Current Status
 
 Until the Helianthus 1.0 release, all MCP namespaces, including `ebus.v1.*`,
