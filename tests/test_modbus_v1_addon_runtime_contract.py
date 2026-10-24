@@ -578,6 +578,15 @@ class ModbusMultiEndpointRuntimeContractTest(unittest.TestCase):
         ):
             self.assertIn(required, qualification)
 
+    def test_sunspec_instances_have_a_selectable_cached_status_surface(self) -> None:
+        rows = table_with(self.sections["Observability"], "Surface")
+        sunspec = [row for row in rows if "modbus.v1.sunspec.status.get" in row[0]]
+        self.assertEqual(len(sunspec), 1)
+        for required in ("`instance`", "qualification posture", "closed reason", "asset IDs", "cached"):
+            self.assertIn(required, sunspec[0][1])
+        rules = " ".join(self.sections["Observability"].split())
+        self.assertIn("applies to the three vendor status tools and to `modbus.v1.sunspec.status.get`", rules)
+
     def test_examples_hold_no_endpoint_address_serial_or_pin(self) -> None:
         for uri in re.findall(r"tcp://[^\s\"`]+", self.text):
             if uri != "tcp://host:port":

@@ -12,8 +12,9 @@ qualify a live device or extend the MCP schema.
 Several Modbus TCP endpoints, each a separately qualified managed driver
 instance with its own status, are specified in
 [`modbus-multi-endpoint-runtime.md`](./modbus-multi-endpoint-runtime.md). That
-page adds one optional `instance` argument to three vendor status tools and
-defines no other tool or field.
+page adds one optional `instance` argument to three vendor status tools, defines
+one cached SunSpec status tool with the same argument, and defines no other tool
+or field.
 
 ## Current Status
 

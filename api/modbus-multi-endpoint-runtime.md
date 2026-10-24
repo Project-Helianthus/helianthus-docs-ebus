@@ -440,6 +440,7 @@ gateway. The requirement is a Hypothesis.
 | --- | --- | --- |
 | `helianthus.runtime.list` and `get` | Every instance appears, disabled and withheld ones included, with the closed G5 driver projection and no new field | Hypothesis |
 | `modbus.v1.huawei.smartlogger.status.get`, `modbus.v1.huawei.emma.identity.get`, `modbus.v1.huawei.sdongle.status.get` | Gain the optional string argument `instance`, described below. A pre-1.0 schema change with updated goldens. | Hypothesis |
+| `modbus.v1.sunspec.status.get` (new) | A cached, read-only status tool for the `sunspec` family with the same optional `instance` argument. It reports, for the selected `sunspec` instance, the qualification posture with its closed reason, the child routing and the published asset IDs, so a second `sunspec` instance is observable without the single-slot retained-observation tool or the closed G5 projection. Pre-stable, with goldens. | Hypothesis |
 | `semantic.v1.snapshot.get` and GraphQL `semanticSnapshot` | The semantic reads for every multi-asset instance, by opaque asset ID, as in the [shared snapshot contract](./semantic-snapshot-read.md). A deployment may publish more than 32 assets; consumers select in groups of at most 32. | Hypothesis, building on a Proven contract |
 | `semantic.v1.pv.current.get` | Remains the single-asset SunSpec projection, serving the asset of the v1 slot only; it answers as an unavailable provider when no such entry exists | Hypothesis |
 | Canonical PV M2M projection and the Portal semantic PV panel | Keep addressing their one configured asset reference | Hypothesis |
@@ -453,12 +454,12 @@ The `instance` argument:
 | Rule | Grade |
 | --- | --- |
 | It is a string with the label grammar and names the entry's label. | Hypothesis |
-| It is optional. When omitted it resolves to the only configured instance of the tool's family; with none the tool answers `UNAVAILABLE` as for an unconfigured provider, and with more than one it answers `INVALID_ARGUMENT`. | Hypothesis |
+| It applies to the three vendor status tools and to `modbus.v1.sunspec.status.get`. It is optional. When omitted it resolves to the only configured instance of the tool's family; with none the tool answers `UNAVAILABLE` as for an unconfigured provider, and with more than one it answers `INVALID_ARGUMENT`. | Hypothesis |
 | A label that names no configured instance of the tool's family is `INVALID_ARGUMENT` with a static message that does not reveal whether the label exists for another family. | Hypothesis |
 | The tool reads cached state and performs no wire I/O. | Hypothesis |
 | For the selected instance it reports the child routing and the published asset IDs, and the posture with its closed reason. The member names and shape are owned by the gateway golden envelopes of those tools. | Hypothesis |
 | The golden envelopes cover omitted instance, valid instance, wrong family, unknown label, a disabled instance and a withheld instance, each with two instances configured. | Hypothesis |
-| Every other `modbus.v1` tool is unchanged by this contract. Raw reads and retained observations address the v1 slot only, because a raw read bypasses family qualification and would bypass a vendor family's pacing. Whether a raw read may select an instance is not decided here. | Hypothesis, Unknown for the open question |
+| Every other `modbus.v1` tool, apart from the new SunSpec status tool, is unchanged by this contract. Raw reads and retained observations address the v1 slot only, because a raw read bypasses family qualification and would bypass a vendor family's pacing. Whether a raw read may select an instance is not decided here. | Hypothesis, Unknown for the open question |
 
 ## Acceptance obligations
 
