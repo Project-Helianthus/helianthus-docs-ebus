@@ -480,6 +480,133 @@ evidence. M5 remains blocked until the deployed exact gateway and registry
 combination returns `GO`; a preliminary or deployed `NO_GO` remains evidence
 but does not authorize semantic publication.
 
+## Registry-Selected V4 Successor
+
+The V3 record remains immutable for runs selecting exactly its two closed flavor
+contracts. Qualification runs against the
+[flavor 1.2.0 contract](../architecture/protocol-routing-vendor-fronius-observed-flavor-v1-2.md),
+and runs that must select among all three closed flavor contracts, use V4. V4
+adds no model-ID rule, changes no decision map, and reads Model `123` exactly as
+V3 does. It differs from V3 in the closed flavor list, which gains the flavor
+1.2.0 identifier, in the live target, which names that identifier, and in two
+pin fields for the exact registry and gateway revisions that carry the
+admission and the live-smoke acceptance of that identifier.
+
+### Registry-Selected V4 Contract Record
+
+<!-- publication-audit: machine-checked-record start -->
+```json
+{
+  "contract": "helianthus.modbus-sunspec-live-qualification.v4",
+  "phase": "FMV3-M4-04",
+  "supersedes_for_new_runs": "helianthus.modbus-sunspec-live-qualification.v3",
+  "registry_dependency": {
+    "module": "github.com/Project-Helianthus/helianthus-modbusreg",
+    "version": "v0.6.8-0.20261025102717-d4a92a1d2613",
+    "merge": "d4a92a1d261396ea8518adc6200c1494e46e7618"
+  },
+  "gateway_dependency": {
+    "module": "github.com/Project-Helianthus/helianthus-ebusgateway",
+    "merge": "d287715efa5f6b3f8b3ac7e6827fad3970dd1dda"
+  },
+  "activation": {
+    "disabled_by_default": true,
+    "worker_start_condition": "complete_explicit_modbus_opt_in"
+  },
+  "acquisition": {
+    "transport": "modbus_tcp",
+    "unit_id": 1,
+    "function_code": 3,
+    "qualifications_per_attempt": 1,
+    "per_read_timeout_seconds": 2,
+    "attempt_timeout_seconds": 30
+  },
+  "selection": {
+    "input": "complete_terminal_verified_SunSpecChainSnapshot",
+    "decoder_dispatch": "exact_registry_key",
+    "capability": "sunspec.inverter.three_phase.monitoring@1.0.0",
+    "supported_flavors": [
+      "sunspec.flavor.fronius.gen24.float.observed@1.0.0",
+      "sunspec.flavor.fronius.gen24.float.observed@1.1.0",
+      "sunspec.flavor.fronius.gen24.float.observed@1.2.0"
+    ],
+    "required_exact_match_count": 1,
+    "current_live_target": "sunspec.flavor.fronius.gen24.float.observed@1.2.0",
+    "hardcoded_model_id_rules": false
+  },
+  "model_123": {
+    "decoder_key": [123, 24, "sunspec.models@7abdf898-v1"],
+    "ownership": "standard_sunspec_core",
+    "access": "read_only_decode",
+    "writes_permitted": false
+  },
+  "decision_precedence": [
+    "capability",
+    "flavor_only_if_capability_ADMITTED"
+  ],
+  "capability_decision_map": {
+    "INVALID_CHAIN": "STOP",
+    "AMBIGUOUS_SOURCE": "NO_GO",
+    "SOURCE_ABSENT": "NO_GO",
+    "SOURCE_UNSUPPORTED": "NO_GO",
+    "INVALID_REQUIRED_FACT": "NO_GO",
+    "ADMITTED": "CONTINUE_FLAVOR"
+  },
+  "flavor_decision_map": {
+    "MATCHED": "GO",
+    "COMMON_IDENTITY_MISMATCH": "NO_GO",
+    "FIRMWARE_MISMATCH": "NO_GO",
+    "CHAIN_MISMATCH": "NO_GO",
+    "CAPABILITY_NOT_ADMITTED": "STOP_INCOHERENT",
+    "AMBIGUOUS_SOURCE": "STOP_INCOHERENT"
+  },
+  "runtime_or_transport_error": "STOP",
+  "recovery": {
+    "max_qualification_attempts": 2,
+    "retry_trigger": ["transport_error", "endpoint_reconnect_required"],
+    "endpoint_owned_backoff_reconnect_max": 1,
+    "final_attempt_requires_new": ["poll_generation_id", "deadline_identity"],
+    "periodic_retries": false
+  },
+  "result": {
+    "logs_and_results": "categorical_only",
+    "retained_on_go": ["capability_id", "capability_reason", "flavor_id", "flavor_reason", "sample_id"],
+    "raw_mcp_on_no_go": "USABLE",
+    "registry_observation_on_no_go": "UNAVAILABLE"
+  },
+  "shutdown": {
+    "required_order": ["worker_cancel", "worker_join", "adapter_close"]
+  },
+  "go_authority": "qualification_evidence_only",
+  "support_claim": false,
+  "live_result_published_here": false,
+  "writes_permitted": false,
+  "m5_gate": "BLOCKED_UNTIL_DEPLOYED_EXACT_GO"
+}
+```
+<!-- publication-audit: machine-checked-record end -->
+
+V4 requires exactly one of the three closed flavor contracts to match. Zero
+matches is `NO_GO`; more than one match is incoherent and `STOP`. The V1.1 and
+V1.2 contracts share one ordered chain and differ only in the exact Common
+version string, so one snapshot cannot match both. The live target is the
+flavor 1.2.0 identifier, but V4 does not broaden any flavor, choose one by
+preference order, or treat a firmware string as ordered or compatible.
+
+The registry pin is the merge that admits the flavor 1.2.0 identifier, and its
+version field is the exact module version that merge resolves to. The gateway
+pin is the merge whose live smoke accepts exactly the three listed
+identifiers. Both pins are bare record fields: they are not links, and no other
+text of this page repeats them.
+
+V4 retains V3's explicit opt-in, FC03-only acquisition, bounded reads and
+attempts, reconnect rules, categorical redaction, shutdown ordering, and
+operator-controlled rollback. It publishes no live result. A `GO` under V4 is
+qualification evidence only, is not a product-family support claim, and does
+not authorize writes, automatic activation, or canonical PV publication.
+FMV3-M4-05 remains the owner of sanitized live evidence. M5 remains blocked
+until the deployed exact gateway and registry combination returns `GO`.
+
 ## Multi-Endpoint Successor
 
 This page stays the frozen contract of the three scalar options and the
