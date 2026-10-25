@@ -1,3 +1,4 @@
+import functools
 import json
 from pathlib import Path
 import re
@@ -20,6 +21,26 @@ RESET_RULE = next(r for r in checker.RULES if r["path"] == RESET_PATH)
 QUARANTINE_DIRECTORY_ROW = next(
     line for line in DOCUMENTS[RESET_PATH].splitlines() if line.startswith("| 4 |")
 )
+
+
+@pytest.fixture(scope="module", autouse=True)
+def parse_each_document_text_once():
+    """Parse each distinct document text once for this file.
+
+    Almost every test changes one document and calls checker.validate(), which
+    parses all eight documents again. The cache key is the full text, so a
+    document that a test has modified is parsed and checked for real; only
+    identical texts share a parse. The checker is restored after the last test.
+    """
+    parse_prose, parse_tables = checker.prose, checker.table_blocks
+    prose = functools.lru_cache(maxsize=64)(parse_prose)
+    tables = functools.lru_cache(maxsize=64)(
+        lambda text: tuple(tuple(block) for block in parse_tables(text)))
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setattr(checker, "prose", prose)
+        patch.setattr(checker, "table_blocks",
+                      lambda text: [list(block) for block in tables(text)])
+        yield
 
 
 def test_runtime_control_contract_repository() -> None:
