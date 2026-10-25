@@ -603,12 +603,667 @@ def test_v12_contract_matches_the_repository_pages() -> None:
     assert_v12_contract(load_docs())
 
 
+V2_HEADING = "### Registry-Selected V2 Contract Record"
+V3_SUCCESSOR_HEADING = "## Registry-Selected V3 Successor"
+V3_HEADING = "### Registry-Selected V3 Contract Record"
+V4_SUCCESSOR_HEADING = "## Registry-Selected V4 Successor"
+V4_HEADING = "### Registry-Selected V4 Contract Record"
+FOLLOWING_HEADING = "## Multi-Endpoint Successor"
+
+
+def runtime_sections(runtime: str) -> tuple[str, str]:
+    lines = runtime.split("\n")
+    v3 = lines.index(V3_SUCCESSOR_HEADING)
+    v4 = lines.index(V4_SUCCESSOR_HEADING)
+    following = lines.index(FOLLOWING_HEADING)
+    assert v3 < v4 < following
+    return "\n".join(lines[v3:v4]), "\n".join(lines[v4:following])
+
+
 def test_v12_is_not_added_to_the_registry_selected_v3_record() -> None:
     runtime = text(RUNTIME)
-    record = json_record_after(runtime, "### Registry-Selected V3 Contract Record")
+    v3_section, v4_section = runtime_sections(runtime)
+    record = json_record_after(runtime, V3_HEADING)
 
-    assert FLAVOR_V12_ID not in runtime
+    # The V3 record stays closed on the two earlier identifiers; the flavor
+    # 1.2.0 identifier is published only by the V4 successor record.
+    assert FLAVOR_V12_ID not in v3_section
     assert record["selection"]["supported_flavors"] == [FLAVOR_V1_ID, FLAVOR_V11_ID]
+    assert record["selection"]["current_live_target"] == FLAVOR_V11_ID
+    assert v4_section.count(FLAVOR_V12_ID) >= 2
+    assert runtime.count(FLAVOR_V12_ID) == v4_section.count(FLAVOR_V12_ID)
+
+
+# Registry-selected V4 record. It pins the registry and gateway merges as bare
+# commit ids, which the publication audit permits only between the
+# machine-checked-record markers. These tests therefore repeat no pin: they
+# read the pins from the record, check their form, their placement and their
+# agreement, and derive every weakening from the parsed record.
+
+V2_CONTRACT = "helianthus.modbus-sunspec-live-qualification.v2"
+V3_CONTRACT = "helianthus.modbus-sunspec-live-qualification.v3"
+V4_CONTRACT = "helianthus.modbus-sunspec-live-qualification.v4"
+MARKER_START = "<!-- publication-audit: machine-checked-record start -->"
+MARKER_END = "<!-- publication-audit: machine-checked-record end -->"
+REGISTRY_MODULE = "github.com/Project-Helianthus/helianthus-modbusreg"
+GATEWAY_MODULE = "github.com/Project-Helianthus/helianthus-ebusgateway"
+COMMIT_ID = re.compile(r"[0-9a-f]{40}")
+PSEUDO_VERSION = re.compile(r"v\d+\.\d+\.\d+-0\.\d{14}-(?P<revision>[0-9a-f]{12})")
+V4_FLAVORS = [FLAVOR_V1_ID, FLAVOR_V11_ID, FLAVOR_V12_ID]
+V4_REPLACED = ("contract", "supersedes_for_new_runs", "selection")
+V4_INHERITED = [
+    "activation",
+    "acquisition",
+    "model_123",
+    "decision_precedence",
+    "capability_decision_map",
+    "flavor_decision_map",
+    "runtime_or_transport_error",
+    "recovery",
+    "result",
+    "shutdown",
+    "go_authority",
+    "support_claim",
+    "live_result_published_here",
+    "writes_permitted",
+    "m5_gate",
+]
+V4_PROSE = [
+    "adds no model-ID rule, changes no decision map",
+    "V4 requires exactly one of the three closed flavor contracts to match.",
+    "Zero matches is `NO_GO`; more than one match is incoherent and `STOP`.",
+    "differ only in the exact Common version string, so one snapshot cannot match both.",
+    "V4 does not broaden any flavor, choose one by preference order, or treat a "
+    "firmware string as ordered or compatible.",
+    "Both pins are bare record fields: they are not links, and no other text of "
+    "this page repeats them.",
+    "It publishes no live result.",
+    "is not a product-family support claim",
+    "does not authorize writes, automatic activation, or canonical PV publication.",
+    "M5 remains blocked until the deployed exact gateway and registry combination "
+    "returns `GO`.",
+]
+
+
+def marked_blocks(document: str) -> list[tuple[int, int]]:
+    """Line pairs of the marker comments, read the way the publication audit reads them."""
+    lines = document.split("\n")
+    blocks: list[tuple[int, int]] = []
+    start = None
+    for number, raw in enumerate(lines):
+        marker = raw.strip()
+        if marker == MARKER_START:
+            assert start is None, "nested start marker"
+            start = number
+        elif marker == MARKER_END:
+            assert start is not None, "end marker without a start marker"
+            blocks.append((start, number))
+            start = None
+    assert start is None, "start marker without an end marker"
+    spelled = sum("machine-checked-record" in raw for raw in lines)
+    assert spelled == 2 * len(blocks), "misspelled or embedded marker"
+    return blocks
+
+
+def record_in_block(document: str, heading: str) -> tuple[dict[str, object], int, int]:
+    """The record of the first marked fence after one heading, with its marker lines."""
+    lines = document.split("\n")
+    assert lines.count(heading) == 1
+    at = lines.index(heading)
+    after = [block for block in marked_blocks(document) if block[0] > at]
+    assert after
+    start, end = after[0]
+    assert lines[start + 1] == "```json"
+    assert lines[end - 1] == "```"
+    assert not any(raw.startswith("#") for raw in lines[at + 1 : end])
+    assert "```" not in "\n".join(lines[at:start])
+    return json.loads("\n".join(lines[start + 2 : end - 1])), start, end
+
+
+def assert_v4_record(
+    record: dict[str, object], v3: dict[str, object], v2: dict[str, object]
+) -> None:
+    keys = list(v3)
+    assert keys[:3] == ["contract", "phase", "supersedes_for_new_runs"]
+    assert list(record) == keys[:3] + ["registry_dependency", "gateway_dependency"] + keys[3:]
+    assert record["contract"] == V4_CONTRACT
+    assert record["phase"] == v3["phase"]
+    assert record["supersedes_for_new_runs"] == V3_CONTRACT
+
+    registry = record["registry_dependency"]
+    assert list(registry) == ["module", "version", "merge"]
+    assert registry["module"] == REGISTRY_MODULE
+    assert COMMIT_ID.fullmatch(registry["merge"])
+    version = PSEUDO_VERSION.fullmatch(registry["version"])
+    assert version is not None
+    assert version.group("revision") == registry["merge"][:12]
+
+    gateway = record["gateway_dependency"]
+    assert list(gateway) == ["module", "merge"]
+    assert gateway["module"] == GATEWAY_MODULE
+    assert COMMIT_ID.fullmatch(gateway["merge"])
+    assert len({registry["merge"], gateway["merge"], v2["registry_dependency"]["merge"]}) == 3
+
+    assert record["selection"] == {
+        "input": "complete_terminal_verified_SunSpecChainSnapshot",
+        "decoder_dispatch": "exact_registry_key",
+        "capability": "sunspec.inverter.three_phase.monitoring@1.0.0",
+        "supported_flavors": V4_FLAVORS,
+        "required_exact_match_count": 1,
+        "current_live_target": FLAVOR_V12_ID,
+        "hardcoded_model_id_rules": False,
+    }
+    for key in keys:
+        if key not in V4_REPLACED and key != "phase":
+            assert record[key] == v3[key], key
+    assert V4_INHERITED == [key for key in keys if key not in V4_REPLACED and key != "phase"]
+
+
+def assert_v4_placement(runtime: str) -> None:
+    lines = runtime.split("\n")
+    blocks = marked_blocks(runtime)
+    record, start, end = record_in_block(runtime, V4_HEADING)
+    assert (start, end) in blocks
+
+    order = []
+    for heading in (V2_HEADING, V3_HEADING, V4_SUCCESSOR_HEADING, V4_HEADING, FOLLOWING_HEADING):
+        assert lines.count(heading) == 1, heading
+        order.append(lines.index(heading))
+    assert order == sorted(order)
+    successor = order[2]
+    following = order[4]
+    assert end < following
+
+    # A commit id may appear only between markers, and each V4 pin appears
+    # exactly once, in its own record, in no abbreviated form elsewhere.
+    inside = {number for first, last in blocks for number in range(first + 1, last)}
+    for number, raw in enumerate(lines):
+        if HEX_40.search(raw):
+            assert number in inside, raw
+    assert not HEX_64.search(runtime)
+    outside = "\n".join(lines[:start] + lines[end + 1 :])
+    fence = "\n".join(lines[start + 2 : end - 1])
+    revision = PSEUDO_VERSION.fullmatch(record["registry_dependency"]["version"])
+    assert revision is not None
+    for pin in (
+        record["registry_dependency"]["merge"],
+        record["gateway_dependency"]["merge"],
+        revision.group("revision"),
+    ):
+        assert pin in fence
+        assert pin not in outside
+
+    prose = "\n".join(lines[successor:start] + lines[end + 1 : following])
+    assert_publication_clean(prose)
+    normalized = squash(prose)
+    for phrase in V4_PROSE:
+        assert phrase in normalized, phrase
+
+
+def assert_v4_page(runtime: str) -> None:
+    record, _, _ = record_in_block(runtime, V4_HEADING)
+    assert_v4_record(
+        record, json_record_after(runtime, V3_HEADING), json_record_after(runtime, V2_HEADING)
+    )
+    assert_v4_placement(runtime)
+
+
+def test_v4_is_the_closed_successor_record_of_v3() -> None:
+    runtime = text(RUNTIME)
+    record, _, _ = record_in_block(runtime, V4_HEADING)
+    v3 = json_record_after(runtime, V3_HEADING)
+
+    assert_v4_page(runtime)
+    assert record["selection"]["supported_flavors"] == v3["selection"]["supported_flavors"] + [
+        FLAVOR_V12_ID
+    ]
+    assert record["support_claim"] is False
+    assert record["live_result_published_here"] is False
+    assert record["writes_permitted"] is False
+    assert record["m5_gate"] == "BLOCKED_UNTIL_DEPLOYED_EXACT_GO"
+
+
+def test_earlier_records_keep_their_form_beside_v4() -> None:
+    runtime = text(RUNTIME)
+    v2 = json_record_after(runtime, V2_HEADING)
+    v3 = json_record_after(runtime, V3_HEADING)
+
+    v3_section, _ = runtime_sections(runtime)
+    marked_v2, _, _ = record_in_block(runtime, V2_HEADING)
+
+    assert v2 == marked_v2
+    assert v2["contract"] == V2_CONTRACT
+    assert v3["contract"] == V3_CONTRACT
+    assert "registry_dependency" in v2 and "registry_dependency" not in v3
+    assert "gateway_dependency" not in v2 and "gateway_dependency" not in v3
+    assert not HEX_40.search(v3_section)
+
+
+def pin_edit(path: tuple[str, ...], change):
+    def edit(record: dict[str, object], v2: dict[str, object]) -> None:
+        target = record
+        for key in path[:-1]:
+            target = target[key]
+        target[path[-1]] = change(target.get(path[-1]), record, v2)
+
+    return edit
+
+
+def drop_edit(*path: str):
+    def edit(record: dict[str, object], v2: dict[str, object]) -> None:
+        target = record
+        for key in path[:-1]:
+            target = target[key]
+        del target[path[-1]]
+
+    return edit
+
+
+def value_edit(*path: str, value):
+    return pin_edit(path, lambda old, record, v2: value)
+
+
+def flip_last_digit(value: str) -> str:
+    return value[:-1] + ("0" if value[-1] != "0" else "1")
+
+
+def flip_first_digit(value: str) -> str:
+    return ("0" if value[0] != "0" else "1") + value[1:]
+
+
+def adopt_revision(version: str, merge: str) -> str:
+    return re.sub(r"[0-9a-f]{12}$", merge[:12], version)
+
+
+def reorder_edit(*keys: str):
+    def edit(record: dict[str, object], v2: dict[str, object]) -> None:
+        first = {key: record.pop(key) for key in keys}
+        rest = dict(record)
+        record.clear()
+        record.update(first)
+        record.update(rest)
+
+    return edit
+
+
+def registry_takes(source):
+    def edit(record: dict[str, object], v2: dict[str, object]) -> None:
+        merge = source(record, v2)
+        registry = record["registry_dependency"]
+        registry["merge"] = merge
+        registry["version"] = adopt_revision(registry["version"], merge)
+
+    return edit
+
+
+def flavors_edit(change):
+    return pin_edit(("selection", "supported_flavors"), lambda old, record, v2: change(list(old)))
+
+
+def swapped(values: list[str], first: int, second: int) -> list[str]:
+    values[first], values[second] = values[second], values[first]
+    return values
+
+
+V4_RECORD_EDITS = [
+    # contract, supersession and phase
+    pytest.param(value_edit("contract", value=V3_CONTRACT), id="contract-reuses-v3"),
+    pytest.param(
+        value_edit("contract", value=V4_CONTRACT[:-1] + "5"), id="contract-skips-a-version"
+    ),
+    pytest.param(drop_edit("contract"), id="contract-dropped"),
+    pytest.param(
+        value_edit("supersedes_for_new_runs", value=V2_CONTRACT), id="supersedes-v2"
+    ),
+    pytest.param(
+        value_edit("supersedes_for_new_runs", value=V4_CONTRACT), id="supersedes-itself"
+    ),
+    pytest.param(value_edit("phase", value="FMV3-M4-05"), id="phase-changed"),
+    # registry pin: module, version, merge
+    pytest.param(drop_edit("registry_dependency"), id="registry-dependency-dropped"),
+    pytest.param(
+        value_edit(
+            "registry_dependency", "module", value="github.com/Project-Helianthus/helianthus-modbus"
+        ),
+        id="registry-module-is-the-transport-library",
+    ),
+    pytest.param(drop_edit("registry_dependency", "module"), id="registry-module-dropped"),
+    pytest.param(drop_edit("registry_dependency", "version"), id="registry-version-dropped"),
+    pytest.param(
+        value_edit("registry_dependency", "version", value="v0.6.7"), id="registry-version-is-a-tag"
+    ),
+    pytest.param(
+        pin_edit(
+            ("registry_dependency", "version"), lambda old, record, v2: flip_last_digit(old)
+        ),
+        id="registry-version-names-another-revision",
+    ),
+    pytest.param(
+        pin_edit(
+            ("registry_dependency", "version"),
+            lambda old, record, v2: re.sub(r"-0\.\d{14}-", "-", old),
+        ),
+        id="registry-version-without-timestamp",
+    ),
+    pytest.param(drop_edit("registry_dependency", "merge"), id="registry-merge-dropped"),
+    pytest.param(
+        pin_edit(("registry_dependency", "merge"), lambda old, record, v2: old[:-1]),
+        id="registry-merge-39-digits",
+    ),
+    pytest.param(
+        pin_edit(("registry_dependency", "merge"), lambda old, record, v2: old.upper()),
+        id="registry-merge-upper-case",
+    ),
+    pytest.param(
+        pin_edit(("registry_dependency", "merge"), lambda old, record, v2: flip_first_digit(old)),
+        id="registry-merge-prefix-disagrees-with-version",
+    ),
+    pytest.param(
+        registry_takes(lambda record, v2: record["gateway_dependency"]["merge"]),
+        id="registry-merge-is-the-gateway-pin",
+    ),
+    pytest.param(
+        registry_takes(lambda record, v2: v2["registry_dependency"]["merge"]),
+        id="registry-merge-is-the-v2-pin",
+    ),
+    pytest.param(
+        value_edit("registry_dependency", "tag", value="v0.6.7"), id="registry-extra-field"
+    ),
+    pytest.param(
+        pin_edit(
+            ("registry_dependency",),
+            lambda old, record, v2: {key: old[key] for key in ("merge", "version", "module")},
+        ),
+        id="registry-fields-reordered",
+    ),
+    # gateway pin: module, merge
+    pytest.param(drop_edit("gateway_dependency"), id="gateway-dependency-dropped"),
+    pytest.param(
+        value_edit(
+            "gateway_dependency", "module", value="github.com/Project-Helianthus/helianthus-ebusreg"
+        ),
+        id="gateway-module-is-another-repository",
+    ),
+    pytest.param(drop_edit("gateway_dependency", "module"), id="gateway-module-dropped"),
+    pytest.param(drop_edit("gateway_dependency", "merge"), id="gateway-merge-dropped"),
+    pytest.param(
+        pin_edit(("gateway_dependency", "merge"), lambda old, record, v2: old[:-1]),
+        id="gateway-merge-39-digits",
+    ),
+    pytest.param(
+        pin_edit(("gateway_dependency", "merge"), lambda old, record, v2: old.upper()),
+        id="gateway-merge-upper-case",
+    ),
+    pytest.param(
+        pin_edit(("gateway_dependency", "merge"), lambda old, record, v2: "g" + old[1:]),
+        id="gateway-merge-not-hex",
+    ),
+    pytest.param(
+        pin_edit(
+            ("gateway_dependency", "merge"),
+            lambda old, record, v2: record["registry_dependency"]["merge"],
+        ),
+        id="gateway-merge-is-the-registry-pin",
+    ),
+    pytest.param(
+        pin_edit(
+            ("gateway_dependency", "merge"),
+            lambda old, record, v2: v2["registry_dependency"]["merge"],
+        ),
+        id="gateway-merge-is-the-v2-pin",
+    ),
+    pytest.param(
+        value_edit("gateway_dependency", "version", value="v0.6.32"), id="gateway-extra-field"
+    ),
+    pytest.param(
+        pin_edit(
+            ("gateway_dependency",),
+            lambda old, record, v2: {key: old[key] for key in ("merge", "module")},
+        ),
+        id="gateway-fields-reordered",
+    ),
+    pytest.param(
+        reorder_edit("gateway_dependency", "registry_dependency"), id="pins-swapped"
+    ),
+    pytest.param(value_edit("support_flavors", value=[]), id="unknown-top-level-field"),
+    pytest.param(reorder_edit("selection"), id="selection-moved-before-the-pins"),
+    # selection: every field, and each member of the closed flavor list
+    pytest.param(
+        value_edit("selection", "input", value="partial_snapshot"), id="selection-input-changed"
+    ),
+    pytest.param(
+        value_edit("selection", "decoder_dispatch", value="model_id_range"),
+        id="selection-dispatch-changed",
+    ),
+    pytest.param(
+        value_edit(
+            "selection", "capability", value="sunspec.inverter.three_phase.monitoring@1.1.0"
+        ),
+        id="selection-capability-changed",
+    ),
+    pytest.param(flavors_edit(lambda values: values[1:]), id="flavors-drop-1.0.0"),
+    pytest.param(flavors_edit(lambda values: values[:1] + values[2:]), id="flavors-drop-1.1.0"),
+    pytest.param(flavors_edit(lambda values: values[:2]), id="flavors-drop-1.2.0"),
+    pytest.param(flavors_edit(lambda values: values[::-1]), id="flavors-reversed"),
+    pytest.param(
+        flavors_edit(lambda values: swapped(values, 0, 1)), id="flavors-first-two-swapped"
+    ),
+    pytest.param(flavors_edit(lambda values: values + values[-1:]), id="flavors-duplicate"),
+    pytest.param(
+        flavors_edit(
+            lambda values: values + ["sunspec.flavor.fronius.gen24.float.observed@1.3.0"]
+        ),
+        id="flavors-unlisted-identifier-added",
+    ),
+    pytest.param(
+        flavors_edit(lambda values: values[:2] + [FLAVOR_V12_ID[:-1] + "*"]),
+        id="flavors-wildcard",
+    ),
+    pytest.param(
+        flavors_edit(lambda values: values[:2] + [FLAVOR_V12_ID.upper()]),
+        id="flavors-upper-case",
+    ),
+    pytest.param(flavors_edit(lambda values: values[2:]), id="flavors-only-1.2.0"),
+    pytest.param(
+        value_edit("selection", "required_exact_match_count", value=0), id="match-count-zero"
+    ),
+    pytest.param(
+        value_edit("selection", "required_exact_match_count", value=2), id="match-count-two"
+    ),
+    pytest.param(
+        value_edit("selection", "current_live_target", value=FLAVOR_V11_ID),
+        id="live-target-stays-1.1.0",
+    ),
+    pytest.param(
+        value_edit("selection", "current_live_target", value=FLAVOR_V1_ID),
+        id="live-target-is-1.0.0",
+    ),
+    pytest.param(
+        value_edit(
+            "selection",
+            "current_live_target",
+            value="sunspec.flavor.fronius.gen24.float.observed@1.3.0",
+        ),
+        id="live-target-is-unlisted",
+    ),
+    pytest.param(
+        value_edit("selection", "hardcoded_model_id_rules", value=True),
+        id="model-id-rules-enabled",
+    ),
+    pytest.param(
+        value_edit("selection", "fallback_flavor", value=FLAVOR_V11_ID),
+        id="selection-extra-field",
+    ),
+    # inherited safety fields, each changed and each dropped
+    *[
+        pytest.param(value_edit(key, value="changed"), id=f"{key}-changed")
+        for key in V4_INHERITED
+    ],
+    *[pytest.param(drop_edit(key), id=f"{key}-dropped") for key in V4_INHERITED],
+]
+
+
+@pytest.mark.parametrize("edit", V4_RECORD_EDITS)
+def test_v4_record_rejects_a_weakened_record(edit) -> None:
+    runtime = text(RUNTIME)
+    v2 = json_record_after(runtime, V2_HEADING)
+    v3 = json_record_after(runtime, V3_HEADING)
+    record, _, _ = record_in_block(runtime, V4_HEADING)
+    assert_v4_record(record, v3, v2)
+
+    weakened = json.loads(json.dumps(record))
+    edit(weakened, v2)
+    assert json.dumps(weakened) != json.dumps(record)
+    with pytest.raises(AssertionError):
+        assert_v4_record(weakened, v3, v2)
+
+
+def loose(phrase: str) -> re.Pattern[str]:
+    return re.compile(r"\s+".join(re.escape(word) for word in phrase.split()))
+
+
+def with_lines(runtime: str, change) -> str:
+    lines = runtime.split("\n")
+    record, start, end = record_in_block(runtime, V4_HEADING)
+    change(lines, start, end, record)
+    return "\n".join(lines)
+
+
+def insert_after_successor_heading(extra: str):
+    def change(lines: list[str], start: int, end: int, record: dict[str, object]) -> None:
+        lines.insert(lines.index(V4_SUCCESSOR_HEADING) + 1, extra.format(**pins(record)))
+
+    return change
+
+
+def pins(record: dict[str, object]) -> dict[str, str]:
+    registry = record["registry_dependency"]
+    return {
+        "registry": registry["merge"],
+        "gateway": record["gateway_dependency"]["merge"],
+        "revision": registry["merge"][:12],
+    }
+
+
+def move_following_heading(lines: list[str], start: int, end: int, record: dict) -> None:
+    lines.remove(FOLLOWING_HEADING)
+    lines.insert(lines.index(V4_SUCCESSOR_HEADING), FOLLOWING_HEADING)
+
+
+def stray_end_marker(lines: list[str], start: int, end: int, record: dict) -> None:
+    lines.insert(0, MARKER_END)
+
+
+def stray_second_start(lines: list[str], start: int, end: int, record: dict) -> None:
+    lines.insert(start + 1, MARKER_START)
+
+
+def fence_before_marker(lines: list[str], start: int, end: int, record: dict) -> None:
+    lines[start], lines[start + 1] = lines[start + 1], lines[start]
+
+
+def misspell_start(lines: list[str], start: int, end: int, record: dict) -> None:
+    lines[start] = lines[start].replace("record start", "records start")
+
+
+def embed_start(lines: list[str], start: int, end: int, record: dict) -> None:
+    lines[start] = "prose " + lines[start]
+
+
+def embed_extra_end(lines: list[str], start: int, end: int, record: dict) -> None:
+    lines.insert(end + 2, "prose " + MARKER_END)
+
+
+def drop_line(which: str):
+    def change(lines: list[str], start: int, end: int, record: dict) -> None:
+        targets = {"start": [start], "end": [end], "both": [start, end]}[which]
+        for number in sorted(targets, reverse=True):
+            del lines[number]
+
+    return change
+
+
+def pin_in_heading(lines: list[str], start: int, end: int, record: dict) -> None:
+    lines.insert(end + 2, f"### Pin {pins(record)['gateway']}")
+
+
+V4_PAGE_EDITS = [
+    pytest.param(drop_line("start"), id="start-marker-dropped"),
+    pytest.param(drop_line("end"), id="end-marker-dropped"),
+    pytest.param(drop_line("both"), id="markers-dropped-pins-unprotected"),
+    pytest.param(stray_second_start, id="start-marker-nested"),
+    pytest.param(stray_end_marker, id="end-marker-without-start"),
+    pytest.param(misspell_start, id="marker-misspelled"),
+    pytest.param(embed_start, id="marker-embedded-in-prose"),
+    pytest.param(embed_extra_end, id="extra-marker-embedded-after-the-record"),
+    pytest.param(fence_before_marker, id="marker-not-adjacent-to-the-fence"),
+    pytest.param(move_following_heading, id="record-after-the-next-section"),
+    pytest.param(pin_in_heading, id="pin-in-a-heading"),
+    pytest.param(
+        insert_after_successor_heading("\nThe registry merge is {registry}."),
+        id="registry-pin-in-prose",
+    ),
+    pytest.param(
+        insert_after_successor_heading("\nThe gateway merge is {gateway}."),
+        id="gateway-pin-in-prose",
+    ),
+    pytest.param(
+        insert_after_successor_heading("\nThe registry revision is {revision}."),
+        id="abbreviated-pin-in-prose",
+    ),
+    pytest.param(
+        insert_after_successor_heading(
+            "\n[merge](https://example.invalid/helianthus/commit/{gateway})"
+        ),
+        id="pin-in-a-link",
+    ),
+]
+
+
+@pytest.mark.parametrize("change", V4_PAGE_EDITS)
+def test_v4_record_rejects_a_weakened_page(change) -> None:
+    runtime = text(RUNTIME)
+    assert_v4_page(runtime)
+    weakened = with_lines(runtime, change)
+    assert weakened != runtime
+    with pytest.raises(AssertionError):
+        assert_v4_page(weakened)
+
+
+def edit_v4_section(runtime: str, pattern: re.Pattern[str], replacement: str) -> str:
+    _, section_v4 = runtime_sections(runtime)
+    assert len(pattern.findall(section_v4)) == 1
+    assert runtime.count(section_v4) == 1
+    return runtime.replace(section_v4, pattern.sub(replacement, section_v4))
+
+
+@pytest.mark.parametrize("phrase", V4_PROSE)
+def test_v4_record_rejects_a_dropped_prose_clause(phrase: str) -> None:
+    runtime = text(RUNTIME)
+    weakened = edit_v4_section(runtime, loose(phrase), "")
+    assert weakened != runtime
+    with pytest.raises(AssertionError):
+        assert_v4_page(weakened)
+
+
+@pytest.mark.parametrize(
+    ("before", "after"),
+    [
+        ("exactly one of the three closed flavor contracts", "at least one of the three closed flavor contracts"),
+        ("Zero matches is `NO_GO`", "Zero matches is `GO`"),
+        ("more than one match is incoherent and `STOP`", "more than one match is incoherent and `GO`"),
+        ("is not a product-family support claim", "is a product-family support claim"),
+        ("M5 remains blocked until", "M5 is open once"),
+        ("It publishes no live result.", "It publishes the live result."),
+        ("so one snapshot cannot match both", "so one snapshot can match both"),
+    ],
+)
+def test_v4_record_rejects_a_reversed_prose_clause(before: str, after: str) -> None:
+    runtime = text(RUNTIME)
+    weakened = edit_v4_section(runtime, loose(before), after)
+    assert weakened != runtime
+    with pytest.raises(AssertionError):
+        assert_v4_page(weakened)
 
 
 @pytest.mark.parametrize(("before", "after"), PAGE_EDITS)
