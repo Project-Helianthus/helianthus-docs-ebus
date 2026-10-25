@@ -75,6 +75,49 @@ def test_semantic_operation_route_contract() -> None:
     validate_contract(TEXT)
 
 
+@pytest.mark.parametrize("before,after", (
+    ("When at least one `semanticOperation` selection reaches its resolver,",
+     "Whenever the parsed operation selects `semanticOperation`,"),
+    ("If every `semanticOperation` selection is skipped by `@skip(if: true)` or\n"
+     "`@include(if: false)`, the stock GraphQL executor never invokes the resolver;\n"
+     "only resolver-owned checks are bypassed, and a second skipped selection does not\n"
+     "produce `INVALID_ARGUMENT`.",
+     "Every second skipped selection produces `INVALID_ARGUMENT`."),
+))
+def test_rejects_unconditional_skipped_selection_validation(before: str, after: str) -> None:
+    assert before in TEXT
+    with pytest.raises(AssertionError, match="Visible contract blocks changed"):
+        validate_contract(TEXT.replace(before, after, 1))
+
+
+@pytest.mark.parametrize("rule", (
+    "only resolver-owned checks are bypassed",
+    "Stock GraphQL document validation and variable coercion still run before",
+    "missing non-null variables even when every selection is skipped",
+))
+def test_preserves_stock_validation_for_skipped_selections(rule: str) -> None:
+    assert rule in TEXT
+    with pytest.raises(AssertionError, match="Visible contract blocks changed"):
+        validate_contract(TEXT.replace(rule, "validation is bypassed", 1))
+
+
+@pytest.mark.parametrize("rule", (
+    "Go's `encoding/json.Marshal` with its default HTML escaping enabled",
+    "UTF-8, without insignificant whitespace or a trailing newline",
+    "Object keys are sorted",
+    "non-ASCII characters are emitted directly except U+2028 and U+2029",
+    r'`\u2028` and `\u2029`',
+    r'`<`, `>` and `&` use `\u003c`, `\u003e` and `\u0026`',
+    "solidus `/` is not escaped",
+    r'quotation marks and backslashes use `\"` and `\\`',
+    r'`\b`, `\f`, `\n`, `\r`, `\t` or lowercase `\u00xx` escapes',
+))
+def test_pins_input_size_serialization(rule: str) -> None:
+    assert rule in TEXT
+    with pytest.raises(AssertionError, match="Visible contract blocks changed"):
+        validate_contract(TEXT.replace(rule, "any compact JSON encoding", 1))
+
+
 @pytest.mark.parametrize("token", BLOCKS, ids=lambda token: token.content[:60])
 @pytest.mark.parametrize("wrapper", ("", "<!--\n{}\n-->\n", "```text\n{}\n```\n", "{} weakened\n"))
 def test_rejects_missing_hidden_or_weakened_rule(token, wrapper: str) -> None:
@@ -172,14 +215,15 @@ def test_rejects_duplicate_members_at_every_object_level(
     ("1–5000 milliseconds", "1–60000 milliseconds"),
     ("`String!`; exact existing SemReg `AssetID`", "`ID!`; exact existing SemReg `AssetID`"),
     ("numeric inputs are rejected", "numeric inputs are coerced"),
-    ("duplicate member names at every object level", "duplicate member names only in input records"),
-    ("before constructing objects that discard\nduplicates or performing GraphQL coercion",
-     "after constructing objects that discard duplicates and performing GraphQL coercion"),
-    ("Compare names after JSON escape\ndecoding", "Compare names before JSON escape decoding"),
-    ("reject duplicates even when their values are identical",
-     "allow duplicates when their values are identical"),
-    ("before JSON parsing or GraphQL coercion", "after GraphQL coercion"),
+    ("including a selection that a\ndirective would skip", "excluding a selection that a directive would skip"),
+    ("a second selection is `INVALID_ARGUMENT`", "a second selection is accepted"),
+    ("no content encoding other than identity", "any content encoding"),
     ("65,536", "131,072"),
+    ("as the length of its compact JSON encoding", "as the length of the whole request body"),
+    ("an input over the limit is\n`RESOURCE_EXHAUSTED`", "an input over the limit is truncated"),
+    ("is handled exactly as by the\nstock GraphQL handler", "is first checked by a stricter route guard"),
+    ("The route scans no request body as bytes", "The route scans every request body as bytes"),
+    ("rejects no duplicate JSON member name of its own", "rejects duplicate JSON member names"),
     ("`readbackRelation` is `inconclusive` when evidenced, otherwise null",
      "`readbackRelation` is null"),
     ("complete capability collection revision", "optional capability collection revision"),
