@@ -4,6 +4,7 @@ import ipaddress
 import json
 from pathlib import Path
 import re
+import unicodedata
 import unittest
 
 
@@ -216,11 +217,14 @@ class ReferenceValidator:
             if text.startswith("﻿"):
                 return invalid
             document = json.loads(text, object_pairs_hook=pairs, parse_float=reject, parse_constant=reject)
-        except ValueError:
+        except (ValueError, RecursionError):
             return invalid
         if "null" in re.findall(r'"(?:[^"\\]|\\.)*"|\bnull\b', text):
             return invalid
-        if self._has_control_character(document):
+        try:
+            if self._has_control_character(document):
+                return invalid
+        except RecursionError:
             return invalid
         if not isinstance(document, dict):
             return invalid
@@ -251,7 +255,7 @@ class ReferenceValidator:
     @classmethod
     def _has_control_character(cls, value: object) -> bool:
         if isinstance(value, str):
-            return any(ord(char) < 0x20 or ord(char) == 0x7F for char in value)
+            return any(unicodedata.category(char) == "Cc" for char in value)
         if isinstance(value, dict):
             return any(cls._has_control_character(item) for pair in value.items() for item in pair)
         if isinstance(value, list):
@@ -411,6 +415,10 @@ class ModbusMultiEndpointRuntimeContractTest(unittest.TestCase):
             b"x" * (MAX_DOCUMENT_BYTES + 1),
             self.example_bytes.replace(b'"label": "roof"', b'"label": "ro\\u0001of"'),
             b'{"contract": "' + DOCUMENT_CONTRACT.encode() + b'", "endpoints": [], "a\\u0001": 1}',
+            b'{"contract": "' + DOCUMENT_CONTRACT.encode() + b'", "endpoints": [], "a\\u0000": 1}',
+            b'{"contract": "' + DOCUMENT_CONTRACT.encode() + b'", "endpoints": [], "a\\u0080": 1}',
+            self.example_bytes.replace(b'"label": "roof"', b'"label": "ro\\u009fof"'),
+            b'{"contract": "' + DOCUMENT_CONTRACT.encode() + b'", "endpoints": ' + b"[" * 3000 + b"]" * 3000 + b"}",
         )
         for raw in invalid_documents:
             with self.subTest(raw=raw[:40]):
