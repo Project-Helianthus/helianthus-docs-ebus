@@ -30,6 +30,10 @@ Current platform contracts:
 - [`../../api/modbus-v1-addon-runtime.md`](../../api/modbus-v1-addon-runtime.md) -
   FMV3-M4-03 disabled-by-default add-on configuration, protected endpoint-file,
   one direct gateway launch, and protocol-local Modbus failure contract
+- [`../../api/modbus-multi-endpoint-runtime.md`](../../api/modbus-multi-endpoint-runtime.md) -
+  pre-implementation contract for a bounded list of Modbus TCP endpoints, one
+  managed driver instance and one qualification per entry, pacing profile, asset
+  keying, and per-instance failure isolation
 - [`driver-runtime-manager-v1.md`](./driver-runtime-manager-v1.md) - target
   protocol-neutral lifecycle, readiness, retry, isolation, add-on validation,
   and one-release acceptance contract for eBUS, Modbus TCP, and eeBUS
