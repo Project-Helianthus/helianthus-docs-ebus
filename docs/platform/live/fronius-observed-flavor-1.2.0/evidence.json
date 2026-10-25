@@ -1,0 +1,50 @@
+{
+  "contract": "helianthus.fronius-sunspec-observed-walk-evidence.v1",
+  "evidence_class": "READ_ONLY_WALK_OBSERVATION",
+  "export_tier": "PUBLIC_REDACTED",
+  "outcome": "OBSERVED",
+  "target": {
+    "manufacturer": "Fronius",
+    "model": "Symo GEN24 10.0",
+    "firmware": "1.42.9-1"
+  },
+  "acquisition": {
+    "transport": "modbus_tcp",
+    "unit_id": 1,
+    "function_code": 3,
+    "signature_pdu_offset": 40000,
+    "writes_permitted": false
+  },
+  "observation": {
+    "source_validity": "terminal_verified",
+    "chain": [
+      {"model_id": 1, "model_length": 65},
+      {"model_id": 113, "model_length": 60},
+      {"model_id": 120, "model_length": 26},
+      {"model_id": 121, "model_length": 30},
+      {"model_id": 122, "model_length": 44},
+      {"model_id": 123, "model_length": 24},
+      {"model_id": 160, "model_length": 88},
+      {"model_id": 124, "model_length": 24},
+      {"model_id": 65535, "model_length": 0}
+    ],
+    "extent_words": 381,
+    "field_value_retention": "PRESERVED_PRIVATE_NOT_PROMOTED"
+  },
+  "registry_evaluation": {
+    "capability_id": "sunspec.inverter.three_phase.monitoring@1.0.0",
+    "capability_reason": "ADMITTED",
+    "flavor_results": [
+      {
+        "flavor_id": "sunspec.flavor.fronius.gen24.float.observed@1.0.0",
+        "flavor_reason": "FIRMWARE_MISMATCH"
+      },
+      {
+        "flavor_id": "sunspec.flavor.fronius.gen24.float.observed@1.1.0",
+        "flavor_reason": "FIRMWARE_MISMATCH"
+      }
+    ],
+    "qualification_evidence_only": true,
+    "support_claim": false
+  }
+}
