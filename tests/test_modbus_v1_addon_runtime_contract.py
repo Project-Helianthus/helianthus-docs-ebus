@@ -281,7 +281,7 @@ class ReferenceValidator:
         if self.endpoint(entry["endpoint"]) is None:
             return "INVALID_ENDPOINT"
         if "dial_timeout" in entry:
-            match = re.fullmatch(r"([1-9][0-9]*)(ms|s)", entry["dial_timeout"]) if isinstance(
+            match = re.fullmatch(r"([1-9][0-9]{0,5})(ms|s)", entry["dial_timeout"]) if isinstance(
                 entry["dial_timeout"], str
             ) else None
             if match is None or not 100 <= int(match.group(1)) * (1 if match.group(2) == "ms" else 1000) <= 30000:
@@ -395,6 +395,7 @@ class ModbusMultiEndpointRuntimeContractTest(unittest.TestCase):
             "UNKNOWN_MEMBER": with_entry(enabled=True),
             "INVALID_ENDPOINT": with_entry(endpoint="tcp://sunspec-b.example.invalid/path"),
             "INVALID_TIMEOUT": with_entry(dial_timeout="50ms"),
+            "INVALID_TIMEOUT_HUGE": with_entry(dial_timeout="9" * 5000 + "s"),
             "INVALID_UNITS": with_entry(units=[2]),
             "INVALID_PACING": with_entry(pacing={"backoff_floor_s": 400}),
         }
@@ -402,7 +403,7 @@ class ModbusMultiEndpointRuntimeContractTest(unittest.TestCase):
         produced = set()
         for category, document in cases.items():
             with self.subTest(category=category):
-                self.assertEqual(self.check(document)[0], category)
+                self.assertEqual(self.check(document)[0], category.removesuffix("_HUGE"))
                 produced.add(self.check(document)[0])
         invalid_documents = (
             b"",
