@@ -1,3 +1,4 @@
+import copy
 import functools
 import json
 from pathlib import Path
@@ -413,6 +414,21 @@ def test_runtime_control_contract_registered_in_local_gate() -> None:
     ('"revision": "29"', '"revision": "28"'),
     ('"enabled": true', '"enabled": 1'),
     ('"reason": "RETRY_SCHEDULED",', '"reason": "RETRY_SCHEDULED", "extra": true,'),
+    ('"observed_state": "BACKOFF"', '"observed_state": "RUNNING"'),
+    ('"observed_state": "BACKOFF"', '"observed_state": "RETRY_SCHEDULED"'),
+    ('"recovery": {', '"recovery": null, "recovery": {'),
+    ('"recovery": {', '"recovery": {"extra": true, '),
+    ('"attempt": 3,', '"attempt": "3",'),
+    ('"attempt": 3,', '"attempt": 0,'),
+    ('"attempt": 3,', '"attempt": 3.0,'),
+    ('"next_attempt_at": "2000-01-01T00:00:08Z"', '"next_attempt_at": "2000-01-01T00:00:08+00:00"'),
+    ('"last_failure_class": "DIAL_FAILED"', '"last_failure_class": "UNKNOWN"'),
+    ('"last_failure_cause": "dial: connection refused"',
+     '"last_failure_cause": "dial 192.0.2.10:9000: connection refused"'),
+    ('"last_failure_cause": "dial: connection refused"',
+     '"last_failure_cause": "dial: connection refused", "extra": true'),
+    ('"desired_revision": "7",\n    "observed_state": "RUNNING"',
+     '"desired_revision": "7",\n    "recovery": null,\n    "observed_state": "RUNNING"'),
     ('{"desired_state":"RUNNING","desired_revision":"8"}',
      '{"desired_state":"RUNNING","desired_revision":8}'),
     ('{"desired_state":"RUNNING","desired_revision":"8"}',
@@ -1048,3 +1064,255 @@ def test_runtime_control_contract_incoherent_record_case_mutations(case, change)
     documents[checker.LIFECYCLE] = documents[checker.LIFECYCLE].replace(row, replacement, 1)
     assert (f"{checker.LIFECYCLE}: invalid unavailable-read case table"
             in checker.validate(documents))
+
+
+# --- Optional `recovery` member of the G5 driver object ----------------------
+#
+# Every case below mutates exactly one member of an otherwise valid object and
+# calls the checker's object-level rule, so the doc pin in validate() cannot
+# stand in for the rule under test.
+
+def backoff_driver() -> dict:
+    return copy.deepcopy({
+        "driver_id": "ebus.primary", "enabled": True, "desired_state": "RUNNING",
+        "desired_revision": "7", "observed_state": "BACKOFF",
+        "reason": "RETRY_SCHEDULED", "safety_quarantined": False, "revision": "29",
+        "recovery": {
+            "attempt": 3, "next_attempt_at": "2000-01-01T00:00:08Z",
+            "last_failure_class": "DIAL_FAILED",
+            "last_failure_cause": "dial: connection refused",
+        },
+    })
+
+
+def with_recovery(**changes) -> dict:
+    driver = backoff_driver()
+    driver["recovery"].update(changes)
+    return driver
+
+
+def without_recovery_member(member: str) -> dict:
+    driver = backoff_driver()
+    del driver["recovery"][member]
+    return driver
+
+
+OBSERVED_STATES = ("DISABLED", "STOPPED", "STARTING", "RUNNING", "DEGRADED",
+                   "BACKOFF", "STOPPING", "FAILED")
+RECOVERY_FIELDS = ("attempt", "next_attempt_at", "last_failure_class", "last_failure_cause")
+ADDRESS_CAUSES = [
+    "dial tcp 192.0.2.10: connection refused",
+    "dial tcp 192.0.2.10:9000: connection refused",
+    "refused by adapter:9000",
+    "dial tcp [2001:db8::1]: connection refused",
+    "adapter aa:bb:cc:dd:ee:ff did not answer",
+    "dial tcp://adapter: connection refused",
+    "dial example.invalid: no such host",
+    "login as user@adapter refused",
+    "open /dev/ttyUSB0: no such device",
+    "open C:\\com3: access denied",
+]
+
+
+def test_recovery_driver_object_accepts_backoff_with_and_without_member() -> None:
+    assert checker.driver_object(backoff_driver())
+    optional = backoff_driver()
+    del optional["recovery"]
+    assert checker.driver_object(optional)
+
+
+@pytest.mark.parametrize("state", [s for s in OBSERVED_STATES if s != "BACKOFF"])
+def test_recovery_driver_object_rejects_member_outside_backoff(state) -> None:
+    # Catches a producer rule that admits `recovery` in this observed state.
+    driver = backoff_driver()
+    driver["observed_state"] = state
+    assert not checker.driver_object(driver)
+    del driver["recovery"]
+    assert checker.driver_object(driver)
+
+
+@pytest.mark.parametrize("state", ["RETRY_SCHEDULED", "backoff", "", None, ["BACKOFF"]])
+def test_recovery_driver_object_rejects_non_state_values(state) -> None:
+    # RETRY_SCHEDULED is a `reason`, never an observed state; no other spelling
+    # of BACKOFF admits the member either.
+    driver = backoff_driver()
+    driver["observed_state"] = state
+    assert not checker.driver_object(driver)
+
+
+def test_recovery_driver_object_reason_alone_does_not_admit_member() -> None:
+    driver = backoff_driver()
+    driver["observed_state"] = "RUNNING"
+    driver["reason"] = "RETRY_SCHEDULED"
+    assert not checker.driver_object(driver)
+
+
+@pytest.mark.parametrize("value", [None, {}, [], "", 0, False, [backoff_driver()["recovery"]]])
+def test_recovery_driver_object_rejects_non_object_recovery(value) -> None:
+    driver = backoff_driver()
+    driver["recovery"] = value
+    assert not checker.driver_object(driver)
+
+
+@pytest.mark.parametrize("member", ["extra", "recovery_id", "attempts", "Recovery"])
+def test_recovery_driver_object_stays_closed(member) -> None:
+    top = backoff_driver()
+    top[member] = 1
+    assert not checker.driver_object(top)
+    inner = backoff_driver()
+    inner["recovery"][member] = 1
+    assert not checker.driver_object(inner)
+
+
+@pytest.mark.parametrize("member", sorted(checker.DRIVER_MEMBERS))
+def test_recovery_driver_object_requires_existing_members(member) -> None:
+    driver = backoff_driver()
+    del driver[member]
+    assert not checker.driver_object(driver)
+
+
+@pytest.mark.parametrize("member", RECOVERY_FIELDS)
+def test_recovery_object_requires_every_member(member) -> None:
+    # One case per field: dropping this member must be refused.
+    assert not checker.driver_object(without_recovery_member(member))
+
+
+@pytest.mark.parametrize("attempt", [1, 2, 3, 1000000])
+def test_recovery_attempt_accepts_integers_from_one(attempt) -> None:
+    assert checker.driver_object(with_recovery(attempt=attempt))
+
+
+@pytest.mark.parametrize("attempt", [0, -1, "3", 3.0, 1.5, True, False, None, [3]])
+def test_recovery_attempt_rejects(attempt) -> None:
+    # 0 and negatives: lower bound; "3" and 3.0: type; True: bool is not an integer.
+    assert not checker.driver_object(with_recovery(attempt=attempt))
+
+
+@pytest.mark.parametrize("stamp", [
+    "2000-01-01T00:00:08Z", "2000-01-01T00:00:08.5Z", "2000-01-01T00:00:08.123456789Z",
+    "2000-02-29T23:59:59Z", "2026-12-31T23:59:59Z",
+])
+def test_recovery_next_attempt_at_accepts_utc_timestamps(stamp) -> None:
+    assert checker.driver_object(with_recovery(next_attempt_at=stamp))
+
+
+@pytest.mark.parametrize("stamp", [
+    "2000-01-01T00:00:08+00:00",     # numeric offset, even a zero one
+    "2000-01-01T01:00:08+01:00",
+    "2000-01-01T00:00:08z",          # designator must be upper case
+    "2000-01-01T00:00:08",           # no zone
+    "2000-01-01 00:00:08Z",          # space instead of T
+    "2000-01-01t00:00:08Z",
+    "2000-01-01T00:00Z",             # seconds are required
+    "2000-01-01T00:00:08.Z",         # empty fraction
+    "2000-01-01T00:00:08.1234567890Z",  # ten fractional digits
+    "2000-02-30T00:00:08Z",          # no such day
+    "2001-02-29T00:00:08Z",          # not a leap year
+    "2000-13-01T00:00:08Z",
+    "2000-01-01T24:00:00Z",
+    "2000-01-01T00:60:00Z",
+    "2000-01-01T00:00:60Z",          # leap second is not published
+    "0000-01-01T00:00:08Z",
+    "2000-01-01T00:00:08Z\n",
+    "\u0662000-01-01T00:00:08Z",      # non-ASCII digit
+    "", 946684808, None, ["2000-01-01T00:00:08Z"],
+])
+def test_recovery_next_attempt_at_rejects(stamp) -> None:
+    assert not checker.driver_object(with_recovery(next_attempt_at=stamp))
+
+
+@pytest.mark.parametrize("failure_class", ["DIAL_FAILED", "TIMEOUT", "TRANSPORT_CLOSED", "OTHER"])
+def test_recovery_last_failure_class_accepts_closed_set(failure_class) -> None:
+    assert checker.driver_object(with_recovery(last_failure_class=failure_class))
+
+
+@pytest.mark.parametrize("failure_class", [
+    "dial_failed", "Timeout", "UNKNOWN", "NONE", "RETRY_SCHEDULED", "DEPENDENCY_UNAVAILABLE",
+    "DIAL_FAILED ", "", None, 1, True, ["TIMEOUT"], {"TIMEOUT": 1},
+])
+def test_recovery_last_failure_class_rejects(failure_class) -> None:
+    assert not checker.driver_object(with_recovery(last_failure_class=failure_class))
+
+
+@pytest.mark.parametrize("cause", [
+    "", "dial: connection refused", "i/o timeout", "read: connection reset by peer",
+    "x" * 160,
+])
+def test_recovery_last_failure_cause_accepts(cause) -> None:
+    assert checker.driver_object(with_recovery(last_failure_cause=cause))
+
+
+@pytest.mark.parametrize("cause", [
+    "x" * 161, "x" * 1000,
+    "caf\u00e9", "line\nbreak", "tab\there", "nul\x00", "del\x7f", "\u2028",
+    None, 5, True, ["x"], {"cause": "x"},
+])
+def test_recovery_last_failure_cause_rejects_length_type_and_charset(cause) -> None:
+    assert not checker.driver_object(with_recovery(last_failure_cause=cause))
+
+
+@pytest.mark.parametrize("cause", ADDRESS_CAUSES)
+def test_recovery_last_failure_cause_rejects_address_shapes(cause) -> None:
+    assert not checker.driver_object(with_recovery(last_failure_cause=cause))
+    # The same text with the address removed is accepted, so the refusal above
+    # is about the address and not about the surrounding words.
+    stripped = re.sub(r"\S*(?:\d\.\d|:\S|/|\\|@|\.invalid)\S*", "", cause)
+    stripped = " ".join(stripped.split())
+    assert checker.driver_object(with_recovery(last_failure_cause=stripped)), stripped
+
+
+def test_recovery_contract_text_matches_checker_constants() -> None:
+    text = DOCUMENTS[checker.MCP]
+    states_row = next(line for line in text.splitlines() if line.startswith("| `observed_state` |"))
+    assert set(re.findall(r"`([A-Z]+)`", states_row)) == set(OBSERVED_STATES) == checker.OBSERVED_STATES
+    assert checker.RECOVERY_STATES == {"BACKOFF"}
+    assert ("`recovery` is present only while `observed_state` is `BACKOFF`."
+            in checker.normalize(text))
+    classes = re.findall(r"^\| `([A-Z_]+)` \| [A-Z][^|]*\|$", text.split(
+        "| `last_failure_class` | Meaning |", 1)[1].split("\n\n", 1)[0], re.MULTILINE)
+    assert set(classes) == checker.FAILURE_CLASSES and len(classes) == 4
+    cause_row = next(line for line in text.splitlines() if line.startswith("| `last_failure_cause` |"))
+    assert f"0 to {checker.CAUSE_MAX_CHARS} characters" in cause_row
+    assert "printable ASCII (U+0020 to U+007E)" in cause_row
+    member_rows = re.findall(r"^\| `([a-z_]+)` \| (?:Integer|String)\b", text, re.MULTILINE)
+    assert set(member_rows) == set(RECOVERY_FIELDS) == checker.RECOVERY_MEMBERS
+
+
+def test_recovery_compatibility_note_is_frozen_in_the_section() -> None:
+    rule = next(r for r in checker.RULES if r["start"] == "### Read and mutation data")
+    note = next(clause for clause in rule["required"] if clause.startswith("Compatibility:"))
+    flat = checker.normalize(note)
+    assert "additive, optional member" in flat
+    assert "`meta.contract` stays `major: 1`, `minor: 0`" in flat
+    documents = dict(DOCUMENTS)
+    documents[checker.MCP] = documents[checker.MCP].replace(note, "", 1)
+    assert any("changed obligation: Compatibility:" in error
+               for error in checker.validate(documents))
+
+
+def test_recovery_running_example_without_member_is_pinned() -> None:
+    documents = dict(DOCUMENTS)
+    anchor = '    "revision": "30"\n  }'
+    assert anchor in documents[checker.MCP]
+    member = ('    "revision": "30",\n    "recovery": {"attempt": 1, '
+              '"next_attempt_at": "2000-01-01T00:00:08Z", '
+              '"last_failure_class": "OTHER", "last_failure_cause": ""}\n  }')
+    documents[checker.MCP] = documents[checker.MCP].replace(anchor, member, 1)
+    assert f"{checker.MCP}: invalid G5 closed data examples" in checker.validate(documents)
+
+
+def test_recovery_checker_cli_rejects_member_in_running_example(tmp_path: Path) -> None:
+    for path, text in DOCUMENTS.items():
+        target = tmp_path / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(text, encoding="utf-8")
+    mcp = tmp_path / checker.MCP
+    mcp.write_text(mcp.read_text(encoding="utf-8").replace(
+        '"observed_state": "RUNNING"', '"observed_state": "RUNNING", "recovery": {}', 1),
+        encoding="utf-8")
+    result = subprocess.run(
+        [sys.executable, str(checker.ROOT / "scripts/check_runtime_control_contract.py"),
+         "--root", str(tmp_path)], capture_output=True, text=True,
+    )
+    assert result.returncode == 1
+    assert "invalid G5 closed data examples" in result.stderr
