@@ -66,8 +66,8 @@ REASON_CODE = re.compile(r"[A-Z][A-Z_]*")
 UTC_TIMESTAMP = re.compile(
     r"([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2}):([0-9]{2})(?:\.[0-9]{1,9})?Z")
 # Address shapes that must not survive in the cause text: IPv4, IPv6 or hardware
-# address groups, host:port, URL scheme, absolute or drive path, user@host and a
-# dotted host name. A fixture lint; the gateway owns the stripping.
+# address groups, host:port, URL scheme, absolute or drive path, user@host, a
+# dotted host name and the single-label operand of a dial or lookup. A fixture lint; the gateway owns the stripping.
 ADDRESS_SHAPES = tuple(re.compile(pattern) for pattern in (
     r"[0-9]{1,3}(?:\.[0-9]{1,3}){3}",
     r"::|(?:[0-9A-Fa-f]{1,4}:){2,}",
@@ -76,6 +76,8 @@ ADDRESS_SHAPES = tuple(re.compile(pattern) for pattern in (
     r"(?:^|[\s(])/[A-Za-z0-9._-]|[A-Za-z]:\\|\\",
     r"\S@\S",
     r"[A-Za-z0-9-]\.[A-Za-z0-9-]",
+    # Single-label host name: the operand of a dial, lookup, resolve or connect.
+    r"\b(?:dial|lookup|resolve|connect to)\s+(?:(?:tcp|udp)\s+)?(?!(?:tcp|udp)\b)[A-Za-z0-9-]+(?::|$)",
 ))
 UNAVAILABLE_SECTION = "### Envelope, lifecycle errors and acceptance vectors"
 UNAVAILABLE_CASE_SECTION = "### Unavailable reads with invalid durable bounds"

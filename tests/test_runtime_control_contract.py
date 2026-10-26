@@ -1111,6 +1111,9 @@ ADDRESS_CAUSES = [
     "login as user@adapter refused",
     "open /dev/ttyUSB0: no such device",
     "open C:\\com3: access denied",
+    "lookup gateway: no such host",
+    "dial ebus-adapter: connection refused",
+    "dial tcp ebus-adapter: connection refused",
 ]
 
 
@@ -1257,6 +1260,7 @@ def test_recovery_last_failure_cause_rejects_address_shapes(cause) -> None:
     # The same text with the address removed is accepted, so the refusal above
     # is about the address and not about the surrounding words.
     stripped = re.sub(r"\S*(?:\d\.\d|:\S|/|\\|@|\.invalid)\S*", "", cause)
+    stripped = re.sub(r"\b(lookup|dial tcp|dial) (?!tcp:)[\w-]+:", r"\1:", stripped)
     stripped = " ".join(stripped.split())
     assert checker.driver_object(with_recovery(last_failure_cause=stripped)), stripped
 
