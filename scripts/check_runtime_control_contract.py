@@ -9,6 +9,7 @@ substitute for normative prose; request/result examples are checked separately.
 from __future__ import annotations
 
 import argparse
+from datetime import datetime
 import hashlib
 import json
 from pathlib import Path
@@ -47,6 +48,37 @@ SNAPSHOT_MEMBERS = {
 }
 REASON_MEMBERS = {"code", "retryable"}
 RETRY_MEMBERS = {"eligible", "budget_remaining", "not_before_utc"}
+# G5 driver object: eight required members plus the one optional `recovery`
+# member, allowed only while the observed state is BACKOFF.
+OBSERVED_STATES = {"DISABLED", "STOPPED", "STARTING", "RUNNING", "DEGRADED",
+                   "BACKOFF", "STOPPING", "FAILED"}
+DESIRED_STATES = {"RUNNING", "STOPPED"}
+DRIVER_MEMBERS = {"driver_id", "enabled", "desired_state", "desired_revision",
+                  "observed_state", "reason", "safety_quarantined", "revision"}
+RECOVERY = "recovery"
+RECOVERY_STATES = {"BACKOFF"}
+RECOVERY_MEMBERS = {"attempt", "next_attempt_at", "last_failure_class",
+                    "last_failure_cause"}
+FAILURE_CLASSES = {"DIAL_FAILED", "TIMEOUT", "TRANSPORT_CLOSED", "OTHER"}
+CAUSE_MAX_CHARS = 160
+DRIVER_ID = re.compile(r"[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*")
+REASON_CODE = re.compile(r"[A-Z][A-Z_]*")
+UTC_TIMESTAMP = re.compile(
+    r"([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2}):([0-9]{2})(?:\.[0-9]{1,9})?Z")
+# Address shapes that must not survive in the cause text: IPv4, IPv6 or hardware
+# address groups, host:port, URL scheme, absolute or drive path, user@host, a
+# dotted host name and the single-label operand of a dial or lookup. A fixture lint; the gateway owns the stripping.
+ADDRESS_SHAPES = tuple(re.compile(pattern) for pattern in (
+    r"[0-9]{1,3}(?:\.[0-9]{1,3}){3}",
+    r"::|(?:[0-9A-Fa-f]{1,4}:){2,}",
+    r"\S:[0-9]{1,5}(?![0-9])",
+    r"[A-Za-z][A-Za-z0-9+.-]*://",
+    r"(?:^|[\s(])/[A-Za-z0-9._-]|[A-Za-z]:\\|\\",
+    r"\S@\S",
+    r"[A-Za-z0-9-]\.[A-Za-z0-9-]",
+    # Single-label host name: the operand of a dial, lookup, resolve or connect.
+    r"\b(?:dial|lookup|resolve|connect to)\s+(?:(?:tcp|udp)\s+)?(?!(?:tcp|udp)\b)[A-Za-z0-9-]+(?::|$)",
+))
 UNAVAILABLE_SECTION = "### Envelope, lifecycle errors and acceptance vectors"
 UNAVAILABLE_CASE_SECTION = "### Unavailable reads with invalid durable bounds"
 UNAVAILABLE_VIEW_MEMBERS = {
@@ -138,6 +170,56 @@ def revision(value: object) -> bool:
     )
 
 
+def utc_timestamp(value: object) -> bool:
+    """RFC 3339 UTC with the Z designator: a real calendar date and clock time."""
+    match = UTC_TIMESTAMP.fullmatch(value) if isinstance(value, str) else None
+    if match is None:
+        return False
+    try:
+        datetime(*(int(group) for group in match.groups()))
+    except ValueError:
+        return False
+    return True
+
+
+def failure_cause(value: object) -> bool:
+    return (
+        isinstance(value, str) and len(value) <= CAUSE_MAX_CHARS
+        and all(" " <= char <= "~" for char in value)
+        and not any(shape.search(value) for shape in ADDRESS_SHAPES)
+    )
+
+
+def recovery_object(value: object) -> bool:
+    return (
+        isinstance(value, dict) and value.keys() == RECOVERY_MEMBERS
+        and type(value["attempt"]) is int and value["attempt"] >= 1
+        and utc_timestamp(value["next_attempt_at"])
+        and isinstance(value["last_failure_class"], str)
+        and value["last_failure_class"] in FAILURE_CLASSES
+        and failure_cause(value["last_failure_cause"])
+    )
+
+
+def driver_object(value: object) -> bool:
+    """The closed G5 driver object; `recovery` is optional and BACKOFF-only."""
+    if not isinstance(value, dict) or not DRIVER_MEMBERS <= value.keys() <= DRIVER_MEMBERS | {RECOVERY}:
+        return False
+    state = value["observed_state"]
+    return (
+        isinstance(value["driver_id"], str) and len(value["driver_id"]) <= 128
+        and DRIVER_ID.fullmatch(value["driver_id"]) is not None
+        and type(value["enabled"]) is bool and type(value["safety_quarantined"]) is bool
+        and isinstance(value["desired_state"], str) and value["desired_state"] in DESIRED_STATES
+        and revision(value["desired_revision"]) and value["desired_revision"] != "0"
+        and isinstance(state, str) and state in OBSERVED_STATES
+        and isinstance(value["reason"], str) and REASON_CODE.fullmatch(value["reason"]) is not None
+        and revision(value["revision"])
+        and (RECOVERY not in value
+             or (state in RECOVERY_STATES and recovery_object(value[RECOVERY])))
+    )
+
+
 def closed_object(pairs: list[tuple[str, object]]) -> dict:
     result = {}
     for key, value in pairs:
@@ -198,7 +280,8 @@ def validate(documents: dict[str, str]) -> list[str]:
     examples = [t.content for t in MarkdownIt().parse(mcp_section)
                 if t.type == "fence"]
     try:
-        listing, decision = [json.loads(s, object_pairs_hook=closed_object) for s in examples]
+        listing, single, decision = [
+            json.loads(s, object_pairs_hook=closed_object) for s in examples]
         assert isinstance(listing, dict) and listing.keys() == {"catalog_revision", "drivers"}
         assert revision(listing["catalog_revision"]) and listing["catalog_revision"] != "0"
         assert isinstance(listing["drivers"], list) and len(listing["drivers"]) == 1
@@ -208,8 +291,26 @@ def validate(documents: dict[str, str]) -> list[str]:
             "desired_state": "RUNNING", "desired_revision": "7",
             "observed_state": "BACKOFF", "reason": "RETRY_SCHEDULED",
             "safety_quarantined": False, "revision": listing["catalog_revision"],
+            "recovery": {
+                "attempt": 3, "next_attempt_at": "2000-01-01T00:00:08Z",
+                "last_failure_class": "DIAL_FAILED",
+                "last_failure_cause": "dial: connection refused",
+            },
         }
         assert type(driver["enabled"]) is bool and type(driver["safety_quarantined"]) is bool
+        assert driver_object(driver)
+        # The running driver carries no recovery member at all.
+        assert isinstance(single, dict) and single.keys() == {"catalog_revision", "driver"}
+        assert revision(single["catalog_revision"]) and single["catalog_revision"] != "0"
+        assert single["driver"] == {
+            "driver_id": "ebus.primary", "enabled": True,
+            "desired_state": "RUNNING", "desired_revision": "7",
+            "observed_state": "RUNNING", "reason": "NONE",
+            "safety_quarantined": False, "revision": single["catalog_revision"],
+        }
+        assert type(single["driver"]["enabled"]) is bool
+        assert type(single["driver"]["safety_quarantined"]) is bool
+        assert driver_object(single["driver"])
         assert isinstance(decision, dict) and decision.keys() == {"desired_state", "desired_revision"}
         assert decision["desired_state"] in {"RUNNING", "STOPPED"}
         assert revision(decision["desired_revision"]) and decision["desired_revision"] != "0"

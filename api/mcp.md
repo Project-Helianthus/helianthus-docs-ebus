@@ -114,7 +114,8 @@ construct a provider, open an endpoint, reconcile or poll in place of the servic
 
 List `data` has exactly `catalog_revision` and `drivers`. Get `data` has exactly
 `catalog_revision` and `driver`. Each driver object projects the landed cached
-`DriverStatus` with exactly these fields:
+`DriverStatus` with exactly these fields; every member except the optional
+`recovery` is always present:
 
 | Wire field | Internal field / meaning |
 |---|---|
@@ -126,6 +127,60 @@ List `data` has exactly `catalog_revision` and `drivers`. Get `data` has exactly
 | `reason` | `Reason`, categorical manager reason string, never a raw error |
 | `safety_quarantined` | `SafetyQuarantined`, unproven native close |
 | `revision` | `Revision`, catalog/view revision string |
+| `recovery` | Optional recovery schedule, present only while `observed_state` is `BACKOFF`; defined below |
+
+The driver object stays closed except for that one optional member. `recovery`
+is present only while `observed_state` is `BACKOFF`. In `DISABLED`, `STOPPED`,
+`STARTING`, `RUNNING`, `DEGRADED`, `STOPPING` and `FAILED` it is absent: never
+`null`, never an empty object. `RETRY_SCHEDULED` is a `reason` value that
+`BACKOFF` reports, not an observed state, so a reason alone never admits the
+member. A driver in `BACKOFF` may omit it; absence there means only that no
+schedule is published. Reads still perform no endpoint I/O: the member reports
+the cached schedule.
+
+When present, `recovery` is a closed object with exactly these four members, all
+required:
+
+| `recovery` member | Type and meaning |
+|---|---|
+| `attempt` | Integer of at least 1: the one-based number of the recovery attempt scheduled for `next_attempt_at` |
+| `next_attempt_at` | String: when that attempt is due, an RFC 3339 UTC timestamp written with the `Z` designator, whole seconds or up to nine fractional digits, never a numeric offset |
+| `last_failure_class` | String: one of `DIAL_FAILED`, `TIMEOUT`, `TRANSPORT_CLOSED` or `OTHER` |
+| `last_failure_cause` | String: display text of the last failure, 0 to 160 characters, printable ASCII (U+0020 to U+007E), with every address stripped by the gateway |
+
+This contract names no failure class for a driver attempt: its closed reason
+codes describe the driver state, not the attempt that failed. `last_failure_class`
+therefore has the following closed set, and adding a value is a contract change:
+
+| `last_failure_class` | Meaning |
+|---|---|
+| `DIAL_FAILED` | The transport connection could not be established |
+| `TIMEOUT` | The attempt, or an established transport, exceeded its time limit |
+| `TRANSPORT_CLOSED` | An established transport was closed or lost |
+| `OTHER` | Any other retryable failure |
+
+`next_attempt_at` is a scheduled time, not a promise that the attempt starts at
+that instant. The gateway removes every address from `last_failure_cause` before
+publishing it: no IP address, host name, port, URL, device path or hardware
+address remains. Consumers display the text and do not parse it; the
+machine-readable member is `last_failure_class`. Accepted-mutation data and
+`REVISION_CONFLICT` data are unchanged and never carry `recovery`; the member
+adds no tool, argument, error code or GraphQL field.
+
+Compatibility: `recovery` is an additive, optional member, a change of the kind a
+minor revision would admit. Responses for drivers outside `BACKOFF` are
+unchanged, so a consumer written against the closed driver object without
+`recovery` keeps working for them. A consumer that rejects unknown driver members
+must accept `recovery` before it reads from a gateway that publishes it. The
+pre-1.0 rule above governs: this change is recorded by this documentation, the
+updated examples and the pull request, and `meta.contract` stays `major: 1`,
+`minor: 0`.
+
+The examples below show one `BACKOFF` driver with `recovery` and one `RUNNING`
+driver without it. The committed checker rejects `recovery` in every other
+observed state, any other driver member, and a `recovery` object with a missing,
+extra, out-of-range or malformed member. Gateway output goldens must cover the
+same cases.
 
 List includes every registered driver, sorted bytewise by `driver_id`, with
 `drivers: []` for an empty catalog. Entries and `catalog_revision` come from
@@ -227,9 +282,34 @@ Synthetic list `data` example (not a live observation):
       "observed_state": "BACKOFF",
       "reason": "RETRY_SCHEDULED",
       "safety_quarantined": false,
-      "revision": "29"
+      "revision": "29",
+      "recovery": {
+        "attempt": 3,
+        "next_attempt_at": "2000-01-01T00:00:08Z",
+        "last_failure_class": "DIAL_FAILED",
+        "last_failure_cause": "dial: connection refused"
+      }
     }
   ]
+}
+```
+
+Synthetic get `data` example for the same driver after it recovered (not a live
+observation):
+
+```json
+{
+  "catalog_revision": "30",
+  "driver": {
+    "driver_id": "ebus.primary",
+    "enabled": true,
+    "desired_state": "RUNNING",
+    "desired_revision": "7",
+    "observed_state": "RUNNING",
+    "reason": "NONE",
+    "safety_quarantined": false,
+    "revision": "30"
+  }
 }
 ```
 
