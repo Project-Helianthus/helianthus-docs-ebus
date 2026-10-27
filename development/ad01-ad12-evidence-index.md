@@ -26,10 +26,13 @@ observations, not same-name XR aliases or proof of complete AD acceptance.
 
 ## Transport-matrix placement
 
-The gateway's transport conformance matrix runs these rows on every southbound
-transport of the multiplexer (ENS, ENH, UDP-plain, TCP-plain, and reserved
-UART-direct framings), next to the PX arbitration cases and one coexistence
-case; its schema lives under `matrix/` in the
+The gateway's transport conformance matrix runs these rows on the
+multiplexer's supported southbound transports, ENH and ENS over the adapter's
+single TCP connection, next to the PX arbitration cases and one coexistence
+case. Other southbound framings (UDP-plain, TCP-plain, UART-direct) are
+reserved and planned only: they have no multiplexer path in the architecture
+yet, so their cells stay planned or blocked and never count as run. The schema
+lives under `matrix/` in the
 [gateway repository](https://github.com/Project-Helianthus/helianthus-ebusgateway).
 A matrix cell result becomes a live artifact for a row here only when it names
 the row, the transport and its evidence as the result discipline below
