@@ -1,11 +1,12 @@
 # AD11 rollback equivalence and retained-state boundaries
 
-> **Retired obligation.** The acceptance-index row AD11 is retired. Its return
-> target, the standalone proxy topology, is deprecated, so a return to it is no
-> longer an accepted rollback target. This page stays as an unexecuted
-> comparison design and nothing below is required evidence. Configurations that
-> bypass the multiplexer (direct adapter transports, ebusd-tcp) are accepted
-> directly by the compatibility cells of the gateway transport matrix.
+> **Narrowed obligation.** The acceptance-index row AD11 no longer covers a
+> return to the standalone proxy topology: that target is deprecated and is not
+> an accepted rollback target. The supported targets, a direct adapter
+> transport and ebusd-tcp, remain in scope; compare B and R for them as
+> described below, reading "proxy" in B and R as the supported target.
+> Compatibility cells of the gateway transport matrix do not replace this
+> transition comparison.
 
 ## Status and authority
 
@@ -168,7 +169,7 @@ add-on configuration rollback acceptance. It adds no automatic device operation,
 new major/experimental namespace, transport production change or output binding.
 
 Parent acceptance under docs-ebus #250 and gateway #476 remains open, and
-must itself record the AD11 retirement made by the operator decision on
+must itself record the retirement of the proxy return target made by the operator decision on
 helianthus-ebusgateway#1378: row-scoped
 offline comparison artifacts, independent review, complete committed-head gates,
 separately authorized live topology/semantic observations and hardware acceptance
