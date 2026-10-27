@@ -46,10 +46,13 @@ This compatibility rule does not probe the adapter and is not a protocol
 autodetection or fallback mechanism.
 
 Adapter-direct and an external proxy endpoint are mutually exclusive add-on
-configurations. To use an external proxy instead, disable adapter-direct and
-configure the proxy explicitly:
+configurations. The external standalone proxy is deprecated and is a
+historical reference only; do not select it for new or rolled-back
+deployments. The following option shape is retained solely so that existing
+configurations can be recognized and migrated away:
 
 ```yaml
+# Historical, deprecated: recognize and migrate away; do not configure.
 adapter_direct_enabled: false
 proxy_profile: enh # or ens
 proxy_endpoint: proxy.example.invalid:9999
