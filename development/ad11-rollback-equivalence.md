@@ -1,5 +1,12 @@
 # AD11 rollback equivalence and retained-state boundaries
 
+> **Retired obligation.** The acceptance-index row AD11 is retired. Its return
+> target, the standalone proxy topology, is deprecated, so a return to it is no
+> longer an accepted rollback target. This page stays as an unexecuted
+> comparison design and nothing below is required evidence. Configurations that
+> bypass the multiplexer (direct adapter transports, ebusd-tcp) are accepted
+> directly by the compatibility cells of the gateway transport matrix.
+
 ## Status and authority
 
 This is a **proposed offline comparison contract** for the acceptance-index AD11

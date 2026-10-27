@@ -24,6 +24,17 @@ obligations rather than new wire facts. ENH/ENS here mean transport prefixes,
 not the firmware data-only ENS codec. Linked offline tests are candidate partial
 observations, not same-name XR aliases or proof of complete AD acceptance.
 
+## Transport-matrix placement
+
+The gateway's transport conformance matrix runs these rows on every southbound
+transport of the multiplexer (ENS, ENH, UDP-plain, TCP-plain, and reserved
+UART-direct framings), next to the PX arbitration cases and one coexistence
+case; its schema lives under `matrix/` in the
+[gateway repository](https://github.com/Project-Helianthus/helianthus-ebusgateway).
+A matrix cell result becomes a live artifact for a row here only when it names
+the row, the transport and its evidence as the result discipline below
+requires.
+
 ## Retained rows
 
 Every result starts unresolved. `Missing` means no row-scoped result artifact
@@ -42,15 +53,17 @@ authorized operator session, not an instruction to perform a live action now.
 | AD07 | Gateway and ebusd compete fairly at SYN | [XR_Arbitration_Fairness_NoStarvation](../architecture/enh-ens-conformance-tests.md#xr_arbitration_fairness_nostarvation); [owner scheduling](../architecture/adapter-direct-multiplexer.md#ad06-owner-arbitration-model) | [TestArbitrator_FairnessWindow_ExternalGetsEveryNthGrant](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/internal/adaptermux/arbitration_test.go) (partial candidate; not run) | Observe gateway and ebusd contention at SYN, grants and bounded progress; distinguish scheduling from physical address priority. | Unknown; offline artifact: Missing; live artifact: Missing; qualification: unassessed. |
 | AD08 | Per-session echo suppression | [Arbitration byte visibility](../protocols/enh.md#arbitration-byte-visibility) and [post-arbitration byte echo](../protocols/enh.md#post-arbitration-byte-echo); [echo suppression](../architecture/adapter-direct-multiplexer.md#ad07-echo-suppression) | [TestArbitrationWinnerSynthesis_MultiSessionDeliversToNonWinner](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/internal/adaptermux/session_test.go) (partial candidate; not run) | Observe multiple sessions: suppress only the synthesized arbitration-byte RECEIVED notification to the winning session while delivering it to other observers; preserve required post-arbitration SEND echoes to the sending session. | Unknown; offline artifact: Missing; live artifact: Missing; qualification: unassessed. |
 | AD09 | Adapter disconnect triggers reconnection recovery | [XR_UpstreamLoss_GracefulShutdown_NoHang](../architecture/enh-ens-conformance-tests.md#xr_upstreamloss_gracefulshutdown_nohang) and [XR_START_ReconnectWait_BoundedDeadline](../architecture/enh-ens-conformance-tests.md#xr_start_reconnectwait_boundeddeadline) | [TestUnmanagedConnectionLossKeepsLegacyReconnectLoop](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/internal/adaptermux/connection_health_test.go) (partial candidate; not run) | Observe disconnect, bounded failure, reconnect and resumed traffic without stale-session completion. | Unknown; offline artifact: Missing; live artifact: Missing; qualification: unassessed. |
-| AD10 | Migration preserves semantics | [Forward migration](../deployment/adapter-direct-migration.md#forward-migration-proxy-based-to-adapter-direct) | Missing: no migration equivalence test identified in the supplied AD matrix. | Compare semantic results before and after migration for the same public family fixture/conditions, including MCP and GraphQL parity. | Unknown; offline artifact: Missing; live artifact: Missing; qualification: unassessed. |
-| AD11 | Rollback restores behavior | [Rollback](../deployment/adapter-direct-migration.md#rollback-adapter-direct-to-proxy-based) | Missing: no topology rollback equivalence test identified in the supplied AD matrix. | Compare restored proxy-based behavior with the pre-migration baseline, including MCP and GraphQL parity. | Unknown; offline artifact: Missing; live artifact: Missing; qualification: unassessed. |
-| AD12 | No 0xA9/0xAA escape corruption | [ENH receive path](../protocols/enh.md#send); [XR_ENH_0xAA_DataNotSYN](../architecture/enh-ens-conformance-tests.md#xr_enh_0xaa_datanotsyn) | [TestActiveTransport_ImplementsEscapeAware](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/internal/adaptermux/pr502_review_test.go) (partial candidate; not run); [TestEchoTracker_EscapeBytePayload](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/internal/adaptermux/echo_tracker_gateway_test.go) (partial candidate; not run) | Correlate raw escape pairs with logical 0xA9/0xAA payload and raw SYN boundaries; show no double escaping or loss of provenance. | Unknown; offline artifact: Missing; live artifact: Missing; qualification: unassessed. |
+| AD10 | Migration preserves semantics | [Forward migration](../deployment/adapter-direct-migration.md#forward-migration-proxy-based-to-adapter-direct) | Equivalence test plan: [AD10 comparison records](ad10-migration-equivalence.md) (proposed design; not run). | Per southbound transport, pair the configuration the multiplexer replaces (the direct adapter transport, or ebusd-tcp) with the multiplexer on the same bus and family conditions; in the single session that retires the proxy topologies, the proxy route is an additional replaced side. Compare each semantic field and MCP and GraphQL parity as separate decisions. | Unknown; offline artifact: Missing; live artifact: Missing; qualification: unassessed. |
+| AD11 | Rollback restores behavior | [Rollback](../deployment/adapter-direct-migration.md#rollback-adapter-direct-to-proxy-based) | Retired: the return target, the standalone proxy topology, is deprecated. The [AD11 comparison design](ad11-rollback-equivalence.md) stays unexecuted. | None. Configurations that bypass the multiplexer (direct adapter transports, ebusd-tcp) are accepted directly by the compatibility cells of the gateway transport matrix, not by a rollback comparison. | Retired; no artifact required; never counted as PASS. |
+| AD12 | No 0xA9/0xAA escape corruption | [ENH receive path](../protocols/enh.md#send); [XR_ENH_0xAA_DataNotSYN](../architecture/enh-ens-conformance-tests.md#xr_enh_0xaa_datanotsyn); [wire-symbol delivery](../architecture/adapter-direct-multiplexer.md#ad12-passive-path-delivery) | [TestActiveTransport_ImplementsEscapeAware](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/internal/adaptermux/pr502_review_test.go) (partial candidate; not run); [TestEchoTracker_EscapeBytePayload](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/internal/adaptermux/echo_tracker_gateway_test.go) (partial candidate; not run) | Correlate raw escape pairs with logical 0xA9/0xAA payload and raw SYN boundaries at the multiplexer boundary: each raw symbol reaches external sessions unchanged, immediately and in order; every `SEND` is one physical wire byte (host-side escaping on both paths); reserved bytes in a CRC position are sent and verified as both raw symbols; the logical view shows no double escaping or loss of provenance. | Unknown; offline artifact: Missing; live artifact: Missing; qualification: unassessed. |
 
 ## Result discipline
 
 For each row, retain separate offline and live artifact references and outcomes:
 `Missing` (no supplied artifact), `Not run`, `PASS`, `FAIL` (an executed assertion
 was violated), or `Unverified` (execution or evidence could not be checked).
+A row marked `Retired` carries no obligation any more; its row states why, it
+needs no artifact, and it is never counted as PASS.
 A missing artifact, timeout, unavailable tool, or environment failure cannot be
 converted to PASS or silently reported as a behavioral FAIL. Record the exact
 assertion and failure when a real FAIL exists. Keep all other rows unresolved
@@ -80,15 +93,18 @@ The architecture's AD01/AD04 retain INFO across in-band RESETTED, while
 [the native INFO interleaving contract](../protocols/enh.md#info-frame-length-and-interleaving)
 and `XR_INFO_RESETTED_CachePolicy_Explicit` require invalidation on every
 RESETTED. The catalog's adaptermux alias is not evidence resolving that
-conflict. Also, architecture AD12's logical-byte wording must not override the
-native ENH physical-wire receive contract; logical bytes are a host projection.
-Keep these conflicts visible during review, especially reset and escape rows;
-this template changes neither contract nor implementation.
+conflict. The architecture's AD12 text now states the wire-symbol contract:
+raw symbols at the multiplexer boundary, host-side escaping on both paths, and
+a logical view with escape provenance for internal consumers. That resolves the
+former conflict with the native ENH physical-wire receive contract; logical
+bytes remain a host projection. Keep the INFO conflict visible during review,
+especially on reset rows; this index changes no implementation.
 
 No last-known-good artifact is erased by a missing or failing newer run: keep
 its original identity, scope and result separately, without splicing sessions
 or treating stale evidence as current admission. Admission remains fail-closed
-when required evidence is absent or contradictory. All twelve obligations under
-#250/#476 remain open. No transport production change, hardware waiver, release
-result, namespace change, MCP behavior change or GraphQL behavior change is
-provided by this documentation slice.
+when required evidence is absent or contradictory. AD11 is retired as its row
+states; the other eleven obligations under #250/#476 remain open. No transport
+production change, hardware waiver, release result, namespace change, MCP
+behavior change or GraphQL behavior change is provided by this documentation
+slice.

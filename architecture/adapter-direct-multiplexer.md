@@ -41,8 +41,9 @@ single upstream connection into three paths:
 - **Proxy endpoint**: optional TCP listener for external ENH clients (ebusd,
   VRC Explorer) with full initiator access
 
-The standalone proxy (`helianthus-ebus-adapter-proxy`) remains available as an
-independent product for non-gateway deployments.
+The standalone proxy (`helianthus-ebus-adapter-proxy`) is deprecated and kept
+only as a read-only historical reference; its multiplexing role is carried by
+this multiplexer.
 
 ## Key Architectural Decisions
 
@@ -142,9 +143,23 @@ acquisition.
 
 ### AD12: Passive Path Delivery
 
-ENH protocol delivers logical bytes (no escape sequences). Passive path
-callback receives third-party symbols only. Connected/disconnected/reset
-lifecycle events are delivered alongside data symbols.
+The multiplexer boundary carries raw wire symbols. An ENH `RECEIVED` event
+carries one physical wire byte, so an escaped data or CRC byte arrives as two
+symbols (`0xA9 0x00` or `0xA9 0x01`) and only an unescaped `0xAA` is a
+structural SYN (see the [ENH receive path](../protocols/enh.md#send)).
+Escaping is host-side on both paths: every `SEND`, from the gateway or from an
+external session, supplies one physical wire byte that the sending host has
+already expanded, and each receiving host decodes the pairs itself.
+
+External ENH sessions receive each raw symbol immediately and in order,
+without waiting for an escape suffix. Internal consumers (the active path, the
+passive path and wire phase tracking) use a separately decoded logical view
+that records whether each logical byte came from an escape pair. That logical
+view is a host projection, not the wire contract.
+
+The passive path callback receives third-party symbols only, from the logical
+view. Connected/disconnected/reset lifecycle events are delivered alongside
+data symbols.
 
 ## Operational Notes
 
@@ -152,7 +167,9 @@ lifecycle events are delivered alongside data symbols.
   the gateway level. Only one may be active at a time.
 - Migration and rollback procedures are documented in
   [`../deployment/adapter-direct-migration.md`](../deployment/adapter-direct-migration.md).
-- The standalone proxy remains available for users who do not run the gateway.
+- The standalone proxy is deprecated. A return from adapter-direct to a proxy
+  topology is not an accepted rollback target; leaving adapter-direct for a
+  direct adapter transport or for ebusd-tcp remains a configuration change.
 
 ## Live Validation (v0.4.0)
 

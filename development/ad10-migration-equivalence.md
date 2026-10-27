@@ -13,6 +13,16 @@ AD10 hardware acceptance remains at
 This page specifies comparison records, not a migration or capture procedure,
 runtime interface, profile admission, or parent closure.
 
+## Pairing in the transport matrix
+
+The standalone proxy is deprecated. The `proxy` side of a pair below is
+therefore read as the configuration that the multiplexer replaces on the same
+southbound transport: the direct adapter transport or ebusd-tcp. In the single
+hardware session that retires the proxy topologies, the proxy route itself is
+attached once more as an additional replaced side. The `adapter_direct` side is
+the multiplexer. The gateway transport matrix runs one AD10 pair per southbound
+transport; this page defines how each pair is compared.
+
 ## Current sources and limits
 
 The following are current documentary contracts, not newly executed evidence:

@@ -108,12 +108,17 @@ using a single `exec`-based add-on wrapper does not remove this listener.
    adapter-direct address with the previous proxy transport and endpoint.
 3. Restart the gateway or addon.
 
+A return to an external standalone proxy is no longer an accepted rollback
+target, because the standalone proxy is deprecated. Restoring a direct adapter
+transport or ebusd-tcp remains a supported rollback.
+
 ## Notes
 
 - Zero-downtime migration is not required. A restart is acceptable and expected.
 - The eBUS continues to operate independently during the gateway restart window;
   no bus state is lost.
-- When `-proxy-listen` is configured, the standalone proxy remains available for
-  non-gateway consumers (e.g. ebusd clients) even in adapter-direct mode.
+- When `-proxy-listen` is configured, the gateway's integrated proxy listener
+  remains available for non-gateway consumers (e.g. ebusd clients) in
+  adapter-direct mode.
 - The adapter-direct transport and proxy-based transport are mutually exclusive
   at the gateway level. Only one may be active at a time.
