@@ -100,12 +100,12 @@ using a single `exec`-based add-on wrapper does not remove this listener.
 
 ## Rollback (Adapter-Direct to Proxy-Based)
 
-1. For the add-on, set `adapter_direct_enabled: false` and restore the previous
-   `transport`, `network`, and `address` values. If the previous topology used
-   an external adapter proxy, also restore `proxy_profile` and
-   `proxy_endpoint`.
-2. For a standalone gateway, replace `-transport adapter-direct` and its
-   adapter-direct address with the previous proxy transport and endpoint.
+1. For the add-on, set `adapter_direct_enabled: false` and restore a
+   supported previous `transport`, `network`, and `address`: a direct adapter
+   transport or ebusd-tcp. Do not restore `proxy_profile` or `proxy_endpoint`
+   for a standalone proxy.
+2. For a standalone gateway, replace the current adapter-direct address with
+   another direct adapter address or an ebusd-tcp endpoint.
 3. Restart the gateway or addon.
 
 A return to an external standalone proxy is no longer an accepted rollback
