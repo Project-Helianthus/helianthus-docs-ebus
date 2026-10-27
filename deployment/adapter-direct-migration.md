@@ -98,7 +98,7 @@ using a single `exec`-based add-on wrapper does not remove this listener.
 3. Start the gateway.
 4. Verify via MCP or GraphQL that semantic planes populate normally.
 
-## Rollback (Adapter-Direct to Proxy-Based)
+## Rollback (Adapter-Direct to a Direct Adapter Transport or ebusd-tcp)
 
 1. For the add-on, set `adapter_direct_enabled: false` and restore a
    supported previous `transport`, `network`, and `address`: a direct adapter
