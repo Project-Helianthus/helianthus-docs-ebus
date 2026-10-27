@@ -1,5 +1,15 @@
 # AD11 rollback equivalence and retained-state boundaries
 
+> **Narrowed obligation.** The acceptance-index row AD11 no longer covers a
+> return to the standalone proxy topology: that target is deprecated and is not
+> an accepted rollback target. The supported targets, a direct adapter
+> transport and ebusd-tcp, remain in scope; compare B and R for them as
+> described below, using the topology-neutral fields and target variants
+> defined in the worksheet section; "proxy" in the stage names and examples is
+> a historical label for the pre-migration and restored observation.
+> Compatibility cells of the gateway transport matrix do not replace this
+> transition comparison.
+
 ## Status and authority
 
 This is a **proposed offline comparison contract** for the acceptance-index AD11
@@ -37,9 +47,9 @@ live connection handles or permission to perform a device operation.
 
 | Stage | Identity and content | Comparison purpose |
 |---|---|---|
-| B: pre-migration baseline | A separately retained proxy observation, its source identity, effective topology and public fixture conditions; keep original raw evidence and interpretation together. | Defines the behavior to recover. Reconstructing B from a later cache is prohibited. |
+| B: pre-migration baseline | A separately retained pre-migration observation in the target topology, its source identity, effective topology and public fixture conditions; keep original raw evidence and interpretation together. | Defines the behavior to recover. Reconstructing B from a later cache is prohibited. |
 | D: post-switch state | An adapter-direct observation with its own topology, source provenance, session epoch and outcomes, or an explicit incomplete record. | Documents what changed and any discontinuity; D is never substituted for B. |
-| R: restored observation | A new proxy observation after the documented return boundary, with a new session epoch and independently acquired evidence. | Compared with B for the same declared scope and conditions; equality with D is insufficient. |
+| R: restored observation | A new observation in the target topology after the documented return boundary, with a new session epoch and independently acquired evidence. | Compared with B for the same declared scope and conditions; equality with D is insufficient. |
 
 A proposed worksheet records the following for each stage. Missing fields remain
 explicitly unknown; a default value must not manufacture identity or freshness.
@@ -48,12 +58,27 @@ explicitly unknown; a default value must not manufacture identity or freshness.
 |---|---|
 | Stage and lineage | Stage-local observation label; references to B, D and R where available; completed or interrupted transition; ordered acquisition steps and discontinuities. No capture times or private identifiers in public examples. |
 | Source identity | Public fixture/source label, device family, transport/adapter family and relevant firmware context when known. Preserve the original evidence reference and source-to-observation binding. Family name or equal values alone do not establish the same source. Unknown relevant firmware context limits the claim. |
-| Topology | Effective transport kind, proxy route role and public route label, network kind, and applicable external-proxy profile role. Labels describe fixture roles, not network coordinates. A selected configuration and an observed active path are separate facts. |
+| Topology | Effective transport kind, network kind, and a route role with a public route label, populated per target variant below. Labels describe fixture roles, not network coordinates. A selected configuration and an observed active path are separate facts. |
 | Semantic key | Semantic plane, entity/instance scope, property, type, unit and availability meaning, with the native evidence reference when relevant. Preserve every native discriminator rather than collapsing similarly numbered registers or opcodes. |
 | Conditions | Fixture revision label and controlled input/state, selected observation scope and expected outcomes. If conditions cannot be matched, do not explain away a value difference as successful restoration. |
 | Acquisition | Stage-local session epoch, observation ordering, acquisition outcome, fresh versus retained status, reset/disconnect boundary and raw evidence reference. An ordinal after a boundary alone does not prove a new read. |
 | Projection | MCP and GraphQL projections bound to the same stage-local observation, including semantic key, value, type/unit, availability, freshness, source and error meaning wherever exposed. Record an unexposed required dimension as unknown. |
 | Result | Per-dimension Equivalent, Different or Unknown; separate evidence grade, execution result and qualification. Record contradictory evidence beside any earlier last-known-good result. |
+
+Target variants for the Topology group. Record only the fields of the
+rollback target actually exercised; a field that does not exist for that target
+is recorded as not applicable, never filled with proxy provenance:
+
+| Rollback target | Route role and label | Target-specific field |
+|---|---|---|
+| Direct adapter transport | Direct adapter route (the adapter-direct southbound transport and its framing family) | Southbound transport and framing label; no proxy profile |
+| ebusd-tcp | ebusd-tcp route (gateway as client of an ebusd endpoint) | ebusd endpoint role label; no proxy profile |
+
+The stages named B and R keep their roles: B is the separately retained
+pre-migration observation and R is the restored observation, each in the
+topology of the chosen target. The synthetic examples below are written with
+`route-A` as the route label of that target; read it as the direct adapter
+route or the ebusd-tcp route, with the target-specific field from this table.
 
 These labels form a deterministic comparison envelope: the same detached inputs
 and declared scope must yield the same ordered dimension results and reasons.
@@ -66,7 +91,7 @@ cache retention and transport lifetime. No session splicing is allowed.
 
 | Boundary | Must recover or be re-observed for the claimed scope | What can remain as history; what cannot carry forward as current proof |
 |---|---|---|
-| Proxy selection and routing | Recover B's transport/network/route roles and applicable external-proxy profile role. Independently observe that R uses that topology, with only one gateway transport active. | Saved configuration is historical intent until effective selection and path evidence exist. The integrated compatibility listener alone does not prove a return to the external proxy topology. |
+| Proxy selection and routing | Recover B's transport/network/route roles and the target-specific field of the chosen rollback target. Independently observe that R uses that topology, with only one gateway transport active. | Saved configuration is historical intent until effective selection and path evidence exist. The integrated compatibility listener alone does not prove a return to B's route. |
 | Semantic behavior | Re-observe B's semantic keys, types, units, availability/error meanings and controlled-condition outcomes through R. Value equality is required only for matched deterministic fixture conditions. | Retain B and D caches with original provenance and stale/last-known-good status. Cached equality cannot replace a fresh R observation. Do not erase partial last-known-good state because newer evidence is missing or different. |
 | Source binding | Re-observe a compatible source binding for R and match it to B's declared source and conditions. Any replacement or identity conflict needs an explicit limitation. | Neither a shared family label nor a copied identity label from an earlier session proves continuity. Incompatible sources are not admissible comparison pairs. |
 | Session lifecycle | R has a distinct newly established transport-session epoch and fresh acquisition evidence after the return boundary. Record interruption or disconnect as such. | Old live handles, sockets, ownership grants, pending requests/responses, echo/phase state and old “connected” flags cannot be reused or counted as R proof. Historical handle labels may explain provenance only. Late D completions remain D evidence. |
@@ -160,7 +185,9 @@ unmerged implementation or specification. It does not change G5 D1–D5/O8 or cl
 add-on configuration rollback acceptance. It adds no automatic device operation,
 new major/experimental namespace, transport production change or output binding.
 
-Parent acceptance under docs-ebus #250 and gateway #476 remains open: row-scoped
+Parent acceptance under docs-ebus #250 and gateway #476 remains open, and
+must itself record the retirement of the proxy return target made by the operator decision on
+helianthus-ebusgateway#1378: row-scoped
 offline comparison artifacts, independent review, complete committed-head gates,
 separately authorized live topology/semantic observations and hardware acceptance
 are still needed. Other AD rows remain unresolved on their own evidence. Document

@@ -13,6 +13,18 @@ AD10 hardware acceptance remains at
 This page specifies comparison records, not a migration or capture procedure,
 runtime interface, profile admission, or parent closure.
 
+## Pairing in the transport matrix
+
+The standalone proxy is deprecated. The baseline side of a pair is the
+configuration that the multiplexer replaces on the same southbound transport:
+the direct adapter transport or ebusd-tcp. In the single hardware session that
+retires the proxy topologies, the proxy route itself is attached once more as
+an additional baseline. Each baseline observation carries its actual topology
+label (`direct`, `ebusd-tcp` or `proxy`) and its own route identity; none is
+aliased to `proxy`. The `adapter_direct` side is the multiplexer. The gateway
+transport matrix runs one AD10 pair per supported southbound transport; this
+page defines how each pair is compared.
+
 ## Current sources and limits
 
 The following are current documentary contracts, not newly executed evidence:
@@ -21,7 +33,7 @@ The following are current documentary contracts, not newly executed evidence:
 |---|---|---|
 | [AD evidence index](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/development/ad01-ad12-evidence-index.md) | AD10 has no identified migration equivalence test; MCP/GraphQL parity and same-family conditions remain obligations. | AD numbers in the multiplexer architecture are a different namespace. No indexed row is certified. |
 | [Migration guide](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/deployment/adapter-direct-migration.md) | Semantic zones, DHW and boiler checks; mutually exclusive routes; restart is acceptable. | “Valid data” alone does not establish field equality, provenance or freshness. Rollback is separate AD11 work. |
-| [Multiplexer architecture](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/adapter-direct-multiplexer.md) | Active/passive/external paths and reset clearing of pending work. | INFO retention and logical-byte wording conflict with the native contract as noted by the index. Historical live claims do not fill this comparison. |
+| [Multiplexer architecture](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/adapter-direct-multiplexer.md) | Active/passive/external paths and reset clearing of pending work. | INFO retention conflicts with the native contract as noted by the index; the logical-byte wording is resolved by the wire-symbol contract. Historical live claims do not fill this comparison. |
 | [Native ENH](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/enh.md) | Physical SEND/RECEIVED bytes, escape handling, INIT timeout and INFO invalidation on RESETTED. | Implementation descriptions cannot override these wire rules. |
 | [Native ENS](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ens.md) | Prefix/framing scope and separation from the data-only serial codec. | A data-only codec cannot supply missing ENH control events. |
 | [MCP](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/api/mcp.md) | Existing semantic tool inventory, deterministic envelopes, discovery provenance distinct from verification. | Does not define the comparison record proposed below. |
@@ -47,7 +59,7 @@ A proposed pair record contains:
 | Record part | Required content |
 |---|---|
 | Pair key | `comparison_id`, `case_id`, family fixture identity and revision, state-vector identity, candidate generation, comparison-policy revision and schema/mapping baseline. |
-| Two sides | Exactly one `proxy` observation and one `adapter_direct` observation, each with its own immutable observation ID, source generation, session/reset epoch, ordered event IDs and virtual read point. They replay the same fixture state under the declared route. |
+| Two sides | Exactly one baseline observation (topology label `direct`, `ebusd-tcp` or `proxy`, with its route identity) and one `adapter_direct` observation, each with its own immutable observation ID, source generation, session/reset epoch, ordered event IDs and virtual read point. They replay the same fixture state under the declared route. |
 | Correspondence | Explicit one-to-one rows mapping each side's source identity to one fixture source role and semantic entity/field. Include eBUS source and destination, direction, PB/SB or service, native operation key and expected data type/unit. For B524 the key includes opcode, group, instance and register; OP=0x02 and OP=0x06 are distinct. |
 | Generation binding | A frozen pair manifest binds each route-local source generation and reset epoch to this candidate generation. IDs need not be equal across routes; their correspondence must be declared before actual results are inspected. |
 | Baseline | Detached expected field results derived from the declared fixture state and cited contracts, not copied from either observed route. Unknown native mappings remain Unknown and cannot become an equivalence oracle. |
@@ -148,7 +160,7 @@ confirm the executable selection and schema before using them as actual paths.
 | No known value / missing field | Preserve the surface's independently specified absent/null/error representation; no zero or false substitution. Exact MCP representation remains a baseline gap. | Requested nullable field is `null`; unselected field is outside comparison, not a missing-value observation. Record any GraphQL error separately. |
 | Discovery origin / verification | Registry tools retain each face's `discovery_source` and independent `verification_state`; omitted for no slot. | Queried face's `discoverySource` / `verificationState` agree; no-slot nullable fields are `null`. Origin cannot be rewritten by verification. |
 | Freshness / retained lineage | Compare sidecar age/receipt and any documented exposed metadata independently of the value. | Merged value plus startup state where available; do not assert a per-field freshness member exists. Require sidecar proof. |
-| Deliberate route metadata | Route identity and correlation follow the declared proxy/direct side, not equality across routes. | `daemonStatus.initiatorAddress` may be `auto` for an auto-leased proxy and the configured synthetic source for direct; declare this condition in advance. |
+| Deliberate route metadata | Route identity and correlation follow the declared baseline/direct side, not equality across routes. | `daemonStatus.initiatorAddress` may be `auto` for an auto-leased proxy and the configured synthetic source for direct; declare this condition in advance. |
 
 These numbers are semantic fixture inputs, not register mappings or device
 observations. No native encoding or writable behavior is inferred from them.

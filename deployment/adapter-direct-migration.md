@@ -46,10 +46,13 @@ This compatibility rule does not probe the adapter and is not a protocol
 autodetection or fallback mechanism.
 
 Adapter-direct and an external proxy endpoint are mutually exclusive add-on
-configurations. To use an external proxy instead, disable adapter-direct and
-configure the proxy explicitly:
+configurations. The external standalone proxy is deprecated and is a
+historical reference only; do not select it for new or rolled-back
+deployments. The following option shape is retained solely so that existing
+configurations can be recognized and migrated away:
 
 ```yaml
+# Historical, deprecated: recognize and migrate away; do not configure.
 adapter_direct_enabled: false
 proxy_profile: enh # or ens
 proxy_endpoint: proxy.example.invalid:9999
@@ -98,22 +101,29 @@ using a single `exec`-based add-on wrapper does not remove this listener.
 3. Start the gateway.
 4. Verify via MCP or GraphQL that semantic planes populate normally.
 
-## Rollback (Adapter-Direct to Proxy-Based)
+## Rollback (Adapter-Direct to a Direct Adapter Transport or ebusd-tcp)
 
-1. For the add-on, set `adapter_direct_enabled: false` and restore the previous
-   `transport`, `network`, and `address` values. If the previous topology used
-   an external adapter proxy, also restore `proxy_profile` and
-   `proxy_endpoint`.
-2. For a standalone gateway, replace `-transport adapter-direct` and its
-   adapter-direct address with the previous proxy transport and endpoint.
+1. For the add-on, set `adapter_direct_enabled: false` and restore a
+   supported previous `transport`, `network`, and `address`: a direct adapter
+   transport or ebusd-tcp. Do not restore `proxy_profile` or `proxy_endpoint`
+   for a standalone proxy.
+2. For a standalone gateway, restore the previous `-transport`, `-network`
+   and `-address` flags together: a direct adapter transport with its address,
+   or `-transport ebusd-tcp` with an ebusd-tcp endpoint. Changing only the
+   address leaves `-transport adapter-direct` selected.
 3. Restart the gateway or addon.
+
+A return to an external standalone proxy is no longer an accepted rollback
+target, because the standalone proxy is deprecated. Restoring a direct adapter
+transport or ebusd-tcp remains a supported rollback.
 
 ## Notes
 
 - Zero-downtime migration is not required. A restart is acceptable and expected.
 - The eBUS continues to operate independently during the gateway restart window;
   no bus state is lost.
-- When `-proxy-listen` is configured, the standalone proxy remains available for
-  non-gateway consumers (e.g. ebusd clients) even in adapter-direct mode.
+- When `-proxy-listen` is configured, the gateway's integrated proxy listener
+  remains available for non-gateway consumers (e.g. ebusd clients) in
+  adapter-direct mode.
 - The adapter-direct transport and proxy-based transport are mutually exclusive
   at the gateway level. Only one may be active at a time.
