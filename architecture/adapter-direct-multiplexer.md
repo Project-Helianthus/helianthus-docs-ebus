@@ -43,7 +43,11 @@ single upstream connection into three paths:
 
 The standalone proxy (`helianthus-ebus-adapter-proxy`) is deprecated and kept
 only as a read-only historical reference; its multiplexing role is carried by
-this multiplexer.
+this multiplexer. Pages that still describe the proxy-based topology (the
+[architecture overview](overview.md#transport-modes) and the UDP-plain
+guidance in [full-stack deployment](../deployment/full-stack.md)) describe the
+deprecated topology and are superseded by this lifecycle statement until they
+are updated.
 
 ## Key Architectural Decisions
 
@@ -152,10 +156,12 @@ external session, supplies one physical wire byte that the sending host has
 already expanded, and each receiving host decodes the pairs itself.
 
 External ENH sessions receive each raw symbol immediately and in order,
-without waiting for an escape suffix. Internal consumers (the active path, the
-passive path and wire phase tracking) use a separately decoded logical view
-that records whether each logical byte came from an escape pair. That logical
-view is a host projection, not the wire contract.
+without waiting for an escape suffix. The active `RawTransport` also carries the raw symbol sequence unchanged, so
+`gateway.Bus` performs the one escape decoding itself. Only mux-internal
+tracking (wire phase tracking, echo tracking) and passive consumers use a
+separately decoded logical view that records whether each logical byte came
+from an escape pair. That logical view is a host projection, not the wire
+contract, and is never fed to the active path.
 
 The passive path callback receives third-party symbols only, from the logical
 view. Connected/disconnected/reset lifecycle events are delivered alongside

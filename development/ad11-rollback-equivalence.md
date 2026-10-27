@@ -167,7 +167,9 @@ unmerged implementation or specification. It does not change G5 D1–D5/O8 or cl
 add-on configuration rollback acceptance. It adds no automatic device operation,
 new major/experimental namespace, transport production change or output binding.
 
-Parent acceptance under docs-ebus #250 and gateway #476 remains open: row-scoped
+Parent acceptance under docs-ebus #250 and gateway #476 remains open, and
+must itself record the AD11 retirement made by the operator decision on
+helianthus-ebusgateway#1378: row-scoped
 offline comparison artifacts, independent review, complete committed-head gates,
 separately authorized live topology/semantic observations and hardware acceptance
 are still needed. Other AD rows remain unresolved on their own evidence. Document
