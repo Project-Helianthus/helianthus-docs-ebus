@@ -1,4 +1,5 @@
 import copy
+from collections import OrderedDict
 import functools
 import json
 from pathlib import Path
@@ -22,6 +23,39 @@ RESET_RULE = next(r for r in checker.RULES if r["path"] == RESET_PATH)
 QUARANTINE_DIRECTORY_ROW = next(
     line for line in DOCUMENTS[RESET_PATH].splitlines() if line.startswith("| 4 |")
 )
+
+
+O02_MARKDOWN_IT = checker.MarkdownIt
+
+
+def O02_cached_parser(O02_parse=None):
+    """Cache stock MarkdownIt configurations used by this module only."""
+    O02_tokens = OrderedDict()
+    O02_parse = O02_parse or O02_MARKDOWN_IT.parse
+
+    class O02MarkdownIt(O02_MARKDOWN_IT):
+        def parse(self, src, env=None):
+            # Explicit environments may have parser side effects; do not cache them.
+            if env is not None:
+                return O02_parse(self, src, env)
+            O02_key = (src, json.dumps(dict(self.options), sort_keys=True),
+                       tuple((O02_stage, tuple(O02_rules)) for O02_stage, O02_rules
+                             in self.get_active_rules().items()))
+            if O02_key not in O02_tokens:
+                O02_tokens[O02_key] = O02_parse(self, src)
+                if len(O02_tokens) > 64:
+                    O02_tokens.popitem(last=False)
+            O02_tokens.move_to_end(O02_key)
+            return copy.deepcopy(O02_tokens[O02_key])
+
+    return O02MarkdownIt
+
+
+@pytest.fixture(scope="module", autouse=True)
+def O02_cache_rendered_sections():
+    with pytest.MonkeyPatch.context() as O02_patch:
+        O02_patch.setattr(checker, "MarkdownIt", O02_cached_parser())
+        yield
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -1320,3 +1354,126 @@ def test_recovery_checker_cli_rejects_member_in_running_example(tmp_path: Path) 
     )
     assert result.returncode == 1
     assert "invalid G5 closed data examples" in result.stderr
+
+
+@pytest.mark.parametrize("O02_field", ["text", "rules", "options"])
+def test_O02_parser_key_fields(O02_field):
+    O02_parser = O02_cached_parser()
+    O02_text = '| Left | Right |\n| --- | --- |\n| one | two |\n\n<div>public</div>\n'
+    O02_original = O02_MARKDOWN_IT()
+    O02_changed = O02_MARKDOWN_IT()
+    O02_cached_original = O02_parser()
+    O02_cached_changed = O02_parser()
+    O02_changed_text = O02_text
+    if O02_field == "text":
+        O02_changed_text = O02_text.replace("one", "three")
+    elif O02_field == "rules":
+        O02_changed.enable("table")
+        O02_cached_changed.enable("table")
+    else:
+        O02_changed.options["html"] = False
+        O02_cached_changed.options["html"] = False
+    O02_expected = O02_changed.parse(O02_changed_text)
+    assert O02_original.parse(O02_text) != O02_expected
+    assert O02_cached_original.parse(O02_text) == O02_original.parse(O02_text)
+    assert O02_cached_changed.parse(O02_changed_text) == O02_expected
+    assert O02_cached_original.parse(O02_text) == O02_original.parse(O02_text)
+
+
+def test_O02_parser_detaches_nested_tokens():
+    O02_parser = O02_cached_parser()()
+    O02_text = '**public** example\n'
+    O02_expected = O02_MARKDOWN_IT().parse(O02_text)
+    O02_result = O02_parser.parse(O02_text)
+    O02_result[0].map[0] = 99
+    O02_result[1].children[1].content = "changed"
+    O02_result[1].attrs["O02"] = "changed"
+    O02_result.pop()
+    assert O02_parser.parse(O02_text) == O02_expected
+    O02_parser.parse(O02_text)[1].children.clear()
+    assert O02_parser.parse(O02_text) == O02_expected
+
+
+def test_O02_parser_cache_is_bounded_and_uses_recent_entries():
+    O02_calls = []
+
+    def O02_count(self, src, env=None):
+        O02_calls.append(src)
+        return O02_MARKDOWN_IT.parse(self, src, env)
+
+    O02_parser = O02_cached_parser(O02_count)()
+    for O02_index in range(64):
+        O02_parser.parse(f'O02 example {O02_index}')
+    O02_parser.parse('O02 example 0')
+    O02_parser.parse('O02 example 64')
+    O02_parser.parse('O02 example 0')
+    assert len(O02_calls) == 65
+    O02_parser.parse('O02 example 1')
+    assert len(O02_calls) == 66
+
+
+def test_O02_parser_preserves_explicit_environment():
+    O02_parser = O02_cached_parser()()
+    for O02_index in range(2):
+        O02_env = {}
+        assert O02_parser.parse('[O02]: /public\n', O02_env) == []
+        assert O02_env['references']['O02']['href'] == '/public'
+
+
+def test_O02_parser_patch_restores_after_failure():
+    O02_before = checker.MarkdownIt
+    with pytest.raises(RuntimeError, match="O02 synthetic failure"):
+        with pytest.MonkeyPatch.context() as O02_patch:
+            O02_patch.setattr(checker, "MarkdownIt", O02_cached_parser())
+            assert checker.MarkdownIt is not O02_before
+            raise RuntimeError("O02 synthetic failure")
+    assert checker.MarkdownIt is O02_before
+
+
+def test_O02_validation_parity_and_parser_counts():
+    O02_missing = dict(DOCUMENTS)
+    O02_clause = RESET_RULE["required"][0]
+    assert O02_clause in O02_missing[RESET_PATH]
+    O02_missing[RESET_PATH] = O02_missing[RESET_PATH].replace(O02_clause, '', 1)
+    O02_extra = dict(DOCUMENTS)
+    O02_extra[checker.API] = O02_extra[checker.API].replace(
+        '## `DriverSnapshotV1`',
+        '## `DriverSnapshotV1`\n\n```json\n{}\n```', 1)
+    O02_envelope = dict(DOCUMENTS)
+    O02_example = unavailable_examples(DOCUMENTS[checker.MCP])[0]
+    O02_value = json.loads(O02_example)
+    del O02_value['error']['source_layer']
+    O02_envelope[checker.MCP] = O02_envelope[checker.MCP].replace(
+        O02_example, json.dumps(O02_value) + '\n', 1)
+    O02_inputs = [DOCUMENTS, DOCUMENTS, O02_missing, O02_extra, O02_envelope]
+    # Warm the unchanged M73 prose/table caches equally before both measurements.
+    for O02_documents in O02_inputs:
+        checker.validate(O02_documents)
+    O02_results = []
+    O02_counts = []
+    for O02_cached in (False, True):
+        O02_calls = []
+
+        def O02_count(self, src, env=None):
+            O02_calls.append(src)
+            return O02_MARKDOWN_IT.parse(self, src, env)
+
+        class O02CountingMarkdownIt(O02_MARKDOWN_IT):
+            parse = O02_count
+
+        with pytest.MonkeyPatch.context() as O02_patch:
+            O02_patch.setattr(checker, 'MarkdownIt',
+                             O02_cached_parser(O02_count) if O02_cached
+                             else O02CountingMarkdownIt)
+            O02_results.append([checker.validate(O02_documents)
+                                for O02_documents in O02_inputs])
+        O02_counts.append(len(O02_calls))
+    assert O02_results[0] == O02_results[1]
+    assert O02_results[0][:2] == [[], []]
+    assert any(RESET_PATH in O02_error for O02_error in O02_results[0][2])
+    assert (f'{checker.API}: invalid revision example in ## `DriverSnapshotV1`'
+            in O02_results[0][3])
+    assert (f'{checker.MCP}: invalid unavailable-read failure envelopes'
+            in O02_results[0][4])
+    assert O02_counts == [25, 7]
+    print(f'O02 parser invocations: uncached={O02_counts[0]}, cached={O02_counts[1]}')
