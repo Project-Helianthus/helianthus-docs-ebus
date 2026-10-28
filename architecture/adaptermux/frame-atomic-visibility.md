@@ -1,5 +1,19 @@
 # Frame-Atomic Visibility — Helianthus Proxy Design Sketch
 
+> **Current delivery contract:** [v9 — bounded pacer backlog and strict
+> arbitration ordering](frame-atomic-visibility-v9.md). The design sketch below
+> is historical; its unbounded pacing and real-time arbitration descriptions
+> are superseded by v9.
+>
+> **I5 (pacer correctness, current restatement of v5 I5):** on-time delivery
+> retains `τ_wire_byte` cadence per session. The paced backlog has a default
+> bound of **2 RECEIVED symbols**; beyond that bound, flush the backlog
+> immediately in stream order and resume pacing from the current time.
+> `STARTED` and `FAILED` never overtake queued `RECEIVED` symbols: flush the
+> preceding backlog first and write the arbitration result immediately after it.
+> Export backlog flushes separately as `adaptermux_session_backlog_flushes_total`,
+> outside the latency histogram. See v9 for counter scope and ordering examples.
+
 > Status: design sketch · Branch: `frame-atomic-visibility` (multi-repo)
 > · Authors: Razvan + Claude · Date: 2026-05-18
 
