@@ -319,3 +319,59 @@ def test_rejects_untracked_rendered_blocks(addition: str, position: str) -> None
     changed = addition + "\n" + TEXT if position == "before" else TEXT + "\n" + addition
     with pytest.raises(AssertionError, match="Raw HTML blocks and indented code blocks"):
         validate_contract(changed)
+
+
+@pytest.mark.parametrize("before,after", (
+    ("unknown input members", "known input members"),
+    ("missing required\nmembers", "optional members"),
+    ("null required members", "nullable members"),
+    ("missing non-null variables before any resolver", "present variables before any resolver"),
+    ("ordinary GraphQL request errors without a promised\n`errors[].extensions.code`",
+     "GraphQL request errors carrying `INVALID_ARGUMENT` on `errors[].extensions.code`"),
+    ("they do not promise `INVALID_ARGUMENT`", "they promise `INVALID_ARGUMENT`"),
+    ("they do not establish a `data.semanticOperation` field result",
+     "they establish a null `data.semanticOperation` field result"),
+    ("Resolver-owned structural refusals carry `INVALID_ARGUMENT`",
+     "Resolver-owned structural refusals carry no code"),
+    ("resolver-owned size\nrefusals carry `RESOURCE_EXHAUSTED`",
+     "resolver-owned size refusals carry `INVALID_ARGUMENT`"),
+    ("an unwired operation provider carries\n`UNAVAILABLE`",
+     "an unwired operation provider carries `INVALID_ARGUMENT`"),
+    ("A resolver refusal nulls only\n`data.semanticOperation` (or its response alias)",
+     "A resolver refusal nulls the entire `data` object"),
+    ("preserving unrelated selections\nin the `data` object",
+     "discarding unrelated selections in the `data` object"),
+    ("it does not null the entire `data` object", "it nulls the entire `data` object"),
+    ("Stock request errors and these resolver refusals all mean no-send.", ""),
+))
+def test_O04_rejects_error_boundary_weakening(tmp_path: Path, before: str, after: str) -> None:
+    # The unmodified page is the valid control; change one obligation at a time.
+    validate_contract(TEXT)
+    assert TEXT.count(before) == 1
+    mutant = tmp_path / "O04-semantic-operation-route.md"
+    mutant.write_text(TEXT.replace(before, after, 1), encoding="utf-8")
+    try:
+        with pytest.raises(AssertionError, match="Visible contract blocks changed"):
+            validate_contract(mutant.read_text(encoding="utf-8"))
+    finally:
+        mutant.unlink()
+
+
+@pytest.mark.parametrize("bound", (
+    "1–5000 milliseconds",
+    "Allow at most one `semanticOperation`\nselection in the executing operation",
+    "Limit the total input to 65,536 bytes (64 KiB)",
+    "Limit each opaque ID to 256 UTF-8 bytes",
+    "arguments and\npreconditions to 64 entries each",
+    "Existing SemReg type/collection bounds also\napply.",
+))
+def test_O04_rejects_removed_parsed_input_bound(tmp_path: Path, bound: str) -> None:
+    validate_contract(TEXT)
+    assert TEXT.count(bound) == 1
+    mutant = tmp_path / "O04-semantic-operation-route.md"
+    mutant.write_text(TEXT.replace(bound, "", 1), encoding="utf-8")
+    try:
+        with pytest.raises(AssertionError, match="Visible contract blocks changed"):
+            validate_contract(mutant.read_text(encoding="utf-8"))
+    finally:
+        mutant.unlink()

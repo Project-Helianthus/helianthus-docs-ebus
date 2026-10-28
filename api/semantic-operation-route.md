@@ -210,14 +210,24 @@ current executor, satisfy stale preconditions or confirm a new operation.
 
 ## Surface compatibility
 
-GraphQL uses its normal `data`/`errors` envelope. Structural errors map to
-`INVALID_ARGUMENT`, size overflow to `RESOURCE_EXHAUSTED`, and an unwired
-operation provider to `UNAVAILABLE` on `errors[].extensions.code`, with a null
-mutation root and no-send. Domain admission failures use the `failed` result
-and preserve the owning reason, including stale epoch or unsupported capability.
-After possible dispatch, evidence uncertainty must return `unknown` when a
-response can still be delivered; a transport error alone proves nothing about
-execution. Do not mark errors as safe to resubmit after possible dispatch.
+GraphQL uses its normal `data`/`errors` envelope. Stock GraphQL document
+validation and variable coercion reject unknown input members, missing required
+members, null required members and missing non-null variables before any resolver
+runs. These are ordinary GraphQL request errors without a promised
+`errors[].extensions.code`; in particular, they do not promise `INVALID_ARGUMENT`.
+The stock-error fixtures require request errors before resolver execution;
+they do not establish a `data.semanticOperation` field result.
+Resolver-owned structural refusals carry `INVALID_ARGUMENT`, resolver-owned size
+refusals carry `RESOURCE_EXHAUSTED`, and an unwired operation provider carries
+`UNAVAILABLE` on `errors[].extensions.code`. A resolver refusal nulls only
+`data.semanticOperation` (or its response alias), preserving unrelated selections
+in the `data` object; it does not null the entire `data` object.
+Stock request errors and these resolver refusals all mean no-send.
+Domain admission failures use the `failed` result and preserve the owning reason,
+including stale epoch or unsupported capability. After possible dispatch,
+evidence uncertainty must return `unknown` when a response can still be delivered;
+a transport error alone proves nothing about execution. Do not mark errors as
+safe to resubmit after possible dispatch.
 
 Existing eBUS MCP names, envelopes, errors and behavior remain compatible.
 This page registers no new MCP mutation. Any future MCP projection must use the
