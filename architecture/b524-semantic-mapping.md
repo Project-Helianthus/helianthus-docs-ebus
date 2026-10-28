@@ -278,12 +278,18 @@ describes legacy-field absence outside projection accounting; no return source
 is established by this mirror. Existing MCP field names and GraphQL aliases
 remain the compatibility boundary.
 
-The gateway currently mirrors the circuit 0 state (RR=0x001E) into
-`diagnostics.heatingStatusRaw`; that mirror is not part of this mapping, because
-circuit 0 is managed by the functional module and can report
-heating/cooling/DHW independently of the boiler. RR=0x001E belongs to the
-circuit surface only, and the removal of the mirror is tracked in
-[helianthus-ebusgateway#1012](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1012).
+**Proven (implementation behavior):** the gateway leaves
+`diagnostics.heatingStatusRaw` unset when the boiler read is unavailable;
+neither circuit 0 nor the semantic cache supplies that diagnostic. Circuit
+state (`OP=0x02, GG=0x02, II=<circuit>, RR=0x001E`) and pump observations
+(`OP=0x02, GG=0x02, II=<circuit>, RR=0x001B`) are published only on the circuit
+surface. These controller observations are distinct from direct B509
+boiler-family data; their native meanings and evidence grades remain those of
+the [B524 register catalog](../protocols/vaillant/ebus-vaillant-B524-register-map.md#circuit-state-enum).
+The circuit-zero mirror removal tracked by
+[helianthus-ebusgateway#1012](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1012)
+was delivered by
+[helianthus-ebusgateway#1353](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/1353).
 
 The controller-mediated candidates `OP=0x06, GG=0x01/0x02, RR=0x0015` and
 `RR=0x0012` have unknown native reply layouts. They are **withheld from this
