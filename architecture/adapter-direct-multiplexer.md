@@ -63,7 +63,8 @@ startup and preserved across in-band RESETTED events.
 Wire phase tracking is skipped during gateway ownership periods. The gateway's
 active path has full protocol-level awareness through ENH echo matching and does
 not need the multiplexer's wire phase tracker. Phase tracking resumes when
-ownership is released at a SYN boundary.
+ownership is released, including on transaction failure or a foreign initiator
+byte; release does not require waiting for a SYN boundary (see AD11).
 
 ### AD03: ArbitrationSendsSource
 
@@ -139,11 +140,38 @@ When the adapter sends ENHResResetted:
 Single ENH/ENS TCP connection with TCP_NODELAY + KeepAlive. Reconnection loop
 on disconnect with exponential backoff (1s initial, 30s cap).
 
-### AD11: Ownership Duration Guard
+### AD11: Ownership Lifecycle and Duration Guard
 
-Hard limit on continuous bus ownership (default 10s, strictly larger than any
-request timeout). Idle SYN release after a 200ms grace period following bus
-acquisition.
+The gateway releases its own ownership when its transaction fails: on a read
+timeout, write error, or context cancellation. A new bid over a live gateway
+grant also releases the previous ownership, with reason `abandoned_on_rebid`.
+A foreign initiator byte during gateway ownership releases that ownership with
+reason `arbitration_collision`. These abnormal endings do not hold ownership
+until the next idle SYN or until the duration guard expires.
+
+For a normal transaction, idle SYN release retains the 200 ms grace period
+following bus acquisition. The hard limit on continuous ownership defaults to
+1.5 s and serves as a last-resort guard, rather than the normal release mechanism
+for a failed transaction.
+
+Stale active-path bytes belonging to a finished or failed transaction are
+discarded and counted. They are never drained into the next grant; the next
+transaction must receive only its own active-path bytes.
+
+Mux diagnostics expose these lifecycle counters in `ActiveTxnSnapshot`:
+
+| Field | Meaning |
+| --- | --- |
+| `InactiveReasonCounts` | Abnormal transaction endings counted by reason, including `abandoned_on_rebid` and `arbitration_collision`. |
+| `StaleActiveBytesDiscarded` | Stale active-path bytes discarded after a transaction finishes or fails, rather than carried into the next grant. |
+| `ForeignInitiatorReleases` | Gateway ownership releases caused by a foreign initiator byte. |
+
+Evidence status: **Proven** as the gateway implementation contract described by
+[gateway issue #1401](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1401)
+and its companion [PR #1407](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/1407).
+These are gateway ownership rules, not a native eBUS wire contract or a device
+family qualification claim. Live-equipment validation of this lifecycle is
+**Unknown** here.
 
 ### AD12: Passive Path Delivery
 
