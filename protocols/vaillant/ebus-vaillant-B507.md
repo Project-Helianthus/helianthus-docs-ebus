@@ -26,8 +26,9 @@ Evidence labels:
 - `FORK_MORPHZ`: morphZ/ebusd-configuration `ebusd-2.1.x/de/vaillant/08.hmu00.HW5103.csv`, `custom/myconfig.csv`
 - `FORK_KOLIBRIE`: kolibrie-eric/ebusd-configuration `ebusd-2.1.x/de/vaillant/08.hmu.csv`, `ebusd-2.1.x/en/vaillant/08.hmu.csv`
 
-**Confidence:** MEDIUM-HIGH for protocol existence and 0900 poll; MEDIUM for
-HeatpumpLoadSensor decode; LOW for write semantics.
+**Hypothesis:** protocol existence, the 0900 poll and the HeatpumpLoadSensor
+interpretation are based on community configurations. **Unknown:** native write
+semantics.
 
 ## Wire Format
 
@@ -36,7 +37,7 @@ Initiator -> Target request:
   [0xB5] [0x07] [0x09] [sub] [...]
 
 Target response (ID 0900):  :HEX:* (variable length, undecoded)
-Target response (ID 0931):  D1C (1 byte, signed 0.5-step %, range -64.0 to +63.5)
+Target response (ID 0931):  D1C (community codec: 1 byte, unsigned, divisor 2, range 0-100%)
 
 QQ (initiator):    0x15 (VRC720-family controller address)
 ZZ (target):       0x08 (heat-pump unit; class not established, see Open question 12)
@@ -57,30 +58,30 @@ not established.
 
 ## Message Table
 
-| ID (hex) | Name | ebusd type | Data fields | Direction | Poll interval | Confidence |
+| ID (hex) | Name | ebusd type | Data fields | Direction | Poll interval | Evidence status |
 |----------|------|-----------|-------------|-----------|--------------|------------|
-| `09 00` | unknown_m_poll_60s_b507h (`unknownMPoll60sB507h`) | `r` | `:HEX:*` (variable, undecoded) | controller (`0x15`) -> heat pump (`0x08`) | 60 s | MEDIUM-HIGH |
-| `09 31` | heatpump_load_sensor (`HeatpumpLoadSensor`) | `r` / `r5` | `percent1:D1C` (1 byte, %) | controller -> heat pump | 5 s (morphZ custom) | MEDIUM |
-| `09` (write) | -- (unnamed) | `*w` | -- (undecoded capture) | unknown initiator -> heat pump | observed | LOW |
+| `09 00` | unknown_m_poll_60s_b507h (`unknownMPoll60sB507h`) | `r` | `:HEX:*` (variable, undecoded) | controller (`0x15`) -> heat pump (`0x08`) | 60 s | Hypothesis |
+| `09 31` | heatpump_load_sensor (`HeatpumpLoadSensor`) | `r` / `r5` | `percent1:D1C` (1 byte, %) | controller -> heat pump | 5 s (morphZ custom) | Hypothesis |
+| `09` (write) | -- (unnamed) | `*w` | -- (undecoded capture) | unknown initiator -> heat pump | observed | Unknown |
 
 ### D1C Encoding
 
-**Proven (numeric contract):** D1C uses a signed eight-bit carrier with
-0.5 percentage points per LSB. The full carrier range is -128..127, giving a
-numeric range of -64..63.5%.
+**Proven (ebusd codec only):** the [ebusd built-in datatype reference](https://github.com/john30/ebusd/wiki/4.3.-Builtin-data-types)
+defines D1C as an unsigned one-byte value divided by two, with a documented
+range of 0-100. In the community configurations, the field is labelled as a
+percentage; the following are codec examples, not observed B507 responses.
 
-| Raw byte (hex) | Signed carrier (decimal) | Decoded percentage |
+| Raw byte (hex) | Unsigned carrier (decimal) | Decoded percentage |
 |---|---:|---:|
 | `63` | 99 | 49.5% |
-| `80` | -128 | -64% |
 | `7F` | 127 | 63.5% |
+| `80` | 128 | 64% |
+| `C8` | 200 | 100% |
 
-**Unknown (physical meaning):** the advertised operational range of 0-100%
-conflicts with this signed half-percent carrier, which cannot represent 100%.
-Clipping negative signed values to zero does not reconcile the conflict. No
-unavailable, sentinel or error meaning is established for these bytes. The
-numeric contract alone does not qualify the B507 field interpretation or
-physical device support.
+**Unknown (native physical meaning):** the configuration type does not establish
+that the B507 response represents compressor load, its native operational range,
+or device support. No native unavailable, sentinel or error meaning is
+established for these bytes.
 
 ### ID 0900 Response
 
@@ -164,7 +165,7 @@ wire. The request length NN counts the op byte plus its data bytes.
 
 Candidate, unconfirmed on the wire: the `09` request byte (a flow temperature
 setpoint, `u8` ÷2 °C) is the byte that the community rows treat as the sub-ID
-`00` or `31`, and the `09` reply is a `u16` efficiency, not the one-byte signed
+`00` or `31`, and the `09` reply is a `u16` efficiency, not the one-byte unsigned
 percentage of `HeatpumpLoadSensor`; the relation is unresolved (see Open
 Questions).
 
@@ -182,12 +183,12 @@ whether the service is available under the PeBUS profile is not established (see
 
 | Fork | File | Line | URL |
 |------|------|------|-----|
-| jonesPD | `ebusd-2.1.x/en/vaillant/08.hmu.csv` | L4 | https://github.com/jonesPD/ebusd-configuration/blob/b1d506ae9b8d63bf5855532860e719d72d174cb4/ebusd-2.1.x/en/vaillant/08.hmu.csv#L4 |
-| xerion3800 | `ebusd-2.1.x/en/vaillant/08.hmu.csv` | L4 | https://github.com/xerion3800/ebusd-configuration/blob/e30e2573c2ab47f2dd82da9158381b9cace96477/ebusd-2.1.x/en/vaillant/08.hmu.csv#L4 |
-| morphZ | `ebusd-2.1.x/de/vaillant/08.hmu00.HW5103.csv` | L5 | https://github.com/morphZ/ebusd-configuration/blob/9c895ecd6bed3cea7676c89638aa9833ce31d2f5/ebusd-2.1.x/de/vaillant/08.hmu00.HW5103.csv#L5 |
-| morphZ | `custom/myconfig.csv` | L209 | https://github.com/morphZ/ebusd-configuration/blob/9c895ecd6bed3cea7676c89638aa9833ce31d2f5/custom/myconfig.csv#L209 |
-| kolibrie-eric | `ebusd-2.1.x/de/vaillant/08.hmu.csv` | L2, L4 | https://github.com/kolibrie-eric/ebusd-configuration/blob/2cd7c92e0a494808cdc38a6cdf36bf699054f286/ebusd-2.1.x/de/vaillant/08.hmu.csv#L2 |
-| kolibrie-eric | `ebusd-2.1.x/en/vaillant/08.hmu.csv` | L5, L21 | https://github.com/kolibrie-eric/ebusd-configuration/blob/2cd7c92e0a494808cdc38a6cdf36bf699054f286/ebusd-2.1.x/en/vaillant/08.hmu.csv#L5 |
+| jonesPD | `ebusd-2.1.x/en/vaillant/08.hmu.csv` | L4 | https://github.com/jonesPD/ebusd-configuration/blob/HEAD/ebusd-2.1.x/en/vaillant/08.hmu.csv#L4 |
+| xerion3800 | `ebusd-2.1.x/en/vaillant/08.hmu.csv` | L4 | https://github.com/xerion3800/ebusd-configuration/blob/HEAD/ebusd-2.1.x/en/vaillant/08.hmu.csv#L4 |
+| morphZ | `ebusd-2.1.x/de/vaillant/08.hmu00.HW5103.csv` | L5 | https://github.com/morphZ/ebusd-configuration/blob/HEAD/ebusd-2.1.x/de/vaillant/08.hmu00.HW5103.csv#L5 |
+| morphZ | `custom/myconfig.csv` | L209 | https://github.com/morphZ/ebusd-configuration/blob/HEAD/custom/myconfig.csv#L209 |
+| kolibrie-eric | `ebusd-2.1.x/de/vaillant/08.hmu.csv` | L2, L4 | https://github.com/kolibrie-eric/ebusd-configuration/blob/HEAD/ebusd-2.1.x/de/vaillant/08.hmu.csv#L2 |
+| kolibrie-eric | `ebusd-2.1.x/en/vaillant/08.hmu.csv` | L5, L21 | https://github.com/kolibrie-eric/ebusd-configuration/blob/HEAD/ebusd-2.1.x/en/vaillant/08.hmu.csv#L5 |
 
 ### Independence Assessment
 
@@ -229,7 +230,7 @@ replicate the 60-second poll entry.
 6. The candidate layout of `09` (see "Candidate layouts") takes a flow
    temperature setpoint in the byte after the op and returns a `u16`
    efficiency; the community-configuration reading of `09 31` as a one-byte
-   signed 0.5-step percentage differs in response width. The relation is
+   unsigned 0.5-step percentage differs in response width. The relation is
    unresolved.
 7. The candidate ops are known only as candidate layouts; no exchange of them
    was observed beyond the community configuration and the captures described on
