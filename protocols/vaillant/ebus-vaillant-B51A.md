@@ -27,16 +27,31 @@ Evidence labels:
 
 ## Wire Shape
 
-Common configured read shape:
+**Proven — configured register-table payload shape:** The two register-table
+forms below use a four-byte request payload. `SUBGROUP` is one byte: `32` or
+`34`, respectively. The `B5 1A` service bytes are outside this payload.
 
 ```text
-Request payload:
-  05 [IDX] [SUBGROUP_HI] [SUBGROUP_LO] [REG]
+Request payload (4 bytes):
+  05 [IDX] [SUBGROUP] [REG]
 ```
+
+Synthetic byte-expansion examples (shape only, not supported register mappings):
+
+| IDX | SUBGROUP | REG | Request payload | Payload bytes |
+|---|---|---|---|---|
+| `4D` | `32` | `01` | `05 4D 32 01` | 4 |
+| `15` | `34` | `02` | `05 15 34 02` | 4 |
+
+No zero byte precedes the subgroup in either example. These expansions establish
+no value codec or native device support; those remain **Unknown** for these
+synthetic tuples. Per-register IDX choices, including contested choices, remain
+as listed below. Partial forms, backup-heater forms, and candidate mirror and
+diagnosis layouts remain separate; this four-byte shape does not normalize them.
 
 > **CORRECTION (2026-04-14) — IDX byte is per-register, not fixed per sub-group.**
 > The existing documentation presented sub-group requests as `05 FF 32 [REG]` with
-> 0xFF implied universally. The IDX byte (second byte after `05`) varies by register.
+> 0xFF implied universally. The IDX byte (second payload byte, immediately after `05`) varies by register.
 > Using the wrong IDX returns no valid response. See Section "IDX Byte Pattern" below.
 
 Known configured `@base(MF, 0x1a, ...)` forms include:
@@ -124,7 +139,7 @@ response. This caused P4's scan to miss all energy/COP registers entirely.
 
 ### Sub-Group 05xx32 — Live Data + Energy Statistics
 
-Frame format: `B51A 05 [IDX] 32 [REG]`
+Request payload (4 bytes): `05 [IDX] 32 [REG]`
 
 > **Naming note:** Canonical naming uses `dhw_*` (snake_case). ebusd
 > source naming uses `Hwc*` (camelCase). Both refer to domestic hot water.
@@ -172,7 +187,7 @@ Frame format: `B51A 05 [IDX] 32 [REG]`
 
 ### Sub-Group 05xx34 — Lifecycle Counters
 
-Frame format: `B51A 05 [IDX] 34 [REG]`
+Request payload (4 bytes): `05 [IDX] 34 [REG]`
 
 > **WARNING: IDX bytes are contested between D3/P5 and fork sources. Both IDX sets
 > are listed below. Live verification required before implementation. See Open
