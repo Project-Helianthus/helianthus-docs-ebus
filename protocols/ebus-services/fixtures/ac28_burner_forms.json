@@ -1,0 +1,160 @@
+{
+  "family": "Vaillant",
+  "evidence_status": "Hypothesis",
+  "qualification": "Unknown",
+  "forms": [
+    {
+      "form": "positive_only_prefix",
+      "logical_prefix": [
+        5,
+        1
+      ],
+      "body": null,
+      "meaning": "Unknown"
+    },
+    {
+      "form": "five_field_request",
+      "logical_prefix": [
+        5,
+        1
+      ],
+      "fields": [
+        {
+          "logical": 2,
+          "name": "heat_state",
+          "carrier": "u8",
+          "domain": [
+            0,
+            255
+          ],
+          "default": 0,
+          "unit": null
+        },
+        {
+          "logical": 3,
+          "name": "boiler_target",
+          "carrier": "u8",
+          "domain": [
+            0,
+            90
+          ],
+          "default": 0,
+          "unit": "degC"
+        },
+        {
+          "logical": 4,
+          "name": "dhw_target",
+          "carrier": "u8",
+          "domain": [
+            0,
+            90
+          ],
+          "default": 0,
+          "unit": "degC"
+        },
+        {
+          "logical": 5,
+          "name": "outside_temp",
+          "carrier": "signed8",
+          "domain": [
+            -128,
+            127
+          ],
+          "default": 0,
+          "unit": "degC"
+        },
+        {
+          "logical": 6,
+          "name": "setting_degree",
+          "carrier": "u8",
+          "domain": [
+            0,
+            255
+          ],
+          "default": 0,
+          "unit": "%"
+        }
+      ]
+    }
+  ],
+  "heat_labels": {
+    "00": "shutdown",
+    "55": "DHW",
+    "AA": "heating",
+    "CC": "emission-check",
+    "EE": "controller-stop"
+  },
+  "heat_check_candidate": {
+    "raw": "DD",
+    "meaning": "unresolved",
+    "support": "Unknown"
+  },
+  "unit_metadata": [
+    273.15,
+    0.01
+  ],
+  "identity_conversion": {
+    "scale": 1,
+    "offset": 0
+  },
+  "unknown": [
+    "outside_3F_replacement",
+    "scheduling",
+    "admission",
+    "default_materialization",
+    "physical_acknowledgement",
+    "effect_confirmation"
+  ],
+  "vectors": [
+    {
+      "field": "outside_temp",
+      "raw": "FF",
+      "value": -1,
+      "within_candidate_domain": true
+    },
+    {
+      "field": "setting_degree",
+      "raw": "FF",
+      "value": 255,
+      "within_candidate_domain": true
+    },
+    {
+      "field": "boiler_target",
+      "raw": "5A",
+      "value": 90,
+      "within_candidate_domain": true
+    },
+    {
+      "field": "boiler_target",
+      "raw": "5B",
+      "value": 91,
+      "within_candidate_domain": false
+    },
+    {
+      "field": "dhw_target",
+      "raw": "5A",
+      "value": 90,
+      "within_candidate_domain": true
+    },
+    {
+      "field": "dhw_target",
+      "raw": "5B",
+      "value": 91,
+      "within_candidate_domain": false
+    },
+    {
+      "field": "heat_state",
+      "raw": "DD",
+      "value": 221,
+      "within_candidate_domain": true,
+      "meaning": "unresolved"
+    },
+    {
+      "field": "outside_temp",
+      "raw": "3F",
+      "value": 63,
+      "within_candidate_domain": true,
+      "replacement": "Unknown"
+    }
+  ]
+}
