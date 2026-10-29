@@ -51,9 +51,9 @@ originated by other bus participants.
 
 Any identification response observed on the bus from any
 initiator/target pair contributes to device-presence evidence.
-Helianthus does not need to originate the query -- a VRC700
-identifying a BAI, or any other pair exchanging `07 04`, is
-equally valid evidence of both participants' existence.
+Helianthus does not need to originate the query -- a regulator
+identifying a boiler-interface device, or any other pair exchanging `07 04`,
+is equally valid evidence of both participants' existence.
 
 A single observed `07 04` exchange provides strong evidence for two
 addresses simultaneously: the initiator (who sent the query) and
@@ -69,14 +69,17 @@ requires no bus arbitration.
 See [`nm-model.md`](./nm-model.md) for the full `FF 00` semantics
 within the NM state machine.
 
-### Passive FF 01 (NM State Broadcast)
+### Passive FF 01 (Reset Target Configuration NM)
 
-A device announcing its NM state (via `FF 01`) is a presence signal.
-This broadcast is optional-later in Helianthus's own broadcast lane,
-but is always consumed passively from peers when observed.
+**Proven:** `FF 01` resets status charts and net status and erases and
+re-initializes dynamically generated target configuration. An observed,
+CRC-valid, sender-attributed reset can provide passive evidence of the
+sender's presence; it is not a periodic NM state announcement.
 
-Like `FF 00`, the broadcast nature of `FF 01` means passive
-consumption adds zero bus load.
+Passive observation adds zero bus load and does not authorize Helianthus
+to originate a reset. `FF 01` is excluded from the optional-later presence
+broadcast plan; emission requires a separate explicit reset-emission policy
+in [nm-participant-policy.md](./nm-participant-policy.md#ff-01-reset-target-configuration-nm----not-admitted).
 
 ### New Cyclic Traffic from Unseen Addresses
 

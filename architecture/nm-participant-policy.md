@@ -164,11 +164,16 @@ M7a feasibility), `FF 02` is emitted without a payload. This means the
 broadcast signals failure but is only partially interrogable by peers.
 This limitation is accepted for the first lock baseline.
 
-### FF 01 (NM State) -- Optional-Later
+### FF 01 (Reset Target Configuration NM) -- Not Admitted
 
-Deferred until the broadcast lane is proven stable through operational
-experience with `FF 00` and `FF 02`. Not part of the first lock
-baseline.
+**Proven:** `FF 01` resets status charts and net status and erases and
+re-initializes dynamically generated target configuration. It must not be
+scheduled as a periodic NM state or presence broadcast.
+
+**Unknown:** Physical support and emission admission. `FF 01` is excluded
+from both the first lock baseline and the optional-later broadcast plan.
+Helianthus must not emit it until a separate explicit reset-emission policy
+is defined; successful `FF 00`/`FF 02` operation does not admit it.
 
 ### 07 FF (Sign of Life) -- Optional-Later
 
@@ -189,11 +194,19 @@ responses.
 
 Gated responder surfaces:
 
-- `07 04` NMQueryExistence response
-- `FF 03` NMResolveNodeAddress
-- `FF 04` NMQueryNodes
-- `FF 05` NMResolveService
-- `FF 06` NMUpdateService
+- `07 04` Identification response
+- `FF 03` Net Status Query and same-service response
+- `FF 04` Monitored Participants Query and same-service response
+- `FF 05` Failed Nodes Query and same-service response
+- `FF 06` Required Services Query and same-service response
+
+**Proven:** `FF 03`–`FF 06` queries are addressed to the queried
+initiator's companion target, not broadcast. Each returns response data
+under its own service; `FF 04` is not a reply service for `FF 03`, and
+`FF 06` is not a reply service for `FF 05`.
+**Unknown:** Physical support and query emission admission. Passing the
+responder feasibility gate alone does not admit outbound queries or resolve
+incomplete bodies in the [FF service reference](../protocols/ebus-services/ebus-service-FFh.md#query-direction-and-response-service).
 
 Cross-reference: [nm-model.md](./nm-model.md) classifies these services
 and defines which are initiator-mode versus responder-mode.

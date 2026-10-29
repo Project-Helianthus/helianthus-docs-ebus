@@ -180,12 +180,22 @@ production.
 
 | Service ID | Name | Purpose | Notes |
 |---|---|---|---|
-| `FF 01` | NMState | Periodic NM state broadcast | Added after broadcast lane is proven stable |
 | `07 FF` | Sign of Life | Good-citizen presence signal | Cadence floor >= 10 seconds |
 
 `07 FF` Sign of Life is a good-citizen signal announcing the
 gateway's presence on the bus. The cadence floor of 10 seconds ensures
 the gateway does not contribute excessive bus load.
+
+#### FF 01 Reset Emission -- Not Admitted
+
+**Proven:** `FF 01` resets status charts and net status and erases and
+re-initializes dynamically generated target configuration. It is not a
+periodic state or presence announcement and is excluded from the
+optional-later broadcast plan.
+
+**Unknown:** Physical support and emission admission. Helianthus must not
+emit `FF 01` without a separately defined, explicit reset-emission policy;
+broadcast-lane stability alone does not admit it.
 
 ### Responder Lane
 
@@ -196,10 +206,17 @@ not currently available in the Helianthus transport layer.
 | Service ID | Name | Purpose |
 |---|---|---|
 | `07 04` | Identification | Respond to targeted identity query |
-| `FF 03` | NMResolutionRequest | Request NM resolution from peer |
-| `FF 04` | NMResolutionResponse | Respond to NM resolution request |
-| `FF 05` | QueryNMState | Targeted NM state query |
-| `FF 06` | ReportNMState | Targeted NM state response |
+| `FF 03` | Net Status Query | Return net status in `FF 03` |
+| `FF 04` | Monitored Participants Query | Return monitored participant statuses in `FF 04` |
+| `FF 05` | Failed Nodes Query | Return failed nodes in `FF 05` |
+| `FF 06` | Required Services Query | Return required services in `FF 06` |
+
+**Proven:** Each `FF 03`–`FF 06` query is addressed to the queried
+initiator's companion target; response data is returned in the same
+service, not a paired service. These queries are not broadcasts.
+**Unknown:** Physical support and query emission admission. The documented
+routing does not admit query emission or establish complete request/response
+bodies; see the [FF service reference](../protocols/ebus-services/ebus-service-FFh.md#query-direction-and-response-service).
 
 The interrogation target for responder-lane services is the active
 local companion address derived from the active local initiator
@@ -216,12 +233,12 @@ by its OSI Layer 7 role within the eBUS application layer.
 | Service ID | Name | OSI L7 Category | Direction |
 |---|---|---|---|
 | `FF 00` | NMReset | Network management | Broadcast |
-| `FF 01` | NMState | Network management | Broadcast |
+| `FF 01` | Reset Target Configuration NM | Network management | Broadcast (reset emission not admitted) |
 | `FF 02` | NMFailure | Network management | Broadcast |
-| `FF 03` | NMResolutionRequest | Network management | Broadcast |
-| `FF 04` | NMResolutionResponse | Network management | Broadcast |
-| `FF 05` | QueryNMState | Network management | Targeted |
-| `FF 06` | ReportNMState | Network management | Targeted |
+| `FF 03` | Net Status Query | Network management | Addressed query/response, same service |
+| `FF 04` | Monitored Participants Query | Network management | Addressed query/response, same service |
+| `FF 05` | Failed Nodes Query | Network management | Addressed query/response, same service |
+| `FF 06` | Required Services Query | Network management | Addressed query/response, same service |
 | `07 04` | Identification | Identification | Targeted |
 | `07 FE` | Inquiry of Existence | Existence/presence | Broadcast |
 | `07 FF` | Sign of Life | Presence signal | Broadcast |
@@ -244,15 +261,14 @@ decisions.
 
 **Proven on live bus:**
 
-- Vaillant bus faces observed: `0x15`, `0xEC`, `0x04`, `0xF6` with
-  alias pairs `0xEC -> 0x15` and `0xF6 -> 0x04`.
+- Vaillant device families observed with initiator/companion address pairs.
 - `07 04` identification works via targeted query to known addresses.
 - Active send path handles `0xFE` broadcast frames without companion
   response waiting.
 - Passive observation infrastructure exists and is used by the semantic
   polling runtime.
 
-**Tested but yielded no useful data:**
+**Unknown: Peer NM support.**
 
 - Peer `FF 03`/`FF 04`/`FF 05`/`FF 06` interrogation on the observed
   Vaillant system returned no actionable data. This confirms that peer
