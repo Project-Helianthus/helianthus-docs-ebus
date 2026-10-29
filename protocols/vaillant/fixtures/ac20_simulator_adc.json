@@ -1,0 +1,454 @@
+{
+  "id": "ac20_simulator_adc",
+  "representation_grade": "Proven",
+  "candidate_grade": "Hypothesis",
+  "physical_qualification": "Unknown",
+  "coordinate_system": "logical_including_prefix_not_physical_offsets",
+  "limitations": [
+    "partial_catalog",
+    "remaining_selectors_unknown",
+    "address_space_unknown",
+    "support_unknown",
+    "zero_not_established_sentinel",
+    "signed_carrier_does_not_admit_negative_values",
+    "formal_and_operational_domains_are_distinct"
+  ],
+  "entries": [
+    {
+      "id": "ac20_b520_op00_request",
+      "family": "Vaillant simulator",
+      "variant": null,
+      "direction": "request",
+      "service": "B520",
+      "operation": 0,
+      "alternative": "request",
+      "logical_extent": 10,
+      "physical_extent": null,
+      "grade": "Hypothesis",
+      "raw_fallback": "preserve_raw_bytes",
+      "fields": [
+        {
+          "name": "relay",
+          "logical_position": 3,
+          "width": 1,
+          "raw_domain": [
+            0,
+            255
+          ],
+          "signed": false,
+          "byte_order": null,
+          "conversion": null,
+          "unit": null,
+          "default": 0,
+          "mappings": {},
+          "reserved_regions": [],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve_raw_bytes",
+          "bit_roles": null
+        },
+        {
+          "name": "PWM1",
+          "logical_position": 4,
+          "width": 1,
+          "raw_domain": [
+            0,
+            255
+          ],
+          "signed": false,
+          "byte_order": null,
+          "conversion": {
+            "divide_by": 2
+          },
+          "unit": "percent",
+          "default": 0,
+          "mappings": {},
+          "reserved_regions": [],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve_raw_bytes"
+        },
+        {
+          "name": "PWM2",
+          "logical_position": 5,
+          "width": 1,
+          "raw_domain": [
+            0,
+            255
+          ],
+          "signed": false,
+          "byte_order": null,
+          "conversion": {
+            "divide_by": 2
+          },
+          "unit": "percent",
+          "default": 0,
+          "mappings": {},
+          "reserved_regions": [],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve_raw_bytes"
+        },
+        {
+          "name": "stepper",
+          "logical_position": 6,
+          "width": 1,
+          "raw_domain": [
+            0,
+            255
+          ],
+          "signed": false,
+          "byte_order": null,
+          "conversion": null,
+          "unit": "steps",
+          "default": 0,
+          "mappings": {
+            "255": "calibrate/go-to-zero"
+          },
+          "reserved_regions": [],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve_raw_bytes",
+          "steps_domain": [
+            0,
+            240
+          ],
+          "unmapped_regions": [
+            [
+              241,
+              254
+            ]
+          ]
+        },
+        {
+          "name": "LED",
+          "logical_position": 7,
+          "width": 1,
+          "raw_domain": [
+            0,
+            255
+          ],
+          "signed": false,
+          "byte_order": null,
+          "conversion": null,
+          "unit": null,
+          "default": 0,
+          "mappings": {
+            "0": "disabled",
+            "1": "enabled"
+          },
+          "reserved_regions": [],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve_raw_bytes",
+          "unmapped_regions": [
+            [
+              2,
+              255
+            ]
+          ]
+        },
+        {
+          "name": "ED",
+          "logical_position": 8,
+          "width": 1,
+          "raw_domain": [
+            0,
+            255
+          ],
+          "signed": false,
+          "byte_order": null,
+          "conversion": {
+            "divide_by": 2
+          },
+          "unit": "percent",
+          "default": 0,
+          "mappings": {},
+          "reserved_regions": [],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve_raw_bytes"
+        },
+        {
+          "name": "temperature-table",
+          "logical_position": 9,
+          "width": 1,
+          "raw_domain": [
+            0,
+            255
+          ],
+          "signed": false,
+          "byte_order": null,
+          "conversion": null,
+          "unit": null,
+          "default": 0,
+          "mappings": {
+            "0": {
+              "label": "standard3K3",
+              "candidate_celsius_range": [
+                -13.5,
+                116
+              ]
+            },
+            "1": {
+              "label": "extended1K",
+              "candidate_celsius_range": [
+                -20,
+                155
+              ]
+            },
+            "2": {
+              "label": "low-temperature15K",
+              "candidate_celsius_range": [
+                -39,
+                80
+              ]
+            },
+            "3": {
+              "label": "standard1K",
+              "candidate_celsius_range": [
+                -13.9,
+                130
+              ]
+            }
+          },
+          "reserved_regions": [],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve_raw_bytes",
+          "unmapped_regions": [
+            [
+              4,
+              255
+            ]
+          ]
+        }
+      ],
+      "reserved_regions": [],
+      "remaining_selectors": null,
+      "address_space": null,
+      "support": null
+    },
+    {
+      "id": "ac20_b520_op00_positive",
+      "family": "Vaillant simulator",
+      "variant": null,
+      "direction": "response",
+      "service": "B520",
+      "operation": 0,
+      "alternative": "positive",
+      "logical_extent": 18,
+      "physical_extent": null,
+      "grade": "Hypothesis",
+      "raw_fallback": "preserve_raw_bytes",
+      "fields": [
+        {
+          "name": "ADC",
+          "logical_position": 3,
+          "width": 2,
+          "raw_domain": [
+            0,
+            1023
+          ],
+          "signed": false,
+          "byte_order": "little_endian",
+          "conversion": null,
+          "unit": null,
+          "default": 0,
+          "mappings": {},
+          "reserved_regions": [],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve_raw_bytes"
+        },
+        {
+          "name": "temperature1",
+          "logical_position": 5,
+          "width": 2,
+          "raw_domain": [
+            0,
+            3200
+          ],
+          "signed": true,
+          "byte_order": "little_endian",
+          "conversion": {
+            "divide_by": 16
+          },
+          "unit": "degrees_C",
+          "default": 0,
+          "mappings": {},
+          "reserved_regions": [],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve_raw_bytes",
+          "candidate_physical_domain": [
+            0,
+            200
+          ],
+          "sentinel": null
+        },
+        {
+          "name": "temperature2",
+          "logical_position": 7,
+          "width": 2,
+          "raw_domain": [
+            0,
+            3200
+          ],
+          "signed": true,
+          "byte_order": "little_endian",
+          "conversion": {
+            "divide_by": 16
+          },
+          "unit": "degrees_C",
+          "default": 0,
+          "mappings": {},
+          "reserved_regions": [],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve_raw_bytes",
+          "candidate_physical_domain": [
+            0,
+            200
+          ],
+          "sentinel": null
+        },
+        {
+          "name": "temperature3",
+          "logical_position": 9,
+          "width": 2,
+          "raw_domain": [
+            0,
+            3200
+          ],
+          "signed": true,
+          "byte_order": "little_endian",
+          "conversion": {
+            "divide_by": 16
+          },
+          "unit": "degrees_C",
+          "default": 0,
+          "mappings": {},
+          "reserved_regions": [],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve_raw_bytes",
+          "candidate_physical_domain": [
+            0,
+            200
+          ],
+          "sentinel": null
+        },
+        {
+          "name": "temperature4",
+          "logical_position": 11,
+          "width": 2,
+          "raw_domain": [
+            0,
+            3200
+          ],
+          "signed": true,
+          "byte_order": "little_endian",
+          "conversion": {
+            "divide_by": 16
+          },
+          "unit": "degrees_C",
+          "default": 0,
+          "mappings": {},
+          "reserved_regions": [],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve_raw_bytes",
+          "candidate_physical_domain": [
+            0,
+            200
+          ],
+          "sentinel": null
+        },
+        {
+          "name": "reserved",
+          "logical_position": 13,
+          "width": 1,
+          "raw_domain": [
+            0,
+            255
+          ],
+          "signed": false,
+          "byte_order": null,
+          "conversion": null,
+          "unit": null,
+          "default": 0,
+          "mappings": {},
+          "reserved_regions": [
+            [
+              13,
+              1
+            ]
+          ],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve_raw_bytes"
+        },
+        {
+          "name": "impeller",
+          "logical_position": 14,
+          "width": 2,
+          "raw_domain": [
+            0,
+            1000
+          ],
+          "signed": false,
+          "byte_order": "little_endian",
+          "conversion": null,
+          "unit": "Hz",
+          "default": 0,
+          "mappings": {},
+          "reserved_regions": [],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve_raw_bytes"
+        },
+        {
+          "name": "vortex",
+          "logical_position": 16,
+          "width": 2,
+          "raw_domain": [
+            0,
+            350
+          ],
+          "signed": false,
+          "byte_order": "little_endian",
+          "conversion": null,
+          "unit": "Hz",
+          "default": 0,
+          "mappings": {},
+          "reserved_regions": [],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve_raw_bytes",
+          "candidate_operational_domain": [
+            5,
+            350
+          ],
+          "candidate_hysteresis_hz": {
+            "on": 5,
+            "off": 4
+          },
+          "sentinel": null
+        }
+      ],
+      "reserved_regions": [
+        [
+          13,
+          1
+        ]
+      ],
+      "remaining_selectors": null,
+      "address_space": null,
+      "support": null
+    },
+    {
+      "id": "ac20_b520_op00_negative",
+      "family": "Vaillant simulator",
+      "variant": null,
+      "direction": "response",
+      "service": "B520",
+      "operation": 0,
+      "alternative": "negative",
+      "logical_extent": null,
+      "physical_extent": null,
+      "grade": "Hypothesis",
+      "raw_fallback": "preserve_raw_bytes",
+      "fields": [],
+      "reserved_regions": [],
+      "remaining_selectors": null,
+      "address_space": null,
+      "support": null
+    }
+  ]
+}
