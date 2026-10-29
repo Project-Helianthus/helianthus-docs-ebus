@@ -43,9 +43,9 @@ def expected():
                               candidate_physical_domain=[0, 200], sentinel=None))
     positive += [field('reserved', 13, reserved_regions=[[13, 1]]),
                  field('impeller', 14, 2, 1000, unit='Hz'),
-                 field('vortex', 16, 2, 350, unit='Hz',
-                       candidate_operational_domain=[5, 350],
-                       candidate_hysteresis_hz={'on': 5, 'off': 4}, sentinel=None)]
+                 field('vortex', 16, 2, unit='Hz', raw_domain=None,
+                       candidate_operational_domain=None,
+                       candidate_hysteresis_hz=None, sentinel=None)]
     entries = []
     for alternative, direction, extent, fields, reserved in [
         ('request', 'request', 10, request, []),
@@ -67,7 +67,7 @@ def expected():
                              'address_space_unknown', 'support_unknown',
                              'zero_not_established_sentinel',
                              'signed_carrier_does_not_admit_negative_values',
-                             'formal_and_operational_domains_are_distinct'],
+                             'vortex_domains_and_hysteresis_unknown'],
                 entries=entries)
 
 
@@ -156,17 +156,23 @@ class SimulatorADC(unittest.TestCase):
                     self.assertEqual(candidate(f, bytes.fromhex(raw)), value)
                     self.assertEqual(inside(f['raw_domain'], value), valid)
 
-    def test_vortex_domains(self):
+    def test_vortex_carrier_without_threshold_claims(self):
         f = self.field('positive', 'vortex')
-        for raw, formal, operational in [(0, True, False), (4, True, False),
-                                        (5, True, True), (350, True, True),
-                                        (351, False, False)]:
+        for raw in (0, 4, 5, 350, 351, 65535):
             with self.subTest(raw=raw):
                 self.assertEqual(candidate(f, raw.to_bytes(2, 'little')), raw)
-                self.assertEqual(inside(f['raw_domain'], raw), formal)
-                self.assertEqual(inside(f['candidate_operational_domain'], raw), operational)
-        self.assertEqual(f['candidate_hysteresis_hz'], {'on': 5, 'off': 4})
-        self.assertIsNone(f['sentinel'])
+        for key in ('raw_domain', 'candidate_operational_domain',
+                    'candidate_hysteresis_hz', 'sentinel'):
+            with self.subTest(key=key):
+                self.assertIsNone(f[key])
+
+    def test_service_index_links_page(self):
+        overview = (PAGE.parent / 'ebus-vaillant.md').read_text()
+        index = overview.split('## Scope', 1)[0]
+        self.assertIn('[`ebus-vaillant-B520.md`](ebus-vaillant-B520.md)', index)
+        without_page = next(line for line in index.splitlines()
+                            if 'without a dedicated page' in line)
+        self.assertNotIn('B520', without_page)
 
     def test_page_tables(self):
         identity = [['Family', 'Variant', 'Direction', 'Service', 'Operation', 'Alternative',
@@ -199,8 +205,8 @@ class SimulatorADC(unittest.TestCase):
         positive += [
             ['reserved', '13', 'u8', '0..255', 'raw; meaning Unknown', '0'],
             ['impeller', '14', 'u16 LE', '0..1000', 'Hz', '0'],
-            ['vortex', '16', 'u16 LE', '0..350',
-             'Hz; candidate operational 5..350; hysteresis on 5/off 4 Hz', '0']]
+            ['vortex', '16', 'u16 LE', 'Unknown',
+             'Hz; operational domain and hysteresis Unknown', '0']]
         self.assertEqual(tables(self.page), [identity, request, labels, positive])
 
     def test_page_grade_boundaries(self):
@@ -221,7 +227,8 @@ class SimulatorADC(unittest.TestCase):
             'ADC raw 1023 lies inside its declared domain and 1024 lies outside.',
             'Temperature bytes `00 0C` carry 3072, giving candidate 192 degrees C inside both declared ranges.',
             'Bytes `FF FF` carry signed -1, giving -0.0625 degrees C outside the declared domain;',
-            'Vortex values 0 and 4 lie inside the formal domain but outside the candidate operational domain; 5 and 350 lie inside both, and 351 outside both.',
+            'its declared raw domain, operational domain and hysteresis remain **Unknown** because the linked overview supplies no threshold evidence.',
+            'Vortex carrier values are preserved without classifying them as inside or outside an operational domain.',
             'Remaining selectors, address-space semantics and support remain **Unknown**',
         ]:
             with self.subTest(phrase=phrase):

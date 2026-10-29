@@ -69,16 +69,18 @@ declared domain. The reserved byte is retained independently of the useful field
 | temperature4 | 11 | i16 LE | 0..3200 | raw/16 degrees C; 0..200 | 0 |
 | reserved | 13 | u8 | 0..255 | raw; meaning Unknown | 0 |
 | impeller | 14 | u16 LE | 0..1000 | Hz | 0 |
-| vortex | 16 | u16 LE | 0..350 | Hz; candidate operational 5..350; hysteresis on 5/off 4 Hz | 0 |
+| vortex | 16 | u16 LE | Unknown | Hz; operational domain and hysteresis Unknown | 0 |
 
-Zero is not an established sentinel. Vortex formal and candidate operational
-domains are distinct; neither establishes physical enforcement or peer effects.
+Zero is not an established sentinel. The vortex carrier represents 0..65535;
+its declared raw domain, operational domain and hysteresis remain **Unknown**
+because the linked overview supplies no threshold evidence. Carrier capacity
+does not establish physical enforcement or peer effects.
 ADC raw 1023 lies inside its declared domain and 1024 lies outside.
 Temperature bytes `00 0C` carry 3072, giving candidate 192 degrees C inside both
 declared ranges. Bytes `FF FF` carry signed -1, giving -0.0625 degrees C outside
 the declared domain; this is neither automatically admitted nor an established
-sentinel. Vortex values 0 and 4 lie inside the formal domain but outside the
-candidate operational domain; 5 and 350 lie inside both, and 351 outside both.
+sentinel. Vortex carrier values are preserved without classifying them as
+inside or outside an operational domain.
 
 ## Evidence and unresolved properties
 

@@ -11,7 +11,7 @@
     "support_unknown",
     "zero_not_established_sentinel",
     "signed_carrier_does_not_admit_negative_values",
-    "formal_and_operational_domains_are_distinct"
+    "vortex_domains_and_hysteresis_unknown"
   ],
   "entries": [
     {
@@ -398,10 +398,7 @@
           "name": "vortex",
           "logical_position": 16,
           "width": 2,
-          "raw_domain": [
-            0,
-            350
-          ],
+          "raw_domain": null,
           "signed": false,
           "byte_order": "little_endian",
           "conversion": null,
@@ -411,14 +408,8 @@
           "reserved_regions": [],
           "grade": "Hypothesis",
           "raw_fallback": "preserve_raw_bytes",
-          "candidate_operational_domain": [
-            5,
-            350
-          ],
-          "candidate_hysteresis_hz": {
-            "on": 5,
-            "off": 4
-          },
+          "candidate_operational_domain": null,
+          "candidate_hysteresis_hz": null,
           "sentinel": null
         }
       ],

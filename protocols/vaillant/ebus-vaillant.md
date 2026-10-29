@@ -18,13 +18,14 @@ For detailed coverage of selector-heavy identifiers, see:
 - `0xB5 0x15` (B515, legacy timer template): [`ebus-vaillant-B515.md`](ebus-vaillant-B515.md)
 - `0xB5 0x16` (B516, Energy statistics): [`ebus-vaillant-B516-energy.md`](ebus-vaillant-B516-energy.md)
 - `0xB5 0x1A` (B51A, heat-pump statistics and live-monitor): [`ebus-vaillant-B51A.md`](ebus-vaillant-B51A.md)
+- `0xB5 0x20` (B520, simulator actuator ranges and ADC quantities): [`ebus-vaillant-B520.md`](ebus-vaillant-B520.md)
 - `0xB5 0x21` (B521, OMU service registers): [`ebus-vaillant-B521.md`](ebus-vaillant-B521.md)
 - `0xB5 0x22` (B522, recoVAIR ventilation commands): [`ebus-vaillant-B522.md`](ebus-vaillant-B522.md)
 - `0xB5 0x23` (B523, functional-module actor/sensor data): [`ebus-vaillant-B523.md`](ebus-vaillant-B523.md)
 - `0xB5 0x24` (B524, GetExtendedRegisters): [`ebus-vaillant-B524.md`](ebus-vaillant-B524.md)
 - `0xB5 0x55` (B555, timer/schedule protocol): [`ebus-vaillant-b555-timer-protocol.md`](ebus-vaillant-b555-timer-protocol.md)
 - VR90 room controller protocol: [`ebus-vaillant-vr90-emulation.md`](ebus-vaillant-vr90-emulation.md)
-- B5 services without a dedicated page (B501, B502, B50A to B50D, B50F, B517 to B519, B520, B525, header-only identities): [Other B5 services](#other-b5-services-candidate-layouts)
+- B5 services without a dedicated page (B501, B502, B50A to B50D, B50F, B517 to B519, B525, header-only identities): [Other B5 services](#other-b5-services-candidate-layouts)
 
 ## Scope
 
