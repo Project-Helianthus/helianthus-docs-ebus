@@ -6,6 +6,15 @@ Canonical SHA-256: 9e0a29bb76d99f551904b05749e322aafd3972621858aa6d1acbe49b9ef37
 
 ## Scope
 
+**Proven:** this catalog contains 57 command identities across
+`03/05/07/08/09/0F/FE/FF`, not 57 executable body schemas or executable methods.
+The “Method” column names catalog entries; it does not establish a request
+builder, routable invocation or qualified physical support. The implemented
+`07/04` identity scanner remains independent of catalog-wide schema coverage.
+See [registry catalog metadata and callable capability](../vaillant-plane-capabilities.md)
+for the five-property boundary, synthetic metadata example and separate passive
+and active B516 shapes.
+
 The locked plan states:
 
 > Services in `ebus_standard` first lock baseline:
