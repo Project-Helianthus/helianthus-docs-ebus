@@ -504,26 +504,6 @@
     "value": -2,
     "unit": null
   },
-  "circuit_examples": [
-    {
-      "circuit": 1,
-      "raw": "41 20",
-      "failure": null,
-      "last_good": "41 20"
-    },
-    {
-      "circuit": 2,
-      "raw": null,
-      "failure": "synthetic failure",
-      "last_good": "42 20"
-    },
-    {
-      "circuit": 3,
-      "raw": "43 20",
-      "failure": null,
-      "last_good": "43 20"
-    }
-  ],
   "ui_examples": [
     {
       "operation": "OP00",

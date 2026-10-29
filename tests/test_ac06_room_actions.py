@@ -8,6 +8,8 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 PAGE = ROOT / "protocols/vaillant/ebus-vaillant.md"
 FIXTURE = ROOT / "protocols/vaillant/fixtures/ac06_room_actions.json"
+STATE_PAGE = ROOT / "development/ac06-room-actions-state.md"
+STATE_FIXTURE = ROOT / "development/fixtures/ac06_room_actions_state.json"
 AXES = ("family", "variant", "direction", "service", "operation", "alternative")
 SPECS = (
     ("B50A", "room-action-temperature", "read", "OP00", (0, 3, None)),
@@ -180,11 +182,29 @@ class RoomActions(unittest.TestCase):
 
     def test_partial_circuit_state_and_raw_bytes(self):
         # Independent expected outcomes catch lost successes, trimming and erased last-good data.
-        self.assertEqual(self.doc["circuit_examples"], [
+        self.assertEqual(json.loads(STATE_FIXTURE.read_text())["circuit_examples"], [
             {"circuit": 1, "raw": "41 20", "failure": None, "last_good": "41 20"},
             {"circuit": 2, "raw": None, "failure": "synthetic failure", "last_good": "42 20"},
             {"circuit": 3, "raw": "43 20", "failure": None, "last_good": "43 20"},
         ])
+
+    def test_retention_contract_stays_in_application_tree(self):
+        self.assertNotIn("circuit_examples", self.doc)
+        self.assertNotIn("last_good", FIXTURE.read_text())
+        self.assertNotIn("last-known-good", self.room)
+        self.assertNotIn("survive a failed", self.room)
+        state = json.loads(STATE_FIXTURE.read_text())
+        self.assertIs(state["synthetic_only"], True)
+        self.assertEqual(state["representation_grade"], "Proven")
+        self.assertEqual(state["runtime_qualification"], "Unknown")
+        text = re.sub(r"\s+", " ", STATE_PAGE.read_text())
+        for claim in (
+            "keep raw name bytes and partial last-known-good values independently per circuit.",
+            "Neither a failed read nor an unresolved alternative erases a successful value.",
+            "Valid circuits 1 and 3 survive a failed circuit 2;",
+            "A bounded 1..15 aggregate is not installed cardinality.",
+        ):
+            self.assertIn(claim, text)
 
     def test_b50d_raw_unknowns(self):
         self.assertEqual(self.doc["ui_examples"], [
@@ -239,12 +259,7 @@ class RoomActions(unittest.TestCase):
             "`FF FF` remains -0.0625, with no unavailable promotion.",
             "B50C digits `01 02 03 04` remain four values [1, 2, 3, 4].",
             "OP01 `FE FF` is candidate signed -2 with **Unknown** unit and sentinel;",
-            "OP02 preserves independent per-circuit successes and failures:",
-            "valid circuits 1 and 3 survive a failed circuit 2.",
-            "A bounded 1..15 aggregate is not installed cardinality.",
-            "Echoed circuit, string trimming, B524 namespace equivalence and wildcard semantics of zero are **Unknown**.",
-            "Keep raw name bytes and partial last-known-good values;",
-            "neither a failed read nor an unresolved alternative erases a successful value.",
+            "echoed circuit, string trimming, B524 namespace equivalence and wildcard semantics of zero are **Unknown**.",
             "UI-direction writes are distinct from remote-control writes and completed UI effects.",
             "Unknown raw 255 remains unlabeled for both operations.",
         ):

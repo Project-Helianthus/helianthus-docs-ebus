@@ -602,12 +602,10 @@ candidate -2048; `FF FF` remains -0.0625, with no unavailable promotion.
 
 B50C digits `01 02 03 04` remain four values [1, 2, 3, 4]. OP01 `FE FF` is
 candidate signed -2 with **Unknown** unit and sentinel; no temperature unit is
-inferred. OP02 preserves independent per-circuit successes and failures: valid
-circuits 1 and 3 survive a failed circuit 2. A bounded 1..15 aggregate is not
-installed cardinality. Echoed circuit, string trimming, B524 namespace equivalence
-and wildcard semantics of zero are **Unknown**. Keep raw name bytes and partial
-last-known-good values; neither a failed read nor an unresolved alternative
-erases a successful value.
+inferred. For OP02, echoed circuit, string trimming, B524 namespace equivalence
+and wildcard semantics of zero are **Unknown**. Raw name bytes remain
+uninterpreted; a failed read or unresolved response alternative supplies no
+qualified name value.
 
 B50D is the UI family: UI-direction writes are distinct from remote-control
 writes and completed UI effects. Unknown raw 255 remains unlabeled for both
