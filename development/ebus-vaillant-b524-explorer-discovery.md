@@ -4,12 +4,74 @@ This is the public contract for VRC Explorer's bounded scan policy. It preserves
 the native `(OP, GG, II, RR)` identity and distinguishes observed response bytes,
 family-qualified interpretations, and scanner policy. It adds no device writes.
 
+## Family-qualified library catalog
+
+**Proven (application behavior):** the registry's AB03 catalog path,
+`vaillant/system/ab03_discovery_catalog.go`, explicitly selects controller family
+720 through `Ab03DiscoveryWindows`. It is separate from the generic
+`B524DiscoveryProfiles` exploration defaults; consulting it does not change those
+defaults, create a fresh family profile, or admit a scan or physical device.
+An unknown family has no fallback catalog. A lookup match does not authorize
+transmission or establish presence, codec qualification, or physical support.
+Those remain **Unknown** without their own evidence. A native interpretation may
+remain a **Hypothesis** even when this application catalog behavior is Proven.
+
+The native contract comes first: check the public
+[B524 wire contract](../protocols/vaillant/ebus-vaillant-B524.md),
+[OP00 identifier package](../protocols/vaillant/fixtures/b524-op00-system-information-ids.csv),
+[OP02 family register matrix](../protocols/vaillant/fixtures/b524-op02-requester-register-matrix.csv),
+and [OP06 observed-window package](../protocols/vaillant/fixtures/b524-op06-observed-windows-v1.json).
+The library catalog is implementation evidence, not a new native-wire proof.
+Preserve the complete `(OP, GG, II, RR)` identity and raw bytes beside each
+interpretation; same-numbered OP02 and OP06 groups are independent namespaces.
+
+All numeric cells below are hexadecimal. II minimum and maximum are inclusive;
+a numeric scalar ceiling bounds RR0000 through that ceiling. **Unknown (absent)**
+is an absent scalar ceiling, never RR0000. Availability-only identifies a
+separate predicate lookup, not a scalar window or qualified presence result.
+
+| OP | GG | II minimum | II maximum | Scalar RR ceiling | Availability-only | Predicate RR | Candidate scope |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 02 | 02 | 00 | 08 | 0025 | No | None | Ordinary heating circuits |
+| 02 | 02 | 09 | 09 | 0025 | No | None | Independent virtual native water |
+| 02 | 03 | 00 | 0A | 002E | No | None | Zones |
+| 02 | 04 | 00 | 01 | 000B | No | None | Solar circuits |
+| 02 | 05 | 00 | 01 | 0004 | No | None | Solar cylinders |
+| 02 | 08 | Explicit qualified minimum | Explicit qualified maximum | Unknown (absent) | No | None | Own bounded interval required |
+| 06 | 01 | 01 | 08 | 002F | No | None | Remote candidates |
+| 06 | 02 | 01 | 08 | 002F | No | None | Remote candidates |
+| 06 | 03 | 01 | 08 | 002F | No | None | Remote candidates |
+| 06 | 05 | 01 | 08 | 002F | No | None | Remote candidates |
+| 06 | 06 | 01 | 08 | 002F | No | None | Remote candidates |
+| 06 | 07 | 01 | 08 | 002F | No | None | Remote candidates |
+| 06 | 08 | 01 | 08 | 002F | No | None | Remote candidates |
+| 06 | 0B | 01 | 08 | 002F | No | None | Remote candidates |
+| 06 | 0C | 01 | 08 | 002F | No | None | Remote candidates |
+| 06 | 09 | 01 | 08 | 0035 | No | None | Remote candidates |
+| 06 | 0A | 01 | 08 | 0035 | No | None | Remote candidates |
+| 06 | 0E | 01 | 08 | 0033 | No | None | Remote candidates |
+| 06 | 0F | 01 | 08 | 0033 | No | None | Remote candidates |
+| 06 | 04 | 01 | 08 | Unknown (absent) | No | None | No qualified scalar ceiling |
+| 06 | 0D | 01 | 08 | Unknown (absent) | Yes | 0001 | Availability predicate only |
+
+OP02/GG08 is omitted unless the caller supplies its own qualified bounded II
+interval with minimum no greater than maximum. It inherits neither the generic
+exploration interval nor another group's ceiling; selecting that interval still
+leaves its scalar ceiling Unknown. OP06/GG04 admits no scalar RR through this
+catalog, including RR0000. OP06/GG0D permits only the RR0001 availability lookup;
+its native Boolean qualification remains Unknown as described below.
+
+A characterized window is not a terminal register maximum. An optional group,
+catalog row, capacity, or failed probe proves neither installed presence nor
+physical absence. No new scan default, runtime transmit route, physical
+eligibility, or stability promise follows from this catalog.
+
 ## Local circuit coverage
 
 For OP02/GG02, the VRC720 family is II00..II09:
 II00..II08 are ordinary heating-circuit candidates and II09 is the virtual
-native-water circuit. A other or unknown family requires separate
-qualification. OP00/ID00 `circuit_count_maximum` is a
+native-water circuit. For other or unknown families, separate qualification
+is required. OP00/ID00 `circuit_count_maximum` is a
 supported-capacity value under the bounded contract below; it does not select
 or allocate II identities. It does not add II0A, and II09 remains a separately
 selected candidate.
@@ -43,7 +105,8 @@ intervals remain only in JSON/trace artifacts and never become Browser or HTML c
 
 ## Explicit instance intervals
 
-The following are current scanner profile bounds, not a claim that every
+The following are existing Explorer scanner profile bounds, separate from the
+explicit family-qualified library catalog above. They are not a claim that every
 candidate exists. Artifacts record `ii_min` and `ii_max` separately from
 positive presence observations; planner and discovery output expose the same
 interval. A count from OP00 never changes the numbering origin.
@@ -64,11 +127,12 @@ shows an unprobed group separately from a group with zero confirmed-present
 instances. Neither state suppresses selection in a custom plan. OP02/GG06 and
 GG07 retain their presentation names, but their instance and RR layout remain
 Unknown and require an explicit custom RR scope. OP06/GG04 and OP06/GG0D likewise require
-a manual RR scope because their RR maxima are Unknown. `recommended`, `full`,
+a manual scalar RR scope because their RR maxima are Unknown; the separate
+GG0D/RR0001 availability-only candidate remains eligible. `recommended`, `full`,
 `research`, and `custom` retain their own selector policies. Same-numbered OP06
 groups never supply their local selector contract.
 
-The VRC720-family circuit predicate uses
+The controller-family-720 circuit predicate uses
 OP02/GG02/RR0002. Correlated raw `0100` with FLAGS=03 qualifies II00 and II01
 as active in this profile. Raw `0000` with FLAGS=03 qualifies II02 as inactive;
 visibility alone does not make a zero active. This is an implementation
@@ -108,6 +172,17 @@ circuit capacity `3`, and two configured or confirmed zones with zone capacity
 `3`, are normal and are not mismatches. Capacity never creates, removes,
 orders, or makes II slots contiguous; each candidate must pass its concrete
 group predicate. II09 remains independent of `circuit_count_maximum`.
+
+**Proven (synthetic capacity example):** capacity `8` from OP00/ID0000 or
+ID0001 never enumerates installed slots. In an independently qualified candidate
+interval II01..II08, positive presence established only at II01 and II08 retains
+exactly those two slots. II02..II07 remain six unknown/unprobed candidates; the
+capacity creates no six negative observations and does not move II08 into II02.
+Keep capacity, per-slot presence, and probe coverage separate. A failed or
+partial recheck preserves raw replies and each field's useful last-known-good
+state as prior evidence; it neither manufactures false connection results nor
+promotes that prior state to current qualification. Unknown stays Unknown, and
+admission still requires the applicable positive evidence.
 
 The two capacity values are recommendations for bounded candidate planning
 only. They never construct instances. A missing, malformed, conflicting, or
@@ -202,7 +277,7 @@ qualified profile requires. GG04 retains Unknown RR layout and presence
 semantics. GG0D retains Unknown RR maximum, but its common RR0001 candidate
 probe remains eligible.
 
-Historical VRC720 observations for GG09/0A/0C/0E/0F include RR0001 raw `00` at
+Historical controller-family-720 observations for GG09/0A/0C/0E/0F include RR0001 raw `00` at
 II00, `01` at II01, and `00` at later historical selectors. They explain why
 the current profile begins at II01; they do not expand its upper bound beyond
 II08. The captured RR1 result is independent from an older artifact's generic
@@ -232,7 +307,7 @@ For OP06/GG0D (VR41 presentation family), probe II01..II08 at RR0001 even
 though its RR maximum is Unknown. It uses the common `device_connected` name.
 
 **Hypothesis; native qualification Unknown:** no positive, correlated
-GG0D/RR0001 observation is published for this model profile. The scanner applies
+GG0D/RR0001 observation is published for this family profile. The scanner applies
 the common exact one-byte BOOL candidate interpretation, recording
 `source=heuristic_probe`: `00` yields a heuristic `not_connected` candidate state
 and `01` a heuristic `connected` candidate state. These states are not qualified
@@ -341,7 +416,8 @@ presence evidence.
 | 01, 02, 03, 05, 06, 07, 08, 0B, 0C | RR0000..002F | bounded correlated read/Describe observations |
 | 09, 0A | RR0000..0035 | bounded correlated read/Describe observations |
 | 0E, 0F | RR0000..0033 | bounded correlated reads; RR0033 is a read-only observation, while the matching generic Describe body remains unqualified |
-| 04, 0D | Unknown | explicit custom RR scope only |
+| 04 | Unknown | explicit custom RR scope only; no catalog scalar ceiling |
+| 0D | Unknown | RR0001 availability-only candidate; scalar scope remains unqualified |
 
 These windows are observed scheduling ceilings, never terminal maxima. In
 particular, a read-only state register can exist above the highest qualified
