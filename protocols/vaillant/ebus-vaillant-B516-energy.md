@@ -185,7 +185,7 @@ For sub-command `0x10`, observed responses are typically 11 bytes (some regulato
 | 7-10 | `value_0..value_3` — IEEE 754 float32 little-endian watt-hours |
 
 - `value_*` is an IEEE 754 float32 little-endian number. Divide by `1000` to convert Wh to kWh.
-- Example: bytes `0x00 0xE8 0x03 0x00` → `100000.0 Wh` → `100 kWh`.
+- **Proven arithmetic example (synthetic):** bytes `0x00 0x50 0xC3 0x47` → `100000.0 Wh` → `100 kWh` (IEEE 754 float32 little-endian).
 - **Read-only verification step:** a reply to a total request (§4.2) echoes
   the regulator's own current date in bytes 5-6, rather than the all-zero
   date sent in the request. Decoding that echoed date with the §3 formula

@@ -212,17 +212,29 @@ validated exchanges. A Vaillant requester sends the type values 0,
 
 #### 4.3.1 Group-day values in A6 (candidate)
 
-Candidate interpretation, unconfirmed on the wire: the weekday byte of A6 also
-has the group values 7 = Monday-Sunday, 8 = Monday-Friday and
-9 = Saturday-Sunday; the weekday byte of A5 has only 0 to 6. A requester
-issues the weekday values 0 to 6 only (candidate); no request carrying a
-group value is known. Whether a controller accepts a group value is not
-established.
+**Hypothesis — aggregate-day mappings, unconfirmed on the wire:** the
+[B524 timer section](./ebus-vaillant-B524.md#44-0x03--0x04-timer-schedules)
+already documents its candidate weekday table. The two transports differ:
 
-The B524 timer transport (Section 9) uses a different candidate group-day
-numbering, not yet documented on the
-[B524 page](./ebus-vaillant-B524.md#44-0x03--0x04-timer-schedules); a bridge
-must not carry a group-day value from one transport to the other.
+| Family / transport | Operation | 0..6 | 7 (`0x07`) | 8 (`0x08`) | 9 (`0x09`) | Evidence status |
+| --- | --- | --- | --- | --- | --- | --- |
+| VRC720 family / B555 | A6 write | Monday..Sunday | Monday-Sunday | Monday-Friday | Saturday-Sunday | Hypothesis |
+| VRC700 family / B524 | OP04 write | Monday..Sunday | Monday-Sunday | Saturday-Sunday | Monday-Friday | Hypothesis |
+| VRC720 family / B555 | A5 read | Monday..Sunday | not used | not used | not used | Hypothesis |
+| VRC700 family / B524 | OP03 read | Monday..Sunday | not used | not used | not used | Hypothesis |
+
+Ordinary codes `0x00` through `0x06` mean Monday through Sunday in order.
+A5 and OP03 do not inherit aggregate-day support from the write variants.
+Retain the raw day code and operation with the family and selector context:
+B555 `ZONE` and `HC`, or B524 group `GG`, instance `II` and `ADDRESS` as
+documented in the linked timer section. Do not translate a raw aggregate-day
+code between transports; codes 8 and 9 have opposite candidate meanings.
+
+A requester issues the weekday values 0 to 6 only (candidate); no B555 request
+carrying a group value is known. Physical acceptance of either aggregate-day
+mapping, physical support and persistence remain **Unknown**. Neither table
+qualifies those properties or grants permission to emit a schedule write.
+A passing table check establishes documentation consistency only.
 
 ## 5. Opcode Details
 
@@ -885,7 +897,9 @@ Every item below is unresolved. None is promoted by the candidate text above.
 - The validated ZONE values (`0xFF` for the DHW and CC writes, `0x00` to
   `0x02` for the zone heating writes; Sections 4.1 and 7) are not reconciled
   with the candidate correspondence ZONE = module index.
-- The B524 OP04 aggregate-day numbering (candidate: 8 = Saturday-Sunday,
-  9 = Monday-Friday) is **Unknown** until documented on the B524 page.
+- The B524 OP04 aggregate-day numbering (8 = Saturday-Sunday,
+  9 = Monday-Friday) is documented as a **Hypothesis** in the
+  [B524 timer section](./ebus-vaillant-B524.md#44-0x03--0x04-timer-schedules).
+  Physical acceptance, support and persistence remain **Unknown**.
 - Other installations of the VRC720 family have not been observed for any
   candidate statement in this document.
