@@ -1475,5 +1475,97 @@ def test_O02_validation_parity_and_parser_counts():
             in O02_results[0][3])
     assert (f'{checker.MCP}: invalid unavailable-read failure envelopes'
             in O02_results[0][4])
-    assert O02_counts == [25, 7]
+    # Five rendered documents replace two separately parsed MCP sections.
+    # Across five validations this adds fifteen uncached and five cached parses.
+    assert O02_counts == [40, 12]
     print(f'O02 parser invocations: uncached={O02_counts[0]}, cached={O02_counts[1]}')
+
+
+EXACT_G5_FENCE_RULES = [r for r in checker.RULES if r.get("exact")]
+
+
+def exact_g5_fence_insert(rule, addition, location):
+    documents = dict(DOCUMENTS)
+    path, start, end = rule["path"], rule["start"], rule["end"]
+    before, section = documents[path].split(start, 1)
+    body, after = section.split(end, 1) if end else (section, "")
+    body = ("\n\n" + addition + "\n\n" + body if location == "beginning"
+            else body + "\n\n" + addition + "\n\n")
+    documents[path] = before + start + body + (end or "") + after
+    return documents
+
+
+@pytest.mark.parametrize("rule", EXACT_G5_FENCE_RULES, ids=lambda r: r["start"])
+@pytest.mark.parametrize("location", ["beginning", "end"])
+@pytest.mark.parametrize("info", ["json", "text", ""])
+@pytest.mark.parametrize("fence", ["```", "~~~"])
+def test_exact_g5_fence_extra_example(rule, location, info, fence):
+    # Independently covers owner (path + heading), location, info and delimiter.
+    # Kills omission of this owner, JSON-only counting, or an extra allowance.
+    assert checker.validate(DOCUMENTS) == []
+    documents = exact_g5_fence_insert(rule, f"{fence}{info}\n{{}}\n{fence}", location)
+    assert (f"{rule['path']}: invalid exact example inventory in {rule['start']}"
+            in checker.validate(documents))
+
+
+@pytest.mark.parametrize("rule", EXACT_G5_FENCE_RULES, ids=lambda r: r["start"])
+@pytest.mark.parametrize("location", ["beginning", "end"])
+@pytest.mark.parametrize("indent", ["    ", "\t"])
+def test_exact_g5_fence_indented_code(rule, location, indent):
+    # Kills accepting indented code while counting fences correctly.
+    assert checker.validate(DOCUMENTS) == []
+    documents = exact_g5_fence_insert(rule, indent + '{"extra":true}', location)
+    assert (f"{rule['path']}: invalid exact example inventory in {rule['start']}"
+            in checker.validate(documents))
+
+
+@pytest.mark.parametrize("rule", EXACT_G5_FENCE_RULES, ids=lambda r: r["start"])
+def test_exact_g5_fence_inventory_cannot_omit_rule(rule, monkeypatch):
+    # A future exact rule must never inherit an implicit example allowance.
+    assert checker.validate(DOCUMENTS) == []
+    inventory = dict(checker.EXACT_EXAMPLE_COUNTS)
+    del inventory[rule["path"], rule["start"]]
+    monkeypatch.setattr(checker, "EXACT_EXAMPLE_COUNTS", inventory)
+    assert "exact example inventory does not match exact rules" in checker.validate(DOCUMENTS)
+
+
+@pytest.mark.parametrize("start,count,error", [
+    ("### Read and mutation data", 3, "invalid G5 closed data examples"),
+    (checker.UNAVAILABLE_SECTION, 2, "invalid unavailable-read failure envelopes"),
+])
+@pytest.mark.parametrize("info", ["json", "json example", "text", ""])
+@pytest.mark.parametrize("fence", ["```", "~~~"])
+def test_exact_g5_fence_approved_examples(start, count, error, info, fence):
+    rule = next(r for r in EXACT_G5_FENCE_RULES if r["start"] == start)
+    documents = dict(DOCUMENTS)
+    before, body = documents[checker.MCP].split(start, 1)
+    body, after = body.split(rule["end"], 1)
+    assert body.count("```json") == count
+    body = body.replace("```json", fence + info).replace("\n```", "\n" + fence)
+    documents[checker.MCP] = before + start + body + rule["end"] + after
+    assert checker.validate(documents) == []
+    # Same counts but duplicate member: kills ordinary json.loads substitution.
+    tokens = [t for t in checker.MarkdownIt().parse(body) if t.type == "fence"]
+    example = tokens[0].content
+    key, value = next(iter(json.loads(example).items()))
+    duplicate = example.replace("{", "{" + json.dumps(key) + ":" + json.dumps(value) + ",", 1)
+    documents[checker.MCP] = documents[checker.MCP].replace(example, duplicate, 1)
+    assert f"{checker.MCP}: {error}" in checker.validate(documents)
+
+
+@pytest.mark.parametrize("wrapper", ["```text\n{}\n```", "~~~\n{}\n~~~", "<!--\n{}\n-->"])
+@pytest.mark.parametrize("start", ["### Read and mutation data", checker.UNAVAILABLE_SECTION])
+def test_exact_g5_fence_fake_headings_do_not_select_owner(wrapper, start):
+    rule = next(r for r in EXACT_G5_FENCE_RULES if r["start"] == start)
+    documents = dict(DOCUMENTS)
+    decoy = wrapper.format(start + "\n\n{}\n\n" + rule["end"])
+    # A decoy before the real parent is harmless; raw split selects it instead.
+    parent = rule["parent"]
+    documents[checker.MCP] = documents[checker.MCP].replace(parent, decoy + "\n\n" + parent, 1)
+    assert checker.validate(documents) == []
+    # A real invalid example after the decoy still belongs to the real owner.
+    before, real_body = documents[checker.MCP].rsplit(start + "\n", 1)
+    documents[checker.MCP] = (before + start + '\n\n```text\n{"extra":true}\n```\n'
+                              + real_body)
+    assert (f"{checker.MCP}: invalid exact example inventory in {start}"
+            in checker.validate(documents))
