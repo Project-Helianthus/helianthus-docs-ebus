@@ -100,19 +100,47 @@ The numeric value and the raw response must be retained. Do not assign public
 Notes:
 - `II` is absent from this four-byte header. Retain it from the request;
   do not assume an unqualified controller profile uses this layout.
-- **Short responses** (payload < 4 bytes) are **not** successful register reads. A single-byte `0x00` indicates wrong route, unsupported opcode, or group default -- ebusd reports `invalid position ... / 00`. Write operations may return short acknowledgements. Treat as not-a-register-value.
+- **Short responses** (payload < 4 bytes) are **not** successful register reads. A single byte `00` or `FF` is status-only, without a `GG/RR` echo or value; its cause is **Unknown**. Two- and three-byte replies remain short/unqualified, never empty. A four-byte header has no value tail. Write operations may return short acknowledgements; none of these shapes establishes absence or writability.
 - Correlation must retain request context (`GG/II/RR/opcode`).
 - Parameter descriptions retain their request identifier and full 16-bit register. The historical short `01 GG RR` probe is incomplete and must not provide input-validation authority.
 
 ### 2.3 Register response states
 
-B524 register reads produce one of three distinct response states:
+**Proven — response-shape distinctions:** empty means exactly zero payload
+bytes. Lengths below count the response payload after transport framing, not
+an adapter's length prefix. These distinctions do not qualify a family codec
+or physical support for a selector.
 
 | State | Wire manifestation | Meaning |
 |-------|-------------------|---------|
-| **Value reply** | ACK + FLAGS+GG+RR+VALUE (4+ bytes) | A correlated value-shaped reply; its semantic validity still needs a qualified codec. |
-| **Empty reply** | ACK + 0 bytes payload (NN=0) | An observed empty response. It may be feature-gated, unsupported, or otherwise family-specific. |
+| **Empty reply** | ACK + 0 payload bytes | Empty only at `len(payload) == 0`; cause remains family-specific. |
+| **Status-only reply** | ACK + 1 payload byte, such as `00` or `FF` | Raw status without `GG/RR` echo or value; neither absence nor writable permission. |
+| **Short/unqualified reply** | ACK + 2 or 3 payload bytes | Nonempty, incomplete header; no qualified register value. |
+| **Header-only reply** | ACK + 4 payload bytes: `FLAGS GG RR_LO RR_HI` | Echo identity can be inspected, but no value tail exists. |
+| **Echoed value-shaped reply** | ACK + 5 or more payload bytes: `FLAGS GG RR_LO RR_HI VALUE...` | Requires matching echo and retained request context; semantic validity still needs a qualified codec. |
 | **Negative/timeout** | NACK, transport error, or timeout | No qualifying value reply; this does not prove global register absence. |
+
+Synthetic shape examples for request `(OP=0x02, GG=0x02, II=0x00,
+RR=0x0002)` using the section 2.2 header, with payload bytes only:
+
+| Payload length | Raw payload | Classification |
+| --- | --- | --- |
+| 0 | no bytes | Empty reply. |
+| 1 | `00` | Status-only zero; no echo or value, not empty. |
+| 1 | `FF` | Status-only nonzero; no echo or value, not empty. |
+| 2 | `00 02` | Short/unqualified, not empty. |
+| 3 | `00 02 02` | Short/unqualified, not empty. |
+| 4 | `00 02 02 00` | Header-only, matching `GG/RR`, no value. |
+| 5 | `00 02 02 00 05` | Matching echo with raw value tail `05`; width/codec qualification remains separate. |
+| 6 | `00 02 02 00 05 00` | Matching echo with raw value tail `05 00`; candidate uint16 code 5 requires family qualification (section 4.2.4). |
+
+Retain raw status, raw bytes, echoed identity and any decoding failure
+independently. A failed decode does not erase a matching echo; a mismatched
+echo does not qualify a value. Keep useful prior per-field evidence rather
+than replacing it with invented values after an empty, short or failed reply.
+The public [register observations](fixtures/b524-basv0-register-observations-v1.json)
+retain response state separately from presence and decoding; omitted payloads
+there are not reconstructed by these synthetic examples.
 
 **NACK-or-CRC ambiguity:** When accessing B524 via transport-layer adapters (ebusd TCP `hex`, ENH), the adapter reports negative outcomes as a single error class. A true protocol-level NACK (the device explicitly rejected the request) and a CRC failure (corrupt frame on the wire) are indistinguishable in transport traces. Scanners and analysis tools should classify these uniformly as `nack_or_crc` rather than asserting either cause. Only direct bus-level observation (raw frame capture with CRC verification) can disambiguate. A scanner may use the outcome to bound a profile-local scan, but must retain it as non-qualification rather than proof of absence.
 
@@ -127,7 +155,7 @@ observations; see the [register-map entry](ebus-vaillant-B524-register-map.md#gg
 for its candidate enum and profile scope. It does not establish a VRC720
 empty reply or the selector's behaviour when no system quick mode is engaged.
 
-A reader must preserve empty replies separately from value replies and negative/timeout outcomes. A profile may label an empty reply `dormant` only where correlated evidence supports that interpretation.
+A reader must preserve empty, status-only, short/unqualified and header-only replies separately from value-shaped replies and negative/timeout outcomes. A profile may label an empty reply `dormant` only where correlated evidence supports that interpretation.
 
 ### 2.4 Sentinel and no-data patterns
 
@@ -135,7 +163,7 @@ Four distinct "no real data" signaling mechanisms exist in B524 responses:
 
 | Pattern | Wire bytes | When used | Detection |
 |---------|-----------|-----------|-----------|
-| **Empty reply** | ACK + 0 data bytes | Empty response; cause is family-specific | `len(payload) < 4` |
+| **Empty reply** | ACK + 0 data bytes | Empty response; cause is family-specific | `len(payload) == 0` |
 | **NaN sentinel** | FLAGS+GG+RR+`00 00 C0 7F` | Float register where sensor is disconnected or reading unavailable | `math.isnan(f32_value)` |
 | **0x7FFFFFFF sentinel** | FLAGS+GG+RR+`FF FF FF 7F` | Integer register with uninitialized or out-of-range value | `u32_value == 0x7FFFFFFF` |
 | **Zero** | FLAGS+GG+RR+`00 00` | Legitimate value = 0 | Context-dependent; not a sentinel |
@@ -645,6 +673,24 @@ and step for numeric and non-enum values as well as enumerations. Missing or
 unqualified metadata leaves those constraints Unknown. Historical short probes
 do not replace a complete correlated OP01/OP07 description.
 
+**Proven — qualification limit:** calendar/clock display candidates and
+length-inferred descriptions do not establish validated numeric minimum,
+maximum or step constraints. Exact selector match alone establishes neither
+presence, codec qualification nor write authority. Preserve raw description
+spans, failed decoding and useful prior qualified fields separately; missing
+qualification leaves each affected constraint **Unknown**.
+
+For example, a matching description for `(OP=0x02, GG=0x00, II=0x00,
+RR=0x0034)` or `RR=0x0035`, together with a three-byte date/time display
+candidate, still leaves numeric minimum, maximum and step **Unknown**.
+Candidate day/month or hour/minute display ranges in section 4.7 are not
+validated parameter bounds. Splitting a response into equal-length spans
+also leaves those constraints **Unknown** when the scalar codec is unqualified.
+See the public [description profile](fixtures/b524-basv0-description-profile-v1.json)
+for raw spans and separate decoding qualification. Native write outcomes and
+physical response adaptation remain unresolved; matching metadata does not
+settle either.
+
 #### 4.2.4 Circuit type interpretation (`GG=0x02 RR=0x02`)
 
 `GG=0x02 RR=0x02` (`circuit_type` / `mctype`) is a configuration register with raw values 0..4 on the VRC720 family. See [`ebus-vaillant-B524-register-map.md` mctype](./ebus-vaillant-B524-register-map.md#mctype--circuit-type) for the authoritative enum definition.
@@ -659,7 +705,26 @@ do not replace a complete correlated OP01/OP07 description.
 4 = Increase in return   Return temperature raise circuit
 ```
 
-On the VRC720 family these raw values are the complete wire-level meaning; no resolution or context inputs are needed to interpret them. On the VRC700 family a value 5 with the label `PoolCircuit` is a candidate, unconfirmed on the wire (see the register map's [family enumerations](./ebus-vaillant-B524-register-map.md#enumerations-that-differ-by-family)); whether it occurs in replies is not established.
+**Proven — family qualification requirement:** seven candidate codebooks differ
+between the VRC700 and VRC720 controller families. Keep their existing
+[family enumerations](./ebus-vaillant-B524-register-map.md#enumerations-that-differ-by-family)
+separate; the
+[requester matrix](fixtures/b524-op02-requester-register-matrix.csv)
+retains the family axis. A shared `(OP, GG, II, RR)` does not select a codebook
+without the controller family. Candidate labels remain **Hypothesis**,
+independently of codec qualification or physical support.
+
+For the same synthetic `(OP=0x02, GG=0x02, II=0x00, RR=0x0002)` and raw
+value tail `05 00` (candidate uint16 code 5):
+
+| Controller family | Independent interpretation |
+| --- | --- |
+| VRC700 family | Code 5 has the candidate pool label `PoolCircuit` (**Hypothesis**); occurrence in native replies remains unestablished. |
+| VRC720 family | Retain raw code 5; pool meaning is **Unknown**, since this family does not establish that label. |
+| Unknown family | Retain raw code 5 and **Unknown** meaning; do not choose either family's table or apply a blanket fallback. |
+
+These examples add no numeric label rows to the existing family codebooks,
+qualify no codec, and establish no register presence or write permission.
 
 Higher-level semantic projections (e.g., cooling capability, pool heating, cylinder charging) may combine the raw circuit type with other registers and system topology. Such projections are implementation-specific and are not part of the B524 wire protocol; they are documented separately.
 
@@ -743,8 +808,8 @@ Write request payload (6+ bytes):
 ```
 
 Read response:
-- Successful: `FLAGS GG RR_LO RR_HI [value...]`
-- Short responses (< 4 bytes) are not successful reads. See section 2.2.
+- Value-shaped (5+ bytes): `FLAGS GG RR_LO RR_HI VALUE...`; echo matching and codec qualification are separate requirements.
+- Exactly 4 bytes is header-only, with no value tail. Zero bytes is empty; 1 byte is status-only; 2 or 3 bytes is short/unqualified. See section 2.3.
 
 Addressing notes:
 - `0x02` is the local controller selector family.
@@ -1046,7 +1111,7 @@ are given in sections 4.8 and 4.9 and in the
 [register matrix](fixtures/b524-op02-requester-register-matrix.csv).
 
 - A date is a three-byte triple (day, month, year) and a time is a three-byte
-  triple (hour, minute, second). The reply payload is three bytes (candidate,
+  triple (hour, minute, second). The value tail is three bytes (candidate,
   unconfirmed on the wire).
 - A date triple is day 1..31, month 1..12 and, as a candidate reading, year as
   byte + 2000; the year-byte codec is unresolved (see below).
