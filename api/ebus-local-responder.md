@@ -145,7 +145,7 @@ reclamation barrier. No address or token reuse can bypass this barrier.
 
 The sole wire authority serializes ordinary initiator ownership and selected
 target output. It cannot grant both simultaneously. A target reservation cannot
-arbitrate, send master `START`, initiate a command, or release another owner's
+arbitrate, send initiator `START`, initiate a command, or release another owner's
 transaction. Conflicting initiator ownership withholds the target answer;
 neither subscriber priority nor a late callback can steal the wire. Observers
 may receive raw evidence without gaining transmit authority.
@@ -158,7 +158,7 @@ Its manufacturer byte, five ASCII family bytes and four valid BCD bytes are
 explicit synthetic inputs, not copied device identities or a compatibility
 claim. The response is precomputed with native CRC/escaping. Empty, malformed,
 unsupported or broadcast requests stay silent. No register write, spontaneous
-broadcast, live discovery or real-device emulation is included. A slave answer
+broadcast, live discovery or real-device emulation is included. A target answer
 on a real bus is a live write; this offline contract authorizes none.
 
 No default configuration reaches a new real-bus transmit path and no production
@@ -181,7 +181,7 @@ matching to the parent criterion text remains unverified.
 | 3 | Detached immutable plans and lease reclamation; caller mutation, replacement, held reader, acknowledgement loss and expiry equality | Contract only; runtime **Unknown** |
 | 4 | Destination-time provisional selection; escaped source/destination prefix and later bytes delivered once in order | Contract only; runtime **Unknown** |
 | 5 | CRC, frame type, phase and deadline admission; valid identification positive control and one invalid condition at a time | Contract only; runtime **Unknown** |
-| 6 | One wire authority, no master START, independent bounded control lane; saturated data cannot hide revocation, neither role steals ownership | Contract only; runtime **Unknown** |
+| 6 | One wire authority, no initiator START, independent bounded control lane; saturated data cannot hide revocation, neither role steals ownership | Contract only; runtime **Unknown** |
 | 7 | Gap/restart invalidation and ABI validation; stale key fields, malformed regions, wrap refusal, snapshot parity and unaffected last-known-good state | Contract only; runtime **Unknown** |
 | 8 | Production timing/error acceptance, platform atomics/MMIO, physical fault containment and hardware suitability | **Unknown**; hardware/owner decisions remain open |
 

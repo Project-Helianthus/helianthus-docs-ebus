@@ -38,7 +38,7 @@ The mapping header is 64 bytes, aligned to 8 bytes:
 
 | Offset | Type | Field and requirement |
 | --- | --- | --- |
-| 0 | u32 | Magic `0x3142574c` (bytes `LWB1`) |
+| 0 | u32 | Magic: ASCII bytes `LWB1` in increasing offset order |
 | 4 | u32 | ABI version, exactly 1 |
 | 8 | u32 | Header bytes, exactly 64 |
 | 12 | u32 | Total mapping bytes, finite and equal to the supplied buffer length |
@@ -159,7 +159,7 @@ refuse advancement and invalidate instead of aliasing old slots.
 
 The worker is the only wire authority and must inspect pending control before
 any next output decision, then revalidate the exact keys and `now < expiry`
-conditions immediately before every symbol. Host commands cannot perform master
+conditions immediately before every symbol. Host commands cannot perform initiator
 START through a target reservation or create a second UART writer. A synchronous
 offline output step must not retain references or queued symbols after it
 returns. Asynchronous hardware/DMA writes are outside this offline ABI contract.
