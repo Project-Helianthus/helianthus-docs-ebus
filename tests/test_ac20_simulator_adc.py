@@ -39,7 +39,7 @@ def expected():
                       ('temperature3', 9), ('temperature4', 11)]:
         positive.append(field(name, pos, 2, signed=True, divisor=16, unit='degrees_C',
                               raw_domain=None, candidate_physical_domain=None, sentinel=None))
-    positive += [field('reserved', 13, reserved_regions=[[13, 1]]),
+    positive += [field('unknown13', 13),
                  field('impeller', 14, 2, unit='Hz', raw_domain=None),
                  field('vortex', 16, 2, unit='Hz', raw_domain=None,
                        candidate_operational_domain=None,
@@ -47,7 +47,7 @@ def expected():
     entries = []
     for alternative, direction, extent, fields, reserved in [
         ('request', 'request', 10, request, []),
-        ('positive', 'response', 18, positive, [[13, 1]]),
+        ('positive', 'response', 18, positive, []),
         ('negative', 'response', None, [], []),
     ]:
         entries.append(dict(id='ac20_b520_op00_' + alternative,
@@ -177,6 +177,10 @@ class SimulatorADC(unittest.TestCase):
         without_page = next(line for line in index.splitlines()
                             if 'without a dedicated page' in line)
         self.assertNotIn('B520', without_page)
+        section = overview.split('## Other B5 services (candidate layouts)', 1)[1]
+        preamble = ' '.join(section.split('###', 1)[0].split())
+        self.assertIn('The services below have no dedicated page except for '
+                      '[B520](ebus-vaillant-B520.md).', preamble)
 
     def test_page_tables(self):
         identity = [['Family', 'Variant', 'Direction', 'Service', 'Operation', 'Alternative',
@@ -207,7 +211,7 @@ class SimulatorADC(unittest.TestCase):
                           ('temperature3', '9'), ('temperature4', '11')]:
             positive.append([name, pos, 'i16 LE', 'Unknown', 'raw/16 degrees C', 'Unknown'])
         positive += [
-            ['reserved', '13', 'u8', '0..255', 'raw; meaning Unknown', 'Unknown'],
+            ['unknown13', '13', 'u8', '0..255', 'raw; meaning Unknown', 'Unknown'],
             ['impeller', '14', 'u16 LE', 'Unknown', 'Hz', 'Unknown'],
             ['vortex', '16', 'u16 LE', 'Unknown',
              'Hz; operational domain and hysteresis Unknown', 'Unknown']]

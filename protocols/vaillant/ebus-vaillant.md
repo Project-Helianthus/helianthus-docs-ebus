@@ -476,8 +476,9 @@ On heat pump systems with VWZIO (0x76), B511 traffic involving that device has a
 
 ## Other B5 services (candidate layouts)
 
-The services below have no dedicated page. Every layout in this section is a
-candidate layout, unconfirmed on the wire. No exchange of any of these services
+The services below have no dedicated page except for
+[B520](ebus-vaillant-B520.md). Every layout in this section is a candidate layout,
+unconfirmed on the wire. No exchange of any of these services
 on the wire is known (see [Open questions](#open-questions)). No service in this
 section is documented as safe to send; the state-changing ones (including, but
 not limited to, the B501 write, the `B5 09 35` write, the B50B writes, the B519

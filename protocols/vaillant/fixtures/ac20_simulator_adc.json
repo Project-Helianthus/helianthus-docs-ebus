@@ -300,7 +300,7 @@
           "sentinel": null
         },
         {
-          "name": "reserved",
+          "name": "unknown13",
           "logical_position": 13,
           "width": 1,
           "raw_domain": [
@@ -313,12 +313,7 @@
           "unit": null,
           "default": null,
           "mappings": {},
-          "reserved_regions": [
-            [
-              13,
-              1
-            ]
-          ],
+          "reserved_regions": [],
           "grade": "Hypothesis",
           "raw_fallback": "preserve_raw_bytes"
         },
@@ -356,12 +351,7 @@
           "sentinel": null
         }
       ],
-      "reserved_regions": [
-        [
-          13,
-          1
-        ]
-      ],
+      "reserved_regions": [],
       "remaining_selectors": null,
       "address_space": null,
       "support": null

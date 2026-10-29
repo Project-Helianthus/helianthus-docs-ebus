@@ -61,8 +61,8 @@ Every row is **Hypothesis** for the sourced layout and scaling; defaults and
 unsupported interpretations are **Unknown**. LE means
 little-endian. Accepted raw and physical domains are **Unknown**; carrier
 signedness alone does not establish acceptance or rejection of negative values.
-The reserved byte is retained independently of the useful fields; its raw domain
-also states carrier capacity only.
+The byte at logical position 13 has **Unknown** meaning and is retained without
+classifying it as reserved; its raw domain states carrier capacity only.
 
 | Field | Logical position | Carrier | Declared raw domain | Candidate interpretation | Default |
 | --- | --- | --- | --- | --- | --- |
@@ -71,7 +71,7 @@ also states carrier capacity only.
 | temperature2 | 7 | i16 LE | Unknown | raw/16 degrees C | Unknown |
 | temperature3 | 9 | i16 LE | Unknown | raw/16 degrees C | Unknown |
 | temperature4 | 11 | i16 LE | Unknown | raw/16 degrees C | Unknown |
-| reserved | 13 | u8 | 0..255 | raw; meaning Unknown | Unknown |
+| unknown13 | 13 | u8 | 0..255 | raw; meaning Unknown | Unknown |
 | impeller | 14 | u16 LE | Unknown | Hz | Unknown |
 | vortex | 16 | u16 LE | Unknown | Hz; operational domain and hysteresis Unknown | Unknown |
 
