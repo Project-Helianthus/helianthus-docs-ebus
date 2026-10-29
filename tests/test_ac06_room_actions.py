@@ -212,6 +212,17 @@ class RoomActions(unittest.TestCase):
             "| Family / operation | Candidate fields in relative order | Carrier / conversion | Labels / defaults | Grade |"),
             FIELD_PAGE_ROWS)
 
+    def test_identifier_index_family_consistency(self):
+        index = section(self.page, "## Identifier Index", "### Standard eBUS Protocols")
+        for identifier, description in (
+            ("0xB5 0x0C", "Remote-control keycode-digits (OP00), signed-value (OP01; unit Unknown) and heating-circuit-name (OP02) reads (B50C; Hypothesis)"),
+            ("0xB5 0x0D", "UI-direction room-action (OP00) and holiday-status (OP01) writes (B50D; Hypothesis)"),
+        ):
+            with self.subTest(identifier=identifier):
+                entries = [line for line in index.splitlines()
+                           if line.startswith(identifier + "  ")]
+                self.assertEqual(entries, [f"{identifier}  {description}"])
+
     def test_page_scoped_claims_and_preserved_variants(self):
         text = re.sub(r"\s+", " ", self.room)
         for claim in (
