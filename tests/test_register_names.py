@@ -831,9 +831,29 @@ def test_backticked_whitespace_is_validated_without_a_catalog_name(
         names.decompose(found[0][1], vocabulary)
 
 
+def _unique_cell_line(lines: list[str], cell: str, column: int) -> int:
+    """Locate a required real-page cell without depending on prose line counts."""
+    matches = [
+        number for number, line in enumerate(lines, 1)
+        if len(cells := line.split("|")) > column and cells[column].strip() == cell
+    ]
+    assert len(matches) == 1, (cell, matches)
+    return matches[0]
+
+
 def test_real_page_prose_cells_are_skipped_even_with_catalog_selectors() -> None:
     lines = names.PROTOCOL.read_text(encoding="utf-8").splitlines()
-    prose_lines = {160, 161, 162, 1198, 1199, 1200, 1202}
+    prose_cells = [
+        (3, "Write target for mode activation"),
+        (3, "Write target for mode on/off"),
+        (3, "Mirrors the written mode value"),
+        (1, "DHW tapping set point (`RR=0x0004`)"),
+        (1, "Tank start-loading hysteresis (`RR=0x0027`)"),
+        (1, "CH buffer offset (`RR=0x00A2`)"),
+        (1, "One-time DHW load (`RR=0x000D`)"),
+    ]
+    prose_lines = {_unique_cell_line(lines, cell, column) for column, cell in prose_cells}
+    assert len(prose_lines) == 7
     catalog = {
         (row["group"], row["register"]) for row in
         _rows(FIXTURES / "b524-op02-register-names.csv") if row["name"]
@@ -848,24 +868,30 @@ def test_real_page_prose_cells_are_skipped_even_with_catalog_selectors() -> None
 
 
 @pytest.mark.parametrize(
-    ("number", "cell", "expected", "selector"),
+    ("column", "original", "cell", "expected", "selector"),
     [
-        (158, "Ventilation operating mode (enum, see register map)",
+        (3, "`ventilation_operating_mode` (enum, see register map)",
+         "Ventilation operating mode (enum, see register map)",
          "ventilation_operating_mode", ("0x00", "0x0016")),
-        (1201, "External energy management enabled (`RR=0x00B6`)",
+        (1, "`external_energy_management_enabled` (`RR=0x00B6`)",
+         "External energy management enabled (`RR=0x00B6`)",
          "external_energy_management_enabled", ("0x00", "0x00B6")),
-        (158, "Ventilation-operating mode (enum, see register map)",
+        (3, "`ventilation_operating_mode` (enum, see register map)",
+         "Ventilation-operating mode (enum, see register map)",
          "ventilation_operating_mode", ("0x00", "0x0016")),
-        (158, "!Ventilation  operating--mode! (enum, see register map)",
+        (3, "`ventilation_operating_mode` (enum, see register map)",
+         "!Ventilation  operating--mode! (enum, see register map)",
          "ventilation_operating_mode", ("0x00", "0x0016")),
     ],
 )
 def test_unquoted_mangled_canonical_name_fails_the_gate(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str],
-    number: int, cell: str, expected: str, selector: tuple[str, str]
+    column: int, original: str, cell: str, expected: str, selector: tuple[str, str]
 ) -> None:
     lines = names.PROTOCOL.read_text(encoding="utf-8").splitlines()
-    column = 3 if number == 158 else 1
+    number = _unique_cell_line(lines, original, column)
+    cells = [part.strip() for part in lines[number - 1].split("|")]
+    assert names._row_selector(cells) == selector
     cells = lines[number - 1].split("|")
     cells[column] = f" {cell} "
     lines[number - 1] = "|".join(cells)
@@ -903,12 +929,14 @@ def test_normalized_prose_needs_a_catalog_named_selector(selector: str) -> None:
 
 
 def test_already_canonical_cells_are_left_to_existing_selector_checks() -> None:
-    lines = names.PROTOCOL.read_text(encoding="utf-8").replace(
-        "`ventilation_operating_mode` (enum, see register map)",
-        "Ventilation-operating-mode (enum, see register map)", 1,
-    ).splitlines()
+    lines = names.PROTOCOL.read_text(encoding="utf-8").splitlines()
+    original = "`ventilation_operating_mode` (enum, see register map)"
+    number = _unique_cell_line(lines, original, 3)
+    lines[number - 1] = lines[number - 1].replace(
+        original, "Ventilation-operating-mode (enum, see register map)", 1,
+    )
     catalog = _rows(FIXTURES / "b524-op02-register-names.csv")
     assert names.mangled_canonical_names(lines, catalog) == []
     assert names.selector_name_mismatches(lines, catalog) == [
-        (158, "Ventilation-operating-mode", "ventilation_operating_mode")
+        (number, "Ventilation-operating-mode", "ventilation_operating_mode")
     ]
