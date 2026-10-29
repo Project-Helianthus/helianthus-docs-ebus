@@ -33,6 +33,54 @@ unavailable recheck retain the baseline as prior evidence, and on a differing
 recheck retain both. A profile mismatch makes that baseline inapplicable as
 verification. [Reuse scope][scope], [baseline rechecking][baseline]
 
+## Status-only display and export boundary
+
+The [native response states][responses] and [read header][flags] are the
+wire-contract reference: an empty response differs from a correlated value
+reply, and a short response is not a successful register read. The following
+**Proven software contract** classifies zero bytes as empty, exactly one byte
+`00` or `FF` as `status_only`, and a correlated header with a value tail as a
+separate shape. This classification documents implementation behavior; it
+does not establish physical support or a universal meaning for either status
+byte. Presence, absence, codec and write permission remain **Unknown** where
+independent evidence does not establish them.
+
+These four synthetic examples show reply payload bytes only, excluding ACK,
+length and transport framing. For the value example, the synthetic request
+payload is `02 00 03 00 01 00`: `(OP=0x02, GG=0x03, II=0x00, RR=0x0001)`.
+Its reply echoes GG/RR; OP and II remain request context. No example is a
+device observation or a new codec qualification.
+
+| Case | Exact reply payload | Software shape | Value admission and display boundary |
+| --- | --- | --- | --- |
+| Empty | Zero bytes (`""`) | Empty reply | No current value; neither presence nor absence follows. It is not `status_only`. |
+| Status zero | `00` (one byte) | `status_only` | Retain exactly `00`; no decoded value, absence claim, codec qualification or write permission. Proposed display: **Status only**. |
+| Status FF | `FF` (one byte) | `status_only` | Retain exactly `FF`, distinct from `00` and empty; no decoded value, presence/absence claim, codec qualification or write permission. Proposed display: **Status only**. |
+| Correlated value tail | `00 03 01 00 2A` (five bytes) | Correlated value-shaped reply; tail `2A` | Usable as a current decoded value only with independently qualified codec and applicable profile match. Leading `00` is the header byte, not a status-only reply. Shape alone grants no semantic grade or write permission. |
+
+**Status only** is proposed neutral UI wording until the operator-held display
+child is released; it is not a claim that a viewer already implements it.
+Entry grade and decoded-value grade remain independent of each other, codec
+qualification, profile match and response shape. A Proven software
+classification does not promote a retained entry or decoded-value grade.
+Unknown stays Unknown. This crosswalk adds no stored grade fields and makes
+no claim that grade persistence or all packaged fixture parity is implemented.
+
+| Pipeline boundary | Required preservation and fail-closed behavior |
+| --- | --- |
+| Acquisition | Preserve the exact one-byte reply and its request selector context as `status_only`; do not convert it to empty, absence, a boolean, a sentinel value or a qualified codec. |
+| Replay | Reproduce the status-only shape and original `00` or `FF` byte without decoding it as a current value or promoting retained grades. |
+| Migration | Keep legacy active records with a one-byte `00` or `FF` reply readable, preserving raw bytes and useful prior metadata. An active label grants no value, presence, codec or write permission. |
+| Export | Carry the exact raw status byte and status-only distinction through the existing representation; do not collapse it to empty, absence or a decoded value. No new schema/export field is defined here. |
+| Viewers | Keep raw `00` and `FF` inspectable even if both receive the proposed **Status only** label. Do not present a prior decoded value as the current status-only result. |
+
+Retain useful last-known-good state per field as prior evidence when a new
+reply is status-only; it cannot supply a missing current value or replace an
+independent qualification check. The existing public [register observations
+fixture][observation-fixture] retains `status_only` metadata but explicitly
+omits response payloads. It corroborates the retained state vocabulary, not
+these synthetic raw bytes or end-to-end pipeline implementation parity.
+
 This document changes neither MCP compatibility nor GraphQL behavior. It uses
 the existing [shared-evidence contract reference][shared] through the published
 reuse page; it does not revise that contract or claim implementation parity.
@@ -45,6 +93,7 @@ reuse page; it does not revise that contract or claim implementation parity.
 [uncertainty]: ../protocols/vaillant/ebus-vaillant-b524-basv0-profile-v1.md#explicitly-retained-uncertainty
 [schema]: ../protocols/vaillant/fixtures/b524-basv0-description-profile-schema-v1.json
 [observations]: ../protocols/vaillant/fixtures/b524-basv0-register-observations-schema-v1.json
+[observation-fixture]: ../protocols/vaillant/fixtures/b524-basv0-register-observations-v1.json
 [reuse]: ebus-vaillant-b524-basv0-profile-reuse.md
 [scope]: ebus-vaillant-b524-basv0-profile-reuse.md#validation_scope-and-presence
 [baseline]: ebus-vaillant-b524-explorer-discovery.md#bundled-metadata-and-rechecking
