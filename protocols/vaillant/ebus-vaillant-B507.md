@@ -37,7 +37,7 @@ Initiator -> Target request:
   [0xB5] [0x07] [0x09] [sub] [...]
 
 Target response (ID 0900):  :HEX:* (variable length, undecoded)
-Target response (ID 0931):  D1C (community codec: 1 byte, unsigned, divisor 2, range 0-100%)
+Target response (ID 0931):  1 byte (signed 0.5-step % hypothesis; community D1C codec differs, see below)
 
 QQ (initiator):    0x15 (VRC720-family controller address)
 ZZ (target):       0x08 (heat-pump unit; class not established, see Open question 12)
@@ -66,22 +66,31 @@ not established.
 
 ### D1C Encoding
 
-**Proven (ebusd codec only):** the [ebusd built-in datatype reference](https://github.com/john30/ebusd/wiki/4.3.-Builtin-data-types)
-defines D1C as an unsigned one-byte value divided by two, with a documented
-range of 0-100. In the community configurations, the field is labelled as a
-percentage; the following are codec examples, not observed B507 responses.
+**Hypothesis (signed B507 interpretation):** interpret the response byte as a
+signed two's-complement integer, then divide by two. The following are
+arithmetic examples, not observed B507 responses.
 
-| Raw byte (hex) | Unsigned carrier (decimal) | Decoded percentage |
+| Raw byte (hex) | Signed carrier (decimal) | Decoded percentage |
 |---|---:|---:|
 | `63` | 99 | 49.5% |
 | `7F` | 127 | 63.5% |
-| `80` | 128 | 64% |
-| `C8` | 200 | 100% |
+| `80` | -128 | -64% |
 
-**Unknown (native physical meaning):** the configuration type does not establish
-that the B507 response represents compressor load, its native operational range,
-or device support. No native unavailable, sentinel or error meaning is
-established for these bytes.
+**Proven (arithmetic only):** a signed one-byte carrier divided by two spans
+-64.0% to +63.5%. Thus `63` is 49.5%, not 99.5%.
+
+**Proven (ebusd codec only):** the [ebusd built-in datatype reference](https://github.com/john30/ebusd/wiki/4.3.-Builtin-data-types)
+defines D1C as unsigned, divided by two, with a documented range of 0-100.
+That codec definition conflicts with the signed interpretation above; the
+community configuration's `percent1:D1C` label does not establish native B507
+signedness. The claimed operational range of 0-100% also conflicts with the
+signed carrier's maximum of +63.5%; this range conflict remains unresolved.
+
+**Unknown (native physical meaning):** which interpretation applies to B507,
+whether the response represents compressor load, its native operational range,
+and device support. No native unavailable, sentinel or error meaning is
+established for these bytes; negative values or values outside a claimed range
+alone do not establish such meanings.
 
 ### ID 0900 Response
 
