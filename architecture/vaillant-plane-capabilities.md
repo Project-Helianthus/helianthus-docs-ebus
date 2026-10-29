@@ -80,6 +80,18 @@ The native authority is the public B516 page's
 and [response format](../protocols/vaillant/ebus-vaillant-B516-energy.md#6-response-format).
 These describe the energy-statistics sub-command, not every B516 body.
 
+Implementation evidence for the table is in `helianthus-ebusreg`:
+`energyTemplate.Build` in
+[heating/energy.go](https://github.com/Project-Helianthus/helianthus-ebusreg/blob/main/vaillant/heating/energy.go)
+and [dhw/energy.go](https://github.com/Project-Helianthus/helianthus-ebusreg/blob/main/vaillant/dhw/energy.go)
+emits the three-byte active body; `energySchemaSelector` in
+[heating/schemas.go](https://github.com/Project-Helianthus/helianthus-ebusreg/blob/main/vaillant/heating/schemas.go)
+and [dhw/schemas.go](https://github.com/Project-Helianthus/helianthus-ebusreg/blob/main/vaillant/dhw/schemas.go)
+declares the WORD descriptor. Passive acceptance and value decoding are in
+`parseEnergyStatsSelector` and `(*plane).DecodeBroadcast` in
+[system/b516_energy_broadcast.go](https://github.com/Project-Helianthus/helianthus-ebusreg/blob/main/vaillant/system/b516_energy_broadcast.go).
+These sources establish implementation shapes, not the native wire contract.
+
 | Path | Request body | Reply/value contract | Capability conclusion |
 |---|---|---|---|
 | Passive processing | Accepts eight bytes beginning `10`: `[10, period, period_index, energy_index, source, usage, date_lo, date_hi]`. | Accepts an eleven-byte reply with a trailing little-endian IEEE 754 binary32 energy value at bytes 7–10. | **Proven** implementation acceptance shape; passive processing does not originate a request or establish active support. It does not promote every native field interpretation to Proven. |
