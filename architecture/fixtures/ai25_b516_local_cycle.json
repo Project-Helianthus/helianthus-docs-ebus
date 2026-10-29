@@ -1,0 +1,306 @@
+{
+  "grade": "Hypothesis",
+  "policy": {
+    "slots": 9,
+    "sentinel": 4294967295,
+    "threshold": 2,
+    "modulus": 4294967296,
+    "gates": "registration_and_capability",
+    "positive_only": false,
+    "partial_sum": "retain",
+    "scheduler_arguments": [
+      1,
+      60
+    ]
+  },
+  "steps": [
+    {
+      "id": "delta_one",
+      "slot": 0,
+      "registered": true,
+      "capable": true,
+      "outcome": "success",
+      "prior": 10,
+      "raw": "00003041",
+      "marker": "00",
+      "previous": 10,
+      "new": 11,
+      "diagnostic": "success",
+      "changed": false,
+      "contribution": 11,
+      "failure": 0
+    },
+    {
+      "id": "delta_two",
+      "slot": 1,
+      "registered": true,
+      "capable": true,
+      "outcome": "success",
+      "prior": 10,
+      "raw": "00004041",
+      "marker": "00",
+      "previous": 10,
+      "new": 12,
+      "diagnostic": "success",
+      "changed": true,
+      "contribution": 12,
+      "failure": 0
+    },
+    {
+      "id": "prior_sentinel",
+      "slot": 2,
+      "registered": true,
+      "capable": true,
+      "outcome": "success",
+      "prior": 4294967295,
+      "raw": "00000000",
+      "marker": "00",
+      "previous": 4294967295,
+      "new": 0,
+      "diagnostic": "success",
+      "changed": true,
+      "contribution": 0,
+      "failure": 0
+    },
+    {
+      "id": "read_failure",
+      "slot": 3,
+      "registered": true,
+      "capable": true,
+      "outcome": "read_failure",
+      "prior": 10,
+      "raw": null,
+      "marker": "A1",
+      "previous": 10,
+      "new": 4294967295,
+      "diagnostic": "read_failure",
+      "changed": true,
+      "contribution": 0,
+      "failure": 1
+    },
+    {
+      "id": "parse_failure",
+      "slot": 4,
+      "registered": true,
+      "capable": true,
+      "outcome": "parse_failure",
+      "prior": 10,
+      "raw": "AA",
+      "marker": "B2",
+      "previous": 10,
+      "new": 4294967295,
+      "diagnostic": "parse_failure",
+      "changed": true,
+      "contribution": 0,
+      "failure": 1
+    },
+    {
+      "id": "unregistered",
+      "slot": 5,
+      "registered": false,
+      "capable": true,
+      "outcome": "success",
+      "prior": 10,
+      "raw": "00004041",
+      "marker": "C3",
+      "previous": null,
+      "new": 4294967295,
+      "diagnostic": "skip_registration",
+      "changed": null,
+      "contribution": 0,
+      "failure": 0
+    },
+    {
+      "id": "incapable",
+      "slot": 6,
+      "registered": true,
+      "capable": false,
+      "outcome": "success",
+      "prior": 10,
+      "raw": "00004041",
+      "marker": "D4",
+      "previous": null,
+      "new": 4294967295,
+      "diagnostic": "skip_capability",
+      "changed": null,
+      "contribution": 0,
+      "failure": 0
+    },
+    {
+      "id": "decrease_one",
+      "slot": 7,
+      "registered": true,
+      "capable": true,
+      "outcome": "success",
+      "prior": 12,
+      "raw": "00003041",
+      "marker": "00",
+      "previous": 12,
+      "new": 11,
+      "diagnostic": "success",
+      "changed": true,
+      "contribution": 11,
+      "failure": 0
+    },
+    {
+      "id": "ninth_slot",
+      "slot": 8,
+      "registered": true,
+      "capable": true,
+      "outcome": "success",
+      "prior": 10,
+      "raw": "00004041",
+      "marker": "00",
+      "previous": 10,
+      "new": 12,
+      "diagnostic": "success",
+      "changed": true,
+      "contribution": 12,
+      "failure": 0
+    },
+    {
+      "id": "negative",
+      "slot": 0,
+      "registered": true,
+      "capable": true,
+      "outcome": "success",
+      "prior": 10,
+      "raw": "000080BF",
+      "marker": "E5",
+      "previous": 10,
+      "new": null,
+      "diagnostic": "Unknown",
+      "changed": null,
+      "contribution": null,
+      "failure": 0
+    },
+    {
+      "id": "nan",
+      "slot": 1,
+      "registered": true,
+      "capable": true,
+      "outcome": "success",
+      "prior": 10,
+      "raw": "0000C07F",
+      "marker": "F6",
+      "previous": 10,
+      "new": null,
+      "diagnostic": "Unknown",
+      "changed": null,
+      "contribution": null,
+      "failure": 0
+    },
+    {
+      "id": "unsupported_step",
+      "slot": 2,
+      "registered": true,
+      "capable": true,
+      "outcome": "unprovided",
+      "prior": 10,
+      "raw": null,
+      "marker": "17",
+      "previous": 10,
+      "new": null,
+      "diagnostic": "Unknown",
+      "changed": null,
+      "contribution": null,
+      "failure": 0
+    },
+    {
+      "id": "wrap_large",
+      "slot": 0,
+      "registered": true,
+      "capable": true,
+      "outcome": "success",
+      "prior": 10,
+      "raw": "injected_u32:FFFFFFFE",
+      "marker": "00",
+      "previous": 10,
+      "new": 4294967294,
+      "diagnostic": "success",
+      "changed": true,
+      "contribution": 4294967294,
+      "failure": 0
+    },
+    {
+      "id": "wrap_small",
+      "slot": 1,
+      "registered": true,
+      "capable": true,
+      "outcome": "success",
+      "prior": 10,
+      "raw": "00004040",
+      "marker": "00",
+      "previous": 10,
+      "new": 3,
+      "diagnostic": "success",
+      "changed": true,
+      "contribution": 3,
+      "failure": 0
+    }
+  ],
+  "cycles": [
+    {
+      "id": "partial",
+      "steps": [
+        "delta_one",
+        "read_failure"
+      ],
+      "counter_before": 4,
+      "sum": 11,
+      "counter_after": 5,
+      "publication": true
+    },
+    {
+      "id": "sum_wrap",
+      "steps": [
+        "wrap_large",
+        "wrap_small"
+      ],
+      "counter_before": 2,
+      "sum": 1,
+      "counter_after": 0,
+      "publication": true
+    },
+    {
+      "id": "counter_wrap",
+      "steps": [
+        "read_failure"
+      ],
+      "counter_before": 4294967295,
+      "sum": 0,
+      "counter_after": 0,
+      "publication": "Unknown"
+    },
+    {
+      "id": "clean",
+      "steps": [
+        "delta_two"
+      ],
+      "counter_before": 7,
+      "sum": 12,
+      "counter_after": 0,
+      "publication": true
+    },
+    {
+      "id": "skip",
+      "steps": [
+        "unregistered"
+      ],
+      "counter_before": 7,
+      "sum": 0,
+      "counter_after": 0,
+      "publication": "Unknown"
+    },
+    {
+      "id": "conversion_unknown",
+      "steps": [
+        "negative"
+      ],
+      "counter_before": 7,
+      "sum": 0,
+      "counter_after": 0,
+      "publication": "Unknown"
+    }
+  ]
+}
