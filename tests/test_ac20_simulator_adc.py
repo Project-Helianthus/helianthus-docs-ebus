@@ -17,7 +17,7 @@ def expected():
                      raw_domain=[0, high], signed=signed,
                      byte_order='little_endian' if width == 2 else None,
                      conversion={'divide_by': divisor} if divisor else None,
-                     unit=unit, default=0, mappings={}, reserved_regions=[],
+                     unit=unit, default=None, mappings={}, reserved_regions=[],
                      grade='Hypothesis', raw_fallback='preserve_raw_bytes')
         value.update(extra)
         return value
@@ -25,24 +25,22 @@ def expected():
         field('relay', 3, bit_roles=None),
         field('PWM1', 4, divisor=2, unit='percent'),
         field('PWM2', 5, divisor=2, unit='percent'),
-        field('stepper', 6, unit='steps', steps_domain=[0, 240],
-              mappings={'255': 'calibrate/go-to-zero'}, unmapped_regions=[[241, 254]]),
-        field('LED', 7, mappings={'0': 'disabled', '1': 'enabled'},
-              unmapped_regions=[[2, 255]]),
+        field('stepper', 6, steps_domain=None, unmapped_regions=[]),
+        field('LED', 7, unmapped_regions=[]),
         field('ED', 8, divisor=2, unit='percent'),
         field('temperature-table', 9, unmapped_regions=[[4, 255]], mappings={
-            '0': {'label': 'standard3K3', 'candidate_celsius_range': [-13.5, 116]},
-            '1': {'label': 'extended1K', 'candidate_celsius_range': [-20, 155]},
-            '2': {'label': 'low-temperature15K', 'candidate_celsius_range': [-39, 80]},
-            '3': {'label': 'standard1K', 'candidate_celsius_range': [-13.9, 130]}}),
+            '0': {'label': 'standard3K3', 'candidate_celsius_range': None},
+            '1': {'label': 'extended1K', 'candidate_celsius_range': None},
+            '2': {'label': 'low-temperature15K', 'candidate_celsius_range': None},
+            '3': {'label': 'standard1K', 'candidate_celsius_range': None}}),
     ]
-    positive = [field('ADC', 3, 2, 1023)]
+    positive = [field('ADC', 3, 2, raw_domain=None)]
     for name, pos in [('temperature1', 5), ('temperature2', 7),
                       ('temperature3', 9), ('temperature4', 11)]:
-        positive.append(field(name, pos, 2, 3200, True, 16, 'degrees_C',
-                              candidate_physical_domain=[0, 200], sentinel=None))
+        positive.append(field(name, pos, 2, signed=True, divisor=16, unit='degrees_C',
+                              raw_domain=None, candidate_physical_domain=None, sentinel=None))
     positive += [field('reserved', 13, reserved_regions=[[13, 1]]),
-                 field('impeller', 14, 2, 1000, unit='Hz'),
+                 field('impeller', 14, 2, unit='Hz', raw_domain=None),
                  field('vortex', 16, 2, unit='Hz', raw_domain=None,
                        candidate_operational_domain=None,
                        candidate_hysteresis_hz=None, sentinel=None)]
@@ -66,8 +64,9 @@ def expected():
                 limitations=['partial_catalog', 'remaining_selectors_unknown',
                              'address_space_unknown', 'support_unknown',
                              'zero_not_established_sentinel',
-                             'signed_carrier_does_not_admit_negative_values',
-                             'vortex_domains_and_hysteresis_unknown'],
+                             'vortex_domains_and_hysteresis_unknown',
+                             'defaults_unknown', 'actuator_semantics_unknown',
+                             'acceptance_bounds_unknown', 'thermistor_celsius_ranges_unknown'],
                 entries=entries)
 
 
@@ -124,37 +123,42 @@ class SimulatorADC(unittest.TestCase):
                 self.assertEqual(candidate(f, bytes.fromhex('FF')), 127.5)
                 self.assertTrue(inside(f['raw_domain'], 255))
 
-    def test_stepper_boundaries(self):
-        f = self.field('request', 'stepper')
-        for raw, steps, unmapped, label in [
-            (240, True, False, None), (241, False, True, None),
-            (254, False, True, None), (255, False, False, 'calibrate/go-to-zero')]:
-            with self.subTest(raw=raw):
-                self.assertEqual(inside(f['steps_domain'], raw), steps)
-                self.assertEqual(inside(f['unmapped_regions'][0], raw), unmapped)
-                self.assertEqual(f['mappings'].get(str(raw)), label)
+    def test_unsupported_properties_remain_unknown(self):
+        for entry in self.data['entries']:
+            for f in entry['fields']:
+                with self.subTest(field=f['name']):
+                    self.assertIsNone(f['default'])
+                    if f['width'] == 2:
+                        self.assertIsNone(f['raw_domain'])
+        for name in ('stepper', 'LED'):
+            f = self.field('request', name)
+            self.assertEqual(f['mappings'], {})
+            self.assertEqual(f['unmapped_regions'], [])
+            for raw in (0, 1, 240, 241, 254, 255):
+                self.assertEqual(candidate(f, bytes([raw])), raw)
+        self.assertIsNone(self.field('request', 'stepper')['steps_domain'])
+        self.assertIsNone(self.field('request', 'stepper')['unit'])
+        for mapping in self.field('request', 'temperature-table')['mappings'].values():
+            self.assertIsNone(mapping['candidate_celsius_range'])
 
     def test_temperature_carriers(self):
         for name in ('temperature1', 'temperature2', 'temperature3', 'temperature4'):
             f = self.field('positive', name)
-            for raw, carrier, result, valid in [
-                ('00 0C', 3072, 192, True), ('FF FF', -1, -0.0625, False),
-                ('00 00', 0, 0, True), ('80 0C', 3200, 200, True),
-                ('81 0C', 3201, 200.0625, False)]:
+            for raw, result in [('00 0C', 192), ('FF FF', -0.0625),
+                                ('00 00', 0), ('80 0C', 200), ('81 0C', 200.0625)]:
                 with self.subTest(field=name, raw=raw):
                     self.assertEqual(candidate(f, bytes.fromhex(raw)), result)
-                    self.assertEqual(inside(f['raw_domain'], carrier), valid)
-                    self.assertEqual(inside(f['candidate_physical_domain'], result), valid)
+                    self.assertIsNone(f['raw_domain'])
+                    self.assertIsNone(f['candidate_physical_domain'])
                     self.assertIsNone(f['sentinel'])
 
     def test_adc_and_impeller(self):
-        for name, cases in [('ADC', [('FF 03', 1023, True), ('00 04', 1024, False)]),
-                            ('impeller', [('E8 03', 1000, True), ('E9 03', 1001, False)])]:
+        for name in ('ADC', 'impeller'):
             f = self.field('positive', name)
-            for raw, value, valid in cases:
-                with self.subTest(field=name, raw=raw):
-                    self.assertEqual(candidate(f, bytes.fromhex(raw)), value)
-                    self.assertEqual(inside(f['raw_domain'], value), valid)
+            for value in (0, 1000, 1001, 1023, 1024, 65535):
+                with self.subTest(field=name, value=value):
+                    self.assertEqual(candidate(f, value.to_bytes(2, 'little')), value)
+                    self.assertIsNone(f['raw_domain'])
 
     def test_vortex_carrier_without_threshold_claims(self):
         f = self.field('positive', 'vortex')
@@ -185,28 +189,28 @@ class SimulatorADC(unittest.TestCase):
         header = ['Field', 'Logical position', 'Carrier', 'Declared raw domain',
                   'Candidate interpretation', 'Default']
         request = [header] + [line.split(' | ') for line in [
-            'relay | 3 | u8 | 0..255 | raw; bit roles Unknown | 0',
-            'PWM1 | 4 | u8 | 0..255 | raw/2 percent; 0..127.5 | 0',
-            'PWM2 | 5 | u8 | 0..255 | raw/2 percent; 0..127.5 | 0',
-            'stepper | 6 | u8 | 0..255 | 0..240 steps; 241..254 unmapped; 255 calibrate/go-to-zero | 0',
-            'LED | 7 | u8 | 0..255 | 0 disabled; 1 enabled; 2..255 unmapped | 0',
-            'ED | 8 | u8 | 0..255 | raw/2 percent; 0..127.5 | 0',
-            'temperature-table | 9 | u8 | 0..255 | labels below; 4..255 unmapped | 0']]
+            'relay | 3 | u8 | 0..255 | raw; bit roles Unknown | Unknown',
+            'PWM1 | 4 | u8 | 0..255 | raw/2 percent; 0..127.5 | Unknown',
+            'PWM2 | 5 | u8 | 0..255 | raw/2 percent; 0..127.5 | Unknown',
+            'stepper | 6 | u8 | 0..255 | raw; steps and calibration semantics Unknown | Unknown',
+            'LED | 7 | u8 | 0..255 | raw; value meanings Unknown | Unknown',
+            'ED | 8 | u8 | 0..255 | raw/2 percent; 0..127.5 | Unknown',
+            'temperature-table | 9 | u8 | 0..255 | labels below; 4..255 unmapped | Unknown']]
         labels = [['Temperature-table raw', 'Candidate label', 'Candidate range (degrees C)', 'Grade']]
-        for raw, label, domain in [('0', 'standard3K3', '-13.5..116'),
-                                   ('1', 'extended1K', '-20..155'),
-                                   ('2', 'low-temperature15K', '-39..80'),
-                                   ('3', 'standard1K', '-13.9..130')]:
+        for raw, label, domain in [('0', 'standard3K3', 'Unknown'),
+                                   ('1', 'extended1K', 'Unknown'),
+                                   ('2', 'low-temperature15K', 'Unknown'),
+                                   ('3', 'standard1K', 'Unknown')]:
             labels.append([raw, label, domain, 'Hypothesis'])
-        positive = [header, ['ADC', '3', 'u16 LE', '0..1023', 'raw quantity; unit Unknown', '0']]
+        positive = [header, ['ADC', '3', 'u16 LE', 'Unknown', 'raw quantity; unit Unknown', 'Unknown']]
         for name, pos in [('temperature1', '5'), ('temperature2', '7'),
                           ('temperature3', '9'), ('temperature4', '11')]:
-            positive.append([name, pos, 'i16 LE', '0..3200', 'raw/16 degrees C; 0..200', '0'])
+            positive.append([name, pos, 'i16 LE', 'Unknown', 'raw/16 degrees C', 'Unknown'])
         positive += [
-            ['reserved', '13', 'u8', '0..255', 'raw; meaning Unknown', '0'],
-            ['impeller', '14', 'u16 LE', '0..1000', 'Hz', '0'],
+            ['reserved', '13', 'u8', '0..255', 'raw; meaning Unknown', 'Unknown'],
+            ['impeller', '14', 'u16 LE', 'Unknown', 'Hz', 'Unknown'],
             ['vortex', '16', 'u16 LE', 'Unknown',
-             'Hz; operational domain and hysteresis Unknown', '0']]
+             'Hz; operational domain and hysteresis Unknown', 'Unknown']]
         self.assertEqual(tables(self.page), [identity, request, labels, positive])
 
     def test_page_grade_boundaries(self):
@@ -216,24 +220,21 @@ class SimulatorADC(unittest.TestCase):
             '**Proven** applies only to their checked software representation and arithmetic.',
             'Physical qualification is **Unknown**.',
             'these declarations grant no runtime capability or write admission.',
-            'Every row is **Hypothesis**.',
+            'Every row is **Hypothesis** for the sourced layout and scaling; defaults and unsupported interpretations are **Unknown**.',
             'Absence does not mean zero length.',
-            'Zero is not an established sentinel.',
-            'Signed temperature carriers do not admit negative values into the declared domain.',
+            'Zero is not an established sentinel or default.',
+            'Accepted raw and physical domains are **Unknown**;',
             'independent physical channel behavior is **Unknown**.',
             'Native adaptation, physical lengths, peer effects, device support and physical qualification remain **Unknown**.',
             'Do not clip at 100 or interpret `FF` as unavailable.',
             'Raw `FF` for either PWM label or ED gives candidate 127.5 percent.',
-            'ADC raw 1023 lies inside its declared domain and 1024 lies outside.',
-            'Temperature bytes `00 0C` carry 3072, giving candidate 192 degrees C inside both declared ranges.',
-            'Bytes `FF FF` carry signed -1, giving -0.0625 degrees C outside the declared domain;',
-            'its declared raw domain, operational domain and hysteresis remain **Unknown** because the linked overview supplies no threshold evidence.',
-            'Vortex carrier values are preserved without classifying them as inside or outside an operational domain.',
+            'acceptance and sentinel meanings **Unknown**.',
+            'Those properties remain **Unknown** in both this page and the synthetic fixture;',
             'Remaining selectors, address-space semantics and support remain **Unknown**',
         ]:
             with self.subTest(phrase=phrase):
                 self.assertIn(phrase, text)
-        self.assertEqual(text.count('Every row is **Hypothesis**.'), 2)
+        self.assertEqual(text.count('Every row is **Hypothesis** for the sourced layout and scaling;'), 2)
 
 
 if __name__ == '__main__':

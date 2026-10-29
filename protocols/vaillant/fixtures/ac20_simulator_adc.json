@@ -10,8 +10,11 @@
     "address_space_unknown",
     "support_unknown",
     "zero_not_established_sentinel",
-    "signed_carrier_does_not_admit_negative_values",
-    "vortex_domains_and_hysteresis_unknown"
+    "vortex_domains_and_hysteresis_unknown",
+    "defaults_unknown",
+    "actuator_semantics_unknown",
+    "acceptance_bounds_unknown",
+    "thermistor_celsius_ranges_unknown"
   ],
   "entries": [
     {
@@ -39,7 +42,7 @@
           "byte_order": null,
           "conversion": null,
           "unit": null,
-          "default": 0,
+          "default": null,
           "mappings": {},
           "reserved_regions": [],
           "grade": "Hypothesis",
@@ -60,7 +63,7 @@
             "divide_by": 2
           },
           "unit": "percent",
-          "default": 0,
+          "default": null,
           "mappings": {},
           "reserved_regions": [],
           "grade": "Hypothesis",
@@ -80,7 +83,7 @@
             "divide_by": 2
           },
           "unit": "percent",
-          "default": 0,
+          "default": null,
           "mappings": {},
           "reserved_regions": [],
           "grade": "Hypothesis",
@@ -97,24 +100,14 @@
           "signed": false,
           "byte_order": null,
           "conversion": null,
-          "unit": "steps",
-          "default": 0,
-          "mappings": {
-            "255": "calibrate/go-to-zero"
-          },
+          "unit": null,
+          "default": null,
+          "mappings": {},
           "reserved_regions": [],
           "grade": "Hypothesis",
           "raw_fallback": "preserve_raw_bytes",
-          "steps_domain": [
-            0,
-            240
-          ],
-          "unmapped_regions": [
-            [
-              241,
-              254
-            ]
-          ]
+          "steps_domain": null,
+          "unmapped_regions": []
         },
         {
           "name": "LED",
@@ -128,20 +121,12 @@
           "byte_order": null,
           "conversion": null,
           "unit": null,
-          "default": 0,
-          "mappings": {
-            "0": "disabled",
-            "1": "enabled"
-          },
+          "default": null,
+          "mappings": {},
           "reserved_regions": [],
           "grade": "Hypothesis",
           "raw_fallback": "preserve_raw_bytes",
-          "unmapped_regions": [
-            [
-              2,
-              255
-            ]
-          ]
+          "unmapped_regions": []
         },
         {
           "name": "ED",
@@ -157,7 +142,7 @@
             "divide_by": 2
           },
           "unit": "percent",
-          "default": 0,
+          "default": null,
           "mappings": {},
           "reserved_regions": [],
           "grade": "Hypothesis",
@@ -175,35 +160,23 @@
           "byte_order": null,
           "conversion": null,
           "unit": null,
-          "default": 0,
+          "default": null,
           "mappings": {
             "0": {
               "label": "standard3K3",
-              "candidate_celsius_range": [
-                -13.5,
-                116
-              ]
+              "candidate_celsius_range": null
             },
             "1": {
               "label": "extended1K",
-              "candidate_celsius_range": [
-                -20,
-                155
-              ]
+              "candidate_celsius_range": null
             },
             "2": {
               "label": "low-temperature15K",
-              "candidate_celsius_range": [
-                -39,
-                80
-              ]
+              "candidate_celsius_range": null
             },
             "3": {
               "label": "standard1K",
-              "candidate_celsius_range": [
-                -13.9,
-                130
-              ]
+              "candidate_celsius_range": null
             }
           },
           "reserved_regions": [],
@@ -239,15 +212,12 @@
           "name": "ADC",
           "logical_position": 3,
           "width": 2,
-          "raw_domain": [
-            0,
-            1023
-          ],
+          "raw_domain": null,
           "signed": false,
           "byte_order": "little_endian",
           "conversion": null,
           "unit": null,
-          "default": 0,
+          "default": null,
           "mappings": {},
           "reserved_regions": [],
           "grade": "Hypothesis",
@@ -257,100 +227,76 @@
           "name": "temperature1",
           "logical_position": 5,
           "width": 2,
-          "raw_domain": [
-            0,
-            3200
-          ],
+          "raw_domain": null,
           "signed": true,
           "byte_order": "little_endian",
           "conversion": {
             "divide_by": 16
           },
           "unit": "degrees_C",
-          "default": 0,
+          "default": null,
           "mappings": {},
           "reserved_regions": [],
           "grade": "Hypothesis",
           "raw_fallback": "preserve_raw_bytes",
-          "candidate_physical_domain": [
-            0,
-            200
-          ],
+          "candidate_physical_domain": null,
           "sentinel": null
         },
         {
           "name": "temperature2",
           "logical_position": 7,
           "width": 2,
-          "raw_domain": [
-            0,
-            3200
-          ],
+          "raw_domain": null,
           "signed": true,
           "byte_order": "little_endian",
           "conversion": {
             "divide_by": 16
           },
           "unit": "degrees_C",
-          "default": 0,
+          "default": null,
           "mappings": {},
           "reserved_regions": [],
           "grade": "Hypothesis",
           "raw_fallback": "preserve_raw_bytes",
-          "candidate_physical_domain": [
-            0,
-            200
-          ],
+          "candidate_physical_domain": null,
           "sentinel": null
         },
         {
           "name": "temperature3",
           "logical_position": 9,
           "width": 2,
-          "raw_domain": [
-            0,
-            3200
-          ],
+          "raw_domain": null,
           "signed": true,
           "byte_order": "little_endian",
           "conversion": {
             "divide_by": 16
           },
           "unit": "degrees_C",
-          "default": 0,
+          "default": null,
           "mappings": {},
           "reserved_regions": [],
           "grade": "Hypothesis",
           "raw_fallback": "preserve_raw_bytes",
-          "candidate_physical_domain": [
-            0,
-            200
-          ],
+          "candidate_physical_domain": null,
           "sentinel": null
         },
         {
           "name": "temperature4",
           "logical_position": 11,
           "width": 2,
-          "raw_domain": [
-            0,
-            3200
-          ],
+          "raw_domain": null,
           "signed": true,
           "byte_order": "little_endian",
           "conversion": {
             "divide_by": 16
           },
           "unit": "degrees_C",
-          "default": 0,
+          "default": null,
           "mappings": {},
           "reserved_regions": [],
           "grade": "Hypothesis",
           "raw_fallback": "preserve_raw_bytes",
-          "candidate_physical_domain": [
-            0,
-            200
-          ],
+          "candidate_physical_domain": null,
           "sentinel": null
         },
         {
@@ -365,7 +311,7 @@
           "byte_order": null,
           "conversion": null,
           "unit": null,
-          "default": 0,
+          "default": null,
           "mappings": {},
           "reserved_regions": [
             [
@@ -380,15 +326,12 @@
           "name": "impeller",
           "logical_position": 14,
           "width": 2,
-          "raw_domain": [
-            0,
-            1000
-          ],
+          "raw_domain": null,
           "signed": false,
           "byte_order": "little_endian",
           "conversion": null,
           "unit": "Hz",
-          "default": 0,
+          "default": null,
           "mappings": {},
           "reserved_regions": [],
           "grade": "Hypothesis",
@@ -403,7 +346,7 @@
           "byte_order": "little_endian",
           "conversion": null,
           "unit": "Hz",
-          "default": 0,
+          "default": null,
           "mappings": {},
           "reserved_regions": [],
           "grade": "Hypothesis",
