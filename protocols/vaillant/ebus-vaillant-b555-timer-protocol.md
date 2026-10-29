@@ -897,7 +897,9 @@ Every item below is unresolved. None is promoted by the candidate text above.
 - The validated ZONE values (`0xFF` for the DHW and CC writes, `0x00` to
   `0x02` for the zone heating writes; Sections 4.1 and 7) are not reconciled
   with the candidate correspondence ZONE = module index.
-- The B524 OP04 aggregate-day numbering (candidate: 8 = Saturday-Sunday,
-  9 = Monday-Friday) is **Unknown** until documented on the B524 page.
+- The B524 OP04 aggregate-day numbering (8 = Saturday-Sunday,
+  9 = Monday-Friday) is documented as a **Hypothesis** in the
+  [B524 timer section](./ebus-vaillant-B524.md#44-0x03--0x04-timer-schedules).
+  Physical acceptance, support and persistence remain **Unknown**.
 - Other installations of the VRC720 family have not been observed for any
   candidate statement in this document.
