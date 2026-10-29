@@ -14,18 +14,31 @@ manager proposal; they must not add tools, placeholder drivers or public fields
 to the first external MCP slice. That slice lists registered drivers and uses
 only the G5 wire projection.
 
-V1 manages exactly these stable driver instances:
+Actual driver registration is the source of runtime inventory. The following
+IDs are **Proven** examples from the inspected ordinary gateway composition,
+not an exhaustive catalog or a promise of stable IDs before 1.0. The
+[sidecar composition](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/cmd/gateway/managed_sidecar_composition.go)
+and [runtime control tests](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/cmd/gateway/runtime_control_test.go)
+supply the implementation evidence:
 
 | Driver ID | Protocol family | Initial provider |
 | --- | --- | --- |
 | `ebus.primary` | eBUS | primary eBUS adapter runtime |
-| `modbus.tcp.default` | Modbus TCP | default Modbus TCP endpoint runtime |
+| `modbus.sunspec` | Modbus TCP | SunSpec runtime |
+| `growatt.bms.rs485` | Growatt BMS | RS485 runtime |
 | `eebus.primary` | eeBUS | primary SHIP/SPINE runtime |
 
-The IDs identify configured runtime slots, not physical devices. Device
+The IDs identify configured runtime instances, not physical devices. Device
 identity, transport endpoints, credentials, and protocol payloads never enter
-an ID. Adding another instance or protocol requires a later versioned catalog;
-V1 consumers must not invent IDs.
+an ID. Consumers use registered IDs and must not invent IDs or placeholders.
+Endpoint-specific instances follow the existing
+[multi-endpoint contract](../../api/modbus-multi-endpoint-runtime.md); adding an
+instance does not require a versioned catalog on this page.
+
+Registration evidence does not establish provider readiness, protocol or family
+qualification, runtime admission, or delivery of the broader manager proposal.
+Those remain **Unknown** from this inventory evidence alone; proposed manager
+behavior remains a **Hypothesis** until its own acceptance evidence exists.
 
 This contract owns process composition, lifecycle, readiness, operations, and
 consumer rollout. It does not alter transport framing, protocol semantics,
@@ -80,10 +93,11 @@ driver-local. They are never promoted into that global-fatal boundary.
 
 ## Startup And State Transitions
 
-At process startup the manager creates all three catalog entries before it
-starts any provider. Reconciliation derives from the durable desired state
-owned by the lifecycle page, not from configuration alone. Each descriptor is
-then evaluated independently:
+At process startup the manager creates inventory entries for every registered
+driver before it starts any provider; it does not create unregistered
+placeholders or require a fixed number of entries. Reconciliation derives from
+the durable desired state owned by the lifecycle page, not from configuration
+alone. Each descriptor is then evaluated independently:
 
 - a valid configured-disabled descriptor enters `DISABLED`;
 - a valid configured-enabled descriptor whose durable desired state is
@@ -311,7 +325,8 @@ publication. Intermediate dependency merges are not separate live releases.
 The release gate must demonstrate, from the exact packaged gateway/add-on
 pair:
 
-- all three driver IDs are always listed with the closed V1 shape;
+- all registered driver IDs, including configured-disabled entries, are listed
+  using only the closed G5 wire projection, without unregistered placeholders;
 - configured-enabled, healthy drivers with durable desired `RUNNING` reconcile
   through `STARTING` to `RUNNING` without duplicate instances; configured-enabled
   drivers with durable desired `STOPPED` remain stopped with no provider started,
