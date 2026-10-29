@@ -64,9 +64,9 @@ change. Explorer `/v1` exports must pass
 
 ## Description metadata states and caller-supplied index
 
-**Proven (retained fixture metadata):** the states below partition the 2093
-records in the [public description fixture][source-7]. They describe metadata,
-not current usable values or physical qualification.
+**Proven:** the [public description fixture][source-7] contains 2,093
+description records, partitioned by metadata state below. These states describe
+metadata, not current usable values or physical qualification.
 
 | Metadata state | Records | Meaning at the reuse boundary |
 | --- | ---: | --- |
@@ -74,8 +74,8 @@ not current usable values or physical qualification.
 | `length_inferred` | 1885 | A codec inferred from span width; it remains unqualified. |
 | `undecoded` | 69 | No decoded codec; preserve the available raw evidence. |
 
-The counts sum to `139 + 1885 + 69 = 2093`. Here `undecoded` names the absence
-of decoded metadata, not a third codec-provenance value. A complete selector
+The counts sum to 139 + 1,885 + 69 = 2,093 records. Here `undecoded` names the
+absence of decoded metadata, not a third codec-provenance value. A complete selector
 alone qualifies neither a usable codec nor value presence nor write permission.
 Codec, observed byte width, qualification, and evidence grade are independent
 fields; an unresolved codec must not discard an independently useful width or
