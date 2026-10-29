@@ -65,9 +65,22 @@ not established.
 
 ### D1C Encoding
 
-ebusd Data type 1C -- signed 1-byte, 0.5 unit/LSB. Operational range
-0-100%. Values above `0x63` (99.5%) or negative likely indicate a sentinel
-or error state.
+**Proven (numeric contract):** D1C uses a signed eight-bit carrier with
+0.5 percentage points per LSB. The full carrier range is -128..127, giving a
+numeric range of -64..63.5%.
+
+| Raw byte (hex) | Signed carrier (decimal) | Decoded percentage |
+|---|---:|---:|
+| `63` | 99 | 49.5% |
+| `80` | -128 | -64% |
+| `7F` | 127 | 63.5% |
+
+**Unknown (physical meaning):** the advertised operational range of 0-100%
+conflicts with this signed half-percent carrier, which cannot represent 100%.
+Clipping negative signed values to zero does not reconcile the conflict. No
+unavailable, sentinel or error meaning is established for these bytes. The
+numeric contract alone does not qualify the B507 field interpretation or
+physical device support.
 
 ### ID 0900 Response
 
