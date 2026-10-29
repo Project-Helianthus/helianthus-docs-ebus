@@ -1,5 +1,10 @@
 # Frame-Atomic Visibility v8 — Surgical Fixes to v7
 
+> **Delivery-contract update:** [v9 — bounded pacer backlog and strict
+> arbitration ordering](frame-atomic-visibility-v9.md) supersedes the pacing
+> guarantee summarized as I3 below. This historical page is otherwise unchanged;
+> its I5 names FSM autonomy, whereas v5 I5 names pacer correctness.
+
 > Status: design sketch v8. Surgical fixes per round-7 split-verdict.
 > Branch: `frame-atomic-visibility` · Date: 2026-05-18
 
