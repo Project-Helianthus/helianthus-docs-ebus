@@ -543,7 +543,7 @@
       "alternative": "positive-status",
       "raw": "B5 02 00",
       "interpretation": "status",
-      "grade": "Proven distinction"
+      "grade": "Hypothesis"
     },
     {
       "tag": "B502-data",
@@ -551,7 +551,7 @@
       "alternative": "return-data",
       "raw": "B5 02 00",
       "interpretation": "opaque",
-      "grade": "Proven distinction"
+      "grade": "Hypothesis"
     }
   ],
   "service_qualifications": [

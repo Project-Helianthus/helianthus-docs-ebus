@@ -263,18 +263,19 @@ class RoomActions(unittest.TestCase):
     def test_independent_return_services(self):
         self.assertEqual(self.doc["return_examples"], [
             {"tag": "B501-status", "service": "B501", "alternative": "positive-status",
-             "raw": "B5 02 00", "interpretation": "status", "grade": "Proven distinction"},
+             "raw": "B5 02 00", "interpretation": "status", "grade": "Hypothesis"},
             {"tag": "B502-data", "service": "B502", "alternative": "return-data",
-             "raw": "B5 02 00", "interpretation": "opaque", "grade": "Proven distinction"},
+             "raw": "B5 02 00", "interpretation": "opaque", "grade": "Hypothesis"},
         ])
         text = section(self.page, "### B501 and B502:", "### B50A to B50D:")
         self.assertEqual(table(text, "| Tagged case | Service identity | Interpretation | Grade |"), [
-            ["B501-status", "B501", "positive-status form; candidate prefix B5 02", "Proven distinction"],
-            ["B502-data", "B502", "independent return-data service; variable data opaque", "Proven distinction"],
+            ["B501-status", "B501", "positive-status form; candidate prefix B5 02", "Hypothesis"],
+            ["B502-data", "B502", "independent return-data service; variable data opaque", "Hypothesis"],
         ])
         normalized = re.sub(r"\s+", " ", text)
         for claim in (
-            "B502 is an independent return-data service, distinct from a B501 positive-status form",
+            "**Hypothesis:** B502 is an independent return-data service, distinct from a B501 positive-status form",
+            "The synthetic examples keep these candidate identities separate; native service identity remains **Unknown** without wire evidence.",
             "B502 variable data remains opaque;",
             "the alternative candidate reading of a leading zero as no error and a nonzero value as an error number remains unresolved.",
         ):

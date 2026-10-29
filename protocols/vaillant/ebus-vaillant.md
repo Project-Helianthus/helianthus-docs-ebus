@@ -516,8 +516,10 @@ detail for B504 to B508 is in the fixtures linked from those pages; "u8",
 
 ### B501 and B502: symbolic access and service PC interface
 
-**Proven distinction:** B502 is an independent return-data service, distinct
+**Hypothesis:** B502 is an independent return-data service, distinct
 from a B501 positive-status form even when candidate prefixes look similar.
+The synthetic examples keep these candidate identities separate; native service
+identity remains **Unknown** without wire evidence.
 The candidate `B5 02 Status` notation below does not identify a B502 service
 exchange. B502 variable data remains opaque; the alternative candidate reading
 of a leading zero as no error and a nonzero value as an error number remains
@@ -525,8 +527,8 @@ unresolved.
 
 | Tagged case | Service identity | Interpretation | Grade |
 |---|---|---|---|
-| B501-status | B501 | positive-status form; candidate prefix B5 02 | Proven distinction |
-| B502-data | B502 | independent return-data service; variable data opaque | Proven distinction |
+| B501-status | B501 | positive-status form; candidate prefix B5 02 | Hypothesis |
+| B502-data | B502 | independent return-data service; variable data opaque | Hypothesis |
 
 - Candidate layout: request `B5 01 Flags 00 AddressLE16` (read), or the same
   followed by data (write). `Flags` is offset 2: bits 0..1 address mode (0
