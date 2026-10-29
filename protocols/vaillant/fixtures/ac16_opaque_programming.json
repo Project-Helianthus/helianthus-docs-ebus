@@ -1,0 +1,517 @@
+{
+  "synthetic_only": true,
+  "representation_grade": "Proven",
+  "candidate_grade": "Hypothesis",
+  "physical_qualification": "Unknown",
+  "limitations": {
+    "crc_algorithm": "Unknown",
+    "crc_coverage": "Unknown",
+    "crc_initialization": "Unknown",
+    "persistence_reset": "Unknown",
+    "correlation": "Unknown",
+    "transport_crc_relation": "Unknown",
+    "mode_dependent_reply_policy": "Unknown",
+    "full_positive_layouts": "Unknown",
+    "physical_native_effects": "Unknown",
+    "negative_layouts": "Unknown",
+    "variant": "Unknown",
+    "data_maximum": "Unknown",
+    "prefix_only_physical_response": "Unknown",
+    "native_adaptation": "Unknown",
+    "peer_effects": "Unknown"
+  },
+  "field_types": {
+    "data": {
+      "representation": "opaque-bytefield",
+      "conversion": "unchanged",
+      "extent": "through-end-of-PDU",
+      "minimum_bytes": 0,
+      "maximum_bytes": null,
+      "width_bytes": null,
+      "mappings": {},
+      "grade": "Hypothesis"
+    },
+    "CRC": {
+      "representation": "raw-u8",
+      "conversion": "unchanged",
+      "minimum": 0,
+      "maximum": 255,
+      "default": 0,
+      "mappings": {},
+      "grade": "Hypothesis"
+    },
+    "slave-address": {
+      "representation": "raw-u8",
+      "conversion": "unchanged",
+      "minimum": 0,
+      "maximum": 255,
+      "default": 0,
+      "mappings": {},
+      "grade": "Hypothesis"
+    }
+  },
+  "rows": [
+    {
+      "family": "Vaillant",
+      "variant": "Unknown",
+      "direction": "request",
+      "service": "B519",
+      "operation": "00",
+      "alternative": "request",
+      "layout": "no-declared-inputs",
+      "extent": null,
+      "grade": "Hypothesis",
+      "fields": []
+    },
+    {
+      "family": "Vaillant",
+      "variant": "Unknown",
+      "direction": "response",
+      "service": "B519",
+      "operation": "00",
+      "alternative": "positive",
+      "layout": "partial",
+      "extent": null,
+      "grade": "Hypothesis",
+      "fields": [
+        {
+          "name": "CRC",
+          "logical_position": null
+        }
+      ]
+    },
+    {
+      "family": "Vaillant",
+      "variant": "Unknown",
+      "direction": "response",
+      "service": "B519",
+      "operation": "00",
+      "alternative": "negative",
+      "layout": "Unknown",
+      "extent": null,
+      "grade": "Hypothesis",
+      "fields": []
+    },
+    {
+      "family": "Vaillant",
+      "variant": "Unknown",
+      "direction": "request",
+      "service": "B519",
+      "operation": "01",
+      "alternative": "request",
+      "layout": "declared-fields",
+      "extent": null,
+      "grade": "Hypothesis",
+      "fields": [
+        {
+          "name": "data",
+          "logical_position": 3
+        }
+      ]
+    },
+    {
+      "family": "Vaillant",
+      "variant": "Unknown",
+      "direction": "response",
+      "service": "B519",
+      "operation": "01",
+      "alternative": "positive",
+      "layout": "partial",
+      "extent": null,
+      "grade": "Hypothesis",
+      "fields": [
+        {
+          "name": "CRC",
+          "logical_position": null
+        }
+      ]
+    },
+    {
+      "family": "Vaillant",
+      "variant": "Unknown",
+      "direction": "response",
+      "service": "B519",
+      "operation": "01",
+      "alternative": "negative",
+      "layout": "Unknown",
+      "extent": null,
+      "grade": "Hypothesis",
+      "fields": []
+    },
+    {
+      "family": "Vaillant",
+      "variant": "Unknown",
+      "direction": "request",
+      "service": "B519",
+      "operation": "02",
+      "alternative": "request",
+      "layout": "no-declared-inputs",
+      "extent": null,
+      "grade": "Hypothesis",
+      "fields": []
+    },
+    {
+      "family": "Vaillant",
+      "variant": "Unknown",
+      "direction": "response",
+      "service": "B519",
+      "operation": "02",
+      "alternative": "positive",
+      "layout": "partial",
+      "extent": null,
+      "grade": "Hypothesis",
+      "fields": [
+        {
+          "name": "CRC",
+          "logical_position": null
+        }
+      ]
+    },
+    {
+      "family": "Vaillant",
+      "variant": "Unknown",
+      "direction": "response",
+      "service": "B519",
+      "operation": "02",
+      "alternative": "negative",
+      "layout": "Unknown",
+      "extent": null,
+      "grade": "Hypothesis",
+      "fields": []
+    },
+    {
+      "family": "Vaillant",
+      "variant": "Unknown",
+      "direction": "request",
+      "service": "B519",
+      "operation": "03",
+      "alternative": "request",
+      "layout": "declared-fields",
+      "extent": null,
+      "grade": "Hypothesis",
+      "fields": [
+        {
+          "name": "data",
+          "logical_position": 3
+        }
+      ]
+    },
+    {
+      "family": "Vaillant",
+      "variant": "Unknown",
+      "direction": "response",
+      "service": "B519",
+      "operation": "03",
+      "alternative": "positive",
+      "layout": "declared-fields",
+      "extent": null,
+      "grade": "Hypothesis",
+      "fields": [
+        {
+          "name": "data",
+          "logical_position": 3
+        }
+      ]
+    },
+    {
+      "family": "Vaillant",
+      "variant": "Unknown",
+      "direction": "response",
+      "service": "B519",
+      "operation": "03",
+      "alternative": "negative",
+      "layout": "Unknown",
+      "extent": null,
+      "grade": "Hypothesis",
+      "fields": []
+    },
+    {
+      "family": "Vaillant",
+      "variant": "Unknown",
+      "direction": "request",
+      "service": "B519",
+      "operation": "04",
+      "alternative": "request",
+      "layout": "declared-fields",
+      "extent": null,
+      "grade": "Hypothesis",
+      "fields": [
+        {
+          "name": "data",
+          "logical_position": 3
+        }
+      ]
+    },
+    {
+      "family": "Vaillant",
+      "variant": "Unknown",
+      "direction": "response",
+      "service": "B519",
+      "operation": "04",
+      "alternative": "positive",
+      "layout": "partial",
+      "extent": null,
+      "grade": "Hypothesis",
+      "fields": [
+        {
+          "name": "CRC",
+          "logical_position": null
+        }
+      ]
+    },
+    {
+      "family": "Vaillant",
+      "variant": "Unknown",
+      "direction": "response",
+      "service": "B519",
+      "operation": "04",
+      "alternative": "negative",
+      "layout": "Unknown",
+      "extent": null,
+      "grade": "Hypothesis",
+      "fields": []
+    },
+    {
+      "family": "Vaillant",
+      "variant": "Unknown",
+      "direction": "request",
+      "service": "B519",
+      "operation": "05",
+      "alternative": "request",
+      "layout": "declared-fields",
+      "extent": null,
+      "grade": "Hypothesis",
+      "fields": [
+        {
+          "name": "data",
+          "logical_position": 3
+        }
+      ]
+    },
+    {
+      "family": "Vaillant",
+      "variant": "Unknown",
+      "direction": "response",
+      "service": "B519",
+      "operation": "05",
+      "alternative": "positive",
+      "layout": "partial",
+      "extent": null,
+      "grade": "Hypothesis",
+      "fields": [
+        {
+          "name": "CRC",
+          "logical_position": null
+        }
+      ]
+    },
+    {
+      "family": "Vaillant",
+      "variant": "Unknown",
+      "direction": "response",
+      "service": "B519",
+      "operation": "05",
+      "alternative": "negative",
+      "layout": "Unknown",
+      "extent": null,
+      "grade": "Hypothesis",
+      "fields": []
+    },
+    {
+      "family": "Vaillant",
+      "variant": "Unknown",
+      "direction": "request",
+      "service": "B519",
+      "operation": "06",
+      "alternative": "request",
+      "layout": "declared-fields",
+      "extent": null,
+      "grade": "Hypothesis",
+      "fields": [
+        {
+          "name": "data",
+          "logical_position": 3
+        }
+      ]
+    },
+    {
+      "family": "Vaillant",
+      "variant": "Unknown",
+      "direction": "response",
+      "service": "B519",
+      "operation": "06",
+      "alternative": "positive",
+      "layout": "prefix-only",
+      "extent": null,
+      "grade": "Hypothesis",
+      "fields": []
+    },
+    {
+      "family": "Vaillant",
+      "variant": "Unknown",
+      "direction": "response",
+      "service": "B519",
+      "operation": "06",
+      "alternative": "negative",
+      "layout": "Unknown",
+      "extent": null,
+      "grade": "Hypothesis",
+      "fields": []
+    },
+    {
+      "family": "Vaillant",
+      "variant": "Unknown",
+      "direction": "request",
+      "service": "B519",
+      "operation": "07",
+      "alternative": "request",
+      "layout": "declared-fields",
+      "extent": null,
+      "grade": "Hypothesis",
+      "fields": [
+        {
+          "name": "data",
+          "logical_position": 3
+        }
+      ]
+    },
+    {
+      "family": "Vaillant",
+      "variant": "Unknown",
+      "direction": "response",
+      "service": "B519",
+      "operation": "07",
+      "alternative": "positive",
+      "layout": "partial",
+      "extent": null,
+      "grade": "Hypothesis",
+      "fields": [
+        {
+          "name": "CRC",
+          "logical_position": null
+        }
+      ]
+    },
+    {
+      "family": "Vaillant",
+      "variant": "Unknown",
+      "direction": "response",
+      "service": "B519",
+      "operation": "07",
+      "alternative": "negative",
+      "layout": "Unknown",
+      "extent": null,
+      "grade": "Hypothesis",
+      "fields": []
+    },
+    {
+      "family": "Vaillant",
+      "variant": "Unknown",
+      "direction": "request",
+      "service": "B519",
+      "operation": "08",
+      "alternative": "request",
+      "layout": "declared-fields",
+      "extent": null,
+      "grade": "Hypothesis",
+      "fields": [
+        {
+          "name": "slave-address",
+          "logical_position": 3
+        },
+        {
+          "name": "data",
+          "logical_position": 4
+        }
+      ]
+    },
+    {
+      "family": "Vaillant",
+      "variant": "Unknown",
+      "direction": "response",
+      "service": "B519",
+      "operation": "08",
+      "alternative": "positive",
+      "layout": "partial",
+      "extent": null,
+      "grade": "Hypothesis",
+      "fields": [
+        {
+          "name": "CRC",
+          "logical_position": null
+        }
+      ]
+    },
+    {
+      "family": "Vaillant",
+      "variant": "Unknown",
+      "direction": "response",
+      "service": "B519",
+      "operation": "08",
+      "alternative": "negative",
+      "layout": "Unknown",
+      "extent": null,
+      "grade": "Hypothesis",
+      "fields": []
+    },
+    {
+      "family": "Vaillant",
+      "variant": "Unknown",
+      "direction": "request",
+      "service": "B519",
+      "operation": "AA",
+      "alternative": "request",
+      "layout": "no-declared-inputs",
+      "extent": null,
+      "grade": "Hypothesis",
+      "fields": []
+    },
+    {
+      "family": "Vaillant",
+      "variant": "Unknown",
+      "direction": "response",
+      "service": "B519",
+      "operation": "AA",
+      "alternative": "positive",
+      "layout": "declared-fields",
+      "extent": null,
+      "grade": "Hypothesis",
+      "fields": [
+        {
+          "name": "data",
+          "logical_position": 3
+        }
+      ]
+    },
+    {
+      "family": "Vaillant",
+      "variant": "Unknown",
+      "direction": "response",
+      "service": "B519",
+      "operation": "AA",
+      "alternative": "negative",
+      "layout": "Unknown",
+      "extent": null,
+      "grade": "Hypothesis",
+      "fields": []
+    }
+  ],
+  "examples": {
+    "data": [
+      [
+        0,
+        255,
+        65
+      ],
+      []
+    ],
+    "CRC": [
+      0,
+      255
+    ],
+    "slave-address": [
+      0,
+      255
+    ]
+  }
+}
