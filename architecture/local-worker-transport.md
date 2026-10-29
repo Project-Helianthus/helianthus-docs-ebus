@@ -108,9 +108,12 @@ sequence, time or direction. A raw event has zero payload;
 it carries one octet plus its original sequence, capture time, direction and
 phase. Control records have direction/phase zero. Publish, revoke and revocation
 acknowledgement carry the exact registration key, worker/stream/plan identity
-and original plan expiry; their transaction/token fields are zero. Gap and stop
-are stream-wide controls with worker, stream, capture sequence/time, and all
-registration/plan/transaction/token fields zero. Other unused fields are zero;
+and original plan expiry; their transaction/token fields are zero. Gap is a
+worker-originated stream-wide control with worker, stream and capture
+sequence/time; its registration/plan/transaction/token fields are zero. Stop is a
+host-originated stream-wide control with worker and stream identity; its capture
+sequence/time and registration/plan/transaction/token fields are zero.
+Other unused fields are zero;
 unknown kind/status/direction/phase values refuse. Host control accepts publish,
 revoke and stop; worker control accepts acknowledgement and gap; host data
 accepts command; worker data accepts raw event and completion. Wrong-lane kinds
@@ -186,7 +189,8 @@ quarantine growth; exhaustion refuses publication, rather than unsafe reuse.
 A raw event records observation-time sequence/time before queueing, preserving
 all wire octets, including escape prefixes and echoes. The full prefix crosses
 destination-time selection as specified by the registration companion. Captured
-control and raw observations share the stream's sequence domain. Lane delivery
+control and raw observations share the stream's sequence domain, allocated only
+by the worker. Host stop records consume no capture sequence. Lane delivery
 may interleave; merge by capture sequence using a finite fixture reorder buffer
 and deadline. An unexplained discontinuity, duplicate, time regression or reorder
 bound/deadline breach is a gap, never silent omission. Host-origin commands have
