@@ -1520,6 +1520,29 @@ def test_exact_g5_fence_indented_code(rule, location, indent):
 
 
 @pytest.mark.parametrize("rule", EXACT_G5_FENCE_RULES, ids=lambda r: r["start"])
+@pytest.mark.parametrize("location", ["beginning", "end"])
+@pytest.mark.parametrize("wrapper", [
+    "<pre><code>{}</code></pre>",
+    "<pre>\n{}\n</pre>",
+    '<PRE class="example"><CODE>{}</CODE></PRE>',
+    "<div>\n<pre><code>{}</code></pre>\n</div>",
+    "<code>{}</code>",
+])
+def test_exact_g5_rejects_html_code(rule, location, wrapper):
+    documents = exact_g5_fence_insert(
+        rule, wrapper.format('{"receipt":"unexpected"}'), location)
+    assert (f"{rule['path']}: invalid exact example inventory in {rule['start']}"
+            in checker.validate(documents))
+
+
+@pytest.mark.parametrize("rule", EXACT_G5_FENCE_RULES, ids=lambda r: r["start"])
+def test_exact_g5_accepts_commented_html_code(rule):
+    documents = exact_g5_fence_insert(
+        rule, '<!-- <pre><code>{"receipt":"unexpected"}</code></pre> -->', "beginning")
+    assert checker.validate(documents) == []
+
+
+@pytest.mark.parametrize("rule", EXACT_G5_FENCE_RULES, ids=lambda r: r["start"])
 def test_exact_g5_fence_inventory_cannot_omit_rule(rule, monkeypatch):
     # A future exact rule must never inherit an implicit example allowance.
     assert checker.validate(DOCUMENTS) == []

@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 from datetime import datetime
 import hashlib
+from html.parser import HTMLParser
 import json
 from pathlib import Path
 import re
@@ -245,6 +246,18 @@ EXACT_EXAMPLE_COUNTS = {
 }
 
 
+class HTMLCodeDetector(HTMLParser):
+    """Recognize code markup without treating HTML comments as examples."""
+
+    def __init__(self):
+        super().__init__()
+        self.found = False
+
+    def handle_starttag(self, tag, attrs):
+        if tag in {"pre", "code"}:
+            self.found = True
+
+
 def exact_example_sections(documents: dict[str, str], errors: list[str]) -> dict:
     parsed = {}
     sections = {}
@@ -272,8 +285,14 @@ def exact_example_sections(documents: dict[str, str], errors: list[str]) -> dict
             errors.append(f"{path}: invalid rendered section {start}")
             continue
         examples = [t for t in tokens[first:last] if t.type in {"fence", "code_block"}]
+        html = HTMLCodeDetector()
+        for token in tokens[first:last]:
+            for part in [token, *(token.children or [])]:
+                if part.type in {"html_block", "html_inline"}:
+                    html.feed(part.content)
+        html.close()
         sections[path, start] = [t.content for t in examples if t.type == "fence"]
-        if (any(t.type == "code_block" for t in examples)
+        if (html.found or any(t.type == "code_block" for t in examples)
                 or len(examples) != EXACT_EXAMPLE_COUNTS.get((path, start))):
             errors.append(f"{path}: invalid exact example inventory in {start}")
     return sections
