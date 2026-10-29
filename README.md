@@ -31,6 +31,7 @@ Gateway HTTP entrypoints are split by role: `/ui` is the read-only projection br
 
 ## Application contracts (AGPL-3.0)
 
+- Proposed offline local responder: [registration contract](api/ebus-local-responder.md) and [worker transport contract](architecture/local-worker-transport.md) (contract only; implementation and hardware acceptance remain open)
 - [VRC Explorer B524 operation reads](development/ebus-vaillant-b524-operation-reads.md)
 - [VRC Explorer discovery and descriptions](development/ebus-vaillant-b524-explorer-discovery.md)
 - [BASV0 B524 description-profile reuse](development/ebus-vaillant-b524-basv0-profile-reuse.md)
