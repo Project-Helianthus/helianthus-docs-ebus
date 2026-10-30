@@ -307,6 +307,7 @@ done
 jv development/fixtures/b524-operation-edit-plan-schema-v1.json development/fixtures/b524-operation-edit-plan-synthetic-v1.json
 jv development/fixtures/b524-native-write-qualification-schema-v1.json development/fixtures/b524-native-write-qualification-synthetic-v1.json
 python3 -m pytest -q tests/test_b524_operation_reads.py
+python3 -m pytest -q tests/test_al08_b524_system_information.py
 
 echo "==> check cross-runtime platform contracts (MSP-DOCS-CLEAN)"
 python3 -m pytest -q tests/test_m625_cross_seed_contract.py
