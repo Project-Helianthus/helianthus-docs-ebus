@@ -138,9 +138,7 @@
           ],
           "signed": false,
           "byte_order": null,
-          "conversion": {
-            "divide_by": 2
-          },
+          "conversion": null,
           "unit": "percent",
           "default": null,
           "mappings": {},

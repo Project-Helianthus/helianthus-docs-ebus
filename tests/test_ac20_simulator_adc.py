@@ -27,7 +27,7 @@ def expected():
         field('PWM2', 5, divisor=2, unit='percent'),
         field('stepper', 6, steps_domain=None, unmapped_regions=[]),
         field('LED', 7, unmapped_regions=[]),
-        field('ED', 8, divisor=2, unit='percent'),
+        field('ED', 8, unit='percent'),
         field('temperature-table', 9, unmapped_regions=[[4, 255]], mappings={
             '0': {'label': 'standard3K3', 'candidate_celsius_range': None},
             '1': {'label': 'extended1K', 'candidate_celsius_range': None},
@@ -117,11 +117,20 @@ class SimulatorADC(unittest.TestCase):
                         self.assertNotEqual(mutated, expected())
 
     def test_percent_ff(self):
-        for name in ('PWM1', 'PWM2', 'ED'):
+        for name in ('PWM1', 'PWM2'):
             with self.subTest(field=name):
                 f = self.field('request', name)
                 self.assertEqual(candidate(f, bytes.fromhex('FF')), 127.5)
                 self.assertTrue(inside(f['raw_domain'], 255))
+
+    def test_ed_scaling_unknown_preserves_raw(self):
+        f = self.field('request', 'ED')
+        self.assertIsNone(f['conversion'])
+        self.assertEqual(f['unit'], 'percent')
+        self.assertEqual(f['raw_domain'], [0, 255])
+        for raw in range(256):
+            with self.subTest(raw=raw):
+                self.assertEqual(candidate(f, bytes([raw])), raw)
 
     def test_unsupported_properties_remain_unknown(self):
         for entry in self.data['entries']:
@@ -198,7 +207,7 @@ class SimulatorADC(unittest.TestCase):
             'PWM2 | 5 | u8 | 0..255 | raw/2 percent; 0..127.5 | Unknown',
             'stepper | 6 | u8 | 0..255 | raw; steps and calibration semantics Unknown | Unknown',
             'LED | 7 | u8 | 0..255 | raw; value meanings Unknown | Unknown',
-            'ED | 8 | u8 | 0..255 | raw/2 percent; 0..127.5 | Unknown',
+            'ED | 8 | u8 | 0..255 | percent label; scaling Unknown; preserve raw | Unknown',
             'temperature-table | 9 | u8 | 0..255 | labels below; 4..255 unmapped | Unknown']]
         labels = [['Temperature-table raw', 'Candidate label', 'Candidate range (degrees C)', 'Grade']]
         for raw, label, domain in [('0', 'standard3K3', 'Unknown'),
@@ -231,7 +240,8 @@ class SimulatorADC(unittest.TestCase):
             'independent physical channel behavior is **Unknown**.',
             'Native adaptation, physical lengths, peer effects, device support and physical qualification remain **Unknown**.',
             'Do not clip at 100 or interpret `FF` as unavailable.',
-            'Raw `FF` for either PWM label or ED gives candidate 127.5 percent.',
+            'Raw `FF` for either PWM label gives candidate 127.5 percent.',
+            'ED has a candidate percent label, but its scaling is **Unknown**;',
             'acceptance and sentinel meanings **Unknown**.',
             'Those properties remain **Unknown** in both this page and the synthetic fixture;',
             'Remaining selectors, address-space semantics and support remain **Unknown**',

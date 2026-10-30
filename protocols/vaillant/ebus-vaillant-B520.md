@@ -41,7 +41,7 @@ channel behavior is **Unknown**.
 | PWM2 | 5 | u8 | 0..255 | raw/2 percent; 0..127.5 | Unknown |
 | stepper | 6 | u8 | 0..255 | raw; steps and calibration semantics Unknown | Unknown |
 | LED | 7 | u8 | 0..255 | raw; value meanings Unknown | Unknown |
-| ED | 8 | u8 | 0..255 | raw/2 percent; 0..127.5 | Unknown |
+| ED | 8 | u8 | 0..255 | percent label; scaling Unknown; preserve raw | Unknown |
 | temperature-table | 9 | u8 | 0..255 | labels below; 4..255 unmapped | Unknown |
 
 | Temperature-table raw | Candidate label | Candidate range (degrees C) | Grade |
@@ -51,9 +51,12 @@ channel behavior is **Unknown**.
 | 2 | low-temperature15K | Unknown | Hypothesis |
 | 3 | standard1K | Unknown | Hypothesis |
 
-Raw `FF` for either PWM label or ED gives candidate 127.5 percent. Do not clip
-at 100 or interpret `FF` as unavailable. Stepper and LED bytes retain their raw
-values without assigning motion, calibration or enabled/disabled semantics.
+Raw `FF` for either PWM label gives candidate 127.5 percent. Do not clip
+at 100 or interpret `FF` as unavailable. ED has a candidate percent label, but
+its scaling is **Unknown**; the overview specifies division by two only for PWM.
+Preserve ED bytes without converting them to a percentage. Stepper and LED bytes
+retain their raw values without assigning motion, calibration or enabled/disabled
+semantics.
 
 ## OP00 positive fields
 
