@@ -358,6 +358,6 @@ runtime error behavior require separate implementation evidence.
 ```
 <!-- ab25ao25-contract-end -->
 
-The focused suite is a mandatory separate ship check. The full docs gate uses
-an explicit list and does not automatically discover this new suite. No gate,
-index, catalog or protocol page is changed by this companion.
+The full docs gate explicitly runs this focused suite with unittest discovery
+so that its custom loader executes the contract checks. No index, catalog or
+protocol page is changed by this companion.
