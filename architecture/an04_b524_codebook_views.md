@@ -11,9 +11,10 @@ preserved: neither surface gains a method or a new projection through this work.
 
 The public [native B524 contract](../protocols/vaillant/ebus-vaillant-B524.md)
 comes first for wire facts, especially register reply shapes in section 2.2
-and opcode-scoped selectors in section 3.1. This page is a new software API
-contract, not another native family page or new qualification. The finite
-candidate tables below are issue-supplied hypotheses, not measured evidence.
+and opcode-scoped selectors in section 3.1. This page specifies the proposed
+software API contract; native family documentation and qualification stay
+separate. The finite candidate tables below are issue-supplied hypotheses,
+not measured evidence.
 The [synthetic examples](fixtures/an04_b524_codebook_views.json) retain inputs
 and independent expected outputs; no live equipment or private data is used.
 
