@@ -1,0 +1,130 @@
+{
+  "synthetic": true,
+  "grade": "Hypothesis",
+  "physical_qualification": "Unknown",
+  "presence": "Unknown",
+  "freshness": "Unknown",
+  "execution": "Unknown",
+  "key": {
+    "family": "vaillant",
+    "variant": "B510",
+    "primary": 181,
+    "secondary": 16,
+    "operation": 0,
+    "direction": "request",
+    "field": "loading_pump",
+    "alternative": "none",
+    "group": null,
+    "instance_scope": "none",
+    "register": null
+  },
+  "defaults": {
+    "mode": "forced-heating",
+    "numeric_mode_code": null,
+    "modulation": 67,
+    "option_bits": [
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "loading_pump": 255.0
+  },
+  "loading_pump": {
+    "formal_domain": [
+      0,
+      127.5
+    ],
+    "unit": "percent",
+    "raw_bytes": "FF",
+    "value": 127.5,
+    "default_conflict": true
+  },
+  "option_cases": [
+    {
+      "raw_setpoint": 42,
+      "option_bit2": 0,
+      "role": "heating"
+    },
+    {
+      "raw_setpoint": 42,
+      "option_bit2": 1,
+      "role": "cooling"
+    },
+    {
+      "raw_setpoint": 44,
+      "option_bit2": 0,
+      "role": "heating"
+    },
+    {
+      "raw_setpoint": 44,
+      "option_bit2": 1,
+      "role": "cooling"
+    }
+  ],
+  "forced_contexts": [
+    {
+      "mode": "forced-heating",
+      "numeric_mode_code": null,
+      "loading_pump_meaning": "Unknown",
+      "pump_activation": "Unknown"
+    },
+    {
+      "mode": "forced-DHW",
+      "numeric_mode_code": null,
+      "loading_pump_meaning": "Unknown",
+      "pump_activation": "Unknown"
+    },
+    {
+      "mode": "forced-off",
+      "numeric_mode_code": null,
+      "loading_pump_meaning": "Unknown",
+      "pump_activation": "Unknown"
+    }
+  ],
+  "zero_degrees_roles": [
+    "stop",
+    "pump-stop"
+  ],
+  "transitions": [
+    {
+      "from": 0,
+      "to": 1,
+      "candidate_minimum_seconds": 300,
+      "execution_guarantee": false,
+      "enforcement": "Unknown"
+    },
+    {
+      "from": 1,
+      "to": 1,
+      "candidate_minimum_seconds": null,
+      "execution_guarantee": false,
+      "enforcement": "Unknown"
+    },
+    {
+      "from": 0,
+      "to": 0,
+      "candidate_minimum_seconds": null,
+      "execution_guarantee": false,
+      "enforcement": "Unknown"
+    },
+    {
+      "from": 0,
+      "to": 2,
+      "candidate_minimum_seconds": 300,
+      "execution_guarantee": false,
+      "enforcement": "Unknown"
+    },
+    {
+      "from": 1,
+      "to": 2,
+      "candidate_minimum_seconds": null,
+      "execution_guarantee": false,
+      "enforcement": "Unknown"
+    }
+  ]
+}
