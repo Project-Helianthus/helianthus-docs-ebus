@@ -62,7 +62,7 @@ For the example, `state` is `Hypothesis` and semantic `fields` is:
 
 Every result field has `raw` and `state`. This view supplies only the optional
 `label` on `declared_form`; it declares no `number`, `flags`, `reserved` or
-`candidate_domain`. The slave address remains one raw byte, with no numeric
+`candidate_domain`. The target address remains one raw byte, with no numeric
 conversion or domain qualification. There are no numeric results or units.
 A future independently exact numeric calculation may additionally have
 `calculation: "Proven"`, without promoting a Hypothesis family grade. Incomplete,
@@ -2079,8 +2079,8 @@ independent constants; it does not implement a second production interpreter.
 
 ## Validation boundary
 
-The focused suite is a mandatory separate ship check: Gate D uses an explicit
-list and does not automatically include it. No gate registration is added here.
+The focused suite is registered in the explicit Gate D list in
+`scripts/ci_local.sh`.
 Production invocation, error/no-result behavior, defensive memory ownership,
 and mutation isolation require companion implementation evidence; static tuples
 cannot prove them. Full repository Gate D with the provisioned references,

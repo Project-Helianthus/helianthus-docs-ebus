@@ -258,6 +258,9 @@ python3 -m pytest -q tests/test_ae04_b505_candidates.py
 echo "==> check B520 simulator actuator and ADC declarations"
 python3 -m pytest -q tests/test_ac20_simulator_adc.py
 
+echo "==> check B519 opaque-body API and unresolved replies"
+python3 -m unittest discover -s tests -p 'test_ao22_b519_opaque_views.py'
+
 echo "==> check B509/B524 passive watch-policy documentation contract"
 python3 -m pytest -q tests/test_watch_policy_contract.py
 python3 -m pytest -q tests/test_b524_operation_docs.py
