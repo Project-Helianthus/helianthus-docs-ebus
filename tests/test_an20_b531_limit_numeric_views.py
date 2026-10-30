@@ -519,10 +519,13 @@ def _reject(testcase: unittest.TestCase, mutator) -> None:
     temp_root = os.environ.get("TMPDIR") or None
     with tempfile.TemporaryDirectory(dir=temp_root) as tmp:
         directory = Path(tmp)
-        page = directory / "page.md"
+        (directory / "architecture").mkdir()
+        (directory / "protocols").symlink_to(ROOT / "protocols", target_is_directory=True)
+        page = directory / "architecture" / PAGE.name
         fixture = directory / "fixture.json"
         page.write_text(PAGE.read_text(encoding="utf-8"), encoding="utf-8")
         fixture.write_text(FIXTURE.read_text(encoding="utf-8"), encoding="utf-8")
+        testcase.assertEqual(contract_errors(page, fixture), [])
         mutator(page, fixture)
         errors = contract_errors(page, fixture)
         testcase.assertTrue(errors)
