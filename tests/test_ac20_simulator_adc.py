@@ -190,7 +190,8 @@ class SimulatorADC(unittest.TestCase):
         section = overview.split('## Other B5 services (candidate layouts)', 1)[1]
         preamble = ' '.join(section.split('###', 1)[0].split())
         self.assertIn('The services below have no dedicated page except for '
-                      '[B520](ebus-vaillant-B520.md).', preamble)
+                      '[B520](ebus-vaillant-B520.md) and '
+                      '[B525](ebus-vaillant-B525.md).', preamble)
 
     def test_page_tables(self):
         identity = [['Family', 'Variant', 'Direction', 'Service', 'Operation', 'Alternative',
