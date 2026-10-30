@@ -115,9 +115,34 @@ class DirectionAlternatives(unittest.TestCase):
                 extent, raw, 'unset', conflict, unresolved,
             ))
         self.assertCountEqual(rows, expected_rows)
-        # Reject a second incompatible declaration table or a promoted grade.
-        all_rows = [line for line in self.page.splitlines() if line.startswith('|')]
+        # Reject extra declarations or promoted grades within the bounded inventory.
+        inventory = self.page.split('## Bounded direction declarations\n', 1)[1]
+        all_rows = [line for line in inventory.splitlines() if line.startswith('|')]
         self.assertEqual(len(all_rows), 27)
+
+    def test_standard_layouts_separate_from_synthetic_inventory(self):
+        standard, inventory = self.page.split('## Bounded direction declarations\n', 1)
+        standard = standard.split('## Standard command layouts\n', 1)[1]
+        rows = [line for line in standard.splitlines() if line.startswith('|')]
+        self.assertEqual(rows, [
+            '| Service | Standard name | Request payload | Response payload |',
+            '|---|---|---|---|',
+            '| `0x0900` | Read RAM | 0: address low; 1: address high; 2: count DN | 0..DN-1: data (DN bytes) |',
+            '| `0x0901` | Write RAM | 0: address low; 1: address high; 2..: data | Empty (response NN=0) |',
+            '| `0x0902` | Read EEPROM | 0: address low; 1: address high; 2: count DN | 0..DN-1: data (DN bytes) |',
+            '| `0x0903` | Write EEPROM | 0: address low; 1: address high; 2..: data | Empty (response NN=0) |',
+        ])
+        normalized = ' '.join(standard.split())
+        for statement in (
+            '**Proven:**', '§3.5.1–§3.5.4, pp. 49–52',
+            'Offsets below are zero-based within the payload, excluding PB/SB, length, CRC and ACK.',
+            'read requests have NN=3; DN has nominal range 0..10, with DN>10 permitted in service mode.',
+            '**Unknown:** write-data count:',
+            'These imply NN-1 versus NN data bytes; the ambiguity is retained.',
+        ):
+            self.assertIn(statement, normalized)
+        self.assertIn('Its omission of request data is not an address-only standard write layout;',
+                      ' '.join(inventory.split()))
 
     def test_address_examples_independent_values(self):
         self.assertEqual(self.fixture['address_cases'], [

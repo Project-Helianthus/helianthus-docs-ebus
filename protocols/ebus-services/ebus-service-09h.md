@@ -1,21 +1,23 @@
-# eBUS Service 0x09 — Memory-service direction alternatives
+# eBUS Service 0x09 — Memory Server (Application Layer)
 
-> Source: eBUS Specification Application Layer (OSI 7) V1.6.1, §3.5 (service naming context).
+> Source: eBUS Specification Application Layer (OSI 7) V1.6.1, §3.5 (standard command layouts and service-mode restriction).
 
 ## Scope and evidence
 
-This bounded declaration covers only `0900`, `0901`, `0902` and `0903`,
+The standard command reference below is primary evidence. The separate bounded
+synthetic inventory covers only `0900`, `0901`, `0902` and `0903`,
 matching the finite AE27 companion catalog. It does not imply a complete family
 catalog. The historical RAM/EEPROM storage names do not establish a physical
 memory space; a storage-name inconsistency must not change PB/SB service identity.
 Other vendor variants and requester behavior remain separate and unqualified.
 
-All field declarations below are **Hypothesis**. For these declarations,
+All field declarations in the bounded synthetic inventory are **Hypothesis**.
+For those declarations,
 **Proven** applies only to the
 presence of these finite declarations in the companion, not to native behavior
 or installed support. Synthetic examples do not qualify physical behavior.
-The specification citation supplies naming and service-mode context; the supplied
-direction alternatives and corroborating catalog are not reproducible wire observations.
+The synthetic direction alternatives and corroborating catalog are not
+reproducible wire observations and do not replace the standard layouts.
 
 ## Service-mode restriction and security
 
@@ -32,13 +34,36 @@ restriction or establish execution authority.
 > Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`.
 <!-- legacy-role-mapping:end -->
 
+## Standard command layouts
+
+**Proven:** the [eBUS Application Layer specification, §3.5.1–§3.5.4, pp. 49–52](https://ab-log.ru/files/File/eBUS/Spec_Prot_7_V1_6_1_E.pdf#page=49)
+defines these service-only Memory Server layouts. Offsets below are zero-based
+within the payload, excluding PB/SB, length, CRC and ACK.
+
+| Service | Standard name | Request payload | Response payload |
+|---|---|---|---|
+| `0x0900` | Read RAM | 0: address low; 1: address high; 2: count DN | 0..DN-1: data (DN bytes) |
+| `0x0901` | Write RAM | 0: address low; 1: address high; 2..: data | Empty (response NN=0) |
+| `0x0902` | Read EEPROM | 0: address low; 1: address high; 2: count DN | 0..DN-1: data (DN bytes) |
+| `0x0903` | Write EEPROM | 0: address low; 1: address high; 2..: data | Empty (response NN=0) |
+
+**Proven:** read requests have NN=3; DN has nominal range 0..10, with DN>10
+permitted in service mode. Addresses are low-byte-first, 16-bit; device-specific
+address meanings and physical storage remain **Unknown**.
+
+**Unknown:** write-data count: the specification's NN wording counts from M7
+(high address byte), bounded 1..8, but its data rows enumerate Data Byte 0
+through NN-1. These imply NN-1 versus NN data bytes; the ambiguity is retained.
+The final EEPROM write block may have NN<10. An empty standard write response
+alone does not prove persistence or execution on a device.
+
 ## Bounded direction declarations
 
 Identity is PB `09` plus the SB encoded in the last two digits of the service,
 direction and field. An operation discriminator is absent. Request and positive
 are abstract directions, not observed peer traffic. A logical position is not a
-wire offset. All physical positions are Unknown. In particular, positive-prefix
-relevance to PeBUS does not establish physical response positions. `unset` means
+wire offset. All physical positions in this inventory are Unknown. In particular,
+positive-prefix relevance to PeBUS does not establish physical response positions. `unset` means
 metadata is absent, not zero, a sentinel, a default or an inferred scale.
 
 | Grade | Service | Direction | Field | Logical position | Extent (bytes) | Raw type / domain | Scale | Sentinel / default / conflict | Unresolved |
@@ -72,7 +97,9 @@ metadata is absent, not zero, a sentinel, a default or an inferred scale.
 The `0900` and `0901` address example `34 12` denotes 4660 in the unsigned
 LE16 alternative. For `0902` and `0903`, it retains independent low=52 and
 high=18 bytes; address equivalence is Unknown. Request positions beyond PB/SB
-are unprovided. No request data declaration is supplied by this finite scope.
+are unprovided in this inventory. Its omission of request data is not an
+address-only standard write layout; both standard write requests include data
+as shown above. The fixture represents only these bounded alternatives.
 
 Positive `0900` and `0903` place opaque `AA 55` at abstract position 2 after
 PB/SB; `0902` places the same data at 0 without PB/SB. There is no universal
@@ -102,7 +129,8 @@ specification's service-mode restriction.
 
 **Unknown:** physical memory space, peer effects, address equivalence, actual
 packet extent, empty-request acceptance and installed support. Unprovided
-request positions remain Unknown. Storage names do not resolve these questions.
+request positions in the synthetic inventory remain Unknown. Storage names do
+not resolve these questions.
 No service-mode rule or execution authority follows from these declarations.
 No memory reader/writer or verification client is defined here.
 
