@@ -106,11 +106,11 @@ In CRC rows, `empty` means zero input bytes; other inputs are exact hex spans.
 
 | Field | Initialization | Numeric CRC | LE16 | Grade |
 |---|---|---|---|---|
-| 313233343536373839 | FFFF | 29B1 | B1 29 | Proven |
+| 31 32 33 34 35 36 37 38 39 | FFFF | 29B1 | B1 29 | Proven |
 | empty | FFFF | FFFF | FF FF | Proven |
-| 313233343536373839 | 0000 | 31C3 | C3 31 | Proven |
-| 31323334 | FFFF | 5349 | 49 53 | Proven |
-| 3536373839 | FFFF | 5EB6 | B6 5E | Proven |
+| 31 32 33 34 35 36 37 38 39 | 0000 | 31C3 | C3 31 | Proven |
+| 31 32 33 34 | FFFF | 5349 | 49 53 | Proven |
+| 35 36 37 38 39 | FFFF | 5EB6 | B6 5E | Proven |
 
 ### crc_parameters
 
@@ -151,8 +151,8 @@ In CRC rows, `empty` means zero input bytes; other inputs are exact hex spans.
 | session initiator | Unknown |
 | virtual block size | Unknown |
 | peer append/offset behavior | Unknown |
-| application-start version result | Unknown |
-| conditional later groups | Unknown |
+| version reported after application activation | Unknown |
+| eligibility of subsequent transfer groups | Unknown |
 | custom CRC table | Unknown |
 | programming executor | Unknown |
 | transport implementation | Unknown |

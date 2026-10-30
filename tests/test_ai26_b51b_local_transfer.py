@@ -28,11 +28,11 @@ TABLES = {
         ['absent', 'valid', '34 12', '34 12', 'Hypothesis'],
         ['78 56', 'valid', 'none', '78 56', 'Hypothesis']],
     'crc': [
-        ['313233343536373839', 'FFFF', '29B1', 'B1 29', 'Proven'],
+        ['31 32 33 34 35 36 37 38 39', 'FFFF', '29B1', 'B1 29', 'Proven'],
         ['empty', 'FFFF', 'FFFF', 'FF FF', 'Proven'],
-        ['313233343536373839', '0000', '31C3', 'C3 31', 'Proven'],
-        ['31323334', 'FFFF', '5349', '49 53', 'Proven'],
-        ['3536373839', 'FFFF', '5EB6', 'B6 5E', 'Proven']],
+        ['31 32 33 34 35 36 37 38 39', '0000', '31C3', 'C3 31', 'Proven'],
+        ['31 32 33 34', 'FFFF', '5349', '49 53', 'Proven'],
+        ['35 36 37 38 39', 'FFFF', '5EB6', 'B6 5E', 'Proven']],
     'crc_parameters': [
         ['polynomial', '1021', 'Hypothesis'],
         ['initial', 'FFFF', 'Hypothesis'], ['bit_order', 'MSB-first', 'Hypothesis'],
@@ -49,7 +49,7 @@ TABLES = {
         ['14', '17', '22', 'reject', 'Hypothesis']],
     'unknowns': [[name, 'Unknown'] for name in [
         'session initiator', 'virtual block size', 'peer append/offset behavior',
-        'application-start version result', 'conditional later groups',
+        'version reported after application activation', 'eligibility of subsequent transfer groups',
         'custom CRC table', 'programming executor', 'transport implementation',
         'physical maximum', 'installed support', 'freshness', 'qualification']],
 }
@@ -181,9 +181,11 @@ class LocalTransferTests(unittest.TestCase):
             self.assertEqual(result, int(expected, 16))
             self.assertEqual(result, binascii.crc_hqx(data, int(init, 16)))
             self.assertEqual(result.to_bytes(2, 'little').hex(' ').upper(), le16)
-        self.assertNotEqual(crc(b'1234'), crc(b'123456789'))
-        self.assertNotEqual(crc(b'123456789', 0), crc(b'123456789'))
-        self.assertNotEqual(crc(b'1234') ^ crc(b'56789'), crc(b'123456789'))
+        full_input = b'1234' + b'5678' + b'9'
+        suffix = b'5678' + b'9'
+        self.assertNotEqual(crc(b'1234'), crc(full_input))
+        self.assertNotEqual(crc(full_input, 0), crc(full_input))
+        self.assertNotEqual(crc(b'1234') ^ crc(suffix), crc(full_input))
 
     def test_route_shapes_and_every_gate_independently(self):
         good = dict.fromkeys(GATES, True)

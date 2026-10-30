@@ -120,7 +120,7 @@
     ],
     "crc": [
       [
-        "313233343536373839",
+        "31 32 33 34 35 36 37 38 39",
         "FFFF",
         "29B1",
         "B1 29",
@@ -134,21 +134,21 @@
         "Proven"
       ],
       [
-        "313233343536373839",
+        "31 32 33 34 35 36 37 38 39",
         "0000",
         "31C3",
         "C3 31",
         "Proven"
       ],
       [
-        "31323334",
+        "31 32 33 34",
         "FFFF",
         "5349",
         "49 53",
         "Proven"
       ],
       [
-        "3536373839",
+        "35 36 37 38 39",
         "FFFF",
         "5EB6",
         "B6 5E",
@@ -266,11 +266,11 @@
         "Unknown"
       ],
       [
-        "application-start version result",
+        "version reported after application activation",
         "Unknown"
       ],
       [
-        "conditional later groups",
+        "eligibility of subsequent transfer groups",
         "Unknown"
       ],
       [
