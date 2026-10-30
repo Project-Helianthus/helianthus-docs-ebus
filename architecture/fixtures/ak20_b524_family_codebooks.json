@@ -1,0 +1,3812 @@
+{
+  "service": "B524",
+  "provenance": "synthetic",
+  "entries": [
+    {
+      "id": "ab30_controller-700_gg01_rr0003_u16",
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 1,
+        "instance_scope": "00",
+        "register": 3
+      },
+      "grade": "Hypothesis",
+      "representation_grade": "Proven",
+      "enumeration": {
+        "0": {
+          "value": 0,
+          "label": "off"
+        },
+        "1": {
+          "value": 1,
+          "label": "automatic"
+        },
+        "2": {
+          "value": 2,
+          "label": "day"
+        }
+      },
+      "raw_form": {
+        "encoding": "u16",
+        "width_bytes": 2,
+        "signedness": "unsigned",
+        "preserved": true
+      },
+      "raw_fallback": "Preserve raw bytes; unlisted codes and unknown families have Unknown meaning.",
+      "relations": {
+        "identity_grade": "Proven",
+        "candidate_opcode": "OP02",
+        "instance_scope_role": "metadata-only",
+        "width_selection": "explicit alternative; reply length does not select",
+        "family_selection": "explicit; no auto-detection"
+      },
+      "unknown": {
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "installed_cardinality": "Unknown",
+        "present_slots": "Unknown",
+        "freshness": "Unknown",
+        "unlisted_codes": "Unknown"
+      }
+    },
+    {
+      "id": "ab30_controller-700_gg02_rr0002_u16",
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 2,
+        "instance_scope": "dynamic",
+        "register": 2
+      },
+      "grade": "Hypothesis",
+      "representation_grade": "Proven",
+      "enumeration": {
+        "0": {
+          "value": 0,
+          "label": "deactivated"
+        },
+        "1": {
+          "value": 1,
+          "label": "heating"
+        },
+        "2": {
+          "value": 2,
+          "label": "fixed-flow"
+        },
+        "3": {
+          "value": 3,
+          "label": "DHW"
+        },
+        "4": {
+          "value": 4,
+          "label": "return-flow"
+        },
+        "5": {
+          "value": 5,
+          "label": "pool"
+        }
+      },
+      "raw_form": {
+        "encoding": "u16",
+        "width_bytes": 2,
+        "signedness": "unsigned",
+        "preserved": true
+      },
+      "raw_fallback": "Preserve raw bytes; unlisted codes and unknown families have Unknown meaning.",
+      "relations": {
+        "identity_grade": "Proven",
+        "candidate_opcode": "OP02",
+        "instance_scope_role": "metadata-only",
+        "width_selection": "explicit alternative; reply length does not select",
+        "family_selection": "explicit; no auto-detection"
+      },
+      "unknown": {
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "installed_cardinality": "Unknown",
+        "present_slots": "Unknown",
+        "freshness": "Unknown",
+        "unlisted_codes": "Unknown"
+      }
+    },
+    {
+      "id": "ab30_controller-700_gg03_rr0001_u16",
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 1
+      },
+      "grade": "Hypothesis",
+      "representation_grade": "Proven",
+      "enumeration": {
+        "0": {
+          "value": 0,
+          "label": "off"
+        },
+        "1": {
+          "value": 1,
+          "label": "automatic"
+        },
+        "2": {
+          "value": 2,
+          "label": "day"
+        }
+      },
+      "raw_form": {
+        "encoding": "u16",
+        "width_bytes": 2,
+        "signedness": "unsigned",
+        "preserved": true
+      },
+      "raw_fallback": "Preserve raw bytes; unlisted codes and unknown families have Unknown meaning.",
+      "relations": {
+        "identity_grade": "Proven",
+        "candidate_opcode": "OP02",
+        "instance_scope_role": "metadata-only",
+        "width_selection": "explicit alternative; reply length does not select",
+        "family_selection": "explicit; no auto-detection"
+      },
+      "unknown": {
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "installed_cardinality": "Unknown",
+        "present_slots": "Unknown",
+        "freshness": "Unknown",
+        "unlisted_codes": "Unknown"
+      }
+    },
+    {
+      "id": "ab30_controller-700_gg03_rr0006_u16",
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 6
+      },
+      "grade": "Hypothesis",
+      "representation_grade": "Proven",
+      "enumeration": {
+        "0": {
+          "value": 0,
+          "label": "off"
+        },
+        "1": {
+          "value": 1,
+          "label": "automatic"
+        },
+        "2": {
+          "value": 2,
+          "label": "day"
+        },
+        "3": {
+          "value": 3,
+          "label": "setback"
+        }
+      },
+      "raw_form": {
+        "encoding": "u16",
+        "width_bytes": 2,
+        "signedness": "unsigned",
+        "preserved": true
+      },
+      "raw_fallback": "Preserve raw bytes; unlisted codes and unknown families have Unknown meaning.",
+      "relations": {
+        "identity_grade": "Proven",
+        "candidate_opcode": "OP02",
+        "instance_scope_role": "metadata-only",
+        "width_selection": "explicit alternative; reply length does not select",
+        "family_selection": "explicit; no auto-detection"
+      },
+      "unknown": {
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "installed_cardinality": "Unknown",
+        "present_slots": "Unknown",
+        "freshness": "Unknown",
+        "unlisted_codes": "Unknown"
+      }
+    },
+    {
+      "id": "ab30_controller-700_gg03_rr0013_u16",
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 19
+      },
+      "grade": "Hypothesis",
+      "representation_grade": "Proven",
+      "enumeration": {
+        "0": {
+          "value": 0,
+          "label": "none"
+        },
+        "1": {
+          "value": 1,
+          "label": "central"
+        },
+        "2": {
+          "value": 2,
+          "label": "remote-circuit-one"
+        },
+        "3": {
+          "value": 3,
+          "label": "remote-circuit-two"
+        },
+        "4": {
+          "value": 4,
+          "label": "remote-circuit-three"
+        },
+        "5": {
+          "value": 5,
+          "label": "remote-circuit-four"
+        },
+        "6": {
+          "value": 6,
+          "label": "remote-circuit-five"
+        },
+        "7": {
+          "value": 7,
+          "label": "remote-circuit-six"
+        },
+        "8": {
+          "value": 8,
+          "label": "remote-circuit-seven"
+        },
+        "9": {
+          "value": 9,
+          "label": "remote-circuit-eight"
+        }
+      },
+      "raw_form": {
+        "encoding": "u16",
+        "width_bytes": 2,
+        "signedness": "unsigned",
+        "preserved": true
+      },
+      "raw_fallback": "Preserve raw bytes; unlisted codes and unknown families have Unknown meaning.",
+      "relations": {
+        "identity_grade": "Proven",
+        "candidate_opcode": "OP02",
+        "instance_scope_role": "metadata-only",
+        "width_selection": "explicit alternative; reply length does not select",
+        "family_selection": "explicit; no auto-detection"
+      },
+      "unknown": {
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "installed_cardinality": "Unknown",
+        "present_slots": "Unknown",
+        "freshness": "Unknown",
+        "unlisted_codes": "Unknown"
+      }
+    },
+    {
+      "id": "ab30_controller-700_gg03_rr001B_u8",
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u8",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 27
+      },
+      "grade": "Hypothesis",
+      "representation_grade": "Proven",
+      "enumeration": {
+        "0": {
+          "value": 0,
+          "label": "no-quick-mode"
+        },
+        "1": {
+          "value": 1,
+          "label": "ventilation-boost"
+        },
+        "3": {
+          "value": 3,
+          "label": "party"
+        },
+        "4": {
+          "value": 4,
+          "label": "quick-veto"
+        },
+        "5": {
+          "value": 5,
+          "label": "one-day-holiday"
+        },
+        "6": {
+          "value": 6,
+          "label": "one-day-bank-holiday"
+        },
+        "7": {
+          "value": 7,
+          "label": "holiday"
+        },
+        "8": {
+          "value": 8,
+          "label": "bank-holiday"
+        },
+        "10": {
+          "value": 10,
+          "label": "system-off"
+        }
+      },
+      "raw_form": {
+        "encoding": "u8",
+        "width_bytes": 1,
+        "signedness": "unsigned",
+        "preserved": true
+      },
+      "raw_fallback": "Preserve raw bytes; unlisted codes and unknown families have Unknown meaning.",
+      "relations": {
+        "identity_grade": "Proven",
+        "candidate_opcode": "OP02",
+        "instance_scope_role": "metadata-only",
+        "width_selection": "explicit alternative; reply length does not select",
+        "family_selection": "explicit; no auto-detection"
+      },
+      "unknown": {
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "installed_cardinality": "Unknown",
+        "present_slots": "Unknown",
+        "freshness": "Unknown",
+        "unlisted_codes": "Unknown"
+      }
+    },
+    {
+      "id": "ab30_controller-700_gg03_rr001B_u16",
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 27
+      },
+      "grade": "Hypothesis",
+      "representation_grade": "Proven",
+      "enumeration": {
+        "0": {
+          "value": 0,
+          "label": "no-quick-mode"
+        },
+        "1": {
+          "value": 1,
+          "label": "ventilation-boost"
+        },
+        "3": {
+          "value": 3,
+          "label": "party"
+        },
+        "4": {
+          "value": 4,
+          "label": "quick-veto"
+        },
+        "5": {
+          "value": 5,
+          "label": "one-day-holiday"
+        },
+        "6": {
+          "value": 6,
+          "label": "one-day-bank-holiday"
+        },
+        "7": {
+          "value": 7,
+          "label": "holiday"
+        },
+        "8": {
+          "value": 8,
+          "label": "bank-holiday"
+        },
+        "10": {
+          "value": 10,
+          "label": "system-off"
+        }
+      },
+      "raw_form": {
+        "encoding": "u16",
+        "width_bytes": 2,
+        "signedness": "unsigned",
+        "preserved": true
+      },
+      "raw_fallback": "Preserve raw bytes; unlisted codes and unknown families have Unknown meaning.",
+      "relations": {
+        "identity_grade": "Proven",
+        "candidate_opcode": "OP02",
+        "instance_scope_role": "metadata-only",
+        "width_selection": "explicit alternative; reply length does not select",
+        "family_selection": "explicit; no auto-detection"
+      },
+      "unknown": {
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "installed_cardinality": "Unknown",
+        "present_slots": "Unknown",
+        "freshness": "Unknown",
+        "unlisted_codes": "Unknown"
+      }
+    },
+    {
+      "id": "ab30_controller-700_gg03_rr001C_signed8",
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "signed8",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 28
+      },
+      "grade": "Hypothesis",
+      "representation_grade": "Proven",
+      "enumeration": {
+        "0": {
+          "value": 0,
+          "label": "control-circuit-one"
+        },
+        "1": {
+          "value": 1,
+          "label": "control-circuit-two"
+        },
+        "2": {
+          "value": 2,
+          "label": "control-circuit-three"
+        },
+        "255": {
+          "value": -1,
+          "label": "unbound"
+        }
+      },
+      "raw_form": {
+        "encoding": "signed8",
+        "width_bytes": 1,
+        "signedness": "signed",
+        "preserved": true
+      },
+      "raw_fallback": "Preserve raw bytes; unlisted codes and unknown families have Unknown meaning.",
+      "relations": {
+        "identity_grade": "Proven",
+        "candidate_opcode": "OP02",
+        "instance_scope_role": "metadata-only",
+        "width_selection": "explicit alternative; reply length does not select",
+        "family_selection": "explicit; no auto-detection"
+      },
+      "unknown": {
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "installed_cardinality": "Unknown",
+        "present_slots": "Unknown",
+        "freshness": "Unknown",
+        "unlisted_codes": "Unknown"
+      }
+    },
+    {
+      "id": "ab30_controller-720_gg01_rr0003_u16",
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 1,
+        "instance_scope": "00",
+        "register": 3
+      },
+      "grade": "Hypothesis",
+      "representation_grade": "Proven",
+      "enumeration": {
+        "0": {
+          "value": 0,
+          "label": "off"
+        },
+        "1": {
+          "value": 1,
+          "label": "time-controlled"
+        },
+        "2": {
+          "value": 2,
+          "label": "manual"
+        }
+      },
+      "raw_form": {
+        "encoding": "u16",
+        "width_bytes": 2,
+        "signedness": "unsigned",
+        "preserved": true
+      },
+      "raw_fallback": "Preserve raw bytes; unlisted codes and unknown families have Unknown meaning.",
+      "relations": {
+        "identity_grade": "Proven",
+        "candidate_opcode": "OP02",
+        "instance_scope_role": "metadata-only",
+        "width_selection": "explicit alternative; reply length does not select",
+        "family_selection": "explicit; no auto-detection"
+      },
+      "unknown": {
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "installed_cardinality": "Unknown",
+        "present_slots": "Unknown",
+        "freshness": "Unknown",
+        "unlisted_codes": "Unknown"
+      }
+    },
+    {
+      "id": "ab30_controller-720_gg02_rr0002_u16",
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 2,
+        "instance_scope": "dynamic",
+        "register": 2
+      },
+      "grade": "Hypothesis",
+      "representation_grade": "Proven",
+      "enumeration": {
+        "0": {
+          "value": 0,
+          "label": "deactivated"
+        },
+        "1": {
+          "value": 1,
+          "label": "heating"
+        },
+        "2": {
+          "value": 2,
+          "label": "fixed-flow"
+        },
+        "3": {
+          "value": 3,
+          "label": "DHW"
+        },
+        "4": {
+          "value": 4,
+          "label": "return-flow"
+        }
+      },
+      "raw_form": {
+        "encoding": "u16",
+        "width_bytes": 2,
+        "signedness": "unsigned",
+        "preserved": true
+      },
+      "raw_fallback": "Preserve raw bytes; unlisted codes and unknown families have Unknown meaning.",
+      "relations": {
+        "identity_grade": "Proven",
+        "candidate_opcode": "OP02",
+        "instance_scope_role": "metadata-only",
+        "width_selection": "explicit alternative; reply length does not select",
+        "family_selection": "explicit; no auto-detection"
+      },
+      "unknown": {
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "installed_cardinality": "Unknown",
+        "present_slots": "Unknown",
+        "freshness": "Unknown",
+        "unlisted_codes": "Unknown"
+      }
+    },
+    {
+      "id": "ab30_controller-720_gg03_rr0001_u16",
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 1
+      },
+      "grade": "Hypothesis",
+      "representation_grade": "Proven",
+      "enumeration": {
+        "0": {
+          "value": 0,
+          "label": "off"
+        },
+        "1": {
+          "value": 1,
+          "label": "time-controlled"
+        },
+        "2": {
+          "value": 2,
+          "label": "manual"
+        }
+      },
+      "raw_form": {
+        "encoding": "u16",
+        "width_bytes": 2,
+        "signedness": "unsigned",
+        "preserved": true
+      },
+      "raw_fallback": "Preserve raw bytes; unlisted codes and unknown families have Unknown meaning.",
+      "relations": {
+        "identity_grade": "Proven",
+        "candidate_opcode": "OP02",
+        "instance_scope_role": "metadata-only",
+        "width_selection": "explicit alternative; reply length does not select",
+        "family_selection": "explicit; no auto-detection"
+      },
+      "unknown": {
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "installed_cardinality": "Unknown",
+        "present_slots": "Unknown",
+        "freshness": "Unknown",
+        "unlisted_codes": "Unknown"
+      }
+    },
+    {
+      "id": "ab30_controller-720_gg03_rr0006_u16",
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 6
+      },
+      "grade": "Hypothesis",
+      "representation_grade": "Proven",
+      "enumeration": {
+        "0": {
+          "value": 0,
+          "label": "off"
+        },
+        "1": {
+          "value": 1,
+          "label": "time-controlled"
+        },
+        "2": {
+          "value": 2,
+          "label": "manual"
+        }
+      },
+      "raw_form": {
+        "encoding": "u16",
+        "width_bytes": 2,
+        "signedness": "unsigned",
+        "preserved": true
+      },
+      "raw_fallback": "Preserve raw bytes; unlisted codes and unknown families have Unknown meaning.",
+      "relations": {
+        "identity_grade": "Proven",
+        "candidate_opcode": "OP02",
+        "instance_scope_role": "metadata-only",
+        "width_selection": "explicit alternative; reply length does not select",
+        "family_selection": "explicit; no auto-detection"
+      },
+      "unknown": {
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "installed_cardinality": "Unknown",
+        "present_slots": "Unknown",
+        "freshness": "Unknown",
+        "unlisted_codes": "Unknown"
+      }
+    },
+    {
+      "id": "ab30_controller-720_gg03_rr0013_u16",
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 19
+      },
+      "grade": "Hypothesis",
+      "representation_grade": "Proven",
+      "enumeration": {
+        "0": {
+          "value": 0,
+          "label": "none"
+        },
+        "1": {
+          "value": 1,
+          "label": "central"
+        },
+        "2": {
+          "value": 2,
+          "label": "remote-circuit-one"
+        },
+        "3": {
+          "value": 3,
+          "label": "remote-circuit-two"
+        },
+        "4": {
+          "value": 4,
+          "label": "remote-circuit-three"
+        },
+        "5": {
+          "value": 5,
+          "label": "remote-circuit-four"
+        }
+      },
+      "raw_form": {
+        "encoding": "u16",
+        "width_bytes": 2,
+        "signedness": "unsigned",
+        "preserved": true
+      },
+      "raw_fallback": "Preserve raw bytes; unlisted codes and unknown families have Unknown meaning.",
+      "relations": {
+        "identity_grade": "Proven",
+        "candidate_opcode": "OP02",
+        "instance_scope_role": "metadata-only",
+        "width_selection": "explicit alternative; reply length does not select",
+        "family_selection": "explicit; no auto-detection"
+      },
+      "unknown": {
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "installed_cardinality": "Unknown",
+        "present_slots": "Unknown",
+        "freshness": "Unknown",
+        "unlisted_codes": "Unknown"
+      }
+    },
+    {
+      "id": "ab30_controller-720_gg03_rr001B_u8",
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u8",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 27
+      },
+      "grade": "Hypothesis",
+      "representation_grade": "Proven",
+      "enumeration": {
+        "0": {
+          "value": 0,
+          "label": "no-special-function"
+        },
+        "1": {
+          "value": 1,
+          "label": "ventilation-boost"
+        },
+        "4": {
+          "value": 4,
+          "label": "quick-veto"
+        },
+        "7": {
+          "value": 7,
+          "label": "holiday"
+        },
+        "10": {
+          "value": 10,
+          "label": "system-off"
+        }
+      },
+      "raw_form": {
+        "encoding": "u8",
+        "width_bytes": 1,
+        "signedness": "unsigned",
+        "preserved": true
+      },
+      "raw_fallback": "Preserve raw bytes; unlisted codes and unknown families have Unknown meaning.",
+      "relations": {
+        "identity_grade": "Proven",
+        "candidate_opcode": "OP02",
+        "instance_scope_role": "metadata-only",
+        "width_selection": "explicit alternative; reply length does not select",
+        "family_selection": "explicit; no auto-detection"
+      },
+      "unknown": {
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "installed_cardinality": "Unknown",
+        "present_slots": "Unknown",
+        "freshness": "Unknown",
+        "unlisted_codes": "Unknown"
+      }
+    },
+    {
+      "id": "ab30_controller-720_gg03_rr001B_u16",
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 27
+      },
+      "grade": "Hypothesis",
+      "representation_grade": "Proven",
+      "enumeration": {
+        "0": {
+          "value": 0,
+          "label": "no-special-function"
+        },
+        "1": {
+          "value": 1,
+          "label": "ventilation-boost"
+        },
+        "4": {
+          "value": 4,
+          "label": "quick-veto"
+        },
+        "7": {
+          "value": 7,
+          "label": "holiday"
+        },
+        "10": {
+          "value": 10,
+          "label": "system-off"
+        }
+      },
+      "raw_form": {
+        "encoding": "u16",
+        "width_bytes": 2,
+        "signedness": "unsigned",
+        "preserved": true
+      },
+      "raw_fallback": "Preserve raw bytes; unlisted codes and unknown families have Unknown meaning.",
+      "relations": {
+        "identity_grade": "Proven",
+        "candidate_opcode": "OP02",
+        "instance_scope_role": "metadata-only",
+        "width_selection": "explicit alternative; reply length does not select",
+        "family_selection": "explicit; no auto-detection"
+      },
+      "unknown": {
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "installed_cardinality": "Unknown",
+        "present_slots": "Unknown",
+        "freshness": "Unknown",
+        "unlisted_codes": "Unknown"
+      }
+    },
+    {
+      "id": "ab30_controller-720_gg03_rr001C_signed8",
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "signed8",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 28
+      },
+      "grade": "Hypothesis",
+      "representation_grade": "Proven",
+      "enumeration": {
+        "0": {
+          "value": 0,
+          "label": "control-circuit-one"
+        },
+        "1": {
+          "value": 1,
+          "label": "control-circuit-two"
+        },
+        "2": {
+          "value": 2,
+          "label": "control-circuit-three"
+        },
+        "3": {
+          "value": 3,
+          "label": "control-circuit-four"
+        },
+        "4": {
+          "value": 4,
+          "label": "control-circuit-five"
+        },
+        "5": {
+          "value": 5,
+          "label": "control-circuit-six"
+        },
+        "6": {
+          "value": 6,
+          "label": "control-circuit-seven"
+        },
+        "7": {
+          "value": 7,
+          "label": "control-circuit-eight"
+        },
+        "8": {
+          "value": 8,
+          "label": "control-circuit-nine"
+        },
+        "255": {
+          "value": -1,
+          "label": "unbound"
+        }
+      },
+      "raw_form": {
+        "encoding": "signed8",
+        "width_bytes": 1,
+        "signedness": "signed",
+        "preserved": true
+      },
+      "raw_fallback": "Preserve raw bytes; unlisted codes and unknown families have Unknown meaning.",
+      "relations": {
+        "identity_grade": "Proven",
+        "candidate_opcode": "OP02",
+        "instance_scope_role": "metadata-only",
+        "width_selection": "explicit alternative; reply length does not select",
+        "family_selection": "explicit; no auto-detection"
+      },
+      "unknown": {
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "installed_cardinality": "Unknown",
+        "present_slots": "Unknown",
+        "freshness": "Unknown",
+        "unlisted_codes": "Unknown"
+      }
+    }
+  ],
+  "cases": [
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 1,
+        "instance_scope": "00",
+        "register": 3
+      },
+      "raw_code": 0,
+      "expected": {
+        "value": 0,
+        "label": "off"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 1,
+        "instance_scope": "00",
+        "register": 3
+      },
+      "raw_code": 1,
+      "expected": {
+        "value": 1,
+        "label": "automatic"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 1,
+        "instance_scope": "00",
+        "register": 3
+      },
+      "raw_code": 2,
+      "expected": {
+        "value": 2,
+        "label": "day"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 1,
+        "instance_scope": "00",
+        "register": 3
+      },
+      "raw_code": 254,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 2,
+        "instance_scope": "dynamic",
+        "register": 2
+      },
+      "raw_code": 0,
+      "expected": {
+        "value": 0,
+        "label": "deactivated"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 2,
+        "instance_scope": "dynamic",
+        "register": 2
+      },
+      "raw_code": 1,
+      "expected": {
+        "value": 1,
+        "label": "heating"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 2,
+        "instance_scope": "dynamic",
+        "register": 2
+      },
+      "raw_code": 2,
+      "expected": {
+        "value": 2,
+        "label": "fixed-flow"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 2,
+        "instance_scope": "dynamic",
+        "register": 2
+      },
+      "raw_code": 3,
+      "expected": {
+        "value": 3,
+        "label": "DHW"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 2,
+        "instance_scope": "dynamic",
+        "register": 2
+      },
+      "raw_code": 4,
+      "expected": {
+        "value": 4,
+        "label": "return-flow"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 2,
+        "instance_scope": "dynamic",
+        "register": 2
+      },
+      "raw_code": 5,
+      "expected": {
+        "value": 5,
+        "label": "pool"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 2,
+        "instance_scope": "dynamic",
+        "register": 2
+      },
+      "raw_code": 254,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 1
+      },
+      "raw_code": 0,
+      "expected": {
+        "value": 0,
+        "label": "off"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 1
+      },
+      "raw_code": 1,
+      "expected": {
+        "value": 1,
+        "label": "automatic"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 1
+      },
+      "raw_code": 2,
+      "expected": {
+        "value": 2,
+        "label": "day"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 1
+      },
+      "raw_code": 254,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 6
+      },
+      "raw_code": 0,
+      "expected": {
+        "value": 0,
+        "label": "off"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 6
+      },
+      "raw_code": 1,
+      "expected": {
+        "value": 1,
+        "label": "automatic"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 6
+      },
+      "raw_code": 2,
+      "expected": {
+        "value": 2,
+        "label": "day"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 6
+      },
+      "raw_code": 3,
+      "expected": {
+        "value": 3,
+        "label": "setback"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 6
+      },
+      "raw_code": 254,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 19
+      },
+      "raw_code": 0,
+      "expected": {
+        "value": 0,
+        "label": "none"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 19
+      },
+      "raw_code": 1,
+      "expected": {
+        "value": 1,
+        "label": "central"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 19
+      },
+      "raw_code": 2,
+      "expected": {
+        "value": 2,
+        "label": "remote-circuit-one"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 19
+      },
+      "raw_code": 3,
+      "expected": {
+        "value": 3,
+        "label": "remote-circuit-two"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 19
+      },
+      "raw_code": 4,
+      "expected": {
+        "value": 4,
+        "label": "remote-circuit-three"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 19
+      },
+      "raw_code": 5,
+      "expected": {
+        "value": 5,
+        "label": "remote-circuit-four"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 19
+      },
+      "raw_code": 6,
+      "expected": {
+        "value": 6,
+        "label": "remote-circuit-five"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 19
+      },
+      "raw_code": 7,
+      "expected": {
+        "value": 7,
+        "label": "remote-circuit-six"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 19
+      },
+      "raw_code": 8,
+      "expected": {
+        "value": 8,
+        "label": "remote-circuit-seven"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 19
+      },
+      "raw_code": 9,
+      "expected": {
+        "value": 9,
+        "label": "remote-circuit-eight"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 19
+      },
+      "raw_code": 254,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u8",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 27
+      },
+      "raw_code": 0,
+      "expected": {
+        "value": 0,
+        "label": "no-quick-mode"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u8",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 27
+      },
+      "raw_code": 1,
+      "expected": {
+        "value": 1,
+        "label": "ventilation-boost"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u8",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 27
+      },
+      "raw_code": 3,
+      "expected": {
+        "value": 3,
+        "label": "party"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u8",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 27
+      },
+      "raw_code": 4,
+      "expected": {
+        "value": 4,
+        "label": "quick-veto"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u8",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 27
+      },
+      "raw_code": 5,
+      "expected": {
+        "value": 5,
+        "label": "one-day-holiday"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u8",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 27
+      },
+      "raw_code": 6,
+      "expected": {
+        "value": 6,
+        "label": "one-day-bank-holiday"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u8",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 27
+      },
+      "raw_code": 7,
+      "expected": {
+        "value": 7,
+        "label": "holiday"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u8",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 27
+      },
+      "raw_code": 8,
+      "expected": {
+        "value": 8,
+        "label": "bank-holiday"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u8",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 27
+      },
+      "raw_code": 10,
+      "expected": {
+        "value": 10,
+        "label": "system-off"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u8",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 27
+      },
+      "raw_code": 254,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 27
+      },
+      "raw_code": 0,
+      "expected": {
+        "value": 0,
+        "label": "no-quick-mode"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 27
+      },
+      "raw_code": 1,
+      "expected": {
+        "value": 1,
+        "label": "ventilation-boost"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 27
+      },
+      "raw_code": 3,
+      "expected": {
+        "value": 3,
+        "label": "party"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 27
+      },
+      "raw_code": 4,
+      "expected": {
+        "value": 4,
+        "label": "quick-veto"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 27
+      },
+      "raw_code": 5,
+      "expected": {
+        "value": 5,
+        "label": "one-day-holiday"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 27
+      },
+      "raw_code": 6,
+      "expected": {
+        "value": 6,
+        "label": "one-day-bank-holiday"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 27
+      },
+      "raw_code": 7,
+      "expected": {
+        "value": 7,
+        "label": "holiday"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 27
+      },
+      "raw_code": 8,
+      "expected": {
+        "value": 8,
+        "label": "bank-holiday"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 27
+      },
+      "raw_code": 10,
+      "expected": {
+        "value": 10,
+        "label": "system-off"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 27
+      },
+      "raw_code": 254,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "signed8",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 28
+      },
+      "raw_code": 0,
+      "expected": {
+        "value": 0,
+        "label": "control-circuit-one"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "signed8",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 28
+      },
+      "raw_code": 1,
+      "expected": {
+        "value": 1,
+        "label": "control-circuit-two"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "signed8",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 28
+      },
+      "raw_code": 2,
+      "expected": {
+        "value": 2,
+        "label": "control-circuit-three"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "signed8",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 28
+      },
+      "raw_code": 255,
+      "expected": {
+        "value": -1,
+        "label": "unbound"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "signed8",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 28
+      },
+      "raw_code": 254,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 1,
+        "instance_scope": "00",
+        "register": 3
+      },
+      "raw_code": 0,
+      "expected": {
+        "value": 0,
+        "label": "off"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 1,
+        "instance_scope": "00",
+        "register": 3
+      },
+      "raw_code": 1,
+      "expected": {
+        "value": 1,
+        "label": "time-controlled"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 1,
+        "instance_scope": "00",
+        "register": 3
+      },
+      "raw_code": 2,
+      "expected": {
+        "value": 2,
+        "label": "manual"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 1,
+        "instance_scope": "00",
+        "register": 3
+      },
+      "raw_code": 254,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 2,
+        "instance_scope": "dynamic",
+        "register": 2
+      },
+      "raw_code": 0,
+      "expected": {
+        "value": 0,
+        "label": "deactivated"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 2,
+        "instance_scope": "dynamic",
+        "register": 2
+      },
+      "raw_code": 1,
+      "expected": {
+        "value": 1,
+        "label": "heating"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 2,
+        "instance_scope": "dynamic",
+        "register": 2
+      },
+      "raw_code": 2,
+      "expected": {
+        "value": 2,
+        "label": "fixed-flow"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 2,
+        "instance_scope": "dynamic",
+        "register": 2
+      },
+      "raw_code": 3,
+      "expected": {
+        "value": 3,
+        "label": "DHW"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 2,
+        "instance_scope": "dynamic",
+        "register": 2
+      },
+      "raw_code": 4,
+      "expected": {
+        "value": 4,
+        "label": "return-flow"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 2,
+        "instance_scope": "dynamic",
+        "register": 2
+      },
+      "raw_code": 254,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 1
+      },
+      "raw_code": 0,
+      "expected": {
+        "value": 0,
+        "label": "off"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 1
+      },
+      "raw_code": 1,
+      "expected": {
+        "value": 1,
+        "label": "time-controlled"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 1
+      },
+      "raw_code": 2,
+      "expected": {
+        "value": 2,
+        "label": "manual"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 1
+      },
+      "raw_code": 254,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 6
+      },
+      "raw_code": 0,
+      "expected": {
+        "value": 0,
+        "label": "off"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 6
+      },
+      "raw_code": 1,
+      "expected": {
+        "value": 1,
+        "label": "time-controlled"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 6
+      },
+      "raw_code": 2,
+      "expected": {
+        "value": 2,
+        "label": "manual"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 6
+      },
+      "raw_code": 254,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 19
+      },
+      "raw_code": 0,
+      "expected": {
+        "value": 0,
+        "label": "none"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 19
+      },
+      "raw_code": 1,
+      "expected": {
+        "value": 1,
+        "label": "central"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 19
+      },
+      "raw_code": 2,
+      "expected": {
+        "value": 2,
+        "label": "remote-circuit-one"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 19
+      },
+      "raw_code": 3,
+      "expected": {
+        "value": 3,
+        "label": "remote-circuit-two"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 19
+      },
+      "raw_code": 4,
+      "expected": {
+        "value": 4,
+        "label": "remote-circuit-three"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 19
+      },
+      "raw_code": 5,
+      "expected": {
+        "value": 5,
+        "label": "remote-circuit-four"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 19
+      },
+      "raw_code": 254,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u8",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 27
+      },
+      "raw_code": 0,
+      "expected": {
+        "value": 0,
+        "label": "no-special-function"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u8",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 27
+      },
+      "raw_code": 1,
+      "expected": {
+        "value": 1,
+        "label": "ventilation-boost"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u8",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 27
+      },
+      "raw_code": 4,
+      "expected": {
+        "value": 4,
+        "label": "quick-veto"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u8",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 27
+      },
+      "raw_code": 7,
+      "expected": {
+        "value": 7,
+        "label": "holiday"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u8",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 27
+      },
+      "raw_code": 10,
+      "expected": {
+        "value": 10,
+        "label": "system-off"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u8",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 27
+      },
+      "raw_code": 254,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 27
+      },
+      "raw_code": 0,
+      "expected": {
+        "value": 0,
+        "label": "no-special-function"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 27
+      },
+      "raw_code": 1,
+      "expected": {
+        "value": 1,
+        "label": "ventilation-boost"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 27
+      },
+      "raw_code": 4,
+      "expected": {
+        "value": 4,
+        "label": "quick-veto"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 27
+      },
+      "raw_code": 7,
+      "expected": {
+        "value": 7,
+        "label": "holiday"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 27
+      },
+      "raw_code": 10,
+      "expected": {
+        "value": 10,
+        "label": "system-off"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 27
+      },
+      "raw_code": 254,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "signed8",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 28
+      },
+      "raw_code": 0,
+      "expected": {
+        "value": 0,
+        "label": "control-circuit-one"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "signed8",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 28
+      },
+      "raw_code": 1,
+      "expected": {
+        "value": 1,
+        "label": "control-circuit-two"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "signed8",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 28
+      },
+      "raw_code": 2,
+      "expected": {
+        "value": 2,
+        "label": "control-circuit-three"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "signed8",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 28
+      },
+      "raw_code": 3,
+      "expected": {
+        "value": 3,
+        "label": "control-circuit-four"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "signed8",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 28
+      },
+      "raw_code": 4,
+      "expected": {
+        "value": 4,
+        "label": "control-circuit-five"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "signed8",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 28
+      },
+      "raw_code": 5,
+      "expected": {
+        "value": 5,
+        "label": "control-circuit-six"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "signed8",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 28
+      },
+      "raw_code": 6,
+      "expected": {
+        "value": 6,
+        "label": "control-circuit-seven"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "signed8",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 28
+      },
+      "raw_code": 7,
+      "expected": {
+        "value": 7,
+        "label": "control-circuit-eight"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "signed8",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 28
+      },
+      "raw_code": 8,
+      "expected": {
+        "value": 8,
+        "label": "control-circuit-nine"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "signed8",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 28
+      },
+      "raw_code": 255,
+      "expected": {
+        "value": -1,
+        "label": "unbound"
+      },
+      "grade": "Hypothesis"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "signed8",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 28
+      },
+      "raw_code": 254,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "unknown-family",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 2,
+        "instance_scope": "dynamic",
+        "register": 2
+      },
+      "raw_code": 5,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "none",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 2,
+        "instance_scope": "dynamic",
+        "register": 2
+      },
+      "raw_code": 5,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "other",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 2,
+        "instance_scope": "dynamic",
+        "register": 2
+      },
+      "raw_code": 5,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 0,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 2,
+        "instance_scope": "dynamic",
+        "register": 2
+      },
+      "raw_code": 5,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 0,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 2,
+        "instance_scope": "dynamic",
+        "register": 2
+      },
+      "raw_code": 5,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 6,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 2,
+        "instance_scope": "dynamic",
+        "register": 2
+      },
+      "raw_code": 5,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "write",
+        "field": "value",
+        "alternative": "u16",
+        "group": 2,
+        "instance_scope": "dynamic",
+        "register": 2
+      },
+      "raw_code": 5,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "other",
+        "alternative": "u16",
+        "group": 2,
+        "instance_scope": "dynamic",
+        "register": 2
+      },
+      "raw_code": 5,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "none",
+        "group": 2,
+        "instance_scope": "dynamic",
+        "register": 2
+      },
+      "raw_code": 5,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 0,
+        "instance_scope": "dynamic",
+        "register": 2
+      },
+      "raw_code": 5,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 2,
+        "instance_scope": "00",
+        "register": 2
+      },
+      "raw_code": 5,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 2,
+        "instance_scope": "dynamic",
+        "register": 0
+      },
+      "raw_code": 5,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": null,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 2,
+        "instance_scope": "dynamic",
+        "register": 2
+      },
+      "raw_code": 5,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": null,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 2,
+        "instance_scope": "dynamic",
+        "register": 2
+      },
+      "raw_code": 5,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 0,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 2,
+        "instance_scope": "dynamic",
+        "register": 2
+      },
+      "raw_code": 5,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": null,
+        "instance_scope": "dynamic",
+        "register": 2
+      },
+      "raw_code": 5,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 2,
+        "instance_scope": "dynamic",
+        "register": null
+      },
+      "raw_code": 5,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 1,
+        "instance_scope": "00",
+        "register": 3
+      },
+      "raw_code": 255,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 1,
+        "instance_scope": "00",
+        "register": 3
+      },
+      "raw_code": 65535,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 1
+      },
+      "raw_code": 255,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 1
+      },
+      "raw_code": 65535,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 6
+      },
+      "raw_code": 255,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 6
+      },
+      "raw_code": 65535,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-700",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "signed8",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 28
+      },
+      "raw_code": 8,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 1,
+        "instance_scope": "00",
+        "register": 3
+      },
+      "raw_code": 255,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 1,
+        "instance_scope": "00",
+        "register": 3
+      },
+      "raw_code": 65535,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 2,
+        "instance_scope": "dynamic",
+        "register": 2
+      },
+      "raw_code": 5,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 1
+      },
+      "raw_code": 255,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 1
+      },
+      "raw_code": 65535,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 6
+      },
+      "raw_code": 255,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 6
+      },
+      "raw_code": 65535,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 19
+      },
+      "raw_code": 9,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u8",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 27
+      },
+      "raw_code": 3,
+      "expected": null,
+      "grade": "Unknown"
+    },
+    {
+      "key": {
+        "family": "controller-720",
+        "variant": "none",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "read",
+        "field": "value",
+        "alternative": "u16",
+        "group": 3,
+        "instance_scope": "dynamic",
+        "register": 27
+      },
+      "raw_code": 3,
+      "expected": null,
+      "grade": "Unknown"
+    }
+  ]
+}
