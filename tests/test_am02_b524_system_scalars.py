@@ -208,9 +208,13 @@ class SystemScalars(unittest.TestCase):
                             del changed[axis]
                         else:
                             changed[axis] = None if mode == 'null' else []
-                        self.raw_only(changed, reply)
+                        result = self.raw_only(changed, reply)
+                        self.assertEqual(result['unit'], binding['unit'] if axis in
+                                         ('software', 'hardware', 'api_version',
+                                          'api_revision') else 'Unknown')
             for axis in ('variant', 'direction', 'unexpected'):
-                self.raw_only(dict(ctx, **{axis: 'extra'}), reply)
+                self.assertEqual(self.raw_only(dict(ctx, **{axis: 'extra'}), reply)['unit'],
+                                 binding['unit'])
             # An actual unlisted neighboring RR, independently found from oracle.
             listed = {b['register'] for b in EXPECTED if b['family'] == ctx['family']}
             neighbor = ctx['register'] + 1
@@ -253,13 +257,15 @@ class SystemScalars(unittest.TestCase):
             for axis, maximum in (('opcode', 255), ('group', 255),
                                   ('instance', 255), ('register', 65535)):
                 for value in (-1, maximum + 1, True, '00', 0.0):
-                    self.raw_only(dict(ctx, **{axis: value}), reply)
+                    self.assertEqual(self.raw_only(dict(ctx, **{axis: value}), reply)['unit'],
+                                     'Unknown')
             for axis, maximum in (('group', 255), ('register', 65535)):
                 for value in (-1, maximum + 1, False, '00', 0.0):
                     self.raw_only(ctx, dict(reply, **{axis: value}))
             for axis in ('software', 'hardware', 'api_version', 'api_revision'):
                 for value in ('', -1, False, 0.0):
-                    self.raw_only(dict(ctx, **{axis: value}), reply)
+                    self.assertEqual(self.raw_only(dict(ctx, **{axis: value}), reply)['unit'],
+                                     binding['unit'])
 
     def test_owned_memory_for_every_binding_and_partial_result(self):
         for binding in EXPECTED:

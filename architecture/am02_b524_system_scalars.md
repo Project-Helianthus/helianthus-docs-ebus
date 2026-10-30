@@ -119,11 +119,10 @@ def interpret(context, reply, codec_grade=None, bindings=()):
                                  (type(value) is int and value >= 0))
     for key, maximum in (("opcode", 255), ("group", 255),
                          ("instance", 255), ("register", 65535)):
-        complete = complete and unsigned(context.get(key), maximum)
-    if not complete:
-        return result
+        if not unsigned(context.get(key), maximum):
+            return result
     binding = next((b for b in bindings
-                    if b["family"] == context["family"]
+                    if b["family"] == context.get("family")
                     and b["opcode"] == context["opcode"]
                     and b["group"] == context["group"]
                     and b["register"] == context["register"]
@@ -132,7 +131,8 @@ def interpret(context, reply, codec_grade=None, bindings=()):
     if binding is None:
         return result
     result["unit"] = binding["unit"]
-    if (set(reply) != REPLY_KEYS or reply.get("kind") != "echo_payload"
+    if (not complete
+            or set(reply) != REPLY_KEYS or reply.get("kind") != "echo_payload"
             or not unsigned(reply.get("group"), 255)
             or not unsigned(reply.get("register"), 65535)
             or reply["group"] != context["group"]
