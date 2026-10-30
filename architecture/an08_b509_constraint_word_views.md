@@ -12,7 +12,9 @@ The examples are synthetic. They are not device observations, captures, or
 installation records.
 
 The signature below is hypothetical and is used consistently by this contract.
-No implementation module is imported.
+This documentation establishes the API contract before implementation.
+Implementation must follow this contract. The checks use a local reference
+helper and import no production module.
 
 ```text
 interpret_b509_op33_positive_alternative(selection, addresses, words) -> view
@@ -245,5 +247,5 @@ other family uses the same helper selection, the algorithm that would turn
 
 ## Companion
 
-AN07 is the ordinary companion of this page. This page has no dependency on a
-code change.
+AN07 is a related companion. This page owns the B509 OP33 helper contract; it
+neither defines nor requires the companion API.

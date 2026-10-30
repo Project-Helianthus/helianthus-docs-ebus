@@ -166,7 +166,7 @@ RESULT_PAGE_ROWS = (
 def signed_le16(raw):
     value = raw[0] | (raw[1] << 8)
     if value >= 0x8000:
-        value -= 0x10000
+        value -= 1 << 16
     return value
 
 
@@ -177,7 +177,7 @@ def unsigned_le16(raw):
 def signed_be16(raw):
     value = (raw[0] << 8) | raw[1]
     if value >= 0x8000:
-        value -= 0x10000
+        value -= 1 << 16
     return value
 
 
