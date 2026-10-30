@@ -99,8 +99,8 @@ qualification. Verify=false retains the positive/unverified distinction.
 [Standard-library checks](../tests/test_aj26_standard09_local_policy.py) compare
 page tables and scenarios to independent transition and arithmetic expectations.
 No memory client, writer, authorization gate or forwarder is implemented. eBUS
-MCP compatibility and GraphQL parity are unaffected because no runtime or API
-is changed. No new namespace or major version is introduced. No authorization
-gate is introduced before 0.9; any roadmap discussion belongs to 0.11.
+MCP compatibility and GraphQL parity are unaffected because no runtime or API is changed.
+No new namespace or major version is introduced.
+No authorization gate is introduced before 0.9; any roadmap discussion belongs to 0.11.
 Full ship gates and transport qualification are separate later requirements;
 these checks establish no physical result.

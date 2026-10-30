@@ -196,7 +196,7 @@ class LocalPolicyTest(unittest.TestCase):
         self.assertIn('endian rules: both are **Unknown**', self.page)
         self.assertIn('No memory client, writer, authorization gate or forwarder is implemented', self.page)
         self.assertIn('Nothing here is stable before 1.0', self.page)
-        self.assertIn('No authorization\ngate is introduced before 0.9', self.page)
+        self.assertIn('No authorization gate is introduced before 0.9; any roadmap discussion belongs to 0.11.', self.page.splitlines())
         self.assertIn('0.11', self.page)
         for forbidden in ('candidate is **Proven**', 'blocksize is 16', 'periodicity is 60'):
             self.assertNotIn(forbidden, self.page)
