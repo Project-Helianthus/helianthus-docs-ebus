@@ -143,7 +143,7 @@ def interpret(context, reply, codec_grade=None):
 
 Every table tuple has its own controls in the example package. For every float
 binding `00 00 C0 3F` gives 1.5 and `00 00 80 BF` gives -1;
-IEEE word 0x7F800000 materialized little-endian as `00 00 80 7F` is raw-only.
+IEEE positive infinity encoded little-endian as `00 00 80 7F` is raw-only.
 For every uint16 binding `34 12` gives 4660 and `FF FF` gives 65535 without a
 sentinel interpretation. Width minus/plus one, neighboring unlisted RR, OP06,
 unknown family, II01, mismatched returned GG/RR, all non-echo kinds, unknown or

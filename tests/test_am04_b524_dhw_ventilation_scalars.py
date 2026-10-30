@@ -172,8 +172,11 @@ class ScalarContract(unittest.TestCase):
             alternate = b'\x34\x12' if codec == 'float32' else b'\x00\x00\xc0\x3f'
             self.check(context, dict(reply, value_bytes=alternate), unit=unit)
             if codec == 'float32':
-                for word in (0x7f800000, 0xff800000, 0x7fc00001):
-                    self.check(context, dict(reply, value_bytes=word.to_bytes(4, 'little')), unit=unit)
+                # Exact little-endian bytes for positive/negative infinity and NaN.
+                for raw in (bytes((0, 0, 0x80, 0x7f)),
+                            bytes((0, 0, 0x80, 0xff)),
+                            bytes((1, 0, 0xc0, 0x7f))):
+                    self.check(context, dict(reply, value_bytes=raw), unit=unit)
                 # Finite, out-of-assumed-range values remain candidate numbers.
                 self.check(context, dict(reply, value_bytes=struct.pack('<f', -500)), expected=-500, unit=unit)
             self.check(dict(context, extra={'items': [0]}), dict(reply, extra={'items': [0]}), expected=number, unit=unit)
