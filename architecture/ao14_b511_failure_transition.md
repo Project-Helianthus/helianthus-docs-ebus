@@ -392,8 +392,8 @@ production function; production-call validation remains a separate code task.
 ```
 <!-- ab13ao13-contract:end -->
 
-The focused suite is a mandatory separate ship check: the repository's full
-local gate has an explicit suite list and does not automatically include it.
+The focused suite is registered in the repository's full local gate as a
+mandatory unittest invocation.
 Full Gate D, publication checks and independent committed-change review remain
 required before shipping. Transport classification is documentation-only: no
 transport execution or device smoke test is evidenced by these examples.
