@@ -66,7 +66,7 @@ def refresh(service, op, registration, index, selector, success, count, reply, p
 
 
 def timer(index, failure):
-    if index != 0:
+    if index != 0 or failure == UNKNOWN:
         return UNKNOWN, UNKNOWN
     return (120, 'failure') if failure != 0 else (UNKNOWN, 'capability')
 
@@ -214,6 +214,11 @@ class CandidateTransitions(unittest.TestCase):
             self.assertEqual(refresh(*args), (prior, []))
         # Initialization is separately declared; no refresh is needed to clear it.
         self.assertEqual(dict((r[0], r[1]) for r in self.tables['constants'][1:])['failure_initial'], 0)
+
+    def test_timer_preserves_unknown_failure(self):
+        for index in (0, 1):
+            with self.subTest(index=index):
+                self.assertEqual(timer(index, UNKNOWN), (UNKNOWN, UNKNOWN))
 
     def test_timer_without_refresh(self):
         for index, failure, argument, path, _ in self.tables['timer'][1:]:
