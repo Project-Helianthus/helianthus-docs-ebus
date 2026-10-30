@@ -51,9 +51,10 @@ channel behavior is **Unknown**.
 | 2 | low-temperature15K | Unknown | Hypothesis |
 | 3 | standard1K | Unknown | Hypothesis |
 
-Raw `FF` for either PWM label gives candidate 127.5 percent. Do not clip
-at 100 or interpret `FF` as unavailable. ED has a candidate percent label, but
-its scaling is **Unknown**; the overview specifies division by two only for PWM.
+Raw `FF` for either PWM label gives candidate 127.5 percent by arithmetic alone.
+Do not clip the candidate arithmetic at 100. Acceptance and sentinel meaning of
+`FF` are **Unknown**; the overview does not establish whether it means unavailable.
+ED has a candidate percent label, but its scaling is **Unknown**; the overview specifies division by two only for PWM.
 Preserve ED bytes without converting them to a percentage. Stepper and LED bytes
 retain their raw values without assigning motion, calibration or enabled/disabled
 semantics.

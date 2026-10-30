@@ -23,8 +23,8 @@ def expected():
         return value
     request = [
         field('relay', 3, bit_roles=None),
-        field('PWM1', 4, divisor=2, unit='percent'),
-        field('PWM2', 5, divisor=2, unit='percent'),
+        field('PWM1', 4, divisor=2, unit='percent', sentinel=None),
+        field('PWM2', 5, divisor=2, unit='percent', sentinel=None),
         field('stepper', 6, steps_domain=None, unmapped_regions=[]),
         field('LED', 7, unmapped_regions=[]),
         field('ED', 8, unit='percent'),
@@ -122,6 +122,7 @@ class SimulatorADC(unittest.TestCase):
                 f = self.field('request', name)
                 self.assertEqual(candidate(f, bytes.fromhex('FF')), 127.5)
                 self.assertTrue(inside(f['raw_domain'], 255))
+                self.assertIsNone(f['sentinel'])
 
     def test_ed_scaling_unknown_preserves_raw(self):
         f = self.field('request', 'ED')
@@ -239,8 +240,9 @@ class SimulatorADC(unittest.TestCase):
             'Accepted raw and physical domains are **Unknown**;',
             'independent physical channel behavior is **Unknown**.',
             'Native adaptation, physical lengths, peer effects, device support and physical qualification remain **Unknown**.',
-            'Do not clip at 100 or interpret `FF` as unavailable.',
-            'Raw `FF` for either PWM label gives candidate 127.5 percent.',
+            'Do not clip the candidate arithmetic at 100.',
+            'Acceptance and sentinel meaning of `FF` are **Unknown**;',
+            'Raw `FF` for either PWM label gives candidate 127.5 percent by arithmetic alone.',
             'ED has a candidate percent label, but its scaling is **Unknown**;',
             'acceptance and sentinel meanings **Unknown**.',
             'Those properties remain **Unknown** in both this page and the synthetic fixture;',

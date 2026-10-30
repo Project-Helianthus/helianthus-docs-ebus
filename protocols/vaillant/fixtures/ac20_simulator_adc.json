@@ -67,7 +67,8 @@
           "mappings": {},
           "reserved_regions": [],
           "grade": "Hypothesis",
-          "raw_fallback": "preserve_raw_bytes"
+          "raw_fallback": "preserve_raw_bytes",
+          "sentinel": null
         },
         {
           "name": "PWM2",
@@ -87,7 +88,8 @@
           "mappings": {},
           "reserved_regions": [],
           "grade": "Hypothesis",
-          "raw_fallback": "preserve_raw_bytes"
+          "raw_fallback": "preserve_raw_bytes",
+          "sentinel": null
         },
         {
           "name": "stepper",
