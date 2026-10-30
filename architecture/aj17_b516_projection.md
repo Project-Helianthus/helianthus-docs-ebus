@@ -1,12 +1,12 @@
 # Local energy extent and publication candidate
 
-The native authority comes first: [B516 §9 and §11](../protocols/vaillant/ebus-vaillant-B516-energy.md#9-sub-id-0x14---current-electrical-power-candidate).
-It describes an unconfirmed OP14 wire candidate, not a qualified power service.
+The native B516 OP14 wire candidate remains unconfirmed; it does not establish
+a qualified power service.
 This page defines only the bounded local software candidate from
 [issue #824](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/824),
 a partial slice of [#736](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/736).
 All proposed rules below are **Hypothesis**. No runtime feature is implemented.
-The local u32/W projection is not a reinterpretation of the native page's
+The local u32/W projection is not a reinterpretation of the native
 candidate binary32 word. Numeric identity between them remains Unknown.
 No offsets for either word are selected here.
 
@@ -65,9 +65,9 @@ scale. No nonzero-scale conversion or actor1 power projection is specified.
 | Raw local power | Published current_power |
 | --- | --- |
 | 0 | 0 |
-| FFFFFFFF | null |
+| 2^32 - 1 | null |
 | 7 | 7 |
-| FFFFFFFE | 4294967294 |
+| 2^32 - 2 | 4294967294 |
 
 These are local integer u32 inputs, not a byte decoder for native OP14.
 
@@ -75,7 +75,7 @@ These are local integer u32 inputs, not a byte decoder for native OP14.
 
 A per-device status operation rereads registered AND capable slots. Each emitted
 entry has exactly `participant_address`, `coupler_address` (integer 0), and
-`current_power` (integer u32, or null for FFFFFFFF). Participant addresses remain
+`current_power` (integer u32, or null for 2^32 - 1). Participant addresses remain
 distinct; neither address nor variant substitutes for registration or capability.
 Do not emit a second word, previous value, total or freshness. Zero is integer 0,
 not null. Preserve serialized bytes and count exactly; this proposal defines no

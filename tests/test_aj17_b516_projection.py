@@ -86,7 +86,7 @@ class LocalEnergyContract(unittest.TestCase):
                 self.assertGreaterEqual(c['current_power'], 0)
                 self.assertLess(c['current_power'], 2**32)
         self.assertEqual(self.table('| Raw local power | Published current_power |'), [
-            ('0', '0'), ('FFFFFFFF', 'null'), ('7', '7'), ('FFFFFFFE', str(2**32 - 2))])
+            ('0', '0'), ('2^32 - 1', 'null'), ('7', '7'), ('2^32 - 2', str(2**32 - 2))])
 
     def test_slot_selection_and_entry_shape(self):
         cases = self.data['slots']
