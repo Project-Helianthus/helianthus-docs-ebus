@@ -1,0 +1,300 @@
+{
+  "contract": {
+    "api": "Ab19Ao19Interpret(ab19ao19Input json.RawMessage) (json.RawMessage, error)",
+    "package": "vaillant",
+    "dependencies": "standard library",
+    "input": {
+      "required": [
+        "context",
+        "fields"
+      ],
+      "optional": [
+        "arguments"
+      ],
+      "context": {
+        "primary": 181,
+        "secondary": 20,
+        "operation": "integer",
+        "direction": "string",
+        "view": "explicit string"
+      },
+      "fields": "object of integer byte arrays, each element 0..255",
+      "arguments": "object; no nonempty argument vocabulary is specified by this slice"
+    },
+    "output": {
+      "required": [
+        "context",
+        "raw",
+        "state",
+        "fields",
+        "physical",
+        "qualified"
+      ],
+      "optional": [
+        "arguments"
+      ],
+      "physical": "Unknown",
+      "qualified": false,
+      "field_required": [
+        "raw",
+        "state"
+      ],
+      "field_optional": [
+        "number",
+        "label",
+        "flags",
+        "reserved",
+        "candidate_domain",
+        "grade",
+        "calculation"
+      ],
+      "semantic_grade": "Hypothesis",
+      "exact_calculation": "Proven"
+    },
+    "selection": [
+      [
+        6,
+        "positive",
+        "generic-result"
+      ],
+      [
+        6,
+        "positive",
+        "specific-a-result"
+      ],
+      [
+        6,
+        "positive",
+        "specific-b-result"
+      ],
+      [
+        7,
+        "positive",
+        "progress"
+      ],
+      [
+        8,
+        "positive",
+        "pressure"
+      ]
+    ],
+    "op06": {
+      "generic-result": {
+        "1": "in-progress",
+        "255": "unsupported"
+      },
+      "specific-a-result": {
+        "1": "not-successful",
+        "invalid": [
+          3,
+          255
+        ]
+      },
+      "specific-b-result": {
+        "1": "not-successful",
+        "invalid": [
+          3,
+          255
+        ]
+      },
+      "unmapped": [
+        0,
+        2
+      ]
+    },
+    "op07": {
+      "0": "idle",
+      "1": "progress",
+      "2": "passed",
+      "3": "warning",
+      "4": "combustion-error",
+      "5": "gas-type-error",
+      "6": "aborted",
+      "255": "unsupported",
+      "unmapped": [
+        7,
+        254
+      ]
+    },
+    "op08": {
+      "field": "logical_object",
+      "extent": 13,
+      "opaque_positions": [
+        0,
+        1,
+        2
+      ],
+      "layout": [
+        [
+          "feedback",
+          3,
+          1,
+          "unmapped"
+        ],
+        [
+          "pressure",
+          4,
+          2,
+          "LEu16 carrier"
+        ],
+        [
+          "minimum",
+          6,
+          2,
+          "LEu16 carrier"
+        ],
+        [
+          "maximum",
+          8,
+          2,
+          "LEu16 carrier"
+        ],
+        [
+          "step",
+          10,
+          1,
+          "unit-conflict"
+        ],
+        [
+          "flow",
+          11,
+          2,
+          "LEu16 / 100 l/min"
+        ]
+      ],
+      "pressure_unit": "Unknown",
+      "step_conflict": {
+        "constant": 1,
+        "unit": "mbar",
+        "default": 0
+      }
+    },
+    "rules": {
+      "unknown_selection": "raw-only Unknown; no guessed view or identity",
+      "identity_mismatch": "raw-only Unknown",
+      "raw_preservation": "all context keys, raw fields, opaque prefix and tails; arguments if supplied",
+      "partial": "retain complete independent fields; never decode a truncated word",
+      "number_omission": [
+        "incomplete",
+        "unmapped",
+        "unit-conflict",
+        "unknown-order"
+      ],
+      "outside_domain": "an explicitly defined carrier may keep number with candidate_domain=false; none defined here",
+      "isolation": "deep independent context, raw and arguments; calls and sibling fields share no mutable storage",
+      "presence": "missing, empty and explicit zero remain distinct through JSON round trips",
+      "errors": "malformed JSON, duplicate object keys at every depth, wrong JSON kinds, invalid bytes: error and no successful result",
+      "unknown_sibling": "cannot erase complete independent fields",
+      "qualification": "never inferred from family, variant, selection or arithmetic",
+      "effects": "feedback alone proves no completed effect; physical adaptation, peer effects and persistence Unknown",
+      "op02": "twenty-row union Unknown",
+      "op05": "128 typed rows Unknown",
+      "non_goals": [
+        "command builder",
+        "global cache",
+        "generic catalog",
+        "metadata listing",
+        "registration",
+        "pending API import",
+        "runtime call site"
+      ],
+      "parity": "no eBUS MCP or GraphQL surface change"
+    }
+  },
+  "cases": [
+    {"id":"ab19ao19_op06_generic_0","input":{"context":{"primary":181,"secondary":20,"operation":6,"direction":"positive","view":"generic-result","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"feedback":[0]}},"expected":{"state":"complete","fields":{"feedback":{"raw":[0],"state":"unmapped","grade":"Hypothesis"}},"physical":"Unknown","qualified":false}},
+    {"id":"ab19ao19_op06_generic_1","input":{"context":{"primary":181,"secondary":20,"operation":6,"direction":"positive","view":"generic-result","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"feedback":[1]}},"expected":{"state":"complete","fields":{"feedback":{"raw":[1],"state":"mapped","grade":"Hypothesis","label":"in-progress"}},"physical":"Unknown","qualified":false}},
+    {"id":"ab19ao19_op06_generic_2","input":{"context":{"primary":181,"secondary":20,"operation":6,"direction":"positive","view":"generic-result","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"feedback":[2]}},"expected":{"state":"complete","fields":{"feedback":{"raw":[2],"state":"unmapped","grade":"Hypothesis"}},"physical":"Unknown","qualified":false}},
+    {"id":"ab19ao19_op06_generic_3","input":{"context":{"primary":181,"secondary":20,"operation":6,"direction":"positive","view":"generic-result","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"feedback":[3]}},"expected":{"state":"complete","fields":{"feedback":{"raw":[3],"state":"unmapped","grade":"Hypothesis"}},"physical":"Unknown","qualified":false}},
+    {"id":"ab19ao19_op06_generic_255","input":{"context":{"primary":181,"secondary":20,"operation":6,"direction":"positive","view":"generic-result","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"feedback":[255]}},"expected":{"state":"complete","fields":{"feedback":{"raw":[255],"state":"mapped","grade":"Hypothesis","label":"unsupported"}},"physical":"Unknown","qualified":false}},
+    {"id":"ab19ao19_op06_specific_a_0","input":{"context":{"primary":181,"secondary":20,"operation":6,"direction":"positive","view":"specific-a-result","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"feedback":[0]}},"expected":{"state":"complete","fields":{"feedback":{"raw":[0],"state":"unmapped","grade":"Hypothesis"}},"physical":"Unknown","qualified":false}},
+    {"id":"ab19ao19_op06_specific_a_1","input":{"context":{"primary":181,"secondary":20,"operation":6,"direction":"positive","view":"specific-a-result","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"feedback":[1]}},"expected":{"state":"complete","fields":{"feedback":{"raw":[1],"state":"mapped","grade":"Hypothesis","label":"not-successful"}},"physical":"Unknown","qualified":false}},
+    {"id":"ab19ao19_op06_specific_a_2","input":{"context":{"primary":181,"secondary":20,"operation":6,"direction":"positive","view":"specific-a-result","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"feedback":[2]}},"expected":{"state":"complete","fields":{"feedback":{"raw":[2],"state":"unmapped","grade":"Hypothesis"}},"physical":"Unknown","qualified":false}},
+    {"id":"ab19ao19_op06_specific_a_3","input":{"context":{"primary":181,"secondary":20,"operation":6,"direction":"positive","view":"specific-a-result","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"feedback":[3]}},"expected":{"state":"complete","fields":{"feedback":{"raw":[3],"state":"invalid","grade":"Hypothesis"}},"physical":"Unknown","qualified":false}},
+    {"id":"ab19ao19_op06_specific_a_255","input":{"context":{"primary":181,"secondary":20,"operation":6,"direction":"positive","view":"specific-a-result","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"feedback":[255]}},"expected":{"state":"complete","fields":{"feedback":{"raw":[255],"state":"invalid","grade":"Hypothesis"}},"physical":"Unknown","qualified":false}},
+    {"id":"ab19ao19_op06_specific_b_0","input":{"context":{"primary":181,"secondary":20,"operation":6,"direction":"positive","view":"specific-b-result","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"feedback":[0]}},"expected":{"state":"complete","fields":{"feedback":{"raw":[0],"state":"unmapped","grade":"Hypothesis"}},"physical":"Unknown","qualified":false}},
+    {"id":"ab19ao19_op06_specific_b_1","input":{"context":{"primary":181,"secondary":20,"operation":6,"direction":"positive","view":"specific-b-result","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"feedback":[1]}},"expected":{"state":"complete","fields":{"feedback":{"raw":[1],"state":"mapped","grade":"Hypothesis","label":"not-successful"}},"physical":"Unknown","qualified":false}},
+    {"id":"ab19ao19_op06_specific_b_2","input":{"context":{"primary":181,"secondary":20,"operation":6,"direction":"positive","view":"specific-b-result","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"feedback":[2]}},"expected":{"state":"complete","fields":{"feedback":{"raw":[2],"state":"unmapped","grade":"Hypothesis"}},"physical":"Unknown","qualified":false}},
+    {"id":"ab19ao19_op06_specific_b_3","input":{"context":{"primary":181,"secondary":20,"operation":6,"direction":"positive","view":"specific-b-result","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"feedback":[3]}},"expected":{"state":"complete","fields":{"feedback":{"raw":[3],"state":"invalid","grade":"Hypothesis"}},"physical":"Unknown","qualified":false}},
+    {"id":"ab19ao19_op06_specific_b_255","input":{"context":{"primary":181,"secondary":20,"operation":6,"direction":"positive","view":"specific-b-result","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"feedback":[255]}},"expected":{"state":"complete","fields":{"feedback":{"raw":[255],"state":"invalid","grade":"Hypothesis"}},"physical":"Unknown","qualified":false}},
+    {"id":"ab19ao19_op07_0","input":{"context":{"primary":181,"secondary":20,"operation":7,"direction":"positive","view":"progress","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"feedback":[0]}},"expected":{"state":"complete","fields":{"feedback":{"raw":[0],"state":"mapped","grade":"Hypothesis","label":"idle"}},"physical":"Unknown","qualified":false}},
+    {"id":"ab19ao19_op07_1","input":{"context":{"primary":181,"secondary":20,"operation":7,"direction":"positive","view":"progress","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"feedback":[1]}},"expected":{"state":"complete","fields":{"feedback":{"raw":[1],"state":"mapped","grade":"Hypothesis","label":"progress"}},"physical":"Unknown","qualified":false}},
+    {"id":"ab19ao19_op07_2","input":{"context":{"primary":181,"secondary":20,"operation":7,"direction":"positive","view":"progress","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"feedback":[2]}},"expected":{"state":"complete","fields":{"feedback":{"raw":[2],"state":"mapped","grade":"Hypothesis","label":"passed"}},"physical":"Unknown","qualified":false}},
+    {"id":"ab19ao19_op07_3","input":{"context":{"primary":181,"secondary":20,"operation":7,"direction":"positive","view":"progress","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"feedback":[3]}},"expected":{"state":"complete","fields":{"feedback":{"raw":[3],"state":"mapped","grade":"Hypothesis","label":"warning"}},"physical":"Unknown","qualified":false}},
+    {"id":"ab19ao19_op07_4","input":{"context":{"primary":181,"secondary":20,"operation":7,"direction":"positive","view":"progress","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"feedback":[4]}},"expected":{"state":"complete","fields":{"feedback":{"raw":[4],"state":"mapped","grade":"Hypothesis","label":"combustion-error"}},"physical":"Unknown","qualified":false}},
+    {"id":"ab19ao19_op07_5","input":{"context":{"primary":181,"secondary":20,"operation":7,"direction":"positive","view":"progress","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"feedback":[5]}},"expected":{"state":"complete","fields":{"feedback":{"raw":[5],"state":"mapped","grade":"Hypothesis","label":"gas-type-error"}},"physical":"Unknown","qualified":false}},
+    {"id":"ab19ao19_op07_6","input":{"context":{"primary":181,"secondary":20,"operation":7,"direction":"positive","view":"progress","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"feedback":[6]}},"expected":{"state":"complete","fields":{"feedback":{"raw":[6],"state":"mapped","grade":"Hypothesis","label":"aborted"}},"physical":"Unknown","qualified":false}},
+    {"id":"ab19ao19_op07_7","input":{"context":{"primary":181,"secondary":20,"operation":7,"direction":"positive","view":"progress","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"feedback":[7]}},"expected":{"state":"complete","fields":{"feedback":{"raw":[7],"state":"unmapped","grade":"Hypothesis"}},"physical":"Unknown","qualified":false}},
+    {"id":"ab19ao19_op07_254","input":{"context":{"primary":181,"secondary":20,"operation":7,"direction":"positive","view":"progress","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"feedback":[254]}},"expected":{"state":"complete","fields":{"feedback":{"raw":[254],"state":"unmapped","grade":"Hypothesis"}},"physical":"Unknown","qualified":false}},
+    {"id":"ab19ao19_op07_255","input":{"context":{"primary":181,"secondary":20,"operation":7,"direction":"positive","view":"progress","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"feedback":[255]}},"expected":{"state":"complete","fields":{"feedback":{"raw":[255],"state":"mapped","grade":"Hypothesis","label":"unsupported"}},"physical":"Unknown","qualified":false}},
+    {"id":"ab19ao19_pressure_control","input":{"context":{"primary":181,"secondary":20,"operation":8,"direction":"positive","view":"pressure","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"logical_object":[17,34,51,0,1,0,0,1,52,18,0,100,0]}},"expected":{"state":"complete","physical":"Unknown","qualified":false,"fields":{"feedback":{"raw":[0],"state":"unmapped","grade":"Hypothesis"},"pressure":{"raw":[1,0],"state":"mapped","number":1,"grade":"Hypothesis","calculation":"Proven"},"minimum":{"raw":[0,1],"state":"mapped","number":256,"grade":"Hypothesis","calculation":"Proven"},"maximum":{"raw":[52,18],"state":"mapped","number":4660,"grade":"Hypothesis","calculation":"Proven"},"step":{"raw":[0],"state":"unit-conflict","grade":"Hypothesis"},"flow":{"raw":[100,0],"state":"mapped","number":1,"grade":"Hypothesis","calculation":"Proven"}}}},
+    {"id":"ab19ao19_pressure_low","input":{"context":{"primary":181,"secondary":20,"operation":8,"direction":"positive","view":"pressure","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"logical_object":[17,34,51,0,2,0,0,1,52,18,0,100,0]}},"expected":{"state":"complete","physical":"Unknown","qualified":false,"fields":{"feedback":{"raw":[0],"state":"unmapped","grade":"Hypothesis"},"pressure":{"raw":[2,0],"state":"mapped","number":2,"grade":"Hypothesis","calculation":"Proven"},"minimum":{"raw":[0,1],"state":"mapped","number":256,"grade":"Hypothesis","calculation":"Proven"},"maximum":{"raw":[52,18],"state":"mapped","number":4660,"grade":"Hypothesis","calculation":"Proven"},"step":{"raw":[0],"state":"unit-conflict","grade":"Hypothesis"},"flow":{"raw":[100,0],"state":"mapped","number":1,"grade":"Hypothesis","calculation":"Proven"}}}},
+    {"id":"ab19ao19_pressure_high","input":{"context":{"primary":181,"secondary":20,"operation":8,"direction":"positive","view":"pressure","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"logical_object":[17,34,51,0,1,1,0,1,52,18,0,100,0]}},"expected":{"state":"complete","physical":"Unknown","qualified":false,"fields":{"feedback":{"raw":[0],"state":"unmapped","grade":"Hypothesis"},"pressure":{"raw":[1,1],"state":"mapped","number":257,"grade":"Hypothesis","calculation":"Proven"},"minimum":{"raw":[0,1],"state":"mapped","number":256,"grade":"Hypothesis","calculation":"Proven"},"maximum":{"raw":[52,18],"state":"mapped","number":4660,"grade":"Hypothesis","calculation":"Proven"},"step":{"raw":[0],"state":"unit-conflict","grade":"Hypothesis"},"flow":{"raw":[100,0],"state":"mapped","number":1,"grade":"Hypothesis","calculation":"Proven"}}}},
+    {"id":"ab19ao19_minimum_low","input":{"context":{"primary":181,"secondary":20,"operation":8,"direction":"positive","view":"pressure","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"logical_object":[17,34,51,0,1,0,1,1,52,18,0,100,0]}},"expected":{"state":"complete","physical":"Unknown","qualified":false,"fields":{"feedback":{"raw":[0],"state":"unmapped","grade":"Hypothesis"},"pressure":{"raw":[1,0],"state":"mapped","number":1,"grade":"Hypothesis","calculation":"Proven"},"minimum":{"raw":[1,1],"state":"mapped","number":257,"grade":"Hypothesis","calculation":"Proven"},"maximum":{"raw":[52,18],"state":"mapped","number":4660,"grade":"Hypothesis","calculation":"Proven"},"step":{"raw":[0],"state":"unit-conflict","grade":"Hypothesis"},"flow":{"raw":[100,0],"state":"mapped","number":1,"grade":"Hypothesis","calculation":"Proven"}}}},
+    {"id":"ab19ao19_minimum_high","input":{"context":{"primary":181,"secondary":20,"operation":8,"direction":"positive","view":"pressure","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"logical_object":[17,34,51,0,1,0,0,2,52,18,0,100,0]}},"expected":{"state":"complete","physical":"Unknown","qualified":false,"fields":{"feedback":{"raw":[0],"state":"unmapped","grade":"Hypothesis"},"pressure":{"raw":[1,0],"state":"mapped","number":1,"grade":"Hypothesis","calculation":"Proven"},"minimum":{"raw":[0,2],"state":"mapped","number":512,"grade":"Hypothesis","calculation":"Proven"},"maximum":{"raw":[52,18],"state":"mapped","number":4660,"grade":"Hypothesis","calculation":"Proven"},"step":{"raw":[0],"state":"unit-conflict","grade":"Hypothesis"},"flow":{"raw":[100,0],"state":"mapped","number":1,"grade":"Hypothesis","calculation":"Proven"}}}},
+    {"id":"ab19ao19_maximum_low","input":{"context":{"primary":181,"secondary":20,"operation":8,"direction":"positive","view":"pressure","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"logical_object":[17,34,51,0,1,0,0,1,53,18,0,100,0]}},"expected":{"state":"complete","physical":"Unknown","qualified":false,"fields":{"feedback":{"raw":[0],"state":"unmapped","grade":"Hypothesis"},"pressure":{"raw":[1,0],"state":"mapped","number":1,"grade":"Hypothesis","calculation":"Proven"},"minimum":{"raw":[0,1],"state":"mapped","number":256,"grade":"Hypothesis","calculation":"Proven"},"maximum":{"raw":[53,18],"state":"mapped","number":4661,"grade":"Hypothesis","calculation":"Proven"},"step":{"raw":[0],"state":"unit-conflict","grade":"Hypothesis"},"flow":{"raw":[100,0],"state":"mapped","number":1,"grade":"Hypothesis","calculation":"Proven"}}}},
+    {"id":"ab19ao19_maximum_high","input":{"context":{"primary":181,"secondary":20,"operation":8,"direction":"positive","view":"pressure","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"logical_object":[17,34,51,0,1,0,0,1,52,19,0,100,0]}},"expected":{"state":"complete","physical":"Unknown","qualified":false,"fields":{"feedback":{"raw":[0],"state":"unmapped","grade":"Hypothesis"},"pressure":{"raw":[1,0],"state":"mapped","number":1,"grade":"Hypothesis","calculation":"Proven"},"minimum":{"raw":[0,1],"state":"mapped","number":256,"grade":"Hypothesis","calculation":"Proven"},"maximum":{"raw":[52,19],"state":"mapped","number":4916,"grade":"Hypothesis","calculation":"Proven"},"step":{"raw":[0],"state":"unit-conflict","grade":"Hypothesis"},"flow":{"raw":[100,0],"state":"mapped","number":1,"grade":"Hypothesis","calculation":"Proven"}}}},
+    {"id":"ab19ao19_flow_low","input":{"context":{"primary":181,"secondary":20,"operation":8,"direction":"positive","view":"pressure","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"logical_object":[17,34,51,0,1,0,0,1,52,18,0,200,0]}},"expected":{"state":"complete","physical":"Unknown","qualified":false,"fields":{"feedback":{"raw":[0],"state":"unmapped","grade":"Hypothesis"},"pressure":{"raw":[1,0],"state":"mapped","number":1,"grade":"Hypothesis","calculation":"Proven"},"minimum":{"raw":[0,1],"state":"mapped","number":256,"grade":"Hypothesis","calculation":"Proven"},"maximum":{"raw":[52,18],"state":"mapped","number":4660,"grade":"Hypothesis","calculation":"Proven"},"step":{"raw":[0],"state":"unit-conflict","grade":"Hypothesis"},"flow":{"raw":[200,0],"state":"mapped","number":2,"grade":"Hypothesis","calculation":"Proven"}}}},
+    {"id":"ab19ao19_flow_high","input":{"context":{"primary":181,"secondary":20,"operation":8,"direction":"positive","view":"pressure","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"logical_object":[17,34,51,0,1,0,0,1,52,18,0,100,1]}},"expected":{"state":"complete","physical":"Unknown","qualified":false,"fields":{"feedback":{"raw":[0],"state":"unmapped","grade":"Hypothesis"},"pressure":{"raw":[1,0],"state":"mapped","number":1,"grade":"Hypothesis","calculation":"Proven"},"minimum":{"raw":[0,1],"state":"mapped","number":256,"grade":"Hypothesis","calculation":"Proven"},"maximum":{"raw":[52,18],"state":"mapped","number":4660,"grade":"Hypothesis","calculation":"Proven"},"step":{"raw":[0],"state":"unit-conflict","grade":"Hypothesis"},"flow":{"raw":[100,1],"state":"mapped","number":3.56,"grade":"Hypothesis","calculation":"Proven"}}}},
+    {"id":"ab19ao19_prefix_0","input":{"context":{"primary":181,"secondary":20,"operation":8,"direction":"positive","view":"pressure","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"logical_object":[255,34,51,0,1,0,0,1,52,18,0,100,0]}},"expected":{"state":"complete","physical":"Unknown","qualified":false,"fields":{"feedback":{"raw":[0],"state":"unmapped","grade":"Hypothesis"},"pressure":{"raw":[1,0],"state":"mapped","number":1,"grade":"Hypothesis","calculation":"Proven"},"minimum":{"raw":[0,1],"state":"mapped","number":256,"grade":"Hypothesis","calculation":"Proven"},"maximum":{"raw":[52,18],"state":"mapped","number":4660,"grade":"Hypothesis","calculation":"Proven"},"step":{"raw":[0],"state":"unit-conflict","grade":"Hypothesis"},"flow":{"raw":[100,0],"state":"mapped","number":1,"grade":"Hypothesis","calculation":"Proven"}}}},
+    {"id":"ab19ao19_prefix_1","input":{"context":{"primary":181,"secondary":20,"operation":8,"direction":"positive","view":"pressure","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"logical_object":[17,255,51,0,1,0,0,1,52,18,0,100,0]}},"expected":{"state":"complete","physical":"Unknown","qualified":false,"fields":{"feedback":{"raw":[0],"state":"unmapped","grade":"Hypothesis"},"pressure":{"raw":[1,0],"state":"mapped","number":1,"grade":"Hypothesis","calculation":"Proven"},"minimum":{"raw":[0,1],"state":"mapped","number":256,"grade":"Hypothesis","calculation":"Proven"},"maximum":{"raw":[52,18],"state":"mapped","number":4660,"grade":"Hypothesis","calculation":"Proven"},"step":{"raw":[0],"state":"unit-conflict","grade":"Hypothesis"},"flow":{"raw":[100,0],"state":"mapped","number":1,"grade":"Hypothesis","calculation":"Proven"}}}},
+    {"id":"ab19ao19_prefix_2","input":{"context":{"primary":181,"secondary":20,"operation":8,"direction":"positive","view":"pressure","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"logical_object":[17,34,255,0,1,0,0,1,52,18,0,100,0]}},"expected":{"state":"complete","physical":"Unknown","qualified":false,"fields":{"feedback":{"raw":[0],"state":"unmapped","grade":"Hypothesis"},"pressure":{"raw":[1,0],"state":"mapped","number":1,"grade":"Hypothesis","calculation":"Proven"},"minimum":{"raw":[0,1],"state":"mapped","number":256,"grade":"Hypothesis","calculation":"Proven"},"maximum":{"raw":[52,18],"state":"mapped","number":4660,"grade":"Hypothesis","calculation":"Proven"},"step":{"raw":[0],"state":"unit-conflict","grade":"Hypothesis"},"flow":{"raw":[100,0],"state":"mapped","number":1,"grade":"Hypothesis","calculation":"Proven"}}}},
+    {"id":"ab19ao19_step_one","input":{"context":{"primary":181,"secondary":20,"operation":8,"direction":"positive","view":"pressure","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"logical_object":[17,34,51,0,1,0,0,1,52,18,1,100,0]}},"expected":{"state":"complete","physical":"Unknown","qualified":false,"fields":{"feedback":{"raw":[0],"state":"unmapped","grade":"Hypothesis"},"pressure":{"raw":[1,0],"state":"mapped","number":1,"grade":"Hypothesis","calculation":"Proven"},"minimum":{"raw":[0,1],"state":"mapped","number":256,"grade":"Hypothesis","calculation":"Proven"},"maximum":{"raw":[52,18],"state":"mapped","number":4660,"grade":"Hypothesis","calculation":"Proven"},"step":{"raw":[1],"state":"unit-conflict","grade":"Hypothesis"},"flow":{"raw":[100,0],"state":"mapped","number":1,"grade":"Hypothesis","calculation":"Proven"}}}},
+    {"id":"ab19ao19_pressure_feedback","input":{"context":{"primary":181,"secondary":20,"operation":8,"direction":"positive","view":"pressure","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"logical_object":[17,34,51,6,1,0,0,1,52,18,0,100,0]}},"expected":{"state":"complete","physical":"Unknown","qualified":false,"fields":{"feedback":{"raw":[6],"state":"unmapped","grade":"Hypothesis"},"pressure":{"raw":[1,0],"state":"mapped","number":1,"grade":"Hypothesis","calculation":"Proven"},"minimum":{"raw":[0,1],"state":"mapped","number":256,"grade":"Hypothesis","calculation":"Proven"},"maximum":{"raw":[52,18],"state":"mapped","number":4660,"grade":"Hypothesis","calculation":"Proven"},"step":{"raw":[0],"state":"unit-conflict","grade":"Hypothesis"},"flow":{"raw":[100,0],"state":"mapped","number":1,"grade":"Hypothesis","calculation":"Proven"}}}},
+    {"id":"ab19ao19_tail_and_sibling","input":{"context":{"primary":181,"secondary":20,"operation":8,"direction":"positive","view":"pressure","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"logical_object":[17,34,51,0,1,0,0,1,52,18,0,100,0,255,0],"unmodelled":[0,255]}},"expected":{"state":"complete","physical":"Unknown","qualified":false,"fields":{"feedback":{"raw":[0],"state":"unmapped","grade":"Hypothesis"},"pressure":{"raw":[1,0],"state":"mapped","number":1,"grade":"Hypothesis","calculation":"Proven"},"minimum":{"raw":[0,1],"state":"mapped","number":256,"grade":"Hypothesis","calculation":"Proven"},"maximum":{"raw":[52,18],"state":"mapped","number":4660,"grade":"Hypothesis","calculation":"Proven"},"step":{"raw":[0],"state":"unit-conflict","grade":"Hypothesis"},"flow":{"raw":[100,0],"state":"mapped","number":1,"grade":"Hypothesis","calculation":"Proven"}}}},
+    {"id":"ab19ao19_length_0","input":{"context":{"primary":181,"secondary":20,"operation":8,"direction":"positive","view":"pressure","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"logical_object":[]}},"expected":{"state":"partial","physical":"Unknown","qualified":false,"fields":{"feedback":{"raw":[],"state":"incomplete","grade":"Hypothesis"},"pressure":{"raw":[],"state":"incomplete","grade":"Hypothesis"},"minimum":{"raw":[],"state":"incomplete","grade":"Hypothesis"},"maximum":{"raw":[],"state":"incomplete","grade":"Hypothesis"},"step":{"raw":[],"state":"incomplete","grade":"Hypothesis"},"flow":{"raw":[],"state":"incomplete","grade":"Hypothesis"}}}},
+    {"id":"ab19ao19_length_3","input":{"context":{"primary":181,"secondary":20,"operation":8,"direction":"positive","view":"pressure","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"logical_object":[17,34,51]}},"expected":{"state":"partial","physical":"Unknown","qualified":false,"fields":{"feedback":{"raw":[],"state":"incomplete","grade":"Hypothesis"},"pressure":{"raw":[],"state":"incomplete","grade":"Hypothesis"},"minimum":{"raw":[],"state":"incomplete","grade":"Hypothesis"},"maximum":{"raw":[],"state":"incomplete","grade":"Hypothesis"},"step":{"raw":[],"state":"incomplete","grade":"Hypothesis"},"flow":{"raw":[],"state":"incomplete","grade":"Hypothesis"}}}},
+    {"id":"ab19ao19_length_4","input":{"context":{"primary":181,"secondary":20,"operation":8,"direction":"positive","view":"pressure","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"logical_object":[17,34,51,0]}},"expected":{"state":"partial","physical":"Unknown","qualified":false,"fields":{"feedback":{"raw":[0],"state":"unmapped","grade":"Hypothesis"},"pressure":{"raw":[],"state":"incomplete","grade":"Hypothesis"},"minimum":{"raw":[],"state":"incomplete","grade":"Hypothesis"},"maximum":{"raw":[],"state":"incomplete","grade":"Hypothesis"},"step":{"raw":[],"state":"incomplete","grade":"Hypothesis"},"flow":{"raw":[],"state":"incomplete","grade":"Hypothesis"}}}},
+    {"id":"ab19ao19_length_5","input":{"context":{"primary":181,"secondary":20,"operation":8,"direction":"positive","view":"pressure","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"logical_object":[17,34,51,0,1]}},"expected":{"state":"partial","physical":"Unknown","qualified":false,"fields":{"feedback":{"raw":[0],"state":"unmapped","grade":"Hypothesis"},"pressure":{"raw":[1],"state":"incomplete","grade":"Hypothesis"},"minimum":{"raw":[],"state":"incomplete","grade":"Hypothesis"},"maximum":{"raw":[],"state":"incomplete","grade":"Hypothesis"},"step":{"raw":[],"state":"incomplete","grade":"Hypothesis"},"flow":{"raw":[],"state":"incomplete","grade":"Hypothesis"}}}},
+    {"id":"ab19ao19_length_6","input":{"context":{"primary":181,"secondary":20,"operation":8,"direction":"positive","view":"pressure","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"logical_object":[17,34,51,0,1,0]}},"expected":{"state":"partial","physical":"Unknown","qualified":false,"fields":{"feedback":{"raw":[0],"state":"unmapped","grade":"Hypothesis"},"pressure":{"raw":[1,0],"state":"mapped","number":1,"grade":"Hypothesis","calculation":"Proven"},"minimum":{"raw":[],"state":"incomplete","grade":"Hypothesis"},"maximum":{"raw":[],"state":"incomplete","grade":"Hypothesis"},"step":{"raw":[],"state":"incomplete","grade":"Hypothesis"},"flow":{"raw":[],"state":"incomplete","grade":"Hypothesis"}}}},
+    {"id":"ab19ao19_length_7","input":{"context":{"primary":181,"secondary":20,"operation":8,"direction":"positive","view":"pressure","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"logical_object":[17,34,51,0,1,0,0]}},"expected":{"state":"partial","physical":"Unknown","qualified":false,"fields":{"feedback":{"raw":[0],"state":"unmapped","grade":"Hypothesis"},"pressure":{"raw":[1,0],"state":"mapped","number":1,"grade":"Hypothesis","calculation":"Proven"},"minimum":{"raw":[0],"state":"incomplete","grade":"Hypothesis"},"maximum":{"raw":[],"state":"incomplete","grade":"Hypothesis"},"step":{"raw":[],"state":"incomplete","grade":"Hypothesis"},"flow":{"raw":[],"state":"incomplete","grade":"Hypothesis"}}}},
+    {"id":"ab19ao19_length_8","input":{"context":{"primary":181,"secondary":20,"operation":8,"direction":"positive","view":"pressure","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"logical_object":[17,34,51,0,1,0,0,1]}},"expected":{"state":"partial","physical":"Unknown","qualified":false,"fields":{"feedback":{"raw":[0],"state":"unmapped","grade":"Hypothesis"},"pressure":{"raw":[1,0],"state":"mapped","number":1,"grade":"Hypothesis","calculation":"Proven"},"minimum":{"raw":[0,1],"state":"mapped","number":256,"grade":"Hypothesis","calculation":"Proven"},"maximum":{"raw":[],"state":"incomplete","grade":"Hypothesis"},"step":{"raw":[],"state":"incomplete","grade":"Hypothesis"},"flow":{"raw":[],"state":"incomplete","grade":"Hypothesis"}}}},
+    {"id":"ab19ao19_length_9","input":{"context":{"primary":181,"secondary":20,"operation":8,"direction":"positive","view":"pressure","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"logical_object":[17,34,51,0,1,0,0,1,52]}},"expected":{"state":"partial","physical":"Unknown","qualified":false,"fields":{"feedback":{"raw":[0],"state":"unmapped","grade":"Hypothesis"},"pressure":{"raw":[1,0],"state":"mapped","number":1,"grade":"Hypothesis","calculation":"Proven"},"minimum":{"raw":[0,1],"state":"mapped","number":256,"grade":"Hypothesis","calculation":"Proven"},"maximum":{"raw":[52],"state":"incomplete","grade":"Hypothesis"},"step":{"raw":[],"state":"incomplete","grade":"Hypothesis"},"flow":{"raw":[],"state":"incomplete","grade":"Hypothesis"}}}},
+    {"id":"ab19ao19_length_10","input":{"context":{"primary":181,"secondary":20,"operation":8,"direction":"positive","view":"pressure","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"logical_object":[17,34,51,0,1,0,0,1,52,18]}},"expected":{"state":"partial","physical":"Unknown","qualified":false,"fields":{"feedback":{"raw":[0],"state":"unmapped","grade":"Hypothesis"},"pressure":{"raw":[1,0],"state":"mapped","number":1,"grade":"Hypothesis","calculation":"Proven"},"minimum":{"raw":[0,1],"state":"mapped","number":256,"grade":"Hypothesis","calculation":"Proven"},"maximum":{"raw":[52,18],"state":"mapped","number":4660,"grade":"Hypothesis","calculation":"Proven"},"step":{"raw":[],"state":"incomplete","grade":"Hypothesis"},"flow":{"raw":[],"state":"incomplete","grade":"Hypothesis"}}}},
+    {"id":"ab19ao19_length_11","input":{"context":{"primary":181,"secondary":20,"operation":8,"direction":"positive","view":"pressure","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"logical_object":[17,34,51,0,1,0,0,1,52,18,0]}},"expected":{"state":"partial","physical":"Unknown","qualified":false,"fields":{"feedback":{"raw":[0],"state":"unmapped","grade":"Hypothesis"},"pressure":{"raw":[1,0],"state":"mapped","number":1,"grade":"Hypothesis","calculation":"Proven"},"minimum":{"raw":[0,1],"state":"mapped","number":256,"grade":"Hypothesis","calculation":"Proven"},"maximum":{"raw":[52,18],"state":"mapped","number":4660,"grade":"Hypothesis","calculation":"Proven"},"step":{"raw":[0],"state":"unit-conflict","grade":"Hypothesis"},"flow":{"raw":[],"state":"incomplete","grade":"Hypothesis"}}}},
+    {"id":"ab19ao19_length_12","input":{"context":{"primary":181,"secondary":20,"operation":8,"direction":"positive","view":"pressure","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"logical_object":[17,34,51,0,1,0,0,1,52,18,0,100]}},"expected":{"state":"partial","physical":"Unknown","qualified":false,"fields":{"feedback":{"raw":[0],"state":"unmapped","grade":"Hypothesis"},"pressure":{"raw":[1,0],"state":"mapped","number":1,"grade":"Hypothesis","calculation":"Proven"},"minimum":{"raw":[0,1],"state":"mapped","number":256,"grade":"Hypothesis","calculation":"Proven"},"maximum":{"raw":[52,18],"state":"mapped","number":4660,"grade":"Hypothesis","calculation":"Proven"},"step":{"raw":[0],"state":"unit-conflict","grade":"Hypothesis"},"flow":{"raw":[100],"state":"incomplete","grade":"Hypothesis"}}}},
+    {"id":"ab19ao19_missing_object","input":{"context":{"primary":181,"secondary":20,"operation":8,"direction":"positive","view":"pressure","family":"synthetic-family","variant":"synthetic-variant"},"fields":{}},"expected":{"state":"partial","physical":"Unknown","qualified":false,"fields":{"feedback":{"raw":[],"state":"incomplete","grade":"Hypothesis"},"pressure":{"raw":[],"state":"incomplete","grade":"Hypothesis"},"minimum":{"raw":[],"state":"incomplete","grade":"Hypothesis"},"maximum":{"raw":[],"state":"incomplete","grade":"Hypothesis"},"step":{"raw":[],"state":"incomplete","grade":"Hypothesis"},"flow":{"raw":[],"state":"incomplete","grade":"Hypothesis"}}}},
+    {"id":"ab19ao19_explicit_zero","input":{"context":{"primary":181,"secondary":20,"operation":8,"direction":"positive","view":"pressure","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"logical_object":[17,34,51,0,0,0,0,0,0,0,0,0,0]}},"expected":{"state":"complete","physical":"Unknown","qualified":false,"fields":{"feedback":{"raw":[0],"state":"unmapped","grade":"Hypothesis"},"pressure":{"raw":[0,0],"state":"mapped","number":0,"grade":"Hypothesis","calculation":"Proven"},"minimum":{"raw":[0,0],"state":"mapped","number":0,"grade":"Hypothesis","calculation":"Proven"},"maximum":{"raw":[0,0],"state":"mapped","number":0,"grade":"Hypothesis","calculation":"Proven"},"step":{"raw":[0],"state":"unit-conflict","grade":"Hypothesis"},"flow":{"raw":[0,0],"state":"mapped","number":0,"grade":"Hypothesis","calculation":"Proven"}}}},
+    {"id":"ab19ao19_unknown_primary","input":{"context":{"primary":180,"secondary":20,"operation":8,"direction":"positive","view":"pressure","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"logical_object":[17,34,51,0,1,0,0,1,52,18,0,100,0]}},"expected":{"state":"Unknown","fields":{},"physical":"Unknown","qualified":false}},
+    {"id":"ab19ao19_unknown_secondary","input":{"context":{"primary":181,"secondary":21,"operation":8,"direction":"positive","view":"pressure","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"logical_object":[17,34,51,0,1,0,0,1,52,18,0,100,0]}},"expected":{"state":"Unknown","fields":{},"physical":"Unknown","qualified":false}},
+    {"id":"ab19ao19_unknown_direction","input":{"context":{"primary":181,"secondary":20,"operation":8,"direction":"negative","view":"pressure","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"logical_object":[17,34,51,0,1,0,0,1,52,18,0,100,0]}},"expected":{"state":"Unknown","fields":{},"physical":"Unknown","qualified":false}},
+    {"id":"ab19ao19_unknown_view","input":{"context":{"primary":181,"secondary":20,"operation":8,"direction":"positive","view":"other","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"logical_object":[17,34,51,0,1,0,0,1,52,18,0,100,0]}},"expected":{"state":"Unknown","fields":{},"physical":"Unknown","qualified":false}},
+    {"id":"ab19ao19_unknown_operation","input":{"context":{"primary":181,"secondary":20,"operation":9,"direction":"positive","view":"pressure","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"logical_object":[17,34,51,0,1,0,0,1,52,18,0,100,0]}},"expected":{"state":"Unknown","fields":{},"physical":"Unknown","qualified":false}},
+    {"id":"ab19ao19_unknown_op2","input":{"context":{"primary":181,"secondary":20,"operation":2,"direction":"positive","view":"pressure","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"logical_object":[17,34,51,0,1,0,0,1,52,18,0,100,0]}},"expected":{"state":"Unknown","fields":{},"physical":"Unknown","qualified":false}},
+    {"id":"ab19ao19_unknown_op5","input":{"context":{"primary":181,"secondary":20,"operation":5,"direction":"positive","view":"pressure","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"logical_object":[17,34,51,0,1,0,0,1,52,18,0,100,0]}},"expected":{"state":"Unknown","fields":{},"physical":"Unknown","qualified":false}},
+    {"id":"ab19ao19_opaque_family","input":{"context":{"primary":181,"secondary":20,"operation":8,"direction":"positive","view":"pressure","family":{"opaque":[0,"candidate"]},"variant":"synthetic-variant"},"fields":{"logical_object":[17,34,51,0,1,0,0,1,52,18,0,100,0]}},"expected":{"state":"complete","physical":"Unknown","qualified":false,"fields":{"feedback":{"raw":[0],"state":"unmapped","grade":"Hypothesis"},"pressure":{"raw":[1,0],"state":"mapped","number":1,"grade":"Hypothesis","calculation":"Proven"},"minimum":{"raw":[0,1],"state":"mapped","number":256,"grade":"Hypothesis","calculation":"Proven"},"maximum":{"raw":[52,18],"state":"mapped","number":4660,"grade":"Hypothesis","calculation":"Proven"},"step":{"raw":[0],"state":"unit-conflict","grade":"Hypothesis"},"flow":{"raw":[100,0],"state":"mapped","number":1,"grade":"Hypothesis","calculation":"Proven"}}}},
+    {"id":"ab19ao19_opaque_variant","input":{"context":{"primary":181,"secondary":20,"operation":8,"direction":"positive","view":"pressure","family":"synthetic-family","variant":{"opaque":[0,"candidate"]}},"fields":{"logical_object":[17,34,51,0,1,0,0,1,52,18,0,100,0]}},"expected":{"state":"complete","physical":"Unknown","qualified":false,"fields":{"feedback":{"raw":[0],"state":"unmapped","grade":"Hypothesis"},"pressure":{"raw":[1,0],"state":"mapped","number":1,"grade":"Hypothesis","calculation":"Proven"},"minimum":{"raw":[0,1],"state":"mapped","number":256,"grade":"Hypothesis","calculation":"Proven"},"maximum":{"raw":[52,18],"state":"mapped","number":4660,"grade":"Hypothesis","calculation":"Proven"},"step":{"raw":[0],"state":"unit-conflict","grade":"Hypothesis"},"flow":{"raw":[100,0],"state":"mapped","number":1,"grade":"Hypothesis","calculation":"Proven"}}}},
+    {"id":"ab19ao19_wrong_view_generic-result","input":{"context":{"primary":181,"secondary":20,"operation":8,"direction":"positive","view":"generic-result","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"logical_object":[17,34,51,0,1,0,0,1,52,18,0,100,0]}},"expected":{"state":"Unknown","fields":{},"physical":"Unknown","qualified":false}},
+    {"id":"ab19ao19_wrong_view_specific-a-result","input":{"context":{"primary":181,"secondary":20,"operation":8,"direction":"positive","view":"specific-a-result","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"logical_object":[17,34,51,0,1,0,0,1,52,18,0,100,0]}},"expected":{"state":"Unknown","fields":{},"physical":"Unknown","qualified":false}},
+    {"id":"ab19ao19_wrong_view_specific-b-result","input":{"context":{"primary":181,"secondary":20,"operation":8,"direction":"positive","view":"specific-b-result","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"logical_object":[17,34,51,0,1,0,0,1,52,18,0,100,0]}},"expected":{"state":"Unknown","fields":{},"physical":"Unknown","qualified":false}},
+    {"id":"ab19ao19_feedback_missing","input":{"context":{"primary":181,"secondary":20,"operation":6,"direction":"positive","view":"generic-result","family":"synthetic-family","variant":"synthetic-variant"},"fields":{}},"expected":{"state":"partial","fields":{"feedback":{"raw":[],"state":"incomplete","grade":"Hypothesis"}},"physical":"Unknown","qualified":false}},
+    {"id":"ab19ao19_feedback_empty","input":{"context":{"primary":181,"secondary":20,"operation":6,"direction":"positive","view":"generic-result","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"feedback":[]}},"expected":{"state":"partial","fields":{"feedback":{"raw":[],"state":"incomplete","grade":"Hypothesis"}},"physical":"Unknown","qualified":false}},
+    {"id":"ab19ao19_feedback_tail","input":{"context":{"primary":181,"secondary":20,"operation":6,"direction":"positive","view":"generic-result","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"feedback":[1,255],"other":[6]}},"expected":{"state":"complete","fields":{"feedback":{"raw":[1,255],"state":"mapped","grade":"Hypothesis","label":"in-progress"}},"physical":"Unknown","qualified":false}},
+    {"id":"ab19ao19_arguments_empty","input":{"context":{"primary":181,"secondary":20,"operation":8,"direction":"positive","view":"pressure","family":"synthetic-family","variant":"synthetic-variant"},"fields":{"logical_object":[17,34,51,0,1,0,0,1,52,18,0,100,0]},"arguments":{}},"expected":{"state":"complete","physical":"Unknown","qualified":false,"fields":{"feedback":{"raw":[0],"state":"unmapped","grade":"Hypothesis"},"pressure":{"raw":[1,0],"state":"mapped","number":1,"grade":"Hypothesis","calculation":"Proven"},"minimum":{"raw":[0,1],"state":"mapped","number":256,"grade":"Hypothesis","calculation":"Proven"},"maximum":{"raw":[52,18],"state":"mapped","number":4660,"grade":"Hypothesis","calculation":"Proven"},"step":{"raw":[0],"state":"unit-conflict","grade":"Hypothesis"},"flow":{"raw":[100,0],"state":"mapped","number":1,"grade":"Hypothesis","calculation":"Proven"}}}}
+  ],
+  "error_cases": [
+    {"id":"ab19ao19_malformed","json":"{\"context\":","expected":"error; no successful result"},
+    {"id":"ab19ao19_duplicate_top","json":"{\"context\":{},\"context\":{},\"fields\":{}}","expected":"error; no successful result"},
+    {"id":"ab19ao19_duplicate_context","json":"{\"context\":{\"view\":\"pressure\",\"view\":\"progress\"},\"fields\":{}}","expected":"error; no successful result"},
+    {"id":"ab19ao19_duplicate_fields","json":"{\"context\":{},\"fields\":{\"feedback\":[0],\"feedback\":[1]}}","expected":"error; no successful result"},
+    {"id":"ab19ao19_duplicate_arguments","json":"{\"context\":{},\"fields\":{},\"arguments\":{\"x\":0,\"x\":1}}","expected":"error; no successful result"},
+    {"id":"ab19ao19_wrong_root","json":"[]","expected":"error; no successful result"},
+    {"id":"ab19ao19_wrong_context","json":"{\"context\":[],\"fields\":{}}","expected":"error; no successful result"},
+    {"id":"ab19ao19_wrong_fields","json":"{\"context\":{},\"fields\":[]}","expected":"error; no successful result"},
+    {"id":"ab19ao19_wrong_arguments","json":"{\"context\":{},\"fields\":{},\"arguments\":[]}","expected":"error; no successful result"},
+    {"id":"ab19ao19_byte_negative","json":"{\"context\":{\"primary\":181,\"secondary\":20,\"operation\":6,\"direction\":\"positive\",\"view\":\"generic-result\"},\"fields\":{\"feedback\":[-1]}}","expected":"error; no successful result"},
+    {"id":"ab19ao19_byte_overflow","json":"{\"context\":{\"primary\":181,\"secondary\":20,\"operation\":6,\"direction\":\"positive\",\"view\":\"generic-result\"},\"fields\":{\"feedback\":[256]}}","expected":"error; no successful result"},
+    {"id":"ab19ao19_byte_fraction","json":"{\"context\":{\"primary\":181,\"secondary\":20,\"operation\":6,\"direction\":\"positive\",\"view\":\"generic-result\"},\"fields\":{\"feedback\":[0.5]}}","expected":"error; no successful result"},
+    {"id":"ab19ao19_byte_boolean","json":"{\"context\":{\"primary\":181,\"secondary\":20,\"operation\":6,\"direction\":\"positive\",\"view\":\"generic-result\"},\"fields\":{\"feedback\":[true]}}","expected":"error; no successful result"},
+    {"id":"ab19ao19_byte_null","json":"{\"context\":{\"primary\":181,\"secondary\":20,\"operation\":6,\"direction\":\"positive\",\"view\":\"generic-result\"},\"fields\":{\"feedback\":[null]}}","expected":"error; no successful result"},
+    {"id":"ab19ao19_byte_string","json":"{\"context\":{\"primary\":181,\"secondary\":20,\"operation\":6,\"direction\":\"positive\",\"view\":\"generic-result\"},\"fields\":{\"feedback\":[\"0\"]}}","expected":"error; no successful result"},
+    {"id":"ab19ao19_byte_object","json":"{\"context\":{\"primary\":181,\"secondary\":20,\"operation\":6,\"direction\":\"positive\",\"view\":\"generic-result\"},\"fields\":{\"feedback\":[{}]}}","expected":"error; no successful result"},
+    {"id":"ab19ao19_byte_nested","json":"{\"context\":{\"primary\":181,\"secondary\":20,\"operation\":6,\"direction\":\"positive\",\"view\":\"generic-result\"},\"fields\":{\"feedback\":[[]]}}","expected":"error; no successful result"},
+    {"id":"ab19ao19_wrong_array","json":"{\"context\":{},\"fields\":{\"feedback\":0}}","expected":"error; no successful result"},
+    {"id":"ab19ao19_missing_context","json":"{\"fields\":{}}","expected":"error; no successful result"},
+    {"id":"ab19ao19_missing_fields","json":"{\"context\":{}}","expected":"error; no successful result"},
+    {"id":"ab19ao19_null_fields","json":"{\"context\":{},\"fields\":null}","expected":"error; no successful result"},
+    {"id":"ab19ao19_operation_string","json":"{\"context\":{\"primary\":181,\"secondary\":20,\"operation\":\"8\",\"direction\":\"positive\",\"view\":\"pressure\"},\"fields\":{}}","expected":"error; no successful result"},
+    {"id":"ab19ao19_operation_bool","json":"{\"context\":{\"primary\":181,\"secondary\":20,\"operation\":true,\"direction\":\"positive\",\"view\":\"pressure\"},\"fields\":{}}","expected":"error; no successful result"}
+  ]
+}
