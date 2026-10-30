@@ -87,7 +87,7 @@ request path, polling default or control execution is implemented. These offline
 checks establish no physical result or admission. eBUS MCP compatibility and
 GraphQL parity remain unchanged; no surface, registration or schema is added.
 
-## Unknown ledger
+## Unknown properties
 
 Every item below remains Unknown independently of the candidate grade.
 
