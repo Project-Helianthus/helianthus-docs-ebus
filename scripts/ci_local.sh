@@ -255,6 +255,9 @@ python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py
 echo "==> check Vaillant B505 sentinel and override candidates"
 python3 -m pytest -q tests/test_ae04_b505_candidates.py
 
+echo "==> check Vaillant B51B local-transfer candidate contract"
+python3 -m pytest -q tests/test_ai26_b51b_local_transfer.py
+
 echo "==> check B509/B524 passive watch-policy documentation contract"
 python3 -m pytest -q tests/test_watch_policy_contract.py
 python3 -m pytest -q tests/test_b524_operation_docs.py
