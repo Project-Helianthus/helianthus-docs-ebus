@@ -121,7 +121,7 @@ class DiagnosticShapes(unittest.TestCase):
                 self.assertLessEqual(value, row['maximum'])
                 if case['field'] == 'address':
                     self.assertEqual(row['byte_order'], 'little_endian')
-                    self.assertEqual(value, 0x12345678)
+                    self.assertEqual(value, 305419896)
                     self.assertGreater(value, 65535)
         self.assertEqual([c['value'] for c in self.data['cases'][3:5]], [0, 255])
 
