@@ -2,6 +2,9 @@
 
 The native B516 OP14 wire candidate remains unconfirmed; it does not establish
 a qualified power service.
+The native candidate layout and unresolved wire behavior are documented in
+[B516 §9](../protocols/vaillant/ebus-vaillant-B516-energy.md#9-sub-id-0x14---current-electrical-power-candidate)
+and [§11](../protocols/vaillant/ebus-vaillant-B516-energy.md#11-open-questions).
 This page defines only the bounded local software candidate from
 [issue #824](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/824),
 a partial slice of [#736](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/736).
