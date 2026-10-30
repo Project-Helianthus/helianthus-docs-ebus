@@ -162,4 +162,3 @@ indices and counts are synthetic local coordinates.
 | "refresh_before_timer" | "Unknown" | "Unknown" |
 | "failure_initial" | 0 | "Hypothesis" |
 | "capability_initial" | "Unknown" | "Unknown" |
-
