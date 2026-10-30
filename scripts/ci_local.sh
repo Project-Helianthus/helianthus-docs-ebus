@@ -302,6 +302,9 @@ jv development/fixtures/b524-operation-edit-plan-schema-v1.json development/fixt
 jv development/fixtures/b524-native-write-qualification-schema-v1.json development/fixtures/b524-native-write-qualification-synthetic-v1.json
 python3 -m pytest -q tests/test_b524_operation_reads.py
 
+echo "==> check B525 candidate declarations and synthetic fixtures"
+python3 -m pytest -q tests/test_ae22_b525_candidates.py
+
 echo "==> check cross-runtime platform contracts (MSP-DOCS-CLEAN)"
 python3 -m pytest -q tests/test_m625_cross_seed_contract.py
 python3 -m pytest -q tests/test_platform_contracts.py -k trusted_prior_workflow
