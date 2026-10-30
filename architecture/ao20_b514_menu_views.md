@@ -101,8 +101,8 @@ they are not evidence that an implementation has executed. The
 [standard-library unittest](../tests/test_ao20_b514_menu_views.py) checks the page
 and fixture against independent finite constants, including negative mutations.
 It does not implement a decoder or establish runtime conformance of the Go API.
-The focused suite is a separate mandatory ship check because the repository's
-full gate uses an explicit list. Independent committed-change review, full Gate
+The focused suite is registered in the repository's explicit full-gate list
+in `scripts/ci_local.sh`. Independent committed-change review, full Gate
 D, publication checks and applicable transport classification remain required.
 
 <!-- ab19ao19 finite contract: exactly one JSON block -->
