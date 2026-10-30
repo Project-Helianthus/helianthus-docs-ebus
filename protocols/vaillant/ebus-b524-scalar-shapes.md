@@ -33,8 +33,8 @@ GG01 fields and room-control roles; it is not selector priority.
 | gg01-byte19 | 02 | 01 | Unknown | 0019 | Unknown | read | scalar | u8 | 1 | not-applicable | 1 | 0 | Unknown | Hypothesis |
 | gg01-float15 | 02 | 01 | Unknown | 0015 | Unknown | read | scalar | binary32 | 4 | little-endian | 1 | 0 | Unknown | Hypothesis |
 | room-mode | 02 | 03 | Unknown | 0006 | controller-family | write | mode | u16 | 2 | little-endian | 1 | 0 | Unknown | Hypothesis |
-| room-manual | 02 | 03 | Unknown | 0022 | controller-family | write | manual-temperature | binary32 | 4 | little-endian | 1 | 0 | Unknown | Hypothesis |
-| room-comfort | 02 | 03 | Unknown | 0007 | controller-family | write | comfort-temperature | binary32 | 4 | little-endian | 1 | 0 | Unknown | Hypothesis |
+| room-manual | 02 | 03 | Unknown | 0022 | VRC720 family | write | manual-temperature | binary32 | 4 | little-endian | 1 | 0 | Unknown | Hypothesis |
+| room-comfort | 02 | 03 | Unknown | 0007 | VRC700 family | write | comfort-temperature | binary32 | 4 | little-endian | 1 | 0 | Unknown | Hypothesis |
 
 Unsigned-byte representation has range 0..255; little-endian unsigned u16 has
 range 0..65535. These are representation ranges, not qualified native limits

@@ -16,8 +16,8 @@ EXPECTED = (
     ('gg01-byte19', 1, 25, None, 'read', 'scalar', 'u8', 1),
     ('gg01-float15', 1, 21, None, 'read', 'scalar', 'binary32', 4),
     ('room-mode', 3, 6, 'controller-family', 'write', 'mode', 'u16', 2),
-    ('room-manual', 3, 34, 'controller-family', 'write', 'manual-temperature', 'binary32', 4),
-    ('room-comfort', 3, 7, 'controller-family', 'write', 'comfort-temperature', 'binary32', 4),
+    ('room-manual', 3, 34, 'VRC720 family', 'write', 'manual-temperature', 'binary32', 4),
+    ('room-comfort', 3, 7, 'VRC700 family', 'write', 'comfort-temperature', 'binary32', 4),
 )
 CASES = (
     ('zone-u8', '01', 1), ('zone-u16', '01', None),
@@ -164,6 +164,10 @@ class ScalarShapes(unittest.TestCase):
                     changes += ['write' if identity[axis] == 'read' else 'read']
                 if axis == 'family':
                     changes += [None if identity[axis] else 'controller-family']
+                    if entry['id'] in ('room-manual', 'room-comfort'):
+                        changes += ['controller-family']
+                        changes += [family for family in ('VRC720 family', 'VRC700 family')
+                                    if family != identity[axis]]
                 for changed in changes:
                     wrong = dict(identity, **{axis: changed})
                     with self.subTest(candidate=entry['id'], axis=axis, value=changed):

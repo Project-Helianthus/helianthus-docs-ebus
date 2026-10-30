@@ -124,7 +124,7 @@
         "group": 3,
         "instance": null,
         "register": 34,
-        "family": "controller-family",
+        "family": "VRC720 family",
         "direction": "write",
         "role": "manual-temperature"
       },
@@ -143,7 +143,7 @@
         "group": 3,
         "instance": null,
         "register": 7,
-        "family": "controller-family",
+        "family": "VRC700 family",
         "direction": "write",
         "role": "comfort-temperature"
       },
