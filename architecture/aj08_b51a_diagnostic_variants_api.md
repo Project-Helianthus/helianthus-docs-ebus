@@ -1,6 +1,6 @@
 # B51A finite library contract
 
-The native contract comes first: [B51A diagnostic variants](../protocols/vaillant/ebus-b51a-diagnostic-variants.md).
+The native evidence boundary comes first: [B51A diagnostic variants](../protocols/vaillant/ebus-b51a-diagnostic-variants.md).
 This page describes the bounded library interface; it introduces no runtime
 decoder, generic schema, provider API or control operation. Nothing is stable
 before 1.0.
@@ -35,12 +35,11 @@ companion catalog use responder for the native target role.
 
 Ab98Entry carries Ab98Key and Ab98Grade independently of Ab98MetadataPresence,
 Ab98PhysicalQualification, Ab98Invocation, Ab98Unknown and preserved raw metadata.
-The declarations' metadata presence is Proven, the native field interpretations
-are Hypothesis, and qualification/invocation remain Unknown. A grade is neither
-physical qualification nor write authorization. Unknown width, byte order,
-bounds, replacement CRC number, alternative selection and replication algorithms
-remain unknown. Both bit3 interpretations, raw 02 and the configuration-default
-conflict survive lookup. Optional metadata is not fabricated from a label.
+Native field interpretations and qualification/invocation remain Unknown.
+The companion supplement and fixture withhold unsupported mappings; this interface
+contract supplies no missing provenance and admits no native entries from them.
+A grade is neither physical qualification nor write authorization. Optional
+metadata is not fabricated from a label.
 
 Ab98Entries and each successful Ab98Lookup return independently owned nested
 data: pointers, maps, slices, labels, conditions, alternatives and their nested
