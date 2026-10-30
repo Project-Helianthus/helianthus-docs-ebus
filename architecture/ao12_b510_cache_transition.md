@@ -332,9 +332,9 @@ aliasing and partial-state conformance remain implementation acceptance work.
 
 ## Validation boundary
 
-The focused suite is a separate mandatory ship check: Gate D has an explicit
-suite list and does not automatically run this file. No gate registration is
-changed here. Later shipment requires independent committed-change review,
+The focused suite is registered in `scripts/ci_local.sh` with
+`python3 -m unittest discover -s tests -p 'test_ao12_b510_cache_transition.py' -v`.
+Later shipment requires independent committed-change review,
 full repository CI, Gate D with its provisioned references, publication checks
 and applicable transport classification. Documentation checks cannot certify
 Go error handling, deep-copy isolation, eBUS MCP or GraphQL runtime behavior.

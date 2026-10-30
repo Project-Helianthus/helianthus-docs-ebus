@@ -55,7 +55,7 @@ python3() {
     '-m pytest -q tests/test_workflow_lint_cleanup.py')
       printf 'cleanup-tests\n' >> "$CALL_LOG"
       ;;
-    scripts/*.py*|'-m pytest -q '*|'-') ;;
+    scripts/*.py*|'-m pytest -q '*|'-m unittest discover -s tests -p test_ao12_b510_cache_transition.py -v'|'-') ;;
     *) printf 'Unexpected synthetic tool call: %s\n' "$*" >&2; return 98 ;;
   esac
   return 0
