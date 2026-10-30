@@ -11,7 +11,7 @@
       "3",
       "1",
       "u8",
-      "0",
+      "Unknown",
       "0..255",
       "Unknown",
       "Hypothesis"
@@ -23,7 +23,7 @@
       "3",
       "1",
       "u8",
-      "0",
+      "Unknown",
       "0..255",
       "Unknown",
       "Hypothesis"
@@ -35,7 +35,7 @@
       "3",
       "1",
       "u8",
-      "0",
+      "Unknown",
       "0..255",
       "Unknown",
       "Hypothesis"
@@ -47,7 +47,7 @@
       "3",
       "1",
       "u8",
-      "0",
+      "Unknown",
       "0..255",
       "Unknown",
       "Hypothesis"
@@ -59,7 +59,7 @@
       "3",
       "1",
       "u8",
-      "0",
+      "Unknown",
       "0..255",
       "Unknown",
       "Hypothesis"
@@ -71,7 +71,7 @@
       "3",
       "1",
       "u8",
-      "0",
+      "Unknown",
       "0..255",
       "Unknown",
       "Hypothesis"
@@ -83,7 +83,7 @@
       "3",
       "1",
       "u8",
-      "0",
+      "Unknown",
       "0..255",
       "Unknown",
       "Hypothesis"
@@ -95,7 +95,7 @@
       "3",
       "1",
       "u8",
-      "0",
+      "Unknown",
       "0..255",
       "Unknown",
       "Hypothesis"
@@ -107,7 +107,7 @@
       "3",
       "1",
       "u8",
-      "0",
+      "Unknown",
       "0..255",
       "Unknown",
       "Hypothesis"
@@ -119,7 +119,7 @@
       "3",
       "1",
       "u8",
-      "0",
+      "Unknown",
       "0..255",
       "Unknown",
       "Hypothesis"
@@ -131,18 +131,6 @@
       "4",
       "1",
       "u8",
-      "0",
-      "0..255",
-      "Unknown",
-      "Hypothesis"
-    ],
-    [
-      "02",
-      "request",
-      "flags",
-      "4",
-      "1",
-      "u8",
       "Unknown",
       "0..255",
       "Unknown",
@@ -151,205 +139,80 @@
     [
       "02",
       "request",
-      "length",
-      "5",
-      "1",
-      "u8",
+      "supplemental_layout",
       "Unknown",
-      "0..255",
       "Unknown",
-      "Hypothesis"
-    ],
-    [
-      "02",
-      "request",
-      "mirror_address",
-      "6",
-      "2",
-      "LE u16",
       "Unknown",
-      "0..65535",
-      "0..mirror-length-1",
-      "Hypothesis"
+      "Unknown",
+      "Unknown",
+      "Unknown",
+      "Unknown"
     ],
     [
       "02",
       "positive",
-      "positive",
-      "4",
-      "1",
-      "u8",
+      "supplemental_layout",
       "Unknown",
-      "0..255",
       "Unknown",
-      "Hypothesis"
-    ],
-    [
-      "02",
-      "positive",
-      "data",
-      "5",
-      "end",
-      "opaque",
       "Unknown",
-      "not scalar",
-      "length 0..unset",
-      "Hypothesis"
+      "Unknown",
+      "Unknown",
+      "Unknown",
+      "Unknown"
     ],
     [
       "03",
       "request",
-      "flags",
-      "4",
-      "1",
-      "u8",
-      "0",
-      "0..255",
+      "supplemental_layout",
       "Unknown",
-      "Hypothesis"
-    ],
-    [
-      "03",
-      "request",
-      "mirror_address",
-      "5",
-      "2",
-      "LE u16",
-      "0",
-      "0..65535",
-      "independent mirror limit Unknown",
-      "Hypothesis"
-    ],
-    [
-      "03",
-      "request",
-      "symbol_address",
-      "7",
-      "2",
-      "LE u16",
-      "0",
-      "0..65535",
-      "independent symbol limit Unknown",
-      "Hypothesis"
-    ],
-    [
-      "03",
-      "request",
-      "data",
-      "9",
-      "end",
-      "opaque",
       "Unknown",
-      "not scalar",
-      "length 0..unset",
-      "Hypothesis"
+      "Unknown",
+      "Unknown",
+      "Unknown",
+      "Unknown",
+      "Unknown"
     ],
     [
       "03",
       "positive",
-      "flags",
-      "4",
-      "1",
-      "u8",
-      "0",
-      "0..255",
+      "supplemental_layout",
       "Unknown",
-      "Hypothesis"
+      "Unknown",
+      "Unknown",
+      "Unknown",
+      "Unknown",
+      "Unknown",
+      "Unknown"
     ],
     [
       "06",
       "request",
-      "level",
-      "4",
-      "1",
-      "u8",
+      "supplemental_layout",
       "Unknown",
-      "0..255",
       "Unknown",
-      "Hypothesis"
-    ],
-    [
-      "06",
-      "request",
-      "point",
-      "5",
-      "1",
-      "u8",
       "Unknown",
-      "0..255",
-      "0..99",
-      "Hypothesis"
-    ],
-    [
-      "06",
-      "request",
-      "value",
-      "6",
-      "2",
-      "LE u16",
       "Unknown",
-      "0..65535",
       "Unknown",
-      "Hypothesis"
+      "Unknown",
+      "Unknown"
     ],
     [
       "06",
       "positive",
-      "save_status",
-      "4",
-      "1",
-      "u8",
-      "0",
-      "0..255",
-      "5..255 unlabeled; no implicit success",
-      "Hypothesis"
-    ],
-    [
-      "06",
-      "positive",
-      "mirror_address",
-      "5",
-      "2",
-      "LE u16",
+      "supplemental_layout",
       "Unknown",
-      "0..65535",
-      "independent mirror limit Unknown",
-      "Hypothesis"
-    ],
-    [
-      "06",
-      "positive",
-      "symbol_address",
-      "7",
-      "2",
-      "LE u16",
       "Unknown",
-      "0..65535",
-      "independent symbol limit Unknown",
-      "Hypothesis"
-    ],
-    [
-      "06",
-      "positive",
-      "value",
-      "9",
-      "conditional",
-      "LE u16",
       "Unknown",
-      "0..65535",
-      "display type selects width",
-      "Hypothesis"
+      "Unknown",
+      "Unknown",
+      "Unknown",
+      "Unknown"
     ]
   ],
   "rules": [
     [
-      "correlation",
-      "00,01 only: equal sequence is candidate correlation; no retry or freshness policy",
-      "Hypothesis"
-    ],
-    [
       "reset-bit",
-      "0:denied:false",
+      "0:denied; default Unknown",
       "Hypothesis"
     ],
     [
@@ -358,59 +221,24 @@
       "Unknown"
     ],
     [
-      "read-flags",
-      "0:triple-storage; default Unknown; bits 1..7 Unknown",
-      "Hypothesis"
-    ],
-    [
-      "read-positive",
-      "0:false;1:true",
-      "Hypothesis"
-    ],
-    [
-      "read-unresolved",
-      "2..255:unresolved",
+      "correlation",
+      "Unknown",
       "Unknown"
     ],
     [
-      "read-alternative",
-      "bit 0:out-of-area; conflicts with whole-u8 interpretation",
-      "Hypothesis"
+      "read-layout",
+      "Unknown",
+      "Unknown"
     ],
     [
-      "read-length",
-      "requested and returned lengths independent",
-      "Hypothesis"
+      "write-layout",
+      "Unknown",
+      "Unknown"
     ],
     [
-      "write-request-bits",
-      "0:triple-storage:false;1:direct-update:false;2..7:reserved:false",
-      "Hypothesis"
-    ],
-    [
-      "write-positive-bits",
-      "0:not-written:false;1:invalid-symbol:false;2:invalid-parameter:false;3:storage-error:false;4..7:reserved:false",
-      "Hypothesis"
-    ],
-    [
-      "opaque-data",
-      "end-delimited; minimum 0; maximum unset; empty does not prove acceptance",
-      "Hypothesis"
-    ],
-    [
-      "save-status",
-      "0:value-not-saved;1:point-not-found;2:write-protected;3:range-violation;4:misconfiguration",
-      "Hypothesis"
-    ],
-    [
-      "save-widths",
-      "formal-u16:2;display-one-byte:1;display-two-byte:2",
-      "Hypothesis"
-    ],
-    [
-      "address-limits",
-      "mirror and symbol logical limits independent; no other address dictionary",
-      "Hypothesis"
+      "save-layout",
+      "Unknown",
+      "Unknown"
     ],
     [
       "physical-adaptation",
@@ -619,94 +447,58 @@
       "Proven"
     ],
     [
-      "read-request",
+      "opaque-02-request",
       "02",
       "request",
       "B5 1A 02 07 01 03 34 12",
       "-",
-      "requested=3;mirror=4660",
-      "Proven"
+      "Unknown",
+      "Unknown"
     ],
     [
-      "read-short",
+      "opaque-02-positive",
       "02",
       "positive",
-      "B5 1A 02 07 01 AA BB",
+      "B5 1A 02 07 02 AA BB",
       "-",
-      "positive=true;actual=2;data=AA BB",
-      "Proven"
+      "Unknown",
+      "Unknown"
     ],
     [
-      "read-false",
-      "02",
-      "positive",
-      "B5 1A 02 07 00",
-      "-",
-      "positive=false;actual=0;data=",
-      "Proven"
-    ],
-    [
-      "read-raw-two",
-      "02",
-      "positive",
-      "B5 1A 02 07 02",
-      "-",
-      "positive=unresolved;actual=0;data=",
-      "Proven"
-    ],
-    [
-      "write-empty",
+      "opaque-03-request",
       "03",
       "request",
       "B5 1A 03 07 00 34 12 78 56",
       "-",
-      "mirror=4660;symbol=22136;actual=0;acceptance=Unknown",
-      "Proven"
+      "Unknown",
+      "Unknown"
     ],
     [
-      "save-point-99",
+      "opaque-03-positive",
+      "03",
+      "positive",
+      "B5 1A 03 07 00",
+      "-",
+      "Unknown",
+      "Unknown"
+    ],
+    [
+      "opaque-06-request",
       "06",
       "request",
       "B5 1A 06 FF 09 63 34 12",
       "-",
-      "sequence=255;level=9;point=99;fits=true;value=4660",
-      "Proven"
+      "Unknown",
+      "Unknown"
     ],
     [
-      "save-point-100",
-      "06",
-      "request",
-      "B5 1A 06 00 09 64 34 12",
-      "-",
-      "sequence=0;level=9;point=100;fits=false;value=4660",
-      "Proven"
-    ],
-    [
-      "save-zero",
+      "opaque-06-positive",
       "06",
       "positive",
       "B5 1A 06 07 00 34 12 78 56 34",
-      "display-one-byte",
-      "status=value-not-saved;mirror=4660;symbol=22136;value=52;width=1",
-      "Proven"
-    ],
-    [
-      "save-one",
-      "06",
-      "positive",
-      "B5 1A 06 07 01 34 12 78 56 34 12",
-      "display-two-byte",
-      "status=point-not-found;mirror=4660;symbol=22136;value=4660;width=2",
-      "Proven"
-    ],
-    [
-      "save-five",
-      "06",
-      "positive",
-      "B5 1A 06 07 05 34 12 78 56 34 12",
-      "formal-u16",
-      "status=unmapped;mirror=4660;symbol=22136;value=4660;width=2",
-      "Proven"
+      "-",
+      "Unknown",
+      "Unknown"
     ]
   ]
 }
