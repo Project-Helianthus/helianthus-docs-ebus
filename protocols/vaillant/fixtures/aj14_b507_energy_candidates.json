@@ -1,0 +1,191 @@
+{
+  "identity": {
+    "family": "vaillant",
+    "variant": "B507",
+    "primary": 181,
+    "secondary": 7,
+    "direction": null
+  },
+  "boundaries": {
+    "provenance": "synthetic; not captured telegrams",
+    "physical_support": "Unknown",
+    "coordinates": null,
+    "actual_reference": "Unknown",
+    "cost_converter": null,
+    "execution_permission": false,
+    "preserve_raw": true,
+    "capacity_alternative": "negative mode-related prose unresolved",
+    "temperature_direct_measurement": "Unknown",
+    "cost_direct_measurement": "Unknown"
+  },
+  "synthetic_tuples": {
+    "fields": [
+      [
+        "06",
+        "capacity",
+        "Hypothesis",
+        "8",
+        "unsigned",
+        "raw / 10 kW; raw 0..250 only",
+        "Unknown"
+      ],
+      [
+        "06",
+        "cost",
+        "Hypothesis",
+        "Unknown",
+        "Unknown",
+        "mode and monetary/emissions reference dependent; converter Unknown",
+        "calculated or estimated possible"
+      ],
+      [
+        "06",
+        "temperature",
+        "Hypothesis",
+        "Unknown",
+        "Unknown",
+        "converter Unknown",
+        "calculated or estimated possible"
+      ],
+      [
+        "08",
+        "preference word",
+        "Hypothesis",
+        "16",
+        "Unknown",
+        "operation-local candidate labels only",
+        "Unknown"
+      ],
+      [
+        "09",
+        "preference word",
+        "Unknown",
+        "Unknown",
+        "Unknown",
+        "raw; no transferred labels",
+        "Unknown"
+      ],
+      [
+        "0B",
+        "preference word",
+        "Unknown",
+        "Unknown",
+        "Unknown",
+        "raw; no transferred labels",
+        "Unknown"
+      ]
+    ],
+    "capacity": [
+      [
+        "0",
+        "0",
+        "inside"
+      ],
+      [
+        "1",
+        "0.1",
+        "inside"
+      ],
+      [
+        "250",
+        "25",
+        "inside"
+      ],
+      [
+        "251",
+        "Unknown",
+        "outside"
+      ]
+    ],
+    "words": [
+      [
+        "08",
+        "0000",
+        "appliance-unavailable candidate",
+        "Hypothesis"
+      ],
+      [
+        "08",
+        "FFFF",
+        "maximum-efficiency-preference",
+        "Hypothesis"
+      ],
+      [
+        "08",
+        "0001",
+        "unmapped",
+        "Unknown"
+      ],
+      [
+        "09",
+        "0000",
+        "raw",
+        "Unknown"
+      ],
+      [
+        "09",
+        "FFFF",
+        "raw",
+        "Unknown"
+      ],
+      [
+        "09",
+        "0001",
+        "raw",
+        "Unknown"
+      ],
+      [
+        "0B",
+        "0000",
+        "raw",
+        "Unknown"
+      ],
+      [
+        "0B",
+        "FFFF",
+        "raw",
+        "Unknown"
+      ],
+      [
+        "0B",
+        "0001",
+        "raw",
+        "Unknown"
+      ]
+    ],
+    "cost_contexts": [
+      [
+        "mode-a",
+        "monetary",
+        "173",
+        "Unknown",
+        "calculated or estimated possible",
+        "Unknown"
+      ],
+      [
+        "mode-a",
+        "emissions",
+        "173",
+        "Unknown",
+        "calculated or estimated possible",
+        "Unknown"
+      ],
+      [
+        "mode-b",
+        "monetary",
+        "173",
+        "Unknown",
+        "calculated or estimated possible",
+        "Unknown"
+      ],
+      [
+        "mode-b",
+        "emissions",
+        "173",
+        "Unknown",
+        "calculated or estimated possible",
+        "Unknown"
+      ]
+    ]
+  }
+}
