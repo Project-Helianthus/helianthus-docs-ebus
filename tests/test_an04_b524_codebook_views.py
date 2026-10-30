@@ -108,8 +108,9 @@ def interpret(inp, books):
     out.update({key: 'Unknown' for key in UNKNOWN_FIELDS})
     alt = inp['alternative']
     widths = {'u8': 1, 'u16le': 2, 'signed8': 1}
-    if not raw and inp['response_state'] != 'echo-payload':
-        out['state'] = 'partial'
+    if not raw:
+        out['state'] = ('malformed-width' if inp['response_state'] == 'echo-payload'
+                        else 'partial')
         return out
     if alt not in widths:
         return out
@@ -223,6 +224,18 @@ class CodebookViewsTest(unittest.TestCase):
             self.assertEqual((-1, 'unbound'), (signed[0]['expected']['raw_integer'],
                                              signed[0]['expected']['candidate_label']))
         self.assertEqual('malformed-width', cases['quick-u16le-[3]']['expected']['state'])
+        for selection in ('missing', 'unknown'):
+            case = cases[f'empty-echo-{selection}-alternative']
+            self.assertEqual([], case['input']['raw_value'])
+            self.assertEqual('echo-payload', case['input']['response_state'])
+            self.assertEqual(None if selection == 'missing' else 'u32le',
+                             case['input']['alternative'])
+            out = interpret(case['input'], self.books)
+            self.assertEqual('malformed-width', out['state'])
+            self.assertIsNone(out['raw_integer'])
+            self.assertIsNone(out['candidate_label'])
+            self.assertEqual(('Unknown', 'Unknown'),
+                             (out['numeric_grade'], out['semantic_grade']))
         for state in ('status-only-0', 'status-only-255', 'empty-None', 'short-None',
                       'header-only-None', 'transport-failure-None'):
             self.assertEqual('partial', cases[state]['expected']['state'])
