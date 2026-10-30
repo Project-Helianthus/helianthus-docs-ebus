@@ -22,9 +22,10 @@ For detailed coverage of selector-heavy identifiers, see:
 - `0xB5 0x22` (B522, recoVAIR ventilation commands): [`ebus-vaillant-B522.md`](ebus-vaillant-B522.md)
 - `0xB5 0x23` (B523, functional-module actor/sensor data): [`ebus-vaillant-B523.md`](ebus-vaillant-B523.md)
 - `0xB5 0x24` (B524, GetExtendedRegisters): [`ebus-vaillant-B524.md`](ebus-vaillant-B524.md)
+- `0xB5 0x25` (B525, radio-field declarations; Hypothesis): [`ebus-vaillant-B525.md`](ebus-vaillant-B525.md)
 - `0xB5 0x55` (B555, timer/schedule protocol): [`ebus-vaillant-b555-timer-protocol.md`](ebus-vaillant-b555-timer-protocol.md)
 - VR90 room controller protocol: [`ebus-vaillant-vr90-emulation.md`](ebus-vaillant-vr90-emulation.md)
-- B5 services without a dedicated page (B501, B502, B50A to B50D, B50F, B517 to B519, B520, B525, header-only identities): [Other B5 services](#other-b5-services-candidate-layouts)
+- B5 services without a dedicated page (B501, B502, B50A to B50D, B50F, B517 to B519, B520, header-only identities): [Other B5 services](#other-b5-services-candidate-layouts)
 
 ## Scope
 
@@ -475,8 +476,8 @@ On heat pump systems with VWZIO (0x76), B511 traffic involving that device has a
 
 ## Other B5 services (candidate layouts)
 
-The services below have no dedicated page. Every layout in this section is a
-candidate layout, unconfirmed on the wire. No exchange of any of these services
+Except for B525, the services below have no dedicated page. Every layout in this
+section is a candidate layout, unconfirmed on the wire. No exchange of any of these services
 on the wire is known (see [Open questions](#open-questions)). No service in this
 section is documented as safe to send; the state-changing ones (including, but
 not limited to, the B501 write, the `B5 09 35` write, the B50B writes, the B519
@@ -615,6 +616,9 @@ The CRC is a raw `u8`; its algorithm is unknown.
   offset `u16` LE @7, data 0..23 bytes).
 
 ### B525: radio diagnosis
+
+For the detailed radio-field declarations and their Hypothesis/Unknown evidence
+boundaries, see [`ebus-vaillant-B525.md`](ebus-vaillant-B525.md).
 
 Candidate layout, `B5 25 <selector>`:
 
