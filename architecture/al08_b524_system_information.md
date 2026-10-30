@@ -41,7 +41,7 @@ is the bounded declaration checked alongside the synthetic examples:
   "ab42ResultFields": ["ab42Context", "ab42Raw", "ab42State", "ab42Value", "ab42Capacity", "ab42CapacityState"],
   "ab42InvalidLengths": [0, 1, 2, 3, 5],
   "ab42NonFinite": ["NaN", "positive infinity", "negative infinity"],
-  "ab42CapacityRule": "finite nonnegative integer",
+  "ab42CapacityRule": "profile-supported integer: 1, 2, 3, 5, 7, 8",
   "ab42Cardinality": "supported capacity; never discovered cardinality or slot presence",
   "ab42InterpretationGrade": "Hypothesis"
 }
@@ -63,9 +63,12 @@ There is no discovery-state update here, so existing last-known-good state is
 not replaced by an invalid decode.
 
 `ab42CapacityState` is `decoded` only for identifiers 0x0000 and 0x0001 with a
-finite nonnegative integer value; `ab42Capacity` then contains that integer.
-Otherwise capacity is `Unknown` and null. A finite fractional or negative value
-remains decoded while capacity is Unknown. Zero is numeric zero, not absence.
+profile-supported integer value in {1, 2, 3, 5, 7, 8}; `ab42Capacity` then
+contains that integer. Otherwise capacity is `Unknown` and null. Any other finite
+value remains decoded while capacity is Unknown, including zero, unsupported
+positive integers, fractional values and negative values. Zero is numeric zero,
+not absence. An unsupported capacity leaves the concrete presence predicate
+independent, as required by the native profile.
 IDs 0x0000 and 0x0001 describe supported circuit/zone capacities, never
  discovered cardinality or slot presence. Capacity does not create slots or
 qualify a device. There is no implicit count label for an unknown identifier;

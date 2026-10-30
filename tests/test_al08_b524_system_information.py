@@ -27,7 +27,7 @@ EXPECTED_CONTRACT = {
     "ab42ResultFields": RESULT_FIELDS,
     "ab42InvalidLengths": [0, 1, 2, 3, 5],
     "ab42NonFinite": ["NaN", "positive infinity", "negative infinity"],
-    "ab42CapacityRule": "finite nonnegative integer",
+    "ab42CapacityRule": "profile-supported integer: 1, 2, 3, 5, 7, 8",
     "ab42Cardinality": "supported capacity; never discovered cardinality or slot presence",
     "ab42InterpretationGrade": "Hypothesis",
 }
@@ -47,7 +47,7 @@ def example_result(context, raw):
         result["ab42State"] = "invalid_non_finite"
         return result
     result.update(ab42State="decoded", ab42Value=value)
-    if context["ab42Identifier"] in (0, 1) and value >= 0 and value.is_integer():
+    if context["ab42Identifier"] in (0, 1) and value in (1, 2, 3, 5, 7, 8):
         result.update(ab42Capacity=int(value), ab42CapacityState="decoded")
     return result
 
@@ -73,10 +73,11 @@ class InformationContractTests(unittest.TestCase):
             "`ab42State` is `decoded`, `invalid_length` or `invalid_non_finite`.",
             "`ab42Value` is a finite number only for `decoded`, otherwise null.",
             "Invalid\nlengths and NaN or either infinity retain owned raw bytes with explicit invalid\nstate.",
-            "A finite fractional or negative value\nremains decoded while capacity is Unknown.",
+            "profile-supported integer value in {1, 2, 3, 5, 7, 8}",
+            "Any other finite\nvalue remains decoded while capacity is Unknown",
             "There is no implicit count label for an unknown identifier;\npreserve 0xFFFF numerically.",
             "API version and API revision\nare distinct fields",
-            "Zero is numeric zero, not absence.",
+            "Zero is numeric zero,\nnot absence.",
             "Never fabricate a terminal discovery marker.",
             "IDs 0x0000 and 0x0001 describe supported circuit/zone capacities, never\n discovered cardinality or slot presence.",
             "ID 0x000D heat-pump count and separate eligibility\nchecks are independent",
@@ -96,7 +97,7 @@ class InformationContractTests(unittest.TestCase):
             (0, [0, 0, 0], [0, 0, 128, 63], 1.0, 1, "decoded"),
             (0, [0, 0, 0], [0, 0, 192, 63], 1.5, None, "Unknown"),
             (0, [0, 0, 0], [0, 0, 128, 191], -1.0, None, "Unknown"),
-            (1, [0, 1, 0], [0, 0, 0, 0], 0.0, 0, "decoded"),
+            (1, [0, 1, 0], [0, 0, 0, 0], 0.0, None, "Unknown"),
             (65535, [0, 255, 255], [0, 0, 128, 63], 1.0, None, "Unknown"),
             (13, [0, 13, 0], [0, 0, 128, 63], 1.0, None, "Unknown"),
         ]
@@ -183,14 +184,26 @@ class InformationContractTests(unittest.TestCase):
         for identifier in (0, 1):
             for raw, value, capacity in (
                 ([0, 0, 128, 63], 1.0, 1),
+                ([0, 0, 0, 64], 2.0, 2),
+                ([0, 0, 64, 64], 3.0, 3),
+                ([0, 0, 160, 64], 5.0, 5),
+                ([0, 0, 224, 64], 7.0, 7),
+                ([0, 0, 0, 65], 8.0, 8),
                 ([0, 0, 192, 63], 1.5, None),
                 ([0, 0, 128, 191], -1.0, None),
-                ([0, 0, 0, 0], 0.0, 0),
+                ([0, 0, 0, 0], 0.0, None),
+                ([0, 0, 128, 64], 4.0, None),
+                ([0, 0, 192, 64], 6.0, None),
+                ([0, 0, 16, 65], 9.0, None),
             ):
                 with self.subTest(identifier=identifier, value=value):
                     result = example_result(
                         dict(self.context, ab42Identifier=identifier), bytes(raw)
                     )
+                    self.assertEqual(result["ab42State"], "decoded")
+                    self.assertEqual(result["ab42Raw"], bytearray(raw))
+                    self.assertEqual(result["ab42Context"],
+                                     dict(self.context, ab42Identifier=identifier))
                     self.assertEqual(result["ab42Value"], value)
                     self.assertEqual(result["ab42Capacity"], capacity)
                     self.assertEqual(result["ab42CapacityState"],

@@ -12,7 +12,7 @@
     {"ab42Identifier": 0, "ab42Request": [0, 0, 0], "ab42Raw": [0, 0, 128, 63], "ab42Value": 1.0, "ab42Capacity": 1, "ab42CapacityState": "decoded"},
     {"ab42Identifier": 0, "ab42Request": [0, 0, 0], "ab42Raw": [0, 0, 192, 63], "ab42Value": 1.5, "ab42Capacity": null, "ab42CapacityState": "Unknown"},
     {"ab42Identifier": 0, "ab42Request": [0, 0, 0], "ab42Raw": [0, 0, 128, 191], "ab42Value": -1.0, "ab42Capacity": null, "ab42CapacityState": "Unknown"},
-    {"ab42Identifier": 1, "ab42Request": [0, 1, 0], "ab42Raw": [0, 0, 0, 0], "ab42Value": 0.0, "ab42Capacity": 0, "ab42CapacityState": "decoded"},
+    {"ab42Identifier": 1, "ab42Request": [0, 1, 0], "ab42Raw": [0, 0, 0, 0], "ab42Value": 0.0, "ab42Capacity": null, "ab42CapacityState": "Unknown"},
     {"ab42Identifier": 65535, "ab42Request": [0, 255, 255], "ab42Raw": [0, 0, 128, 63], "ab42Value": 1.0, "ab42Capacity": null, "ab42CapacityState": "Unknown"},
     {"ab42Identifier": 13, "ab42Request": [0, 13, 0], "ab42Raw": [0, 0, 128, 63], "ab42Value": 1.0, "ab42Capacity": null, "ab42CapacityState": "Unknown"}
   ]
