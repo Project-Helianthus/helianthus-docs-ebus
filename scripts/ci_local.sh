@@ -280,6 +280,7 @@ python3 scripts/validate_b524_basv0_description_profile.py \
 jv protocols/vaillant/fixtures/b524-basv0-register-observations-schema-v1.json \
   protocols/vaillant/fixtures/b524-basv0-register-observations-v1.json
 python3 -m pytest -q tests/test_b524_basv0_description_profile.py
+python3 -m pytest -q tests/test_al10_b524_description_spans.py
 python3 -m pytest -q tests/test_b524_calendar_edge_vectors.py
 python3 -m pytest -q tests/test_b524_description_schema_privacy.py
 python3 -m pytest -q tests/test_b524_exp_nonfinite_limits.py
