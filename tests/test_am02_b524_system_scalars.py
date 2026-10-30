@@ -158,8 +158,10 @@ class SystemScalars(unittest.TestCase):
                     reply['value'] = bytearray.fromhex(raw)
                     self.candidate(ctx, reply, number, binding['unit'])
             if binding['codec'] == 'float32':
-                for bits in (0x7F800000, 0xFF800000, 0x7FC00000):
-                    raw = bits.to_bytes(4, 'little')
+                for octets in ((0x00, 0x00, 0x80, 0x7F),
+                               (0x00, 0x00, 0x80, 0xFF),
+                               (0x00, 0x00, 0xC0, 0x7F)):
+                    raw = bytes(octets)
                     self.assertFalse(math.isfinite(struct.unpack('<f', raw)[0]))
                     reply['value'] = bytearray(raw)
                     self.assertEqual(self.raw_only(ctx, reply)['unit'], binding['unit'])
