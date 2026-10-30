@@ -32,7 +32,8 @@ GG01 fields and room-control roles; it is not selector priority.
 | gg01-byte14 | 02 | 01 | Unknown | 0014 | Unknown | read | scalar | u8 | 1 | not-applicable | 1 | 0 | Unknown | Hypothesis |
 | gg01-byte19 | 02 | 01 | Unknown | 0019 | Unknown | read | scalar | u8 | 1 | not-applicable | 1 | 0 | Unknown | Hypothesis |
 | gg01-float15 | 02 | 01 | Unknown | 0015 | Unknown | read | scalar | binary32 | 4 | little-endian | 1 | 0 | Unknown | Hypothesis |
-| room-mode | 02 | 03 | Unknown | 0006 | controller-family | write | mode | u16 | 2 | little-endian | 1 | 0 | Unknown | Hypothesis |
+| room-mode-vrc720 | 02 | 03 | Unknown | 0006 | VRC720 family | write | mode | u16 | 2 | little-endian | 1 | 0 | Unknown | Hypothesis |
+| room-mode-vrc700 | 02 | 03 | Unknown | 0006 | VRC700 family | write | mode | u16 | 2 | little-endian | 1 | 0 | Unknown | Hypothesis |
 | room-manual | 02 | 03 | Unknown | 0022 | VRC720 family | write | manual-temperature | binary32 | 4 | little-endian | 1 | 0 | Unknown | Hypothesis |
 | room-comfort | 02 | 03 | Unknown | 0007 | VRC700 family | write | comfort-temperature | binary32 | 4 | little-endian | 1 | 0 | Unknown | Hypothesis |
 
@@ -59,7 +60,8 @@ roles, and RR0014 and RR0019 remain separate byte fields.
 | gg01-byte14 | 0E | 14 |
 | gg01-byte19 | 13 | 19 |
 | gg01-float15 | 00 00 80 3F | 1.0 |
-| room-mode | 01 01 | 257 |
+| room-mode-vrc720 | 01 01 | 257 |
+| room-mode-vrc700 | 01 01 | 257 |
 | room-manual | 00 00 80 3F | 1.0 |
 | room-comfort | 00 00 80 3F | 1.0 |
 
@@ -89,7 +91,7 @@ decode failure retains a prior cached value with uncertain freshness. Retaining
 that prior value does not validate the new raw bytes or make the old value
 fresh. These declarations supply no cache updater.
 
-The three room rows are distinct write-role declarations only. No active
+The four room rows are distinct family-qualified write-role declarations only. No active
 builder or executor is supplied. Synthetic representation checks establish no
 physical support, freshness, persistence, admission or execution permission;
 missing qualification withholds a usable native claim while preserving raw

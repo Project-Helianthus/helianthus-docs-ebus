@@ -99,13 +99,32 @@
       "grade": "Hypothesis"
     },
     {
-      "id": "room-mode",
+      "id": "room-mode-vrc720",
       "identity": {
         "opcode": 2,
         "group": 3,
         "instance": null,
         "register": 6,
-        "family": "controller-family",
+        "family": "VRC720 family",
+        "direction": "write",
+        "role": "mode"
+      },
+      "codec": "u16",
+      "width": 2,
+      "byte_order": "little-endian",
+      "factor": 1,
+      "offset": 0,
+      "unit": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "id": "room-mode-vrc700",
+      "identity": {
+        "opcode": 2,
+        "group": 3,
+        "instance": null,
+        "register": 6,
+        "family": "VRC700 family",
         "direction": "write",
         "role": "mode"
       },
@@ -203,7 +222,12 @@
       "value": 1.0
     },
     {
-      "candidate": "room-mode",
+      "candidate": "room-mode-vrc720",
+      "raw": "01 01",
+      "value": 257
+    },
+    {
+      "candidate": "room-mode-vrc700",
       "raw": "01 01",
       "value": 257
     },

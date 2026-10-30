@@ -15,7 +15,8 @@ EXPECTED = (
     ('gg01-byte14', 1, 20, None, 'read', 'scalar', 'u8', 1),
     ('gg01-byte19', 1, 25, None, 'read', 'scalar', 'u8', 1),
     ('gg01-float15', 1, 21, None, 'read', 'scalar', 'binary32', 4),
-    ('room-mode', 3, 6, 'controller-family', 'write', 'mode', 'u16', 2),
+    ('room-mode-vrc720', 3, 6, 'VRC720 family', 'write', 'mode', 'u16', 2),
+    ('room-mode-vrc700', 3, 6, 'VRC700 family', 'write', 'mode', 'u16', 2),
     ('room-manual', 3, 34, 'VRC720 family', 'write', 'manual-temperature', 'binary32', 4),
     ('room-comfort', 3, 7, 'VRC700 family', 'write', 'comfort-temperature', 'binary32', 4),
 )
@@ -24,7 +25,8 @@ CASES = (
     ('zone-u8', '01 00', None), ('zone-u16', '01 00', 1),
     ('zone-u8', '00 01', None), ('zone-u16', '00 01', 256),
     ('gg01-byte14', '0E', 14), ('gg01-byte19', '13', 19),
-    ('gg01-float15', '00 00 80 3F', 1.0), ('room-mode', '01 01', 257),
+    ('gg01-float15', '00 00 80 3F', 1.0),
+    ('room-mode-vrc720', '01 01', 257), ('room-mode-vrc700', '01 01', 257),
     ('room-manual', '00 00 80 3F', 1.0), ('room-comfort', '00 00 80 3F', 1.0),
 )
 AXES = ('opcode', 'group', 'instance', 'register', 'family', 'direction', 'role')
@@ -177,6 +179,18 @@ class ScalarShapes(unittest.TestCase):
                 del missing[axis]
                 with self.subTest(candidate=entry['id'], missing=axis):
                     self.assertEqual(candidates(self.entries, missing), [])
+
+    def test_room_mode_exact_family_scope(self):
+        identity = dict(opcode=2, group=3, instance=None, register=6,
+                        direction='write', role='mode')
+        for family, name in (('VRC720 family', 'room-mode-vrc720'),
+                             ('VRC700 family', 'room-mode-vrc700')):
+            with self.subTest(family=family):
+                matches = candidates(self.entries, dict(identity, family=family))
+                self.assertEqual([entry['id'] for entry in matches], [name])
+                self.assertEqual(interpret(matches[0], bytes.fromhex('01 01'))[0], 257)
+        for family in (None, 'controller-family', 'other-family'):
+            self.assertEqual(candidates(self.entries, dict(identity, family=family)), [])
 
     def test_request_and_reply_lengths_never_choose_candidate(self):
         identity = self.entries[0]['identity']
