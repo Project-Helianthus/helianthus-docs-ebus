@@ -1,0 +1,1712 @@
+{
+  "grade": "Hypothesis",
+  "unknown": {
+    "native_behavior": "Unknown",
+    "physical_schedule_effects": "Unknown",
+    "persistence": "Unknown",
+    "atomicity": "Unknown",
+    "a6_dispatch_count": "Unknown",
+    "mid_slot_failure": "Unknown",
+    "retry_or_rollback": "Unknown"
+  },
+  "preparation_operation": "A6",
+  "preparation_direction": "write",
+  "preparation": [
+    {
+      "count": 0,
+      "heating": false,
+      "inputs": [
+        "start-hour-a",
+        "start-minute-a",
+        "end-hour-a",
+        "end-minute-a",
+        "setpoint-a"
+      ],
+      "expected": {
+        "retained_inputs": [
+          "start-hour-a",
+          "start-minute-a",
+          "end-hour-a",
+          "end-minute-a",
+          "setpoint-a"
+        ],
+        "processed": []
+      }
+    },
+    {
+      "count": 1,
+      "heating": false,
+      "inputs": [
+        "start-hour-a",
+        "start-minute-a",
+        "end-hour-a",
+        "end-minute-a",
+        "setpoint-a"
+      ],
+      "expected": {
+        "retained_inputs": [
+          "start-hour-a",
+          "start-minute-a",
+          "end-hour-a",
+          "end-minute-a",
+          "setpoint-a"
+        ],
+        "processed": [
+          [
+            "start-hour-a",
+            "start-minute-a",
+            "end-hour-a",
+            "end-minute-a",
+            "FFFF"
+          ]
+        ]
+      }
+    },
+    {
+      "count": 0,
+      "heating": true,
+      "inputs": [
+        "start-hour-a",
+        "start-minute-a",
+        "end-hour-a",
+        "end-minute-a",
+        "setpoint-a"
+      ],
+      "expected": {
+        "retained_inputs": [
+          "start-hour-a",
+          "start-minute-a",
+          "end-hour-a",
+          "end-minute-a",
+          "setpoint-a"
+        ],
+        "processed": []
+      }
+    },
+    {
+      "count": 1,
+      "heating": true,
+      "inputs": [
+        "start-hour-a",
+        "start-minute-a",
+        "end-hour-a",
+        "end-minute-a",
+        "setpoint-a"
+      ],
+      "expected": {
+        "retained_inputs": [
+          "start-hour-a",
+          "start-minute-a",
+          "end-hour-a",
+          "end-minute-a",
+          "setpoint-a"
+        ],
+        "processed": [
+          [
+            "start-hour-a",
+            "start-minute-a",
+            "end-hour-a",
+            "end-minute-a",
+            "setpoint-a"
+          ]
+        ]
+      }
+    }
+  ],
+  "weekly": [
+    {
+      "name": "complete",
+      "identity": {
+        "family": "synthetic-timer-family",
+        "transport": "B555",
+        "zone": "zone-a",
+        "channel": "channel-a"
+      },
+      "operation": "A4/A5",
+      "direction": "read",
+      "a4_status": "success",
+      "capacity": 2,
+      "days": [
+        {
+          "day": 0,
+          "count": 1,
+          "raw_slots": [
+            "raw-day-0-slot-0"
+          ]
+        },
+        {
+          "day": 1,
+          "count": 2,
+          "raw_slots": [
+            "raw-day-1-slot-0",
+            "raw-day-1-slot-1"
+          ]
+        },
+        {
+          "day": 2,
+          "count": 0,
+          "raw_slots": []
+        },
+        {
+          "day": 3,
+          "count": 1,
+          "raw_slots": [
+            "raw-day-3-slot-0"
+          ]
+        },
+        {
+          "day": 4,
+          "count": 2,
+          "raw_slots": [
+            "raw-day-4-slot-0",
+            "raw-day-4-slot-1"
+          ]
+        },
+        {
+          "day": 5,
+          "count": 1,
+          "raw_slots": [
+            "raw-day-5-slot-0"
+          ]
+        },
+        {
+          "day": 6,
+          "count": 1,
+          "raw_slots": [
+            "raw-day-6-slot-0"
+          ]
+        }
+      ],
+      "last_known_good": [
+        "prior-week-symbol"
+      ],
+      "expected": {
+        "raw_days": [
+          {
+            "day": 0,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-0-slot-0"
+            ]
+          },
+          {
+            "day": 1,
+            "count": 2,
+            "raw_slots": [
+              "raw-day-1-slot-0",
+              "raw-day-1-slot-1"
+            ]
+          },
+          {
+            "day": 2,
+            "count": 0,
+            "raw_slots": []
+          },
+          {
+            "day": 3,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-3-slot-0"
+            ]
+          },
+          {
+            "day": 4,
+            "count": 2,
+            "raw_slots": [
+              "raw-day-4-slot-0",
+              "raw-day-4-slot-1"
+            ]
+          },
+          {
+            "day": 5,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-5-slot-0"
+            ]
+          },
+          {
+            "day": 6,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-6-slot-0"
+            ]
+          }
+        ],
+        "retained_days": [
+          {
+            "day": 0,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-0-slot-0"
+            ]
+          },
+          {
+            "day": 1,
+            "count": 2,
+            "raw_slots": [
+              "raw-day-1-slot-0",
+              "raw-day-1-slot-1"
+            ]
+          },
+          {
+            "day": 2,
+            "count": 0,
+            "raw_slots": []
+          },
+          {
+            "day": 3,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-3-slot-0"
+            ]
+          },
+          {
+            "day": 4,
+            "count": 2,
+            "raw_slots": [
+              "raw-day-4-slot-0",
+              "raw-day-4-slot-1"
+            ]
+          },
+          {
+            "day": 5,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-5-slot-0"
+            ]
+          },
+          {
+            "day": 6,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-6-slot-0"
+            ]
+          }
+        ],
+        "a5_attempts": 8,
+        "partial_day": null,
+        "complete": true,
+        "admission": false,
+        "last_known_good": [
+          "prior-week-symbol"
+        ],
+        "identity": {
+          "family": "synthetic-timer-family",
+          "transport": "B555",
+          "zone": "zone-a",
+          "channel": "channel-a"
+        },
+        "a5_requests": [
+          {
+            "day": 0,
+            "slot": 0
+          },
+          {
+            "day": 1,
+            "slot": 0
+          },
+          {
+            "day": 1,
+            "slot": 1
+          },
+          {
+            "day": 3,
+            "slot": 0
+          },
+          {
+            "day": 4,
+            "slot": 0
+          },
+          {
+            "day": 4,
+            "slot": 1
+          },
+          {
+            "day": 5,
+            "slot": 0
+          },
+          {
+            "day": 6,
+            "slot": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "failure-a4",
+      "identity": {
+        "family": "synthetic-timer-family",
+        "transport": "B555",
+        "zone": "zone-a",
+        "channel": "channel-a"
+      },
+      "operation": "A4/A5",
+      "direction": "read",
+      "a4_status": "failure",
+      "capacity": 2,
+      "days": [
+        {
+          "day": 0,
+          "count": 1,
+          "raw_slots": [
+            "raw-day-0-slot-0"
+          ]
+        },
+        {
+          "day": 1,
+          "count": 2,
+          "raw_slots": [
+            "raw-day-1-slot-0",
+            "raw-day-1-slot-1"
+          ]
+        },
+        {
+          "day": 2,
+          "count": 0,
+          "raw_slots": []
+        },
+        {
+          "day": 3,
+          "count": 1,
+          "raw_slots": [
+            "raw-day-3-slot-0"
+          ]
+        },
+        {
+          "day": 4,
+          "count": 2,
+          "raw_slots": [
+            "raw-day-4-slot-0",
+            "raw-day-4-slot-1"
+          ]
+        },
+        {
+          "day": 5,
+          "count": 1,
+          "raw_slots": [
+            "raw-day-5-slot-0"
+          ]
+        },
+        {
+          "day": 6,
+          "count": 1,
+          "raw_slots": [
+            "raw-day-6-slot-0"
+          ]
+        }
+      ],
+      "last_known_good": [
+        "prior-week-symbol"
+      ],
+      "expected": {
+        "raw_days": [
+          {
+            "day": 0,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-0-slot-0"
+            ]
+          },
+          {
+            "day": 1,
+            "count": 2,
+            "raw_slots": [
+              "raw-day-1-slot-0",
+              "raw-day-1-slot-1"
+            ]
+          },
+          {
+            "day": 2,
+            "count": 0,
+            "raw_slots": []
+          },
+          {
+            "day": 3,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-3-slot-0"
+            ]
+          },
+          {
+            "day": 4,
+            "count": 2,
+            "raw_slots": [
+              "raw-day-4-slot-0",
+              "raw-day-4-slot-1"
+            ]
+          },
+          {
+            "day": 5,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-5-slot-0"
+            ]
+          },
+          {
+            "day": 6,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-6-slot-0"
+            ]
+          }
+        ],
+        "retained_days": [],
+        "a5_attempts": 0,
+        "partial_day": null,
+        "complete": false,
+        "admission": false,
+        "last_known_good": [
+          "prior-week-symbol"
+        ],
+        "identity": {
+          "family": "synthetic-timer-family",
+          "transport": "B555",
+          "zone": "zone-a",
+          "channel": "channel-a"
+        },
+        "a5_requests": []
+      }
+    },
+    {
+      "name": "failure-0",
+      "identity": {
+        "family": "synthetic-timer-family",
+        "transport": "B555",
+        "zone": "zone-a",
+        "channel": "channel-a"
+      },
+      "operation": "A4/A5",
+      "direction": "read",
+      "a4_status": "success",
+      "capacity": 2,
+      "days": [
+        {
+          "day": 0,
+          "count": 3,
+          "raw_slots": [
+            "raw-day-0-slot-0",
+            "raw-day-0-slot-1"
+          ]
+        },
+        {
+          "day": 1,
+          "count": 2,
+          "raw_slots": [
+            "raw-day-1-slot-0",
+            "raw-day-1-slot-1"
+          ]
+        },
+        {
+          "day": 2,
+          "count": 0,
+          "raw_slots": []
+        },
+        {
+          "day": 3,
+          "count": 1,
+          "raw_slots": [
+            "raw-day-3-slot-0"
+          ]
+        },
+        {
+          "day": 4,
+          "count": 2,
+          "raw_slots": [
+            "raw-day-4-slot-0",
+            "raw-day-4-slot-1"
+          ]
+        },
+        {
+          "day": 5,
+          "count": 1,
+          "raw_slots": [
+            "raw-day-5-slot-0"
+          ]
+        },
+        {
+          "day": 6,
+          "count": 1,
+          "raw_slots": [
+            "raw-day-6-slot-0"
+          ]
+        }
+      ],
+      "last_known_good": [
+        "prior-week-symbol"
+      ],
+      "expected": {
+        "raw_days": [
+          {
+            "day": 0,
+            "count": 3,
+            "raw_slots": [
+              "raw-day-0-slot-0",
+              "raw-day-0-slot-1"
+            ]
+          },
+          {
+            "day": 1,
+            "count": 2,
+            "raw_slots": [
+              "raw-day-1-slot-0",
+              "raw-day-1-slot-1"
+            ]
+          },
+          {
+            "day": 2,
+            "count": 0,
+            "raw_slots": []
+          },
+          {
+            "day": 3,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-3-slot-0"
+            ]
+          },
+          {
+            "day": 4,
+            "count": 2,
+            "raw_slots": [
+              "raw-day-4-slot-0",
+              "raw-day-4-slot-1"
+            ]
+          },
+          {
+            "day": 5,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-5-slot-0"
+            ]
+          },
+          {
+            "day": 6,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-6-slot-0"
+            ]
+          }
+        ],
+        "retained_days": [],
+        "a5_attempts": 0,
+        "partial_day": {
+          "day": 0,
+          "count": 3,
+          "raw_slots": []
+        },
+        "complete": false,
+        "admission": false,
+        "last_known_good": [
+          "prior-week-symbol"
+        ],
+        "identity": {
+          "family": "synthetic-timer-family",
+          "transport": "B555",
+          "zone": "zone-a",
+          "channel": "channel-a"
+        },
+        "a5_requests": []
+      }
+    },
+    {
+      "name": "failure-1",
+      "identity": {
+        "family": "synthetic-timer-family",
+        "transport": "B555",
+        "zone": "zone-a",
+        "channel": "channel-a"
+      },
+      "operation": "A4/A5",
+      "direction": "read",
+      "a4_status": "success",
+      "capacity": 2,
+      "days": [
+        {
+          "day": 0,
+          "count": 1,
+          "raw_slots": [
+            "raw-day-0-slot-0"
+          ]
+        },
+        {
+          "day": 1,
+          "count": 3,
+          "raw_slots": [
+            "raw-day-1-slot-0",
+            "raw-day-1-slot-1"
+          ]
+        },
+        {
+          "day": 2,
+          "count": 0,
+          "raw_slots": []
+        },
+        {
+          "day": 3,
+          "count": 1,
+          "raw_slots": [
+            "raw-day-3-slot-0"
+          ]
+        },
+        {
+          "day": 4,
+          "count": 2,
+          "raw_slots": [
+            "raw-day-4-slot-0",
+            "raw-day-4-slot-1"
+          ]
+        },
+        {
+          "day": 5,
+          "count": 1,
+          "raw_slots": [
+            "raw-day-5-slot-0"
+          ]
+        },
+        {
+          "day": 6,
+          "count": 1,
+          "raw_slots": [
+            "raw-day-6-slot-0"
+          ]
+        }
+      ],
+      "last_known_good": [
+        "prior-week-symbol"
+      ],
+      "expected": {
+        "raw_days": [
+          {
+            "day": 0,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-0-slot-0"
+            ]
+          },
+          {
+            "day": 1,
+            "count": 3,
+            "raw_slots": [
+              "raw-day-1-slot-0",
+              "raw-day-1-slot-1"
+            ]
+          },
+          {
+            "day": 2,
+            "count": 0,
+            "raw_slots": []
+          },
+          {
+            "day": 3,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-3-slot-0"
+            ]
+          },
+          {
+            "day": 4,
+            "count": 2,
+            "raw_slots": [
+              "raw-day-4-slot-0",
+              "raw-day-4-slot-1"
+            ]
+          },
+          {
+            "day": 5,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-5-slot-0"
+            ]
+          },
+          {
+            "day": 6,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-6-slot-0"
+            ]
+          }
+        ],
+        "retained_days": [
+          {
+            "day": 0,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-0-slot-0"
+            ]
+          }
+        ],
+        "a5_attempts": 1,
+        "partial_day": {
+          "day": 1,
+          "count": 3,
+          "raw_slots": []
+        },
+        "complete": false,
+        "admission": false,
+        "last_known_good": [
+          "prior-week-symbol"
+        ],
+        "identity": {
+          "family": "synthetic-timer-family",
+          "transport": "B555",
+          "zone": "zone-a",
+          "channel": "channel-a"
+        },
+        "a5_requests": [
+          {
+            "day": 0,
+            "slot": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "failure-2",
+      "identity": {
+        "family": "synthetic-timer-family",
+        "transport": "B555",
+        "zone": "zone-a",
+        "channel": "channel-a"
+      },
+      "operation": "A4/A5",
+      "direction": "read",
+      "a4_status": "success",
+      "capacity": 2,
+      "days": [
+        {
+          "day": 0,
+          "count": 1,
+          "raw_slots": [
+            "raw-day-0-slot-0"
+          ]
+        },
+        {
+          "day": 1,
+          "count": 2,
+          "raw_slots": [
+            "raw-day-1-slot-0",
+            "raw-day-1-slot-1"
+          ]
+        },
+        {
+          "day": 2,
+          "count": 3,
+          "raw_slots": [
+            "raw-day-2-slot-0",
+            "raw-day-2-slot-1"
+          ]
+        },
+        {
+          "day": 3,
+          "count": 1,
+          "raw_slots": [
+            "raw-day-3-slot-0"
+          ]
+        },
+        {
+          "day": 4,
+          "count": 2,
+          "raw_slots": [
+            "raw-day-4-slot-0",
+            "raw-day-4-slot-1"
+          ]
+        },
+        {
+          "day": 5,
+          "count": 1,
+          "raw_slots": [
+            "raw-day-5-slot-0"
+          ]
+        },
+        {
+          "day": 6,
+          "count": 1,
+          "raw_slots": [
+            "raw-day-6-slot-0"
+          ]
+        }
+      ],
+      "last_known_good": [
+        "prior-week-symbol"
+      ],
+      "expected": {
+        "raw_days": [
+          {
+            "day": 0,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-0-slot-0"
+            ]
+          },
+          {
+            "day": 1,
+            "count": 2,
+            "raw_slots": [
+              "raw-day-1-slot-0",
+              "raw-day-1-slot-1"
+            ]
+          },
+          {
+            "day": 2,
+            "count": 3,
+            "raw_slots": [
+              "raw-day-2-slot-0",
+              "raw-day-2-slot-1"
+            ]
+          },
+          {
+            "day": 3,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-3-slot-0"
+            ]
+          },
+          {
+            "day": 4,
+            "count": 2,
+            "raw_slots": [
+              "raw-day-4-slot-0",
+              "raw-day-4-slot-1"
+            ]
+          },
+          {
+            "day": 5,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-5-slot-0"
+            ]
+          },
+          {
+            "day": 6,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-6-slot-0"
+            ]
+          }
+        ],
+        "retained_days": [
+          {
+            "day": 0,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-0-slot-0"
+            ]
+          },
+          {
+            "day": 1,
+            "count": 2,
+            "raw_slots": [
+              "raw-day-1-slot-0",
+              "raw-day-1-slot-1"
+            ]
+          }
+        ],
+        "a5_attempts": 3,
+        "partial_day": {
+          "day": 2,
+          "count": 3,
+          "raw_slots": []
+        },
+        "complete": false,
+        "admission": false,
+        "last_known_good": [
+          "prior-week-symbol"
+        ],
+        "identity": {
+          "family": "synthetic-timer-family",
+          "transport": "B555",
+          "zone": "zone-a",
+          "channel": "channel-a"
+        },
+        "a5_requests": [
+          {
+            "day": 0,
+            "slot": 0
+          },
+          {
+            "day": 1,
+            "slot": 0
+          },
+          {
+            "day": 1,
+            "slot": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "failure-3",
+      "identity": {
+        "family": "synthetic-timer-family",
+        "transport": "B555",
+        "zone": "zone-a",
+        "channel": "channel-a"
+      },
+      "operation": "A4/A5",
+      "direction": "read",
+      "a4_status": "success",
+      "capacity": 2,
+      "days": [
+        {
+          "day": 0,
+          "count": 1,
+          "raw_slots": [
+            "raw-day-0-slot-0"
+          ]
+        },
+        {
+          "day": 1,
+          "count": 2,
+          "raw_slots": [
+            "raw-day-1-slot-0",
+            "raw-day-1-slot-1"
+          ]
+        },
+        {
+          "day": 2,
+          "count": 0,
+          "raw_slots": []
+        },
+        {
+          "day": 3,
+          "count": 3,
+          "raw_slots": [
+            "raw-day-3-slot-0",
+            "raw-day-3-slot-1"
+          ]
+        },
+        {
+          "day": 4,
+          "count": 2,
+          "raw_slots": [
+            "raw-day-4-slot-0",
+            "raw-day-4-slot-1"
+          ]
+        },
+        {
+          "day": 5,
+          "count": 1,
+          "raw_slots": [
+            "raw-day-5-slot-0"
+          ]
+        },
+        {
+          "day": 6,
+          "count": 1,
+          "raw_slots": [
+            "raw-day-6-slot-0"
+          ]
+        }
+      ],
+      "last_known_good": [
+        "prior-week-symbol"
+      ],
+      "expected": {
+        "raw_days": [
+          {
+            "day": 0,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-0-slot-0"
+            ]
+          },
+          {
+            "day": 1,
+            "count": 2,
+            "raw_slots": [
+              "raw-day-1-slot-0",
+              "raw-day-1-slot-1"
+            ]
+          },
+          {
+            "day": 2,
+            "count": 0,
+            "raw_slots": []
+          },
+          {
+            "day": 3,
+            "count": 3,
+            "raw_slots": [
+              "raw-day-3-slot-0",
+              "raw-day-3-slot-1"
+            ]
+          },
+          {
+            "day": 4,
+            "count": 2,
+            "raw_slots": [
+              "raw-day-4-slot-0",
+              "raw-day-4-slot-1"
+            ]
+          },
+          {
+            "day": 5,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-5-slot-0"
+            ]
+          },
+          {
+            "day": 6,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-6-slot-0"
+            ]
+          }
+        ],
+        "retained_days": [
+          {
+            "day": 0,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-0-slot-0"
+            ]
+          },
+          {
+            "day": 1,
+            "count": 2,
+            "raw_slots": [
+              "raw-day-1-slot-0",
+              "raw-day-1-slot-1"
+            ]
+          },
+          {
+            "day": 2,
+            "count": 0,
+            "raw_slots": []
+          }
+        ],
+        "a5_attempts": 3,
+        "partial_day": {
+          "day": 3,
+          "count": 3,
+          "raw_slots": []
+        },
+        "complete": false,
+        "admission": false,
+        "last_known_good": [
+          "prior-week-symbol"
+        ],
+        "identity": {
+          "family": "synthetic-timer-family",
+          "transport": "B555",
+          "zone": "zone-a",
+          "channel": "channel-a"
+        },
+        "a5_requests": [
+          {
+            "day": 0,
+            "slot": 0
+          },
+          {
+            "day": 1,
+            "slot": 0
+          },
+          {
+            "day": 1,
+            "slot": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "failure-4",
+      "identity": {
+        "family": "synthetic-timer-family",
+        "transport": "B555",
+        "zone": "zone-a",
+        "channel": "channel-a"
+      },
+      "operation": "A4/A5",
+      "direction": "read",
+      "a4_status": "success",
+      "capacity": 2,
+      "days": [
+        {
+          "day": 0,
+          "count": 1,
+          "raw_slots": [
+            "raw-day-0-slot-0"
+          ]
+        },
+        {
+          "day": 1,
+          "count": 2,
+          "raw_slots": [
+            "raw-day-1-slot-0",
+            "raw-day-1-slot-1"
+          ]
+        },
+        {
+          "day": 2,
+          "count": 0,
+          "raw_slots": []
+        },
+        {
+          "day": 3,
+          "count": 1,
+          "raw_slots": [
+            "raw-day-3-slot-0"
+          ]
+        },
+        {
+          "day": 4,
+          "count": 3,
+          "raw_slots": [
+            "raw-day-4-slot-0",
+            "raw-day-4-slot-1"
+          ]
+        },
+        {
+          "day": 5,
+          "count": 1,
+          "raw_slots": [
+            "raw-day-5-slot-0"
+          ]
+        },
+        {
+          "day": 6,
+          "count": 1,
+          "raw_slots": [
+            "raw-day-6-slot-0"
+          ]
+        }
+      ],
+      "last_known_good": [
+        "prior-week-symbol"
+      ],
+      "expected": {
+        "raw_days": [
+          {
+            "day": 0,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-0-slot-0"
+            ]
+          },
+          {
+            "day": 1,
+            "count": 2,
+            "raw_slots": [
+              "raw-day-1-slot-0",
+              "raw-day-1-slot-1"
+            ]
+          },
+          {
+            "day": 2,
+            "count": 0,
+            "raw_slots": []
+          },
+          {
+            "day": 3,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-3-slot-0"
+            ]
+          },
+          {
+            "day": 4,
+            "count": 3,
+            "raw_slots": [
+              "raw-day-4-slot-0",
+              "raw-day-4-slot-1"
+            ]
+          },
+          {
+            "day": 5,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-5-slot-0"
+            ]
+          },
+          {
+            "day": 6,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-6-slot-0"
+            ]
+          }
+        ],
+        "retained_days": [
+          {
+            "day": 0,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-0-slot-0"
+            ]
+          },
+          {
+            "day": 1,
+            "count": 2,
+            "raw_slots": [
+              "raw-day-1-slot-0",
+              "raw-day-1-slot-1"
+            ]
+          },
+          {
+            "day": 2,
+            "count": 0,
+            "raw_slots": []
+          },
+          {
+            "day": 3,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-3-slot-0"
+            ]
+          }
+        ],
+        "a5_attempts": 4,
+        "partial_day": {
+          "day": 4,
+          "count": 3,
+          "raw_slots": []
+        },
+        "complete": false,
+        "admission": false,
+        "last_known_good": [
+          "prior-week-symbol"
+        ],
+        "identity": {
+          "family": "synthetic-timer-family",
+          "transport": "B555",
+          "zone": "zone-a",
+          "channel": "channel-a"
+        },
+        "a5_requests": [
+          {
+            "day": 0,
+            "slot": 0
+          },
+          {
+            "day": 1,
+            "slot": 0
+          },
+          {
+            "day": 1,
+            "slot": 1
+          },
+          {
+            "day": 3,
+            "slot": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "failure-5",
+      "identity": {
+        "family": "synthetic-timer-family",
+        "transport": "B555",
+        "zone": "zone-a",
+        "channel": "channel-a"
+      },
+      "operation": "A4/A5",
+      "direction": "read",
+      "a4_status": "success",
+      "capacity": 2,
+      "days": [
+        {
+          "day": 0,
+          "count": 1,
+          "raw_slots": [
+            "raw-day-0-slot-0"
+          ]
+        },
+        {
+          "day": 1,
+          "count": 2,
+          "raw_slots": [
+            "raw-day-1-slot-0",
+            "raw-day-1-slot-1"
+          ]
+        },
+        {
+          "day": 2,
+          "count": 0,
+          "raw_slots": []
+        },
+        {
+          "day": 3,
+          "count": 1,
+          "raw_slots": [
+            "raw-day-3-slot-0"
+          ]
+        },
+        {
+          "day": 4,
+          "count": 2,
+          "raw_slots": [
+            "raw-day-4-slot-0",
+            "raw-day-4-slot-1"
+          ]
+        },
+        {
+          "day": 5,
+          "count": 3,
+          "raw_slots": [
+            "raw-day-5-slot-0",
+            "raw-day-5-slot-1"
+          ]
+        },
+        {
+          "day": 6,
+          "count": 1,
+          "raw_slots": [
+            "raw-day-6-slot-0"
+          ]
+        }
+      ],
+      "last_known_good": [
+        "prior-week-symbol"
+      ],
+      "expected": {
+        "raw_days": [
+          {
+            "day": 0,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-0-slot-0"
+            ]
+          },
+          {
+            "day": 1,
+            "count": 2,
+            "raw_slots": [
+              "raw-day-1-slot-0",
+              "raw-day-1-slot-1"
+            ]
+          },
+          {
+            "day": 2,
+            "count": 0,
+            "raw_slots": []
+          },
+          {
+            "day": 3,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-3-slot-0"
+            ]
+          },
+          {
+            "day": 4,
+            "count": 2,
+            "raw_slots": [
+              "raw-day-4-slot-0",
+              "raw-day-4-slot-1"
+            ]
+          },
+          {
+            "day": 5,
+            "count": 3,
+            "raw_slots": [
+              "raw-day-5-slot-0",
+              "raw-day-5-slot-1"
+            ]
+          },
+          {
+            "day": 6,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-6-slot-0"
+            ]
+          }
+        ],
+        "retained_days": [
+          {
+            "day": 0,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-0-slot-0"
+            ]
+          },
+          {
+            "day": 1,
+            "count": 2,
+            "raw_slots": [
+              "raw-day-1-slot-0",
+              "raw-day-1-slot-1"
+            ]
+          },
+          {
+            "day": 2,
+            "count": 0,
+            "raw_slots": []
+          },
+          {
+            "day": 3,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-3-slot-0"
+            ]
+          },
+          {
+            "day": 4,
+            "count": 2,
+            "raw_slots": [
+              "raw-day-4-slot-0",
+              "raw-day-4-slot-1"
+            ]
+          }
+        ],
+        "a5_attempts": 6,
+        "partial_day": {
+          "day": 5,
+          "count": 3,
+          "raw_slots": []
+        },
+        "complete": false,
+        "admission": false,
+        "last_known_good": [
+          "prior-week-symbol"
+        ],
+        "identity": {
+          "family": "synthetic-timer-family",
+          "transport": "B555",
+          "zone": "zone-a",
+          "channel": "channel-a"
+        },
+        "a5_requests": [
+          {
+            "day": 0,
+            "slot": 0
+          },
+          {
+            "day": 1,
+            "slot": 0
+          },
+          {
+            "day": 1,
+            "slot": 1
+          },
+          {
+            "day": 3,
+            "slot": 0
+          },
+          {
+            "day": 4,
+            "slot": 0
+          },
+          {
+            "day": 4,
+            "slot": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "failure-6",
+      "identity": {
+        "family": "synthetic-timer-family",
+        "transport": "B555",
+        "zone": "zone-a",
+        "channel": "channel-a"
+      },
+      "operation": "A4/A5",
+      "direction": "read",
+      "a4_status": "success",
+      "capacity": 2,
+      "days": [
+        {
+          "day": 0,
+          "count": 1,
+          "raw_slots": [
+            "raw-day-0-slot-0"
+          ]
+        },
+        {
+          "day": 1,
+          "count": 2,
+          "raw_slots": [
+            "raw-day-1-slot-0",
+            "raw-day-1-slot-1"
+          ]
+        },
+        {
+          "day": 2,
+          "count": 0,
+          "raw_slots": []
+        },
+        {
+          "day": 3,
+          "count": 1,
+          "raw_slots": [
+            "raw-day-3-slot-0"
+          ]
+        },
+        {
+          "day": 4,
+          "count": 2,
+          "raw_slots": [
+            "raw-day-4-slot-0",
+            "raw-day-4-slot-1"
+          ]
+        },
+        {
+          "day": 5,
+          "count": 1,
+          "raw_slots": [
+            "raw-day-5-slot-0"
+          ]
+        },
+        {
+          "day": 6,
+          "count": 3,
+          "raw_slots": [
+            "raw-day-6-slot-0",
+            "raw-day-6-slot-1"
+          ]
+        }
+      ],
+      "last_known_good": [
+        "prior-week-symbol"
+      ],
+      "expected": {
+        "raw_days": [
+          {
+            "day": 0,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-0-slot-0"
+            ]
+          },
+          {
+            "day": 1,
+            "count": 2,
+            "raw_slots": [
+              "raw-day-1-slot-0",
+              "raw-day-1-slot-1"
+            ]
+          },
+          {
+            "day": 2,
+            "count": 0,
+            "raw_slots": []
+          },
+          {
+            "day": 3,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-3-slot-0"
+            ]
+          },
+          {
+            "day": 4,
+            "count": 2,
+            "raw_slots": [
+              "raw-day-4-slot-0",
+              "raw-day-4-slot-1"
+            ]
+          },
+          {
+            "day": 5,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-5-slot-0"
+            ]
+          },
+          {
+            "day": 6,
+            "count": 3,
+            "raw_slots": [
+              "raw-day-6-slot-0",
+              "raw-day-6-slot-1"
+            ]
+          }
+        ],
+        "retained_days": [
+          {
+            "day": 0,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-0-slot-0"
+            ]
+          },
+          {
+            "day": 1,
+            "count": 2,
+            "raw_slots": [
+              "raw-day-1-slot-0",
+              "raw-day-1-slot-1"
+            ]
+          },
+          {
+            "day": 2,
+            "count": 0,
+            "raw_slots": []
+          },
+          {
+            "day": 3,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-3-slot-0"
+            ]
+          },
+          {
+            "day": 4,
+            "count": 2,
+            "raw_slots": [
+              "raw-day-4-slot-0",
+              "raw-day-4-slot-1"
+            ]
+          },
+          {
+            "day": 5,
+            "count": 1,
+            "raw_slots": [
+              "raw-day-5-slot-0"
+            ]
+          }
+        ],
+        "a5_attempts": 7,
+        "partial_day": {
+          "day": 6,
+          "count": 3,
+          "raw_slots": []
+        },
+        "complete": false,
+        "admission": false,
+        "last_known_good": [
+          "prior-week-symbol"
+        ],
+        "identity": {
+          "family": "synthetic-timer-family",
+          "transport": "B555",
+          "zone": "zone-a",
+          "channel": "channel-a"
+        },
+        "a5_requests": [
+          {
+            "day": 0,
+            "slot": 0
+          },
+          {
+            "day": 1,
+            "slot": 0
+          },
+          {
+            "day": 1,
+            "slot": 1
+          },
+          {
+            "day": 3,
+            "slot": 0
+          },
+          {
+            "day": 4,
+            "slot": 0
+          },
+          {
+            "day": 4,
+            "slot": 1
+          },
+          {
+            "day": 5,
+            "slot": 0
+          }
+        ]
+      }
+    }
+  ]
+}
