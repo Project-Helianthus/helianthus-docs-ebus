@@ -1,0 +1,378 @@
+{
+  "id": "ac20_simulator_adc",
+  "representation_grade": "Proven",
+  "candidate_grade": "Hypothesis",
+  "physical_qualification": "Unknown",
+  "coordinate_system": "logical_including_prefix_not_physical_offsets",
+  "limitations": [
+    "partial_catalog",
+    "remaining_selectors_unknown",
+    "address_space_unknown",
+    "support_unknown",
+    "zero_not_established_sentinel",
+    "vortex_domains_and_hysteresis_unknown",
+    "defaults_unknown",
+    "actuator_semantics_unknown",
+    "acceptance_bounds_unknown",
+    "thermistor_celsius_ranges_unknown"
+  ],
+  "entries": [
+    {
+      "id": "ac20_b520_op00_request",
+      "family": "Vaillant simulator",
+      "variant": null,
+      "direction": "request",
+      "service": "B520",
+      "operation": 0,
+      "alternative": "request",
+      "logical_extent": 10,
+      "physical_extent": null,
+      "grade": "Hypothesis",
+      "raw_fallback": "preserve_raw_bytes",
+      "fields": [
+        {
+          "name": "relay",
+          "logical_position": 3,
+          "width": 1,
+          "raw_domain": [
+            0,
+            255
+          ],
+          "signed": false,
+          "byte_order": null,
+          "conversion": null,
+          "unit": null,
+          "default": null,
+          "mappings": {},
+          "reserved_regions": [],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve_raw_bytes",
+          "bit_roles": null
+        },
+        {
+          "name": "PWM1",
+          "logical_position": 4,
+          "width": 1,
+          "raw_domain": [
+            0,
+            255
+          ],
+          "signed": false,
+          "byte_order": null,
+          "conversion": {
+            "divide_by": 2
+          },
+          "unit": "percent",
+          "default": null,
+          "mappings": {},
+          "reserved_regions": [],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve_raw_bytes",
+          "sentinel": null
+        },
+        {
+          "name": "PWM2",
+          "logical_position": 5,
+          "width": 1,
+          "raw_domain": [
+            0,
+            255
+          ],
+          "signed": false,
+          "byte_order": null,
+          "conversion": {
+            "divide_by": 2
+          },
+          "unit": "percent",
+          "default": null,
+          "mappings": {},
+          "reserved_regions": [],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve_raw_bytes",
+          "sentinel": null
+        },
+        {
+          "name": "stepper",
+          "logical_position": 6,
+          "width": 1,
+          "raw_domain": [
+            0,
+            255
+          ],
+          "signed": false,
+          "byte_order": null,
+          "conversion": null,
+          "unit": null,
+          "default": null,
+          "mappings": {},
+          "reserved_regions": [],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve_raw_bytes",
+          "steps_domain": null,
+          "unmapped_regions": []
+        },
+        {
+          "name": "LED",
+          "logical_position": 7,
+          "width": 1,
+          "raw_domain": [
+            0,
+            255
+          ],
+          "signed": false,
+          "byte_order": null,
+          "conversion": null,
+          "unit": null,
+          "default": null,
+          "mappings": {},
+          "reserved_regions": [],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve_raw_bytes",
+          "unmapped_regions": []
+        },
+        {
+          "name": "ED",
+          "logical_position": 8,
+          "width": 1,
+          "raw_domain": [
+            0,
+            255
+          ],
+          "signed": false,
+          "byte_order": null,
+          "conversion": null,
+          "unit": "percent",
+          "default": null,
+          "mappings": {},
+          "reserved_regions": [],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve_raw_bytes"
+        },
+        {
+          "name": "temperature-table",
+          "logical_position": 9,
+          "width": 1,
+          "raw_domain": [
+            0,
+            255
+          ],
+          "signed": false,
+          "byte_order": null,
+          "conversion": null,
+          "unit": null,
+          "default": null,
+          "mappings": {
+            "0": {
+              "label": "standard3K3",
+              "candidate_celsius_range": null
+            },
+            "1": {
+              "label": "extended1K",
+              "candidate_celsius_range": null
+            },
+            "2": {
+              "label": "low-temperature15K",
+              "candidate_celsius_range": null
+            },
+            "3": {
+              "label": "standard1K",
+              "candidate_celsius_range": null
+            }
+          },
+          "reserved_regions": [],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve_raw_bytes",
+          "unmapped_regions": [
+            [
+              4,
+              255
+            ]
+          ]
+        }
+      ],
+      "reserved_regions": [],
+      "remaining_selectors": null,
+      "address_space": null,
+      "support": null
+    },
+    {
+      "id": "ac20_b520_op00_positive",
+      "family": "Vaillant simulator",
+      "variant": null,
+      "direction": "response",
+      "service": "B520",
+      "operation": 0,
+      "alternative": "positive",
+      "logical_extent": 18,
+      "physical_extent": null,
+      "grade": "Hypothesis",
+      "raw_fallback": "preserve_raw_bytes",
+      "fields": [
+        {
+          "name": "ADC",
+          "logical_position": 3,
+          "width": 2,
+          "raw_domain": null,
+          "signed": false,
+          "byte_order": "little_endian",
+          "conversion": null,
+          "unit": null,
+          "default": null,
+          "mappings": {},
+          "reserved_regions": [],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve_raw_bytes"
+        },
+        {
+          "name": "temperature1",
+          "logical_position": 5,
+          "width": 2,
+          "raw_domain": null,
+          "signed": true,
+          "byte_order": "little_endian",
+          "conversion": {
+            "divide_by": 16
+          },
+          "unit": "degrees_C",
+          "default": null,
+          "mappings": {},
+          "reserved_regions": [],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve_raw_bytes",
+          "candidate_physical_domain": null,
+          "sentinel": null
+        },
+        {
+          "name": "temperature2",
+          "logical_position": 7,
+          "width": 2,
+          "raw_domain": null,
+          "signed": true,
+          "byte_order": "little_endian",
+          "conversion": {
+            "divide_by": 16
+          },
+          "unit": "degrees_C",
+          "default": null,
+          "mappings": {},
+          "reserved_regions": [],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve_raw_bytes",
+          "candidate_physical_domain": null,
+          "sentinel": null
+        },
+        {
+          "name": "temperature3",
+          "logical_position": 9,
+          "width": 2,
+          "raw_domain": null,
+          "signed": true,
+          "byte_order": "little_endian",
+          "conversion": {
+            "divide_by": 16
+          },
+          "unit": "degrees_C",
+          "default": null,
+          "mappings": {},
+          "reserved_regions": [],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve_raw_bytes",
+          "candidate_physical_domain": null,
+          "sentinel": null
+        },
+        {
+          "name": "temperature4",
+          "logical_position": 11,
+          "width": 2,
+          "raw_domain": null,
+          "signed": true,
+          "byte_order": "little_endian",
+          "conversion": {
+            "divide_by": 16
+          },
+          "unit": "degrees_C",
+          "default": null,
+          "mappings": {},
+          "reserved_regions": [],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve_raw_bytes",
+          "candidate_physical_domain": null,
+          "sentinel": null
+        },
+        {
+          "name": "unknown13",
+          "logical_position": 13,
+          "width": 1,
+          "raw_domain": [
+            0,
+            255
+          ],
+          "signed": false,
+          "byte_order": null,
+          "conversion": null,
+          "unit": null,
+          "default": null,
+          "mappings": {},
+          "reserved_regions": [],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve_raw_bytes"
+        },
+        {
+          "name": "impeller",
+          "logical_position": 14,
+          "width": 2,
+          "raw_domain": null,
+          "signed": false,
+          "byte_order": "little_endian",
+          "conversion": null,
+          "unit": "Hz",
+          "default": null,
+          "mappings": {},
+          "reserved_regions": [],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve_raw_bytes"
+        },
+        {
+          "name": "vortex",
+          "logical_position": 16,
+          "width": 2,
+          "raw_domain": null,
+          "signed": false,
+          "byte_order": "little_endian",
+          "conversion": null,
+          "unit": "Hz",
+          "default": null,
+          "mappings": {},
+          "reserved_regions": [],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve_raw_bytes",
+          "candidate_operational_domain": null,
+          "candidate_hysteresis_hz": null,
+          "sentinel": null
+        }
+      ],
+      "reserved_regions": [],
+      "remaining_selectors": null,
+      "address_space": null,
+      "support": null
+    },
+    {
+      "id": "ac20_b520_op00_negative",
+      "family": "Vaillant simulator",
+      "variant": null,
+      "direction": "response",
+      "service": "B520",
+      "operation": 0,
+      "alternative": "negative",
+      "logical_extent": null,
+      "physical_extent": null,
+      "grade": "Hypothesis",
+      "raw_fallback": "preserve_raw_bytes",
+      "fields": [],
+      "reserved_regions": [],
+      "remaining_selectors": null,
+      "address_space": null,
+      "support": null
+    }
+  ]
+}
