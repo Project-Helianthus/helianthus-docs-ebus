@@ -1,0 +1,2052 @@
+# B507 explicit quantity and preference software results
+
+This bounded software API companion defines selected views for a candidate
+heat-generator family. It does not qualify a native device or define a wire
+layout. The public [B507 native contract](../protocols/vaillant/ebus-vaillant-B507.md)
+is authoritative for native evidence: its candidate layouts and open questions
+leave scaling, signedness, absolute response positions and family applicability
+unresolved. The explicit software capacity view below selects unsigned division
+by ten; it does not resolve those native conflicts. Preference labels below are
+software results only; the native page does not establish their physical meaning.
+
+## API and JSON contract
+
+```go
+package vaillant
+
+func Ab05Ao05Interpret(ab05ao05Input json.RawMessage) (json.RawMessage, error)
+```
+
+Use the standard library only. This is a pure library contract with no cache,
+catalog, Entries/Lookup API, metadata listing, registration, pending API import
+or runtime call site. No AO05 dependency or code merge is needed to check this
+page. New Go identifiers use `ab05ao05` or `Ab05Ao05`; Go tests use
+`TestAb05Ao05`. Synthetic case identifiers use `ab05ao05`.
+
+Input is an object with required `context` and `fields` objects and optional
+`arguments` object. Context requires integer `primary`, `secondary`, `operation`
+and string `direction`, `view`. Preserve every extra context key, including
+opaque JSON family and variant values, without inferring applicability. Fields
+maps names to byte arrays of JSON integers 0..255; booleans, null, fractional
+or floating tokens, scalar values and strings are invalid byte carriers.
+No scalar argument is defined for these two views: absent arguments and `{}`
+are distinct; any argument member is rejected. Missing required input members
+and wrong JSON kinds are errors. Detect duplicate keys at every object depth,
+including opaque context and arguments. Malformed JSON, trailing JSON values,
+wrong kinds and invalid bytes return an error and no successful JSON result;
+error message wording is not specified. Validate input before selecting a view.
+
+Selection requires `(primary, secondary) = (181, 7)`, `direction = positive`
+and exactly `(operation = 6, view = capacity)` or
+`(operation = 8, view = preference)`. Other well-typed identities, operations,
+directions or view tokens return structured raw-only `Unknown`, with empty
+semantic `fields`. Never infer a view from family, variant, field name or width.
+A preference token with operation 6 is Unknown even with a capacity field.
+
+Output contains unchanged deep-copied `context`, independent `raw` copied from
+all supplied fields, `arguments` independently copied only if supplied, `state`,
+semantic `fields`, `physical: "Unknown"`, and `qualified: false`.
+Each present semantic field contains `raw` and `state`. Grade, calculation,
+number, unit, label and candidate domain occur only as specified below.
+No flags or reserved values are defined here. Absent selected fields remain
+absent in both raw and semantic maps; an empty supplied array stays present.
+An exact-width mapped result is `complete`; incomplete width, absent fields,
+unmapped preference or unmodelled sibling fields make the selected result
+`partial`. An explicit Unknown selection remains `Unknown`. Keep all complete
+independent fields when a sibling is unknown; retain all raw tails and fields.
+Overlong selected fields are incomplete, never truncated to fit a view.
+No number is emitted for incomplete, unmapped, unit-conflict or unknown-order
+fields. State, error and presence distinctions survive JSON round trips.
+
+Capacity requires exactly one unsigned byte. The number is the byte divided by
+10, in kW: 0, 1 and 250 give 0, 0.1 and 25. Candidate raw domain is 0..250.
+251..255 retain their carrier numbers, including 25.1 and 25.5, with
+`state: "outside-candidate-domain"` and `candidate_domain: false`; the overall
+result is complete. No signed conversion, multiplication or clipping applies.
+Semantic `grade` stays `Hypothesis`; arithmetic adds `calculation: "Proven"`.
+
+Preference requires exactly two bytes, interpreted as one isolated LE u16.
+`[0,0]` labels `appliance-unavailable`; `[255,255]` labels
+`maximum-efficiency-preference`. Every other word is `unmapped` with no number
+or label. Preference semantics stay `Hypothesis`; neither label asserts
+physical availability or grants execution permission. OP09 and OP0B with any
+of these words are raw-only Unknown, even with view `preference`.
+Cost reference and conversion, absolute positions, physical availability,
+execution, effects, persistence and native support remain Unknown. Successful
+arithmetic and software results never promote family interpretation or native
+qualification. No active request, executor, UI, scan-default, authorization gate
+or transport change is introduced. eBUS MCP compatibility and GraphQL parity
+remain unchanged because this page introduces no runtime interface change.
+
+Input mutation after return, nested output mutation, mutation of context,
+raw or arguments, and later calls must never alter any other result. Independent
+copies include nested opaque context. This is a production acceptance obligation;
+the Python contract suite does not invoke a Go implementation or prove alias
+isolation. Its checks are finite independent assertions on this table and the
+[synthetic fixture](fixtures/ao06_b507_quantity_views.json). No second production
+interpreter is embedded in the test. Production invocation, rejection behavior,
+and memory independence require separate implementation evidence.
+
+## Finite machine-readable contract
+
+This JSON block is the structured contract table. Each case is a complete input
+and expected result; rejection rows contain raw JSON text to preserve duplicate
+keys and numeric token kinds. It includes independently varied selector axes,
+opaque context, missing/empty/zero carriers, widths and unknown siblings.
+All examples are synthetic. The finite table bounds the software contract only.
+
+<!-- ab05ao05-contract:start -->
+```json
+{
+  "api": {
+    "package": "vaillant",
+    "signature": "Ab05Ao05Interpret(ab05ao05Input json.RawMessage) (json.RawMessage, error)",
+    "dependencies": "standard-library",
+    "pure": true
+  },
+  "selection": {
+    "primary": 181,
+    "secondary": 7,
+    "direction": "positive",
+    "views": [
+      {
+        "operation": 6,
+        "view": "capacity",
+        "field": "capacity",
+        "width": 1
+      },
+      {
+        "operation": 8,
+        "view": "preference",
+        "field": "preference",
+        "width": 2
+      }
+    ],
+    "inference": false
+  },
+  "grades": {
+    "semantic": "Hypothesis",
+    "capacity_calculation": "Proven",
+    "physical": "Unknown",
+    "qualified": false,
+    "cost_reference": "Unknown",
+    "cost_conversion": "Unknown",
+    "absolute_positions": "Unknown",
+    "physical_availability": "Unknown",
+    "execution": "Unknown",
+    "effects": "Unknown",
+    "persistence": "Unknown"
+  },
+  "shapes": {
+    "input_required": [
+      "context",
+      "fields"
+    ],
+    "context_required": [
+      "primary",
+      "secondary",
+      "operation",
+      "direction",
+      "view"
+    ],
+    "arguments_allowed": [],
+    "output_required": [
+      "context",
+      "raw",
+      "state",
+      "fields",
+      "physical",
+      "qualified"
+    ],
+    "output_optional": [
+      "arguments"
+    ],
+    "field_required": [
+      "raw",
+      "state"
+    ],
+    "field_optional": [
+      "number",
+      "unit",
+      "label",
+      "grade",
+      "calculation",
+      "flags",
+      "reserved",
+      "candidate_domain"
+    ],
+    "result_states": [
+      "complete",
+      "partial",
+      "Unknown"
+    ],
+    "field_states": [
+      "complete",
+      "incomplete",
+      "unmapped",
+      "outside-candidate-domain",
+      "Unknown"
+    ]
+  },
+  "preservation": {
+    "context": "unchanged-deep-copy",
+    "raw": "independent-copy-all-fields-and-tails",
+    "arguments": "independent-copy-if-present",
+    "missing_vs_zero": true,
+    "empty_vs_missing": true,
+    "unknown_sibling": "retain-complete-independent-fields",
+    "round_trip": "preserve-state-and-presence",
+    "cross_call_aliasing": false
+  },
+  "numeric": {
+    "capacity": {
+      "unsigned": true,
+      "divisor": 10,
+      "unit": "kW",
+      "candidate_min": 0,
+      "candidate_max": 250,
+      "outside": "retain-number-candidate_domain-false"
+    },
+    "preference": {
+      "order": "LE",
+      "labels": {
+        "0000": "appliance-unavailable",
+        "FFFF": "maximum-efficiency-preference"
+      },
+      "other": "unmapped-no-number"
+    },
+    "no_number": [
+      "incomplete",
+      "unmapped",
+      "unit-conflict",
+      "unknown-order"
+    ]
+  },
+  "errors": [
+    "malformed-json",
+    "duplicate-object-key-at-any-depth",
+    "wrong-json-kind",
+    "invalid-byte-element",
+    "unsupported-argument"
+  ],
+  "cases": [
+    {
+      "id": "ab05ao05Capacity0",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 6,
+          "direction": "positive",
+          "view": "capacity",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "fields": {
+          "capacity": [
+            0
+          ]
+        }
+      },
+      "expected": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 6,
+          "direction": "positive",
+          "view": "capacity",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "raw": {
+          "capacity": [
+            0
+          ]
+        },
+        "state": "complete",
+        "fields": {
+          "capacity": {
+            "raw": [
+              0
+            ],
+            "state": "complete",
+            "number": 0,
+            "unit": "kW",
+            "grade": "Hypothesis",
+            "calculation": "Proven",
+            "candidate_domain": true
+          }
+        },
+        "physical": "Unknown",
+        "qualified": false
+      }
+    },
+    {
+      "id": "ab05ao05Capacity1",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 6,
+          "direction": "positive",
+          "view": "capacity",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "fields": {
+          "capacity": [
+            1
+          ]
+        }
+      },
+      "expected": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 6,
+          "direction": "positive",
+          "view": "capacity",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "raw": {
+          "capacity": [
+            1
+          ]
+        },
+        "state": "complete",
+        "fields": {
+          "capacity": {
+            "raw": [
+              1
+            ],
+            "state": "complete",
+            "number": 0.1,
+            "unit": "kW",
+            "grade": "Hypothesis",
+            "calculation": "Proven",
+            "candidate_domain": true
+          }
+        },
+        "physical": "Unknown",
+        "qualified": false
+      }
+    },
+    {
+      "id": "ab05ao05Capacity250",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 6,
+          "direction": "positive",
+          "view": "capacity",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "fields": {
+          "capacity": [
+            250
+          ]
+        }
+      },
+      "expected": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 6,
+          "direction": "positive",
+          "view": "capacity",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "raw": {
+          "capacity": [
+            250
+          ]
+        },
+        "state": "complete",
+        "fields": {
+          "capacity": {
+            "raw": [
+              250
+            ],
+            "state": "complete",
+            "number": 25,
+            "unit": "kW",
+            "grade": "Hypothesis",
+            "calculation": "Proven",
+            "candidate_domain": true
+          }
+        },
+        "physical": "Unknown",
+        "qualified": false
+      }
+    },
+    {
+      "id": "ab05ao05Capacity251",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 6,
+          "direction": "positive",
+          "view": "capacity",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "fields": {
+          "capacity": [
+            251
+          ]
+        }
+      },
+      "expected": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 6,
+          "direction": "positive",
+          "view": "capacity",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "raw": {
+          "capacity": [
+            251
+          ]
+        },
+        "state": "complete",
+        "fields": {
+          "capacity": {
+            "raw": [
+              251
+            ],
+            "state": "outside-candidate-domain",
+            "number": 25.1,
+            "unit": "kW",
+            "grade": "Hypothesis",
+            "calculation": "Proven",
+            "candidate_domain": false
+          }
+        },
+        "physical": "Unknown",
+        "qualified": false
+      }
+    },
+    {
+      "id": "ab05ao05Capacity255",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 6,
+          "direction": "positive",
+          "view": "capacity",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "fields": {
+          "capacity": [
+            255
+          ]
+        }
+      },
+      "expected": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 6,
+          "direction": "positive",
+          "view": "capacity",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "raw": {
+          "capacity": [
+            255
+          ]
+        },
+        "state": "complete",
+        "fields": {
+          "capacity": {
+            "raw": [
+              255
+            ],
+            "state": "outside-candidate-domain",
+            "number": 25.5,
+            "unit": "kW",
+            "grade": "Hypothesis",
+            "calculation": "Proven",
+            "candidate_domain": false
+          }
+        },
+        "physical": "Unknown",
+        "qualified": false
+      }
+    },
+    {
+      "id": "ab05ao05Preference0000",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 8,
+          "direction": "positive",
+          "view": "preference",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "fields": {
+          "preference": [
+            0,
+            0
+          ]
+        }
+      },
+      "expected": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 8,
+          "direction": "positive",
+          "view": "preference",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "raw": {
+          "preference": [
+            0,
+            0
+          ]
+        },
+        "state": "complete",
+        "fields": {
+          "preference": {
+            "raw": [
+              0,
+              0
+            ],
+            "state": "complete",
+            "grade": "Hypothesis",
+            "label": "appliance-unavailable"
+          }
+        },
+        "physical": "Unknown",
+        "qualified": false
+      }
+    },
+    {
+      "id": "ab05ao05Operation9Word0000",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 9,
+          "direction": "positive",
+          "view": "preference",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "fields": {
+          "preference": [
+            0,
+            0
+          ]
+        }
+      },
+      "expected": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 9,
+          "direction": "positive",
+          "view": "preference",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "raw": {
+          "preference": [
+            0,
+            0
+          ]
+        },
+        "state": "Unknown",
+        "fields": {},
+        "physical": "Unknown",
+        "qualified": false
+      }
+    },
+    {
+      "id": "ab05ao05Operation11Word0000",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 11,
+          "direction": "positive",
+          "view": "preference",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "fields": {
+          "preference": [
+            0,
+            0
+          ]
+        }
+      },
+      "expected": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 11,
+          "direction": "positive",
+          "view": "preference",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "raw": {
+          "preference": [
+            0,
+            0
+          ]
+        },
+        "state": "Unknown",
+        "fields": {},
+        "physical": "Unknown",
+        "qualified": false
+      }
+    },
+    {
+      "id": "ab05ao05PreferenceFFFF",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 8,
+          "direction": "positive",
+          "view": "preference",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "fields": {
+          "preference": [
+            255,
+            255
+          ]
+        }
+      },
+      "expected": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 8,
+          "direction": "positive",
+          "view": "preference",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "raw": {
+          "preference": [
+            255,
+            255
+          ]
+        },
+        "state": "complete",
+        "fields": {
+          "preference": {
+            "raw": [
+              255,
+              255
+            ],
+            "state": "complete",
+            "grade": "Hypothesis",
+            "label": "maximum-efficiency-preference"
+          }
+        },
+        "physical": "Unknown",
+        "qualified": false
+      }
+    },
+    {
+      "id": "ab05ao05Operation9WordFFFF",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 9,
+          "direction": "positive",
+          "view": "preference",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "fields": {
+          "preference": [
+            255,
+            255
+          ]
+        }
+      },
+      "expected": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 9,
+          "direction": "positive",
+          "view": "preference",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "raw": {
+          "preference": [
+            255,
+            255
+          ]
+        },
+        "state": "Unknown",
+        "fields": {},
+        "physical": "Unknown",
+        "qualified": false
+      }
+    },
+    {
+      "id": "ab05ao05Operation11WordFFFF",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 11,
+          "direction": "positive",
+          "view": "preference",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "fields": {
+          "preference": [
+            255,
+            255
+          ]
+        }
+      },
+      "expected": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 11,
+          "direction": "positive",
+          "view": "preference",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "raw": {
+          "preference": [
+            255,
+            255
+          ]
+        },
+        "state": "Unknown",
+        "fields": {},
+        "physical": "Unknown",
+        "qualified": false
+      }
+    },
+    {
+      "id": "ab05ao05Preference0001",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 8,
+          "direction": "positive",
+          "view": "preference",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "fields": {
+          "preference": [
+            1,
+            0
+          ]
+        }
+      },
+      "expected": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 8,
+          "direction": "positive",
+          "view": "preference",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "raw": {
+          "preference": [
+            1,
+            0
+          ]
+        },
+        "state": "partial",
+        "fields": {
+          "preference": {
+            "raw": [
+              1,
+              0
+            ],
+            "state": "unmapped",
+            "grade": "Hypothesis"
+          }
+        },
+        "physical": "Unknown",
+        "qualified": false
+      }
+    },
+    {
+      "id": "ab05ao05Operation9Word0001",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 9,
+          "direction": "positive",
+          "view": "preference",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "fields": {
+          "preference": [
+            1,
+            0
+          ]
+        }
+      },
+      "expected": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 9,
+          "direction": "positive",
+          "view": "preference",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "raw": {
+          "preference": [
+            1,
+            0
+          ]
+        },
+        "state": "Unknown",
+        "fields": {},
+        "physical": "Unknown",
+        "qualified": false
+      }
+    },
+    {
+      "id": "ab05ao05Operation11Word0001",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 11,
+          "direction": "positive",
+          "view": "preference",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "fields": {
+          "preference": [
+            1,
+            0
+          ]
+        }
+      },
+      "expected": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 11,
+          "direction": "positive",
+          "view": "preference",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "raw": {
+          "preference": [
+            1,
+            0
+          ]
+        },
+        "state": "Unknown",
+        "fields": {},
+        "physical": "Unknown",
+        "qualified": false
+      }
+    },
+    {
+      "id": "ab05ao05Preference0100",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 8,
+          "direction": "positive",
+          "view": "preference",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "fields": {
+          "preference": [
+            0,
+            1
+          ]
+        }
+      },
+      "expected": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 8,
+          "direction": "positive",
+          "view": "preference",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "raw": {
+          "preference": [
+            0,
+            1
+          ]
+        },
+        "state": "partial",
+        "fields": {
+          "preference": {
+            "raw": [
+              0,
+              1
+            ],
+            "state": "unmapped",
+            "grade": "Hypothesis"
+          }
+        },
+        "physical": "Unknown",
+        "qualified": false
+      }
+    },
+    {
+      "id": "ab05ao05Operation9Word0100",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 9,
+          "direction": "positive",
+          "view": "preference",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "fields": {
+          "preference": [
+            0,
+            1
+          ]
+        }
+      },
+      "expected": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 9,
+          "direction": "positive",
+          "view": "preference",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "raw": {
+          "preference": [
+            0,
+            1
+          ]
+        },
+        "state": "Unknown",
+        "fields": {},
+        "physical": "Unknown",
+        "qualified": false
+      }
+    },
+    {
+      "id": "ab05ao05Operation11Word0100",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 11,
+          "direction": "positive",
+          "view": "preference",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "fields": {
+          "preference": [
+            0,
+            1
+          ]
+        }
+      },
+      "expected": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 11,
+          "direction": "positive",
+          "view": "preference",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "raw": {
+          "preference": [
+            0,
+            1
+          ]
+        },
+        "state": "Unknown",
+        "fields": {},
+        "physical": "Unknown",
+        "qualified": false
+      }
+    },
+    {
+      "id": "ab05ao05CapacityMissing",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 6,
+          "direction": "positive",
+          "view": "capacity",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "fields": {}
+      },
+      "expected": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 6,
+          "direction": "positive",
+          "view": "capacity",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "raw": {},
+        "state": "partial",
+        "fields": {},
+        "physical": "Unknown",
+        "qualified": false
+      }
+    },
+    {
+      "id": "ab05ao05CapacityWidth0",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 6,
+          "direction": "positive",
+          "view": "capacity",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "fields": {
+          "capacity": []
+        }
+      },
+      "expected": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 6,
+          "direction": "positive",
+          "view": "capacity",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "raw": {
+          "capacity": []
+        },
+        "state": "partial",
+        "fields": {
+          "capacity": {
+            "raw": [],
+            "state": "incomplete",
+            "grade": "Hypothesis"
+          }
+        },
+        "physical": "Unknown",
+        "qualified": false
+      }
+    },
+    {
+      "id": "ab05ao05CapacityWidth2",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 6,
+          "direction": "positive",
+          "view": "capacity",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "fields": {
+          "capacity": [
+            1,
+            2
+          ]
+        }
+      },
+      "expected": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 6,
+          "direction": "positive",
+          "view": "capacity",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "raw": {
+          "capacity": [
+            1,
+            2
+          ]
+        },
+        "state": "partial",
+        "fields": {
+          "capacity": {
+            "raw": [
+              1,
+              2
+            ],
+            "state": "incomplete",
+            "grade": "Hypothesis"
+          }
+        },
+        "physical": "Unknown",
+        "qualified": false
+      }
+    },
+    {
+      "id": "ab05ao05PreferenceMissing",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 8,
+          "direction": "positive",
+          "view": "preference",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "fields": {}
+      },
+      "expected": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 8,
+          "direction": "positive",
+          "view": "preference",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "raw": {},
+        "state": "partial",
+        "fields": {},
+        "physical": "Unknown",
+        "qualified": false
+      }
+    },
+    {
+      "id": "ab05ao05PreferenceWidth0",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 8,
+          "direction": "positive",
+          "view": "preference",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "fields": {
+          "preference": []
+        }
+      },
+      "expected": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 8,
+          "direction": "positive",
+          "view": "preference",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "raw": {
+          "preference": []
+        },
+        "state": "partial",
+        "fields": {
+          "preference": {
+            "raw": [],
+            "state": "incomplete",
+            "grade": "Hypothesis"
+          }
+        },
+        "physical": "Unknown",
+        "qualified": false
+      }
+    },
+    {
+      "id": "ab05ao05PreferenceWidth1",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 8,
+          "direction": "positive",
+          "view": "preference",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "fields": {
+          "preference": [
+            0
+          ]
+        }
+      },
+      "expected": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 8,
+          "direction": "positive",
+          "view": "preference",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "raw": {
+          "preference": [
+            0
+          ]
+        },
+        "state": "partial",
+        "fields": {
+          "preference": {
+            "raw": [
+              0
+            ],
+            "state": "incomplete",
+            "grade": "Hypothesis"
+          }
+        },
+        "physical": "Unknown",
+        "qualified": false
+      }
+    },
+    {
+      "id": "ab05ao05PreferenceWidth3",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 8,
+          "direction": "positive",
+          "view": "preference",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "fields": {
+          "preference": [
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "expected": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 8,
+          "direction": "positive",
+          "view": "preference",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "raw": {
+          "preference": [
+            0,
+            0,
+            0
+          ]
+        },
+        "state": "partial",
+        "fields": {
+          "preference": {
+            "raw": [
+              0,
+              0,
+              0
+            ],
+            "state": "incomplete",
+            "grade": "Hypothesis"
+          }
+        },
+        "physical": "Unknown",
+        "qualified": false
+      }
+    },
+    {
+      "id": "ab05ao05AxisPrimary180",
+      "input": {
+        "context": {
+          "primary": 180,
+          "secondary": 7,
+          "operation": 6,
+          "direction": "positive",
+          "view": "capacity",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "fields": {
+          "capacity": [
+            1
+          ]
+        }
+      },
+      "expected": {
+        "context": {
+          "primary": 180,
+          "secondary": 7,
+          "operation": 6,
+          "direction": "positive",
+          "view": "capacity",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "raw": {
+          "capacity": [
+            1
+          ]
+        },
+        "state": "Unknown",
+        "fields": {},
+        "physical": "Unknown",
+        "qualified": false
+      }
+    },
+    {
+      "id": "ab05ao05AxisSecondary8",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 8,
+          "operation": 6,
+          "direction": "positive",
+          "view": "capacity",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "fields": {
+          "capacity": [
+            1
+          ]
+        }
+      },
+      "expected": {
+        "context": {
+          "primary": 181,
+          "secondary": 8,
+          "operation": 6,
+          "direction": "positive",
+          "view": "capacity",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "raw": {
+          "capacity": [
+            1
+          ]
+        },
+        "state": "Unknown",
+        "fields": {},
+        "physical": "Unknown",
+        "qualified": false
+      }
+    },
+    {
+      "id": "ab05ao05AxisOperation7",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 7,
+          "direction": "positive",
+          "view": "capacity",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "fields": {
+          "capacity": [
+            1
+          ]
+        }
+      },
+      "expected": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 7,
+          "direction": "positive",
+          "view": "capacity",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "raw": {
+          "capacity": [
+            1
+          ]
+        },
+        "state": "Unknown",
+        "fields": {},
+        "physical": "Unknown",
+        "qualified": false
+      }
+    },
+    {
+      "id": "ab05ao05AxisDirectionrequest",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 6,
+          "direction": "request",
+          "view": "capacity",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "fields": {
+          "capacity": [
+            1
+          ]
+        }
+      },
+      "expected": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 6,
+          "direction": "request",
+          "view": "capacity",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "raw": {
+          "capacity": [
+            1
+          ]
+        },
+        "state": "Unknown",
+        "fields": {},
+        "physical": "Unknown",
+        "qualified": false
+      }
+    },
+    {
+      "id": "ab05ao05AxisViewpreference",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 6,
+          "direction": "positive",
+          "view": "preference",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "fields": {
+          "capacity": [
+            1
+          ]
+        }
+      },
+      "expected": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 6,
+          "direction": "positive",
+          "view": "preference",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "raw": {
+          "capacity": [
+            1
+          ]
+        },
+        "state": "Unknown",
+        "fields": {},
+        "physical": "Unknown",
+        "qualified": false
+      }
+    },
+    {
+      "id": "ab05ao05AxisViewunknown",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 6,
+          "direction": "positive",
+          "view": "unknown",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "fields": {
+          "capacity": [
+            1
+          ]
+        }
+      },
+      "expected": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 6,
+          "direction": "positive",
+          "view": "unknown",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "raw": {
+          "capacity": [
+            1
+          ]
+        },
+        "state": "Unknown",
+        "fields": {},
+        "physical": "Unknown",
+        "qualified": false
+      }
+    },
+    {
+      "id": "ab05ao05OpaqueFamily",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 6,
+          "direction": "positive",
+          "view": "capacity",
+          "family": {
+            "opaque": [
+              0,
+              false,
+              "synthetic"
+            ]
+          },
+          "variant": "synthetic-variant"
+        },
+        "fields": {
+          "capacity": [
+            1
+          ]
+        }
+      },
+      "expected": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 6,
+          "direction": "positive",
+          "view": "capacity",
+          "family": {
+            "opaque": [
+              0,
+              false,
+              "synthetic"
+            ]
+          },
+          "variant": "synthetic-variant"
+        },
+        "raw": {
+          "capacity": [
+            1
+          ]
+        },
+        "state": "complete",
+        "fields": {
+          "capacity": {
+            "raw": [
+              1
+            ],
+            "state": "complete",
+            "number": 0.1,
+            "unit": "kW",
+            "grade": "Hypothesis",
+            "calculation": "Proven",
+            "candidate_domain": true
+          }
+        },
+        "physical": "Unknown",
+        "qualified": false
+      }
+    },
+    {
+      "id": "ab05ao05OpaqueVariant",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 6,
+          "direction": "positive",
+          "view": "capacity",
+          "family": "synthetic-family",
+          "variant": {
+            "opaque": [
+              0,
+              false,
+              "synthetic"
+            ]
+          }
+        },
+        "fields": {
+          "capacity": [
+            1
+          ]
+        }
+      },
+      "expected": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 6,
+          "direction": "positive",
+          "view": "capacity",
+          "family": "synthetic-family",
+          "variant": {
+            "opaque": [
+              0,
+              false,
+              "synthetic"
+            ]
+          }
+        },
+        "raw": {
+          "capacity": [
+            1
+          ]
+        },
+        "state": "complete",
+        "fields": {
+          "capacity": {
+            "raw": [
+              1
+            ],
+            "state": "complete",
+            "number": 0.1,
+            "unit": "kW",
+            "grade": "Hypothesis",
+            "calculation": "Proven",
+            "candidate_domain": true
+          }
+        },
+        "physical": "Unknown",
+        "qualified": false
+      }
+    },
+    {
+      "id": "ab05ao05UnknownSibling",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 6,
+          "direction": "positive",
+          "view": "capacity",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "fields": {
+          "capacity": [
+            1
+          ],
+          "unmodelled": [
+            0,
+            255,
+            1
+          ]
+        }
+      },
+      "expected": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 6,
+          "direction": "positive",
+          "view": "capacity",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "raw": {
+          "capacity": [
+            1
+          ],
+          "unmodelled": [
+            0,
+            255,
+            1
+          ]
+        },
+        "state": "partial",
+        "fields": {
+          "capacity": {
+            "raw": [
+              1
+            ],
+            "state": "complete",
+            "number": 0.1,
+            "unit": "kW",
+            "grade": "Hypothesis",
+            "calculation": "Proven",
+            "candidate_domain": true
+          }
+        },
+        "physical": "Unknown",
+        "qualified": false
+      }
+    },
+    {
+      "id": "ab05ao05CostUnknown",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 6,
+          "direction": "positive",
+          "view": "capacity",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "fields": {
+          "capacity": [
+            1
+          ],
+          "cost": [
+            10
+          ]
+        }
+      },
+      "expected": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 6,
+          "direction": "positive",
+          "view": "capacity",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "raw": {
+          "capacity": [
+            1
+          ],
+          "cost": [
+            10
+          ]
+        },
+        "state": "partial",
+        "fields": {
+          "capacity": {
+            "raw": [
+              1
+            ],
+            "state": "complete",
+            "number": 0.1,
+            "unit": "kW",
+            "grade": "Hypothesis",
+            "calculation": "Proven",
+            "candidate_domain": true
+          }
+        },
+        "physical": "Unknown",
+        "qualified": false
+      }
+    },
+    {
+      "id": "ab05ao05ArgumentsEmpty",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 6,
+          "direction": "positive",
+          "view": "capacity",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "fields": {
+          "capacity": [
+            1
+          ]
+        },
+        "arguments": {}
+      },
+      "expected": {
+        "context": {
+          "primary": 181,
+          "secondary": 7,
+          "operation": 6,
+          "direction": "positive",
+          "view": "capacity",
+          "family": "synthetic-family",
+          "variant": "synthetic-variant"
+        },
+        "raw": {
+          "capacity": [
+            1
+          ]
+        },
+        "state": "complete",
+        "fields": {
+          "capacity": {
+            "raw": [
+              1
+            ],
+            "state": "complete",
+            "number": 0.1,
+            "unit": "kW",
+            "grade": "Hypothesis",
+            "calculation": "Proven",
+            "candidate_domain": true
+          }
+        },
+        "physical": "Unknown",
+        "qualified": false,
+        "arguments": {}
+      }
+    }
+  ],
+  "rejections": [
+    {
+      "id": "ab05ao05Malformed",
+      "input_json": "{",
+      "error": true,
+      "successful_result": false
+    },
+    {
+      "id": "ab05ao05DuplicateRoot",
+      "input_json": "{\"context\":{\"primary\":181,\"secondary\":7,\"operation\":6,\"direction\":\"positive\",\"view\":\"capacity\",\"family\":\"synthetic-family\",\"variant\":\"synthetic-variant\"},\"fields\":{\"capacity\":[1]},\"fields\":{}}",
+      "error": true,
+      "successful_result": false
+    },
+    {
+      "id": "ab05ao05DuplicateContext",
+      "input_json": "{\"context\":{\"primary\":181,\"primary\":181,\"secondary\":7,\"operation\":6,\"direction\":\"positive\",\"view\":\"capacity\",\"family\":\"synthetic-family\",\"variant\":\"synthetic-variant\"},\"fields\":{\"capacity\":[1]}}",
+      "error": true,
+      "successful_result": false
+    },
+    {
+      "id": "ab05ao05DuplicateField",
+      "input_json": "{\"context\":{\"primary\":181,\"secondary\":7,\"operation\":6,\"direction\":\"positive\",\"view\":\"capacity\",\"family\":\"synthetic-family\",\"variant\":\"synthetic-variant\"},\"fields\":{\"capacity\":[1],\"capacity\":[1]}}",
+      "error": true,
+      "successful_result": false
+    },
+    {
+      "id": "ab05ao05DuplicateOpaque",
+      "input_json": "{\"context\":{\"primary\":181,\"secondary\":7,\"operation\":6,\"direction\":\"positive\",\"view\":\"capacity\",\"family\":{\"x\":0,\"x\":1},\"variant\":\"synthetic-variant\"},\"fields\":{\"capacity\":[1]}}",
+      "error": true,
+      "successful_result": false
+    },
+    {
+      "id": "ab05ao05RootArray",
+      "input_json": "[]",
+      "error": true,
+      "successful_result": false
+    },
+    {
+      "id": "ab05ao05Negative",
+      "input_json": "{\"context\": {\"primary\": 181, \"secondary\": 7, \"operation\": 6, \"direction\": \"positive\", \"view\": \"capacity\", \"family\": \"synthetic-family\", \"variant\": \"synthetic-variant\"}, \"fields\": {\"capacity\": [-1]}}",
+      "error": true,
+      "successful_result": false
+    },
+    {
+      "id": "ab05ao05Overflow",
+      "input_json": "{\"context\": {\"primary\": 181, \"secondary\": 7, \"operation\": 6, \"direction\": \"positive\", \"view\": \"capacity\", \"family\": \"synthetic-family\", \"variant\": \"synthetic-variant\"}, \"fields\": {\"capacity\": [256]}}",
+      "error": true,
+      "successful_result": false
+    },
+    {
+      "id": "ab05ao05Boolean",
+      "input_json": "{\"context\": {\"primary\": 181, \"secondary\": 7, \"operation\": 6, \"direction\": \"positive\", \"view\": \"capacity\", \"family\": \"synthetic-family\", \"variant\": \"synthetic-variant\"}, \"fields\": {\"capacity\": [true]}}",
+      "error": true,
+      "successful_result": false
+    },
+    {
+      "id": "ab05ao05Fraction",
+      "input_json": "{\"context\": {\"primary\": 181, \"secondary\": 7, \"operation\": 6, \"direction\": \"positive\", \"view\": \"capacity\", \"family\": \"synthetic-family\", \"variant\": \"synthetic-variant\"}, \"fields\": {\"capacity\": [1.5]}}",
+      "error": true,
+      "successful_result": false
+    },
+    {
+      "id": "ab05ao05FloatToken",
+      "input_json": "{\"context\": {\"primary\": 181, \"secondary\": 7, \"operation\": 6, \"direction\": \"positive\", \"view\": \"capacity\", \"family\": \"synthetic-family\", \"variant\": \"synthetic-variant\"}, \"fields\": {\"capacity\": [1.0]}}",
+      "error": true,
+      "successful_result": false
+    },
+    {
+      "id": "ab05ao05String",
+      "input_json": "{\"context\": {\"primary\": 181, \"secondary\": 7, \"operation\": 6, \"direction\": \"positive\", \"view\": \"capacity\", \"family\": \"synthetic-family\", \"variant\": \"synthetic-variant\"}, \"fields\": {\"capacity\": [\"1\"]}}",
+      "error": true,
+      "successful_result": false
+    },
+    {
+      "id": "ab05ao05NullElement",
+      "input_json": "{\"context\": {\"primary\": 181, \"secondary\": 7, \"operation\": 6, \"direction\": \"positive\", \"view\": \"capacity\", \"family\": \"synthetic-family\", \"variant\": \"synthetic-variant\"}, \"fields\": {\"capacity\": [null]}}",
+      "error": true,
+      "successful_result": false
+    },
+    {
+      "id": "ab05ao05FieldScalar",
+      "input_json": "{\"context\": {\"primary\": 181, \"secondary\": 7, \"operation\": 6, \"direction\": \"positive\", \"view\": \"capacity\", \"family\": \"synthetic-family\", \"variant\": \"synthetic-variant\"}, \"fields\": {\"capacity\": 1}}",
+      "error": true,
+      "successful_result": false
+    },
+    {
+      "id": "ab05ao05FieldNull",
+      "input_json": "{\"context\": {\"primary\": 181, \"secondary\": 7, \"operation\": 6, \"direction\": \"positive\", \"view\": \"capacity\", \"family\": \"synthetic-family\", \"variant\": \"synthetic-variant\"}, \"fields\": {\"capacity\": null}}",
+      "error": true,
+      "successful_result": false
+    },
+    {
+      "id": "ab05ao05ContextKind",
+      "input_json": "{\"context\": [], \"fields\": {\"capacity\": [1]}}",
+      "error": true,
+      "successful_result": false
+    },
+    {
+      "id": "ab05ao05FieldsKind",
+      "input_json": "{\"context\": {\"primary\": 181, \"secondary\": 7, \"operation\": 6, \"direction\": \"positive\", \"view\": \"capacity\", \"family\": \"synthetic-family\", \"variant\": \"synthetic-variant\"}, \"fields\": []}",
+      "error": true,
+      "successful_result": false
+    },
+    {
+      "id": "ab05ao05ArgumentsKind",
+      "input_json": "{\"context\": {\"primary\": 181, \"secondary\": 7, \"operation\": 6, \"direction\": \"positive\", \"view\": \"capacity\", \"family\": \"synthetic-family\", \"variant\": \"synthetic-variant\"}, \"fields\": {\"capacity\": [1]}, \"arguments\": []}",
+      "error": true,
+      "successful_result": false
+    },
+    {
+      "id": "ab05ao05ArgumentsFlag",
+      "input_json": "{\"context\": {\"primary\": 181, \"secondary\": 7, \"operation\": 6, \"direction\": \"positive\", \"view\": \"capacity\", \"family\": \"synthetic-family\", \"variant\": \"synthetic-variant\"}, \"fields\": {\"capacity\": [1]}, \"arguments\": {\"execute\": true}}",
+      "error": true,
+      "successful_result": false
+    },
+    {
+      "id": "ab05ao05ArgumentsInteger",
+      "input_json": "{\"context\": {\"primary\": 181, \"secondary\": 7, \"operation\": 6, \"direction\": \"positive\", \"view\": \"capacity\", \"family\": \"synthetic-family\", \"variant\": \"synthetic-variant\"}, \"fields\": {\"capacity\": [1]}, \"arguments\": {\"limit\": 0}}",
+      "error": true,
+      "successful_result": false
+    },
+    {
+      "id": "ab05ao05MissingContext",
+      "input_json": "{\"fields\": {\"capacity\": [1]}}",
+      "error": true,
+      "successful_result": false
+    },
+    {
+      "id": "ab05ao05MissingFields",
+      "input_json": "{\"context\": {\"primary\": 181, \"secondary\": 7, \"operation\": 6, \"direction\": \"positive\", \"view\": \"capacity\", \"family\": \"synthetic-family\", \"variant\": \"synthetic-variant\"}}",
+      "error": true,
+      "successful_result": false
+    },
+    {
+      "id": "ab05ao05MissingPrimary",
+      "input_json": "{\"context\": {\"secondary\": 7, \"operation\": 6, \"direction\": \"positive\", \"view\": \"capacity\", \"family\": \"synthetic-family\", \"variant\": \"synthetic-variant\"}, \"fields\": {\"capacity\": [1]}}",
+      "error": true,
+      "successful_result": false
+    },
+    {
+      "id": "ab05ao05WrongKindPrimary",
+      "input_json": "{\"context\": {\"primary\": [], \"secondary\": 7, \"operation\": 6, \"direction\": \"positive\", \"view\": \"capacity\", \"family\": \"synthetic-family\", \"variant\": \"synthetic-variant\"}, \"fields\": {\"capacity\": [1]}}",
+      "error": true,
+      "successful_result": false
+    },
+    {
+      "id": "ab05ao05MissingSecondary",
+      "input_json": "{\"context\": {\"primary\": 181, \"operation\": 6, \"direction\": \"positive\", \"view\": \"capacity\", \"family\": \"synthetic-family\", \"variant\": \"synthetic-variant\"}, \"fields\": {\"capacity\": [1]}}",
+      "error": true,
+      "successful_result": false
+    },
+    {
+      "id": "ab05ao05WrongKindSecondary",
+      "input_json": "{\"context\": {\"primary\": 181, \"secondary\": [], \"operation\": 6, \"direction\": \"positive\", \"view\": \"capacity\", \"family\": \"synthetic-family\", \"variant\": \"synthetic-variant\"}, \"fields\": {\"capacity\": [1]}}",
+      "error": true,
+      "successful_result": false
+    },
+    {
+      "id": "ab05ao05MissingOperation",
+      "input_json": "{\"context\": {\"primary\": 181, \"secondary\": 7, \"direction\": \"positive\", \"view\": \"capacity\", \"family\": \"synthetic-family\", \"variant\": \"synthetic-variant\"}, \"fields\": {\"capacity\": [1]}}",
+      "error": true,
+      "successful_result": false
+    },
+    {
+      "id": "ab05ao05WrongKindOperation",
+      "input_json": "{\"context\": {\"primary\": 181, \"secondary\": 7, \"operation\": [], \"direction\": \"positive\", \"view\": \"capacity\", \"family\": \"synthetic-family\", \"variant\": \"synthetic-variant\"}, \"fields\": {\"capacity\": [1]}}",
+      "error": true,
+      "successful_result": false
+    },
+    {
+      "id": "ab05ao05MissingDirection",
+      "input_json": "{\"context\": {\"primary\": 181, \"secondary\": 7, \"operation\": 6, \"view\": \"capacity\", \"family\": \"synthetic-family\", \"variant\": \"synthetic-variant\"}, \"fields\": {\"capacity\": [1]}}",
+      "error": true,
+      "successful_result": false
+    },
+    {
+      "id": "ab05ao05WrongKindDirection",
+      "input_json": "{\"context\": {\"primary\": 181, \"secondary\": 7, \"operation\": 6, \"direction\": [], \"view\": \"capacity\", \"family\": \"synthetic-family\", \"variant\": \"synthetic-variant\"}, \"fields\": {\"capacity\": [1]}}",
+      "error": true,
+      "successful_result": false
+    },
+    {
+      "id": "ab05ao05MissingView",
+      "input_json": "{\"context\": {\"primary\": 181, \"secondary\": 7, \"operation\": 6, \"direction\": \"positive\", \"family\": \"synthetic-family\", \"variant\": \"synthetic-variant\"}, \"fields\": {\"capacity\": [1]}}",
+      "error": true,
+      "successful_result": false
+    },
+    {
+      "id": "ab05ao05WrongKindView",
+      "input_json": "{\"context\": {\"primary\": 181, \"secondary\": 7, \"operation\": 6, \"direction\": \"positive\", \"view\": [], \"family\": \"synthetic-family\", \"variant\": \"synthetic-variant\"}, \"fields\": {\"capacity\": [1]}}",
+      "error": true,
+      "successful_result": false
+    },
+    {
+      "id": "ab05ao05Trailing",
+      "input_json": "{\"context\": {\"primary\": 181, \"secondary\": 7, \"operation\": 6, \"direction\": \"positive\", \"view\": \"capacity\", \"family\": \"synthetic-family\", \"variant\": \"synthetic-variant\"}, \"fields\": {\"capacity\": [1]}} {}",
+      "error": true,
+      "successful_result": false
+    },
+    {
+      "id": "ab05ao05DuplicateArguments",
+      "input_json": "{\"context\": {\"primary\": 181, \"secondary\": 7, \"operation\": 6, \"direction\": \"positive\", \"view\": \"capacity\", \"family\": \"synthetic-family\", \"variant\": \"synthetic-variant\"}, \"fields\": {\"capacity\": [1]},\"arguments\":{\"x\":0,\"x\":1}}",
+      "error": true,
+      "successful_result": false
+    }
+  ]
+}
+```
+<!-- ab05ao05-contract:end -->
