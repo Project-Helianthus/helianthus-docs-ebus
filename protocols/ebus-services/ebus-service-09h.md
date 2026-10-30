@@ -1,10 +1,20 @@
-# eBUS Service 0x09 — Memory Server (Application Layer)
+# eBUS Service 0x09 — Memory-service direction alternatives
 
-> Source: eBUS Specification Application Layer (OSI 7) V1.6.1, §3.5
+> Source: eBUS Specification Application Layer (OSI 7) V1.6.1, §3.5 (service naming context).
 
-## Scope
+## Scope and evidence
 
-Service `0x09` provides direct RAM and EEPROM read/write access to eBUS modules. This service is restricted to **service mode only** — devices should not support it during normal operation. All commands are one-time with no recurring bus load.
+This bounded declaration covers only `0900`, `0901`, `0902` and `0903`,
+matching the finite AE27 companion catalog. It does not imply a complete family
+catalog. The historical RAM/EEPROM storage names do not establish a physical
+memory space; a storage-name inconsistency must not change PB/SB service identity.
+Other vendor variants and requester behavior remain separate and unqualified.
+
+All field declarations below are **Hypothesis**. **Proven** applies only to the
+presence of these finite declarations in the companion, not to native behavior
+or installed support. Synthetic examples do not qualify physical behavior.
+The specification citation supplies naming context; the supplied direction
+alternatives and corroborating catalog are not reproducible wire observations.
 
 ## Terminology
 
@@ -12,105 +22,74 @@ Service `0x09` provides direct RAM and EEPROM read/write access to eBUS modules.
 > Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`.
 <!-- legacy-role-mapping:end -->
 
-## Command Summary
+## Bounded direction declarations
 
-| PB | SB | Name | Direction | Telegram Type | Access |
-|---:|---:|---|---|---|---|
-| `0x09` | `0x00` | Read RAM | Initiator → Target | Initiator/Target | Service only |
-| `0x09` | `0x01` | Write RAM | Initiator → Target | Initiator/Target | Service only |
-| `0x09` | `0x02` | Read EEPROM | Initiator → Target | Initiator/Target | Service only |
-| `0x09` | `0x03` | Write EEPROM | Initiator → Target | Initiator/Target | Service only |
+Identity is PB `09` plus the SB encoded in the last two digits of the service,
+direction and field. An operation discriminator is absent. Request and positive
+are abstract directions, not observed peer traffic. A logical position is not a
+wire offset. All physical positions are Unknown. In particular, positive-prefix
+relevance to PeBUS does not establish physical response positions. `unset` means
+metadata is absent, not zero, a sentinel, a default or an inferred scale.
 
-## Commands
+| Grade | Service | Direction | Field | Logical position | Extent (bytes) | Raw type / domain | Scale | Sentinel / default / conflict | Unresolved |
+|---|---|---|---|---|---|---|---|---|---|
+| Hypothesis | 0900 | request | PB | 0 | 1 | byte / PB=09 | unset | sentinel unset; default unset; conflict unset | physical position Unknown |
+| Hypothesis | 0900 | request | SB | 1 | 1 | byte / SB=00 | unset | sentinel unset; default unset; conflict unset | physical position Unknown |
+| Hypothesis | 0900 | request | address | Unknown | 2 | unsigned LE16 / 0..65535 | unset | sentinel unset; default 0; conflict unset | logical and physical positions Unknown |
+| Hypothesis | 0900 | request | count | Unknown | 1 | u8 / 0..255 | unset | sentinel unset; default 0; conflict unset | logical and physical positions Unknown |
+| Hypothesis | 0900 | positive | PB | 0 | 1 | byte / PB=09 | unset | sentinel unset; default unset; conflict unset | physical position Unknown |
+| Hypothesis | 0900 | positive | SB | 1 | 1 | byte / SB=00 | unset | sentinel unset; default unset; conflict unset | physical position Unknown |
+| Hypothesis | 0900 | positive | data | 2 | to end-of-data; min 0; max unset | opaque / no defined unit or enum | unset | sentinel unset; default unset; conflict unset | physical position and packet extent Unknown; empty does not establish success |
+| Hypothesis | 0901 | request | PB | 0 | 1 | byte / PB=09 | unset | sentinel unset; default unset; conflict unset | physical position Unknown |
+| Hypothesis | 0901 | request | SB | 1 | 1 | byte / SB=01 | unset | sentinel unset; default unset; conflict unset | physical position Unknown |
+| Hypothesis | 0901 | request | address | Unknown | 2 | unsigned LE16 / 0..65535 | unset | sentinel unset; default 0; conflict unset | logical and physical positions Unknown |
+| Hypothesis | 0901 | positive | PB | 0 | 1 | byte / PB=09 | unset | sentinel unset; default unset; conflict unset | physical position Unknown; prefix-only; no body or success claim |
+| Hypothesis | 0901 | positive | SB | 1 | 1 | byte / SB=01 | unset | sentinel unset; default unset; conflict unset | physical position Unknown; prefix-only; no body or success claim |
+| Hypothesis | 0902 | request | PB | 0 | 1 | byte / PB=09 | unset | sentinel unset; default unset; conflict unset | physical position Unknown |
+| Hypothesis | 0902 | request | SB | 1 | 1 | byte / SB=02 | unset | sentinel unset; default unset; conflict unset | physical position Unknown |
+| Hypothesis | 0902 | request | address_low | Unknown | 1 | u8 / 0..255 | unset | sentinel unset; default 0; conflict unset | logical and physical positions Unknown |
+| Hypothesis | 0902 | request | address_high | Unknown | 1 | u8 / 0..255 | unset | sentinel unset; default 0; conflict unset | logical and physical positions Unknown |
+| Hypothesis | 0902 | request | count | Unknown | 1 | u8 / 0..255 | unset | sentinel unset; default 0; candidate max 10 conflicts with formal 255 | logical and physical positions Unknown |
+| Hypothesis | 0902 | positive | data | 0 | to end-of-data; min 0; max unset | opaque / no defined unit or enum | unset | sentinel unset; default unset; conflict unset | physical position and packet extent Unknown; empty does not establish success |
+| Hypothesis | 0903 | request | PB | 0 | 1 | byte / PB=09 | unset | sentinel unset; default unset; conflict unset | physical position Unknown |
+| Hypothesis | 0903 | request | SB | 1 | 1 | byte / SB=03 | unset | sentinel unset; default unset; conflict unset | physical position Unknown |
+| Hypothesis | 0903 | request | address_low | Unknown | 1 | u8 / 0..255 | unset | sentinel unset; default 0; conflict unset | logical and physical positions Unknown |
+| Hypothesis | 0903 | request | address_high | Unknown | 1 | u8 / 0..255 | unset | sentinel unset; default 0; conflict unset | logical and physical positions Unknown |
+| Hypothesis | 0903 | positive | PB | 0 | 1 | byte / PB=09 | unset | sentinel unset; default unset; conflict unset | physical position Unknown |
+| Hypothesis | 0903 | positive | SB | 1 | 1 | byte / SB=03 | unset | sentinel unset; default unset; conflict unset | physical position Unknown |
+| Hypothesis | 0903 | positive | data | 2 | to end-of-data; min 0; max unset | opaque / no defined unit or enum | unset | sentinel unset; default unset; conflict unset | physical position and packet extent Unknown; empty does not establish success |
 
-### Service 0x09 0x00 — Read RAM Data
+The `0900` and `0901` address example `34 12` denotes 4660 in the unsigned
+LE16 alternative. For `0902` and `0903`, it retains independent low=52 and
+high=18 bytes; address equivalence is Unknown. Request positions beyond PB/SB
+are unprovided. No request data declaration is supplied by this finite scope.
 
-**Description:** Reads `DN` bytes from RAM starting at a 16-bit address. The target responds with the requested data bytes.
+Positive `0900` and `0903` place opaque `AA 55` at abstract position 2 after
+PB/SB; `0902` places the same data at 0 without PB/SB. There is no universal
+prefix-stripping rule. Positive `0901` is prefix-only and declares neither a
+body nor successful execution. Empty opaque data is preserved without claiming
+success or acceptance. The raw counts 0, 10, 11 and 255 remain intact; the
+`0902` candidate maximum 10 and formal maximum 255 remain conflicting claims.
 
-**Request payload:**
-
-| Byte | Field | Type | Range | Description |
-|---:|---|---|---|---|
-| 0 | addr_lo | BYTE | — | Low byte of start address |
-| 1 | addr_hi | BYTE | — | High byte of start address |
-| 2 | count (DN) | BYTE | — | Number of data bytes to read. Official range: `[0..10]`; service mode permits `DN > 10` |
-
-**Response payload:**
-
-| Byte | Field | Type | Range | Description |
-|---:|---|---|---|---|
-| 0..DN-1 | data | BYTE×DN | — | Requested data bytes |
-
----
-
-### Service 0x09 0x01 — Write RAM Data
-
-**Description:** Writes data bytes to RAM starting at a 16-bit address.
-
-**Request payload:**
-
-| Byte | Field | Type | Range | Description |
-|---:|---|---|---|---|
-| 0 | addr_lo | BYTE | — | Low byte of memory address |
-| 1 | addr_hi | BYTE | — | High byte of memory address |
-| 2.. | data | BYTE | — | Data bytes to write (1–8 bytes). **NN note:** the official spec constrains `1 ≤ NN ≤ 8` where `NN` counts "bytes as of M7" (high address byte + data). Data byte count = `NN - 1`, so `NN=1` means address-only (no data) while `NN=8` means 7 data bytes. The spec's data table indexes `Data Byte 0` through `Data Byte NN-1`, suggesting `NN` may alternatively count data bytes directly (giving 1–8 data bytes). This source ambiguity is unresolved; implementations should accept 1–8 data bytes |
-
-**Response payload:** Empty (`NN=0x00`). ACK confirms write.
-
----
-
-### Service 0x09 0x02 — Read EEPROM Data
-
-**Description:** Reads `DN` bytes from EEPROM starting at a 16-bit address. Same request/response layout as [0x09 0x00](#service-0x09-0x00--read-ram-data).
-
-**Request payload:** Identical to Read RAM.
-
-**Response payload:** Identical to Read RAM.
-
----
-
-### Service 0x09 0x03 — Write EEPROM Data
-
-**Description:** Writes data bytes to EEPROM starting at a 16-bit address. Same request layout as [0x09 0x01](#service-0x09-0x01--write-ram-data).
-
-**Request payload:** Identical to Write RAM.
-
-**Response payload:** Empty (`NN=0x00`). ACK confirms write.
-
-> **Note:** The last data block in a multi-block EEPROM write sequence may have `NN < 10`.
-
-## Address Space
-
-Both RAM and EEPROM use a flat 16-bit address space (little-endian: low byte transmitted first). The meaning of addresses is entirely device-specific and is not defined by the eBUS specification.
-
-## Security Considerations
-
-Memory server access bypasses all application-level validation. The specification explicitly restricts this service to service/maintenance mode. Devices that expose `0x09` during normal operation create a risk of uncontrolled state modification.
-
-## Vaillant variants
-
-The standard layouts above stay authoritative. The layouts in the first table are candidate interpretations, unconfirmed on the wire; the usage in the second list is a Vaillant requester behaviour that is likewise unconfirmed on the wire.
-
-| SB | Standard service | Vaillant layout | Result |
-|---:|---|---|---|
-| `0x00` | Read RAM | Request: address (u16 little-endian) and count (u8); reply: opaque data | Follows the standard layout (candidate) |
-| `0x01` | Write RAM | Request: address (u16 little-endian) and data | Follows the standard layout (candidate) |
-| `0x02` | Read EEPROM | Request: address low (u8), address high (u8), count (u8); reply: data starting at reply byte 0 | Follows the standard layout (candidate) |
-| `0x03` | Write EEPROM | Request: address low (u8), address high (u8), data; the positive reply is an opaque data field that may be empty | Request follows the standard layout (candidate); whether the reply is always empty, as the standard requires, is unresolved |
-
-- The empty `0x09 0x03` reply the standard prescribes is consistent with the Vaillant layout; no data-bearing reply is evidenced (candidate).
-- The count of `0x09 0x02` has the formal range 0–255 in the Vaillant layout; the standard's nominal limit of 10 and its service-mode extension are not encoded in it (candidate, unconfirmed on the wire).
-- Candidate interpretation, unconfirmed on the wire: a Vaillant requester issues `0x09 0x02` as `NN=3` with address `0x0000` (little-endian) and count 9 toward a remote room-control unit, and `0x09 0x03` as `NN=3` (16-bit little-endian address and one data byte) toward a system-control unit, with no service-mode step before them, although the standard restricts `0x09` to service mode; whether a target accepts them outside service mode is unknown.
-- No Vaillant requester use of `0x09 0x00` or `0x09 0x01` is known.
+[Synthetic direction examples](fixtures/ae28_09_candidates.json) preserve these
+alternatives and absent metadata. They are examples of declarations, not packet
+captures or evidence of peer effects.
 
 ## Open questions
 
-- Whether a target accepts `0x09 0x02` and `0x09 0x03` outside service mode is unknown.
-- The effect of the `0x09 0x02` read on the target was not observed, and the target replies to `0x09 0x02` and `0x09 0x03` were not observed.
-- The Vaillant `0x09` layouts and requester use are candidates, unconfirmed on the wire; no capture of a `0x09` exchange is known.
+**Unknown:** physical memory space, peer effects, address equivalence, actual
+packet extent, empty-request acceptance and installed support. Unprovided
+request positions remain Unknown. Storage names do not resolve these questions.
+No service-mode rule or execution authority follows from these declarations.
+No memory reader/writer or verification client is defined here.
+
+## Sources
+
+The independently merged [AE27 companion catalog](https://github.com/Project-Helianthus/helianthus-ebusreg/blob/main/catalog/ebus_standard/testdata/ab79_09_candidates.json)
+corroborates only the 25 declarations in the table. Catalog presence does not
+prove a native wire contract or qualify installed support.
 
 ## See Also
 
 - [`ebus-application-layer.md`](./ebus-application-layer.md) — service index
 - [`ebus-overview.md`](./ebus-overview.md) — wire-level framing
-- [`ebus-service-0Fh.md`](./ebus-service-0Fh.md) — test commands (also service-mode restricted)
