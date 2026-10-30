@@ -1,0 +1,278 @@
+{
+  "Declarations": [
+    {
+      "id": "u16",
+      "field": "numeric",
+      "context": "generic",
+      "bits": "16",
+      "byte_order": "little-endian",
+      "conversion": "divide by 10",
+      "raw_min": "0",
+      "raw_max": "65535",
+      "numeric_min": "0",
+      "numeric_max": "6553.5",
+      "grade": "Hypothesis"
+    },
+    {
+      "id": "u16-context",
+      "field": "numeric",
+      "context": "synthetic replacement condition",
+      "bits": "16",
+      "byte_order": "little-endian",
+      "conversion": "divide by 10",
+      "raw_min": "0",
+      "raw_max": "65535",
+      "numeric_min": "0",
+      "numeric_max": "6553.5",
+      "grade": "Hypothesis"
+    },
+    {
+      "id": "a3-min",
+      "field": "A3 minimum setpoint",
+      "context": "generic",
+      "bits": "8",
+      "byte_order": "not applicable",
+      "conversion": "identity",
+      "raw_min": "0",
+      "raw_max": "255",
+      "numeric_min": "0",
+      "numeric_max": "255",
+      "grade": "Hypothesis"
+    },
+    {
+      "id": "a3-max",
+      "field": "A3 maximum setpoint",
+      "context": "generic",
+      "bits": "8",
+      "byte_order": "not applicable",
+      "conversion": "identity",
+      "raw_min": "0",
+      "raw_max": "255",
+      "numeric_min": "0",
+      "numeric_max": "255",
+      "grade": "Hypothesis"
+    },
+    {
+      "id": "a3-qualified",
+      "field": "A3 minimum setpoint",
+      "context": "synthetic Celsius condition",
+      "bits": "8",
+      "byte_order": "not applicable",
+      "conversion": "identity",
+      "raw_min": "0",
+      "raw_max": "255",
+      "numeric_min": "0",
+      "numeric_max": "255",
+      "grade": "Hypothesis"
+    },
+    {
+      "id": "unit2",
+      "field": "raw numeric material",
+      "context": "unqualified unit 2",
+      "bits": "Unknown",
+      "byte_order": "Unknown",
+      "conversion": "Unknown",
+      "raw_min": "Unknown",
+      "raw_max": "Unknown",
+      "numeric_min": "Unknown",
+      "numeric_max": "Unknown",
+      "grade": "Unknown"
+    }
+  ],
+  "Interpretations": [
+    {
+      "id": "u16",
+      "unit_code": "Unknown",
+      "unit": "Unknown",
+      "unit_grade": "Unknown",
+      "replacement_raw": "none selected",
+      "replacement_role": "none selected",
+      "replacement_grade": "Unknown"
+    },
+    {
+      "id": "u16-context",
+      "unit_code": "Unknown",
+      "unit": "Unknown",
+      "unit_grade": "Unknown",
+      "replacement_raw": "65535",
+      "replacement_role": "contextual replacement",
+      "replacement_grade": "Hypothesis"
+    },
+    {
+      "id": "a3-min",
+      "unit_code": "Unknown",
+      "unit": "Unknown",
+      "unit_grade": "Unknown",
+      "replacement_raw": "none selected",
+      "replacement_role": "none selected",
+      "replacement_grade": "Unknown"
+    },
+    {
+      "id": "a3-max",
+      "unit_code": "Unknown",
+      "unit": "Unknown",
+      "unit_grade": "Unknown",
+      "replacement_raw": "none selected",
+      "replacement_role": "none selected",
+      "replacement_grade": "Unknown"
+    },
+    {
+      "id": "a3-qualified",
+      "unit_code": "Unknown",
+      "unit": "degrees C",
+      "unit_grade": "Hypothesis",
+      "replacement_raw": "255",
+      "replacement_role": "unavailable",
+      "replacement_grade": "Hypothesis"
+    },
+    {
+      "id": "unit2",
+      "unit_code": "2",
+      "unit": "Unknown",
+      "unit_grade": "Unknown",
+      "replacement_raw": "none selected",
+      "replacement_role": "none selected",
+      "replacement_grade": "Unknown"
+    }
+  ],
+  "Synthetic tuples": [
+    {
+      "id": "zero",
+      "declaration": "u16",
+      "raw_bytes": "00 00",
+      "raw_numeric_material": "0",
+      "formal_numeric": "0",
+      "contextual_branch": "none selected",
+      "semantic_value": "Unknown",
+      "grade": "Hypothesis"
+    },
+    {
+      "id": "tenth",
+      "declaration": "u16",
+      "raw_bytes": "01 00",
+      "raw_numeric_material": "1",
+      "formal_numeric": "0.1",
+      "contextual_branch": "none selected",
+      "semantic_value": "Unknown",
+      "grade": "Hypothesis"
+    },
+    {
+      "id": "byte-order",
+      "declaration": "u16",
+      "raw_bytes": "00 01",
+      "raw_numeric_material": "256",
+      "formal_numeric": "25.6",
+      "contextual_branch": "none selected",
+      "semantic_value": "Unknown",
+      "grade": "Hypothesis"
+    },
+    {
+      "id": "maximum",
+      "declaration": "u16",
+      "raw_bytes": "FF FF",
+      "raw_numeric_material": "65535",
+      "formal_numeric": "6553.5",
+      "contextual_branch": "none selected",
+      "semantic_value": "Unknown",
+      "grade": "Hypothesis"
+    },
+    {
+      "id": "replacement",
+      "declaration": "u16-context",
+      "raw_bytes": "FF FF",
+      "raw_numeric_material": "65535",
+      "formal_numeric": "6553.5",
+      "contextual_branch": "contextual replacement",
+      "semantic_value": "Unknown",
+      "grade": "Hypothesis"
+    },
+    {
+      "id": "minimum-ff",
+      "declaration": "a3-min",
+      "raw_bytes": "FF",
+      "raw_numeric_material": "255",
+      "formal_numeric": "255",
+      "contextual_branch": "none selected",
+      "semantic_value": "Unknown",
+      "grade": "Hypothesis"
+    },
+    {
+      "id": "maximum-ff",
+      "declaration": "a3-max",
+      "raw_bytes": "FF",
+      "raw_numeric_material": "255",
+      "formal_numeric": "255",
+      "contextual_branch": "none selected",
+      "semantic_value": "Unknown",
+      "grade": "Hypothesis"
+    },
+    {
+      "id": "qualified-ff",
+      "declaration": "a3-qualified",
+      "raw_bytes": "FF",
+      "raw_numeric_material": "255",
+      "formal_numeric": "255",
+      "contextual_branch": "unavailable",
+      "semantic_value": "Unknown",
+      "grade": "Hypothesis"
+    },
+    {
+      "id": "unit2-one",
+      "declaration": "unit2",
+      "raw_bytes": "01 00",
+      "raw_numeric_material": "1",
+      "formal_numeric": "Unknown",
+      "contextual_branch": "none selected",
+      "semantic_value": "Unknown",
+      "grade": "Unknown"
+    },
+    {
+      "id": "unit2-ff",
+      "declaration": "unit2",
+      "raw_bytes": "FF FF",
+      "raw_numeric_material": "65535",
+      "formal_numeric": "Unknown",
+      "contextual_branch": "none selected",
+      "semantic_value": "Unknown",
+      "grade": "Unknown"
+    }
+  ],
+  "Boundaries": [
+    {
+      "claim": "physical qualification",
+      "grade": "Unknown"
+    },
+    {
+      "claim": "native support",
+      "grade": "Unknown"
+    },
+    {
+      "claim": "freshness",
+      "grade": "Unknown"
+    },
+    {
+      "claim": "persistence",
+      "grade": "Unknown"
+    },
+    {
+      "claim": "execution permission",
+      "grade": "Unknown"
+    },
+    {
+      "claim": "enforcement",
+      "grade": "Unknown"
+    },
+    {
+      "claim": "peer effects",
+      "grade": "Unknown"
+    },
+    {
+      "claim": "unqualified units",
+      "grade": "Unknown"
+    },
+    {
+      "claim": "sentinels outside their own contexts",
+      "grade": "Unknown"
+    }
+  ]
+}
