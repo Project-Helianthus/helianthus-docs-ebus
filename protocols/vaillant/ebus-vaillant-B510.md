@@ -217,6 +217,6 @@ The public references below provide corroborating capture examples; they do not 
 ## References
 
 - Public TypeSpec: [hcmode_inc.tsp](https://github.com/john30/ebusd-configuration/blob/main/src/vaillant/hcmode_inc.tsp)
-- Public config corpus: [john30/ebusd-configuration](https://github.com/john30/ebusd-configuration/tree/main/src/vaillant)
+- Vaillant configuration definitions: [john30/ebusd-configuration](https://github.com/john30/ebusd-configuration/tree/main/src/vaillant)
 - Public capture/reference: [Pittnerovi eBUS page](https://www.pittnerovi.com/jiri/hobby/electronics/ebus/)
 - Historical PDF: [Vaillant_ebus.pdf](https://www.pittnerovi.com/jiri/hobby/electronics/ebus/Vaillant_ebus.pdf)
