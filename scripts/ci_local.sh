@@ -255,6 +255,9 @@ python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py
 echo "==> check Vaillant B505 sentinel and override candidates"
 python3 -m pytest -q tests/test_ae04_b505_candidates.py
 
+echo "==> check Vaillant B507 energy candidates"
+python3 -m pytest -q tests/test_aj14_b507_energy_candidates.py
+
 echo "==> check B520 simulator actuator and ADC declarations"
 python3 -m pytest -q tests/test_ac20_simulator_adc.py
 
