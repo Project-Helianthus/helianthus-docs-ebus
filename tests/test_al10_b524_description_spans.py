@@ -35,8 +35,6 @@ def ab44_decode(ab44_ctx, ab44_codec, ab44_width, ab44_grade, ab44_raw):
     def ab44_fail(ab44_reason):
         ab44_result['ab44_reason'] = ab44_reason
         return ab44_result
-    if ab44_build(ab44_ctx) is None:
-        return ab44_fail('ab44_context')
     if not isinstance(ab44_width, int) or isinstance(ab44_width, bool) or ab44_width <= 0:
         return ab44_fail('ab44_width')
     if any(type(ab44_byte) is not int or not 0 <= ab44_byte <= 255
@@ -46,6 +44,8 @@ def ab44_decode(ab44_ctx, ab44_codec, ab44_width, ab44_grade, ab44_raw):
         return ab44_fail('ab44_length')
     ab44_result['ab44_spans'] = [ab44_raw[3 + ab44_index * ab44_width:
         3 + (ab44_index + 1) * ab44_width] for ab44_index in range(3)]
+    if ab44_build(ab44_ctx) is None:
+        return ab44_fail('ab44_context')
     if ab44_raw[:3] != [ab44_ctx['ab44_gg'], ab44_ctx['ab44_rr'] & 255,
                           ab44_ctx['ab44_rr'] >> 8]:
         return ab44_fail('ab44_echo')
@@ -151,6 +151,14 @@ class Ab44ContractTests(unittest.TestCase):
                 'EXP', 4, 'Hypothesis', ab44_exp)['ab44_reason'], 'ab44_context')
 
     def test_ab44_echo_and_spans(self):
+        ab44_ctx = dict(ab44_context)
+        del ab44_ctx['ab44_family']
+        ab44_result = ab44_decode(ab44_ctx, 'UIN', 2, 'Hypothesis', ab44_uin)
+        self.assertEqual(ab44_result['ab44_reason'], 'ab44_context')
+        self.assertEqual(ab44_result['ab44_context'], ab44_ctx)
+        self.assertEqual(ab44_result['ab44_raw'], ab44_uin)
+        self.assertEqual(ab44_result['ab44_spans'], [[0, 0], [4, 0], [1, 0]])
+        self.assertIsNone(ab44_result['ab44_limits'])
         for ab44_index in range(3):
             with self.subTest(ab44_echo=ab44_index):
                 ab44_raw = ab44_exp.copy()
