@@ -12,9 +12,9 @@ The examples are synthetic. They are not device observations, captures, or
 installation records.
 
 The signature below is hypothetical and is used consistently by this contract.
-This documentation establishes the API contract before implementation.
-Implementation must follow this contract. The checks use a local reference
-helper and import no production module.
+The page, fixture and checks specify the same hypothetical helper behavior.
+The checks use a local reference helper and import no production module;
+production implementation is outside this page's scope.
 
 ```text
 interpret_b509_op33_positive_alternative(selection, addresses, words) -> view
