@@ -107,6 +107,12 @@ def unsigned(value, maximum):
     return type(value) is int and 0 <= value <= maximum
 
 
+def hydrate_reply(serialized_reply):
+    reply = copy.deepcopy(serialized_reply)
+    reply["value"] = bytes.fromhex(reply.pop("value_hex"))
+    return reply
+
+
 def interpret(context, reply, codec_grade=None, bindings=()):
     result = dict(context=copy.deepcopy(context), reply=copy.deepcopy(reply),
                   raw=copy.deepcopy(reply.get("value")),
@@ -157,7 +163,15 @@ def interpret(context, reply, codec_grade=None, bindings=()):
 
 ## Synthetic controls and limits
 
-For every listed tuple the package has a complete valid example. Its `controls`
+For every listed tuple the package has a complete serialized example. JSON
+cannot represent bytes: each example's `reply.value_hex` stores the value tail
+as hexadecimal text. First call `reply = hydrate_reply(example["reply"])`, then
+`interpret(example["context"], reply, example["codec_grade"], package["bindings"])`.
+The helper copies the serialized reply, replaces `value_hex` with byte-valued
+`value`, and retains all other fields for the interpreter's exact-key validation.
+Missing `value_hex`, a non-string value, or invalid hexadecimal text raises
+`KeyError`, `TypeError`, or `ValueError`, respectively; no missing bytes are
+invented. Hydration supplies no framing or native evidence. Its `controls`
 section also declares the shared numeric vectors and control categories below. The tests also
 exercise each tuple with the following independent controls; raw-only always
 retains the supplied bytes and context.

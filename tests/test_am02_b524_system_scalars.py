@@ -48,6 +48,7 @@ class SystemScalars(unittest.TestCase):
         namespace = {}
         exec(compile(blocks[0], str(PAGE), 'exec'), namespace)
         cls.interpret = staticmethod(namespace['interpret'])
+        cls.hydrate_reply = staticmethod(namespace['hydrate_reply'])
 
     def call(self, ctx, reply, grade='Hypothesis'):
         return self.interpret(ctx, reply, grade, self.package['bindings'])
@@ -142,7 +143,38 @@ class SystemScalars(unittest.TestCase):
                 self.assertEqual(example['expected'], dict(value=number,
                                  grade='Hypothesis', unit=binding['unit']))
                 self.assertEqual(example['codec_grade'], 'Hypothesis')
-                self.candidate(ctx, reply, number, binding['unit'])
+                hydrated = self.hydrate_reply(example['reply'])
+                self.assertEqual(hydrated, dict(reply, value=bytes(reply['value'])))
+                self.assertIs(type(hydrated['value']), bytes)
+                self.candidate(example['context'], hydrated, number, binding['unit'],
+                               example['codec_grade'])
+
+    def test_hydration_preserves_serialized_input_and_validation_fields(self):
+        serialized = copy.deepcopy(self.package['examples'][0]['reply'])
+        serialized['unexpected'] = {'nested': []}
+        original = copy.deepcopy(serialized)
+        hydrated = self.hydrate_reply(serialized)
+        self.assertEqual(serialized, original)
+        self.assertEqual(hydrated['unexpected'], original['unexpected'])
+        ctx = self.package['examples'][0]['context']
+        self.raw_only(ctx, hydrated)
+        hydrated['unexpected']['nested'].append('returned mutation')
+        self.assertEqual(serialized, original)
+        serialized['unexpected']['nested'].append('input mutation')
+        self.assertEqual(hydrated['unexpected']['nested'], ['returned mutation'])
+
+    def test_hydration_rejects_missing_or_malformed_hex(self):
+        reply = self.package['examples'][0]['reply']
+        missing = dict(reply)
+        del missing['value_hex']
+        with self.assertRaises(KeyError):
+            self.hydrate_reply(missing)
+        for value in (None, 12, [52, 18]):
+            with self.subTest(value=value), self.assertRaises(TypeError):
+                self.hydrate_reply(dict(reply, value_hex=value))
+        for value in ('0', 'not hex'):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                self.hydrate_reply(dict(reply, value_hex=value))
 
     def test_independent_numeric_vectors_for_every_binding(self):
         # Known constants plus struct and integer arithmetic, not interpreter output.
