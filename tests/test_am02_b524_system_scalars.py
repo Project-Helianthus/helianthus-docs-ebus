@@ -163,6 +163,17 @@ class SystemScalars(unittest.TestCase):
         serialized['unexpected']['nested'].append('input mutation')
         self.assertEqual(hydrated['unexpected']['nested'], ['returned mutation'])
 
+    def test_hydration_rejects_value_collision_without_mutating_input(self):
+        for example in self.package['examples']:
+            for value in (None, bytearray(b'conflicting'), {'nested': []}):
+                with self.subTest(context=example['context'], value=value):
+                    serialized = copy.deepcopy(example['reply'])
+                    serialized['value'] = value
+                    original = copy.deepcopy(serialized)
+                    with self.assertRaises(ValueError):
+                        self.hydrate_reply(serialized)
+                    self.assertEqual(serialized, original)
+
     def test_hydration_rejects_missing_or_malformed_hex(self):
         reply = self.package['examples'][0]['reply']
         missing = dict(reply)

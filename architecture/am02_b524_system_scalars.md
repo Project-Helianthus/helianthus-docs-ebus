@@ -108,6 +108,8 @@ def unsigned(value, maximum):
 
 
 def hydrate_reply(serialized_reply):
+    if "value" in serialized_reply:
+        raise ValueError("serialized reply must not contain value")
     reply = copy.deepcopy(serialized_reply)
     reply["value"] = bytes.fromhex(reply.pop("value_hex"))
     return reply
@@ -169,6 +171,8 @@ as hexadecimal text. First call `reply = hydrate_reply(example["reply"])`, then
 `interpret(example["context"], reply, example["codec_grade"], package["bindings"])`.
 The helper copies the serialized reply, replaces `value_hex` with byte-valued
 `value`, and retains all other fields for the interpreter's exact-key validation.
+An existing `value` key raises `ValueError` without changing the input, including
+when its value is null; it must never be silently overwritten by `value_hex`.
 Missing `value_hex`, a non-string value, or invalid hexadecimal text raises
 `KeyError`, `TypeError`, or `ValueError`, respectively; no missing bytes are
 invented. Hydration supplies no framing or native evidence. Its `controls`
