@@ -10,11 +10,21 @@ catalog. The historical RAM/EEPROM storage names do not establish a physical
 memory space; a storage-name inconsistency must not change PB/SB service identity.
 Other vendor variants and requester behavior remain separate and unqualified.
 
-All field declarations below are **Hypothesis**. **Proven** applies only to the
+All field declarations below are **Hypothesis**. For these declarations,
+**Proven** applies only to the
 presence of these finite declarations in the companion, not to native behavior
 or installed support. Synthetic examples do not qualify physical behavior.
-The specification citation supplies naming context; the supplied direction
-alternatives and corroborating catalog are not reproducible wire observations.
+The specification citation supplies naming and service-mode context; the supplied
+direction alternatives and corroborating catalog are not reproducible wire observations.
+
+## Service-mode restriction and security
+
+**Proven:** the eBUS Specification Application Layer (OSI 7) V1.6.1, §3.5
+restricts all four `0x09` commands to service/maintenance mode; devices should
+not support them during normal operation. `0x0901` and `0x0903` are memory-write
+services. Exposing memory writes during normal operation risks uncontrolled
+state modification. The hypothetical declarations below do not relax this
+restriction or establish execution authority.
 
 ## Terminology
 
@@ -74,6 +84,19 @@ success or acceptance. The raw counts 0, 10, 11 and 255 remain intact; the
 [Synthetic direction examples](fixtures/ae28_09_candidates.json) preserve these
 alternatives and absent metadata. They are examples of declarations, not packet
 captures or evidence of peer effects.
+
+## Vaillant variants
+
+**Hypothesis:** the service catalog records `0x0900`–`0x0902` and the `0x0903`
+request as following the standard
+layout. Whether the `0x0903` reply is always empty remains **Unknown**.
+These historical layout comparisons do not resolve the direction alternatives
+or physical positions declared above.
+
+**Hypothesis:** the catalog also records a Vaillant requester issuing `0x0902`
+and `0x0903` without a preceding service-mode step. Target acceptance outside
+service mode remains **Unknown**; requester behavior does not override the
+specification's service-mode restriction.
 
 ## Open questions
 
