@@ -1,6 +1,6 @@
 # AN02: candidate B524 calendar views
 
-This architecture contract specifies the hypothetical ab01an01 pure helper API
+This architecture contract specifies the hypothetical calendar-field pure helper API
 for AN01, independently of its implementation. Refs #856; partial child of #736.
 Nothing here is stable before Helianthus 1.0.
 
