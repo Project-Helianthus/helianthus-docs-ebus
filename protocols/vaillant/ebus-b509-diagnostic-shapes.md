@@ -22,7 +22,7 @@ raw data. “Positive” describes a response form, not a nonzero address rule.
 OP35 declares address and variable raw data, without the OP34 count field;
 its write-status domain is 0..6, with every individual meaning Unknown.
 
-OP51 declares a diagnostic component in 0..7, a master byte, exactly five
+OP51 declares a diagnostic component in 0..7, an initiator byte, exactly five
 ASCII identity characters, and four separate software decimal components.
 Diagnostic component identity is separate from transport session and security
 identity. OP51 direction is Unknown. No NUL terminator, variable identity
@@ -46,6 +46,9 @@ decimal. Cells use JSON scalars, with null meaning Unknown. Row order groups
 logical fields; it does not supply byte offsets or a complete telegram layout.
 Field identity includes family, service, PB, SB, operation, direction and field.
 
+The OP51 initiator byte retains its legacy field name in this table.
+
+<!-- legacy-role-mapping:begin -->
 | operation | direction | field | width_bits | signedness | byte_order | conversion | minimum | maximum | recommended_bytes | maximum_bytes | grade | mapping_grade |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | "13" | "request" | "arguments" | 0 | "Unknown" | "Unknown" | "no_arguments" | null | null | null | null | "Hypothesis" | "Unknown" |
@@ -64,6 +67,8 @@ Field identity includes family, service, PB, SB, operation, direction and field.
 | "51" | "Unknown" | "software_component_2" | null | "Unknown" | "Unknown" | "decimal_scalar" | null | null | null | null | "Hypothesis" | "Unknown" |
 | "51" | "Unknown" | "software_component_3" | null | "Unknown" | "Unknown" | "decimal_scalar" | null | null | null | null | "Hypothesis" | "Unknown" |
 | "51" | "Unknown" | "software_component_4" | null | "Unknown" | "Unknown" | "decimal_scalar" | null | null | null | null | "Hypothesis" | "Unknown" |
+
+<!-- legacy-role-mapping:end -->
 
 Ten bytes is a diagnostic recommendation for OP34 response data, not buffer
 capacity. A synthetic eleven-byte data field is therefore not rejected by
