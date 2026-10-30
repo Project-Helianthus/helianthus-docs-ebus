@@ -255,6 +255,12 @@ python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py
 echo "==> check B506 scoped candidate declarations"
 python3 -m pytest -q tests/test_ae06_b506_candidates.py
 
+echo "==> check Vaillant B505 sentinel and override candidates"
+python3 -m pytest -q tests/test_ae04_b505_candidates.py
+
+echo "==> check B520 simulator actuator and ADC declarations"
+python3 -m pytest -q tests/test_ac20_simulator_adc.py
+
 echo "==> check B509/B524 passive watch-policy documentation contract"
 python3 -m pytest -q tests/test_watch_policy_contract.py
 python3 -m pytest -q tests/test_b524_operation_docs.py

@@ -46,13 +46,16 @@ This is the same rule used by the existing B509 boiler config write path.
 
 The candidate layouts of B505 cover the ops `B5 05 01` to `B5 05 62`
 (no candidate layout is known for `1F`, `50` and `52`), unconfirmed on the wire.
-Every op is a candidate write: the request carries the value, and the positive
-reply carries no response data (candidate) except for the ops described under
-"Feedback-style writes". The field-level layout of every op (byte offset, bit,
-width, codec, default, range, unit, conversion, enumeration) is in
+Outside the bounded sentinel and override slice below, each op is a candidate
+write: the request carries the value, and the positive reply carries no response
+data (candidate) except for the ops described under "Feedback-style writes".
+The older field-level layout declarations (byte offset, bit, width, codec,
+default, range, unit, conversion, enumeration) are in
 [`fixtures/b504-b505-candidate-fields.csv`](fixtures/b504-b505-candidate-fields.csv);
 `vaillant_name` in that file is a correspondence column (Vaillant name,
-correspondence only), not a canonical name.
+correspondence only), not a canonical name. For the exact fields in the bounded
+slice below, the bounded table states the current candidate limits; the older CSV does
+not resolve their conflicting conversions, bounds, positions or response claims.
 
 Offsets count from the first byte of the service prefix (PB, SB and the op
 byte): offset 0 = `B5`, 1 = `05`, 2 = op byte. A target response on the bus
@@ -183,12 +186,16 @@ Every item in this section is a candidate layout, unconfirmed on the wire.
   delete or disable.
 - **Feedback-style writes**: candidate, unconfirmed on the wire: `B5 05 30`,
   `31`, `5D`, `5E`, `5F` and `60` reply with a `u8` feedback at offset 3 where
-  `1` means accepted and any other value means not accepted; `B5 05 61` replies
-  with a cascade error flag in bit 0 instead. The remaining ops carry no
+  `1` means accepted and any other value means not accepted; the separate
+  cascade-response candidate for `B5 05 61` describes
+  an error flag in bit 0. It does not establish acknowledgement or acceptance
+  for the bounded DHW override below. Outside that bounded slice, remaining ops
+  carry no
   response data (candidate), so a successful eBUS response alone does not show
   acceptance (see the read-back rule above).
 - **Numeric codecs** (candidate, unconfirmed on the wire): heating curve (`0B`)
-  `u16` LE ÷100; room temperatures and offsets `i16` LE ÷16 °C; in most ops,
+  `u16` LE ÷100; room temperatures and offsets outside the bounded slice below
+  `i16` LE ÷16 °C; in most other ops,
   setpoints and comfort levels `u8` ÷2 °C, preheating times `u8` × 5 minutes and
   temperature differences `u8` K. Exceptions in the fixture include the desired
   day temperature (`01`) and the vacation setpoint (`2A`), which are plain `u8`
@@ -198,8 +205,9 @@ Every item in this section is a candidate layout, unconfirmed on the wire.
   offsets 3..4, LSB-first, litres per hour, range 0..9999; candidate
   interpretation: packed BCD, nibble order unresolved. **Solar yield**
   (`B5 05 4E`): candidate, unconfirmed on the wire: 24 bits at offsets 3..5,
-  LSB-first, kWh, range 0..99999, followed by a priority-of-measurement byte at
-  offset 6; candidate interpretation: packed BCD, nibble order unresolved.
+  LSB-first, kWh, range 0..99999; the separate priority candidate is bounded
+  below and has no established absolute position here. Candidate interpretation:
+  packed BCD, nibble order unresolved.
   Neither is a plain little-endian integer. The handling of invalid nibbles is
   unresolved (**Hypothesis**).
 - **Operating mode per channel** (`B5 05 4B`): candidate, unconfirmed on the
@@ -214,6 +222,42 @@ Every item in this section is a candidate layout, unconfirmed on the wire.
 - **Forced consumption** (`B5 05 29`, `5F`): candidate, unconfirmed on the wire:
   `0` function disabled, `1` no heat (cooling) consumption, `2` maximum heat
   (cooling) consumption.
+
+## Bounded sentinel and override candidates
+
+These eight declarations concern the Vaillant family and B505 (`PB=0xB5`,
+`SB=0x05`) only. They are **Hypothesis**, not Proven native behavior or physical
+qualification. Other operations and variants remain separate. Logical positions
+identify independent alternatives, not wire offsets; absolute positions and
+source/destination roles are Unknown in this slice. Unknown metadata is absent,
+not zero. No capture or device observation is asserted.
+
+| Identity (operation / field) | Grade | Direction | Logical position / extent | Raw type/domain | Scale | Sentinel/default/conflict | Unresolved |
+|---|---|---|---|---|---|---|---|
+| OP32 / temperature_1 | Hypothesis | Unknown | first temperature / 16 bits; absolute position Unknown | raw word; signedness Unknown | Unknown | 8000: preserve-existing; 0000: circuit-default; otherwise: numeric-candidate; select raw branch before conversion | normal conversion and conflicting numeric bounds Unknown; default temperature Unknown |
+| OP32 / temperature_2 | Hypothesis | Unknown | second temperature / 16 bits; absolute position Unknown | raw word; signedness Unknown | Unknown | 8000: preserve-existing; 0000: circuit-default; otherwise: numeric-candidate; select raw branch before conversion independently | normal conversion and conflicting numeric bounds Unknown; default temperature Unknown |
+| OP61 / dhw_setpoint | Hypothesis | Unknown | Unknown / extent Unknown | Unknown | Unknown | validity 15 minutes = 900 seconds; default Unknown; no OP32 sentinel interpretation | acknowledgement, acceptance, persistence and duration enforcement Unknown |
+| OP4D / collector_temperature | Hypothesis | Unknown | Unknown / extent Unknown | Unknown | Unknown | validity 15 minutes = 900 seconds; default Unknown | acknowledgement, acceptance, persistence and duration enforcement Unknown |
+| OP4D / collector_error | Hypothesis | Unknown | Unknown / 8 bits | raw byte; signedness Unknown | Unknown | 55: short-circuit; AA: open; other codes Unknown; validity 15 minutes = 900 seconds; default Unknown | acknowledgement, acceptance, persistence and duration enforcement Unknown |
+| Unknown operation / pump_power_display | Hypothesis | Unknown | Unknown / extent Unknown | raw encoding Unknown; display domain 0, 25, 50, 75, 100 percent | raw conversion Unknown; display step 25 percent | default Unknown | operation, raw bounds and duration Unknown |
+| Unknown operation / remote_control | Hypothesis | Unknown | Unknown / 8 bits | raw byte; signedness Unknown | Unknown | 01: enable-associated-output; other bytes Unknown; default Unknown | operation and duration Unknown |
+| OP4E / priority | Hypothesis | Unknown | Unknown / 8 bits | unsigned byte; 0..255 | no quantity scale | 0: lowest; 255: highest; default Unknown | absolute position and duration Unknown; independent of quantity units, freshness and execution |
+
+For every row, physical support, acknowledgement, acceptance, persistence,
+freshness, execution and enforcement of any proposed duration remain **Unknown**.
+A fifteen-minute declaration does not establish an enforced expiry. No write
+builder or timer service follows from these declarations. Neither OP32 sentinel
+is a temperature: retain the raw word without numeric conversion. In particular,
+`0001` remains a numeric candidate with no assigned scale, and `8000` in another
+operation gains no OP32 interpretation. Priority ordering is independent of any
+temperature value. Missing or conflicting evidence cannot establish acceptance;
+retain raw evidence and any partial last-known-good state without promoting a
+candidate to supported behavior.
+
+[Synthetic candidate cases](fixtures/ae04_b505_candidates.json) preserve raw
+alternatives and absent metadata; synthetic correctness does not qualify native
+wire behavior. The finite companion scope is the eight independently merged
+AE03 declarations, not a completed family catalogue.
 
 ## Profiles
 
@@ -236,12 +280,21 @@ whether the service is available under the PeBUS profile is not established (see
 - Several candidate default values lie outside their candidate intervals (see
   the fixture; for example the charge pump overrun default 0 against 3..9
   minutes); the intended defaults are unresolved.
+- For the bounded OP32 fields, normal conversion and conflicting numeric bounds
+  remain Unknown; neither sentinel supplies a numeric temperature. For the
+  bounded overrides, absolute positions, acknowledgement, acceptance, persistence
+  and duration enforcement remain Unknown. OP4E priority does not resolve the
+  separate solar-yield encoding questions.
 - How the candidate response offsets map onto the data bytes of a bus response is
   unconfirmed on the wire.
 
 ## References
 
-- Public TypeSpec: [timer_inc.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/timer_inc.tsp)
-- Public TypeSpec: [tempsetpoints_inc.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/tempsetpoints_inc.tsp)
-- Public TypeSpec: [roomtempoffset_inc.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/roomtempoffset_inc.tsp)
+- Finite companion declarations (AE03, implementation corroboration, not native
+  wire proof): [candidate catalogue](https://github.com/Project-Helianthus/helianthus-ebusreg/blob/main/catalog/vaillant/data/ab55_b505_candidates.json),
+  merged in [companion review](https://github.com/Project-Helianthus/helianthus-ebusreg/pull/235).
+
+- Public TypeSpec: [timer_inc.tsp](https://github.com/john30/ebusd-configuration/blob/main/src/vaillant/timer_inc.tsp)
+- Public TypeSpec: [tempsetpoints_inc.tsp](https://github.com/john30/ebusd-configuration/blob/main/src/vaillant/tempsetpoints_inc.tsp)
+- Public TypeSpec: [roomtempoffset_inc.tsp](https://github.com/john30/ebusd-configuration/blob/main/src/vaillant/roomtempoffset_inc.tsp)
 - Consolidated local reference: [`ebus-vaillant.md`](ebus-vaillant.md)
