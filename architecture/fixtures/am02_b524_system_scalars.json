@@ -1,0 +1,1696 @@
+{
+  "provenance": "synthetic; no device observation",
+  "variant": "B524",
+  "direction": "normalized reply",
+  "software_contract_grade": "Proven",
+  "candidate_grade": "Hypothesis",
+  "native": {
+    "physical_support": "Unknown",
+    "presence": "Unknown",
+    "freshness": "Unknown",
+    "effects": "Unknown",
+    "persistence": "Unknown",
+    "delivery": "Unknown",
+    "execution": "Unknown"
+  },
+  "bindings": [
+    {
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "00",
+      "register": 2,
+      "codec": "float32",
+      "unit": "°C",
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "00",
+      "register": 34,
+      "codec": "float32",
+      "unit": "°C",
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "00",
+      "register": 35,
+      "codec": "float32",
+      "unit": "°C",
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "00",
+      "register": 38,
+      "codec": "float32",
+      "unit": "°C",
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "00",
+      "register": 56,
+      "codec": "float32",
+      "unit": "°C",
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "00",
+      "register": 70,
+      "codec": "float32",
+      "unit": "°C",
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "00",
+      "register": 75,
+      "codec": "float32",
+      "unit": "°C",
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "00",
+      "register": 103,
+      "codec": "float32",
+      "unit": "°C",
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "00",
+      "register": 104,
+      "codec": "float32",
+      "unit": "°C",
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "00",
+      "register": 115,
+      "codec": "float32",
+      "unit": "°C",
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "00",
+      "register": 149,
+      "codec": "float32",
+      "unit": "°C",
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "00",
+      "register": 157,
+      "codec": "float32",
+      "unit": "°C",
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "00",
+      "register": 158,
+      "codec": "float32",
+      "unit": "°C",
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "00",
+      "register": 159,
+      "codec": "float32",
+      "unit": "°C",
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "00",
+      "register": 160,
+      "codec": "float32",
+      "unit": "°C",
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "00",
+      "register": 239,
+      "codec": "float32",
+      "unit": "°C",
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "00",
+      "register": 4,
+      "codec": "uint16",
+      "unit": "min",
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "00",
+      "register": 23,
+      "codec": "uint16",
+      "unit": "min",
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "00",
+      "register": 24,
+      "codec": "uint16",
+      "unit": "min",
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "00",
+      "register": 41,
+      "codec": "float32",
+      "unit": "K",
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "00",
+      "register": 47,
+      "codec": "uint16",
+      "unit": "Unknown",
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "00",
+      "register": 54,
+      "codec": "uint16",
+      "unit": "Unknown",
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "00",
+      "register": 57,
+      "codec": "float32",
+      "unit": "bar",
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "controller-700",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "00",
+      "register": 2,
+      "codec": "float32",
+      "unit": "°C",
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "controller-700",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "00",
+      "register": 34,
+      "codec": "float32",
+      "unit": "°C",
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "controller-700",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "00",
+      "register": 35,
+      "codec": "float32",
+      "unit": "°C",
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "controller-700",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "00",
+      "register": 38,
+      "codec": "float32",
+      "unit": "°C",
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "controller-700",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "00",
+      "register": 56,
+      "codec": "float32",
+      "unit": "°C",
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "controller-700",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "00",
+      "register": 70,
+      "codec": "float32",
+      "unit": "°C",
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "controller-700",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "00",
+      "register": 75,
+      "codec": "float32",
+      "unit": "°C",
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "controller-700",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "00",
+      "register": 103,
+      "codec": "float32",
+      "unit": "°C",
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "controller-700",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "00",
+      "register": 104,
+      "codec": "float32",
+      "unit": "°C",
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "controller-700",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "00",
+      "register": 115,
+      "codec": "float32",
+      "unit": "°C",
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "controller-700",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "00",
+      "register": 149,
+      "codec": "float32",
+      "unit": "°C",
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "controller-700",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "00",
+      "register": 157,
+      "codec": "float32",
+      "unit": "°C",
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "controller-700",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "00",
+      "register": 158,
+      "codec": "float32",
+      "unit": "°C",
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "controller-700",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "00",
+      "register": 159,
+      "codec": "float32",
+      "unit": "°C",
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "controller-700",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "00",
+      "register": 160,
+      "codec": "float32",
+      "unit": "°C",
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "controller-700",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "00",
+      "register": 6,
+      "codec": "uint16",
+      "unit": "Unknown",
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "controller-700",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "00",
+      "register": 47,
+      "codec": "uint16",
+      "unit": "Unknown",
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "controller-700",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "00",
+      "register": 54,
+      "codec": "uint16",
+      "unit": "Unknown",
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "controller-700",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "00",
+      "register": 23,
+      "codec": "uint16",
+      "unit": "min",
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "controller-700",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "00",
+      "register": 41,
+      "codec": "float32",
+      "unit": "K",
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "controller-700",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "00",
+      "register": 57,
+      "codec": "float32",
+      "unit": "bar",
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "controller-700",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "dynamic",
+      "register": 66,
+      "codec": "uint16",
+      "unit": "Unknown",
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "controller-700",
+      "opcode": 2,
+      "group": 0,
+      "instance_rule": "dynamic",
+      "register": 67,
+      "codec": "uint16",
+      "unit": "Unknown",
+      "grade": "Hypothesis"
+    }
+  ],
+  "examples": [
+    {
+      "context": {
+        "family": "controller-720",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 2
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 2,
+        "value_hex": "0000c03f"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 1.5,
+        "grade": "Hypothesis",
+        "unit": "°C"
+      }
+    },
+    {
+      "context": {
+        "family": "controller-720",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 34
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 34,
+        "value_hex": "0000c03f"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 1.5,
+        "grade": "Hypothesis",
+        "unit": "°C"
+      }
+    },
+    {
+      "context": {
+        "family": "controller-720",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 35
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 35,
+        "value_hex": "0000c03f"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 1.5,
+        "grade": "Hypothesis",
+        "unit": "°C"
+      }
+    },
+    {
+      "context": {
+        "family": "controller-720",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 38
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 38,
+        "value_hex": "0000c03f"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 1.5,
+        "grade": "Hypothesis",
+        "unit": "°C"
+      }
+    },
+    {
+      "context": {
+        "family": "controller-720",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 56
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 56,
+        "value_hex": "0000c03f"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 1.5,
+        "grade": "Hypothesis",
+        "unit": "°C"
+      }
+    },
+    {
+      "context": {
+        "family": "controller-720",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 70
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 70,
+        "value_hex": "0000c03f"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 1.5,
+        "grade": "Hypothesis",
+        "unit": "°C"
+      }
+    },
+    {
+      "context": {
+        "family": "controller-720",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 75
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 75,
+        "value_hex": "0000c03f"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 1.5,
+        "grade": "Hypothesis",
+        "unit": "°C"
+      }
+    },
+    {
+      "context": {
+        "family": "controller-720",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 103
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 103,
+        "value_hex": "0000c03f"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 1.5,
+        "grade": "Hypothesis",
+        "unit": "°C"
+      }
+    },
+    {
+      "context": {
+        "family": "controller-720",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 104
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 104,
+        "value_hex": "0000c03f"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 1.5,
+        "grade": "Hypothesis",
+        "unit": "°C"
+      }
+    },
+    {
+      "context": {
+        "family": "controller-720",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 115
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 115,
+        "value_hex": "0000c03f"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 1.5,
+        "grade": "Hypothesis",
+        "unit": "°C"
+      }
+    },
+    {
+      "context": {
+        "family": "controller-720",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 149
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 149,
+        "value_hex": "0000c03f"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 1.5,
+        "grade": "Hypothesis",
+        "unit": "°C"
+      }
+    },
+    {
+      "context": {
+        "family": "controller-720",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 157
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 157,
+        "value_hex": "0000c03f"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 1.5,
+        "grade": "Hypothesis",
+        "unit": "°C"
+      }
+    },
+    {
+      "context": {
+        "family": "controller-720",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 158
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 158,
+        "value_hex": "0000c03f"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 1.5,
+        "grade": "Hypothesis",
+        "unit": "°C"
+      }
+    },
+    {
+      "context": {
+        "family": "controller-720",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 159
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 159,
+        "value_hex": "0000c03f"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 1.5,
+        "grade": "Hypothesis",
+        "unit": "°C"
+      }
+    },
+    {
+      "context": {
+        "family": "controller-720",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 160
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 160,
+        "value_hex": "0000c03f"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 1.5,
+        "grade": "Hypothesis",
+        "unit": "°C"
+      }
+    },
+    {
+      "context": {
+        "family": "controller-720",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 239
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 239,
+        "value_hex": "0000c03f"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 1.5,
+        "grade": "Hypothesis",
+        "unit": "°C"
+      }
+    },
+    {
+      "context": {
+        "family": "controller-720",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 4
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 4,
+        "value_hex": "3412"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 4660,
+        "grade": "Hypothesis",
+        "unit": "min"
+      }
+    },
+    {
+      "context": {
+        "family": "controller-720",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 23
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 23,
+        "value_hex": "3412"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 4660,
+        "grade": "Hypothesis",
+        "unit": "min"
+      }
+    },
+    {
+      "context": {
+        "family": "controller-720",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 24
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 24,
+        "value_hex": "3412"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 4660,
+        "grade": "Hypothesis",
+        "unit": "min"
+      }
+    },
+    {
+      "context": {
+        "family": "controller-720",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 41
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 41,
+        "value_hex": "0000c03f"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 1.5,
+        "grade": "Hypothesis",
+        "unit": "K"
+      }
+    },
+    {
+      "context": {
+        "family": "controller-720",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 47
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 47,
+        "value_hex": "3412"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 4660,
+        "grade": "Hypothesis",
+        "unit": "Unknown"
+      }
+    },
+    {
+      "context": {
+        "family": "controller-720",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 54
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 54,
+        "value_hex": "3412"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 4660,
+        "grade": "Hypothesis",
+        "unit": "Unknown"
+      }
+    },
+    {
+      "context": {
+        "family": "controller-720",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 57
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 57,
+        "value_hex": "0000c03f"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 1.5,
+        "grade": "Hypothesis",
+        "unit": "bar"
+      }
+    },
+    {
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 2
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 2,
+        "value_hex": "0000c03f"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 1.5,
+        "grade": "Hypothesis",
+        "unit": "°C"
+      }
+    },
+    {
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 34
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 34,
+        "value_hex": "0000c03f"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 1.5,
+        "grade": "Hypothesis",
+        "unit": "°C"
+      }
+    },
+    {
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 35
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 35,
+        "value_hex": "0000c03f"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 1.5,
+        "grade": "Hypothesis",
+        "unit": "°C"
+      }
+    },
+    {
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 38
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 38,
+        "value_hex": "0000c03f"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 1.5,
+        "grade": "Hypothesis",
+        "unit": "°C"
+      }
+    },
+    {
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 56
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 56,
+        "value_hex": "0000c03f"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 1.5,
+        "grade": "Hypothesis",
+        "unit": "°C"
+      }
+    },
+    {
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 70
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 70,
+        "value_hex": "0000c03f"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 1.5,
+        "grade": "Hypothesis",
+        "unit": "°C"
+      }
+    },
+    {
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 75
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 75,
+        "value_hex": "0000c03f"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 1.5,
+        "grade": "Hypothesis",
+        "unit": "°C"
+      }
+    },
+    {
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 103
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 103,
+        "value_hex": "0000c03f"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 1.5,
+        "grade": "Hypothesis",
+        "unit": "°C"
+      }
+    },
+    {
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 104
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 104,
+        "value_hex": "0000c03f"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 1.5,
+        "grade": "Hypothesis",
+        "unit": "°C"
+      }
+    },
+    {
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 115
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 115,
+        "value_hex": "0000c03f"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 1.5,
+        "grade": "Hypothesis",
+        "unit": "°C"
+      }
+    },
+    {
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 149
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 149,
+        "value_hex": "0000c03f"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 1.5,
+        "grade": "Hypothesis",
+        "unit": "°C"
+      }
+    },
+    {
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 157
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 157,
+        "value_hex": "0000c03f"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 1.5,
+        "grade": "Hypothesis",
+        "unit": "°C"
+      }
+    },
+    {
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 158
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 158,
+        "value_hex": "0000c03f"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 1.5,
+        "grade": "Hypothesis",
+        "unit": "°C"
+      }
+    },
+    {
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 159
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 159,
+        "value_hex": "0000c03f"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 1.5,
+        "grade": "Hypothesis",
+        "unit": "°C"
+      }
+    },
+    {
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 160
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 160,
+        "value_hex": "0000c03f"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 1.5,
+        "grade": "Hypothesis",
+        "unit": "°C"
+      }
+    },
+    {
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 6
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 6,
+        "value_hex": "3412"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 4660,
+        "grade": "Hypothesis",
+        "unit": "Unknown"
+      }
+    },
+    {
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 47
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 47,
+        "value_hex": "3412"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 4660,
+        "grade": "Hypothesis",
+        "unit": "Unknown"
+      }
+    },
+    {
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 54
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 54,
+        "value_hex": "3412"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 4660,
+        "grade": "Hypothesis",
+        "unit": "Unknown"
+      }
+    },
+    {
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 23
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 23,
+        "value_hex": "3412"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 4660,
+        "grade": "Hypothesis",
+        "unit": "min"
+      }
+    },
+    {
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 41
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 41,
+        "value_hex": "0000c03f"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 1.5,
+        "grade": "Hypothesis",
+        "unit": "K"
+      }
+    },
+    {
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 57
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 57,
+        "value_hex": "0000c03f"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 1.5,
+        "grade": "Hypothesis",
+        "unit": "bar"
+      }
+    },
+    {
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 1,
+        "register": 66
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 66,
+        "value_hex": "3412"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 4660,
+        "grade": "Hypothesis",
+        "unit": "Unknown"
+      }
+    },
+    {
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-software",
+        "hardware": "synthetic-hardware",
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 0,
+        "instance": 1,
+        "register": 67
+      },
+      "reply": {
+        "kind": "echo_payload",
+        "group": 0,
+        "register": 67,
+        "value_hex": "3412"
+      },
+      "codec_grade": "Hypothesis",
+      "expected": {
+        "value": 4660,
+        "grade": "Hypothesis",
+        "unit": "Unknown"
+      }
+    }
+  ],
+  "non_echo_kinds": [
+    "empty",
+    "status_only",
+    "short",
+    "header_only",
+    "nack_or_crc",
+    "timeout",
+    "transport_error",
+    "failed",
+    "unknown"
+  ],
+  "controls": {
+    "float32": [
+      {
+        "value_hex": "0000c03f",
+        "value": 1.5
+      },
+      {
+        "value_hex": "000080bf",
+        "value": -1
+      },
+      {
+        "value_hex": "0000807f",
+        "value": null
+      }
+    ],
+    "uint16": [
+      {
+        "value_hex": "3412",
+        "value": 4660
+      },
+      {
+        "value_hex": "ffff",
+        "value": 65535
+      }
+    ],
+    "raw_only": [
+      "width_minus_one",
+      "width_plus_one",
+      "unlisted_neighbor",
+      "opcode_06",
+      "unknown_family",
+      "fixed_ii_01",
+      "changed_returned_group",
+      "changed_returned_register",
+      "non_echo_kind",
+      "unknown_grade",
+      "missing_grade",
+      "malformed",
+      "partial",
+      "extra"
+    ],
+    "candidate": [
+      "fixed_ii_00",
+      "dynamic_ii_00",
+      "dynamic_ii_01",
+      "hypothesis_request",
+      "proven_request_capped",
+      "context_only_change"
+    ],
+    "ownership": [
+      "input_mutation",
+      "returned_mutation"
+    ],
+    "unknown_unit": "Unknown"
+  }
+}
