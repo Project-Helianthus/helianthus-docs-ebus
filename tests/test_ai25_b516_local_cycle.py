@@ -13,20 +13,20 @@ KEYS = ('id slot registered capable outcome prior raw marker previous new '
         'diagnostic changed contribution failure').split()
 # Independent expectations: changing fixture or page does not change these.
 ROWS = [
-    ('delta_one', 0, True, True, 'success', 10, '00003041', '00', 10, 11, 'success', False, 11, 0),
-    ('delta_two', 1, True, True, 'success', 10, '00004041', '00', 10, 12, 'success', True, 12, 0),
-    ('prior_sentinel', 2, True, True, 'success', 4294967295, '00000000', '00', 4294967295, 0, 'success', True, 0, 0),
+    ('delta_one', 0, True, True, 'success', 10, '00 00 30 41', '00', 10, 11, 'success', False, 11, 0),
+    ('delta_two', 1, True, True, 'success', 10, '00 00 40 41', '00', 10, 12, 'success', True, 12, 0),
+    ('prior_sentinel', 2, True, True, 'success', 4294967295, '00 00 00 00', '00', 4294967295, 0, 'success', True, 0, 0),
     ('read_failure', 3, True, True, 'read_failure', 10, None, 'A1', 10, 4294967295, 'read_failure', True, 0, 1),
     ('parse_failure', 4, True, True, 'parse_failure', 10, 'AA', 'B2', 10, 4294967295, 'parse_failure', True, 0, 1),
-    ('unregistered', 5, False, True, 'success', 10, '00004041', 'C3', None, 4294967295, 'skip_registration', None, 0, 0),
-    ('incapable', 6, True, False, 'success', 10, '00004041', 'D4', None, 4294967295, 'skip_capability', None, 0, 0),
-    ('decrease_one', 7, True, True, 'success', 12, '00003041', '00', 12, 11, 'success', True, 11, 0),
-    ('ninth_slot', 8, True, True, 'success', 10, '00004041', '00', 10, 12, 'success', True, 12, 0),
-    ('negative', 0, True, True, 'success', 10, '000080BF', 'E5', 10, None, 'Unknown', None, None, 0),
-    ('nan', 1, True, True, 'success', 10, '0000C07F', 'F6', 10, None, 'Unknown', None, None, 0),
+    ('unregistered', 5, False, True, 'success', 10, '00 00 40 41', 'C3', None, 4294967295, 'skip_registration', None, 0, 0),
+    ('incapable', 6, True, False, 'success', 10, '00 00 40 41', 'D4', None, 4294967295, 'skip_capability', None, 0, 0),
+    ('decrease_one', 7, True, True, 'success', 12, '00 00 30 41', '00', 12, 11, 'success', True, 11, 0),
+    ('ninth_slot', 8, True, True, 'success', 10, '00 00 40 41', '00', 10, 12, 'success', True, 12, 0),
+    ('negative', 0, True, True, 'success', 10, '00 00 80 BF', 'E5', 10, None, 'Unknown', None, None, 0),
+    ('nan', 1, True, True, 'success', 10, '00 00 C0 7F', 'F6', 10, None, 'Unknown', None, None, 0),
     ('unsupported_step', 2, True, True, 'unprovided', 10, None, '17', 10, None, 'Unknown', None, None, 0),
-    ('wrap_large', 0, True, True, 'success', 10, 'injected_u32:FFFFFFFE', '00', 10, 4294967294, 'success', True, 4294967294, 0),
-    ('wrap_small', 1, True, True, 'success', 10, '00004040', '00', 10, 3, 'success', True, 3, 0),
+    ('wrap_large', 0, True, True, 'success', 10, 'injected_u32:4294967294', '00', 10, 4294967294, 'success', True, 4294967294, 0),
+    ('wrap_small', 1, True, True, 'success', 10, '00 00 40 40', '00', 10, 3, 'success', True, 3, 0),
 ]
 CYCLES = [
     ('partial', ['delta_one', 'read_failure'], 4, 11, 5, True),
@@ -61,7 +61,7 @@ def transition(step, policy):
         result.update(new=policy['sentinel'], diagnostic=step['outcome'],
                       contribution=0, failure=1)
     elif step['outcome'] == 'success':
-        if step['raw'] == 'injected_u32:FFFFFFFE':
+        if step['raw'] == 'injected_u32:4294967294':
             value = 4294967294
         else:
             try:
@@ -177,8 +177,8 @@ class LocalCycleTests(unittest.TestCase):
         self.assertTrue(transition(self.steps['decrease_one'], POLICY)['changed'])
         control = self.steps['delta_two']
         for override in ({'prior': -1}, {'prior': 4294967296}, {'registered': 1},
-                         {'raw': 'AA'}, {'raw': None}, {'raw': '0000C03F'},
-                         {'raw': '0000807F'}, {'raw': '0000804F'},
+                         {'raw': 'AA'}, {'raw': None}, {'raw': '00 00 C0 3F'},
+                         {'raw': '00 00 80 7F'}, {'raw': '00 00 80 4F'},
                          {'outcome': 'unprovided'}):
             result = transition(dict(control, **override), POLICY)
             self.assertEqual(result['diagnostic'], 'Unknown')

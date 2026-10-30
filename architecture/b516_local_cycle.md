@@ -5,12 +5,12 @@ requester in the energy-manager family. It assigns no gateway change, producer
 integration, installed support, or physical qualification. Nothing here grants
 execution or admission through eBUS MCP or GraphQL; their contracts are unchanged.
 
-Native evidence comes first: the public [B516 OP14 contract](../protocols/vaillant/ebus-vaillant-B516-energy.md#9-sub-id-0x14---current-electrical-power-candidate)
-grades the candidate layout **Hypothesis**. It preserves a status byte, binary32
-word0, and an uninterpreted word1. Sign, unit, answering targets and cadence remain
+The [B516 energy protocol page](../protocols/vaillant/ebus-vaillant-B516-energy.md),
+section “Sub-ID 0x14 - current electrical power (candidate)”, grades the
+candidate layout **Hypothesis**. It preserves a status byte, binary32 word0, and an uninterpreted word1. Sign, unit, answering targets and cadence remain
 **Unknown**. The local tuples below are synthetic software inputs, not telegrams
-or evidence of those physical properties. Raw float bytes are little-endian;
-markers are independent synthetic variant markers, not native status meanings.
+or evidence of those physical properties. Raw float bytes are space-separated
+and little-endian; markers are independent synthetic variant markers, not native status meanings.
 
 ## Individually graded rules
 
@@ -30,12 +30,12 @@ explicit. The unittest is a bounded candidate transition oracle, not a runtime.
 
 Registration and capability are independent gates per slot (indices 0 through
 8). An admitted attempt copies prior into previous before processing. A skip
-sets new to FFFFFFFF, but whether it updates previous or changed is **Unknown**.
-An admitted read or parse failure sets new to FFFFFFFF, retaining the raw input
+sets new to 4294967295, but whether it updates previous or changed is **Unknown**.
+An admitted read or parse failure sets new to 4294967295, retaining the raw input
 and variant marker beside the previous value. Previous is last-known-good only
 when the supplied prior was good; a prior sentinel remains a sentinel.
 
-For a determined new value, changed is `previous == 0xFFFFFFFF or
+For a determined new value, changed is `previous == 4294967295 or
 ((new - previous) % 4294967296) >= 2`. This is unsigned subtraction: the
 12-to-11 decrease exposes delta 4294967295 and changes. Signed subtraction
 would miss it; absolute difference would produce one and also miss it.
@@ -47,7 +47,7 @@ There is no extra positive-only conversion guard: zero is accepted. Negative
 and NaN conversion results are **Unknown**, rather than rejected by an invented
 positive-only rule or coerced to a number. Other unprovided conversions, outcomes,
 slot identities and malformed inputs remain **Unknown**. The large wrap vector
-injects a u32 directly; FFFFFFFE is not exactly representable as binary32.
+injects a u32 directly; 4294967294 is not exactly representable as binary32.
 No conversion to that integer is claimed. No real-time scheduler runs here.
 Arguments 1/60 establish neither physical cadence, native units nor freshness.
 
@@ -67,20 +67,20 @@ address, source, destination or firmware identity is inferred.
 
 | id | slot | registered | capable | outcome | prior | raw | marker | previous | new | diagnostic | changed | contribution | failure |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| delta_one | 0 | true | true | success | 10 | 00003041 | 00 | 10 | 11 | success | false | 11 | 0 |
-| delta_two | 1 | true | true | success | 10 | 00004041 | 00 | 10 | 12 | success | true | 12 | 0 |
-| prior_sentinel | 2 | true | true | success | 4294967295 | 00000000 | 00 | 4294967295 | 0 | success | true | 0 | 0 |
+| delta_one | 0 | true | true | success | 10 | 00 00 30 41 | 00 | 10 | 11 | success | false | 11 | 0 |
+| delta_two | 1 | true | true | success | 10 | 00 00 40 41 | 00 | 10 | 12 | success | true | 12 | 0 |
+| prior_sentinel | 2 | true | true | success | 4294967295 | 00 00 00 00 | 00 | 4294967295 | 0 | success | true | 0 | 0 |
 | read_failure | 3 | true | true | read_failure | 10 | Unknown | A1 | 10 | 4294967295 | read_failure | true | 0 | 1 |
 | parse_failure | 4 | true | true | parse_failure | 10 | AA | B2 | 10 | 4294967295 | parse_failure | true | 0 | 1 |
-| unregistered | 5 | false | true | success | 10 | 00004041 | C3 | Unknown | 4294967295 | skip_registration | Unknown | 0 | 0 |
-| incapable | 6 | true | false | success | 10 | 00004041 | D4 | Unknown | 4294967295 | skip_capability | Unknown | 0 | 0 |
-| decrease_one | 7 | true | true | success | 12 | 00003041 | 00 | 12 | 11 | success | true | 11 | 0 |
-| ninth_slot | 8 | true | true | success | 10 | 00004041 | 00 | 10 | 12 | success | true | 12 | 0 |
-| negative | 0 | true | true | success | 10 | 000080BF | E5 | 10 | Unknown | Unknown | Unknown | Unknown | 0 |
-| nan | 1 | true | true | success | 10 | 0000C07F | F6 | 10 | Unknown | Unknown | Unknown | Unknown | 0 |
+| unregistered | 5 | false | true | success | 10 | 00 00 40 41 | C3 | Unknown | 4294967295 | skip_registration | Unknown | 0 | 0 |
+| incapable | 6 | true | false | success | 10 | 00 00 40 41 | D4 | Unknown | 4294967295 | skip_capability | Unknown | 0 | 0 |
+| decrease_one | 7 | true | true | success | 12 | 00 00 30 41 | 00 | 12 | 11 | success | true | 11 | 0 |
+| ninth_slot | 8 | true | true | success | 10 | 00 00 40 41 | 00 | 10 | 12 | success | true | 12 | 0 |
+| negative | 0 | true | true | success | 10 | 00 00 80 BF | E5 | 10 | Unknown | Unknown | Unknown | Unknown | 0 |
+| nan | 1 | true | true | success | 10 | 00 00 C0 7F | F6 | 10 | Unknown | Unknown | Unknown | Unknown | 0 |
 | unsupported_step | 2 | true | true | unprovided | 10 | Unknown | 17 | 10 | Unknown | Unknown | Unknown | Unknown | 0 |
-| wrap_large | 0 | true | true | success | 10 | injected_u32:FFFFFFFE | 00 | 10 | 4294967294 | success | true | 4294967294 | 0 |
-| wrap_small | 1 | true | true | success | 10 | 00004040 | 00 | 10 | 3 | success | true | 3 | 0 |
+| wrap_large | 0 | true | true | success | 10 | injected_u32:4294967294 | 00 | 10 | 4294967294 | success | true | 4294967294 | 0 |
+| wrap_small | 1 | true | true | success | 10 | 00 00 40 40 | 00 | 10 | 3 | success | true | 3 | 0 |
 
 ## Injected cycles
 
