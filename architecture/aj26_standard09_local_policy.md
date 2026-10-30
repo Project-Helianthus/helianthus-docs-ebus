@@ -100,7 +100,7 @@ qualification. Verify=false retains the positive/unverified distinction.
 page tables and scenarios to independent transition and arithmetic expectations.
 No memory client, writer, authorization gate or forwarder is implemented. eBUS
 MCP compatibility and GraphQL parity are unaffected because no runtime or API is changed.
-No new namespace or major version is introduced.
+The candidate preserves existing naming and release boundaries.
 No authorization gate is introduced before 0.9; any roadmap discussion belongs to 0.11.
 Full ship gates and transport qualification are separate later requirements;
 these checks establish no physical result.
