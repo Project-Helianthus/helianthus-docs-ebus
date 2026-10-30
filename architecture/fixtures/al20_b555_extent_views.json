@@ -1,0 +1,278 @@
+[
+  {
+    "ab52_api": "Ab52DecodeA4",
+    "ab52_declared_count": 8,
+    "ab52_available_raw": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      12
+    ],
+    "ab52_expected": {
+      "ab52_status": 0,
+      "ab52_day_counts": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        12
+      ],
+      "ab52_complete_week": true,
+      "ab52_eighth_count": null,
+      "ab52_incomplete": false,
+      "ab52_errors": [],
+      "ab52_raw": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        12
+      ]
+    }
+  },
+  {
+    "ab52_api": "Ab52DecodeA4",
+    "ab52_declared_count": 8,
+    "ab52_available_raw": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      12,
+      99
+    ],
+    "ab52_expected": {
+      "ab52_status": 0,
+      "ab52_day_counts": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        12
+      ],
+      "ab52_complete_week": true,
+      "ab52_eighth_count": null,
+      "ab52_incomplete": false,
+      "ab52_errors": [],
+      "ab52_raw": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        12,
+        99
+      ]
+    }
+  },
+  {
+    "ab52_api": "Ab52DecodeA4",
+    "ab52_declared_count": 9,
+    "ab52_available_raw": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      12
+    ],
+    "ab52_expected": {
+      "ab52_status": 0,
+      "ab52_day_counts": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        12
+      ],
+      "ab52_complete_week": true,
+      "ab52_eighth_count": null,
+      "ab52_incomplete": true,
+      "ab52_errors": [
+        "ab52_extent_incomplete"
+      ],
+      "ab52_raw": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        12
+      ]
+    }
+  },
+  {
+    "ab52_api": "Ab52DecodeA4",
+    "ab52_declared_count": 9,
+    "ab52_available_raw": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      13,
+      99
+    ],
+    "ab52_expected": {
+      "ab52_status": 0,
+      "ab52_day_counts": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        13
+      ],
+      "ab52_complete_week": false,
+      "ab52_eighth_count": 99,
+      "ab52_incomplete": false,
+      "ab52_errors": [
+        "ab52_week_rejected"
+      ],
+      "ab52_raw": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        13,
+        99
+      ]
+    }
+  },
+  {
+    "ab52_api": "Ab52DecodeA4",
+    "ab52_declared_count": 8,
+    "ab52_available_raw": [
+      3,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      12
+    ],
+    "ab52_expected": {
+      "ab52_status": 3,
+      "ab52_day_counts": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        12
+      ],
+      "ab52_complete_week": false,
+      "ab52_eighth_count": null,
+      "ab52_incomplete": false,
+      "ab52_errors": [
+        "ab52_week_rejected"
+      ],
+      "ab52_raw": [
+        3,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        12
+      ]
+    }
+  },
+  {
+    "ab52_api": "Ab52DecodeA5",
+    "ab52_declared_count": 7,
+    "ab52_available_raw": [
+      3,
+      23,
+      59,
+      24,
+      60,
+      255,
+      255
+    ],
+    "ab52_expected": {
+      "ab52_status": 3,
+      "ab52_start_hour": 23,
+      "ab52_start_minute": 59,
+      "ab52_end_hour": 24,
+      "ab52_end_minute": 60,
+      "ab52_setpoint_raw": 65535,
+      "ab52_setpoint_candidate_numeric": 6553.5,
+      "ab52_incomplete": false,
+      "ab52_errors": [],
+      "ab52_raw": [
+        3,
+        23,
+        59,
+        24,
+        60,
+        255,
+        255
+      ]
+    }
+  },
+  {
+    "ab52_api": "Ab52DecodeA5",
+    "ab52_declared_count": 7,
+    "ab52_available_raw": [
+      3,
+      23,
+      59,
+      24,
+      60,
+      255
+    ],
+    "ab52_expected": {
+      "ab52_status": 3,
+      "ab52_start_hour": 23,
+      "ab52_start_minute": 59,
+      "ab52_end_hour": 24,
+      "ab52_end_minute": 60,
+      "ab52_setpoint_raw": null,
+      "ab52_setpoint_candidate_numeric": null,
+      "ab52_incomplete": true,
+      "ab52_errors": [
+        "ab52_extent_incomplete"
+      ],
+      "ab52_raw": [
+        3,
+        23,
+        59,
+        24,
+        60,
+        255
+      ]
+    }
+  }
+]
