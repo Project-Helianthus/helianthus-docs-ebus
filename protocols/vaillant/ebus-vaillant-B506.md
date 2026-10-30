@@ -187,6 +187,10 @@ Logical position is not a wire offset. Direction and logical position are
 Unknown in this bounded declaration, even where older enclosing service shapes
 above suggest a request layout. The EEPROM entry does not assign an operation
 or inherit the older `0F`/`10` field associations.
+The five `B5 06 0F`/`B5 06 10` EEPROM rows in the linked field-level CSV
+are superseded by this declaration. Their algorithm assignments, operation
+associations and fixed 16-bit checksum width are withdrawn; those properties
+remain Unknown. The rows are retained only as superseded candidate history.
 
 | Grade | Identity (PB B5 / SB 06, Vaillant family) | Direction | Logical position / extent | Raw type / domain | Scale | Sentinel / default / conflict | Unresolved properties |
 |---|---|---|---|---|---|---|---|

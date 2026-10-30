@@ -1,4 +1,5 @@
 """Finite native declaration acceptance checks, not a decoder or device test."""
+import csv
 import json
 from pathlib import Path
 import unittest
@@ -150,6 +151,16 @@ class B506Declarations(unittest.TestCase):
         self.assertNotIn('| EEPROM checksum or CRC request | 2 | 3 |', self.page)
         self.assertIn('OP11 parameter representations have the explicit keyed Hypothesis declarations', self.page)
         self.assertIn('EEPROM\n  algorithm, returned checksum width, completion, checksum data and operation', self.page)
+        self.assertIn('are superseded by this declaration. Their algorithm assignments, operation\n'
+                      'associations and fixed 16-bit checksum width are withdrawn;', section)
+        with (ROOT / 'protocols/vaillant/fixtures/b506-b508-candidate-fields.csv').open() as source:
+            eeprom_rows = [row for row in csv.DictReader(source)
+                           if row['op'] in ('B5 06 0F', 'B5 06 10')]
+        self.assertEqual(len(eeprom_rows), 5)
+        for row in eeprom_rows:
+            self.assertEqual(row['candidate_variant'],
+                             'Superseded by ../ebus-vaillant-B506.md#scoped-parameter-and-checksum-declarations; '
+                             'algorithm, operation association and returned checksum width Unknown')
 
 
 if __name__ == '__main__':
