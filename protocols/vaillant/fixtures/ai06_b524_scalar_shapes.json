@@ -1,0 +1,245 @@
+{
+  "service": "B524",
+  "provenance": "synthetic",
+  "physical_support": "Unknown",
+  "entries": [
+    {
+      "id": "zone-u8",
+      "identity": {
+        "opcode": 2,
+        "group": 3,
+        "instance": null,
+        "register": 27,
+        "family": null,
+        "direction": "read",
+        "role": "scalar"
+      },
+      "codec": "u8",
+      "width": 1,
+      "byte_order": "not-applicable",
+      "factor": 1,
+      "offset": 0,
+      "unit": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "id": "zone-u16",
+      "identity": {
+        "opcode": 2,
+        "group": 3,
+        "instance": null,
+        "register": 27,
+        "family": null,
+        "direction": "read",
+        "role": "scalar"
+      },
+      "codec": "u16",
+      "width": 2,
+      "byte_order": "little-endian",
+      "factor": 1,
+      "offset": 0,
+      "unit": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "id": "gg01-byte14",
+      "identity": {
+        "opcode": 2,
+        "group": 1,
+        "instance": null,
+        "register": 20,
+        "family": null,
+        "direction": "read",
+        "role": "scalar"
+      },
+      "codec": "u8",
+      "width": 1,
+      "byte_order": "not-applicable",
+      "factor": 1,
+      "offset": 0,
+      "unit": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "id": "gg01-byte19",
+      "identity": {
+        "opcode": 2,
+        "group": 1,
+        "instance": null,
+        "register": 25,
+        "family": null,
+        "direction": "read",
+        "role": "scalar"
+      },
+      "codec": "u8",
+      "width": 1,
+      "byte_order": "not-applicable",
+      "factor": 1,
+      "offset": 0,
+      "unit": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "id": "gg01-float15",
+      "identity": {
+        "opcode": 2,
+        "group": 1,
+        "instance": null,
+        "register": 21,
+        "family": null,
+        "direction": "read",
+        "role": "scalar"
+      },
+      "codec": "binary32",
+      "width": 4,
+      "byte_order": "little-endian",
+      "factor": 1,
+      "offset": 0,
+      "unit": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "id": "room-mode-vrc720",
+      "identity": {
+        "opcode": 2,
+        "group": 3,
+        "instance": null,
+        "register": 6,
+        "family": "VRC720 family",
+        "direction": "write",
+        "role": "mode"
+      },
+      "codec": "u16",
+      "width": 2,
+      "byte_order": "little-endian",
+      "factor": 1,
+      "offset": 0,
+      "unit": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "id": "room-mode-vrc700",
+      "identity": {
+        "opcode": 2,
+        "group": 3,
+        "instance": null,
+        "register": 6,
+        "family": "VRC700 family",
+        "direction": "write",
+        "role": "mode"
+      },
+      "codec": "u16",
+      "width": 2,
+      "byte_order": "little-endian",
+      "factor": 1,
+      "offset": 0,
+      "unit": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "id": "room-manual",
+      "identity": {
+        "opcode": 2,
+        "group": 3,
+        "instance": null,
+        "register": 34,
+        "family": "VRC720 family",
+        "direction": "write",
+        "role": "manual-temperature"
+      },
+      "codec": "binary32",
+      "width": 4,
+      "byte_order": "little-endian",
+      "factor": 1,
+      "offset": 0,
+      "unit": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "id": "room-comfort",
+      "identity": {
+        "opcode": 2,
+        "group": 3,
+        "instance": null,
+        "register": 7,
+        "family": "VRC700 family",
+        "direction": "write",
+        "role": "comfort-temperature"
+      },
+      "codec": "binary32",
+      "width": 4,
+      "byte_order": "little-endian",
+      "factor": 1,
+      "offset": 0,
+      "unit": null,
+      "grade": "Hypothesis"
+    }
+  ],
+  "cases": [
+    {
+      "candidate": "zone-u8",
+      "raw": "01",
+      "value": 1
+    },
+    {
+      "candidate": "zone-u16",
+      "raw": "01",
+      "value": null
+    },
+    {
+      "candidate": "zone-u8",
+      "raw": "01 00",
+      "value": null
+    },
+    {
+      "candidate": "zone-u16",
+      "raw": "01 00",
+      "value": 1
+    },
+    {
+      "candidate": "zone-u8",
+      "raw": "00 01",
+      "value": null
+    },
+    {
+      "candidate": "zone-u16",
+      "raw": "00 01",
+      "value": 256
+    },
+    {
+      "candidate": "gg01-byte14",
+      "raw": "0E",
+      "value": 14
+    },
+    {
+      "candidate": "gg01-byte19",
+      "raw": "13",
+      "value": 19
+    },
+    {
+      "candidate": "gg01-float15",
+      "raw": "00 00 80 3F",
+      "value": 1.0
+    },
+    {
+      "candidate": "room-mode-vrc720",
+      "raw": "01 01",
+      "value": 257
+    },
+    {
+      "candidate": "room-mode-vrc700",
+      "raw": "01 01",
+      "value": 257
+    },
+    {
+      "candidate": "room-manual",
+      "raw": "00 00 80 3F",
+      "value": 1.0
+    },
+    {
+      "candidate": "room-comfort",
+      "raw": "00 00 80 3F",
+      "value": 1.0
+    }
+  ]
+}
