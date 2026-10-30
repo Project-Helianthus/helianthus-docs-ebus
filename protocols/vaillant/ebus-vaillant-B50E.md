@@ -21,7 +21,7 @@ The request prefix is `B5 0E <operation>`. Offsets below count from the first by
 | Operation | Name | Direction (candidate) | Request layout | Reply layout |
 |---|---|---|---|---|
 | `00` | write rule entry | write | 17 bytes: rule index `uint16` at offset 3, type flag at 5, compare flag at 6, time base at 7, address `uint32` at 8, data type at 12, four opaque compare bytes at 13 | echoes the rule index; 5 bytes |
-| `01` | clear rule entry | write | rule index; `FFFF` clears all rules | not established |
+| `01` | clear rule entry | write (candidate) | rule index; request sentinel semantics Unknown | positive response may echo a `uint16` index; see bounded candidates below |
 | `02` | read rule entry | read | rule index `uint16` at offset 3 | rule fields; data-type key at offset 12; a value row selected by the key from offset 13 |
 | `03` | read log buffer | read | buffer offset `uint32` at offset 3, length `uint16` at offset 7 (default 8) | echoes offset at 3 and length at 7; data from offset 9 |
 | `04` | clear log buffer | write | reset `uint8` at offset 3; `1` resets all | feedback: `1` accepted; `0` and `2` to `255` not accepted |
@@ -38,9 +38,52 @@ Frame size: the eBUS application layer limits a manufacturer-specific telegram t
 Candidate interpretation, unconfirmed on the wire.
 
 - Type flag: bits 0 to 1 give the address type (`0` unused, `1` symbolic, `2` absolute, `3` internal event); bits 6 to 7 give the status (`0` unused, `1` stop, `2` start). The meaning of bits 2 to 5 is not established.
-- Compare flag: `0` time only, `1` equal, `2` not equal, `3` less than, `4` less than or equal, `5` greater than, `6` greater than or equal, `7` change. With mode `7`, the most significant bit of the compare flag stops the FIFO override (candidate; the exact bit position and polarity are unconfirmed).
+- Compare flag: see the bounded comparison candidate below; its logical position is Unknown. The offset 6 in the operation `00` layout above is an unqualified layout proposal, not an established location for this candidate.
 - Time base: bits 0 to 1 give the unit (`0` once, `1` second, `2` minute, `3` hours); bits 2 to 7 are a 6-bit multiplier.
 - Address: `uint32` interpreted in the context of the address type.
+
+### Bounded rule comparison and clear-index candidates
+
+The following two declarations are **Hypothesis**, not native qualification.
+They cover only the finite comparison and OP01 positive-index candidates;
+other variants and other rule fields remain separate. Logical positions are
+Unknown; a logical position is not a wire offset. Extents describe candidate
+field carriers, not complete frames. Missing operation or direction metadata
+is explicitly Unknown, not a wildcard or evidence of applicability.
+
+| Grade | Identity | Direction | Logical position / extent | Raw type / domain | Scale / unit | Sentinel / default / conflict | Unresolved properties |
+|---|---|---|---|---|---|---|---|
+| Hypothesis | vaillant / B50E / PB=B5 / SB=0E / OP=Unknown / rule_comparison | Unknown | Unknown / 8 bits | uint8; full byte 00..FF; scalar bits 0..2, modes 0..7; bit 7 independent stop-override-FIFO on match | 1 / none | No sentinel or default established; high flag applies across all modes, not only mode 7 | Bits 3..6 (mask 78) unresolved; preserve full raw byte; physical prefix adaptation Unknown |
+| Hypothesis | vaillant / B50E / PB=B5 / SB=0E / OP=01 / clear_rule_positive_index | response (positive candidate) | Unknown / 16 bits | uint16 unsigned little-endian; 0..65535; optional echo | 1 / none | FFFF (65535) may mean all rules cleared only in this OP01 positive echo form; no default established; other operations have no clear meaning here | One-byte echo incomplete/raw; echo presence does not establish physical deletion or persistence; physical prefix adaptation Unknown |
+
+Scalar comparison candidates: `0` time only, `1` equal, `2` not equal,
+`3` less than, `4` less than or equal, `5` greater than,
+`6` greater than or equal, `7` change. Bit 7 is independent of that scalar:
+when set it is a candidate to stop override FIFO when a rule matches. Bits
+3..6 do not establish additional modes and must remain raw.
+
+The following are synthetic arithmetic examples, not observations of a device.
+Every semantic interpretation remains Hypothesis; physical behavior is Unknown.
+The [synthetic examples](fixtures/ae10_b50e_candidates.json) preserve the raw
+bytes and explicit absent metadata. Their correctness establishes no native
+recording, physical support, freshness or execution authority. Native recording,
+other rule fields and checksum/stuffing semantics remain Unknown. Rule-table
+declarations are separate from active rule execution.
+
+| Raw comparison byte | Scalar mode candidate | High flag candidate | Unresolved bits retained | Grade |
+|---|---|---|---|---|
+| 00 | 0 | false | 00 | Hypothesis |
+| 07 | 7 | false | 00 | Hypothesis |
+| 80 | 0 | true | 00 | Hypothesis |
+| 87 | 7 | true | 00 | Hypothesis |
+| 88 | 0 | true | 08 | Hypothesis |
+
+| Operation | Direction | Raw echo | Index candidate | All-rules candidate | Completeness | Grade |
+|---|---|---|---|---|---|---|
+| 01 | positive response | 34 12 | 4660 | false | complete candidate carrier | Hypothesis |
+| 01 | positive response | FF FF | 65535 | true | complete candidate carrier | Hypothesis |
+| 01 | positive response | FF | Unknown | Unknown | incomplete/raw | Unknown |
+| 02 | positive response | FF FF | Unknown | Unknown | raw; outside clear candidate | Unknown |
 
 ### Built-in rules and operating mode
 
@@ -93,11 +136,13 @@ Candidate interpretation, unconfirmed on the wire: a requester separates buffer 
 - The stuffing rule and the entry separator `AA` for the log buffer are a candidate interpretation, unconfirmed on the wire.
 - The mapping of the layout offsets above to the data bytes of a bus telegram is unconfirmed for every operation.
 - How the operation `00` request (15 data bytes) and long operation `03` replies fit the 14-data-byte limit of a manufacturer-specific eBUS telegram is unresolved.
-- The reply layout of operation `01` is not established.
+- Operation `01` has only the bounded optional positive-index echo candidate above; its physical placement, presence on a target, deletion and persistence remain Unknown. Request sentinel semantics are Unknown.
 - Whether any target answers a `B5 0E` operation, and with which operations, is unconfirmed; the safety class of each operation is unassigned.
 - The widths of the opaque value rows (keys `0`, `15`, `16`) are not established.
 
 ## References
+
+- [Finite B50E candidate catalog](https://github.com/Project-Helianthus/helianthus-ebusreg/blob/main/catalog/vaillant/data/ab61_b50e_candidates.json) — corroborating declaration metadata for the two bounded candidates only; not native wire evidence.
 
 - [Vaillant B503 diagnostic and service selectors](ebus-vaillant-B503.md)
 - [Vaillant B509 register access](ebus-vaillant-B509.md)
