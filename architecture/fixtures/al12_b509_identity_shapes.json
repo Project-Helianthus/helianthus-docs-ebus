@@ -1,0 +1,268 @@
+{
+  "key_control": {
+    "family": "vaillant",
+    "variant": "B509",
+    "primary": 181,
+    "secondary": 9,
+    "operation": 83,
+    "direction": "read",
+    "field": "hardware_identifier",
+    "alternative": "packed_decimal_candidate",
+    "group": null,
+    "instance_scope": "none",
+    "register": null
+  },
+  "hardware": [
+    {
+      "raw": [
+        18,
+        52,
+        86,
+        120,
+        144,
+        18
+      ],
+      "candidate_decimal_pairs": [
+        12,
+        34,
+        56,
+        78,
+        90,
+        12
+      ],
+      "candidate_valid": true
+    },
+    {
+      "raw": [
+        250,
+        52,
+        86,
+        120,
+        144,
+        18
+      ],
+      "candidate_decimal_pairs": null,
+      "candidate_valid": false
+    }
+  ],
+  "alternatives": [
+    {
+      "alternative": "link_address_six",
+      "raw": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "width_bytes": 6,
+      "selection_by_length": false
+    },
+    {
+      "alternative": "conflicting_seven",
+      "raw": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "width_bytes": 7,
+      "selection_by_length": false
+    }
+  ],
+  "states": [
+    {
+      "id": "control",
+      "feedback_success": true,
+      "status_success": true,
+      "content_extent": "synthetic_full",
+      "segments": [
+        {
+          "raw": [
+            65,
+            66
+          ],
+          "valid": true
+        },
+        {
+          "raw": [
+            67,
+            68
+          ],
+          "valid": true
+        }
+      ],
+      "segment_completeness": true,
+      "completeIdentity": false
+    },
+    {
+      "id": "feedback_failure",
+      "feedback_success": false,
+      "status_success": true,
+      "content_extent": "synthetic_full",
+      "segments": [
+        {
+          "raw": [
+            65,
+            66
+          ],
+          "valid": true
+        },
+        {
+          "raw": [
+            67,
+            68
+          ],
+          "valid": true
+        }
+      ],
+      "segment_completeness": true,
+      "completeIdentity": false
+    },
+    {
+      "id": "status_failure",
+      "feedback_success": true,
+      "status_success": false,
+      "content_extent": "synthetic_full",
+      "segments": [
+        {
+          "raw": [
+            65,
+            66
+          ],
+          "valid": true
+        },
+        {
+          "raw": [
+            67,
+            68
+          ],
+          "valid": true
+        }
+      ],
+      "segment_completeness": true,
+      "completeIdentity": false
+    },
+    {
+      "id": "extent_partial",
+      "feedback_success": true,
+      "status_success": true,
+      "content_extent": "partial",
+      "segments": [
+        {
+          "raw": [
+            65,
+            66
+          ],
+          "valid": true
+        },
+        {
+          "raw": [
+            67,
+            68
+          ],
+          "valid": true
+        }
+      ],
+      "segment_completeness": true,
+      "completeIdentity": false
+    },
+    {
+      "id": "segments_incomplete",
+      "feedback_success": true,
+      "status_success": true,
+      "content_extent": "synthetic_full",
+      "segments": [
+        {
+          "raw": [
+            65,
+            66
+          ],
+          "valid": true
+        },
+        {
+          "raw": [
+            67,
+            68
+          ],
+          "valid": true
+        }
+      ],
+      "segment_completeness": false,
+      "completeIdentity": false
+    },
+    {
+      "id": "segment_failure",
+      "feedback_success": true,
+      "status_success": true,
+      "content_extent": "partial",
+      "segments": [
+        {
+          "raw": [
+            65,
+            66
+          ],
+          "valid": true
+        },
+        {
+          "raw": [
+            250
+          ],
+          "valid": false
+        }
+      ],
+      "segment_completeness": false,
+      "completeIdentity": false,
+      "previous_segments": [
+        [
+          69,
+          70
+        ],
+        [
+          67,
+          68
+        ]
+      ],
+      "retained_segments": [
+        [
+          65,
+          66
+        ],
+        [
+          67,
+          68
+        ]
+      ]
+    },
+    {
+      "id": "empty_success",
+      "feedback_success": true,
+      "status_success": true,
+      "content_extent": "empty",
+      "segments": [],
+      "segment_completeness": false,
+      "completeIdentity": false
+    },
+    {
+      "id": "partial_success",
+      "feedback_success": true,
+      "status_success": true,
+      "content_extent": "partial",
+      "segments": [
+        {
+          "raw": [
+            65,
+            66
+          ],
+          "valid": true
+        }
+      ],
+      "segment_completeness": false,
+      "completeIdentity": false
+    }
+  ]
+}
