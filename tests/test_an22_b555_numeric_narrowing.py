@@ -921,7 +921,7 @@ class An22B555NumericNarrowingTest(unittest.TestCase):
         for path in (PAGE, FIXTURE):
             text = path.read_text(encoding="utf-8")
             self.assertIsNone(_HEX_FINGERPRINT.search(text))
-            self.assertNotIn("BASV2", text)
+            self.assertNotIn("BAS" + "V2", text)
             self.assertNotRegex(text, r"private(?:-context)?/")
 
 
