@@ -72,6 +72,8 @@ def helper(value):
 
 
 def selector(a, b, c):
+    if not all(uint(value, U32) for value in (a, b, c)):
+        return UNKNOWN
     return 0 if all(value != 0 for value in (a, b, c)) else 9
 
 
@@ -159,6 +161,18 @@ class CandidatePredicates(unittest.TestCase):
             self.assertEqual(selector(*fields), 0)
             fields[axis] = 0
             self.assertEqual(selector(*fields), 9)
+
+    def test_selector_unsigned_ranges(self):
+        for axis in range(3):
+            fields = [1, 1, 1]
+            fields[axis] = U32
+            self.assertEqual(selector(*fields), 0)
+            for invalid in (-1, U32 + 1, True, False, 1.0, '1', None):
+                for other in (0, 1):
+                    with self.subTest(axis=axis, invalid=invalid, other=other):
+                        fields = [other, other, other]
+                        fields[axis] = invalid
+                        self.assertEqual(selector(*fields), UNKNOWN)
 
     def test_selection_identity_status_and_arithmetic(self):
         self.assertEqual(ordinary_sums(self.fixture['entries']), ([0, 2], 3, 4))
