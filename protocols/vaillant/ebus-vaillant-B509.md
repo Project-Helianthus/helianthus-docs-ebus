@@ -306,6 +306,62 @@ are four sensor error blocks (raw bytes), offset 7 bit 0 is a temperature-error
 flag (bits 1 to 7 reserved) and offsets 8 and 9 are two temperature error
 blocks (raw bytes). The bit maps of the blocks are not established.
 
+### Bounded width and feedback alternatives: 06, 07, 32, 33, 39, 41, 44 and 59
+
+These **Hypothesis** declarations concern the Vaillant family under
+`PB=0xB5`, `SB=0x09`. They are candidate native declarations, not wire-qualified
+behavior. **Unknown**: wire adaptation and installed support. Logical positions
+are Unknown throughout this finite slice; a logical position is not a wire
+offset, and a field extent does not establish a complete payload width.
+Unprovided defaults, sentinels, units and domains remain Unknown. The five OP33
+quantities are separate fields, not an established contiguous wire layout.
+
+| Grade | Operation | Variant | Field | Direction | Logical position / extent | Raw type/domain | Scale | Default/sentinel/conflict | Unresolved |
+|---|---|---|---|---|---|---|---|---|---|
+| Hypothesis | 07 | selector | selector | request | Unknown / 8 bits | unsigned byte | raw | Unknown | Request selector cannot select reply width; wire adaptation and installed support Unknown |
+| Hypothesis | 07 | positive-u16 | value | response | Unknown / 16 bits | unsigned LE16 | raw | default 0; sentinel Unknown | Alternative width remains incomplete/raw; selection, wire adaptation and installed support Unknown |
+| Hypothesis | 07 | positive-u32 | value | response | Unknown / 32 bits | unsigned LE32 | raw | default 0; sentinel Unknown | Alternative width remains incomplete/raw; selection, wire adaptation and installed support Unknown |
+| Hypothesis | 32 | status-query | address | request | Unknown / Unknown | Unknown | Unknown | Unknown | Queries status; does not toggle an address; address width Unknown |
+| Hypothesis | 33 | raw-quantities | address | Unknown | Unknown / Unknown | Unknown | Unknown | Unknown | Address width, byte order and conversion Unknown |
+| Hypothesis | 33 | raw-quantities | minimum | Unknown | Unknown / 16 bits | signed LE16 | raw | Unknown | Five separate raw quantities; factor is not a converter; conversion and minimum<=maximum enforcement Unknown |
+| Hypothesis | 33 | raw-quantities | maximum | Unknown | Unknown / 16 bits | signed LE16 | raw | Unknown | Five separate raw quantities; factor is not a converter; conversion and minimum<=maximum enforcement Unknown |
+| Hypothesis | 33 | raw-quantities | default | Unknown | Unknown / 16 bits | signed LE16 | raw | Unknown | Five separate raw quantities; factor is not a converter; conversion and minimum<=maximum enforcement Unknown |
+| Hypothesis | 33 | raw-quantities | step | Unknown | Unknown / 16 bits | signed LE16 | raw | Unknown | Five separate raw quantities; factor is not a converter; conversion and minimum<=maximum enforcement Unknown |
+| Hypothesis | 33 | raw-quantities | factor | Unknown | Unknown / 16 bits | signed LE16 | raw | Unknown | Five separate raw quantities; factor is not a converter; conversion and minimum<=maximum enforcement Unknown |
+| Hypothesis | 39 | raw-u16 | value | Unknown | Unknown / 16 bits | unsigned 16-bit; byte order Unknown | raw | Unknown | Complement algorithm Unknown |
+| Hypothesis | 41 | raw-0f-f0 | value | Unknown | Unknown / 8 bits | unsigned byte; raw 0F/F0 | raw | Unknown | Other values have no established labels |
+| Hypothesis | 44 | default-domain-conflict | value | Unknown | Unknown / 8 bits | unsigned byte; domain 1..255 | Unknown; minute interpretation Hypothesis | default 0 conflicts with domain 1..255; sentinel Unknown | Conflict unresolved; conversion Unknown |
+| Hypothesis | 59 | quantities | temperature | Unknown | Unknown / 16 bits | signed LE16 | /16 degrees Celsius | Unknown | Wire adaptation and installed support Unknown |
+| Hypothesis | 59 | quantities | flow | Unknown | Unknown / 16 bits | unsigned LE16 | /100 litres per minute | Unknown | Wire adaptation and installed support Unknown |
+| Hypothesis | 59 | quantities | volume | Unknown | Unknown / 16 bits | unsigned LE16 | /10 litres | Unknown | Wire adaptation and installed support Unknown |
+| Hypothesis | 59 | quantities | minimum_volume | Unknown | Unknown / Unknown | width, signedness and byte order Unknown | raw; no division | Unknown | Unit and interpretation Unknown; preserve raw bytes |
+| Hypothesis | 59 | quantities | maximum_volume | Unknown | Unknown / Unknown | width, signedness and byte order Unknown | raw; no division | Unknown | Unit and interpretation Unknown; preserve raw bytes |
+| Hypothesis | 06 | prefix-only-positive | prefix | response | Unknown / Unknown | Unknown | Unknown | Unknown | Shared apparent prefix cannot select alternative or establish successful reset; wire adaptation and installed support Unknown |
+| Hypothesis | 06 | positive-with-feedback | feedback | response | Unknown / 8 bits | unsigned byte | 01 accepted; every other byte rejected | Unknown | Only explicit feedback form; accepted feedback does not establish successful reset; wire adaptation and installed support Unknown |
+| Hypothesis | 06 | negative-without-extra-discriminator | prefix | response | Unknown / Unknown | Unknown | Unknown | Unknown | Ambiguous negative; no extra discriminator; prefix does not establish physical NACK or successful reset; wire adaptation and installed support Unknown |
+
+The [synthetic examples](fixtures/ae08_b509_candidates.json) retain raw carriers
+beside candidate interpretations. In OP07, two-byte `34 12` is 4660 only in the
+16-bit alternative; four-byte `78 56 34 12` is 305419896 only in the 32-bit
+alternative. Cross-variant widths remain incomplete/raw. OP33 retains
+`-1, 2, 0, 1, -2` as minimum, maximum, default, step and factor independently;
+even minimum exceeding maximum does not establish a rejection rule. OP39
+`FF FF` remains raw 65535 without a complement (this symmetric example does
+not resolve byte order). OP59 `F0 FF` is -1 degree Celsius, `64 00` is 1 litre
+per minute and `0A 00` is 1 litre under the respective candidate scales;
+minimum/maximum volume bytes remain raw without division.
+
+For OP06, `00`, `01`, `02`, `FF` mean rejected, accepted, rejected, rejected
+only in the explicit feedback alternative. Prefix-only-positive and
+ambiguous-negative remain separate states; an apparent shared prefix supplies
+no alternative discriminator, physical NACK or successful-reset evidence.
+
+The independently merged [AE07 finite catalog](https://github.com/Project-Helianthus/helianthus-ebusreg/pull/245)
+is corroborating implementation evidence for exactly these 21 entries, not
+proof of the native wire contract or a broader completed catalog. Generic
+OP0D/0E access and identity scanning are outside these entries. Synthetic
+correctness provides no physical qualification, freshness or execution authority.
+
 ### Request and reply widths
 
 Candidate payload widths (NN counts the payload bytes that follow it):
@@ -365,13 +421,20 @@ name is known; it does not mean that the register or a name does not exist.
 - Whether every target accepts both echoed-op and address-only response forms.
 - Whether B509/`0x9A00` (DSN) is available on EHP00/HMU devices for product-type
   gating, or if B514 must be used exclusively for heat pump identification.
-- Heat pump interface unit `540200xx` sub-addressing: single-fork source (burmistrzak TSP);
+- Heat pump interface unit `540200xx` sub-addressing: single-source candidate;
   live validation priority items: CompressorSpeed, Fan1Speed,
   ElectricPowerConsumption, AirInletTemp.
 - EHP `01`-suffix register semantics: page/bank selector vs instance selector.
   Live scan comparing `XX00` vs `XX01` needed.
 
 ## Open questions
+
+- For the bounded alternatives above, reply-width selection for `07`, the
+  address width and conversion of `33`, its minimum<=maximum enforcement,
+  the complement algorithm of `39`, and the default/domain conflict of `44`
+  remain unresolved. `32` queries status rather than toggling an address.
+  `06` still lacks wire adaptation, installed-support and alternative-selection
+  evidence; neither a shared prefix nor accepted feedback proves a reset.
 
 - No exchange of the subcommands in the catalogue is included here. Every
   request shape, reply layout and reply width above is a candidate, and the
@@ -414,8 +477,8 @@ name is known; it does not mean that the register or a name does not exist.
 
 ## References
 
-- Public TypeSpec: [_templates.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/_templates.tsp)
-- Public config corpus: [john30/ebusd-configuration](https://github.com/john30/ebusd-configuration/tree/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant)
+- Public TypeSpec: [_templates.tsp](https://github.com/john30/ebusd-configuration/blob/HEAD/src/vaillant/_templates.tsp)
+- Public config corpus: [john30/ebusd-configuration](https://github.com/john30/ebusd-configuration/tree/HEAD/src/vaillant)
 - Boiler register map: [`ebus-vaillant-B509-boiler-register-map.md`](ebus-vaillant-B509-boiler-register-map.md)
 - Heat pump register map: [`ebus-vaillant-B509-heatpump-register-map.md`](ebus-vaillant-B509-heatpump-register-map.md)
 - Register name correspondence fixture: [`fixtures/b509-register-name-correspondence.csv`](fixtures/b509-register-name-correspondence.csv)
