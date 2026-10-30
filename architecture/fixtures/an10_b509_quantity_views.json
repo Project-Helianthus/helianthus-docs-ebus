@@ -1,0 +1,2717 @@
+{
+  "label": "b509-op59-quantity-view",
+  "signature": "ab09an09.view_b509_op59_candidate_fields(selection, slices)",
+  "stability": "nothing-is-stable-before-helianthus-1.0",
+  "namespace": null,
+  "authorization_gate": null,
+  "write_builder": null,
+  "registry_method": null,
+  "packet_parser": null,
+  "family_detection": "explicit-selection-only",
+  "admission": {
+    "family": "B509",
+    "variant": "explicit-non-empty",
+    "operation": "59",
+    "direction": [
+      "request",
+      "response"
+    ]
+  },
+  "fields": {
+    "temperature": {
+      "signedness": "signed",
+      "endian": "little",
+      "width_octets": 2,
+      "divisor": 16,
+      "unit_label": "°C",
+      "unit_scale_passes": 1,
+      "sentinel": null,
+      "numeric_grade": "Proven",
+      "semantic_grade": "Hypothesis",
+      "native_grade": "Unknown"
+    },
+    "flow": {
+      "signedness": "unsigned",
+      "endian": "little",
+      "width_octets": 2,
+      "divisor": 100,
+      "unit_label": "L/min",
+      "unit_scale_passes": 1,
+      "sentinel": null,
+      "numeric_grade": "Proven",
+      "semantic_grade": "Hypothesis",
+      "native_grade": "Unknown"
+    },
+    "volume": {
+      "signedness": "unsigned",
+      "endian": "little",
+      "width_octets": 2,
+      "divisor": 10,
+      "unit_label": "L",
+      "unit_scale_passes": 1,
+      "sentinel": null,
+      "numeric_grade": "Proven",
+      "semantic_grade": "Hypothesis",
+      "native_grade": "Unknown"
+    },
+    "minimum_volume": {
+      "signedness": null,
+      "endian": null,
+      "width_octets": null,
+      "divisor": null,
+      "unit_label": null,
+      "unit_scale_passes": 0,
+      "sentinel": null,
+      "numeric_grade": null,
+      "semantic_grade": "Hypothesis",
+      "native_grade": "Unknown"
+    },
+    "maximum_volume": {
+      "signedness": null,
+      "endian": null,
+      "width_octets": null,
+      "divisor": null,
+      "unit_label": null,
+      "unit_scale_passes": 0,
+      "sentinel": null,
+      "numeric_grade": null,
+      "semantic_grade": "Hypothesis",
+      "native_grade": "Unknown"
+    }
+  },
+  "unknowns": [
+    "absolute positions",
+    "omitted family variants",
+    "raw sentinels",
+    "peer bounds",
+    "minimum and maximum conversion",
+    "physical support",
+    "actuation"
+  ],
+  "examples": [
+    {
+      "id": "canonical",
+      "selection": {
+        "family": "B509",
+        "variant": "alpha",
+        "operation": "59",
+        "direction": "response"
+      },
+      "slices": {
+        "temperature": "F0 FF",
+        "flow": "64 00",
+        "volume": "0A 00",
+        "minimum_volume": "FF FF",
+        "maximum_volume": "01"
+      },
+      "admitted": true,
+      "fields": {
+        "temperature": {
+          "state": "converted",
+          "raw": "F0 FF",
+          "numeric": "-1",
+          "unit_label": "°C",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "flow": {
+          "state": "converted",
+          "raw": "64 00",
+          "numeric": "1",
+          "unit_label": "L/min",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "volume": {
+          "state": "converted",
+          "raw": "0A 00",
+          "numeric": "1",
+          "unit_label": "L",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "minimum_volume": {
+          "state": "raw",
+          "raw": "FF FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "maximum_volume": {
+          "state": "raw",
+          "raw": "01",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "temperature-low-magnitude",
+      "selection": {
+        "family": "B509",
+        "variant": "alpha",
+        "operation": "59",
+        "direction": "response"
+      },
+      "slices": {
+        "temperature": "00 80",
+        "flow": "64 00",
+        "volume": "0A 00",
+        "minimum_volume": "FF FF",
+        "maximum_volume": "01"
+      },
+      "admitted": true,
+      "fields": {
+        "temperature": {
+          "state": "converted",
+          "raw": "00 80",
+          "numeric": "-2048",
+          "unit_label": "°C",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "flow": {
+          "state": "converted",
+          "raw": "64 00",
+          "numeric": "1",
+          "unit_label": "L/min",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "volume": {
+          "state": "converted",
+          "raw": "0A 00",
+          "numeric": "1",
+          "unit_label": "L",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "minimum_volume": {
+          "state": "raw",
+          "raw": "FF FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "maximum_volume": {
+          "state": "raw",
+          "raw": "01",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "flow-full-scale",
+      "selection": {
+        "family": "B509",
+        "variant": "alpha",
+        "operation": "59",
+        "direction": "response"
+      },
+      "slices": {
+        "temperature": "F0 FF",
+        "flow": "FF FF",
+        "volume": "0A 00",
+        "minimum_volume": "FF FF",
+        "maximum_volume": "01"
+      },
+      "admitted": true,
+      "fields": {
+        "temperature": {
+          "state": "converted",
+          "raw": "F0 FF",
+          "numeric": "-1",
+          "unit_label": "°C",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "flow": {
+          "state": "converted",
+          "raw": "FF FF",
+          "numeric": "655.35",
+          "unit_label": "L/min",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "volume": {
+          "state": "converted",
+          "raw": "0A 00",
+          "numeric": "1",
+          "unit_label": "L",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "minimum_volume": {
+          "state": "raw",
+          "raw": "FF FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "maximum_volume": {
+          "state": "raw",
+          "raw": "01",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "volume-full-scale",
+      "selection": {
+        "family": "B509",
+        "variant": "alpha",
+        "operation": "59",
+        "direction": "response"
+      },
+      "slices": {
+        "temperature": "F0 FF",
+        "flow": "64 00",
+        "volume": "FF FF",
+        "minimum_volume": "FF FF",
+        "maximum_volume": "01"
+      },
+      "admitted": true,
+      "fields": {
+        "temperature": {
+          "state": "converted",
+          "raw": "F0 FF",
+          "numeric": "-1",
+          "unit_label": "°C",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "flow": {
+          "state": "converted",
+          "raw": "64 00",
+          "numeric": "1",
+          "unit_label": "L/min",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "volume": {
+          "state": "converted",
+          "raw": "FF FF",
+          "numeric": "6553.5",
+          "unit_label": "L",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "minimum_volume": {
+          "state": "raw",
+          "raw": "FF FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "maximum_volume": {
+          "state": "raw",
+          "raw": "01",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "temperature-zero",
+      "selection": {
+        "family": "B509",
+        "variant": "alpha",
+        "operation": "59",
+        "direction": "response"
+      },
+      "slices": {
+        "temperature": "00 00",
+        "flow": "64 00",
+        "volume": "0A 00",
+        "minimum_volume": "FF FF",
+        "maximum_volume": "01"
+      },
+      "admitted": true,
+      "fields": {
+        "temperature": {
+          "state": "converted",
+          "raw": "00 00",
+          "numeric": "0",
+          "unit_label": "°C",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "flow": {
+          "state": "converted",
+          "raw": "64 00",
+          "numeric": "1",
+          "unit_label": "L/min",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "volume": {
+          "state": "converted",
+          "raw": "0A 00",
+          "numeric": "1",
+          "unit_label": "L",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "minimum_volume": {
+          "state": "raw",
+          "raw": "FF FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "maximum_volume": {
+          "state": "raw",
+          "raw": "01",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "flow-distinct",
+      "selection": {
+        "family": "B509",
+        "variant": "alpha",
+        "operation": "59",
+        "direction": "response"
+      },
+      "slices": {
+        "temperature": "F0 FF",
+        "flow": "65 00",
+        "volume": "0A 00",
+        "minimum_volume": "FF FF",
+        "maximum_volume": "01"
+      },
+      "admitted": true,
+      "fields": {
+        "temperature": {
+          "state": "converted",
+          "raw": "F0 FF",
+          "numeric": "-1",
+          "unit_label": "°C",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "flow": {
+          "state": "converted",
+          "raw": "65 00",
+          "numeric": "1.01",
+          "unit_label": "L/min",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "volume": {
+          "state": "converted",
+          "raw": "0A 00",
+          "numeric": "1",
+          "unit_label": "L",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "minimum_volume": {
+          "state": "raw",
+          "raw": "FF FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "maximum_volume": {
+          "state": "raw",
+          "raw": "01",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "volume-distinct",
+      "selection": {
+        "family": "B509",
+        "variant": "alpha",
+        "operation": "59",
+        "direction": "response"
+      },
+      "slices": {
+        "temperature": "F0 FF",
+        "flow": "64 00",
+        "volume": "0B 00",
+        "minimum_volume": "FF FF",
+        "maximum_volume": "01"
+      },
+      "admitted": true,
+      "fields": {
+        "temperature": {
+          "state": "converted",
+          "raw": "F0 FF",
+          "numeric": "-1",
+          "unit_label": "°C",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "flow": {
+          "state": "converted",
+          "raw": "64 00",
+          "numeric": "1",
+          "unit_label": "L/min",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "volume": {
+          "state": "converted",
+          "raw": "0B 00",
+          "numeric": "1.1",
+          "unit_label": "L",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "minimum_volume": {
+          "state": "raw",
+          "raw": "FF FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "maximum_volume": {
+          "state": "raw",
+          "raw": "01",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "temperature-as-flow-bytes",
+      "selection": {
+        "family": "B509",
+        "variant": "alpha",
+        "operation": "59",
+        "direction": "response"
+      },
+      "slices": {
+        "temperature": "64 00",
+        "flow": "64 00",
+        "volume": "0A 00",
+        "minimum_volume": "FF FF",
+        "maximum_volume": "01"
+      },
+      "admitted": true,
+      "fields": {
+        "temperature": {
+          "state": "converted",
+          "raw": "64 00",
+          "numeric": "6.25",
+          "unit_label": "°C",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "flow": {
+          "state": "converted",
+          "raw": "64 00",
+          "numeric": "1",
+          "unit_label": "L/min",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "volume": {
+          "state": "converted",
+          "raw": "0A 00",
+          "numeric": "1",
+          "unit_label": "L",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "minimum_volume": {
+          "state": "raw",
+          "raw": "FF FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "maximum_volume": {
+          "state": "raw",
+          "raw": "01",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "flow-as-volume-bytes",
+      "selection": {
+        "family": "B509",
+        "variant": "alpha",
+        "operation": "59",
+        "direction": "response"
+      },
+      "slices": {
+        "temperature": "F0 FF",
+        "flow": "0A 00",
+        "volume": "0A 00",
+        "minimum_volume": "FF FF",
+        "maximum_volume": "01"
+      },
+      "admitted": true,
+      "fields": {
+        "temperature": {
+          "state": "converted",
+          "raw": "F0 FF",
+          "numeric": "-1",
+          "unit_label": "°C",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "flow": {
+          "state": "converted",
+          "raw": "0A 00",
+          "numeric": "0.1",
+          "unit_label": "L/min",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "volume": {
+          "state": "converted",
+          "raw": "0A 00",
+          "numeric": "1",
+          "unit_label": "L",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "minimum_volume": {
+          "state": "raw",
+          "raw": "FF FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "maximum_volume": {
+          "state": "raw",
+          "raw": "01",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "volume-as-flow-bytes",
+      "selection": {
+        "family": "B509",
+        "variant": "alpha",
+        "operation": "59",
+        "direction": "response"
+      },
+      "slices": {
+        "temperature": "F0 FF",
+        "flow": "64 00",
+        "volume": "64 00",
+        "minimum_volume": "FF FF",
+        "maximum_volume": "01"
+      },
+      "admitted": true,
+      "fields": {
+        "temperature": {
+          "state": "converted",
+          "raw": "F0 FF",
+          "numeric": "-1",
+          "unit_label": "°C",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "flow": {
+          "state": "converted",
+          "raw": "64 00",
+          "numeric": "1",
+          "unit_label": "L/min",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "volume": {
+          "state": "converted",
+          "raw": "64 00",
+          "numeric": "10",
+          "unit_label": "L",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "minimum_volume": {
+          "state": "raw",
+          "raw": "FF FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "maximum_volume": {
+          "state": "raw",
+          "raw": "01",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "temperature-omitted",
+      "selection": {
+        "family": "B509",
+        "variant": "alpha",
+        "operation": "59",
+        "direction": "response"
+      },
+      "slices": {
+        "temperature": null,
+        "flow": "64 00",
+        "volume": "0A 00",
+        "minimum_volume": "FF FF",
+        "maximum_volume": "01"
+      },
+      "admitted": true,
+      "fields": {
+        "temperature": {
+          "state": "absent",
+          "raw": null,
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "flow": {
+          "state": "converted",
+          "raw": "64 00",
+          "numeric": "1",
+          "unit_label": "L/min",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "volume": {
+          "state": "converted",
+          "raw": "0A 00",
+          "numeric": "1",
+          "unit_label": "L",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "minimum_volume": {
+          "state": "raw",
+          "raw": "FF FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "maximum_volume": {
+          "state": "raw",
+          "raw": "01",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "flow-omitted",
+      "selection": {
+        "family": "B509",
+        "variant": "alpha",
+        "operation": "59",
+        "direction": "response"
+      },
+      "slices": {
+        "temperature": "F0 FF",
+        "flow": null,
+        "volume": "0A 00",
+        "minimum_volume": "FF FF",
+        "maximum_volume": "01"
+      },
+      "admitted": true,
+      "fields": {
+        "temperature": {
+          "state": "converted",
+          "raw": "F0 FF",
+          "numeric": "-1",
+          "unit_label": "°C",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "flow": {
+          "state": "absent",
+          "raw": null,
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "volume": {
+          "state": "converted",
+          "raw": "0A 00",
+          "numeric": "1",
+          "unit_label": "L",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "minimum_volume": {
+          "state": "raw",
+          "raw": "FF FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "maximum_volume": {
+          "state": "raw",
+          "raw": "01",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "volume-omitted",
+      "selection": {
+        "family": "B509",
+        "variant": "alpha",
+        "operation": "59",
+        "direction": "response"
+      },
+      "slices": {
+        "temperature": "F0 FF",
+        "flow": "64 00",
+        "volume": null,
+        "minimum_volume": "FF FF",
+        "maximum_volume": "01"
+      },
+      "admitted": true,
+      "fields": {
+        "temperature": {
+          "state": "converted",
+          "raw": "F0 FF",
+          "numeric": "-1",
+          "unit_label": "°C",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "flow": {
+          "state": "converted",
+          "raw": "64 00",
+          "numeric": "1",
+          "unit_label": "L/min",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "volume": {
+          "state": "absent",
+          "raw": null,
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "minimum_volume": {
+          "state": "raw",
+          "raw": "FF FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "maximum_volume": {
+          "state": "raw",
+          "raw": "01",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "minimum-omitted",
+      "selection": {
+        "family": "B509",
+        "variant": "alpha",
+        "operation": "59",
+        "direction": "response"
+      },
+      "slices": {
+        "temperature": "F0 FF",
+        "flow": "64 00",
+        "volume": "0A 00",
+        "minimum_volume": null,
+        "maximum_volume": "01"
+      },
+      "admitted": true,
+      "fields": {
+        "temperature": {
+          "state": "converted",
+          "raw": "F0 FF",
+          "numeric": "-1",
+          "unit_label": "°C",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "flow": {
+          "state": "converted",
+          "raw": "64 00",
+          "numeric": "1",
+          "unit_label": "L/min",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "volume": {
+          "state": "converted",
+          "raw": "0A 00",
+          "numeric": "1",
+          "unit_label": "L",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "minimum_volume": {
+          "state": "absent",
+          "raw": null,
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "maximum_volume": {
+          "state": "raw",
+          "raw": "01",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "maximum-omitted",
+      "selection": {
+        "family": "B509",
+        "variant": "alpha",
+        "operation": "59",
+        "direction": "response"
+      },
+      "slices": {
+        "temperature": "F0 FF",
+        "flow": "64 00",
+        "volume": "0A 00",
+        "minimum_volume": "FF FF",
+        "maximum_volume": null
+      },
+      "admitted": true,
+      "fields": {
+        "temperature": {
+          "state": "converted",
+          "raw": "F0 FF",
+          "numeric": "-1",
+          "unit_label": "°C",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "flow": {
+          "state": "converted",
+          "raw": "64 00",
+          "numeric": "1",
+          "unit_label": "L/min",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "volume": {
+          "state": "converted",
+          "raw": "0A 00",
+          "numeric": "1",
+          "unit_label": "L",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "minimum_volume": {
+          "state": "raw",
+          "raw": "FF FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "maximum_volume": {
+          "state": "absent",
+          "raw": null,
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "slices-omitted",
+      "selection": {
+        "family": "B509",
+        "variant": "alpha",
+        "operation": "59",
+        "direction": "response"
+      },
+      "slices": {
+        "temperature": null,
+        "flow": null,
+        "volume": null,
+        "minimum_volume": null,
+        "maximum_volume": null
+      },
+      "admitted": true,
+      "fields": {
+        "temperature": {
+          "state": "absent",
+          "raw": null,
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "flow": {
+          "state": "absent",
+          "raw": null,
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "volume": {
+          "state": "absent",
+          "raw": null,
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "minimum_volume": {
+          "state": "absent",
+          "raw": null,
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "maximum_volume": {
+          "state": "absent",
+          "raw": null,
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "temperature-empty",
+      "selection": {
+        "family": "B509",
+        "variant": "alpha",
+        "operation": "59",
+        "direction": "response"
+      },
+      "slices": {
+        "temperature": "",
+        "flow": "64 00",
+        "volume": "0A 00",
+        "minimum_volume": "FF FF",
+        "maximum_volume": "01"
+      },
+      "admitted": true,
+      "fields": {
+        "temperature": {
+          "state": "malformed",
+          "raw": "",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "flow": {
+          "state": "converted",
+          "raw": "64 00",
+          "numeric": "1",
+          "unit_label": "L/min",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "volume": {
+          "state": "converted",
+          "raw": "0A 00",
+          "numeric": "1",
+          "unit_label": "L",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "minimum_volume": {
+          "state": "raw",
+          "raw": "FF FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "maximum_volume": {
+          "state": "raw",
+          "raw": "01",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "flow-empty",
+      "selection": {
+        "family": "B509",
+        "variant": "alpha",
+        "operation": "59",
+        "direction": "response"
+      },
+      "slices": {
+        "temperature": "F0 FF",
+        "flow": "",
+        "volume": "0A 00",
+        "minimum_volume": "FF FF",
+        "maximum_volume": "01"
+      },
+      "admitted": true,
+      "fields": {
+        "temperature": {
+          "state": "converted",
+          "raw": "F0 FF",
+          "numeric": "-1",
+          "unit_label": "°C",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "flow": {
+          "state": "malformed",
+          "raw": "",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "volume": {
+          "state": "converted",
+          "raw": "0A 00",
+          "numeric": "1",
+          "unit_label": "L",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "minimum_volume": {
+          "state": "raw",
+          "raw": "FF FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "maximum_volume": {
+          "state": "raw",
+          "raw": "01",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "volume-empty",
+      "selection": {
+        "family": "B509",
+        "variant": "alpha",
+        "operation": "59",
+        "direction": "response"
+      },
+      "slices": {
+        "temperature": "F0 FF",
+        "flow": "64 00",
+        "volume": "",
+        "minimum_volume": "FF FF",
+        "maximum_volume": "01"
+      },
+      "admitted": true,
+      "fields": {
+        "temperature": {
+          "state": "converted",
+          "raw": "F0 FF",
+          "numeric": "-1",
+          "unit_label": "°C",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "flow": {
+          "state": "converted",
+          "raw": "64 00",
+          "numeric": "1",
+          "unit_label": "L/min",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "volume": {
+          "state": "malformed",
+          "raw": "",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "minimum_volume": {
+          "state": "raw",
+          "raw": "FF FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "maximum_volume": {
+          "state": "raw",
+          "raw": "01",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "temperature-truncated",
+      "selection": {
+        "family": "B509",
+        "variant": "alpha",
+        "operation": "59",
+        "direction": "response"
+      },
+      "slices": {
+        "temperature": "F0",
+        "flow": "64 00",
+        "volume": "0A 00",
+        "minimum_volume": "FF FF",
+        "maximum_volume": "01"
+      },
+      "admitted": true,
+      "fields": {
+        "temperature": {
+          "state": "malformed",
+          "raw": "F0",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "flow": {
+          "state": "converted",
+          "raw": "64 00",
+          "numeric": "1",
+          "unit_label": "L/min",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "volume": {
+          "state": "converted",
+          "raw": "0A 00",
+          "numeric": "1",
+          "unit_label": "L",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "minimum_volume": {
+          "state": "raw",
+          "raw": "FF FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "maximum_volume": {
+          "state": "raw",
+          "raw": "01",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "flow-truncated",
+      "selection": {
+        "family": "B509",
+        "variant": "alpha",
+        "operation": "59",
+        "direction": "response"
+      },
+      "slices": {
+        "temperature": "F0 FF",
+        "flow": "64",
+        "volume": "0A 00",
+        "minimum_volume": "FF FF",
+        "maximum_volume": "01"
+      },
+      "admitted": true,
+      "fields": {
+        "temperature": {
+          "state": "converted",
+          "raw": "F0 FF",
+          "numeric": "-1",
+          "unit_label": "°C",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "flow": {
+          "state": "malformed",
+          "raw": "64",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "volume": {
+          "state": "converted",
+          "raw": "0A 00",
+          "numeric": "1",
+          "unit_label": "L",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "minimum_volume": {
+          "state": "raw",
+          "raw": "FF FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "maximum_volume": {
+          "state": "raw",
+          "raw": "01",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "volume-truncated",
+      "selection": {
+        "family": "B509",
+        "variant": "alpha",
+        "operation": "59",
+        "direction": "response"
+      },
+      "slices": {
+        "temperature": "F0 FF",
+        "flow": "64 00",
+        "volume": "0A",
+        "minimum_volume": "FF FF",
+        "maximum_volume": "01"
+      },
+      "admitted": true,
+      "fields": {
+        "temperature": {
+          "state": "converted",
+          "raw": "F0 FF",
+          "numeric": "-1",
+          "unit_label": "°C",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "flow": {
+          "state": "converted",
+          "raw": "64 00",
+          "numeric": "1",
+          "unit_label": "L/min",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "volume": {
+          "state": "malformed",
+          "raw": "0A",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "minimum_volume": {
+          "state": "raw",
+          "raw": "FF FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "maximum_volume": {
+          "state": "raw",
+          "raw": "01",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "temperature-wide",
+      "selection": {
+        "family": "B509",
+        "variant": "alpha",
+        "operation": "59",
+        "direction": "response"
+      },
+      "slices": {
+        "temperature": "F0 FF 00",
+        "flow": "64 00",
+        "volume": "0A 00",
+        "minimum_volume": "FF FF",
+        "maximum_volume": "01"
+      },
+      "admitted": true,
+      "fields": {
+        "temperature": {
+          "state": "malformed",
+          "raw": "F0 FF 00",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "flow": {
+          "state": "converted",
+          "raw": "64 00",
+          "numeric": "1",
+          "unit_label": "L/min",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "volume": {
+          "state": "converted",
+          "raw": "0A 00",
+          "numeric": "1",
+          "unit_label": "L",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "minimum_volume": {
+          "state": "raw",
+          "raw": "FF FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "maximum_volume": {
+          "state": "raw",
+          "raw": "01",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "flow-wide",
+      "selection": {
+        "family": "B509",
+        "variant": "alpha",
+        "operation": "59",
+        "direction": "response"
+      },
+      "slices": {
+        "temperature": "F0 FF",
+        "flow": "64 00 00",
+        "volume": "0A 00",
+        "minimum_volume": "FF FF",
+        "maximum_volume": "01"
+      },
+      "admitted": true,
+      "fields": {
+        "temperature": {
+          "state": "converted",
+          "raw": "F0 FF",
+          "numeric": "-1",
+          "unit_label": "°C",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "flow": {
+          "state": "malformed",
+          "raw": "64 00 00",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "volume": {
+          "state": "converted",
+          "raw": "0A 00",
+          "numeric": "1",
+          "unit_label": "L",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "minimum_volume": {
+          "state": "raw",
+          "raw": "FF FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "maximum_volume": {
+          "state": "raw",
+          "raw": "01",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "volume-wide",
+      "selection": {
+        "family": "B509",
+        "variant": "alpha",
+        "operation": "59",
+        "direction": "response"
+      },
+      "slices": {
+        "temperature": "F0 FF",
+        "flow": "64 00",
+        "volume": "0A 00 00",
+        "minimum_volume": "FF FF",
+        "maximum_volume": "01"
+      },
+      "admitted": true,
+      "fields": {
+        "temperature": {
+          "state": "converted",
+          "raw": "F0 FF",
+          "numeric": "-1",
+          "unit_label": "°C",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "flow": {
+          "state": "converted",
+          "raw": "64 00",
+          "numeric": "1",
+          "unit_label": "L/min",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "volume": {
+          "state": "malformed",
+          "raw": "0A 00 00",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "minimum_volume": {
+          "state": "raw",
+          "raw": "FF FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "maximum_volume": {
+          "state": "raw",
+          "raw": "01",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "minimum-narrow",
+      "selection": {
+        "family": "B509",
+        "variant": "alpha",
+        "operation": "59",
+        "direction": "response"
+      },
+      "slices": {
+        "temperature": "F0 FF",
+        "flow": "64 00",
+        "volume": "0A 00",
+        "minimum_volume": "FF",
+        "maximum_volume": "01"
+      },
+      "admitted": true,
+      "fields": {
+        "temperature": {
+          "state": "converted",
+          "raw": "F0 FF",
+          "numeric": "-1",
+          "unit_label": "°C",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "flow": {
+          "state": "converted",
+          "raw": "64 00",
+          "numeric": "1",
+          "unit_label": "L/min",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "volume": {
+          "state": "converted",
+          "raw": "0A 00",
+          "numeric": "1",
+          "unit_label": "L",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "minimum_volume": {
+          "state": "raw",
+          "raw": "FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "maximum_volume": {
+          "state": "raw",
+          "raw": "01",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "minimum-wide",
+      "selection": {
+        "family": "B509",
+        "variant": "alpha",
+        "operation": "59",
+        "direction": "response"
+      },
+      "slices": {
+        "temperature": "F0 FF",
+        "flow": "64 00",
+        "volume": "0A 00",
+        "minimum_volume": "FF FF 00",
+        "maximum_volume": "01"
+      },
+      "admitted": true,
+      "fields": {
+        "temperature": {
+          "state": "converted",
+          "raw": "F0 FF",
+          "numeric": "-1",
+          "unit_label": "°C",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "flow": {
+          "state": "converted",
+          "raw": "64 00",
+          "numeric": "1",
+          "unit_label": "L/min",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "volume": {
+          "state": "converted",
+          "raw": "0A 00",
+          "numeric": "1",
+          "unit_label": "L",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "minimum_volume": {
+          "state": "raw",
+          "raw": "FF FF 00",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "maximum_volume": {
+          "state": "raw",
+          "raw": "01",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "maximum-wide",
+      "selection": {
+        "family": "B509",
+        "variant": "alpha",
+        "operation": "59",
+        "direction": "response"
+      },
+      "slices": {
+        "temperature": "F0 FF",
+        "flow": "64 00",
+        "volume": "0A 00",
+        "minimum_volume": "FF FF",
+        "maximum_volume": "01 02"
+      },
+      "admitted": true,
+      "fields": {
+        "temperature": {
+          "state": "converted",
+          "raw": "F0 FF",
+          "numeric": "-1",
+          "unit_label": "°C",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "flow": {
+          "state": "converted",
+          "raw": "64 00",
+          "numeric": "1",
+          "unit_label": "L/min",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "volume": {
+          "state": "converted",
+          "raw": "0A 00",
+          "numeric": "1",
+          "unit_label": "L",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "minimum_volume": {
+          "state": "raw",
+          "raw": "FF FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "maximum_volume": {
+          "state": "raw",
+          "raw": "01 02",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "family-b524",
+      "selection": {
+        "family": "B524",
+        "variant": "alpha",
+        "operation": "59",
+        "direction": "response"
+      },
+      "slices": {
+        "temperature": "F0 FF",
+        "flow": "64 00",
+        "volume": "0A 00",
+        "minimum_volume": "FF FF",
+        "maximum_volume": "01"
+      },
+      "admitted": false,
+      "fields": {
+        "temperature": {
+          "state": "withheld",
+          "raw": "F0 FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "flow": {
+          "state": "withheld",
+          "raw": "64 00",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "volume": {
+          "state": "withheld",
+          "raw": "0A 00",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "minimum_volume": {
+          "state": "raw",
+          "raw": "FF FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "maximum_volume": {
+          "state": "raw",
+          "raw": "01",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "family-lowercase",
+      "selection": {
+        "family": "b509",
+        "variant": "alpha",
+        "operation": "59",
+        "direction": "response"
+      },
+      "slices": {
+        "temperature": "F0 FF",
+        "flow": "64 00",
+        "volume": "0A 00",
+        "minimum_volume": "FF FF",
+        "maximum_volume": "01"
+      },
+      "admitted": false,
+      "fields": {
+        "temperature": {
+          "state": "withheld",
+          "raw": "F0 FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "flow": {
+          "state": "withheld",
+          "raw": "64 00",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "volume": {
+          "state": "withheld",
+          "raw": "0A 00",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "minimum_volume": {
+          "state": "raw",
+          "raw": "FF FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "maximum_volume": {
+          "state": "raw",
+          "raw": "01",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "family-omitted",
+      "selection": {
+        "family": null,
+        "variant": "alpha",
+        "operation": "59",
+        "direction": "response"
+      },
+      "slices": {
+        "temperature": "F0 FF",
+        "flow": "64 00",
+        "volume": "0A 00",
+        "minimum_volume": "FF FF",
+        "maximum_volume": "01"
+      },
+      "admitted": false,
+      "fields": {
+        "temperature": {
+          "state": "withheld",
+          "raw": "F0 FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "flow": {
+          "state": "withheld",
+          "raw": "64 00",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "volume": {
+          "state": "withheld",
+          "raw": "0A 00",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "minimum_volume": {
+          "state": "raw",
+          "raw": "FF FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "maximum_volume": {
+          "state": "raw",
+          "raw": "01",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "variant-beta",
+      "selection": {
+        "family": "B509",
+        "variant": "beta",
+        "operation": "59",
+        "direction": "response"
+      },
+      "slices": {
+        "temperature": "F0 FF",
+        "flow": "64 00",
+        "volume": "0A 00",
+        "minimum_volume": "FF FF",
+        "maximum_volume": "01"
+      },
+      "admitted": true,
+      "fields": {
+        "temperature": {
+          "state": "converted",
+          "raw": "F0 FF",
+          "numeric": "-1",
+          "unit_label": "°C",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "flow": {
+          "state": "converted",
+          "raw": "64 00",
+          "numeric": "1",
+          "unit_label": "L/min",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "volume": {
+          "state": "converted",
+          "raw": "0A 00",
+          "numeric": "1",
+          "unit_label": "L",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "minimum_volume": {
+          "state": "raw",
+          "raw": "FF FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "maximum_volume": {
+          "state": "raw",
+          "raw": "01",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "variant-empty",
+      "selection": {
+        "family": "B509",
+        "variant": "",
+        "operation": "59",
+        "direction": "response"
+      },
+      "slices": {
+        "temperature": "F0 FF",
+        "flow": "64 00",
+        "volume": "0A 00",
+        "minimum_volume": "FF FF",
+        "maximum_volume": "01"
+      },
+      "admitted": false,
+      "fields": {
+        "temperature": {
+          "state": "withheld",
+          "raw": "F0 FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "flow": {
+          "state": "withheld",
+          "raw": "64 00",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "volume": {
+          "state": "withheld",
+          "raw": "0A 00",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "minimum_volume": {
+          "state": "raw",
+          "raw": "FF FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "maximum_volume": {
+          "state": "raw",
+          "raw": "01",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "variant-omitted",
+      "selection": {
+        "family": "B509",
+        "variant": null,
+        "operation": "59",
+        "direction": "response"
+      },
+      "slices": {
+        "temperature": "F0 FF",
+        "flow": "64 00",
+        "volume": "0A 00",
+        "minimum_volume": "FF FF",
+        "maximum_volume": "01"
+      },
+      "admitted": false,
+      "fields": {
+        "temperature": {
+          "state": "withheld",
+          "raw": "F0 FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "flow": {
+          "state": "withheld",
+          "raw": "64 00",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "volume": {
+          "state": "withheld",
+          "raw": "0A 00",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "minimum_volume": {
+          "state": "raw",
+          "raw": "FF FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "maximum_volume": {
+          "state": "raw",
+          "raw": "01",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "operation-58",
+      "selection": {
+        "family": "B509",
+        "variant": "alpha",
+        "operation": "58",
+        "direction": "response"
+      },
+      "slices": {
+        "temperature": "F0 FF",
+        "flow": "64 00",
+        "volume": "0A 00",
+        "minimum_volume": "FF FF",
+        "maximum_volume": "01"
+      },
+      "admitted": false,
+      "fields": {
+        "temperature": {
+          "state": "withheld",
+          "raw": "F0 FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "flow": {
+          "state": "withheld",
+          "raw": "64 00",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "volume": {
+          "state": "withheld",
+          "raw": "0A 00",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "minimum_volume": {
+          "state": "raw",
+          "raw": "FF FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "maximum_volume": {
+          "state": "raw",
+          "raw": "01",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "operation-omitted",
+      "selection": {
+        "family": "B509",
+        "variant": "alpha",
+        "operation": null,
+        "direction": "response"
+      },
+      "slices": {
+        "temperature": "F0 FF",
+        "flow": "64 00",
+        "volume": "0A 00",
+        "minimum_volume": "FF FF",
+        "maximum_volume": "01"
+      },
+      "admitted": false,
+      "fields": {
+        "temperature": {
+          "state": "withheld",
+          "raw": "F0 FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "flow": {
+          "state": "withheld",
+          "raw": "64 00",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "volume": {
+          "state": "withheld",
+          "raw": "0A 00",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "minimum_volume": {
+          "state": "raw",
+          "raw": "FF FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "maximum_volume": {
+          "state": "raw",
+          "raw": "01",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "direction-request",
+      "selection": {
+        "family": "B509",
+        "variant": "alpha",
+        "operation": "59",
+        "direction": "request"
+      },
+      "slices": {
+        "temperature": "F0 FF",
+        "flow": "64 00",
+        "volume": "0A 00",
+        "minimum_volume": "FF FF",
+        "maximum_volume": "01"
+      },
+      "admitted": true,
+      "fields": {
+        "temperature": {
+          "state": "converted",
+          "raw": "F0 FF",
+          "numeric": "-1",
+          "unit_label": "°C",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "flow": {
+          "state": "converted",
+          "raw": "64 00",
+          "numeric": "1",
+          "unit_label": "L/min",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "volume": {
+          "state": "converted",
+          "raw": "0A 00",
+          "numeric": "1",
+          "unit_label": "L",
+          "numeric_grade": "Proven",
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "minimum_volume": {
+          "state": "raw",
+          "raw": "FF FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "maximum_volume": {
+          "state": "raw",
+          "raw": "01",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "direction-other",
+      "selection": {
+        "family": "B509",
+        "variant": "alpha",
+        "operation": "59",
+        "direction": "other"
+      },
+      "slices": {
+        "temperature": "F0 FF",
+        "flow": "64 00",
+        "volume": "0A 00",
+        "minimum_volume": "FF FF",
+        "maximum_volume": "01"
+      },
+      "admitted": false,
+      "fields": {
+        "temperature": {
+          "state": "withheld",
+          "raw": "F0 FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "flow": {
+          "state": "withheld",
+          "raw": "64 00",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "volume": {
+          "state": "withheld",
+          "raw": "0A 00",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "minimum_volume": {
+          "state": "raw",
+          "raw": "FF FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "maximum_volume": {
+          "state": "raw",
+          "raw": "01",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "direction-empty",
+      "selection": {
+        "family": "B509",
+        "variant": "alpha",
+        "operation": "59",
+        "direction": ""
+      },
+      "slices": {
+        "temperature": "F0 FF",
+        "flow": "64 00",
+        "volume": "0A 00",
+        "minimum_volume": "FF FF",
+        "maximum_volume": "01"
+      },
+      "admitted": false,
+      "fields": {
+        "temperature": {
+          "state": "withheld",
+          "raw": "F0 FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "flow": {
+          "state": "withheld",
+          "raw": "64 00",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "volume": {
+          "state": "withheld",
+          "raw": "0A 00",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "minimum_volume": {
+          "state": "raw",
+          "raw": "FF FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "maximum_volume": {
+          "state": "raw",
+          "raw": "01",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "direction-omitted",
+      "selection": {
+        "family": "B509",
+        "variant": "alpha",
+        "operation": "59",
+        "direction": null
+      },
+      "slices": {
+        "temperature": "F0 FF",
+        "flow": "64 00",
+        "volume": "0A 00",
+        "minimum_volume": "FF FF",
+        "maximum_volume": "01"
+      },
+      "admitted": false,
+      "fields": {
+        "temperature": {
+          "state": "withheld",
+          "raw": "F0 FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "flow": {
+          "state": "withheld",
+          "raw": "64 00",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "volume": {
+          "state": "withheld",
+          "raw": "0A 00",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "minimum_volume": {
+          "state": "raw",
+          "raw": "FF FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "maximum_volume": {
+          "state": "raw",
+          "raw": "01",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "rejected-family-truncated-temperature",
+      "selection": {
+        "family": "B524",
+        "variant": "alpha",
+        "operation": "59",
+        "direction": "response"
+      },
+      "slices": {
+        "temperature": "F0",
+        "flow": "64 00",
+        "volume": "0A 00",
+        "minimum_volume": "FF FF",
+        "maximum_volume": "01"
+      },
+      "admitted": false,
+      "fields": {
+        "temperature": {
+          "state": "malformed",
+          "raw": "F0",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "flow": {
+          "state": "withheld",
+          "raw": "64 00",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "volume": {
+          "state": "withheld",
+          "raw": "0A 00",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "minimum_volume": {
+          "state": "raw",
+          "raw": "FF FF",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        },
+        "maximum_volume": {
+          "state": "raw",
+          "raw": "01",
+          "numeric": null,
+          "unit_label": null,
+          "numeric_grade": null,
+          "semantic_grade": "Hypothesis",
+          "native_grade": "Unknown"
+        }
+      }
+    }
+  ]
+}
