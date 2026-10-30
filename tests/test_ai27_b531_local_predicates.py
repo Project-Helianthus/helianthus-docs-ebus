@@ -55,7 +55,8 @@ def uint(value, maximum):
 
 def transition(registered, prior, result):
     events = [('store', 'FFFF')]
-    if not uint(registered, U32) or not registered or not uint(prior, U32):
+    if (not uint(registered, U32) or not registered or not uint(prior, U32)
+            or type(result) is not int):
         outcome = UNKNOWN
     elif result == 0:
         outcome = 0
@@ -68,6 +69,8 @@ def transition(registered, prior, result):
 
 
 def helper(value):
+    if not uint(value, U32):
+        return UNKNOWN
     return bool(value & 1)
 
 
@@ -89,9 +92,9 @@ def ordinary_sums(entries):
             continue  # Its separate branch has no supplied formula.
         if not all(uint(v, U32) for v in (registered, capability, failure)):
             return UNKNOWN
+        if not uint(token, U64) or not uint(limit, U64):
+            return UNKNOWN
         if registered != 0 and capability != 0 and failure == 0:
-            if not uint(token, U64) or not uint(limit, U64):
-                return UNKNOWN
             selected.append(index)
             tokens += token
             maximum += limit
@@ -151,6 +154,19 @@ class CandidatePredicates(unittest.TestCase):
                              [('store', 'FFFF'), ('capability', UNKNOWN)])
         self.assertEqual(transition(2, U32, 1)[1], ('capability', U32))
 
+    def test_transition_rejects_non_integer_results(self):
+        for result in (True, False, 0.0, 1.0, '1', None):
+            with self.subTest(result=result):
+                self.assertEqual(transition(1, 2, result),
+                                 [('store', 'FFFF'), ('capability', UNKNOWN)])
+
+    def test_helper_unsigned_range(self):
+        for value, expected in ((0, False), (1, True), (2, False), (U32, True)):
+            self.assertIs(helper(value), expected)
+        for invalid in (-1, U32 + 1, True, False, 1.0, '1', None):
+            with self.subTest(invalid=invalid):
+                self.assertEqual(helper(invalid), UNKNOWN)
+
     def test_selector_fields_independently(self):
         for name, a, b, c, expected in self.fixture['selectors']:
             with self.subTest(case=name):
@@ -193,6 +209,15 @@ class CandidatePredicates(unittest.TestCase):
         self.assertEqual(ordinary_sums([[0, 1, 1, 0, U64, U64],
                                        [2, 1, 1, 0, 1, 1]]), UNKNOWN)
         self.assertEqual(ordinary_sums([control, control]), UNKNOWN)
+
+    def test_ordinary_token_bounds_before_eligibility(self):
+        for status in ((1, 1, 0), (0, 1, 0), (1, 0, 0), (1, 1, 1)):
+            for axis in (4, 5):
+                for invalid in (-1, U64 + 1, True, False, 1.0, '1', None):
+                    with self.subTest(status=status, axis=axis, invalid=invalid):
+                        row = [0, *status, 1, 1]
+                        row[axis] = invalid
+                        self.assertEqual(ordinary_sums([row]), UNKNOWN)
 
     def test_limit_comparison_and_unsigned_ranges(self):
         for name, tokens, maximum, limited, expected in self.fixture['limits']:
