@@ -1,0 +1,1410 @@
+{
+  "id": "an24_b51b_local_budget_crc",
+  "family": "B51B",
+  "api": "ab23an23",
+  "stability": "pre_1_0",
+  "companion": "AN23",
+  "parent_issue": 736,
+  "executor_added": false,
+  "authorization_gate_added": false,
+  "signatures": {
+    "plan": "PlanLocalBudget(procedure, input) -> (procedure, chunks, consumed, unplanned)",
+    "progress": "AdvanceLocalProgress(prior, accepted, actual) -> (outcome, last_known_good, next)",
+    "checksum": "LocalChecksum(payload, start, length, initial) -> (outcome, value, raw, start, length)"
+  },
+  "boundary": {
+    "transfer_client": "false",
+    "programming_command": "false",
+    "framing": "false",
+    "io": "false",
+    "timeout": "false",
+    "routing": "false",
+    "executor": "false",
+    "authorization_gate": "false"
+  },
+  "policy": {
+    "alias_chunk_buffers": "false",
+    "auto_plan_later_groups": "false",
+    "copy_slices": "true",
+    "crc.bit_order": "msb_first",
+    "crc.byte_swap": "false",
+    "crc.covers": "caller_selected_span_only",
+    "crc.extra_byte": "false",
+    "crc.final_xor": "0",
+    "crc.initial_default": "65535",
+    "crc.polynomial": "4129",
+    "crc.reflect_input": "false",
+    "crc.reflect_output": "false",
+    "crc.returns": "numeric_only",
+    "grouped_1024.chunk_caps": "206,206,206,206,200",
+    "grouped_1024.group_limit": "1024",
+    "grouped_1024.groups_per_call": "1",
+    "grouped_1024.inherits_grouped_1024": "false",
+    "grouped_1024.slot_role": "chunks",
+    "peer_empty_packet_claim": "false",
+    "progress.advances_on_rejected": "false",
+    "progress.bool_is_integer": "false",
+    "progress.buffer_offset_from_byte_progress": "false",
+    "progress.buffer_offset_from_chunk_index": "false",
+    "progress.overflow": "reject",
+    "progress.width_bits": "64",
+    "raw_rule": "(i * 17 + 3) & 255",
+    "single_205.chunk_caps": "205",
+    "single_205.group_limit": "none",
+    "single_205.groups_per_call": "1",
+    "single_205.inherits_grouped_1024": "false",
+    "single_205.slot_role": "chunks"
+  },
+  "unknowns": [
+    {
+      "topic": "peer_append",
+      "evidence_grade": "Unknown",
+      "semantic_grade": "Unknown",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "topic": "erase_geometry",
+      "evidence_grade": "Unknown",
+      "semantic_grade": "Unknown",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "topic": "segment_identity",
+      "evidence_grade": "Unknown",
+      "semantic_grade": "Unknown",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "topic": "physical_capacities",
+      "evidence_grade": "Unknown",
+      "semantic_grade": "Unknown",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "topic": "native_crc",
+      "evidence_grade": "Unknown",
+      "semantic_grade": "Unknown",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "topic": "repeated_group_scheduling",
+      "evidence_grade": "Unknown",
+      "semantic_grade": "Unknown",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "topic": "persistence",
+      "evidence_grade": "Unknown",
+      "semantic_grade": "Unknown",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "topic": "support",
+      "evidence_grade": "Unknown",
+      "semantic_grade": "Unknown",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    }
+  ],
+  "examples": [
+    {
+      "id": "grouped_1024_exact",
+      "procedure": "grouped_1024",
+      "raw": {
+        "form": "rule",
+        "length": 1024
+      },
+      "selection": {
+        "kind": "input",
+        "start": 0,
+        "length": 1024
+      },
+      "context": "first_group",
+      "outcome": "planned",
+      "reason": null,
+      "result": {
+        "chunk_lengths": [
+          206,
+          206,
+          206,
+          206,
+          200
+        ],
+        "consumed": 1024,
+        "unplanned": 0
+      },
+      "numeric_grade": "Proven",
+      "semantic_grade": "Proven",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "id": "grouped_1025_unplanned",
+      "procedure": "grouped_1024",
+      "raw": {
+        "form": "rule",
+        "length": 1025
+      },
+      "selection": {
+        "kind": "input",
+        "start": 0,
+        "length": 1025
+      },
+      "context": "unplanned_remainder",
+      "outcome": "planned",
+      "reason": null,
+      "result": {
+        "chunk_lengths": [
+          206,
+          206,
+          206,
+          206,
+          200
+        ],
+        "consumed": 1024,
+        "unplanned": 1
+      },
+      "numeric_grade": "Proven",
+      "semantic_grade": "Proven",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "id": "grouped_2048_one_group",
+      "procedure": "grouped_1024",
+      "raw": {
+        "form": "rule",
+        "length": 2048
+      },
+      "selection": {
+        "kind": "input",
+        "start": 0,
+        "length": 2048
+      },
+      "context": "later_group_not_planned",
+      "outcome": "planned",
+      "reason": null,
+      "result": {
+        "chunk_lengths": [
+          206,
+          206,
+          206,
+          206,
+          200
+        ],
+        "consumed": 1024,
+        "unplanned": 1024
+      },
+      "numeric_grade": "Proven",
+      "semantic_grade": "Proven",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "id": "grouped_824_four_chunks",
+      "procedure": "grouped_1024",
+      "raw": {
+        "form": "rule",
+        "length": 824
+      },
+      "selection": {
+        "kind": "input",
+        "start": 0,
+        "length": 824
+      },
+      "context": "four_chunks_no_fifth",
+      "outcome": "planned",
+      "reason": null,
+      "result": {
+        "chunk_lengths": [
+          206,
+          206,
+          206,
+          206
+        ],
+        "consumed": 824,
+        "unplanned": 0
+      },
+      "numeric_grade": "Proven",
+      "semantic_grade": "Proven",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "id": "grouped_825_short_fifth",
+      "procedure": "grouped_1024",
+      "raw": {
+        "form": "rule",
+        "length": 825
+      },
+      "selection": {
+        "kind": "input",
+        "start": 0,
+        "length": 825
+      },
+      "context": "short_fifth_chunk",
+      "outcome": "planned",
+      "reason": null,
+      "result": {
+        "chunk_lengths": [
+          206,
+          206,
+          206,
+          206,
+          1
+        ],
+        "consumed": 825,
+        "unplanned": 0
+      },
+      "numeric_grade": "Proven",
+      "semantic_grade": "Proven",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "id": "grouped_207_short_second",
+      "procedure": "grouped_1024",
+      "raw": {
+        "form": "rule",
+        "length": 207
+      },
+      "selection": {
+        "kind": "input",
+        "start": 0,
+        "length": 207
+      },
+      "context": "short_second_chunk",
+      "outcome": "planned",
+      "reason": null,
+      "result": {
+        "chunk_lengths": [
+          206,
+          1
+        ],
+        "consumed": 207,
+        "unplanned": 0
+      },
+      "numeric_grade": "Proven",
+      "semantic_grade": "Proven",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "id": "grouped_three_byte_hex",
+      "procedure": "grouped_1024",
+      "raw": {
+        "form": "hex",
+        "hex": "00ff10"
+      },
+      "selection": {
+        "kind": "input",
+        "start": 0,
+        "length": 3
+      },
+      "context": "short_input",
+      "outcome": "planned",
+      "reason": null,
+      "result": {
+        "chunk_lengths": [
+          3
+        ],
+        "consumed": 3,
+        "unplanned": 0
+      },
+      "numeric_grade": "Proven",
+      "semantic_grade": "Proven",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "id": "empty_grouped",
+      "procedure": "grouped_1024",
+      "raw": {
+        "form": "rule",
+        "length": 0
+      },
+      "selection": {
+        "kind": "input",
+        "start": 0,
+        "length": 0
+      },
+      "context": "no_peer_empty_packet",
+      "outcome": "planned",
+      "reason": null,
+      "result": {
+        "chunk_lengths": [],
+        "consumed": 0,
+        "unplanned": 0
+      },
+      "numeric_grade": "Proven",
+      "semantic_grade": "Proven",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "id": "single_205_over_206",
+      "procedure": "single_205",
+      "raw": {
+        "form": "rule",
+        "length": 206
+      },
+      "selection": {
+        "kind": "input",
+        "start": 0,
+        "length": 206
+      },
+      "context": "single_chunk_remainder",
+      "outcome": "planned",
+      "reason": null,
+      "result": {
+        "chunk_lengths": [
+          205
+        ],
+        "consumed": 205,
+        "unplanned": 1
+      },
+      "numeric_grade": "Proven",
+      "semantic_grade": "Proven",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "id": "single_205_exact",
+      "procedure": "single_205",
+      "raw": {
+        "form": "rule",
+        "length": 205
+      },
+      "selection": {
+        "kind": "input",
+        "start": 0,
+        "length": 205
+      },
+      "context": "exact_single_chunk",
+      "outcome": "planned",
+      "reason": null,
+      "result": {
+        "chunk_lengths": [
+          205
+        ],
+        "consumed": 205,
+        "unplanned": 0
+      },
+      "numeric_grade": "Proven",
+      "semantic_grade": "Proven",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "id": "single_205_over_1024",
+      "procedure": "single_205",
+      "raw": {
+        "form": "rule",
+        "length": 1024
+      },
+      "selection": {
+        "kind": "input",
+        "start": 0,
+        "length": 1024
+      },
+      "context": "group_policy_not_inherited",
+      "outcome": "planned",
+      "reason": null,
+      "result": {
+        "chunk_lengths": [
+          205
+        ],
+        "consumed": 205,
+        "unplanned": 819
+      },
+      "numeric_grade": "Proven",
+      "semantic_grade": "Proven",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "id": "empty_single_205",
+      "procedure": "single_205",
+      "raw": {
+        "form": "rule",
+        "length": 0
+      },
+      "selection": {
+        "kind": "input",
+        "start": 0,
+        "length": 0
+      },
+      "context": "no_peer_empty_packet",
+      "outcome": "planned",
+      "reason": null,
+      "result": {
+        "chunk_lengths": [],
+        "consumed": 0,
+        "unplanned": 0
+      },
+      "numeric_grade": "Proven",
+      "semantic_grade": "Proven",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "id": "unknown_procedure",
+      "procedure": "other",
+      "raw": {
+        "form": "hex",
+        "hex": "00ff10"
+      },
+      "selection": {
+        "kind": "input",
+        "start": 0,
+        "length": 3
+      },
+      "context": "supplied_procedure",
+      "outcome": "rejected",
+      "reason": "unknown_procedure",
+      "result": {
+        "chunk_lengths": [],
+        "consumed": 0,
+        "unplanned": 3,
+        "raw": "kept"
+      },
+      "numeric_grade": "Proven",
+      "semantic_grade": "Proven",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "id": "progress_accept_10_17",
+      "procedure": null,
+      "raw": {
+        "form": "none"
+      },
+      "selection": {
+        "kind": "progress",
+        "prior": 10,
+        "accepted": true,
+        "actual": 17
+      },
+      "context": "accepted_chunk",
+      "outcome": "advanced",
+      "reason": null,
+      "result": {
+        "last_known_good": 10,
+        "next": 27
+      },
+      "numeric_grade": "Hypothesis",
+      "semantic_grade": "Hypothesis",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "id": "progress_reject_10_17",
+      "procedure": null,
+      "raw": {
+        "form": "none"
+      },
+      "selection": {
+        "kind": "progress",
+        "prior": 10,
+        "accepted": false,
+        "actual": 17
+      },
+      "context": "rejected_chunk",
+      "outcome": "unchanged",
+      "reason": null,
+      "result": {
+        "last_known_good": 10,
+        "next": 10
+      },
+      "numeric_grade": "Hypothesis",
+      "semantic_grade": "Hypothesis",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "id": "progress_actual_16",
+      "procedure": null,
+      "raw": {
+        "form": "none"
+      },
+      "selection": {
+        "kind": "progress",
+        "prior": 10,
+        "accepted": true,
+        "actual": 16
+      },
+      "context": "actual_length",
+      "outcome": "advanced",
+      "reason": null,
+      "result": {
+        "last_known_good": 10,
+        "next": 26
+      },
+      "numeric_grade": "Hypothesis",
+      "semantic_grade": "Hypothesis",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "id": "progress_actual_0",
+      "procedure": null,
+      "raw": {
+        "form": "none"
+      },
+      "selection": {
+        "kind": "progress",
+        "prior": 10,
+        "accepted": true,
+        "actual": 0
+      },
+      "context": "zero_actual",
+      "outcome": "unchanged",
+      "reason": null,
+      "result": {
+        "last_known_good": 10,
+        "next": 10
+      },
+      "numeric_grade": "Hypothesis",
+      "semantic_grade": "Hypothesis",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "id": "progress_prior_11",
+      "procedure": null,
+      "raw": {
+        "form": "none"
+      },
+      "selection": {
+        "kind": "progress",
+        "prior": 11,
+        "accepted": true,
+        "actual": 17
+      },
+      "context": "prior_count",
+      "outcome": "advanced",
+      "reason": null,
+      "result": {
+        "last_known_good": 11,
+        "next": 28
+      },
+      "numeric_grade": "Hypothesis",
+      "semantic_grade": "Hypothesis",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "id": "progress_overflow",
+      "procedure": null,
+      "raw": {
+        "form": "none"
+      },
+      "selection": {
+        "kind": "progress",
+        "prior": 18446744073709551615,
+        "accepted": true,
+        "actual": 1
+      },
+      "context": "overflow",
+      "outcome": "rejected",
+      "reason": "overflow",
+      "result": {
+        "last_known_good": 18446744073709551615,
+        "next": null
+      },
+      "numeric_grade": "Hypothesis",
+      "semantic_grade": "Hypothesis",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "id": "progress_reject_at_limit",
+      "procedure": null,
+      "raw": {
+        "form": "none"
+      },
+      "selection": {
+        "kind": "progress",
+        "prior": 18446744073709551615,
+        "accepted": false,
+        "actual": 1
+      },
+      "context": "rejected_at_limit",
+      "outcome": "unchanged",
+      "reason": null,
+      "result": {
+        "last_known_good": 18446744073709551615,
+        "next": 18446744073709551615
+      },
+      "numeric_grade": "Hypothesis",
+      "semantic_grade": "Hypothesis",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "id": "progress_negative_actual",
+      "procedure": null,
+      "raw": {
+        "form": "none"
+      },
+      "selection": {
+        "kind": "progress",
+        "prior": 10,
+        "accepted": true,
+        "actual": -1
+      },
+      "context": "negative_actual",
+      "outcome": "rejected",
+      "reason": "negative_count",
+      "result": {
+        "last_known_good": 10,
+        "next": null
+      },
+      "numeric_grade": "Hypothesis",
+      "semantic_grade": "Hypothesis",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "id": "progress_negative_prior",
+      "procedure": null,
+      "raw": {
+        "form": "none"
+      },
+      "selection": {
+        "kind": "progress",
+        "prior": -1,
+        "accepted": true,
+        "actual": 17
+      },
+      "context": "negative_prior",
+      "outcome": "rejected",
+      "reason": "negative_count",
+      "result": {
+        "last_known_good": null,
+        "next": null
+      },
+      "numeric_grade": "Hypothesis",
+      "semantic_grade": "Hypothesis",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "id": "progress_negative_actual_while_rejected",
+      "procedure": null,
+      "raw": {
+        "form": "none"
+      },
+      "selection": {
+        "kind": "progress",
+        "prior": 10,
+        "accepted": false,
+        "actual": -1
+      },
+      "context": "negative_actual_while_rejected",
+      "outcome": "rejected",
+      "reason": "negative_count",
+      "result": {
+        "last_known_good": 10,
+        "next": null
+      },
+      "numeric_grade": "Hypothesis",
+      "semantic_grade": "Hypothesis",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "id": "crc_digits_default",
+      "procedure": null,
+      "raw": {
+        "form": "ascii",
+        "text": "123456789"
+      },
+      "selection": {
+        "kind": "span",
+        "start": 0,
+        "length": 9,
+        "initial": null
+      },
+      "context": "caller_selected_span",
+      "outcome": "checksum",
+      "reason": null,
+      "result": {
+        "raw": "kept",
+        "value": "29B1"
+      },
+      "numeric_grade": "Hypothesis",
+      "semantic_grade": "Hypothesis",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "id": "crc_empty_default",
+      "procedure": null,
+      "raw": {
+        "form": "ascii",
+        "text": ""
+      },
+      "selection": {
+        "kind": "span",
+        "start": 0,
+        "length": 0,
+        "initial": null
+      },
+      "context": "empty_selection",
+      "outcome": "checksum",
+      "reason": null,
+      "result": {
+        "raw": "kept",
+        "value": "FFFF"
+      },
+      "numeric_grade": "Hypothesis",
+      "semantic_grade": "Hypothesis",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "id": "crc_digits_initial_0",
+      "procedure": null,
+      "raw": {
+        "form": "ascii",
+        "text": "123456789"
+      },
+      "selection": {
+        "kind": "span",
+        "start": 0,
+        "length": 9,
+        "initial": 0
+      },
+      "context": "explicit_initial",
+      "outcome": "checksum",
+      "reason": null,
+      "result": {
+        "raw": "kept",
+        "value": "31C3"
+      },
+      "numeric_grade": "Hypothesis",
+      "semantic_grade": "Hypothesis",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "id": "crc_explicit_default_initial",
+      "procedure": null,
+      "raw": {
+        "form": "ascii",
+        "text": "123456789"
+      },
+      "selection": {
+        "kind": "span",
+        "start": 0,
+        "length": 9,
+        "initial": 65535
+      },
+      "context": "explicit_initial",
+      "outcome": "checksum",
+      "reason": null,
+      "result": {
+        "raw": "kept",
+        "value": "29B1"
+      },
+      "numeric_grade": "Hypothesis",
+      "semantic_grade": "Hypothesis",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "id": "crc_empty_initial_0",
+      "procedure": null,
+      "raw": {
+        "form": "ascii",
+        "text": ""
+      },
+      "selection": {
+        "kind": "span",
+        "start": 0,
+        "length": 0,
+        "initial": 0
+      },
+      "context": "explicit_initial",
+      "outcome": "checksum",
+      "reason": null,
+      "result": {
+        "raw": "kept",
+        "value": "0000"
+      },
+      "numeric_grade": "Hypothesis",
+      "semantic_grade": "Hypothesis",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "id": "crc_span_length_8",
+      "procedure": null,
+      "raw": {
+        "form": "ascii",
+        "text": "123456789"
+      },
+      "selection": {
+        "kind": "span",
+        "start": 0,
+        "length": 8,
+        "initial": null
+      },
+      "context": "caller_selected_span",
+      "outcome": "checksum",
+      "reason": null,
+      "result": {
+        "raw": "kept",
+        "value": "A12B"
+      },
+      "numeric_grade": "Hypothesis",
+      "semantic_grade": "Hypothesis",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "id": "crc_span_start_1",
+      "procedure": null,
+      "raw": {
+        "form": "ascii",
+        "text": "123456789"
+      },
+      "selection": {
+        "kind": "span",
+        "start": 1,
+        "length": 8,
+        "initial": null
+      },
+      "context": "caller_selected_span",
+      "outcome": "checksum",
+      "reason": null,
+      "result": {
+        "raw": "kept",
+        "value": "1FDC"
+      },
+      "numeric_grade": "Hypothesis",
+      "semantic_grade": "Hypothesis",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "id": "crc_initial_1",
+      "procedure": null,
+      "raw": {
+        "form": "ascii",
+        "text": "123456789"
+      },
+      "selection": {
+        "kind": "span",
+        "start": 0,
+        "length": 9,
+        "initial": 1
+      },
+      "context": "explicit_initial",
+      "outcome": "checksum",
+      "reason": null,
+      "result": {
+        "raw": "kept",
+        "value": "7610"
+      },
+      "numeric_grade": "Hypothesis",
+      "semantic_grade": "Hypothesis",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "id": "crc_negative_length",
+      "procedure": null,
+      "raw": {
+        "form": "ascii",
+        "text": "123456789"
+      },
+      "selection": {
+        "kind": "span",
+        "start": 0,
+        "length": -1,
+        "initial": null
+      },
+      "context": "malformed_span",
+      "outcome": "rejected",
+      "reason": "negative_span",
+      "result": {
+        "raw": "kept",
+        "value": null
+      },
+      "numeric_grade": "Hypothesis",
+      "semantic_grade": "Hypothesis",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "id": "crc_negative_start",
+      "procedure": null,
+      "raw": {
+        "form": "ascii",
+        "text": "123456789"
+      },
+      "selection": {
+        "kind": "span",
+        "start": -1,
+        "length": 9,
+        "initial": null
+      },
+      "context": "malformed_span",
+      "outcome": "rejected",
+      "reason": "negative_span",
+      "result": {
+        "raw": "kept",
+        "value": null
+      },
+      "numeric_grade": "Hypothesis",
+      "semantic_grade": "Hypothesis",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "id": "crc_span_past_end",
+      "procedure": null,
+      "raw": {
+        "form": "ascii",
+        "text": "123456789"
+      },
+      "selection": {
+        "kind": "span",
+        "start": 0,
+        "length": 10,
+        "initial": null
+      },
+      "context": "span_out_of_range",
+      "outcome": "rejected",
+      "reason": "span_out_of_range",
+      "result": {
+        "raw": "kept",
+        "value": null
+      },
+      "numeric_grade": "Hypothesis",
+      "semantic_grade": "Hypothesis",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "id": "crc_empty_span_at_end",
+      "procedure": null,
+      "raw": {
+        "form": "ascii",
+        "text": "123456789"
+      },
+      "selection": {
+        "kind": "span",
+        "start": 9,
+        "length": 0,
+        "initial": null
+      },
+      "context": "empty_selection",
+      "outcome": "checksum",
+      "reason": null,
+      "result": {
+        "raw": "kept",
+        "value": "FFFF"
+      },
+      "numeric_grade": "Hypothesis",
+      "semantic_grade": "Hypothesis",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "id": "crc_flip_byte_0",
+      "procedure": null,
+      "raw": {
+        "form": "hex",
+        "hex": "303233343536373839"
+      },
+      "selection": {
+        "kind": "span",
+        "start": 0,
+        "length": 9,
+        "initial": null
+      },
+      "context": "mutated_input_byte",
+      "outcome": "checksum",
+      "reason": null,
+      "result": {
+        "raw": "kept",
+        "value": "C292"
+      },
+      "numeric_grade": "Hypothesis",
+      "semantic_grade": "Hypothesis",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "id": "crc_flip_byte_1",
+      "procedure": null,
+      "raw": {
+        "form": "hex",
+        "hex": "313333343536373839"
+      },
+      "selection": {
+        "kind": "span",
+        "start": 0,
+        "length": 9,
+        "initial": null
+      },
+      "context": "mutated_input_byte",
+      "outcome": "checksum",
+      "reason": null,
+      "result": {
+        "raw": "kept",
+        "value": "6E62"
+      },
+      "numeric_grade": "Hypothesis",
+      "semantic_grade": "Hypothesis",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "id": "crc_flip_byte_2",
+      "procedure": null,
+      "raw": {
+        "form": "hex",
+        "hex": "313232343536373839"
+      },
+      "selection": {
+        "kind": "span",
+        "start": 0,
+        "length": 9,
+        "initial": null
+      },
+      "context": "mutated_input_byte",
+      "outcome": "checksum",
+      "reason": null,
+      "result": {
+        "raw": "kept",
+        "value": "91D0"
+      },
+      "numeric_grade": "Hypothesis",
+      "semantic_grade": "Hypothesis",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "id": "crc_flip_byte_3",
+      "procedure": null,
+      "raw": {
+        "form": "hex",
+        "hex": "313233353536373839"
+      },
+      "selection": {
+        "kind": "span",
+        "start": 0,
+        "length": 9,
+        "initial": null
+      },
+      "context": "mutated_input_byte",
+      "outcome": "checksum",
+      "reason": null,
+      "result": {
+        "raw": "kept",
+        "value": "6C11"
+      },
+      "numeric_grade": "Hypothesis",
+      "semantic_grade": "Hypothesis",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "id": "crc_flip_byte_4",
+      "procedure": null,
+      "raw": {
+        "form": "hex",
+        "hex": "313233343436373839"
+      },
+      "selection": {
+        "kind": "span",
+        "start": 0,
+        "length": 9,
+        "initial": null
+      },
+      "context": "mutated_input_byte",
+      "outcome": "checksum",
+      "reason": null,
+      "result": {
+        "raw": "kept",
+        "value": "83E0"
+      },
+      "numeric_grade": "Hypothesis",
+      "semantic_grade": "Hypothesis",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "id": "crc_flip_byte_5",
+      "procedure": null,
+      "raw": {
+        "form": "hex",
+        "hex": "313233343537373839"
+      },
+      "selection": {
+        "kind": "span",
+        "start": 0,
+        "length": 9,
+        "initial": null
+      },
+      "context": "mutated_input_byte",
+      "outcome": "checksum",
+      "reason": null,
+      "result": {
+        "raw": "kept",
+        "value": "5F05"
+      },
+      "numeric_grade": "Hypothesis",
+      "semantic_grade": "Hypothesis",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "id": "crc_flip_byte_6",
+      "procedure": null,
+      "raw": {
+        "form": "hex",
+        "hex": "313233343536363839"
+      },
+      "selection": {
+        "kind": "span",
+        "start": 0,
+        "length": 9,
+        "initial": null
+      },
+      "context": "mutated_input_byte",
+      "outcome": "checksum",
+      "reason": null,
+      "result": {
+        "raw": "kept",
+        "value": "1E81"
+      },
+      "numeric_grade": "Hypothesis",
+      "semantic_grade": "Hypothesis",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "id": "crc_flip_byte_7",
+      "procedure": null,
+      "raw": {
+        "form": "hex",
+        "hex": "313233343536373939"
+      },
+      "selection": {
+        "kind": "span",
+        "start": 0,
+        "length": 9,
+        "initial": null
+      },
+      "context": "mutated_input_byte",
+      "outcome": "checksum",
+      "reason": null,
+      "result": {
+        "raw": "kept",
+        "value": "1A80"
+      },
+      "numeric_grade": "Hypothesis",
+      "semantic_grade": "Hypothesis",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    },
+    {
+      "id": "crc_flip_byte_8",
+      "procedure": null,
+      "raw": {
+        "form": "hex",
+        "hex": "313233343536373838"
+      },
+      "selection": {
+        "kind": "span",
+        "start": 0,
+        "length": 9,
+        "initial": null
+      },
+      "context": "mutated_input_byte",
+      "outcome": "checksum",
+      "reason": null,
+      "result": {
+        "raw": "kept",
+        "value": "3990"
+      },
+      "numeric_grade": "Hypothesis",
+      "semantic_grade": "Hypothesis",
+      "native_grade": "Unknown",
+      "physical_qualification": "Unknown",
+      "presence": "not_claimed",
+      "freshness": "not_applicable",
+      "execution": "not_run"
+    }
+  ],
+  "presence": "not_claimed",
+  "freshness": "not_applicable",
+  "physical_qualification": "Unknown",
+  "native_grade": "Unknown",
+  "execution": "not_run"
+}
