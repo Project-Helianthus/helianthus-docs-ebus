@@ -478,7 +478,7 @@ name is known; it does not mean that the register or a name does not exist.
 ## References
 
 - Public TypeSpec: [_templates.tsp](https://github.com/john30/ebusd-configuration/blob/HEAD/src/vaillant/_templates.tsp)
-- Public config corpus: [john30/ebusd-configuration](https://github.com/john30/ebusd-configuration/tree/HEAD/src/vaillant)
+- Public Vaillant configurations: [john30/ebusd-configuration](https://github.com/john30/ebusd-configuration/tree/HEAD/src/vaillant)
 - Boiler register map: [`ebus-vaillant-B509-boiler-register-map.md`](ebus-vaillant-B509-boiler-register-map.md)
 - Heat pump register map: [`ebus-vaillant-B509-heatpump-register-map.md`](ebus-vaillant-B509-heatpump-register-map.md)
 - Register name correspondence fixture: [`fixtures/b509-register-name-correspondence.csv`](fixtures/b509-register-name-correspondence.csv)
