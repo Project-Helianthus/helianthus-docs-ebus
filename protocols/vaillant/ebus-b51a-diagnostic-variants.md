@@ -111,10 +111,12 @@ established, including valid/invalid and normal/inverted combinations.
 | OP08 configuration | 1 initiator-spare, 2 target-spare; named default initiator-spare conflicts with raw default 0 | 0 and 3..255 unmapped | Hypothesis |
 | OP08 ownership | cross-device ownership | identity and persistence Unknown | Hypothesis |
 
+<!-- legacy-role-mapping:begin -->
 Role terminology follows the native framing contract: initiator corresponds to
 legacy master; target corresponds to legacy slave. Thus target-written and
 target-version preserve the slave-written/slave-version roles, and
 initiator-to-write and initiator-version preserve master-to-write/master-version.
+<!-- legacy-role-mapping:end -->
 The positive direction carries initiator-written and target-to-write instead.
 Configured-register forms and previously allocated storage/save forms remain
 outside this slice; sharing an operation byte does not merge their variants.
