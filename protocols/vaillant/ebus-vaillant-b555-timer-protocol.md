@@ -13,6 +13,9 @@
 
 This document specifies the eBUS B555 protocol used by **VRC720-family controllers only** for reading and writing weekly heating, DHW, and other timer/schedule programs.
 
+See the [numeric range and contextual units supplement](ebus-b555-numeric-units.md)
+for **Hypothesis** declarations and **Unknown** unit and sentinel contexts.
+
 > **CORRECTION (2026-04-14):** B555 is NOT used by VRC700. The original scope statement "VRC700/VRC720 series" was incorrect. VRC700 (device ID `70000`, including Saunier Duval `B7S00`) uses [B524 opcodes 0x03/0x04](./ebus-vaillant-B524.md#44-0x03--0x04-timer-schedules) for timer operations. The [VRC700 crosswalk](./ebus-vaillant-regulators.md#vrc700-operation-profile) adds model-row context without changing that command identity guard. Both device families share eBUS target address `0x15` but are different device classes with different timer transports.
 
 ### 1.0 Timer Transport Device Binding
