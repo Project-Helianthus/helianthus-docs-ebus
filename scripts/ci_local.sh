@@ -257,6 +257,7 @@ python3 -m pytest -q tests/test_ae04_b505_candidates.py
 
 echo "==> check B520 simulator actuator and ADC declarations"
 python3 -m pytest -q tests/test_ac20_simulator_adc.py
+python3 -m pytest -q tests/test_al20_b555_extent_views.py
 
 echo "==> check B509/B524 passive watch-policy documentation contract"
 python3 -m pytest -q tests/test_watch_policy_contract.py
