@@ -37,7 +37,7 @@ These signatures are hypothetical and are the names used for the whole contract.
 
 `PlanLocalBudget` copies input bytes into owned mutable chunk buffers and returns those chunks, the consumed count, and the unplanned count. The procedure identity is returned with them. Empty input returns no chunks. That result is not a peer-empty-packet claim.
 
-`AdvanceLocalProgress` is a pure transition. `accepted` false leaves a valid prior count unchanged. Adding a valid actual count that would exceed the unsigned width is rejected, and the prior count stays the last known good value. A negative prior or actual is rejected. The next count is absent when the transition is rejected.
+`AdvanceLocalProgress` is a pure transition. `accepted` false leaves a valid prior count unchanged. Adding a valid actual count that would exceed the unsigned width is rejected, and the prior count stays the last known good value. A negative prior or actual is rejected. An `accepted` value that is not a Boolean is rejected. The next count is absent when the transition is rejected.
 
 `LocalChecksum` covers exactly the caller-selected span and returns one numeric value. The raw payload, start, and length are kept when the span is rejected. The numeric value is absent in that case. The returned number is not a byte-swapped pair and not a framed field.
 

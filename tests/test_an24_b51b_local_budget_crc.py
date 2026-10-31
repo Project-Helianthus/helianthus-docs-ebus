@@ -742,6 +742,13 @@ def advance_with_rules(prior, accepted, actual, width_bits, overflow, add_when_r
             "next": None,
         }
     prior_known = prior_int if 0 <= prior_int < limit else None
+    if not isinstance(accepted, bool):
+        return {
+            "outcome": "rejected",
+            "reason": "malformed_boolean",
+            "last_known_good": prior_known,
+            "next": None,
+        }
     if prior_int < 0 or actual_int < 0:
         return {
             "outcome": "rejected",
@@ -1199,7 +1206,7 @@ These signatures are hypothetical and are the names used for the whole contract.
 
 `PlanLocalBudget` copies input bytes into owned mutable chunk buffers and returns those chunks, the consumed count, and the unplanned count. The procedure identity is returned with them. Empty input returns no chunks. That result is not a peer-empty-packet claim.
 
-`AdvanceLocalProgress` is a pure transition. `accepted` false leaves a valid prior count unchanged. Adding a valid actual count that would exceed the unsigned width is rejected, and the prior count stays the last known good value. A negative prior or actual is rejected. The next count is absent when the transition is rejected.
+`AdvanceLocalProgress` is a pure transition. `accepted` false leaves a valid prior count unchanged. Adding a valid actual count that would exceed the unsigned width is rejected, and the prior count stays the last known good value. A negative prior or actual is rejected. An `accepted` value that is not a Boolean is rejected. The next count is absent when the transition is rejected.
 
 `LocalChecksum` covers exactly the caller-selected span and returns one numeric value. The raw payload, start, and length are kept when the span is rejected. The numeric value is absent in that case. The returned number is not a byte-swapped pair and not a framed field.
 
@@ -1664,6 +1671,14 @@ class BudgetAndChecksumHelpers(unittest.TestCase):
         self.assertEqual(prior["next"], 28)
         self.assertNotIn("offset", accepted)
         self.assertNotIn("chunk_index", accepted)
+
+    def test_progress_rejects_non_boolean_acceptance(self):
+        for bad in ("false", "true", None, 0, 1, 1.0, []):
+            got = advance_reference(10, bad, 17)
+            self.assertEqual(got["outcome"], "rejected", bad)
+            self.assertEqual(got["reason"], "malformed_boolean", bad)
+            self.assertIsNone(got["next"], bad)
+            self.assertEqual(got["last_known_good"], 10, bad)
 
     def test_progress_overflow_and_negative_counts_fail_closed(self):
         overflow = advance_reference(UINT64_MAX, True, 1)
