@@ -108,6 +108,8 @@ def expected_tables():
 
 CLAIMS = (
     'These Vaillant family declarations are **Hypothesis**.',
+    'All defaults, bounds, mappings and field representations remain candidate declarations; physical qualification is **Unknown**.',
+    'Provenance is not published.',
     'that software result is **Proven** when checked, while physical interpretation remains **Hypothesis** and qualification remains **Unknown**.',
     'Holiday number is separate from circuit/room identity.',
     'Raw bytes and unlabeled values remain independent of candidate interpretation.',
@@ -123,6 +125,10 @@ CLAIMS = (
     'Room-action and holiday-status defaults are zero.',
     'Holiday status 0/1 is a raw value declaration with no on/off interpretation.',
     'Other raw values stay unlabeled.',
+    'lists a conflicting candidate mapping for `B5 0B 05` and `B5 0D 01`: 0 stop, 1 start.',
+    'That mapping remains **Hypothesis**; the disagreement is unresolved.',
+    'This page retains raw 0/1 labels; their physical meaning remains **Unknown**.',
+    'Neither candidate establishes on/off, disable or reset behavior.',
     'The four keycode bytes are independent numeric bytes, not ASCII, packed decimal or a u32.',
     'The synthetic bytes [1,2,3,4] retain four independent numeric values.',
     'A circuit name occupies exactly ten ASCII characters (ten bytes).',

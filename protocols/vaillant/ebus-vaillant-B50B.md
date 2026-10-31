@@ -2,8 +2,9 @@
 
 ## Evidence and scope
 
-These Vaillant family declarations are **Hypothesis**. No native capture or
-physical qualification is supplied here. The [synthetic examples](fixtures/ac04_holiday.json)
+These Vaillant family declarations are **Hypothesis**. All defaults, bounds,
+mappings and field representations remain candidate declarations; physical
+qualification is **Unknown**. Provenance is not published. The [synthetic examples](fixtures/ac04_holiday.json)
 validate only the declared representation: that software result is **Proven**
 when checked, while physical interpretation remains **Hypothesis** and
 qualification remains **Unknown**. A synthetic example is not wire evidence.
@@ -57,6 +58,12 @@ is Unknown, including for zero.
 
 Room-action and holiday-status defaults are zero. Holiday status 0/1 is a raw
 value declaration with no on/off interpretation. Other raw values stay unlabeled.
+
+The [B50A to B50D table](ebus-vaillant.md#b50a-to-b50d-remote-control-services)
+lists a conflicting candidate mapping for `B5 0B 05` and `B5 0D 01`: 0 stop,
+1 start. That mapping remains **Hypothesis**; the disagreement is unresolved.
+This page retains raw 0/1 labels; their physical meaning remains **Unknown**.
+Neither candidate establishes on/off, disable or reset behavior.
 
 | Field | Raw value | Candidate label | Grade |
 |---|---|---|---|
