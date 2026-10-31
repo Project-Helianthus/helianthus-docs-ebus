@@ -9,12 +9,15 @@ PAGE = ROOT / 'protocols/vaillant/ebus-vaillant-B513.md'
 FIXTURE = PAGE.parent / 'fixtures/ac10_appliance_info.json'
 
 
-def field(name, position=None, default=0, mappings=None, bits=None, reserved=(), domain=(0, 255)):
-    return dict(name=name, logical_position=position, width_bytes=1,
+def field(name, position=None, default=0, mappings=None, bits=None, reserved=(), domain=(0, 255), exclusions=()):
+    definition = dict(name=name, logical_position=position, width_bytes=1,
                 raw_domain=list(domain), signedness='unsigned', byte_order='not-applicable',
                 conversion='identity', unit=None, default=default, mappings=mappings or {},
                 bits=bits or {}, reserved_bits=list(reserved), grade='Hypothesis',
                 raw_fallback='preserve-raw-byte')
+    if exclusions:
+        definition['raw_domain_exclusions'] = list(exclusions)
+    return definition
 
 
 def row(operation, direction, alternative, fields, extent=None):
@@ -44,14 +47,14 @@ def expected():
         row('OP05', 'response', 'positive', [field('feedback', default=None,
             mappings={'1': 'accepted'}, domain=(1, 1))]),
         row('OP05', 'response', 'negative', [field('feedback', default=None,
-            mappings={'0': 'not-accepted-or-not-supported', '2..255': 'not-accepted-or-not-supported'})]),
+            mappings={'0': 'not-accepted-or-not-supported', '2..255': 'not-accepted-or-not-supported'}, exclusions=(1,))]),
         row('OP06', 'request', 'request', [
             field('light', 3, mappings={'0': 'off', '100': 'on', '255': 'replacement'}),
             field('colour', 4)]),
         row('OP06', 'response', 'positive', [field('feedback', 3, None,
             {'1': 'accepted'}, domain=(1, 1))]),
         row('OP06', 'response', 'negative', [field('feedback', 3, None,
-            {'0': 'rejected', '2..255': 'rejected'})]),
+            {'0': 'rejected', '2..255': 'rejected'}, exclusions=(1,))]),
         row('OP07', 'request', 'request', [], extent=0),
         row('OP07', 'response', 'positive', [
             field('appliance_type', 3, mappings={'0': 'modulating', '1': 'single-step', '2': 'two-step'}),
@@ -160,6 +163,13 @@ class ApplianceInfo(unittest.TestCase):
                                              (4, 5, 'rejected')):
             for raw in range(256):
                 with self.subTest(positive=positive, raw=raw):
+                    selected = [index for index in (positive, negative)
+                                if (self.data['entries'][index]['fields'][0]['raw_domain'][0]
+                                    <= raw <=
+                                    self.data['entries'][index]['fields'][0]['raw_domain'][1])
+                                and raw not in self.data['entries'][index]['fields'][0].get(
+                                    'raw_domain_exclusions', [])]
+                    self.assertEqual(selected, [positive] if raw == 1 else [negative])
                     self.assertEqual(label(self.data['entries'][positive]['fields'][0], raw),
                                      'accepted' if raw == 1 else None)
                     self.assertEqual(label(self.data['entries'][negative]['fields'][0], raw),

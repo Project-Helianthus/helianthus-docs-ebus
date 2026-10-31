@@ -123,6 +123,9 @@
             0,
             255
           ],
+          "raw_domain_exclusions": [
+            1
+          ],
           "signedness": "unsigned",
           "byte_order": "not-applicable",
           "conversion": "identity",
@@ -252,6 +255,9 @@
           "raw_domain": [
             0,
             255
+          ],
+          "raw_domain_exclusions": [
+            1
           ],
           "signedness": "unsigned",
           "byte_order": "not-applicable",
