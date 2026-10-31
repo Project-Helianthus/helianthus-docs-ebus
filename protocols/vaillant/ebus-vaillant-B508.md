@@ -160,13 +160,13 @@ separately qualified candidate layouts above.
 
 | Family | Variant | Direction | Service | Operation | Alternative | Logical extent | Grade | Physical qualification |
 |---|---|---|---|---|---|---|---|---|
-| B508 | pump role | Unknown | B508 | OP05 | conflicting defaults | Unknown | Hypothesis | Unknown |
+| B508 | pump role | Unknown | B508 | OP05 | candidate default | Unknown | Hypothesis | Unknown |
 | B508 | solar cascading | Unknown | B508 | OP0B | independent tank flags | Unknown | Hypothesis | Unknown |
 | B508 | noise-reduction | broadcast | B508 | OP02 | distinct noise-reduction candidate | Unknown | Hypothesis | Unknown |
 
 | Operation | Field | Logical position | Candidate declaration | Operational default | Grade |
 |---|---|---|---|---|---|
-| OP05 | pump state | Unknown | raw 0 = blocked; raw 1 = released | Unknown: descriptions conflict (blocked; released) | Hypothesis |
+| OP05 | pump state | Unknown | raw 0 = blocked; raw 1 = released | blocked (candidate) | Hypothesis |
 | OP0B | cycle-pause | 3 | interpretation unresolved in this scoped alternative | Unknown | Hypothesis |
 | OP0B | tank-one flag byte | 4 | bit 0 = flag; bits 1..7 reserved | Unknown | Hypothesis |
 | OP0B | tank-two flag byte | 5 | bit 0 = flag; bits 1..7 reserved | Unknown | Hypothesis |
@@ -193,8 +193,9 @@ verification of that representation; physical interpretations remain
 **Hypothesis**. Native adaptation, peer effects and physical qualification
 remain **Unknown**. No runtime capability or permission to send follows.
 
-The OP05 operational default remains **Unknown**: both blocked and released
-default descriptions are retained; neither selects an unconditional pump state.
+The OP05 candidate operational default is blocked (**Hypothesis**); released
+is the meaning of raw value 1, not a second default. Physical qualification
+remains **Unknown**.
 The existing OP02 NoiseReduction broadcast remains a distinct candidate and is
 not replaced by the pump form. A candidate broadcast, timer and later register
 change establish no causal chain, physical support or exclusive use. An actuator

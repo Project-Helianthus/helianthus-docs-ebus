@@ -9,7 +9,7 @@ PAGE = ROOT / 'protocols/vaillant/ebus-vaillant-B508.md'
 FIXTURE = ROOT / 'protocols/vaillant/fixtures/ac08_pump_roles.json'
 AXES = ('family', 'variant', 'direction', 'service', 'operation', 'alternative')
 IDENTITIES = (
-    ('B508', 'pump role', None, 'B508', 'OP05', 'conflicting defaults'),
+    ('B508', 'pump role', None, 'B508', 'OP05', 'candidate default'),
     ('B508', 'solar cascading', None, 'B508', 'OP0B', 'independent tank flags'),
     ('B508', 'noise-reduction', 'broadcast', 'B508', 'OP02',
      'distinct noise-reduction candidate'),
@@ -59,13 +59,12 @@ class PumpRolesTests(unittest.TestCase):
                     with self.assertRaises(AssertionError):
                         check_entries(self, changed)
 
-    def test_pump_raw_values_and_conflicting_defaults(self):
-        # Swapped enums, lost raw 0/1, erased conflict or selected default fail.
+    def test_pump_raw_values_and_candidate_default(self):
+        # Swapped enums, lost raw 0/1 or a changed candidate default fail.
         self.assertEqual(self.data['pump'], {
             'raw_values': [0, 1],
             'mappings': {'0': 'blocked', '1': 'released'},
-            'default': None,
-            'conflicting_default_descriptions': ['blocked', 'released']})
+            'default': 'blocked'})
 
     def test_solar_positions_conversion_and_reserved_bits(self):
         # Catches coupled selectors, mask/shift changes and lost reserved bits.
@@ -107,7 +106,7 @@ class PumpRolesTests(unittest.TestCase):
             ('Family', 'Variant', 'Direction', 'Service', 'Operation',
              'Alternative', 'Logical extent', 'Grade', 'Physical qualification'),
             ('B508', 'pump role', 'Unknown', 'B508', 'OP05',
-             'conflicting defaults', 'Unknown', 'Hypothesis', 'Unknown'),
+             'candidate default', 'Unknown', 'Hypothesis', 'Unknown'),
             ('B508', 'solar cascading', 'Unknown', 'B508', 'OP0B',
              'independent tank flags', 'Unknown', 'Hypothesis', 'Unknown'),
             ('B508', 'noise-reduction', 'broadcast', 'B508', 'OP02',
@@ -115,7 +114,7 @@ class PumpRolesTests(unittest.TestCase):
             ('Operation', 'Field', 'Logical position', 'Candidate declaration',
              'Operational default', 'Grade'),
             ('OP05', 'pump state', 'Unknown', 'raw 0 = blocked; raw 1 = released',
-             'Unknown: descriptions conflict (blocked; released)', 'Hypothesis'),
+             'blocked (candidate)', 'Hypothesis'),
             ('OP0B', 'cycle-pause', '3',
              'interpretation unresolved in this scoped alternative', 'Unknown', 'Hypothesis'),
             ('OP0B', 'tank-one flag byte', '4',
@@ -144,7 +143,7 @@ class PumpRolesTests(unittest.TestCase):
             '**Proven** applies only to software verification of that representation;',
             'Native adaptation, peer effects and physical qualification remain **Unknown**.',
             'No runtime capability or permission to send follows.',
-            'both blocked and released default descriptions are retained; neither selects an unconditional pump state.',
+            'The OP05 candidate operational default is blocked (**Hypothesis**); released is the meaning of raw value 1, not a second default. Physical qualification remains **Unknown**.',
             'The existing OP02 NoiseReduction broadcast remains a distinct candidate and is not replaced by the pump form.',
             'A candidate broadcast, timer and later register change establish no causal chain, physical support or exclusive use.',
             'An actuator effect remains **Unknown**.',

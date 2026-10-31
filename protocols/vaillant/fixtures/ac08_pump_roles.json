@@ -11,7 +11,7 @@
       "direction": null,
       "service": "B508",
       "operation": "OP05",
-      "alternative": "conflicting defaults",
+      "alternative": "candidate default",
       "logical_extent": null,
       "grade": "Hypothesis",
       "physical_qualification": "Unknown"
@@ -48,11 +48,7 @@
       "0": "blocked",
       "1": "released"
     },
-    "default": null,
-    "conflicting_default_descriptions": [
-      "blocked",
-      "released"
-    ]
+    "default": "blocked"
   },
   "solar": {
     "cycle_pause_position": 3,
