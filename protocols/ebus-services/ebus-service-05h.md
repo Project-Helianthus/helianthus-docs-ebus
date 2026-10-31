@@ -81,7 +81,7 @@ The service defines two parallel channel groups with symmetric structure:
 
 **Bus load:** 0.36% at 1/15s.
 
-> **Vaillant variant (candidate, unconfirmed on the wire):** the heat-request values are `0x00`, `0x55`, `0xAA`, `0xCC` and `0xEE`, and `0xDD` (the QC service in the standard; an STB check in the Vaillant variant) is not supported. Boiler and DHW targets have the range 0–90 degC (standard 0–100), the outside temperature as signed 8-bit −128 to 127 degC (standard −50 to +50 degC with replacement `0x3F`) and the setting degree as unsigned 8-bit 0–255 % (standard 0–100 %). Order, width and signedness of the five bytes match the table. These candidate value ranges are not observed device limits; the standard's ranges above stay authoritative. See [Vaillant variants](#vaillant-variants).
+> **Vaillant variant (Hypothesis):** the separate positive-only prefix alternative and five-field request candidate are described under [Vaillant variants](#vaillant-variants). The generic standard table above is independent of these candidates.
 
 ---
 
@@ -316,19 +316,66 @@ This secondary command is barred for compatibility reasons.
 
 ## Vaillant variants
 
-The standard layouts above stay authoritative. The statements below are candidate interpretations, unconfirmed on the wire; no Vaillant device or capture observation of any `0x05` service is known.
+**Hypothesis:** two separate candidate forms are recorded for the Vaillant
+family's `0x05 0x01`. Candidate status applies to the prefixes, field layout,
+labels, domains, defaults, units, and conversion metadata below; native support
+is **Unknown**. Provenance is not published. These declarations do not establish
+observed wire behavior or qualified peer limits.
+Logical positions below include the two prefix positions;
+they do not redefine the generic standard payload offsets above.
 
-| SB | Standard service | Vaillant layout | Result |
-|---:|---|---|---|
-| `0x01` | Operational Data (controller to burner) | Five bytes as above, with the candidate value sets and value ranges given under `0x05 0x01` | Differs (candidate) |
-| `0x00`, `0x02`–`0x0D` | All other `0x05` services | No definition known | No Vaillant definition known; implementation **Unknown** |
+| Form | Logical 0 | Logical 1 | Remaining fields | Evidence status |
+|---|---|---|---|---|
+| Positive-only prefix alternative | `0x05` | `0x01` | None specified; no body inferred | Hypothesis |
+| Five-field request candidate | `0x05` | `0x01` | Five fields at logical 2–6 below | Hypothesis |
 
-- A missing Vaillant definition is not proof that a device lacks the service.
+Prefix relevance does not imply an echo, status, physical acknowledgement, or
+effect confirmation. The positive-only alternative is separate from both the
+five-field request and service `0x05 0x04`; it supplies no invented response body.
+
+| Logical | Field | Carrier | Candidate domain | Candidate default | Candidate unit | Evidence status |
+|---:|---|---|---|---|---|---|
+| 2 | heat_state | u8 | 0–255 raw | 0 (shutdown) | — | Hypothesis |
+| 3 | boiler_target | u8 | 0–90 | 0 | degC | Hypothesis |
+| 4 | dhw_target | u8 | 0–90 | 0 | degC | Hypothesis |
+| 5 | outside_temp | signed8 | -128–127 | 0 | degC | Hypothesis |
+| 6 | setting_degree | u8 | 0–255 | 0 | % | Hypothesis |
+
+| Heat-state raw | Candidate label | Evidence status |
+|---|---|---|
+| `0x00` | shutdown | Hypothesis |
+| `0x55` | DHW | Hypothesis |
+| `0xAA` | heating | Hypothesis |
+| `0xCC` | emission-check | Hypothesis |
+| `0xEE` | controller-stop | Hypothesis |
+| `0xDD` | separate check candidate; meaning unresolved | Hypothesis |
+
+The full heat-state carrier remains 0–255. The `0xDD` check candidate is neither
+universally absent nor an established supported meaning; it does not replace the
+independent generic standard's QC-service label. Unlabelled raw values remain raw.
+
+Unit metadata `273.15` / `0.01` does not add a conversion to identity values:
+boiler and DHW raw decimal 90 give candidate 90 degC, while 91 is outside the
+candidate target domains. Outside raw `0xFF` gives -1 degC; setting raw `0xFF`
+gives 255 %, without clipping to 100. These are declaration checks, not measured
+physical results. Outside raw `0x3F` gives identity value 63; whether it acts as a
+replacement for this variant is **Unknown**.
+
+**Proven (synthetic software checks only):** the
+[synthetic forms](fixtures/ac28_burner_forms.json) preserve the two forms and
+explicit boundary values. This does not qualify native behavior or any device.
 
 ## Open questions
 
-- The `0x05 0x01` value sets and value ranges (heat-request values without `0xDD`, targets 0–90 degC, signed 8-bit outside temperature, unsigned 8-bit setting degree) are candidates, unconfirmed on the wire; no device or capture observation is known.
-- No Vaillant definition of `0x05 0x00` or `0x05 0x02`–`0x0D` is known; whether Vaillant devices send or answer them is not established.
+- **Unknown:** physical support, physical acknowledgement, effect confirmation,
+  scheduling, admission, and default materialization for this variant. Declared
+  defaults do not establish what a peer sends when fields are omitted.
+- **Unknown:** outside `0x3F` replacement behavior for this variant. The generic
+  standard's replacement rule and its independent tables remain unchanged.
+- **Unknown:** which interpretation, if any, of the distinct `0xDD` check
+  candidate applies to a peer.
+- No further Vaillant definition of `0x05 0x00` or `0x05 0x02`–`0x0D` is
+  established here; absence of a definition does not prove absence of a service.
 
 ## Communication Flow
 
