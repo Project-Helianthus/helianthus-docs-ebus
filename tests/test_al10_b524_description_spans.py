@@ -1,4 +1,5 @@
 """Synthetic representation oracle; does not exercise companion code."""
+from collections.abc import Mapping
 import copy
 import json
 import math
@@ -18,7 +19,7 @@ ab44_exp = [2, 2, 0, 0, 0, 160, 193, 0, 0, 160, 65, 0, 0, 128, 63]
 
 
 def ab44_build(ab44_ctx):
-    if set(ab44_ctx) != set(ab44_fields) or any(
+    if not isinstance(ab44_ctx, Mapping) or set(ab44_ctx) != set(ab44_fields) or any(
             ab44_ctx[ab44_key] is None for ab44_key in ab44_fields):
         return {'ab44_request': None, 'ab44_reason': 'ab44_context'}
     if type(ab44_ctx['ab44_op']) is not int or ab44_ctx['ab44_op'] not in (1, 7):
@@ -32,13 +33,17 @@ def ab44_build(ab44_ctx):
 
 
 def ab44_decode(ab44_ctx, ab44_codec, ab44_width, ab44_grade, ab44_raw):
+    ab44_byte_container = isinstance(ab44_raw, (list, tuple, bytes, bytearray))
     ab44_result = {'ab44_context': copy.deepcopy(ab44_ctx),
-                   'ab44_raw': list(ab44_raw), 'ab44_header': None, 'ab44_spans': None,
+                   'ab44_raw': list(ab44_raw) if ab44_byte_container else copy.deepcopy(ab44_raw),
+                   'ab44_header': None, 'ab44_spans': None,
                    'ab44_limits': None, 'ab44_reason': None,
                    'ab44_grade': ab44_grade}
     def ab44_fail(ab44_reason):
         ab44_result['ab44_reason'] = ab44_reason
         return ab44_result
+    if not ab44_byte_container:
+        return ab44_fail('ab44_bytes')
     if len(ab44_raw) >= 3 and all(type(ab44_byte) is int and 0 <= ab44_byte <= 255
                                   for ab44_byte in ab44_raw[:3]):
         ab44_result['ab44_header'] = list(ab44_raw[:3])
@@ -78,6 +83,31 @@ def ab44_decode(ab44_ctx, ab44_codec, ab44_width, ab44_grade, ab44_raw):
 
 
 class Ab44ContractTests(unittest.TestCase):
+    def test_ab44_malformed_raw_containers(self):
+        for ab44_raw in (None, 1, 1.5, True, 'bytes', {}, {'byte': 2}):
+            with self.subTest(ab44_raw=ab44_raw):
+                ab44_result = ab44_decode(ab44_context, 'UIN', 2, 'Hypothesis', ab44_raw)
+                self.assertEqual(ab44_result['ab44_reason'], 'ab44_bytes')
+                self.assertEqual(ab44_result['ab44_raw'], ab44_raw)
+                self.assertIs(type(ab44_result['ab44_raw']), type(ab44_raw))
+                self.assertEqual(ab44_result['ab44_context'], ab44_context)
+                self.assertIsNone(ab44_result['ab44_header'])
+                self.assertIsNone(ab44_result['ab44_spans'])
+                self.assertIsNone(ab44_result['ab44_limits'])
+
+    def test_ab44_malformed_context_containers(self):
+        for ab44_ctx in (None, 1, 1.5, True, 'context', [], ab44_fields):
+            with self.subTest(ab44_ctx=ab44_ctx):
+                self.assertEqual(ab44_build(ab44_ctx),
+                    {'ab44_request': None, 'ab44_reason': 'ab44_context'})
+                ab44_result = ab44_decode(ab44_ctx, 'UIN', 2, 'Hypothesis', ab44_uin)
+                self.assertEqual(ab44_result['ab44_reason'], 'ab44_context')
+                self.assertEqual(ab44_result['ab44_context'], ab44_ctx)
+                self.assertEqual(ab44_result['ab44_raw'], ab44_uin)
+                self.assertEqual(ab44_result['ab44_header'], [2, 2, 0])
+                self.assertEqual(ab44_result['ab44_spans'], [[0, 0], [4, 0], [1, 0]])
+                self.assertIsNone(ab44_result['ab44_limits'])
+
     def test_ab44_page_contract(self):
         ab44_page = (ab44_root / 'architecture/al10_b524_description_spans.md').read_text()
         ab44_policy = json.loads(re.search(r'```json\n(.*?)\n```', ab44_page, re.S)[1])
