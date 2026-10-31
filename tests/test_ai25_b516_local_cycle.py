@@ -43,8 +43,12 @@ OUTPUT_KEYS = 'previous new diagnostic changed contribution failure'.split()
 def transition(step, policy):
     """Bounded local interpretation of injected inputs, with raw retention."""
     result = dict(previous=None, new=None, diagnostic='Unknown', changed=None,
-                  contribution=None, failure=0, raw=step['raw'], marker=step['marker'],
-                  slot=step['slot'])
+                  contribution=None, failure=0, raw=None, marker=None, slot=None)
+    if not isinstance(step, dict):
+        return result
+    result.update({key: step.get(key) for key in ('raw', 'marker', 'slot')})
+    if not {'raw', 'marker', 'slot', 'prior', 'registered', 'capable', 'outcome'} <= step.keys():
+        return result
     if (type(step['slot']) is not int or not 0 <= step['slot'] < policy['slots']
             or type(step['prior']) is not int or not 0 <= step['prior'] < policy['modulus']
             or type(step['registered']) is not bool or type(step['capable']) is not bool):
@@ -151,6 +155,24 @@ class LocalCycleTests(unittest.TestCase):
             with self.subTest(cycle=name):
                 self.assertEqual(cycle([self.steps[i] for i in ids], before, self.fixture['policy']),
                                  (total, after, publication))
+
+    def test_malformed_step_records_remain_unknown(self):
+        control = self.steps['delta_two']
+        malformed = [(key, {k: v for k, v in control.items() if k != key})
+                     for key in ('raw', 'marker', 'slot', 'prior', 'registered',
+                                 'capable', 'outcome')]
+        malformed += [('empty', {}), ('null', None), ('list', [])]
+        for name, step in malformed:
+            with self.subTest(record=name):
+                result = transition(step, POLICY)
+                self.assertEqual(result['diagnostic'], 'Unknown')
+                for key in ('previous', 'new', 'changed', 'contribution'):
+                    self.assertIsNone(result[key], key)
+                self.assertEqual(result['failure'], 0)
+                for key in ('raw', 'marker', 'slot'):
+                    self.assertEqual(result[key], step.get(key) if isinstance(step, dict) else None)
+                self.assertEqual(cycle([step], 3, POLICY), (0, 0, 'Unknown'))
+                self.assertEqual(cycle([control, step], 3, POLICY), (12, 0, 'Unknown'))
 
     def test_identity_slot_axis_and_independent_gates(self):
         control = self.steps['delta_two']
