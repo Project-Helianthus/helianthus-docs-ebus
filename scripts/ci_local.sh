@@ -239,6 +239,8 @@ python3 -m pytest -q tests/test_graphql_face_provenance_checker.py
 python3 -m pytest -q -p no:cacheprovider tests/test_system_config_bound_contract.py
 python3 -m pytest -q tests/test_semantic_snapshot_read_contract.py
 python3 -m pytest -q tests/test_semantic_operation_route_contract.py
+python3 -m pytest -q tests/test_aj17_b516_projection.py
+python3 -m pytest -q tests/test_aj28_ff_local_liveness.py
 python3 -m pytest -q tests/test_aj19_b531_distribution_consumers.py
 
 echo "==> check contribution-driven Portal UX contract"
@@ -266,11 +268,15 @@ python3 -m pytest -q tests/test_ae06_b506_candidates.py
 echo "==> check Vaillant B505 sentinel and override candidates"
 python3 -m pytest -q tests/test_ae04_b505_candidates.py
 
+echo "==> check B510 capability-cache query transition contract"
+python3 -m unittest discover -s tests -p 'test_ao12_b510_cache_transition.py' -v
+
 echo "==> check B51A diagnostic variants and replication flags"
 python3 -m pytest -q tests/test_aj08_b51a_diagnostic_variants.py
 
 echo "==> check B520 simulator actuator and ADC declarations"
 python3 -m pytest -q tests/test_ac20_simulator_adc.py
+python3 -m pytest -q tests/test_am22_standard05_candidate_views.py
 
 echo "==> check B522 candidate demand and scalar API results"
 python3 -m unittest discover -s tests -p 'test_ao26_b522_demand_views.py' -v
@@ -281,6 +287,7 @@ python3 -m pytest -q tests/test_b524_operation_docs.py
 python3 -m pytest -q tests/test_b524_register_name_correspondence.py
 python3 -m pytest -q tests/test_b524_name_bridge_contract.py
 python3 -m pytest -q tests/test_b524_provisional_name_evidence.py
+python3 -m pytest -q tests/test_an04_b524_codebook_views.py
 python3 -m pytest -q tests/test_am10_b524_unscoped_hints.py
 python3 -m pytest -q tests/test_ai06_b524_scalar_shapes.py
 echo "==> check canonical register names against the register naming rules"
@@ -289,6 +296,7 @@ python3 -m pytest -q tests/test_register_names.py
 echo "==> check B509 register name correspondence fixture"
 python3 -m pytest -q tests/test_b509_register_name_correspondence.py
 python3 -m pytest -q tests/test_ai16_b51a_mirror_fields.py
+python3 -m pytest -q tests/test_an08_b509_constraint_word_views.py
 python3 -m pytest -q tests/test_ai14_b514_menu_feedback.py
 python3 scripts/validate_b524_op06_observed_windows.py \
   protocols/vaillant/fixtures/b524-op06-observed-windows-v1.json

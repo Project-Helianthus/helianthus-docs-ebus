@@ -1,0 +1,3858 @@
+{
+  "provenance": "synthetic; no device observation",
+  "grade": "Hypothesis",
+  "qualification": "Unknown",
+  "identity": {
+    "family": "burner",
+    "variant": "vaillant-candidate",
+    "operation": "05/01",
+    "direction": "request",
+    "selector": "burner-five-field"
+  },
+  "fields": [
+    {
+      "name": "heat_state",
+      "offset": 0,
+      "codec": "u8",
+      "unit": null,
+      "domain": [
+        0,
+        85,
+        170,
+        204,
+        238
+      ],
+      "default": 0,
+      "conversion": "identity",
+      "names": {
+        "00": "shutdown",
+        "55": "DHW",
+        "AA": "heating",
+        "CC": "emission-check",
+        "EE": "controller-stop"
+      }
+    },
+    {
+      "name": "boiler_target",
+      "offset": 1,
+      "codec": "u8",
+      "unit": "Celsius",
+      "domain": [
+        0,
+        90
+      ],
+      "default": 0,
+      "conversion": "identity"
+    },
+    {
+      "name": "dhw_target",
+      "offset": 2,
+      "codec": "u8",
+      "unit": "Celsius",
+      "domain": [
+        0,
+        90
+      ],
+      "default": 0,
+      "conversion": "identity"
+    },
+    {
+      "name": "outside_temperature",
+      "offset": 3,
+      "codec": "i8",
+      "unit": "Celsius",
+      "domain": [
+        -128,
+        127
+      ],
+      "default": 0,
+      "conversion": "identity"
+    },
+    {
+      "name": "setting",
+      "offset": 4,
+      "codec": "u8",
+      "unit": "percent",
+      "domain": [
+        0,
+        255
+      ],
+      "default": 0,
+      "conversion": "identity"
+    }
+  ],
+  "unresolved": {
+    "physical_support": "Unknown",
+    "presence": "Unknown",
+    "freshness": "Unknown",
+    "effects": "Unknown",
+    "persistence": "Unknown",
+    "delivery": "Unknown",
+    "execution": "Unknown",
+    "acknowledgement": "Unknown",
+    "command_acceptance": "Unknown",
+    "physical_length": "Unknown",
+    "empty_wire_response": "Unknown"
+  },
+  "cases": [
+    {
+      "id": "valid",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ],
+        "status": "candidate",
+        "complete": true,
+        "fields": [
+          {
+            "name": "heat_state",
+            "raw": 170,
+            "interpretation": "heating",
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "boiler_target",
+            "raw": 90,
+            "interpretation": 90,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "dhw_target",
+            "raw": 35,
+            "interpretation": 35,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "outside_temperature",
+            "raw": 255,
+            "interpretation": -1,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "setting",
+            "raw": 255,
+            "interpretation": 255,
+            "domain_state": "in-candidate-domain"
+          }
+        ],
+        "remainder": [],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "explicit-zero",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "status": "candidate",
+        "complete": true,
+        "fields": [
+          {
+            "name": "heat_state",
+            "raw": 0,
+            "interpretation": "shutdown",
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "boiler_target",
+            "raw": 0,
+            "interpretation": 0,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "dhw_target",
+            "raw": 0,
+            "interpretation": 0,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "outside_temperature",
+            "raw": 0,
+            "interpretation": 0,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "setting",
+            "raw": 0,
+            "interpretation": 0,
+            "domain_state": "in-candidate-domain"
+          }
+        ],
+        "remainder": [],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "outside-3F",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          0,
+          0,
+          0,
+          63,
+          0
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          0,
+          0,
+          0,
+          63,
+          0
+        ],
+        "status": "candidate",
+        "complete": true,
+        "fields": [
+          {
+            "name": "heat_state",
+            "raw": 0,
+            "interpretation": "shutdown",
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "boiler_target",
+            "raw": 0,
+            "interpretation": 0,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "dhw_target",
+            "raw": 0,
+            "interpretation": 0,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "outside_temperature",
+            "raw": 63,
+            "interpretation": 63,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "setting",
+            "raw": 0,
+            "interpretation": 0,
+            "domain_state": "in-candidate-domain"
+          }
+        ],
+        "remainder": [],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "short-0",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": []
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [],
+        "status": "candidate",
+        "complete": false,
+        "fields": [
+          {
+            "name": "heat_state",
+            "raw": null,
+            "interpretation": null,
+            "domain_state": "absent"
+          },
+          {
+            "name": "boiler_target",
+            "raw": null,
+            "interpretation": null,
+            "domain_state": "absent"
+          },
+          {
+            "name": "dhw_target",
+            "raw": null,
+            "interpretation": null,
+            "domain_state": "absent"
+          },
+          {
+            "name": "outside_temperature",
+            "raw": null,
+            "interpretation": null,
+            "domain_state": "absent"
+          },
+          {
+            "name": "setting",
+            "raw": null,
+            "interpretation": null,
+            "domain_state": "absent"
+          }
+        ],
+        "remainder": [],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "short-1",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          170
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          170
+        ],
+        "status": "candidate",
+        "complete": false,
+        "fields": [
+          {
+            "name": "heat_state",
+            "raw": 170,
+            "interpretation": "heating",
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "boiler_target",
+            "raw": null,
+            "interpretation": null,
+            "domain_state": "absent"
+          },
+          {
+            "name": "dhw_target",
+            "raw": null,
+            "interpretation": null,
+            "domain_state": "absent"
+          },
+          {
+            "name": "outside_temperature",
+            "raw": null,
+            "interpretation": null,
+            "domain_state": "absent"
+          },
+          {
+            "name": "setting",
+            "raw": null,
+            "interpretation": null,
+            "domain_state": "absent"
+          }
+        ],
+        "remainder": [],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "short-2",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          170,
+          90
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          170,
+          90
+        ],
+        "status": "candidate",
+        "complete": false,
+        "fields": [
+          {
+            "name": "heat_state",
+            "raw": 170,
+            "interpretation": "heating",
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "boiler_target",
+            "raw": 90,
+            "interpretation": 90,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "dhw_target",
+            "raw": null,
+            "interpretation": null,
+            "domain_state": "absent"
+          },
+          {
+            "name": "outside_temperature",
+            "raw": null,
+            "interpretation": null,
+            "domain_state": "absent"
+          },
+          {
+            "name": "setting",
+            "raw": null,
+            "interpretation": null,
+            "domain_state": "absent"
+          }
+        ],
+        "remainder": [],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "short-3",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          170,
+          90,
+          35
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          170,
+          90,
+          35
+        ],
+        "status": "candidate",
+        "complete": false,
+        "fields": [
+          {
+            "name": "heat_state",
+            "raw": 170,
+            "interpretation": "heating",
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "boiler_target",
+            "raw": 90,
+            "interpretation": 90,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "dhw_target",
+            "raw": 35,
+            "interpretation": 35,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "outside_temperature",
+            "raw": null,
+            "interpretation": null,
+            "domain_state": "absent"
+          },
+          {
+            "name": "setting",
+            "raw": null,
+            "interpretation": null,
+            "domain_state": "absent"
+          }
+        ],
+        "remainder": [],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "short-4",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          170,
+          90,
+          35,
+          255
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          170,
+          90,
+          35,
+          255
+        ],
+        "status": "candidate",
+        "complete": false,
+        "fields": [
+          {
+            "name": "heat_state",
+            "raw": 170,
+            "interpretation": "heating",
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "boiler_target",
+            "raw": 90,
+            "interpretation": 90,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "dhw_target",
+            "raw": 35,
+            "interpretation": 35,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "outside_temperature",
+            "raw": 255,
+            "interpretation": -1,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "setting",
+            "raw": null,
+            "interpretation": null,
+            "domain_state": "absent"
+          }
+        ],
+        "remainder": [],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "extra",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          170,
+          90,
+          35,
+          255,
+          255,
+          17,
+          34
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          170,
+          90,
+          35,
+          255,
+          255,
+          17,
+          34
+        ],
+        "status": "candidate",
+        "complete": false,
+        "fields": [
+          {
+            "name": "heat_state",
+            "raw": 170,
+            "interpretation": "heating",
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "boiler_target",
+            "raw": 90,
+            "interpretation": 90,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "dhw_target",
+            "raw": 35,
+            "interpretation": 35,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "outside_temperature",
+            "raw": 255,
+            "interpretation": -1,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "setting",
+            "raw": 255,
+            "interpretation": 255,
+            "domain_state": "in-candidate-domain"
+          }
+        ],
+        "remainder": [
+          17,
+          34
+        ],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "heat-00",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          0,
+          90,
+          35,
+          255,
+          255
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          0,
+          90,
+          35,
+          255,
+          255
+        ],
+        "status": "candidate",
+        "complete": true,
+        "fields": [
+          {
+            "name": "heat_state",
+            "raw": 0,
+            "interpretation": "shutdown",
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "boiler_target",
+            "raw": 90,
+            "interpretation": 90,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "dhw_target",
+            "raw": 35,
+            "interpretation": 35,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "outside_temperature",
+            "raw": 255,
+            "interpretation": -1,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "setting",
+            "raw": 255,
+            "interpretation": 255,
+            "domain_state": "in-candidate-domain"
+          }
+        ],
+        "remainder": [],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "heat-55",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          85,
+          90,
+          35,
+          255,
+          255
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          85,
+          90,
+          35,
+          255,
+          255
+        ],
+        "status": "candidate",
+        "complete": true,
+        "fields": [
+          {
+            "name": "heat_state",
+            "raw": 85,
+            "interpretation": "DHW",
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "boiler_target",
+            "raw": 90,
+            "interpretation": 90,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "dhw_target",
+            "raw": 35,
+            "interpretation": 35,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "outside_temperature",
+            "raw": 255,
+            "interpretation": -1,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "setting",
+            "raw": 255,
+            "interpretation": 255,
+            "domain_state": "in-candidate-domain"
+          }
+        ],
+        "remainder": [],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "heat-AA",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ],
+        "status": "candidate",
+        "complete": true,
+        "fields": [
+          {
+            "name": "heat_state",
+            "raw": 170,
+            "interpretation": "heating",
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "boiler_target",
+            "raw": 90,
+            "interpretation": 90,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "dhw_target",
+            "raw": 35,
+            "interpretation": 35,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "outside_temperature",
+            "raw": 255,
+            "interpretation": -1,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "setting",
+            "raw": 255,
+            "interpretation": 255,
+            "domain_state": "in-candidate-domain"
+          }
+        ],
+        "remainder": [],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "heat-CC",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          204,
+          90,
+          35,
+          255,
+          255
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          204,
+          90,
+          35,
+          255,
+          255
+        ],
+        "status": "candidate",
+        "complete": true,
+        "fields": [
+          {
+            "name": "heat_state",
+            "raw": 204,
+            "interpretation": "emission-check",
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "boiler_target",
+            "raw": 90,
+            "interpretation": 90,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "dhw_target",
+            "raw": 35,
+            "interpretation": 35,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "outside_temperature",
+            "raw": 255,
+            "interpretation": -1,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "setting",
+            "raw": 255,
+            "interpretation": 255,
+            "domain_state": "in-candidate-domain"
+          }
+        ],
+        "remainder": [],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "heat-EE",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          238,
+          90,
+          35,
+          255,
+          255
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          238,
+          90,
+          35,
+          255,
+          255
+        ],
+        "status": "candidate",
+        "complete": true,
+        "fields": [
+          {
+            "name": "heat_state",
+            "raw": 238,
+            "interpretation": "controller-stop",
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "boiler_target",
+            "raw": 90,
+            "interpretation": 90,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "dhw_target",
+            "raw": 35,
+            "interpretation": 35,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "outside_temperature",
+            "raw": 255,
+            "interpretation": -1,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "setting",
+            "raw": 255,
+            "interpretation": 255,
+            "domain_state": "in-candidate-domain"
+          }
+        ],
+        "remainder": [],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "heat-DD",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          221,
+          90,
+          35,
+          255,
+          255
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          221,
+          90,
+          35,
+          255,
+          255
+        ],
+        "status": "candidate",
+        "complete": true,
+        "fields": [
+          {
+            "name": "heat_state",
+            "raw": 221,
+            "interpretation": null,
+            "domain_state": "unmapped"
+          },
+          {
+            "name": "boiler_target",
+            "raw": 90,
+            "interpretation": 90,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "dhw_target",
+            "raw": 35,
+            "interpretation": 35,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "outside_temperature",
+            "raw": 255,
+            "interpretation": -1,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "setting",
+            "raw": 255,
+            "interpretation": 255,
+            "domain_state": "in-candidate-domain"
+          }
+        ],
+        "remainder": [],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "heat-01",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          1,
+          90,
+          35,
+          255,
+          255
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          1,
+          90,
+          35,
+          255,
+          255
+        ],
+        "status": "candidate",
+        "complete": true,
+        "fields": [
+          {
+            "name": "heat_state",
+            "raw": 1,
+            "interpretation": null,
+            "domain_state": "unmapped"
+          },
+          {
+            "name": "boiler_target",
+            "raw": 90,
+            "interpretation": 90,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "dhw_target",
+            "raw": 35,
+            "interpretation": 35,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "outside_temperature",
+            "raw": 255,
+            "interpretation": -1,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "setting",
+            "raw": 255,
+            "interpretation": 255,
+            "domain_state": "in-candidate-domain"
+          }
+        ],
+        "remainder": [],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "boiler-0",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          170,
+          0,
+          35,
+          255,
+          255
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          170,
+          0,
+          35,
+          255,
+          255
+        ],
+        "status": "candidate",
+        "complete": true,
+        "fields": [
+          {
+            "name": "heat_state",
+            "raw": 170,
+            "interpretation": "heating",
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "boiler_target",
+            "raw": 0,
+            "interpretation": 0,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "dhw_target",
+            "raw": 35,
+            "interpretation": 35,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "outside_temperature",
+            "raw": 255,
+            "interpretation": -1,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "setting",
+            "raw": 255,
+            "interpretation": 255,
+            "domain_state": "in-candidate-domain"
+          }
+        ],
+        "remainder": [],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "boiler-90",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ],
+        "status": "candidate",
+        "complete": true,
+        "fields": [
+          {
+            "name": "heat_state",
+            "raw": 170,
+            "interpretation": "heating",
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "boiler_target",
+            "raw": 90,
+            "interpretation": 90,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "dhw_target",
+            "raw": 35,
+            "interpretation": 35,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "outside_temperature",
+            "raw": 255,
+            "interpretation": -1,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "setting",
+            "raw": 255,
+            "interpretation": 255,
+            "domain_state": "in-candidate-domain"
+          }
+        ],
+        "remainder": [],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "boiler-91",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          170,
+          91,
+          35,
+          255,
+          255
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          170,
+          91,
+          35,
+          255,
+          255
+        ],
+        "status": "candidate",
+        "complete": true,
+        "fields": [
+          {
+            "name": "heat_state",
+            "raw": 170,
+            "interpretation": "heating",
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "boiler_target",
+            "raw": 91,
+            "interpretation": 91,
+            "domain_state": "out-of-candidate-domain"
+          },
+          {
+            "name": "dhw_target",
+            "raw": 35,
+            "interpretation": 35,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "outside_temperature",
+            "raw": 255,
+            "interpretation": -1,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "setting",
+            "raw": 255,
+            "interpretation": 255,
+            "domain_state": "in-candidate-domain"
+          }
+        ],
+        "remainder": [],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "boiler-100",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          170,
+          100,
+          35,
+          255,
+          255
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          170,
+          100,
+          35,
+          255,
+          255
+        ],
+        "status": "candidate",
+        "complete": true,
+        "fields": [
+          {
+            "name": "heat_state",
+            "raw": 170,
+            "interpretation": "heating",
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "boiler_target",
+            "raw": 100,
+            "interpretation": 100,
+            "domain_state": "out-of-candidate-domain"
+          },
+          {
+            "name": "dhw_target",
+            "raw": 35,
+            "interpretation": 35,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "outside_temperature",
+            "raw": 255,
+            "interpretation": -1,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "setting",
+            "raw": 255,
+            "interpretation": 255,
+            "domain_state": "in-candidate-domain"
+          }
+        ],
+        "remainder": [],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "boiler-255",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          170,
+          255,
+          35,
+          255,
+          255
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          170,
+          255,
+          35,
+          255,
+          255
+        ],
+        "status": "candidate",
+        "complete": true,
+        "fields": [
+          {
+            "name": "heat_state",
+            "raw": 170,
+            "interpretation": "heating",
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "boiler_target",
+            "raw": 255,
+            "interpretation": 255,
+            "domain_state": "out-of-candidate-domain"
+          },
+          {
+            "name": "dhw_target",
+            "raw": 35,
+            "interpretation": 35,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "outside_temperature",
+            "raw": 255,
+            "interpretation": -1,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "setting",
+            "raw": 255,
+            "interpretation": 255,
+            "domain_state": "in-candidate-domain"
+          }
+        ],
+        "remainder": [],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "dhw-0",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          170,
+          45,
+          0,
+          255,
+          255
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          170,
+          45,
+          0,
+          255,
+          255
+        ],
+        "status": "candidate",
+        "complete": true,
+        "fields": [
+          {
+            "name": "heat_state",
+            "raw": 170,
+            "interpretation": "heating",
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "boiler_target",
+            "raw": 45,
+            "interpretation": 45,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "dhw_target",
+            "raw": 0,
+            "interpretation": 0,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "outside_temperature",
+            "raw": 255,
+            "interpretation": -1,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "setting",
+            "raw": 255,
+            "interpretation": 255,
+            "domain_state": "in-candidate-domain"
+          }
+        ],
+        "remainder": [],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "dhw-90",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          170,
+          45,
+          90,
+          255,
+          255
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          170,
+          45,
+          90,
+          255,
+          255
+        ],
+        "status": "candidate",
+        "complete": true,
+        "fields": [
+          {
+            "name": "heat_state",
+            "raw": 170,
+            "interpretation": "heating",
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "boiler_target",
+            "raw": 45,
+            "interpretation": 45,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "dhw_target",
+            "raw": 90,
+            "interpretation": 90,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "outside_temperature",
+            "raw": 255,
+            "interpretation": -1,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "setting",
+            "raw": 255,
+            "interpretation": 255,
+            "domain_state": "in-candidate-domain"
+          }
+        ],
+        "remainder": [],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "dhw-91",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          170,
+          45,
+          91,
+          255,
+          255
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          170,
+          45,
+          91,
+          255,
+          255
+        ],
+        "status": "candidate",
+        "complete": true,
+        "fields": [
+          {
+            "name": "heat_state",
+            "raw": 170,
+            "interpretation": "heating",
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "boiler_target",
+            "raw": 45,
+            "interpretation": 45,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "dhw_target",
+            "raw": 91,
+            "interpretation": 91,
+            "domain_state": "out-of-candidate-domain"
+          },
+          {
+            "name": "outside_temperature",
+            "raw": 255,
+            "interpretation": -1,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "setting",
+            "raw": 255,
+            "interpretation": 255,
+            "domain_state": "in-candidate-domain"
+          }
+        ],
+        "remainder": [],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "dhw-100",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          170,
+          45,
+          100,
+          255,
+          255
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          170,
+          45,
+          100,
+          255,
+          255
+        ],
+        "status": "candidate",
+        "complete": true,
+        "fields": [
+          {
+            "name": "heat_state",
+            "raw": 170,
+            "interpretation": "heating",
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "boiler_target",
+            "raw": 45,
+            "interpretation": 45,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "dhw_target",
+            "raw": 100,
+            "interpretation": 100,
+            "domain_state": "out-of-candidate-domain"
+          },
+          {
+            "name": "outside_temperature",
+            "raw": 255,
+            "interpretation": -1,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "setting",
+            "raw": 255,
+            "interpretation": 255,
+            "domain_state": "in-candidate-domain"
+          }
+        ],
+        "remainder": [],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "dhw-255",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          170,
+          45,
+          255,
+          255,
+          255
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          170,
+          45,
+          255,
+          255,
+          255
+        ],
+        "status": "candidate",
+        "complete": true,
+        "fields": [
+          {
+            "name": "heat_state",
+            "raw": 170,
+            "interpretation": "heating",
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "boiler_target",
+            "raw": 45,
+            "interpretation": 45,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "dhw_target",
+            "raw": 255,
+            "interpretation": 255,
+            "domain_state": "out-of-candidate-domain"
+          },
+          {
+            "name": "outside_temperature",
+            "raw": 255,
+            "interpretation": -1,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "setting",
+            "raw": 255,
+            "interpretation": 255,
+            "domain_state": "in-candidate-domain"
+          }
+        ],
+        "remainder": [],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "outside-0",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          170,
+          90,
+          35,
+          0,
+          255
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          170,
+          90,
+          35,
+          0,
+          255
+        ],
+        "status": "candidate",
+        "complete": true,
+        "fields": [
+          {
+            "name": "heat_state",
+            "raw": 170,
+            "interpretation": "heating",
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "boiler_target",
+            "raw": 90,
+            "interpretation": 90,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "dhw_target",
+            "raw": 35,
+            "interpretation": 35,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "outside_temperature",
+            "raw": 0,
+            "interpretation": 0,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "setting",
+            "raw": 255,
+            "interpretation": 255,
+            "domain_state": "in-candidate-domain"
+          }
+        ],
+        "remainder": [],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "outside-63",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          170,
+          90,
+          35,
+          63,
+          255
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          170,
+          90,
+          35,
+          63,
+          255
+        ],
+        "status": "candidate",
+        "complete": true,
+        "fields": [
+          {
+            "name": "heat_state",
+            "raw": 170,
+            "interpretation": "heating",
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "boiler_target",
+            "raw": 90,
+            "interpretation": 90,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "dhw_target",
+            "raw": 35,
+            "interpretation": 35,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "outside_temperature",
+            "raw": 63,
+            "interpretation": 63,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "setting",
+            "raw": 255,
+            "interpretation": 255,
+            "domain_state": "in-candidate-domain"
+          }
+        ],
+        "remainder": [],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "outside-127",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          170,
+          90,
+          35,
+          127,
+          255
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          170,
+          90,
+          35,
+          127,
+          255
+        ],
+        "status": "candidate",
+        "complete": true,
+        "fields": [
+          {
+            "name": "heat_state",
+            "raw": 170,
+            "interpretation": "heating",
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "boiler_target",
+            "raw": 90,
+            "interpretation": 90,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "dhw_target",
+            "raw": 35,
+            "interpretation": 35,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "outside_temperature",
+            "raw": 127,
+            "interpretation": 127,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "setting",
+            "raw": 255,
+            "interpretation": 255,
+            "domain_state": "in-candidate-domain"
+          }
+        ],
+        "remainder": [],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "outside-128",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          170,
+          90,
+          35,
+          128,
+          255
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          170,
+          90,
+          35,
+          128,
+          255
+        ],
+        "status": "candidate",
+        "complete": true,
+        "fields": [
+          {
+            "name": "heat_state",
+            "raw": 170,
+            "interpretation": "heating",
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "boiler_target",
+            "raw": 90,
+            "interpretation": 90,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "dhw_target",
+            "raw": 35,
+            "interpretation": 35,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "outside_temperature",
+            "raw": 128,
+            "interpretation": -128,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "setting",
+            "raw": 255,
+            "interpretation": 255,
+            "domain_state": "in-candidate-domain"
+          }
+        ],
+        "remainder": [],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "outside-255",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ],
+        "status": "candidate",
+        "complete": true,
+        "fields": [
+          {
+            "name": "heat_state",
+            "raw": 170,
+            "interpretation": "heating",
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "boiler_target",
+            "raw": 90,
+            "interpretation": 90,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "dhw_target",
+            "raw": 35,
+            "interpretation": 35,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "outside_temperature",
+            "raw": 255,
+            "interpretation": -1,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "setting",
+            "raw": 255,
+            "interpretation": 255,
+            "domain_state": "in-candidate-domain"
+          }
+        ],
+        "remainder": [],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "setting-0",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          170,
+          90,
+          35,
+          255,
+          0
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          170,
+          90,
+          35,
+          255,
+          0
+        ],
+        "status": "candidate",
+        "complete": true,
+        "fields": [
+          {
+            "name": "heat_state",
+            "raw": 170,
+            "interpretation": "heating",
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "boiler_target",
+            "raw": 90,
+            "interpretation": 90,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "dhw_target",
+            "raw": 35,
+            "interpretation": 35,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "outside_temperature",
+            "raw": 255,
+            "interpretation": -1,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "setting",
+            "raw": 0,
+            "interpretation": 0,
+            "domain_state": "in-candidate-domain"
+          }
+        ],
+        "remainder": [],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "setting-100",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          170,
+          90,
+          35,
+          255,
+          100
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          170,
+          90,
+          35,
+          255,
+          100
+        ],
+        "status": "candidate",
+        "complete": true,
+        "fields": [
+          {
+            "name": "heat_state",
+            "raw": 170,
+            "interpretation": "heating",
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "boiler_target",
+            "raw": 90,
+            "interpretation": 90,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "dhw_target",
+            "raw": 35,
+            "interpretation": 35,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "outside_temperature",
+            "raw": 255,
+            "interpretation": -1,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "setting",
+            "raw": 100,
+            "interpretation": 100,
+            "domain_state": "in-candidate-domain"
+          }
+        ],
+        "remainder": [],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "setting-101",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          170,
+          90,
+          35,
+          255,
+          101
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          170,
+          90,
+          35,
+          255,
+          101
+        ],
+        "status": "candidate",
+        "complete": true,
+        "fields": [
+          {
+            "name": "heat_state",
+            "raw": 170,
+            "interpretation": "heating",
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "boiler_target",
+            "raw": 90,
+            "interpretation": 90,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "dhw_target",
+            "raw": 35,
+            "interpretation": 35,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "outside_temperature",
+            "raw": 255,
+            "interpretation": -1,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "setting",
+            "raw": 101,
+            "interpretation": 101,
+            "domain_state": "in-candidate-domain"
+          }
+        ],
+        "remainder": [],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "setting-255",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ],
+        "status": "candidate",
+        "complete": true,
+        "fields": [
+          {
+            "name": "heat_state",
+            "raw": 170,
+            "interpretation": "heating",
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "boiler_target",
+            "raw": 90,
+            "interpretation": 90,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "dhw_target",
+            "raw": 35,
+            "interpretation": 35,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "outside_temperature",
+            "raw": 255,
+            "interpretation": -1,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "setting",
+            "raw": 255,
+            "interpretation": 255,
+            "domain_state": "in-candidate-domain"
+          }
+        ],
+        "remainder": [],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "wrong-family-other",
+      "input": {
+        "identity": {
+          "family": "other",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "other",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ],
+        "status": "raw-only",
+        "complete": false,
+        "fields": [],
+        "remainder": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "wrong-variant-standard",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "standard",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "standard",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ],
+        "status": "raw-only",
+        "complete": false,
+        "fields": [],
+        "remainder": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "wrong-operation-06-01",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "06/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "06/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ],
+        "status": "raw-only",
+        "complete": false,
+        "fields": [],
+        "remainder": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "wrong-operation-05-04",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/04",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/04",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ],
+        "status": "raw-only",
+        "complete": false,
+        "fields": [],
+        "remainder": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "wrong-direction-response",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "response",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "response",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ],
+        "status": "raw-only",
+        "complete": false,
+        "fields": [],
+        "remainder": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "wrong-direction-positive",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "positive",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "positive",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ],
+        "status": "raw-only",
+        "complete": false,
+        "fields": [],
+        "remainder": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "wrong-selector-automatic",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "automatic"
+        },
+        "body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "automatic"
+        },
+        "raw_body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ],
+        "status": "raw-only",
+        "complete": false,
+        "fields": [],
+        "remainder": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "positive-prefix",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "positive",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          5,
+          1
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "positive",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          5,
+          1
+        ],
+        "status": "raw-only",
+        "complete": false,
+        "fields": [],
+        "remainder": [
+          5,
+          1
+        ],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "absent-family",
+      "input": {
+        "identity": {
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ]
+      },
+      "expected": {
+        "identity": {
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ],
+        "status": "raw-only",
+        "complete": false,
+        "fields": [],
+        "remainder": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "null-family",
+      "input": {
+        "identity": {
+          "family": null,
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": null,
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ],
+        "status": "raw-only",
+        "complete": false,
+        "fields": [],
+        "remainder": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "absent-variant",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ],
+        "status": "raw-only",
+        "complete": false,
+        "fields": [],
+        "remainder": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "null-variant",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": null,
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": null,
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ],
+        "status": "raw-only",
+        "complete": false,
+        "fields": [],
+        "remainder": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "absent-operation",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ],
+        "status": "raw-only",
+        "complete": false,
+        "fields": [],
+        "remainder": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "null-operation",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": null,
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": null,
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ],
+        "status": "raw-only",
+        "complete": false,
+        "fields": [],
+        "remainder": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "absent-direction",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ],
+        "status": "raw-only",
+        "complete": false,
+        "fields": [],
+        "remainder": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "null-direction",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": null,
+          "selector": "burner-five-field"
+        },
+        "body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": null,
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ],
+        "status": "raw-only",
+        "complete": false,
+        "fields": [],
+        "remainder": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "absent-selector",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request"
+        },
+        "body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request"
+        },
+        "raw_body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ],
+        "status": "raw-only",
+        "complete": false,
+        "fields": [],
+        "remainder": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "null-selector",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": null
+        },
+        "body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": null
+        },
+        "raw_body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ],
+        "status": "raw-only",
+        "complete": false,
+        "fields": [],
+        "remainder": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "extra-identity-key",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field",
+          "other": "unknown"
+        },
+        "body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field",
+          "other": "unknown"
+        },
+        "raw_body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ],
+        "status": "raw-only",
+        "complete": false,
+        "fields": [],
+        "remainder": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "malformed-identity",
+      "input": {
+        "identity": [
+          "burner"
+        ],
+        "body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ]
+      },
+      "expected": {
+        "identity": [
+          "burner"
+        ],
+        "raw_body": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ],
+        "status": "malformed",
+        "complete": false,
+        "fields": [],
+        "remainder": [
+          170,
+          90,
+          35,
+          255,
+          255
+        ],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "request-prefix",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          5,
+          1
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          5,
+          1
+        ],
+        "status": "candidate",
+        "complete": false,
+        "fields": [
+          {
+            "name": "heat_state",
+            "raw": 5,
+            "interpretation": null,
+            "domain_state": "unmapped"
+          },
+          {
+            "name": "boiler_target",
+            "raw": 1,
+            "interpretation": 1,
+            "domain_state": "in-candidate-domain"
+          },
+          {
+            "name": "dhw_target",
+            "raw": null,
+            "interpretation": null,
+            "domain_state": "absent"
+          },
+          {
+            "name": "outside_temperature",
+            "raw": null,
+            "interpretation": null,
+            "domain_state": "absent"
+          },
+          {
+            "name": "setting",
+            "raw": null,
+            "interpretation": null,
+            "domain_state": "absent"
+          }
+        ],
+        "remainder": [],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "malformed-extra",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          170,
+          90,
+          35,
+          255,
+          255,
+          256
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          170,
+          90,
+          35,
+          255,
+          255,
+          256
+        ],
+        "status": "malformed",
+        "complete": false,
+        "fields": [],
+        "remainder": [
+          170,
+          90,
+          35,
+          255,
+          255,
+          256
+        ],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "malformed-negative",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          -1
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          -1
+        ],
+        "status": "malformed",
+        "complete": false,
+        "fields": [],
+        "remainder": [
+          -1
+        ],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "malformed-overflow",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          256
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          256
+        ],
+        "status": "malformed",
+        "complete": false,
+        "fields": [],
+        "remainder": [
+          256
+        ],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "malformed-bool",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          true
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          true
+        ],
+        "status": "malformed",
+        "complete": false,
+        "fields": [],
+        "remainder": [
+          true
+        ],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "malformed-text-byte",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          "AA"
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          "AA"
+        ],
+        "status": "malformed",
+        "complete": false,
+        "fields": [],
+        "remainder": [
+          "AA"
+        ],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "malformed-fraction",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": [
+          1.5
+        ]
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": [
+          1.5
+        ],
+        "status": "malformed",
+        "complete": false,
+        "fields": [],
+        "remainder": [
+          1.5
+        ],
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "malformed-null",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": null
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": null,
+        "status": "malformed",
+        "complete": false,
+        "fields": [],
+        "remainder": null,
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    },
+    {
+      "id": "malformed-text-body",
+      "input": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "body": "AA 5A 23 FF FF"
+      },
+      "expected": {
+        "identity": {
+          "family": "burner",
+          "variant": "vaillant-candidate",
+          "operation": "05/01",
+          "direction": "request",
+          "selector": "burner-five-field"
+        },
+        "raw_body": "AA 5A 23 FF FF",
+        "status": "malformed",
+        "complete": false,
+        "fields": [],
+        "remainder": "AA 5A 23 FF FF",
+        "grade": "Hypothesis",
+        "qualification": "Unknown"
+      }
+    }
+  ]
+}
