@@ -7,7 +7,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def refresh(outcomes):
+def refresh(outcomes, cached=None):
     attempts = 0
     result = 'failed'
     for outcome in outcomes[:2]:
@@ -15,7 +15,12 @@ def refresh(outcomes):
         if outcome == 'success':
             result = 'success'
             break
-    return attempts, 'success', result
+    # A failed optional refresh must leave identification data and any
+    # last-known-good state exactly as they were.
+    state = copy.deepcopy(cached)
+    if result == 'success':
+        state = dict(state or {}, refreshed=True)
+    return attempts, 'success', result, state
 
 
 def forwarding(frame):
@@ -34,10 +39,19 @@ def forwarding(frame):
     return selector, bool(known and selector and structural)
 
 
-def verification(row):
+def identity(row):
+    return (row['low'], row['high'], len(row['written']))
+
+
+def verification(row, read_identity=None):
+    # The 0902 read must address the same pair that was written: identical
+    # bytes under a different address/count never verify.
     if not row['positive']:
         return 'not_positive'
-    if row['verify'] and row['written'] == row['read']:
+    if read_identity is None:
+        read_identity = row.get('read_identity', identity(row) if 'low' in row else None)
+    bound = 'low' not in row or read_identity == identity(row)
+    if row['verify'] and bound and row['written'] == row['read']:
         return 'synthetic_verified'
     return 'positive_unverified'
 
@@ -70,7 +84,15 @@ class LocalPolicyTest(unittest.TestCase):
             self.assertEqual(case['outcomes'], outcomes)
             self.assertEqual((case['attempts'], case['identification'], case['refresh']),
                              (attempts, 'success', result))
-            self.assertEqual(refresh(outcomes), (attempts, 'success', result))
+            self.assertEqual(refresh(outcomes)[:3], (attempts, 'success', result))
+            cached = {'raw': ['aa'], 'last_known_good': ['11']}
+            before_state = copy.deepcopy(cached)
+            _, _, _, after_state = refresh(outcomes, cached)
+            self.assertEqual(cached, before_state)
+            if result == 'failed':
+                self.assertEqual(after_state, before_state)
+            else:
+                self.assertEqual(after_state, before_state | {'refreshed': True})
             rows.append((', '.join(outcomes), str(attempts), 'success', result))
         self.assertEqual(table(self.page, '| Refresh input | Attempts | Identification | Optional refresh |'), rows)
         self.assertIn('address `0000`', self.page)
@@ -173,9 +195,15 @@ class LocalPolicyTest(unittest.TestCase):
             self.assertEqual(verification(row), outcome)
         self.assertEqual(sequence[0]['result'], 'synthetic_verified')
         self.assertEqual([r['last_known_good'] for r in sequence], [['11'], ['10'], ['20']])
+        # Pairs with identical bytes are told apart only by read identity.
+        twin = dict(sequence[0])
+        self.assertEqual(verification(twin, identity(twin)), 'synthetic_verified')
+        self.assertEqual(verification(twin, ('01', '00', 1)), 'positive_unverified')
+        self.assertEqual(verification(twin, ('00', '01', 1)), 'positive_unverified')
+        self.assertEqual(verification(twin, ('00', '00', 2)), 'positive_unverified')
         before = copy.deepcopy(self.fixture)
         for row in self.fixture['refresh']:
-            refresh(row['outcomes'])
+            refresh(row['outcomes'], {'raw': ['aa']})
         for row in self.fixture['verification']:
             verification(row)
         self.assertEqual(self.fixture, before)
