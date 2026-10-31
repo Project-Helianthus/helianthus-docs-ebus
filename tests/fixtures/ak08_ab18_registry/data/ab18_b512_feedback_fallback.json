@@ -1,0 +1,534 @@
+[
+  {
+    "id": "ab18-request-secondary-heating-pump",
+    "key": {
+      "family": "B512",
+      "variant": "OP01",
+      "primary": 181,
+      "secondary": 18,
+      "operation": 1,
+      "direction": "request",
+      "field": "secondary-heating-pump",
+      "alternative": "none",
+      "group": null,
+      "instance_scope": "none",
+      "register": null
+    },
+    "grade": "Hypothesis",
+    "logical_position": 3,
+    "type": "u8",
+    "physical_offset": "Unknown",
+    "raw_form": {
+      "type": "u8",
+      "retention": "preserve each independent raw token"
+    },
+    "raw_fallback": "retain raw token and candidate meaning independently",
+    "values": {
+      "FF": "leave-unchanged"
+    },
+    "other_values": "retain-raw",
+    "polarity": "Unknown",
+    "feedback": {
+      "actual_signal_absent": "setpoint-fallback",
+      "actual_signal_present": "actual-signal",
+      "equal_to_setpoint_establishes_actual": false,
+      "wire_discriminator": "Unknown",
+      "physical_value": "Unknown"
+    },
+    "boolean_default": true,
+    "raw_default": null,
+    "raw_default_encoding": "Unknown",
+    "native_support": "Unknown",
+    "physical_effects": "Unknown",
+    "persistence": "Unknown",
+    "delivery": "Unknown"
+  },
+  {
+    "id": "ab18-request-circulation-pump",
+    "key": {
+      "family": "B512",
+      "variant": "OP01",
+      "primary": 181,
+      "secondary": 18,
+      "operation": 1,
+      "direction": "request",
+      "field": "circulation-pump",
+      "alternative": "none",
+      "group": null,
+      "instance_scope": "none",
+      "register": null
+    },
+    "grade": "Hypothesis",
+    "logical_position": 4,
+    "type": "u8",
+    "physical_offset": "Unknown",
+    "raw_form": {
+      "type": "u8",
+      "retention": "preserve each independent raw token"
+    },
+    "raw_fallback": "retain raw token and candidate meaning independently",
+    "values": {
+      "FF": "leave-unchanged"
+    },
+    "other_values": "retain-raw",
+    "polarity": "Unknown",
+    "feedback": {
+      "actual_signal_absent": "setpoint-fallback",
+      "actual_signal_present": "actual-signal",
+      "equal_to_setpoint_establishes_actual": false,
+      "wire_discriminator": "Unknown",
+      "physical_value": "Unknown"
+    },
+    "boolean_default": true,
+    "raw_default": null,
+    "raw_default_encoding": "Unknown",
+    "native_support": "Unknown",
+    "physical_effects": "Unknown",
+    "persistence": "Unknown",
+    "delivery": "Unknown"
+  },
+  {
+    "id": "ab18-request-solar-pump",
+    "key": {
+      "family": "B512",
+      "variant": "OP01",
+      "primary": 181,
+      "secondary": 18,
+      "operation": 1,
+      "direction": "request",
+      "field": "solar-pump",
+      "alternative": "none",
+      "group": null,
+      "instance_scope": "none",
+      "register": null
+    },
+    "grade": "Hypothesis",
+    "logical_position": 5,
+    "type": "u8",
+    "physical_offset": "Unknown",
+    "raw_form": {
+      "type": "u8",
+      "retention": "preserve each independent raw token"
+    },
+    "raw_fallback": "retain raw token and candidate meaning independently",
+    "values": {
+      "FF": "leave-unchanged"
+    },
+    "other_values": "retain-raw",
+    "polarity": "Unknown",
+    "feedback": {
+      "actual_signal_absent": "setpoint-fallback",
+      "actual_signal_present": "actual-signal",
+      "equal_to_setpoint_establishes_actual": false,
+      "wire_discriminator": "Unknown",
+      "physical_value": "Unknown"
+    },
+    "boolean_default": true,
+    "raw_default": null,
+    "raw_default_encoding": "Unknown",
+    "native_support": "Unknown",
+    "physical_effects": "Unknown",
+    "persistence": "Unknown",
+    "delivery": "Unknown"
+  },
+  {
+    "id": "ab18-request-error-relay",
+    "key": {
+      "family": "B512",
+      "variant": "OP01",
+      "primary": 181,
+      "secondary": 18,
+      "operation": 1,
+      "direction": "request",
+      "field": "error-relay",
+      "alternative": "none",
+      "group": null,
+      "instance_scope": "none",
+      "register": null
+    },
+    "grade": "Hypothesis",
+    "logical_position": 6,
+    "type": "u8",
+    "physical_offset": "Unknown",
+    "raw_form": {
+      "type": "u8",
+      "retention": "preserve each independent raw token"
+    },
+    "raw_fallback": "retain raw token and candidate meaning independently",
+    "values": {
+      "0F": "state-0F",
+      "F0": "state-F0"
+    },
+    "other_values": "no-action",
+    "polarity": "Unknown",
+    "feedback": {
+      "actual_signal_absent": "setpoint-fallback",
+      "actual_signal_present": "actual-signal",
+      "equal_to_setpoint_establishes_actual": false,
+      "wire_discriminator": "Unknown",
+      "physical_value": "Unknown"
+    },
+    "boolean_default": true,
+    "raw_default": null,
+    "raw_default_encoding": "Unknown",
+    "native_support": "Unknown",
+    "physical_effects": "Unknown",
+    "persistence": "Unknown",
+    "delivery": "Unknown"
+  },
+  {
+    "id": "ab18-request-loading-pump",
+    "key": {
+      "family": "B512",
+      "variant": "OP01",
+      "primary": 181,
+      "secondary": 18,
+      "operation": 1,
+      "direction": "request",
+      "field": "loading-pump",
+      "alternative": "none",
+      "group": null,
+      "instance_scope": "none",
+      "register": null
+    },
+    "grade": "Hypothesis",
+    "logical_position": 7,
+    "type": "u8",
+    "physical_offset": "Unknown",
+    "raw_form": {
+      "type": "u8",
+      "retention": "preserve each independent raw token"
+    },
+    "raw_fallback": "retain raw token and candidate meaning independently",
+    "values": {
+      "FF": "leave-unchanged"
+    },
+    "other_values": "retain-raw",
+    "polarity": "Unknown",
+    "feedback": {
+      "actual_signal_absent": "setpoint-fallback",
+      "actual_signal_present": "actual-signal",
+      "equal_to_setpoint_establishes_actual": false,
+      "wire_discriminator": "Unknown",
+      "physical_value": "Unknown"
+    },
+    "boolean_default": true,
+    "raw_default": null,
+    "raw_default_encoding": "Unknown",
+    "native_support": "Unknown",
+    "physical_effects": "Unknown",
+    "persistence": "Unknown",
+    "delivery": "Unknown"
+  },
+  {
+    "id": "ab18-request-fume-flap",
+    "key": {
+      "family": "B512",
+      "variant": "OP01",
+      "primary": 181,
+      "secondary": 18,
+      "operation": 1,
+      "direction": "request",
+      "field": "fume-flap",
+      "alternative": "none",
+      "group": null,
+      "instance_scope": "none",
+      "register": null
+    },
+    "grade": "Hypothesis",
+    "logical_position": 8,
+    "type": "u8",
+    "physical_offset": "Unknown",
+    "raw_form": {
+      "type": "u8",
+      "retention": "preserve each independent raw token"
+    },
+    "raw_fallback": "retain raw token and candidate meaning independently",
+    "values": {
+      "0F": "state-0F",
+      "F0": "state-F0"
+    },
+    "other_values": "no-action",
+    "polarity": "Unknown",
+    "feedback": {
+      "actual_signal_absent": "setpoint-fallback",
+      "actual_signal_present": "actual-signal",
+      "equal_to_setpoint_establishes_actual": false,
+      "wire_discriminator": "Unknown",
+      "physical_value": "Unknown"
+    },
+    "boolean_default": true,
+    "raw_default": null,
+    "raw_default_encoding": "Unknown",
+    "native_support": "Unknown",
+    "physical_effects": "Unknown",
+    "persistence": "Unknown",
+    "delivery": "Unknown"
+  },
+  {
+    "id": "ab18-positive-secondary-heating-pump",
+    "key": {
+      "family": "B512",
+      "variant": "OP01",
+      "primary": 181,
+      "secondary": 18,
+      "operation": 1,
+      "direction": "positive",
+      "field": "secondary-heating-pump",
+      "alternative": "none",
+      "group": null,
+      "instance_scope": "none",
+      "register": null
+    },
+    "grade": "Hypothesis",
+    "logical_position": 3,
+    "type": "u8",
+    "physical_offset": "Unknown",
+    "raw_form": {
+      "type": "u8",
+      "retention": "preserve each independent raw token"
+    },
+    "raw_fallback": "retain raw token and candidate meaning independently",
+    "values": {
+      "FF": "function-unavailable"
+    },
+    "other_values": "retain-raw",
+    "polarity": "Unknown",
+    "feedback": {
+      "actual_signal_absent": "setpoint-fallback",
+      "actual_signal_present": "actual-signal",
+      "equal_to_setpoint_establishes_actual": false,
+      "wire_discriminator": "Unknown",
+      "physical_value": "Unknown"
+    },
+    "boolean_default": true,
+    "raw_default": null,
+    "raw_default_encoding": "Unknown",
+    "native_support": "Unknown",
+    "physical_effects": "Unknown",
+    "persistence": "Unknown",
+    "delivery": "Unknown"
+  },
+  {
+    "id": "ab18-positive-circulation-pump",
+    "key": {
+      "family": "B512",
+      "variant": "OP01",
+      "primary": 181,
+      "secondary": 18,
+      "operation": 1,
+      "direction": "positive",
+      "field": "circulation-pump",
+      "alternative": "none",
+      "group": null,
+      "instance_scope": "none",
+      "register": null
+    },
+    "grade": "Hypothesis",
+    "logical_position": 4,
+    "type": "u8",
+    "physical_offset": "Unknown",
+    "raw_form": {
+      "type": "u8",
+      "retention": "preserve each independent raw token"
+    },
+    "raw_fallback": "retain raw token and candidate meaning independently",
+    "values": {
+      "FF": "function-unavailable"
+    },
+    "other_values": "retain-raw",
+    "polarity": "Unknown",
+    "feedback": {
+      "actual_signal_absent": "setpoint-fallback",
+      "actual_signal_present": "actual-signal",
+      "equal_to_setpoint_establishes_actual": false,
+      "wire_discriminator": "Unknown",
+      "physical_value": "Unknown"
+    },
+    "boolean_default": true,
+    "raw_default": null,
+    "raw_default_encoding": "Unknown",
+    "native_support": "Unknown",
+    "physical_effects": "Unknown",
+    "persistence": "Unknown",
+    "delivery": "Unknown"
+  },
+  {
+    "id": "ab18-positive-solar-pump",
+    "key": {
+      "family": "B512",
+      "variant": "OP01",
+      "primary": 181,
+      "secondary": 18,
+      "operation": 1,
+      "direction": "positive",
+      "field": "solar-pump",
+      "alternative": "none",
+      "group": null,
+      "instance_scope": "none",
+      "register": null
+    },
+    "grade": "Hypothesis",
+    "logical_position": 5,
+    "type": "u8",
+    "physical_offset": "Unknown",
+    "raw_form": {
+      "type": "u8",
+      "retention": "preserve each independent raw token"
+    },
+    "raw_fallback": "retain raw token and candidate meaning independently",
+    "values": {
+      "FF": "function-unavailable"
+    },
+    "other_values": "retain-raw",
+    "polarity": "Unknown",
+    "feedback": {
+      "actual_signal_absent": "setpoint-fallback",
+      "actual_signal_present": "actual-signal",
+      "equal_to_setpoint_establishes_actual": false,
+      "wire_discriminator": "Unknown",
+      "physical_value": "Unknown"
+    },
+    "boolean_default": true,
+    "raw_default": null,
+    "raw_default_encoding": "Unknown",
+    "native_support": "Unknown",
+    "physical_effects": "Unknown",
+    "persistence": "Unknown",
+    "delivery": "Unknown"
+  },
+  {
+    "id": "ab18-positive-error-relay",
+    "key": {
+      "family": "B512",
+      "variant": "OP01",
+      "primary": 181,
+      "secondary": 18,
+      "operation": 1,
+      "direction": "positive",
+      "field": "error-relay",
+      "alternative": "none",
+      "group": null,
+      "instance_scope": "none",
+      "register": null
+    },
+    "grade": "Hypothesis",
+    "logical_position": 6,
+    "type": "u8",
+    "physical_offset": "Unknown",
+    "raw_form": {
+      "type": "u8",
+      "retention": "preserve each independent raw token"
+    },
+    "raw_fallback": "retain raw token and candidate meaning independently",
+    "values": {
+      "0F": "state-0F",
+      "F0": "state-F0"
+    },
+    "other_values": "no-action",
+    "polarity": "Unknown",
+    "feedback": {
+      "actual_signal_absent": "setpoint-fallback",
+      "actual_signal_present": "actual-signal",
+      "equal_to_setpoint_establishes_actual": false,
+      "wire_discriminator": "Unknown",
+      "physical_value": "Unknown"
+    },
+    "boolean_default": true,
+    "raw_default": null,
+    "raw_default_encoding": "Unknown",
+    "native_support": "Unknown",
+    "physical_effects": "Unknown",
+    "persistence": "Unknown",
+    "delivery": "Unknown"
+  },
+  {
+    "id": "ab18-positive-loading-pump",
+    "key": {
+      "family": "B512",
+      "variant": "OP01",
+      "primary": 181,
+      "secondary": 18,
+      "operation": 1,
+      "direction": "positive",
+      "field": "loading-pump",
+      "alternative": "none",
+      "group": null,
+      "instance_scope": "none",
+      "register": null
+    },
+    "grade": "Hypothesis",
+    "logical_position": 7,
+    "type": "u8",
+    "physical_offset": "Unknown",
+    "raw_form": {
+      "type": "u8",
+      "retention": "preserve each independent raw token"
+    },
+    "raw_fallback": "retain raw token and candidate meaning independently",
+    "values": {
+      "FF": "function-unavailable"
+    },
+    "other_values": "retain-raw",
+    "polarity": "Unknown",
+    "feedback": {
+      "actual_signal_absent": "setpoint-fallback",
+      "actual_signal_present": "actual-signal",
+      "equal_to_setpoint_establishes_actual": false,
+      "wire_discriminator": "Unknown",
+      "physical_value": "Unknown"
+    },
+    "boolean_default": true,
+    "raw_default": null,
+    "raw_default_encoding": "Unknown",
+    "native_support": "Unknown",
+    "physical_effects": "Unknown",
+    "persistence": "Unknown",
+    "delivery": "Unknown"
+  },
+  {
+    "id": "ab18-positive-fume-flap",
+    "key": {
+      "family": "B512",
+      "variant": "OP01",
+      "primary": 181,
+      "secondary": 18,
+      "operation": 1,
+      "direction": "positive",
+      "field": "fume-flap",
+      "alternative": "none",
+      "group": null,
+      "instance_scope": "none",
+      "register": null
+    },
+    "grade": "Hypothesis",
+    "logical_position": 8,
+    "type": "u8",
+    "physical_offset": "Unknown",
+    "raw_form": {
+      "type": "u8",
+      "retention": "preserve each independent raw token"
+    },
+    "raw_fallback": "retain raw token and candidate meaning independently",
+    "values": {
+      "0F": "state-0F",
+      "F0": "state-F0"
+    },
+    "other_values": "no-action",
+    "polarity": "Unknown",
+    "feedback": {
+      "actual_signal_absent": "setpoint-fallback",
+      "actual_signal_present": "actual-signal",
+      "equal_to_setpoint_establishes_actual": false,
+      "wire_discriminator": "Unknown",
+      "physical_value": "Unknown"
+    },
+    "boolean_default": true,
+    "raw_default": null,
+    "raw_default_encoding": "Unknown",
+    "native_support": "Unknown",
+    "physical_effects": "Unknown",
+    "persistence": "Unknown",
+    "delivery": "Unknown"
+  }
+]
