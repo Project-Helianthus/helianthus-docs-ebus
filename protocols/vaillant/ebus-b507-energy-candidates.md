@@ -16,8 +16,8 @@ marks absent facts. Physical support remains **Unknown** independently of grade.
 No source/destination, payload coordinate, direction, product or firmware is
 established for these tuples. Raw values are isolated field examples, not whole
 frames. Their mode labels are synthetic predicates, not native mode codes.
-All fields have Unknown coordinates and actual reference. Widths other than
-OP06 capacity output's candidate byte and OP08's candidate word remain Unknown here.
+All fields have Unknown coordinates and actual reference. Widths and encodings other than those
+in the field table remain Unknown here.
 The existing half-percent correction is outside this supplement.
 
 ## Field boundaries
@@ -25,9 +25,9 @@ The existing half-percent correction is outside this supplement.
 | Operation | Field | Grade | Width bits | Encoding | Conversion or role | Quantity origin |
 |---|---|---|---|---|---|---|
 | 06 | capacity output | Hypothesis | 8 | unsigned | raw / 10 kW; raw 0..250 only | Unknown |
-| 06 | cost of primary energy | Hypothesis | Unknown | Unknown | mode and monetary/emissions reference dependent; converter Unknown | calculated or estimated possible |
-| 06 | current flow temperature | Hypothesis | Unknown | Unknown | converter Unknown | calculated or estimated possible |
-| 08 | preference word | Hypothesis | 16 | Unknown | operation-local candidate labels only | Unknown |
+| 06 | cost of primary energy | Hypothesis | 8 | unsigned | candidate unit 1/MWh, raw 0..250; mode and monetary/emissions reference dependent; converter Unknown | calculated or estimated possible |
+| 06 | current flow temperature | Hypothesis | 16 | signed little-endian | raw / 16 °C | calculated or estimated possible |
+| 08 | efficiency word | Hypothesis | 16 | Unknown | operation-local candidate labels only | Unknown |
 
 For OP06 capacity output, the candidate is an unsigned byte divided by 10. Negative
 mode-related prose remains a separate unresolved alternative; neither signed8

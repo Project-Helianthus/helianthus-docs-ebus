@@ -14,12 +14,12 @@ API = Path('architecture/aj14_b507_energy_candidates_api.md')
 FIELD_ROWS = [
     ['06', 'capacity output', 'Hypothesis', '8', 'unsigned',
      'raw / 10 kW; raw 0..250 only', 'Unknown'],
-    ['06', 'cost of primary energy', 'Hypothesis', 'Unknown', 'Unknown',
-     'mode and monetary/emissions reference dependent; converter Unknown',
+    ['06', 'cost of primary energy', 'Hypothesis', '8', 'unsigned',
+     'candidate unit 1/MWh, raw 0..250; mode and monetary/emissions reference dependent; converter Unknown',
      'calculated or estimated possible'],
-    ['06', 'current flow temperature', 'Hypothesis', 'Unknown', 'Unknown',
-     'converter Unknown', 'calculated or estimated possible'],
-    ['08', 'preference word', 'Hypothesis', '16', 'Unknown',
+    ['06', 'current flow temperature', 'Hypothesis', '16', 'signed little-endian',
+     'raw / 16 °C', 'calculated or estimated possible'],
+    ['08', 'efficiency word', 'Hypothesis', '16', 'Unknown',
      'operation-local candidate labels only', 'Unknown'],
 ]
 WORD_ROWS = [['08', '0000', 'appliance-unavailable candidate', 'Hypothesis'],
@@ -78,7 +78,7 @@ class EnergyCandidatesTest(unittest.TestCase):
             with self.subTest(operation=operation):
                 mutant = copy.deepcopy(self.fixture)
                 mutant['synthetic_tuples']['fields'].append(
-                    [operation, 'preference word', 'Hypothesis', '16', 'Unknown',
+                    [operation, 'efficiency word', 'Hypothesis', '16', 'Unknown',
                      'operation-local candidate labels only', 'Unknown'])
                 with self.assertRaises(AssertionError):
                     self.check_fixture(mutant)
