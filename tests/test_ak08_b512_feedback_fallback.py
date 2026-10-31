@@ -223,6 +223,12 @@ class NativeContract(unittest.TestCase):
                        'Nothing is stable before Helianthus 1.0'):
             self.assertIn(phrase, prose)
 
+    def test_polarity_relationship_to_main_reference(self):
+        text = ' '.join(PAGE.read_text().split())
+        self.assertIn('kept there as an alternative candidate', text)
+        self.assertIn('This supplement does not adopt it', text)
+        self.assertIn('state-0F and state-F0 as distinct declared states with Unknown polarity', text)
+
     def test_native_boundary_and_local_links(self):
         native = PAGE.read_text() + DATA.read_text()
         self.assertNotRegex(native, r'\b(?:Ab18\w*|GraphQL|MCP|Helianthus|gateway|json.RawMessage)\b')

@@ -54,6 +54,13 @@ Even the actual-signal candidate does not establish a physical value here.
 Boolean default true is separate from a materialized raw default. Its byte
 encoding is Unknown; raw 01 cannot be inferred from the Boolean default.
 
+**Hypothesis (relationship to the main B512 reference):** The main B512
+reference lists `0F` as true and `F0` as false for OP01 relay and fume-flap
+fields. That true/false association is kept there as an alternative candidate.
+This supplement does not adopt it: for OP01 relay and fume-flap it keeps
+state-0F and state-F0 as distinct declared states with Unknown polarity, so
+the two pages are not competing assignments.
+
 ## Evidence
 
 [The synthetic cases](fixtures/ak08_b512_feedback_fallback.json) retain raw
