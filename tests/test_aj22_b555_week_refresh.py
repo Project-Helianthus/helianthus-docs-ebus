@@ -46,6 +46,7 @@ def week_oracle(case):
     assert type(case['capacity']) is int and case['capacity'] > 0
     assert case['a4_status'] in ('success', 'failure')
     retained, requests, partial = [], [], None
+    raw_days = [{'day': day['day'], 'count': day['count']} for day in case['days']]
     if case['a4_status'] == 'success':
         for index, day in enumerate(case['days']):
             assert day['day'] == index
@@ -54,9 +55,10 @@ def week_oracle(case):
                 partial = {'day': index, 'count': day['count'], 'raw_slots': []}
                 break
             assert len(day['raw_slots']) == day['count']
+            raw_days[index]['raw_slots'] = deepcopy(day['raw_slots'])
             retained.append(deepcopy(day))
             requests.extend({'day': index, 'slot': s} for s in range(day['count']))
-    return dict(identity=deepcopy(case['identity']), raw_days=deepcopy(case['days']),
+    return dict(identity=deepcopy(case['identity']), raw_days=raw_days,
                 retained_days=retained, a5_requests=requests,
                 a5_attempts=len(requests), partial_day=partial,
                 complete=len(retained) == 7, admission=False,
@@ -141,6 +143,29 @@ class WeeklyRefreshContract(unittest.TestCase):
                              list(range(d)))
             self.assertFalse(case['expected']['complete'])
             self.assertFalse(case['expected']['admission'])
+
+    def test_raw_days_only_include_acquired_slots(self):
+        for index, case in enumerate(self.data['weekly']):
+            visited = (7 if index == 0 else 0 if index == 1 else index - 2)
+            result = week_oracle(case)
+            for day, raw in enumerate(result['raw_days']):
+                with self.subTest(case=case['name'], day=day):
+                    self.assertEqual(raw['day'], day)
+                    self.assertEqual(raw['count'], case['days'][day]['count'])
+                    if day < visited:
+                        self.assertEqual(raw, case['days'][day])
+                        data = deepcopy(self.data)
+                        del data['weekly'][index]['expected']['raw_days'][day]['raw_slots']
+                        self.reject_copy(data)
+                    else:
+                        self.assertEqual(set(raw), {'day', 'count'})
+                        data = deepcopy(self.data)
+                        data['weekly'][index]['expected']['raw_days'][day]['raw_slots'] = (
+                            deepcopy(case['days'][day]['raw_slots']) or ['unread-slot'])
+                        self.reject_copy(data)
+                        changed = deepcopy(case)
+                        changed['days'][day]['raw_slots'] = ['unread-slot']
+                        self.assertEqual(week_oracle(changed), result)
 
     def test_five_inputs_count_and_heating_independently(self):
         for field in range(5):

@@ -402,52 +402,31 @@
         "raw_days": [
           {
             "day": 0,
-            "count": 1,
-            "raw_slots": [
-              "raw-day-0-slot-0"
-            ]
+            "count": 1
           },
           {
             "day": 1,
-            "count": 2,
-            "raw_slots": [
-              "raw-day-1-slot-0",
-              "raw-day-1-slot-1"
-            ]
+            "count": 2
           },
           {
             "day": 2,
-            "count": 0,
-            "raw_slots": []
+            "count": 0
           },
           {
             "day": 3,
-            "count": 1,
-            "raw_slots": [
-              "raw-day-3-slot-0"
-            ]
+            "count": 1
           },
           {
             "day": 4,
-            "count": 2,
-            "raw_slots": [
-              "raw-day-4-slot-0",
-              "raw-day-4-slot-1"
-            ]
+            "count": 2
           },
           {
             "day": 5,
-            "count": 1,
-            "raw_slots": [
-              "raw-day-5-slot-0"
-            ]
+            "count": 1
           },
           {
             "day": 6,
-            "count": 1,
-            "raw_slots": [
-              "raw-day-6-slot-0"
-            ]
+            "count": 1
           }
         ],
         "retained_days": [],
@@ -538,53 +517,31 @@
         "raw_days": [
           {
             "day": 0,
-            "count": 3,
-            "raw_slots": [
-              "raw-day-0-slot-0",
-              "raw-day-0-slot-1"
-            ]
+            "count": 3
           },
           {
             "day": 1,
-            "count": 2,
-            "raw_slots": [
-              "raw-day-1-slot-0",
-              "raw-day-1-slot-1"
-            ]
+            "count": 2
           },
           {
             "day": 2,
-            "count": 0,
-            "raw_slots": []
+            "count": 0
           },
           {
             "day": 3,
-            "count": 1,
-            "raw_slots": [
-              "raw-day-3-slot-0"
-            ]
+            "count": 1
           },
           {
             "day": 4,
-            "count": 2,
-            "raw_slots": [
-              "raw-day-4-slot-0",
-              "raw-day-4-slot-1"
-            ]
+            "count": 2
           },
           {
             "day": 5,
-            "count": 1,
-            "raw_slots": [
-              "raw-day-5-slot-0"
-            ]
+            "count": 1
           },
           {
             "day": 6,
-            "count": 1,
-            "raw_slots": [
-              "raw-day-6-slot-0"
-            ]
+            "count": 1
           }
         ],
         "retained_days": [],
@@ -685,45 +642,27 @@
           },
           {
             "day": 1,
-            "count": 3,
-            "raw_slots": [
-              "raw-day-1-slot-0",
-              "raw-day-1-slot-1"
-            ]
+            "count": 3
           },
           {
             "day": 2,
-            "count": 0,
-            "raw_slots": []
+            "count": 0
           },
           {
             "day": 3,
-            "count": 1,
-            "raw_slots": [
-              "raw-day-3-slot-0"
-            ]
+            "count": 1
           },
           {
             "day": 4,
-            "count": 2,
-            "raw_slots": [
-              "raw-day-4-slot-0",
-              "raw-day-4-slot-1"
-            ]
+            "count": 2
           },
           {
             "day": 5,
-            "count": 1,
-            "raw_slots": [
-              "raw-day-5-slot-0"
-            ]
+            "count": 1
           },
           {
             "day": 6,
-            "count": 1,
-            "raw_slots": [
-              "raw-day-6-slot-0"
-            ]
+            "count": 1
           }
         ],
         "retained_days": [
@@ -848,40 +787,23 @@
           },
           {
             "day": 2,
-            "count": 3,
-            "raw_slots": [
-              "raw-day-2-slot-0",
-              "raw-day-2-slot-1"
-            ]
+            "count": 3
           },
           {
             "day": 3,
-            "count": 1,
-            "raw_slots": [
-              "raw-day-3-slot-0"
-            ]
+            "count": 1
           },
           {
             "day": 4,
-            "count": 2,
-            "raw_slots": [
-              "raw-day-4-slot-0",
-              "raw-day-4-slot-1"
-            ]
+            "count": 2
           },
           {
             "day": 5,
-            "count": 1,
-            "raw_slots": [
-              "raw-day-5-slot-0"
-            ]
+            "count": 1
           },
           {
             "day": 6,
-            "count": 1,
-            "raw_slots": [
-              "raw-day-6-slot-0"
-            ]
+            "count": 1
           }
         ],
         "retained_days": [
@@ -1025,33 +947,19 @@
           },
           {
             "day": 3,
-            "count": 3,
-            "raw_slots": [
-              "raw-day-3-slot-0",
-              "raw-day-3-slot-1"
-            ]
+            "count": 3
           },
           {
             "day": 4,
-            "count": 2,
-            "raw_slots": [
-              "raw-day-4-slot-0",
-              "raw-day-4-slot-1"
-            ]
+            "count": 2
           },
           {
             "day": 5,
-            "count": 1,
-            "raw_slots": [
-              "raw-day-5-slot-0"
-            ]
+            "count": 1
           },
           {
             "day": 6,
-            "count": 1,
-            "raw_slots": [
-              "raw-day-6-slot-0"
-            ]
+            "count": 1
           }
         ],
         "retained_days": [
@@ -1206,25 +1114,15 @@
           },
           {
             "day": 4,
-            "count": 3,
-            "raw_slots": [
-              "raw-day-4-slot-0",
-              "raw-day-4-slot-1"
-            ]
+            "count": 3
           },
           {
             "day": 5,
-            "count": 1,
-            "raw_slots": [
-              "raw-day-5-slot-0"
-            ]
+            "count": 1
           },
           {
             "day": 6,
-            "count": 1,
-            "raw_slots": [
-              "raw-day-6-slot-0"
-            ]
+            "count": 1
           }
         ],
         "retained_days": [
@@ -1399,18 +1297,11 @@
           },
           {
             "day": 5,
-            "count": 3,
-            "raw_slots": [
-              "raw-day-5-slot-0",
-              "raw-day-5-slot-1"
-            ]
+            "count": 3
           },
           {
             "day": 6,
-            "count": 1,
-            "raw_slots": [
-              "raw-day-6-slot-0"
-            ]
+            "count": 1
           }
         ],
         "retained_days": [
@@ -1608,11 +1499,7 @@
           },
           {
             "day": 6,
-            "count": 3,
-            "raw_slots": [
-              "raw-day-6-slot-0",
-              "raw-day-6-slot-1"
-            ]
+            "count": 3
           }
         ],
         "retained_days": [
