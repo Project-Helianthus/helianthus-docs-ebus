@@ -299,6 +299,7 @@ python3 -m pytest -q tests/test_ap04_b531_ordinary_limit.py
 echo "==> check B509/B524 passive watch-policy documentation contract"
 python3 -m pytest -q tests/test_watch_policy_contract.py
 python3 -m pytest -q tests/test_b524_operation_docs.py
+python3 -m pytest -q tests/test_am04_b524_dhw_ventilation_scalars.py
 python3 -m pytest -q tests/test_b524_register_name_correspondence.py
 python3 -m pytest -q tests/test_b524_name_bridge_contract.py
 python3 -m pytest -q tests/test_b524_provisional_name_evidence.py
