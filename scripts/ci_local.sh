@@ -278,6 +278,9 @@ python3 -m unittest discover -s tests -p 'test_ao12_b510_cache_transition.py' -v
 echo "==> check B51A diagnostic variants and replication flags"
 python3 -m pytest -q tests/test_aj08_b51a_diagnostic_variants.py
 
+echo "==> check Vaillant B507 energy candidates"
+python3 -m pytest -q tests/test_aj14_b507_energy_candidates.py
+
 echo "==> check B520 simulator actuator and ADC declarations"
 python3 -m pytest -q tests/test_ac20_simulator_adc.py
 python3 -m pytest -q tests/test_am22_standard05_candidate_views.py
