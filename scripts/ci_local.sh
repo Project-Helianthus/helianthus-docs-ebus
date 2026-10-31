@@ -257,6 +257,9 @@ python3 -m pytest -q tests/test_ae14_b510_candidates.py
 echo "==> check AI-28 B510/B511 local-cache contract"
 python3 -m pytest -q tests/test_ai28_b510_b511_local_cache.py
 
+echo "==> check AI=22 B523 sensor-field contract"
+python3 -m pytest -q tests/test_ai22_b523_sensor_fields.py
+
 echo "==> check Vaillant B505 sentinel and override candidates"
 python3 -m pytest -q tests/test_ae04_b505_candidates.py
 
