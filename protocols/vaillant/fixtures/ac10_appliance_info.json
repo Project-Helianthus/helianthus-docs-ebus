@@ -1,0 +1,610 @@
+{
+  "representation_grade": "Proven",
+  "candidate_grade": "Hypothesis",
+  "physical_qualification": "Unknown",
+  "coordinate_system": "logical-including-prefix-not-physical-offsets",
+  "entries": [
+    {
+      "family": "B513",
+      "variant": null,
+      "direction": "request",
+      "service": "B513",
+      "operation": "OP05",
+      "alternative": "request",
+      "logical_positions_include_prefix": true,
+      "physical_offsets": null,
+      "extent_bytes": null,
+      "grade": "Hypothesis",
+      "raw_fallback": "preserve-raw-bytes",
+      "fields": [
+        {
+          "name": "request_bits",
+          "logical_position": null,
+          "width_bytes": 1,
+          "raw_domain": [
+            0,
+            255
+          ],
+          "signedness": "unsigned",
+          "byte_order": "not-applicable",
+          "conversion": "identity",
+          "unit": null,
+          "default": 8,
+          "mappings": {},
+          "bits": {
+            "0": {
+              "default": false,
+              "role": "request-data"
+            },
+            "1": {
+              "default": false,
+              "role": "request-data"
+            },
+            "2": {
+              "default": false,
+              "role": "request-data"
+            },
+            "3": {
+              "default": true,
+              "role": "request-data"
+            },
+            "4": {
+              "default": false,
+              "role": "request-data"
+            },
+            "5": {
+              "default": false,
+              "role": "request-data"
+            }
+          },
+          "reserved_bits": [
+            6,
+            7
+          ],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve-raw-byte"
+        }
+      ]
+    },
+    {
+      "family": "B513",
+      "variant": null,
+      "direction": "response",
+      "service": "B513",
+      "operation": "OP05",
+      "alternative": "positive",
+      "logical_positions_include_prefix": true,
+      "physical_offsets": null,
+      "extent_bytes": null,
+      "grade": "Hypothesis",
+      "raw_fallback": "preserve-raw-bytes",
+      "fields": [
+        {
+          "name": "feedback",
+          "logical_position": null,
+          "width_bytes": 1,
+          "raw_domain": [
+            1,
+            1
+          ],
+          "signedness": "unsigned",
+          "byte_order": "not-applicable",
+          "conversion": "identity",
+          "unit": null,
+          "default": null,
+          "mappings": {
+            "1": "accepted"
+          },
+          "bits": {},
+          "reserved_bits": [],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve-raw-byte"
+        }
+      ]
+    },
+    {
+      "family": "B513",
+      "variant": null,
+      "direction": "response",
+      "service": "B513",
+      "operation": "OP05",
+      "alternative": "negative",
+      "logical_positions_include_prefix": true,
+      "physical_offsets": null,
+      "extent_bytes": null,
+      "grade": "Hypothesis",
+      "raw_fallback": "preserve-raw-bytes",
+      "fields": [
+        {
+          "name": "feedback",
+          "logical_position": null,
+          "width_bytes": 1,
+          "raw_domain": [
+            0,
+            255
+          ],
+          "raw_domain_exclusions": [
+            1
+          ],
+          "signedness": "unsigned",
+          "byte_order": "not-applicable",
+          "conversion": "identity",
+          "unit": null,
+          "default": null,
+          "mappings": {
+            "0": "not-accepted-or-not-supported",
+            "2..255": "not-accepted-or-not-supported"
+          },
+          "bits": {},
+          "reserved_bits": [],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve-raw-byte"
+        }
+      ]
+    },
+    {
+      "family": "B513",
+      "variant": null,
+      "direction": "request",
+      "service": "B513",
+      "operation": "OP06",
+      "alternative": "request",
+      "logical_positions_include_prefix": true,
+      "physical_offsets": null,
+      "extent_bytes": null,
+      "grade": "Hypothesis",
+      "raw_fallback": "preserve-raw-bytes",
+      "fields": [
+        {
+          "name": "light",
+          "logical_position": 3,
+          "width_bytes": 1,
+          "raw_domain": [
+            0,
+            255
+          ],
+          "signedness": "unsigned",
+          "byte_order": "not-applicable",
+          "conversion": "identity",
+          "unit": null,
+          "default": 0,
+          "mappings": {
+            "0": "off",
+            "100": "on",
+            "255": "replacement"
+          },
+          "bits": {},
+          "reserved_bits": [],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve-raw-byte"
+        },
+        {
+          "name": "colour",
+          "logical_position": 4,
+          "width_bytes": 1,
+          "raw_domain": [
+            0,
+            255
+          ],
+          "signedness": "unsigned",
+          "byte_order": "not-applicable",
+          "conversion": "identity",
+          "unit": null,
+          "default": 0,
+          "mappings": {},
+          "bits": {},
+          "reserved_bits": [],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve-raw-byte"
+        }
+      ]
+    },
+    {
+      "family": "B513",
+      "variant": null,
+      "direction": "response",
+      "service": "B513",
+      "operation": "OP06",
+      "alternative": "positive",
+      "logical_positions_include_prefix": true,
+      "physical_offsets": null,
+      "extent_bytes": null,
+      "grade": "Hypothesis",
+      "raw_fallback": "preserve-raw-bytes",
+      "fields": [
+        {
+          "name": "feedback",
+          "logical_position": 3,
+          "width_bytes": 1,
+          "raw_domain": [
+            1,
+            1
+          ],
+          "signedness": "unsigned",
+          "byte_order": "not-applicable",
+          "conversion": "identity",
+          "unit": null,
+          "default": null,
+          "mappings": {
+            "1": "accepted"
+          },
+          "bits": {},
+          "reserved_bits": [],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve-raw-byte"
+        }
+      ]
+    },
+    {
+      "family": "B513",
+      "variant": null,
+      "direction": "response",
+      "service": "B513",
+      "operation": "OP06",
+      "alternative": "negative",
+      "logical_positions_include_prefix": true,
+      "physical_offsets": null,
+      "extent_bytes": null,
+      "grade": "Hypothesis",
+      "raw_fallback": "preserve-raw-bytes",
+      "fields": [
+        {
+          "name": "feedback",
+          "logical_position": 3,
+          "width_bytes": 1,
+          "raw_domain": [
+            0,
+            255
+          ],
+          "raw_domain_exclusions": [
+            1
+          ],
+          "signedness": "unsigned",
+          "byte_order": "not-applicable",
+          "conversion": "identity",
+          "unit": null,
+          "default": null,
+          "mappings": {
+            "0": "rejected",
+            "2..255": "rejected"
+          },
+          "bits": {},
+          "reserved_bits": [],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve-raw-byte"
+        }
+      ]
+    },
+    {
+      "family": "B513",
+      "variant": null,
+      "direction": "request",
+      "service": "B513",
+      "operation": "OP07",
+      "alternative": "request",
+      "logical_positions_include_prefix": true,
+      "physical_offsets": null,
+      "extent_bytes": 0,
+      "grade": "Hypothesis",
+      "raw_fallback": "preserve-raw-bytes",
+      "fields": []
+    },
+    {
+      "family": "B513",
+      "variant": null,
+      "direction": "response",
+      "service": "B513",
+      "operation": "OP07",
+      "alternative": "positive",
+      "logical_positions_include_prefix": true,
+      "physical_offsets": null,
+      "extent_bytes": null,
+      "grade": "Hypothesis",
+      "raw_fallback": "preserve-raw-bytes",
+      "fields": [
+        {
+          "name": "appliance_type",
+          "logical_position": 3,
+          "width_bytes": 1,
+          "raw_domain": [
+            0,
+            255
+          ],
+          "signedness": "unsigned",
+          "byte_order": "not-applicable",
+          "conversion": "identity",
+          "unit": null,
+          "default": 0,
+          "mappings": {
+            "0": "modulating",
+            "1": "single-step",
+            "2": "two-step"
+          },
+          "bits": {},
+          "reserved_bits": [],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve-raw-byte"
+        },
+        {
+          "name": "appliance_flags",
+          "logical_position": 4,
+          "width_bytes": 1,
+          "raw_domain": [
+            0,
+            255
+          ],
+          "signedness": "unsigned",
+          "byte_order": "not-applicable",
+          "conversion": "identity",
+          "unit": null,
+          "default": 0,
+          "mappings": {},
+          "bits": {
+            "0": {
+              "label": "floor-standing",
+              "default": false
+            },
+            "1": {
+              "label": "condensing",
+              "default": false
+            },
+            "2": {
+              "label": "fan-assisted",
+              "default": false
+            },
+            "3": {
+              "label": "open-vented",
+              "default": false
+            },
+            "4": {
+              "label": "high-modulation-range",
+              "default": false
+            },
+            "5": {
+              "label": "water-heater",
+              "default": false
+            },
+            "6": {
+              "label": "step-modulation",
+              "default": false
+            },
+            "7": {
+              "label": "ECS",
+              "default": false
+            }
+          },
+          "reserved_bits": [],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve-raw-byte"
+        },
+        {
+          "name": "fuel_flags",
+          "logical_position": 5,
+          "width_bytes": 1,
+          "raw_domain": [
+            0,
+            255
+          ],
+          "signedness": "unsigned",
+          "byte_order": "not-applicable",
+          "conversion": "identity",
+          "unit": null,
+          "default": 0,
+          "mappings": {},
+          "bits": {
+            "0": {
+              "label": "gas",
+              "default": false
+            },
+            "1": {
+              "label": "oil",
+              "default": false
+            },
+            "2": {
+              "label": "ABC",
+              "default": false
+            }
+          },
+          "reserved_bits": [
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve-raw-byte"
+        },
+        {
+          "name": "tank_flags",
+          "logical_position": 6,
+          "width_bytes": 1,
+          "raw_domain": [
+            0,
+            255
+          ],
+          "signedness": "unsigned",
+          "byte_order": "not-applicable",
+          "conversion": "identity",
+          "unit": null,
+          "default": 0,
+          "mappings": {},
+          "bits": {
+            "0": {
+              "label": "layer-tank",
+              "default": false
+            },
+            "1": {
+              "label": "warm-start",
+              "default": false
+            },
+            "2": {
+              "label": "external-tank",
+              "default": false
+            },
+            "3": {
+              "label": "combination",
+              "default": false
+            }
+          },
+          "reserved_bits": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve-raw-byte"
+        },
+        {
+          "name": "feature_flags",
+          "logical_position": 7,
+          "width_bytes": 1,
+          "raw_domain": [
+            0,
+            255
+          ],
+          "signedness": "unsigned",
+          "byte_order": "not-applicable",
+          "conversion": "identity",
+          "unit": null,
+          "default": 0,
+          "mappings": {},
+          "bits": {
+            "0": {
+              "label": "solar-compact",
+              "default": false
+            },
+            "1": {
+              "label": "basic-solar",
+              "default": false
+            },
+            "2": {
+              "label": "AAPS",
+              "default": false
+            },
+            "3": {
+              "label": "advanced-power",
+              "default": false
+            },
+            "4": {
+              "label": "partial-load",
+              "default": false
+            },
+            "5": {
+              "label": "parameter-master",
+              "default": false
+            }
+          },
+          "reserved_bits": [
+            6,
+            7
+          ],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve-raw-byte"
+        },
+        {
+          "name": "pump_mode",
+          "logical_position": 8,
+          "width_bytes": 1,
+          "raw_domain": [
+            0,
+            255
+          ],
+          "signedness": "unsigned",
+          "byte_order": "not-applicable",
+          "conversion": "identity",
+          "unit": null,
+          "default": 0,
+          "mappings": {
+            "0": false,
+            "1": true
+          },
+          "bits": {},
+          "reserved_bits": [],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve-raw-byte"
+        },
+        {
+          "name": "opaque_9",
+          "logical_position": 9,
+          "width_bytes": 1,
+          "raw_domain": [
+            0,
+            255
+          ],
+          "signedness": "unsigned",
+          "byte_order": "not-applicable",
+          "conversion": "identity",
+          "unit": null,
+          "default": 0,
+          "mappings": {},
+          "bits": {},
+          "reserved_bits": [],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve-raw-byte"
+        },
+        {
+          "name": "opaque_10",
+          "logical_position": 10,
+          "width_bytes": 1,
+          "raw_domain": [
+            0,
+            255
+          ],
+          "signedness": "unsigned",
+          "byte_order": "not-applicable",
+          "conversion": "identity",
+          "unit": null,
+          "default": 0,
+          "mappings": {},
+          "bits": {},
+          "reserved_bits": [],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve-raw-byte"
+        },
+        {
+          "name": "opaque_11",
+          "logical_position": 11,
+          "width_bytes": 1,
+          "raw_domain": [
+            0,
+            255
+          ],
+          "signedness": "unsigned",
+          "byte_order": "not-applicable",
+          "conversion": "identity",
+          "unit": null,
+          "default": 0,
+          "mappings": {},
+          "bits": {},
+          "reserved_bits": [],
+          "grade": "Hypothesis",
+          "raw_fallback": "preserve-raw-byte"
+        }
+      ]
+    }
+  ],
+  "synthetic": true,
+  "unknowns": [
+    "physical-adaptation",
+    "peer-effects",
+    "OP00-complement",
+    "OP04-address-dictionaries",
+    "unspecified-positions-and-extents",
+    "variant"
+  ],
+  "examples": {
+    "opaque_tail": [
+      7,
+      8,
+      9
+    ],
+    "unlabeled_type": 3,
+    "pump_mode_values": [
+      0,
+      1,
+      2
+    ]
+  }
+}
