@@ -252,6 +252,9 @@ echo "==> check Vaillant B503 milestone contract"
 python3 scripts/check_vaillant_b503_milestones.py
 python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py
 
+echo "==> check AI-28 B510/B511 local-cache contract"
+python3 -m pytest -q tests/test_ai28_b510_b511_local_cache.py
+
 echo "==> check Vaillant B505 sentinel and override candidates"
 python3 -m pytest -q tests/test_ae04_b505_candidates.py
 
