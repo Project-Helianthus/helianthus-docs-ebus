@@ -133,6 +133,76 @@
       }
     },
     {
+      "id": "matching-destinations",
+      "direction": "client_request_and_returned_data",
+      "input": {
+        "tunnel_destination": 42,
+        "original_destination": 42,
+        "original_pdu": [
+          181,
+          24,
+          0,
+          255
+        ],
+        "original_service": [
+          181,
+          9
+        ],
+        "returned_data": [
+          181,
+          24,
+          9
+        ]
+      },
+      "expected": {
+        "state": "candidate",
+        "admission": "withheld",
+        "raw": {
+          "tunnel_destination": 42,
+          "original_destination": 42,
+          "original_pdu": [
+            181,
+            24,
+            0,
+            255
+          ],
+          "original_service": [
+            181,
+            9
+          ],
+          "returned_data": [
+            181,
+            24,
+            9
+          ]
+        },
+        "envelope": {
+          "channel": "fixed-channel",
+          "outer_destination": 42,
+          "inner": {
+            "original_destination": 42,
+            "original_pdu": [
+              181,
+              24,
+              0,
+              255
+            ]
+          }
+        },
+        "returned": {
+          "context": [
+            181,
+            9
+          ],
+          "raw": [
+            181,
+            24,
+            9
+          ]
+        }
+      }
+    },
+    {
       "id": "destination-max",
       "direction": "client_request_and_returned_data",
       "input": {

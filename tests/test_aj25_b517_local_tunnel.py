@@ -86,6 +86,7 @@ class LocalTunnelContract(unittest.TestCase):
         patches = {
             'destination-zero': ({'tunnel_destination': 0}, False),
             'control': ({}, True),
+            'matching-destinations': ({'tunnel_destination': 42}, True),
             'destination-max': ({'tunnel_destination': 254}, True),
             'destination-255': ({'tunnel_destination': 255}, False),
             'original-destination': ({'original_destination': 43}, True),
@@ -111,7 +112,11 @@ class LocalTunnelContract(unittest.TestCase):
                             'envelope': None, 'returned': None}
                 if accepted:
                     # Separate axes: changing the outer never changes the inner.
-                    self.assertNotEqual(x['tunnel_destination'], x['original_destination'])
+                    envelope = case['expected']['envelope']
+                    self.assertEqual(envelope['outer_destination'],
+                                     expected_input['tunnel_destination'])
+                    self.assertEqual(envelope['inner']['original_destination'],
+                                     expected_input['original_destination'])
                     expected['envelope'] = {
                         'channel': 'fixed-channel',
                         'outer_destination': x['tunnel_destination'],

@@ -8,8 +8,8 @@ helianthus-docs-ebus#736; the parent remains open.
 The [public native B517/B518 contract](../protocols/vaillant/ebus-vaillant.md#b517-and-b518-sub-ebus-tunnel)
 comes first for wire claims. It records candidate layouts and unresolved B518
 readings. The local rules below neither resolve those readings nor establish
-native behavior. Their supplied source is the bounded issue contract, not a
-capture or physical observation. All fixtures are synthetic; no device or
+native behavior. The local declarations remain Hypothesis candidates;
+provenance is not published. All fixtures are synthetic; no device or
 installation is represented.
 
 ## Identity and envelope
