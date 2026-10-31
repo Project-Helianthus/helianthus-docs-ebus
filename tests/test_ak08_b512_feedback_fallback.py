@@ -306,6 +306,8 @@ func TestAK08Errors(t *testing.T) {
  dup,_:=json.Marshal([]json.RawMessage{r[0],r[0]})
  inputs:=[][]byte{[]byte("["),[]byte("{}"),[]byte("null"),[]byte("[null]"),[]byte("[{}]"),dup}
  for _,axis:=range axes {var obj map[string]json.RawMessage;json.Unmarshal(r[0],&obj);var key map[string]any;json.Unmarshal(obj["key"],&key);delete(key,axis);obj["key"],_=json.Marshal(key);bad,_:=json.Marshal(obj);poisoned,_:=json.Marshal([]json.RawMessage{r[0],bad});inputs=append(inputs,poisoned)}
+ for _,field:=range []string{"id","grade","raw_form","feedback"} {var obj map[string]json.RawMessage;json.Unmarshal(r[1],&obj);delete(obj,field);bad,_:=json.Marshal(obj);poisoned,_:=json.Marshal([]json.RawMessage{r[0],bad});inputs=append(inputs,poisoned)
+  obj["key"]=r[0]; var full map[string]json.RawMessage;json.Unmarshal(r[1],&full);full[field]=json.RawMessage("null");nb,_:=json.Marshal(full);np,_:=json.Marshal([]json.RawMessage{nb});inputs=append(inputs,np)}
  for _,b:=range inputs {
   if _,e:=ab18Validate(b);e==nil {t.Fatalf("accepted invalid %s",b)}
   if out,found,e:=ab18Lookup(b,k[0]);e==nil||found||out!=nil {t.Fatal("fail closed")}

@@ -34,10 +34,19 @@ func ab18Validate(ab18Input []byte) (map[string]ab18json.RawMessage, error) {
 	ab18Index := make(map[string]ab18json.RawMessage, len(ab18Rows))
 	for _, ab18Row := range ab18Rows {
 		var ab18Envelope struct {
-			Ab18Key ab18json.RawMessage `json:"key"`
+			Ab18ID       ab18json.RawMessage `json:"id"`
+			Ab18Key      ab18json.RawMessage `json:"key"`
+			Ab18Grade    ab18json.RawMessage `json:"grade"`
+			Ab18RawForm  ab18json.RawMessage `json:"raw_form"`
+			Ab18Feedback ab18json.RawMessage `json:"feedback"`
 		}
 		if ab18Error := ab18json.Unmarshal(ab18Row, &ab18Envelope); ab18Error != nil {
 			return nil, ab18Error
+		}
+		for ab18Name, ab18Payload := range map[string]ab18json.RawMessage{"id": ab18Envelope.Ab18ID, "grade": ab18Envelope.Ab18Grade, "raw_form": ab18Envelope.Ab18RawForm, "feedback": ab18Envelope.Ab18Feedback} {
+			if len(ab18Payload) == 0 || string(ab18Payload) == "null" || string(ab18Payload) == `""` {
+				return nil, ab18fmt.Errorf("ab18: missing row field %s", ab18Name)
+			}
 		}
 		var ab18Axes map[string]ab18json.RawMessage
 		if ab18Error := ab18json.Unmarshal(ab18Envelope.Ab18Key, &ab18Axes); ab18Error != nil {
