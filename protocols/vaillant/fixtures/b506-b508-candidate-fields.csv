@@ -58,11 +58,11 @@ B5 06 0E,response,5,0,16,i16 LE,PA_TFlowCH,0.0,-32768..32767,-2048..2047.9375,°
 B5 06 0E,response,7,0,16,i16 LE,,0.0,-32768..32767,-2048..2047.9375,°C,raw/16,,
 B5 06 0E,response,9,0,16,i16 LE,,0.0,-32768..32767,-2048..2047.9375,°C,raw/16,,
 B5 06 0E,response,11,0,16,i16 LE,,0.0,-32768..32767,-2048..2047.9375,°C,raw/16,,
-B5 06 0F,request,3,0,8,u8,PA_CheckType,send back the supported types,0..255,,,,0=send back the supported types | 2=16-bit checksum for the relevant EEPROM | 4=16-bit CRC for the relevant EEPROM | 8=8-bit CRC for the relevant EEPROM | 16=8-bit CRC with the eBUS polynomial | 255=read CRC,
-B5 06 0F,response,3,0,8,8-bit raw field,PA_CheckType,,,,,,,
-B5 06 0F,response,4,0,16,16-bit raw field,PA_Check,,,,,,,
-B5 06 10,request,3,0,8,8-bit raw field,PA_CheckType,,,,,,,
-B5 06 10,request,4,0,16,16-bit raw field,PA_Check,,,,,,,
+B5 06 0F,request,3,0,8,u8,PA_CheckType,send back the supported types,0..255,,,,0=send back the supported types | 2=16-bit checksum for the relevant EEPROM | 4=16-bit CRC for the relevant EEPROM | 8=8-bit CRC for the relevant EEPROM | 16=8-bit CRC with the eBUS polynomial | 255=read CRC,"Superseded by ../ebus-vaillant-B506.md#scoped-parameter-and-checksum-declarations; algorithm, operation association and returned checksum width Unknown"
+B5 06 0F,response,3,0,8,8-bit raw field,PA_CheckType,,,,,,,"Superseded by ../ebus-vaillant-B506.md#scoped-parameter-and-checksum-declarations; algorithm, operation association and returned checksum width Unknown"
+B5 06 0F,response,4,0,16,16-bit raw field,PA_Check,,,,,,,"Superseded by ../ebus-vaillant-B506.md#scoped-parameter-and-checksum-declarations; algorithm, operation association and returned checksum width Unknown"
+B5 06 10,request,3,0,8,8-bit raw field,PA_CheckType,,,,,,,"Superseded by ../ebus-vaillant-B506.md#scoped-parameter-and-checksum-declarations; algorithm, operation association and returned checksum width Unknown"
+B5 06 10,request,4,0,16,16-bit raw field,PA_Check,,,,,,,"Superseded by ../ebus-vaillant-B506.md#scoped-parameter-and-checksum-declarations; algorithm, operation association and returned checksum width Unknown"
 B5 06 11,request,3,0,8,u8,PA_TestMode,stop active test modes,0..255,,,,"0=stop active test modes | 1=transmit the character 0xAA continuously on the bus | 2=transmit the character 0x00 continuously on the bus | 3=transmit the request 07 04 continuously to the configured target address | 4=stop generating the automatic SYN character | 5=generate no initiator request telegrams | 6=combination of modes 3 and 4 | 7=product-specific EMC test mode | 8=product-specific long-term test mode | 9=external flash-ROM test mode | 10=enter low-power mode | 32=radio test: unmodulated carrier | 33=radio test: pseudo-random sequence with modulation, continuous emission | 34=radio test: pseudo-random sequence with modulation | 35=radio test: pseudo-random sequence with modulation, continuous emission | 36=radio test: pseudo-random sequence with modulation and listen-before-talk | 37=radio test: listening for the pseudo-random sequence with a statistical counter",
 B5 06 11,request,4,0,,parameter set whose layout depends on the test mode (candidate),PA_ParamSet,,,,Raw,,,
 B5 06 11,response,3,0,8,u8,PA_LengtByte,0,0..255,,Raw,,,
