@@ -27,7 +27,7 @@ The existing half-percent correction is outside this supplement.
 | 06 | capacity output | Hypothesis | 8 | unsigned | raw / 10 kW; raw 0..250 only | Unknown |
 | 06 | cost of primary energy | Hypothesis | 8 | unsigned | candidate unit 1/MWh, raw 0..250; mode and monetary/emissions reference dependent; converter Unknown | calculated or estimated possible |
 | 06 | current flow temperature | Hypothesis | 16 | signed little-endian | raw / 16 °C | calculated or estimated possible |
-| 08 | efficiency word | Hypothesis | 16 | Unknown | operation-local candidate labels only | Unknown |
+| 08 | efficiency word | Hypothesis | 16 | unsigned little-endian | raw %; operation-local candidate labels only | Unknown |
 
 For OP06 capacity output, the candidate is an unsigned byte divided by 10. Negative
 mode-related prose remains a separate unresolved alternative; neither signed8

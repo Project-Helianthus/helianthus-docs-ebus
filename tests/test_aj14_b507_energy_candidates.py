@@ -19,8 +19,8 @@ FIELD_ROWS = [
      'calculated or estimated possible'],
     ['06', 'current flow temperature', 'Hypothesis', '16', 'signed little-endian',
      'raw / 16 °C', 'calculated or estimated possible'],
-    ['08', 'efficiency word', 'Hypothesis', '16', 'Unknown',
-     'operation-local candidate labels only', 'Unknown'],
+    ['08', 'efficiency word', 'Hypothesis', '16', 'unsigned little-endian',
+     'raw %; operation-local candidate labels only', 'Unknown'],
 ]
 WORD_ROWS = [['08', '0000', 'appliance-unavailable candidate', 'Hypothesis'],
              ['08', 'FFFF', 'maximum-efficiency-preference', 'Hypothesis'],
@@ -78,8 +78,8 @@ class EnergyCandidatesTest(unittest.TestCase):
             with self.subTest(operation=operation):
                 mutant = copy.deepcopy(self.fixture)
                 mutant['synthetic_tuples']['fields'].append(
-                    [operation, 'efficiency word', 'Hypothesis', '16', 'Unknown',
-                     'operation-local candidate labels only', 'Unknown'])
+                    [operation, 'efficiency word', 'Hypothesis', '16', 'unsigned little-endian',
+                     'raw %; operation-local candidate labels only', 'Unknown'])
                 with self.assertRaises(AssertionError):
                     self.check_fixture(mutant)
                 mutant = copy.deepcopy(self.fixture)
