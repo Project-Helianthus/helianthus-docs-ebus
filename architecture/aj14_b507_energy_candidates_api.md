@@ -42,8 +42,9 @@ command role must remain distinct, including separate OP02 and OP06 identities.
 `Ab13PhysicalQualification`, `Ab13Invocation`, raw preservation and unknown
 metadata. Proven metadata presence means the library contains the metadata;
 it does not prove a native meaning or physical support. Capacity, cost,
-temperature and the OP08 labels remain Hypothesis. OP09/OP0B word meanings,
-physical qualification and invocation remain Unknown. Absent coordinates,
+and temperature remain Hypothesis. OP08, OP09 and OP0B are omitted from this
+bounded B507 entry set; no preference fields or sentinel mappings are supplied.
+Physical qualification and invocation remain Unknown. Absent coordinates,
 converters, references and widths must not become fabricated defaults.
 
 Every successful `Ab13Entries` call returns independently owned nested data.

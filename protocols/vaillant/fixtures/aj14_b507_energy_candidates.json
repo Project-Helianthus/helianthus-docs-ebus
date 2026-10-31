@@ -46,33 +46,6 @@
         "Unknown",
         "converter Unknown",
         "calculated or estimated possible"
-      ],
-      [
-        "08",
-        "preference word",
-        "Hypothesis",
-        "16",
-        "Unknown",
-        "operation-local candidate labels only",
-        "Unknown"
-      ],
-      [
-        "09",
-        "preference word",
-        "Unknown",
-        "Unknown",
-        "Unknown",
-        "raw; no transferred labels",
-        "Unknown"
-      ],
-      [
-        "0B",
-        "preference word",
-        "Unknown",
-        "Unknown",
-        "Unknown",
-        "raw; no transferred labels",
-        "Unknown"
       ]
     ],
     "capacity": [
@@ -95,62 +68,6 @@
         "251",
         "Unknown",
         "outside"
-      ]
-    ],
-    "words": [
-      [
-        "08",
-        "0000",
-        "appliance-unavailable candidate",
-        "Hypothesis"
-      ],
-      [
-        "08",
-        "FFFF",
-        "maximum-efficiency-preference",
-        "Hypothesis"
-      ],
-      [
-        "08",
-        "0001",
-        "unmapped",
-        "Unknown"
-      ],
-      [
-        "09",
-        "0000",
-        "raw",
-        "Unknown"
-      ],
-      [
-        "09",
-        "FFFF",
-        "raw",
-        "Unknown"
-      ],
-      [
-        "09",
-        "0001",
-        "raw",
-        "Unknown"
-      ],
-      [
-        "0B",
-        "0000",
-        "raw",
-        "Unknown"
-      ],
-      [
-        "0B",
-        "FFFF",
-        "raw",
-        "Unknown"
-      ],
-      [
-        "0B",
-        "0001",
-        "raw",
-        "Unknown"
       ]
     ],
     "cost_contexts": [

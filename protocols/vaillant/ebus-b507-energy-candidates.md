@@ -20,7 +20,7 @@ No source/destination, payload coordinate, direction, product or firmware is
 established for these tuples. Raw values are isolated field examples, not whole
 frames. Their mode labels are synthetic predicates, not native mode codes.
 All fields have Unknown coordinates and actual reference. Widths other than
-OP06 capacity's candidate byte and OP08's candidate word remain Unknown here.
+OP06 capacity's candidate byte remain Unknown here.
 The existing half-percent correction is outside this supplement.
 
 ## Field boundaries
@@ -30,9 +30,6 @@ The existing half-percent correction is outside this supplement.
 | 06 | capacity | Hypothesis | 8 | unsigned | raw / 10 kW; raw 0..250 only | Unknown |
 | 06 | cost | Hypothesis | Unknown | Unknown | mode and monetary/emissions reference dependent; converter Unknown | calculated or estimated possible |
 | 06 | temperature | Hypothesis | Unknown | Unknown | converter Unknown | calculated or estimated possible |
-| 08 | preference word | Hypothesis | 16 | Unknown | operation-local candidate labels only | Unknown |
-| 09 | preference word | Unknown | Unknown | Unknown | raw; no transferred labels | Unknown |
-| 0B | preference word | Unknown | Unknown | Unknown | raw; no transferred labels | Unknown |
 
 For OP06 capacity, the candidate is an unsigned byte divided by 10. Negative
 mode-related prose remains a separate unresolved alternative; neither signed8
@@ -46,23 +43,12 @@ candidate domain and remains raw, without clipping or a candidate kW value.
 | 250 | 25 | inside |
 | 251 | Unknown | outside |
 
-## Operation-local words
+## Other operations
 
-Word notation below does not assert byte order or coordinates. OP08's labels
-confer no execution permission and do not transfer to OP09, OP0B, another field,
-or another family. The OP09/OP0B examples do not establish field widths.
-
-| Operation | Raw word | Interpretation | Grade |
-|---|---|---|---|
-| 08 | 0000 | appliance-unavailable candidate | Hypothesis |
-| 08 | FFFF | maximum-efficiency-preference | Hypothesis |
-| 08 | 0001 | unmapped | Unknown |
-| 09 | 0000 | raw | Unknown |
-| 09 | FFFF | raw | Unknown |
-| 09 | 0001 | raw | Unknown |
-| 0B | 0000 | raw | Unknown |
-| 0B | FFFF | raw | Unknown |
-| 0B | 0001 | raw | Unknown |
+OP08, OP09 and OP0B are outside these synthetic tuples. Their distinct candidate
+request and response fields remain in the native reference; no shared preference
+field is established. OP08 sentinel meanings for `0000` and `FFFF` remain
+Unknown: the cited reference supplies no such mapping.
 
 ## Cost context and partial knowledge
 
@@ -83,4 +69,4 @@ The assumed contexts are independent synthetic conditions, not evidence of an
 actual reference or supported mode. Preserve the raw value alongside any
 candidate interpretation. An unknown or out-of-domain field does not erase
 other known raw fields; partial knowledge must remain partial. Readable values
-and preference labels establish neither writable behavior nor permission to act.
+establish neither writable behavior nor permission to act.
