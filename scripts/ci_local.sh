@@ -258,6 +258,9 @@ python3 -m pytest -q tests/test_ae04_b505_candidates.py
 echo "==> check B520 simulator actuator and ADC declarations"
 python3 -m pytest -q tests/test_ac20_simulator_adc.py
 
+echo "==> check B531 ordinary-limit documentation contract"
+python3 -m pytest -q tests/test_ap04_b531_ordinary_limit.py
+
 echo "==> check B509/B524 passive watch-policy documentation contract"
 python3 -m pytest -q tests/test_watch_policy_contract.py
 python3 -m pytest -q tests/test_b524_operation_docs.py

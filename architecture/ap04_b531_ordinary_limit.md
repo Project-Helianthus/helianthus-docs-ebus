@@ -173,13 +173,14 @@ constants, schema/error vectors, copy/round-trip assertions on synthetic JSON,
 and small bounded transition oracles. It is not a Python runtime implementation
 or evidence that a Go function was invoked. Production invocation, rejection,
 and allocation isolation require later implementation tests; this slice owns no
-Go implementation. The supplemental ship command must run explicitly:
+Go implementation. The suite runs in `scripts/ci_local.sh`; it can also run
+directly:
 
 ```sh
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p test_ap04_b531_ordinary_limit.py -v
 ```
 
-Gate D uses a fixed test list and does not automatically discover this suite.
+Gate D uses a fixed test list that explicitly includes this suite.
 Full repository CI with its prescribed read-only prerequisites, publication
 checks, applicable transport classification, and fresh independent committed
 change review remain ship requirements. This is partial work for #736; the
