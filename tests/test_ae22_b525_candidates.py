@@ -135,7 +135,9 @@ class B525Candidates(unittest.TestCase):
                 self.assertEqual(cells[8], f'bits: {bits}; codes: {codes}')
                 self.assertEqual(cells[9], '; '.join(entry['unknowns']) +
                                  f"; relation={entry['relation']}; preserve_all")
-        for statement in ['A logical position is not a wire offset',
+        for statement in ['Every declaration below is **Hypothesis**',
+                          'Provenance is not\npublished.',
+                          'A logical position is not a wire offset',
                           'minimum zero and maximum unset',
                           'empty-packet acceptance', 'positives are prefix-only',
                           'physical and\nnative qualification remain **Unknown**']:
@@ -172,8 +174,14 @@ class B525Candidates(unittest.TestCase):
                 self.assertEqual(vector['raw'][:i] + vector['raw'][i+1:], [0] * 15)
 
     def test_blocks_and_opaque_representation(self):
-        self.assertEqual(self.cases['block_lengths'], [dict(count=31, form='incomplete'),
-                         dict(count=32, form='declared'), dict(count=33, form='extra')])
+        self.assertEqual(self.cases['block_lengths'], [dict(count=31, form='incomplete', raw=list(range(31))),
+                         dict(count=32, form='declared', raw=list(range(32))),
+                         dict(count=33, form='extra', raw=list(range(33)))])
+        for vector in self.cases['block_lengths']:
+            self.assertEqual(len(vector['raw']), vector['count'])
+            form = ('incomplete' if len(vector['raw']) < 32 else
+                    'extra' if len(vector['raw']) > 32 else 'declared')
+            self.assertEqual(vector['form'], form)
         self.assertEqual(self.cases['opaque'], [[], [0, 170, 255]])
         arrays = self.cases['signed_arrays']
         self.assertEqual(len(arrays), 24)
