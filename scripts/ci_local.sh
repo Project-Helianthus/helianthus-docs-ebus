@@ -251,6 +251,9 @@ echo "==> check CC0 and AGPL documentation boundary"
 python3 scripts/check_public_domain_boundary.py
 python3 -m pytest -q tests/test_public_domain_boundary.py
 
+echo "==> check Vaillant room-action and return-service declarations"
+python3 -m pytest -q tests/test_ac06_room_actions.py
+
 echo "==> check Vaillant B503 milestone contract"
 python3 scripts/check_vaillant_b503_milestones.py
 python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py
