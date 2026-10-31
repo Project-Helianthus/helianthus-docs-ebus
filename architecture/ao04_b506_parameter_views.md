@@ -221,10 +221,10 @@ It checks documentation data, not a substitute production interpreter.
   ],
   "errors": [
     {"id": "ab03ao03Malformed","input_text": "{","error": true},
-    {"id": "ab03ao03DuplicateTop","input_text": "{\"context\":{},\"context\":{},\"fields\":{}}","error": true},
-    {"id": "ab03ao03DuplicateContext","input_text": "{\"context\":{\"primary\":181,\"primary\":181},\"fields\":{}}","error": true},
-    {"id": "ab03ao03DuplicateField","input_text": "{\"context\":{},\"fields\":{\"key\":[2],\"key\":[3]}}","error": true},
-    {"id": "ab03ao03DuplicateArgument","input_text": "{\"context\":{},\"fields\":{},\"arguments\":{\"x\":0,\"x\":1}}","error": true},
+    {"id": "ab03ao03DuplicateTop","input_text": "{\"context\":{\"primary\":181,\"secondary\":6,\"operation\":17,\"direction\":\"request\",\"view\":\"parameter-union\"},\"context\":{\"primary\":181,\"secondary\":6,\"operation\":17,\"direction\":\"request\",\"view\":\"parameter-union\"},\"fields\":{\"key\":[2],\"value\":[0,170,255]}}","error": true},
+    {"id": "ab03ao03DuplicateContext","input_text": "{\"context\":{\"primary\":181,\"secondary\":6,\"operation\":17,\"direction\":\"request\",\"view\":\"parameter-union\",\"primary\":181},\"fields\":{\"key\":[2],\"value\":[0,170,255]}}","error": true},
+    {"id": "ab03ao03DuplicateField","input_text": "{\"context\":{\"primary\":181,\"secondary\":6,\"operation\":17,\"direction\":\"request\",\"view\":\"parameter-union\"},\"fields\":{\"key\":[2],\"key\":[3],\"value\":[0,170,255]}}","error": true},
+    {"id": "ab03ao03DuplicateArgument","input_text": "{\"context\":{\"primary\":181,\"secondary\":6,\"operation\":17,\"direction\":\"request\",\"view\":\"parameter-union\"},\"fields\":{\"key\":[2],\"value\":[0,170,255]},\"arguments\":{},\"arguments\":{}}","error": true},
     {"id": "ab03ao03RootArray","input_text": "[]","error": true},
     {"id": "ab03ao03RootNull","input_text": "null","error": true},
     {"id": "ab03ao03MissingContext","input_text": "{\"fields\": {\"key\": [2], \"value\": [0, 170, 255]}}","error": true},
@@ -257,7 +257,7 @@ It checks documentation data, not a substitute production interpreter.
     {"id": "ab03ao03KindSecondaryBool","input_text": "{\"context\": {\"primary\": 181, \"secondary\": false, \"operation\": 17, \"direction\": \"request\", \"view\": \"parameter-union\", \"family\": \"synthetic-family\", \"variant\": \"synthetic-variant\"}, \"fields\": {\"key\": [2], \"value\": [0, 170, 255]}}","error": true},
     {"id": "ab03ao03KindSecondaryFloat","input_text": "{\"context\": {\"primary\": 181, \"secondary\": 6.0, \"operation\": 17, \"direction\": \"request\", \"view\": \"parameter-union\", \"family\": \"synthetic-family\", \"variant\": \"synthetic-variant\"}, \"fields\": {\"key\": [2], \"value\": [0, 170, 255]}}","error": true},
     {"id": "ab03ao03KindSecondaryStr","input_text": "{\"context\": {\"primary\": 181, \"secondary\": \"6\", \"operation\": 17, \"direction\": \"request\", \"view\": \"parameter-union\", \"family\": \"synthetic-family\", \"variant\": \"synthetic-variant\"}, \"fields\": {\"key\": [2], \"value\": [0, 170, 255]}}","error": true},
-    {"id": "ab03ao03DuplicateOpaque","input_text": "{\"context\":{\"family\":{\"x\":0,\"x\":1}},\"fields\":{}}","error": true}
+    {"id": "ab03ao03DuplicateOpaque","input_text": "{\"context\":{\"primary\":181,\"secondary\":6,\"operation\":17,\"direction\":\"request\",\"view\":\"parameter-union\",\"family\":{\"x\":0,\"x\":1}},\"fields\":{\"key\":[2],\"value\":[0,170,255]}}","error": true}
   ]
 }
 ```

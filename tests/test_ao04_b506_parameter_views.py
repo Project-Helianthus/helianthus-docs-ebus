@@ -111,10 +111,10 @@ def ab03ao03Oracle():
 def ab03ao03Errors():
     ab03ao03Result = {
         'Malformed': '{',
-        'DuplicateTop': '{"context":{},"context":{},"fields":{}}',
-        'DuplicateContext': '{"context":{"primary":181,"primary":181},"fields":{}}',
-        'DuplicateField': '{"context":{},"fields":{"key":[2],"key":[3]}}',
-        'DuplicateArgument': '{"context":{},"fields":{},"arguments":{"x":0,"x":1}}',
+        'DuplicateTop': '{"context":{"primary":181,"secondary":6,"operation":17,"direction":"request","view":"parameter-union"},"context":{"primary":181,"secondary":6,"operation":17,"direction":"request","view":"parameter-union"},"fields":{"key":[2],"value":[0,170,255]}}',
+        'DuplicateContext': '{"context":{"primary":181,"secondary":6,"operation":17,"direction":"request","view":"parameter-union","primary":181},"fields":{"key":[2],"value":[0,170,255]}}',
+        'DuplicateField': '{"context":{"primary":181,"secondary":6,"operation":17,"direction":"request","view":"parameter-union"},"fields":{"key":[2],"key":[3],"value":[0,170,255]}}',
+        'DuplicateArgument': '{"context":{"primary":181,"secondary":6,"operation":17,"direction":"request","view":"parameter-union"},"fields":{"key":[2],"value":[0,170,255]},"arguments":{},"arguments":{}}',
         'RootArray': '[]', 'RootNull': 'null',
     }
     for ab03ao03Id, ab03ao03Patch in (
@@ -152,7 +152,7 @@ def ab03ao03Errors():
         ab03ao03Input = {'context': dict(ab03ao03Context), 'fields': {'key': [2], 'value': [0, 170, 255]}}
         ab03ao03Input['context'][ab03ao03Axis] = ab03ao03Value
         ab03ao03Result['Kind' + ab03ao03Axis.title() + type(ab03ao03Value).__name__.title()] = ab03ao03Json.dumps(ab03ao03Input)
-    ab03ao03Result['DuplicateOpaque'] = '{"context":{"family":{"x":0,"x":1}},"fields":{}}'
+    ab03ao03Result['DuplicateOpaque'] = '{"context":{"primary":181,"secondary":6,"operation":17,"direction":"request","view":"parameter-union","family":{"x":0,"x":1}},"fields":{"key":[2],"value":[0,170,255]}}'
     return {'ab03ao03' + ab03ao03Id: {'id': 'ab03ao03' + ab03ao03Id,
             'input_text': ab03ao03Text, 'error': True}
             for ab03ao03Id, ab03ao03Text in ab03ao03Result.items()}
@@ -208,6 +208,30 @@ class Ab03Ao03ContractTests(ab03ao03Unittest.TestCase):
                              [ab03ao03Axis])
         for ab03ao03Doc in self.ab03ao03Documents():
             self.ab03ao03AssertTable(ab03ao03Doc)
+
+    def TestAb03Ao03DuplicateVectorsOtherwiseValid(self):
+        # Collapsing duplicates (last wins) must leave a request that is valid, so only the duplicate is a defect.
+        ab03ao03Duplicates = [ab03ao03Row for ab03ao03Row in ab03ao03Errors().values()
+                              if ab03ao03Row['id'].startswith('ab03ao03Duplicate')]
+        self.assertEqual(len(ab03ao03Duplicates), 5)
+        for ab03ao03Row in ab03ao03Duplicates:
+            with self.subTest(ab03ao03Id=ab03ao03Row['id']):
+                ab03ao03Seen = []
+
+                def ab03ao03Pairs(ab03ao03Items):
+                    ab03ao03Keys = [ab03ao03Key for ab03ao03Key, _ in ab03ao03Items]
+                    if len(set(ab03ao03Keys)) != len(ab03ao03Keys):
+                        ab03ao03Seen.append(ab03ao03Keys)
+                    return dict(ab03ao03Items)
+                ab03ao03Parsed = ab03ao03Json.loads(ab03ao03Row['input_text'], object_pairs_hook=ab03ao03Pairs)
+                self.assertEqual(len(ab03ao03Seen), 1)
+                ab03ao03Axes = ('primary', 'secondary', 'operation', 'direction', 'view')
+                self.assertEqual({ab03ao03Name: ab03ao03Parsed['context'].get(ab03ao03Name) for ab03ao03Name in ab03ao03Axes},
+                                 {ab03ao03Name: ab03ao03Context[ab03ao03Name] for ab03ao03Name in ab03ao03Axes})
+                self.assertEqual(set(ab03ao03Parsed['fields']) - {'key'}, {'value'})
+                self.assertEqual(ab03ao03Parsed['fields']['value'], [0, 170, 255])
+                self.assertIn(ab03ao03Parsed['fields']['key'], ([2], [3]))
+                self.assertIn(ab03ao03Parsed.get('arguments', {}), ({},))
 
 
 def load_tests(ab03ao03Loader, ab03ao03Tests, ab03ao03Pattern):
