@@ -44,6 +44,7 @@ def ab44_decode(ab44_ctx, ab44_codec, ab44_width, ab44_grade, ab44_raw):
         return ab44_result
     if not ab44_byte_container:
         return ab44_fail('ab44_bytes')
+    ab44_raw = ab44_result['ab44_raw']
     if len(ab44_raw) >= 3 and all(type(ab44_byte) is int and 0 <= ab44_byte <= 255
                                   for ab44_byte in ab44_raw[:3]):
         ab44_result['ab44_header'] = list(ab44_raw[:3])
@@ -83,6 +84,22 @@ def ab44_decode(ab44_ctx, ab44_codec, ab44_width, ab44_grade, ab44_raw):
 
 
 class Ab44ContractTests(unittest.TestCase):
+    def test_ab44_admitted_raw_containers(self):
+        for ab44_container in (list, tuple, bytes, bytearray):
+            with self.subTest(ab44_container=ab44_container.__name__):
+                ab44_result = ab44_decode(ab44_context, 'UIN', 2, 'Hypothesis',
+                                          ab44_container(ab44_uin))
+                self.assertEqual(ab44_result, {
+                    'ab44_context': ab44_context, 'ab44_raw': ab44_uin,
+                    'ab44_header': [2, 2, 0],
+                    'ab44_spans': [[0, 0], [4, 0], [1, 0]],
+                    'ab44_limits': [0, 4, 1], 'ab44_reason': None,
+                    'ab44_grade': 'Hypothesis'})
+                for ab44_value in (ab44_result['ab44_raw'],
+                        ab44_result['ab44_header'], ab44_result['ab44_spans'],
+                        *ab44_result['ab44_spans']):
+                    self.assertIs(type(ab44_value), list)
+
     def test_ab44_malformed_raw_containers(self):
         for ab44_raw in (None, 1, 1.5, True, 'bytes', {}, {'byte': 2}):
             with self.subTest(ab44_raw=ab44_raw):
