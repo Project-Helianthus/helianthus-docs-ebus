@@ -16,7 +16,12 @@ uncertainty. Neither declaration supersedes the other's evidence boundary.
 ## Count candidates
 
 **Hypothesis:** count byte 0 denotes unlimited count; 1..255 denotes the finite
-count value. This count is not a retry budget or a payload length.
+count value. This count is not a retry budget or a payload length. The
+[candidate fields](fixtures/b506-b508-candidate-fields.csv) record only a raw
+0..255 field with default 0 and state no unlimited meaning; the zero mapping is
+an unqualified Hypothesis with no native artifact behind it, and the synthetic
+cases repeat the declaration without independent evidence. A consumer must not
+rely on it; the native meaning of zero is Unknown.
 **Hypothesis:** count is at candidate request offset 4 and sequence at offset 3,
 as recorded in the [candidate fields](fixtures/b506-b508-candidate-fields.csv)
 for OP13. Under the parent contract's offset convention, offset 0 is PB, 1 is
