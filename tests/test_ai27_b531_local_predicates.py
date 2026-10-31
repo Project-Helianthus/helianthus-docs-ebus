@@ -88,12 +88,12 @@ def ordinary_sums(entries):
         if index in seen or not uint(index, U32):
             return UNKNOWN
         seen.add(index)
-        if index == 1:
-            continue  # Its separate branch has no supplied formula.
         if not all(uint(v, U32) for v in (registered, capability, failure)):
             return UNKNOWN
         if not uint(token, U64) or not uint(limit, U64):
             return UNKNOWN
+        if index == 1:
+            continue  # Its separate branch has no supplied formula.
         if registered != 0 and capability != 0 and failure == 0:
             selected.append(index)
             tokens += token
@@ -218,6 +218,17 @@ class CandidatePredicates(unittest.TestCase):
                         row = [0, *status, 1, 1]
                         row[axis] = invalid
                         self.assertEqual(ordinary_sums([row]), UNKNOWN)
+
+    def test_special_slot_bounds_before_exclusion(self):
+        for axis, bound in ((1, U32), (2, U32), (3, U32), (4, U64), (5, U64)):
+            for invalid in (-1, bound + 1, True, False, 1.0, '1', None):
+                with self.subTest(axis=axis, invalid=invalid):
+                    row = [1, 1, 1, 0, 100, 1]
+                    row[axis] = invalid
+                    self.assertEqual(ordinary_sums([row]), UNKNOWN)
+            row = [1, 1, 1, 0, 100, 1]
+            row[axis] = bound
+            self.assertEqual(ordinary_sums([row]), ([], 0, 0))
 
     def test_limit_comparison_and_unsigned_ranges(self):
         for name, tokens, maximum, limited, expected in self.fixture['limits']:
