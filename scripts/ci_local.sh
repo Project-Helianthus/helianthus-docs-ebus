@@ -290,6 +290,7 @@ python3 -m pytest -q tests/test_b524_provisional_name_evidence.py
 python3 -m pytest -q tests/test_an04_b524_codebook_views.py
 python3 -m pytest -q tests/test_am10_b524_unscoped_hints.py
 python3 -m pytest -q tests/test_ai06_b524_scalar_shapes.py
+python3 -m pytest -q tests/test_ao28_b523_sensor_views.py
 echo "==> check canonical register names against the register naming rules"
 python3 scripts/check_register_names.py
 python3 -m pytest -q tests/test_register_names.py
