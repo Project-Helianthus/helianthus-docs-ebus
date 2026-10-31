@@ -1,0 +1,130 @@
+{
+  "provenance": "not published",
+  "metadata_presence": "Proven",
+  "physical_qualification": "Unknown",
+  "entries": [
+    {
+      "identity": {
+        "family": "vaillant",
+        "variant": "B50E",
+        "primary": 181,
+        "secondary": 14,
+        "operation": null,
+        "direction": null,
+        "field": "rule_comparison"
+      },
+      "grade": "Hypothesis",
+      "logical_position": null,
+      "width_bits": 8,
+      "scale": 1,
+      "unit": null,
+      "default": null,
+      "sentinel": null,
+      "mode_mask": 7,
+      "stop_override_fifo_mask": 128,
+      "unresolved_mask": 120,
+      "flag_scope": "all scalar modes on rule match",
+      "raw_preserved": true
+    },
+    {
+      "identity": {
+        "family": "vaillant",
+        "variant": "B50E",
+        "primary": 181,
+        "secondary": 14,
+        "operation": 1,
+        "direction": "response",
+        "field": "clear_rule_positive_index"
+      },
+      "grade": "Hypothesis",
+      "logical_position": null,
+      "width_bits": 16,
+      "scale": 1,
+      "unit": null,
+      "default": null,
+      "byte_order": "little_endian",
+      "unsigned": true,
+      "sentinel": 65535,
+      "sentinel_scope": "OP01 positive echo only",
+      "echo_optional": true,
+      "deletion": "Unknown",
+      "persistence": "Unknown",
+      "raw_preserved": true
+    }
+  ],
+  "comparison_cases": [
+    {
+      "raw": "00",
+      "mode": 0,
+      "high_flag": false,
+      "unresolved_bits": 0,
+      "grade": "Hypothesis"
+    },
+    {
+      "raw": "07",
+      "mode": 7,
+      "high_flag": false,
+      "unresolved_bits": 0,
+      "grade": "Hypothesis"
+    },
+    {
+      "raw": "80",
+      "mode": 0,
+      "high_flag": true,
+      "unresolved_bits": 0,
+      "grade": "Hypothesis"
+    },
+    {
+      "raw": "87",
+      "mode": 7,
+      "high_flag": true,
+      "unresolved_bits": 0,
+      "grade": "Hypothesis"
+    },
+    {
+      "raw": "88",
+      "mode": 0,
+      "high_flag": true,
+      "unresolved_bits": 8,
+      "grade": "Hypothesis"
+    }
+  ],
+  "echo_cases": [
+    {
+      "operation": 1,
+      "direction": "positive response",
+      "raw": "34 12",
+      "index": 4660,
+      "all_rules": false,
+      "completeness": "complete candidate carrier",
+      "grade": "Hypothesis"
+    },
+    {
+      "operation": 1,
+      "direction": "positive response",
+      "raw": "FF FF",
+      "index": 65535,
+      "all_rules": true,
+      "completeness": "complete candidate carrier",
+      "grade": "Hypothesis"
+    },
+    {
+      "operation": 1,
+      "direction": "positive response",
+      "raw": "FF",
+      "index": null,
+      "all_rules": null,
+      "completeness": "incomplete/raw",
+      "grade": "Unknown"
+    },
+    {
+      "operation": 2,
+      "direction": "positive response",
+      "raw": "FF FF",
+      "index": null,
+      "all_rules": null,
+      "completeness": "raw; outside clear candidate",
+      "grade": "Unknown"
+    }
+  ]
+}
