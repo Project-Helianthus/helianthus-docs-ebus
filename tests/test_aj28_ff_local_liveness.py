@@ -82,6 +82,7 @@ class LocalLivenessContract(unittest.TestCase):
             self.assertEqual(set(case), {'before', 'event', 'after'})
             before, event, after = (case[key] for key in ('before', 'event', 'after'))
             self.assertEqual(set(before), STATE_FIELDS)
+            self.assertTrue(before['raw'])
             self.assertEqual(set(event), EVENT_FIELDS)
             self.assertEqual(set(before['ages']), {'A', 'B', 'C'})
             self.assertIn(event['kind'], {'transaction', 'response', 'destination_only'})
@@ -107,6 +108,7 @@ class LocalLivenessContract(unittest.TestCase):
             self.assertEqual(set(case), {'before', 'events', 'after_each'})
             before = case['before']
             self.assertEqual(set(before), STATE_FIELDS)
+            self.assertTrue(before['raw'])
             self.assertIs(before['admission'], False)
             self.assertEqual(len(case['events']), len(case['after_each']))
             for event, actual in zip(case['events'], case['after_each']):
@@ -203,6 +205,19 @@ class LocalLivenessContract(unittest.TestCase):
                         ages = d['liveness'][index]['after']['ages']
                         ages[participant] = 1 if ages[participant] == 0 else 0
                     self.reject(alter)
+
+    def test_reject_erased_raw_observations(self):
+        data = json.loads((ROOT / FIXTURE).read_text())
+        for section in ('liveness', 'transitions'):
+            for index in range(len(data[section])):
+                with self.subTest(section=section, case=index):
+                    def erase(d):
+                        case = d[section][index]
+                        states = ([case['after']] if section == 'liveness'
+                                  else case['after_each'])
+                        for state in [case['before'], *states]:
+                            state['raw'] = []
+                    self.reject(erase)
 
     def test_reject_identity_and_predicate_changes(self):
         cases = json.loads((ROOT / FIXTURE).read_text())['liveness']
