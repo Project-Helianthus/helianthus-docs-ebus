@@ -281,6 +281,9 @@ python3 -m pytest -q tests/test_am22_standard05_candidate_views.py
 echo "==> check B522 candidate demand and scalar API results"
 python3 -m unittest discover -s tests -p 'test_ao26_b522_demand_views.py' -v
 
+echo "==> check B519 opaque programming documentation contract"
+python3 -m pytest -q tests/test_ac16_opaque_programming.py
+
 echo "==> check B509/B524 passive watch-policy documentation contract"
 python3 -m pytest -q tests/test_watch_policy_contract.py
 python3 -m pytest -q tests/test_b524_operation_docs.py
