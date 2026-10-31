@@ -1,5 +1,7 @@
 {
-  "evidence": "synthetic only; no physical qualification",
+  "evidence": "Hypothesis",
+  "candidate": true,
+  "physical_qualification": "Unknown",
   "unknown_grade": "Unknown",
   "unknowns": [
     "physical memory space",

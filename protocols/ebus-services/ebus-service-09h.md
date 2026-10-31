@@ -1,29 +1,22 @@
 # eBUS Service 0x09 — Memory Server (Application Layer)
 
-> Source: eBUS Specification Application Layer (OSI 7) V1.6.1, §3.5 (standard command layouts and service-mode restriction).
-
 ## Scope and evidence
 
-The standard command reference below is primary evidence. The separate bounded
-synthetic inventory covers only `0900`, `0901`, `0902` and `0903`,
-matching the finite AE27 companion catalog. It does not imply a complete family
-catalog. The historical RAM/EEPROM storage names do not establish a physical
+The standard command layouts below are **Proven**. The separate bounded
+synthetic candidate inventory covers only `0900`, `0901`, `0902` and `0903`.
+It does not imply a complete family catalog. The historical RAM/EEPROM storage names do not establish a physical
 memory space; a storage-name inconsistency must not change PB/SB service identity.
 Other vendor variants and requester behavior remain separate and unqualified.
 
 All field declarations in the bounded synthetic inventory are **Hypothesis**.
-For those declarations,
-**Proven** applies only to the
-presence of these finite declarations in the companion, not to native behavior
-or installed support. Synthetic examples do not qualify physical behavior.
-The synthetic direction alternatives and corroborating catalog are not
-reproducible wire observations and do not replace the standard layouts.
+These 25 candidate declarations do not establish native behavior or installed
+support. Synthetic examples do not qualify physical behavior or replace the
+standard layouts. Provenance is not published.
 
 ## Service-mode restriction and security
 
-**Proven:** the eBUS Specification Application Layer (OSI 7) V1.6.1, §3.5
-restricts all four `0x09` commands to service/maintenance mode; devices should
-not support them during normal operation. `0x0901` and `0x0903` are memory-write
+**Proven:** all four `0x09` commands are restricted to service/maintenance mode;
+devices should not support them during normal operation. `0x0901` and `0x0903` are memory-write
 services. Exposing memory writes during normal operation risks uncontrolled
 state modification. The hypothetical declarations below do not relax this
 restriction or establish execution authority.
@@ -36,9 +29,8 @@ restriction or establish execution authority.
 
 ## Standard command layouts
 
-**Proven:** the [eBUS Application Layer specification, §3.5.1–§3.5.4, pp. 49–52](https://ab-log.ru/files/File/eBUS/Spec_Prot_7_V1_6_1_E.pdf#page=49)
-defines these service-only Memory Server layouts. Offsets below are zero-based
-within the payload, excluding PB/SB, length, CRC and ACK.
+**Proven:** these are the service-only Memory Server layouts. Offsets below are
+zero-based within the payload, excluding PB/SB, length, CRC and ACK.
 
 | Service | Standard name | Request payload | Response payload |
 |---|---|---|---|
@@ -51,9 +43,8 @@ within the payload, excluding PB/SB, length, CRC and ACK.
 permitted in service mode. Addresses are low-byte-first, 16-bit; device-specific
 address meanings and physical storage remain **Unknown**.
 
-**Unknown:** write-data count: the specification's NN wording counts from M7
-(high address byte), bounded 1..8, but its data rows enumerate Data Byte 0
-through NN-1. These imply NN-1 versus NN data bytes; the ambiguity is retained.
+**Unknown:** write-data count: NN counting from M7 (high address byte),
+bounded 1..8, conflicts with data rows enumerating Data Byte 0 through NN-1. These imply NN-1 versus NN data bytes; the ambiguity is retained.
 The final EEPROM write block may have NN<10. An empty standard write response
 alone does not prove persistence or execution on a device.
 
@@ -63,7 +54,7 @@ Identity is PB `09` plus the SB encoded in the last two digits of the service,
 direction and field. An operation discriminator is absent. Request and positive
 are abstract directions, not observed peer traffic. A logical position is not a
 wire offset. All physical positions in this inventory are Unknown. In particular,
-positive-prefix relevance to PeBUS does not establish physical response positions. `unset` means
+an abstract positive prefix does not establish physical response positions. `unset` means
 metadata is absent, not zero, a sentinel, a default or an inferred scale.
 
 | Grade | Service | Direction | Field | Logical position | Extent (bytes) | Raw type / domain | Scale | Sentinel / default / conflict | Unresolved |
@@ -112,18 +103,20 @@ success or acceptance. The raw counts 0, 10, 11 and 255 remain intact; the
 alternatives and absent metadata. They are examples of declarations, not packet
 captures or evidence of peer effects.
 
-## Vaillant variants
+## Vaillant family variants
 
-**Hypothesis:** the service catalog records `0x0900`–`0x0902` and the `0x0903`
-request as following the standard
-layout. Whether the `0x0903` reply is always empty remains **Unknown**.
-These historical layout comparisons do not resolve the direction alternatives
+**Hypothesis:** candidate layouts for `0x0900`–`0x0902` and the `0x0903`
+request follow the standard layout. Whether the `0x0903` reply is always empty
+remains **Unknown**.
+These candidate layout comparisons do not resolve the direction alternatives
 or physical positions declared above.
 
-**Hypothesis:** the catalog also records a Vaillant requester issuing `0x0902`
-and `0x0903` without a preceding service-mode step. Target acceptance outside
-service mode remains **Unknown**; requester behavior does not override the
-specification's service-mode restriction.
+**Hypothesis:** candidate requester contexts without a preceding service-mode
+step are `0x0902` with `NN=3`, address `0x0000` and count 9 toward a remote
+room-control family, and `0x0903` with `NN=3` and one data byte toward a
+system-control family. Target acceptance outside service mode remains
+**Unknown**; these candidates do not override the service-mode restriction.
+Provenance is not published.
 
 ## Open questions
 
@@ -133,12 +126,6 @@ request positions in the synthetic inventory remain Unknown. Storage names do
 not resolve these questions.
 No service-mode rule or execution authority follows from these declarations.
 No memory reader/writer or verification client is defined here.
-
-## Sources
-
-The independently merged [AE27 companion catalog](https://github.com/Project-Helianthus/helianthus-ebusreg/blob/main/catalog/ebus_standard/testdata/ab79_09_candidates.json)
-corroborates only the 25 declarations in the table. Catalog presence does not
-prove a native wire contract or qualify installed support.
 
 ## See Also
 

@@ -134,7 +134,7 @@ class DirectionAlternatives(unittest.TestCase):
         ])
         normalized = ' '.join(standard.split())
         for statement in (
-            '**Proven:**', '§3.5.1–§3.5.4, pp. 49–52',
+            '**Proven:** these are the service-only Memory Server layouts.',
             'Offsets below are zero-based within the payload, excluding PB/SB, length, CRC and ACK.',
             'read requests have NN=3; DN has nominal range 0..10, with DN>10 permitted in service mode.',
             '**Unknown:** write-data count:',
@@ -180,7 +180,9 @@ class DirectionAlternatives(unittest.TestCase):
             ])
 
     def test_evidence_boundaries_and_local_link(self):
-        self.assertEqual(self.fixture['evidence'], 'synthetic only; no physical qualification')
+        self.assertEqual(self.fixture['evidence'], 'Hypothesis')
+        self.assertIs(self.fixture['candidate'], True)
+        self.assertEqual(self.fixture['physical_qualification'], 'Unknown')
         self.assertEqual(self.fixture['unknown_grade'], 'Unknown')
         self.assertEqual(self.fixture['unknowns'], UNKNOWN)
         self.assertIn('[Synthetic direction examples](fixtures/ae28_09_candidates.json)', self.page)
@@ -188,7 +190,7 @@ class DirectionAlternatives(unittest.TestCase):
         normalized = ' '.join(self.page.split())
         for statement in (
             'A logical position is not a wire offset.',
-            'positive-prefix relevance to PeBUS does not establish physical response positions.',
+            'an abstract positive prefix does not establish physical response positions.',
             'a storage-name inconsistency must not change PB/SB service identity.',
             'No service-mode rule or execution authority follows from these declarations.',
             '**Unknown:** physical memory space, peer effects, address equivalence, actual packet extent, empty-request acceptance and installed support.',
