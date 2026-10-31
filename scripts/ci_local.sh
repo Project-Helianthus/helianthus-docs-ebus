@@ -239,6 +239,7 @@ python3 -m pytest -q tests/test_graphql_face_provenance_checker.py
 python3 -m pytest -q -p no:cacheprovider tests/test_system_config_bound_contract.py
 python3 -m pytest -q tests/test_semantic_snapshot_read_contract.py
 python3 -m pytest -q tests/test_semantic_operation_route_contract.py
+python3 -m pytest -q tests/test_aj17_b516_projection.py
 python3 -m pytest -q tests/test_aj28_ff_local_liveness.py
 python3 -m pytest -q tests/test_aj19_b531_distribution_consumers.py
 
