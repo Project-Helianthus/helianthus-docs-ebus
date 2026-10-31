@@ -1,0 +1,124 @@
+{
+  "synthetic_only": true,
+  "representation_grade": "Proven",
+  "physical_interpretation": "Hypothesis",
+  "native_adaptation": "Unknown",
+  "peer_effects": "Unknown",
+  "entries": [
+    {
+      "family": "B508",
+      "variant": "pump role",
+      "direction": null,
+      "service": "B508",
+      "operation": "OP05",
+      "alternative": "candidate default",
+      "logical_extent": null,
+      "grade": "Hypothesis",
+      "physical_qualification": "Unknown"
+    },
+    {
+      "family": "B508",
+      "variant": "solar cascading",
+      "direction": null,
+      "service": "B508",
+      "operation": "OP0B",
+      "alternative": "independent tank flags",
+      "logical_extent": null,
+      "grade": "Hypothesis",
+      "physical_qualification": "Unknown"
+    },
+    {
+      "family": "B508",
+      "variant": "noise-reduction",
+      "direction": "broadcast",
+      "service": "B508",
+      "operation": "OP02",
+      "alternative": "distinct noise-reduction candidate",
+      "logical_extent": null,
+      "grade": "Hypothesis",
+      "physical_qualification": "Unknown"
+    }
+  ],
+  "pump": {
+    "raw_values": [
+      0,
+      1
+    ],
+    "mappings": {
+      "0": "blocked",
+      "1": "released"
+    },
+    "default": "blocked"
+  },
+  "solar": {
+    "cycle_pause_position": 3,
+    "tanks": [
+      {
+        "name": "tank-one",
+        "logical_position": 4,
+        "width_bytes": 1,
+        "mask": 1,
+        "shift": 0,
+        "reserved_bits": [
+          1,
+          7
+        ]
+      },
+      {
+        "name": "tank-two",
+        "logical_position": 5,
+        "width_bytes": 1,
+        "mask": 1,
+        "shift": 0,
+        "reserved_bits": [
+          1,
+          7
+        ]
+      }
+    ]
+  },
+  "examples": [
+    {
+      "raw_hex": [
+        "01",
+        "00"
+      ],
+      "flags": [
+        1,
+        0
+      ],
+      "reserved_hex": [
+        "00",
+        "00"
+      ]
+    },
+    {
+      "raw_hex": [
+        "00",
+        "01"
+      ],
+      "flags": [
+        0,
+        1
+      ],
+      "reserved_hex": [
+        "00",
+        "00"
+      ]
+    },
+    {
+      "raw_hex": [
+        "80",
+        "00"
+      ],
+      "flags": [
+        0,
+        0
+      ],
+      "reserved_hex": [
+        "80",
+        "00"
+      ]
+    }
+  ]
+}
