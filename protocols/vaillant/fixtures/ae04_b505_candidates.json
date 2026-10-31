@@ -1,0 +1,384 @@
+{
+  "provenance": "synthetic; finite candidate declarations only; no device observation",
+  "qualification": "Unknown",
+  "declarations": [
+    {
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "pb": "B5",
+        "sb": "05",
+        "operation": "32",
+        "direction": null,
+        "field": "temperature_1"
+      },
+      "grade": "Hypothesis",
+      "absolute_position": null,
+      "width_bits": 16,
+      "scale": null,
+      "signedness": "Unknown",
+      "bounds": null,
+      "default": null,
+      "duration_seconds": null,
+      "branches": {
+        "8000": "preserve-existing",
+        "0000": "circuit-default"
+      },
+      "fallback": "numeric-candidate",
+      "selection_order": "raw-before-conversion",
+      "display_steps": null,
+      "priority": null,
+      "unresolved": {
+        "physical_support": "Unknown",
+        "acknowledgement": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "duration_enforcement": "Unknown",
+        "freshness": "Unknown",
+        "execution": "Unknown"
+      }
+    },
+    {
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "pb": "B5",
+        "sb": "05",
+        "operation": "32",
+        "direction": null,
+        "field": "temperature_2"
+      },
+      "grade": "Hypothesis",
+      "absolute_position": null,
+      "width_bits": 16,
+      "scale": null,
+      "signedness": "Unknown",
+      "bounds": null,
+      "default": null,
+      "duration_seconds": null,
+      "branches": {
+        "8000": "preserve-existing",
+        "0000": "circuit-default"
+      },
+      "fallback": "numeric-candidate",
+      "selection_order": "raw-before-conversion",
+      "display_steps": null,
+      "priority": null,
+      "unresolved": {
+        "physical_support": "Unknown",
+        "acknowledgement": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "duration_enforcement": "Unknown",
+        "freshness": "Unknown",
+        "execution": "Unknown"
+      }
+    },
+    {
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "pb": "B5",
+        "sb": "05",
+        "operation": "61",
+        "direction": null,
+        "field": "dhw_setpoint"
+      },
+      "grade": "Hypothesis",
+      "absolute_position": null,
+      "width_bits": null,
+      "scale": null,
+      "signedness": "Unknown",
+      "bounds": null,
+      "default": null,
+      "duration_seconds": 900,
+      "branches": {},
+      "fallback": "Unknown",
+      "selection_order": null,
+      "display_steps": null,
+      "priority": null,
+      "unresolved": {
+        "physical_support": "Unknown",
+        "acknowledgement": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "duration_enforcement": "Unknown",
+        "freshness": "Unknown",
+        "execution": "Unknown"
+      }
+    },
+    {
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "pb": "B5",
+        "sb": "05",
+        "operation": "4D",
+        "direction": null,
+        "field": "collector_temperature"
+      },
+      "grade": "Hypothesis",
+      "absolute_position": null,
+      "width_bits": null,
+      "scale": null,
+      "signedness": "Unknown",
+      "bounds": null,
+      "default": null,
+      "duration_seconds": 900,
+      "branches": {},
+      "fallback": "Unknown",
+      "selection_order": null,
+      "display_steps": null,
+      "priority": null,
+      "unresolved": {
+        "physical_support": "Unknown",
+        "acknowledgement": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "duration_enforcement": "Unknown",
+        "freshness": "Unknown",
+        "execution": "Unknown"
+      }
+    },
+    {
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "pb": "B5",
+        "sb": "05",
+        "operation": "4D",
+        "direction": null,
+        "field": "collector_error"
+      },
+      "grade": "Hypothesis",
+      "absolute_position": null,
+      "width_bits": 8,
+      "scale": null,
+      "signedness": "Unknown",
+      "bounds": null,
+      "default": null,
+      "duration_seconds": 900,
+      "branches": {
+        "55": "short-circuit",
+        "AA": "open"
+      },
+      "fallback": "Unknown",
+      "selection_order": null,
+      "display_steps": null,
+      "priority": null,
+      "unresolved": {
+        "physical_support": "Unknown",
+        "acknowledgement": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "duration_enforcement": "Unknown",
+        "freshness": "Unknown",
+        "execution": "Unknown"
+      }
+    },
+    {
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "pb": "B5",
+        "sb": "05",
+        "operation": null,
+        "direction": null,
+        "field": "pump_power_display"
+      },
+      "grade": "Hypothesis",
+      "absolute_position": null,
+      "width_bits": null,
+      "scale": null,
+      "signedness": "Unknown",
+      "bounds": null,
+      "default": null,
+      "duration_seconds": null,
+      "branches": {},
+      "fallback": "Unknown",
+      "selection_order": null,
+      "display_steps": [
+        0,
+        25,
+        50,
+        75,
+        100
+      ],
+      "priority": null,
+      "unresolved": {
+        "physical_support": "Unknown",
+        "acknowledgement": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "duration_enforcement": "Unknown",
+        "freshness": "Unknown",
+        "execution": "Unknown"
+      }
+    },
+    {
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "pb": "B5",
+        "sb": "05",
+        "operation": null,
+        "direction": null,
+        "field": "remote_control"
+      },
+      "grade": "Hypothesis",
+      "absolute_position": null,
+      "width_bits": 8,
+      "scale": null,
+      "signedness": "Unknown",
+      "bounds": null,
+      "default": null,
+      "duration_seconds": null,
+      "branches": {
+        "01": "enable-associated-output"
+      },
+      "fallback": "Unknown",
+      "selection_order": null,
+      "display_steps": null,
+      "priority": null,
+      "unresolved": {
+        "physical_support": "Unknown",
+        "acknowledgement": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "duration_enforcement": "Unknown",
+        "freshness": "Unknown",
+        "execution": "Unknown"
+      }
+    },
+    {
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "pb": "B5",
+        "sb": "05",
+        "operation": "4E",
+        "direction": null,
+        "field": "priority"
+      },
+      "grade": "Hypothesis",
+      "absolute_position": null,
+      "width_bits": 8,
+      "scale": null,
+      "signedness": "unsigned",
+      "bounds": [
+        0,
+        255
+      ],
+      "default": null,
+      "duration_seconds": null,
+      "branches": {},
+      "fallback": "Unknown",
+      "selection_order": null,
+      "display_steps": null,
+      "priority": {
+        "0": "lowest",
+        "255": "highest"
+      },
+      "unresolved": {
+        "physical_support": "Unknown",
+        "acknowledgement": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "duration_enforcement": "Unknown",
+        "freshness": "Unknown",
+        "execution": "Unknown"
+      }
+    }
+  ],
+  "op32_cases": [
+    {
+      "raw": [
+        "8000",
+        "0000"
+      ],
+      "outcomes": [
+        "preserve-existing",
+        "circuit-default"
+      ],
+      "numeric_values": [
+        null,
+        null
+      ]
+    },
+    {
+      "raw": [
+        "0000",
+        "8000"
+      ],
+      "outcomes": [
+        "circuit-default",
+        "preserve-existing"
+      ],
+      "numeric_values": [
+        null,
+        null
+      ]
+    },
+    {
+      "raw": [
+        "8000",
+        "8000"
+      ],
+      "outcomes": [
+        "preserve-existing",
+        "preserve-existing"
+      ],
+      "numeric_values": [
+        null,
+        null
+      ]
+    },
+    {
+      "raw": [
+        "0001",
+        "0000"
+      ],
+      "outcomes": [
+        "numeric-candidate",
+        "circuit-default"
+      ],
+      "numeric_values": [
+        null,
+        null
+      ]
+    }
+  ],
+  "other_operation_case": {
+    "operation": "61",
+    "field": "dhw_setpoint",
+    "raw": "8000",
+    "outcome": "Unknown",
+    "numeric_value": null
+  },
+  "sensor_cases": [
+    {
+      "raw": "55",
+      "outcome": "short-circuit"
+    },
+    {
+      "raw": "AA",
+      "outcome": "open"
+    },
+    {
+      "raw": "54",
+      "outcome": "Unknown"
+    }
+  ],
+  "priority_cases": [
+    {
+      "raw": 0,
+      "order": "lowest",
+      "temperature": null
+    },
+    {
+      "raw": 255,
+      "order": "highest",
+      "temperature": null
+    }
+  ]
+}
