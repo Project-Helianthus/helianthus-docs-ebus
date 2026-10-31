@@ -22,6 +22,8 @@ def packed(n):
 
 
 def expected_builder(identifier, versions, number):
+    if type(number) is not int:
+        return None, None, None, None, False
     quotient, remainder = divmod(number, 100)
     narrowed = quotient % 256
     components = [packed(v) for v in [*versions, remainder, narrowed]]
@@ -281,6 +283,17 @@ class AJ27Contract(unittest.TestCase):
             m['builders'][0]['number']=number
             with self.assertRaises(AssertionError):
                 validate(m)
+
+    def test_builder_rejects_boolean_number(self):
+        m=copy.deepcopy(self.c)
+        r=m['builders'][0]
+        r['number']=True
+        r.update(remainder=1, quotient=0, quotient_low8=0,
+                 output=[181,65,66,67,68,69,18,52,1,0], full_identity=True)
+        with self.assertRaises(AssertionError):
+            validate(m)
+        self.assertEqual(expected_builder([65,66,67,68,69],[12,34],True),
+                         (None,None,None,None,False))
 
     def test_builder_derived_field_mutations(self):
         for i,r in enumerate(self.c['builders']):
