@@ -21,7 +21,7 @@ EXPECTED = {
 }
 KEY = ('family', 'opcode', 'group', 'instance', 'register')
 CONTEXT = ('family', 'software', 'hardware', 'api_version', 'api_revision',
-           'opcode', 'group', 'instance', 'register')
+           'opcode', 'group', 'instance', 'register', 'operation_type')
 NON_ECHO = ('empty', 'status_only', 'short', 'header_only', 'nack', 'timeout',
             'transport_error', 'decode_failed', 'mismatched', 'unrecognized')
 
@@ -121,7 +121,8 @@ class ScalarContract(unittest.TestCase):
                 values = {'family': 'unknown-family', 'software': 'synthetic-software',
                           'hardware': 'synthetic-hardware', 'api_version': 1,
                           'api_revision': 1, 'opcode': 6, 'group': 0,
-                          'instance': 1, 'register': 6 if context['group'] == 1 else 15}
+                          'instance': 1, 'register': 6 if context['group'] == 1 else 15,
+                          'operation_type': 1}
                 changed = dict(context, **{axis: values[axis]})
                 with self.subTest(key=key, changed=axis):
                     self.check(changed, reply, expected=number if axis in CONTEXT[1:5] else None,
@@ -142,6 +143,24 @@ class ScalarContract(unittest.TestCase):
                     self.check(dict(context, **{axis: malformed}), reply)
             for family in (None, [], 0):
                 self.check(dict(context, family=family), reply)
+
+    def test_read_operation_admission_every_binding(self):
+        for row in self.package['bindings']:
+            context, reply = self.inputs(row)
+            codec, unit = EXPECTED[tuple(context[k] for k in KEY)]
+            number = 1.5 if codec == 'float32' else 4660
+            self.assertEqual(context['operation_type'], 0)
+            for value in (1, 2, -1, 256, False, True, '0', 'read', [], {}):
+                with self.subTest(context=context, operation_type=value):
+                    self.check(dict(context, operation_type=value), reply)
+            for value in ('write', None, 0, False, [], {}):
+                with self.subTest(context=context, direction=value):
+                    self.check(dict(context, direction=value), reply)
+            for value in (1, None, False, True, '0', [], {}):
+                with self.subTest(context=context, OT=value):
+                    self.check(dict(context, OT=value), reply)
+            self.check(dict(context, direction='read', OT=0), reply,
+                       expected=number, unit=unit)
 
     def test_each_reply_and_grade_axis_independently(self):
         for row in self.package['bindings']:

@@ -11,6 +11,7 @@
         "api_version": 0,
         "api_revision": 0,
         "opcode": 2,
+        "operation_type": 0,
         "group": 1,
         "instance": 0,
         "register": 4
@@ -59,6 +60,7 @@
         "api_version": 0,
         "api_revision": 0,
         "opcode": 2,
+        "operation_type": 0,
         "group": 1,
         "instance": 0,
         "register": 5
@@ -107,6 +109,7 @@
         "api_version": 0,
         "api_revision": 0,
         "opcode": 2,
+        "operation_type": 0,
         "group": 9,
         "instance": 0,
         "register": 13
@@ -145,6 +148,7 @@
         "api_version": 0,
         "api_revision": 0,
         "opcode": 2,
+        "operation_type": 0,
         "group": 9,
         "instance": 0,
         "register": 14
@@ -183,6 +187,7 @@
         "api_version": 0,
         "api_revision": 0,
         "opcode": 2,
+        "operation_type": 0,
         "group": 1,
         "instance": 0,
         "register": 4
@@ -231,6 +236,7 @@
         "api_version": 0,
         "api_revision": 0,
         "opcode": 2,
+        "operation_type": 0,
         "group": 1,
         "instance": 0,
         "register": 5

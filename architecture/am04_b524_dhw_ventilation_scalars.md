@@ -20,7 +20,8 @@ A family tag selects a candidate; it is never qualified device identity.
 
 ## Complete candidate set
 
-All numbers in this table are hexadecimal. Every row is a separate binding.
+All numbers in this table are hexadecimal. Every row is a separate read-only
+binding with operation type OT=00; OT=01 writes are never admitted.
 No other selector or family is admitted, including OP06 with identical GG/II/RR.
 
 | Family | Opcode | Group | II rule | Register | Codec | Declared unit | Grade |
@@ -42,7 +43,12 @@ as hexadecimal and omits missing keys; its adapter converts only `value_hex` to
 `value_bytes`. There are no captured frames or physical observations here.
 
 Context requires independent `family`, `software`, `hardware`, `api_version`,
-`api_revision`, `opcode`, `group`, `instance`, and `register` fields. Software,
+`api_revision`, `opcode`, `operation_type`, `group`, `instance`, and `register`
+fields. `operation_type` is the native OT byte and must be the integer 0 (read),
+excluding booleans; missing, malformed and write operations remain raw-only
+without selecting a binding. Optional `direction` and `OT` metadata must agree:
+if supplied, `direction` must be `"read"` and `OT` must be integer 0, excluding
+booleans. Neither substitutes for the required `operation_type`. Software,
 hardware and API fields are opaque nonempty strings or nonnegative integers,
 including explicit zero; no field is inferred from another. Selectors are integers
 excluding booleans: opcode/group/instance are bytes and register is a 16-bit
@@ -115,6 +121,12 @@ def interpret(context, reply, codec_grade=None):
             return result
     if type(context.get("family")) is not str:
         return result
+    if not integer(context.get("operation_type"), 0):
+        return result
+    if "direction" in context and context["direction"] != "read":
+        return result
+    if "OT" in context and not integer(context["OT"], 0):
+        return result
     key = tuple(context.get(f) for f in ("family", "opcode", "group", "instance", "register"))
     binding = BINDINGS.get(key)
     if binding is None:
@@ -146,7 +158,8 @@ binding `00 00 C0 3F` gives 1.5 and `00 00 80 BF` gives -1;
 IEEE positive infinity encoded little-endian as `00 00 80 7F` is raw-only.
 For every uint16 binding `34 12` gives 4660 and `FF FF` gives 65535 without a
 sentinel interpretation. Width minus/plus one, neighboring unlisted RR, OP06,
-unknown family, II01, mismatched returned GG/RR, all non-echo kinds, unknown or
+unknown family, II01, missing/malformed/write operation types, conflicting
+`direction`/`OT` metadata, mismatched returned GG/RR, all non-echo kinds, unknown or
 missing grade, malformed/partial/extra inputs and separate context variations
 are covered by the [focused standard-library tests](../tests/test_am04_b524_dhw_ventilation_scalars.py).
 The tests use independent literal values plus struct/int arithmetic, verify the
