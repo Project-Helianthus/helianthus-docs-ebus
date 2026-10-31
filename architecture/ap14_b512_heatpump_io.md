@@ -126,7 +126,7 @@ The following table is normative alongside the field table.
 | signature | package vaillant; Ab13Ap13Evaluate(ab13ap13Input json.RawMessage) (json.RawMessage, error) |
 | input | object; context:object; fields:object; arguments?:object |
 | arguments | no declared typed arguments or required arguments for these views; opaque extra keys preserved |
-| bytes | arrays of integral numbers 0..255; no Boolean, null, string, fraction or coercion |
+| bytes | arrays of integral numbers 0..255; no Boolean, null, string, fraction, float-syntax literal such as 0.0, or coercion |
 | validation | malformed JSON, duplicate keys anywhere, wrong container/byte kinds or out-of-range bytes: error; no successful result |
 | width | missing, short or overlong named arrays: incomplete; preserve raw and independent complete siblings |
 | selector | exact typed tuple; unsupported or missing/null selector: Unknown, raw-only, no formulas |

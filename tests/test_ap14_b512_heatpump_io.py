@@ -1,6 +1,7 @@
 """Documentation/scenario checks, not an implementation of the proposed Go API."""
 import copy
 import json
+import re
 from pathlib import Path
 import unittest
 
@@ -47,7 +48,7 @@ ab13ap13_expected_rules = [
     ['signature', 'package vaillant; Ab13Ap13Evaluate(ab13ap13Input json.RawMessage) (json.RawMessage, error)'],
     ['input', 'object; context:object; fields:object; arguments?:object'],
     ['arguments', 'no declared typed arguments or required arguments for these views; opaque extra keys preserved'],
-    ['bytes', 'arrays of integral numbers 0..255; no Boolean, null, string, fraction or coercion'],
+    ['bytes', 'arrays of integral numbers 0..255; no Boolean, null, string, fraction, float-syntax literal such as 0.0, or coercion'],
     ['validation', 'malformed JSON, duplicate keys anywhere, wrong container/byte kinds or out-of-range bytes: error; no successful result'],
     ['width', 'missing, short or overlong named arrays: incomplete; preserve raw and independent complete siblings'],
     ['selector', 'exact typed tuple; unsupported or missing/null selector: Unknown, raw-only, no formulas'],
@@ -65,6 +66,57 @@ ab13ap13_expected_rules = [
     ['defaults', 'no missing data filled by 0 or false; no relay vector declared in selected views'],
     ['native', 'selector is software input; no wire offsets, automatic phase selection, ADC10bit narrowing or native qualification'],
 ]
+
+ab13ap13_claims = [
+    'LEs16 means `b0+256*b1`, subtract 65536 if at least 32768, then divide by 16 to obtain Celsius',
+    'The two temperatures branch on bytes `[0,128]` (word 0x8000) **before** signed conversion',
+    'Replacement is a label, not a numeric temperature',
+    'Pressure is exactly byte/10 bar across 0..25.5',
+    'Raw FF calculates 25.5, never 255.0',
+    'do not truncate the candidate default to byte 255 and call it an agreement',
+    'Pressure arithmetic has `calculation="Proven"`, while its family grade stays Hypothesis',
+    'Valid byte pressure calculations have `candidate_domain=true`; the conflicting default does not',
+    'Temperatures and ADC calculations likewise carry `calculation="Proven"` without upgrading their family grade',
+    'Backup FF is replacement; FE is unmapped',
+    '`[18,52]` remains those two bytes, with `unmodeled=true`: no complement, endian interpretation',
+    'Phase numbers are raw u8 percent values',
+    'approximate single-phase 50 and three-phase 0/33/66/100 metadata with no tolerance and no selected kind',
+    'Raw 50 and 33 never choose a phase type',
+    'Board codes are named opaque codes; 13 is unmapped',
+    'ADC FFFF is 65535, never clamped to 1023 from another family',
+    'Unmapped enum values retain raw with `unmodeled=true`, no number or label',
+]
+ab13ap13_mutations = [
+    ('"default_agrees":false', '"default_agrees":true'),
+    ('Raw FF calculates 25.5', 'Raw FF calculates 255.0'),
+    ('never clamped to 1023', 'clamped to 1023'),
+    ('no tolerance and no selected kind', 'a tolerance and a selected kind'),
+    ('Backup FF is replacement; FE is unmapped', 'Backup FE is replacement; FF is unmapped'),
+    ('no complement', 'complement applied'),
+    ('Valid byte pressure calculations have `candidate_domain=true`', 'Valid byte pressure calculations have `candidate_domain=false`'),
+    ('calculation="Proven"', 'calculation="Hypothesis"'),
+    ('13 is unmapped', '13 is mapped'),
+    ('subtract 65536 if at least 32768', 'subtract 65536 if at least 1023'),
+    ('divide by 16', 'divide by 10'),
+    ('[0,128]', '[0,127]'),
+    ('"default_in_byte_domain":false', '"default_in_byte_domain":true'),
+]
+
+
+def ab13ap13_prose_problems(ab13ap13_text):
+    ab13ap13_flat = re.sub(r'\s+', ' ', ab13ap13_text)
+    ab13ap13_problems = [ab13ap13_c for ab13ap13_c in ab13ap13_claims if ab13ap13_c not in ab13ap13_flat]
+    ab13ap13_found = re.search(r'alternatives=(\{.*?\})', ab13ap13_flat)
+    if not ab13ap13_found:
+        ab13ap13_problems.append('pressure alternatives object')
+    else:
+        try:
+            ab13ap13_alt = json.loads(ab13ap13_found.group(1).replace('} ', '}'))
+        except ValueError:
+            ab13ap13_alt = None
+        if ab13ap13_alt != {'candidate_default': 255.0, 'default_in_byte_domain': False, 'default_agrees': False}:
+            ab13ap13_problems.append('pressure alternatives value')
+    return ab13ap13_problems
 
 
 def ab13ap13_table(ab13ap13_text, ab13ap13_header):
@@ -241,8 +293,8 @@ class TestAb13Ap13(unittest.TestCase):
                         raise ValueError('arguments object')
                     for ab13ap13_raw in ab13ap13_value['fields'].values():
                         if not isinstance(ab13ap13_raw, list) or any(
-                            isinstance(ab13ap13_byte, bool) or not isinstance(ab13ap13_byte, (int, float))
-                            or not 0 <= ab13ap13_byte <= 255 or ab13ap13_byte % 1
+                            isinstance(ab13ap13_byte, bool) or not isinstance(ab13ap13_byte, int)
+                            or not 0 <= ab13ap13_byte <= 255
                             for ab13ap13_byte in ab13ap13_raw):
                             raise ValueError('byte array')
                     ab13ap13_accepted = True
@@ -276,6 +328,48 @@ class TestAb13Ap13(unittest.TestCase):
         ab13ap13_distinct = [{}, {'v': None}, {'v': 0}, {'v': False}, {'v': []}]
         self.assertEqual(len({json.dumps(ab13ap13_v) for ab13ap13_v in ab13ap13_distinct}), 5)
         self.assertEqual([json.loads(json.dumps(ab13ap13_v)) for ab13ap13_v in ab13ap13_distinct], ab13ap13_distinct)
+
+    def test_ab13ap13_normative_prose_and_field_properties(self):
+        self.assertEqual(ab13ap13_prose_problems(self.ab13ap13_page), [])
+        for ab13ap13_old, ab13ap13_new in ab13ap13_mutations:
+            with self.subTest(mutation=ab13ap13_old):
+                ab13ap13_flat = re.sub(r'\s+', ' ', self.ab13ap13_page)
+                self.assertIn(ab13ap13_old, ab13ap13_flat)
+                self.assertNotEqual(ab13ap13_prose_problems(ab13ap13_flat.replace(ab13ap13_old, ab13ap13_new, 1)), [])
+        ab13ap13_phase = {'single-phase': [50], 'three-phase': [0, 33, 66, 100],
+                          'approximate': True, 'tolerance': None, 'selected_kind': None}
+        self.assertEqual(self.ab13ap13_fixture['field_properties'], {
+            'pressure': {'calculation': 'Proven', 'candidate_domain': True, 'unmodeled': False,
+                         'alternatives': {'candidate_default': 255.0, 'default_in_byte_domain': False, 'default_agrees': False}},
+            'phase1': {'calculation': 'Proven', 'unmodeled': False, 'alternatives': ab13ap13_phase},
+            'phase2': {'calculation': 'Proven', 'unmodeled': False, 'alternatives': ab13ap13_phase},
+            'temperature': {'calculation': 'Proven', 'replacement_raw': [0, 128], 'sign_threshold': 32768,
+                            'modulus': 65536, 'divisor': 16},
+            'adc': {'calculation': 'Proven', 'max': 65535, 'clamp': None},
+            'backup': {'replacement': 255, 'unmapped_example': 254, 'unmodeled_when_unmapped': True},
+            'board': {'mapped': [0, 1, 2, 3, 11, 12], 'unmapped_example': 13, 'unmodeled_when_unmapped': True},
+            'inverse': {'raw': [18, 52], 'unmodeled': True, 'number': None, 'complement': False},
+            'grade': 'Hypothesis'})
+        # Independent oracle for the stated per-field properties.
+        self.assertEqual(self.ab13ap13_fixture['pressure_conflict']['number'], 255 / 10)
+        self.assertNotEqual(self.ab13ap13_fixture['pressure_conflict']['number'],
+                            self.ab13ap13_fixture['pressure_conflict']['candidate_default'])
+        for ab13ap13_raw, ab13ap13_expected in (([0, 128], None), ([240, 255], -1.0), ([0, 0], 0.0), ([255, 127], 2047.9375)):
+            ab13ap13_word = ab13ap13_raw[0] + 256 * ab13ap13_raw[1]
+            ab13ap13_value = None if ab13ap13_raw == [0, 128] else (ab13ap13_word - 65536 if ab13ap13_word >= 32768 else ab13ap13_word) / 16
+            self.assertEqual(ab13ap13_value, ab13ap13_expected)
+        ab13ap13_by_raw = {(c['field'], tuple(c['raw'])): c for c in self.ab13ap13_fixture['cases']
+                           if c['raw'] is not None and c['state'] == 'complete'}
+        self.assertEqual(ab13ap13_by_raw[('adc0', (255, 255))]['number'], 65535)
+        self.assertEqual(ab13ap13_by_raw[('backup', (255,))]['label'], 'replacement')
+        self.assertIsNone(ab13ap13_by_raw[('backup', (254,))]['label'])
+        self.assertEqual(ab13ap13_by_raw[('board', (12,))]['label'], 'opaque-code-12')
+        self.assertIsNone(ab13ap13_by_raw[('board', (13,))]['label'])
+        self.assertEqual(ab13ap13_by_raw[('phase1', (50,))]['number'], 50)
+        self.assertEqual(ab13ap13_by_raw[('phase2', (33,))]['number'], 33)
+        self.assertEqual(ab13ap13_by_raw[('temperature1', (240, 255))]['number'], -1.0)
+        self.assertIsNone(ab13ap13_by_raw[('temperature1', (0, 128))]['number'])
+        self.assertEqual(ab13ap13_by_raw[('temperature1', (0, 128))]['label'], 'replacement')
 
 
 if __name__ == '__main__':
