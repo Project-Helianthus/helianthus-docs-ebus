@@ -102,6 +102,12 @@ XR rows below reference these symbols explicitly. Implementations MAY expose the
 
 ### XR_Arbitration_Fairness_NoStarvation
 
+> Scope: this invariant is defined for the deprecated standalone proxy. The
+> embedded adapter multiplexer does not use FIFO or fair queues: it selects one
+> bidder by initiator address priority at an idle SYN, so a lower-priority bidder
+> can wait indefinitely behind a higher-priority one
+> ([AD06](adapter-direct-multiplexer.md#ad06-owner-arbitration-model)).
+
 **Invariant:** Under proxy-mediated contention (multiple pending northbound bus
 requests), no single request is starved indefinitely. Proxy arbitration is fair
 across sessions and transports, including clients that use different initiator
