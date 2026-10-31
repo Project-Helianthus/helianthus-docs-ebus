@@ -119,7 +119,11 @@ class BurnerForms(unittest.TestCase):
     def test_qualification_and_defaults_remain_unknown(self):
         self.assertEqual(self.data['family'], 'Vaillant')
         self.assertEqual(self.data['evidence_status'], 'Hypothesis')
+        self.assertEqual(self.data['candidate_status'], 'candidate')
         self.assertEqual(self.data['qualification'], 'Unknown')
+        self.assertIn('Candidate status applies to the prefixes, field layout,\nlabels, domains, defaults, units, and conversion metadata below; native support\nis **Unknown**.', self.variant)
+        self.assertIn('Provenance is not published.', self.variant)
+        self.assertIn('| Candidate default | Candidate unit | Evidence status |', self.variant)
         self.assertEqual(self.data['unknown'], ['outside_3F_replacement', 'scheduling', 'admission', 'default_materialization', 'physical_acknowledgement', 'effect_confirmation'])
         self.assertIn('**Unknown:** physical support, physical acknowledgement, effect confirmation,\n  scheduling, admission, and default materialization', self.variant)
         self.assertIn('Declared\n  defaults do not establish what a peer sends when fields are omitted.', self.variant)

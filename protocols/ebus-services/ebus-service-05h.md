@@ -316,9 +316,12 @@ This secondary command is barred for compatibility reasons.
 
 ## Vaillant variants
 
-**Hypothesis:** for the Vaillant family, `0x05 0x01` has two separate
-candidate forms. These declarations do not establish observed wire behavior or
-qualified peer limits. Logical positions below include the two prefix positions;
+**Hypothesis:** two separate candidate forms are recorded for the Vaillant
+family's `0x05 0x01`. Candidate status applies to the prefixes, field layout,
+labels, domains, defaults, units, and conversion metadata below; native support
+is **Unknown**. Provenance is not published. These declarations do not establish
+observed wire behavior or qualified peer limits.
+Logical positions below include the two prefix positions;
 they do not redefine the generic standard payload offsets above.
 
 | Form | Logical 0 | Logical 1 | Remaining fields | Evidence status |
@@ -330,7 +333,7 @@ Prefix relevance does not imply an echo, status, physical acknowledgement, or
 effect confirmation. The positive-only alternative is separate from both the
 five-field request and service `0x05 0x04`; it supplies no invented response body.
 
-| Logical | Field | Carrier | Candidate domain | Declared default | Unit | Evidence status |
+| Logical | Field | Carrier | Candidate domain | Candidate default | Candidate unit | Evidence status |
 |---:|---|---|---|---|---|---|
 | 2 | heat_state | u8 | 0–255 raw | 0 (shutdown) | — | Hypothesis |
 | 3 | boiler_target | u8 | 0–90 | 0 | degC | Hypothesis |
