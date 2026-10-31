@@ -153,7 +153,7 @@ a lower-address client bypassing an older higher-address contender.
 | XR_ENH_0xAA_DataNotSYN | [ebus-overview.md §SYN](../protocols/ebus-services/ebus-overview.md#acknack-symbols) | ✅ | ✅ | — | ✅ |
 | XR_START_RequestStart_WriteAll_NoDoubleSend | [enh.md §START](../protocols/enh.md#start--started--failed) | ✅ | ✅ | — | ✅ |
 | XR_START_Cancel_ReleasesOwnership | [enh.md §START](../protocols/enh.md#start--started--failed) | ✅ | — | ⚠️ alias (`XR_BLOCKING_ARB_DEADLINE`) | ✅ |
-| XR_Arbitration_Fairness_NoStarvation | [enh.md §START](../protocols/enh.md#start--started--failed) | ✅ | — | ⚠️ alias | — |
+| XR_Arbitration_Fairness_NoStarvation | [enh.md §START](../protocols/enh.md#start--started--failed) | ✅ | — | ❌ deviation (address priority permits starvation) | — |
 | XR_UDP_LeaseTTL_CapRefresh_Bounded | [udp-plain.md §Ownership](../protocols/udp-plain.md#ownership-lease-ttl) | — | — | — | ✅ |
 
 **Notes:**

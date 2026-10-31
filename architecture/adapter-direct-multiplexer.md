@@ -140,9 +140,10 @@ address alone, the way the wire would take it.
 
 #### Starvation is address priority
 
-The gateway's initiator address is its priority control. The default `0x7f` is in
-the lowest priority class, so a higher-priority initiator that bids at every
-SYN can legitimately keep the gateway waiting, exactly as it would on a shared
+The gateway's selected initiator address is its priority control. For example,
+a configured address of `0x7f` is in the lowest priority class, so a
+higher-priority initiator that bids at every SYN can legitimately keep the
+gateway waiting, exactly as it would on a shared
 physical bus. This is standard eBUS behaviour, not a scheduling fault, and the
 mux adds no rotation, age-based preference or queue to compensate for it. A
 deliverable STARTED always reaches its session, however long the bid waited.
