@@ -1,0 +1,547 @@
+{
+  "family": "vaillant",
+  "service": "B509",
+  "primary": 181,
+  "secondary": 9,
+  "representation": "Proven",
+  "native_grade": "Hypothesis",
+  "unknown": {
+    "offsets": null,
+    "defaults": null,
+    "response_correlation": null,
+    "variable_maximum": null,
+    "padding": null,
+    "physical_effects": null,
+    "boolean_byte_mapping": null,
+    "software_widths": null,
+    "software_ranges": null,
+    "source": null,
+    "destination": null,
+    "device": null,
+    "firmware": null,
+    "qualification": "Unknown",
+    "freshness": "Unknown",
+    "persistence": "Unknown",
+    "execution_permission": "Unknown",
+    "raw_fallback": "preserve original bytes"
+  },
+  "fields": [
+    {
+      "operation": "13",
+      "direction": "request",
+      "field": "arguments",
+      "width_bits": 0,
+      "signedness": "Unknown",
+      "byte_order": "Unknown",
+      "conversion": "no_arguments",
+      "minimum": null,
+      "maximum": null,
+      "recommended_bytes": null,
+      "maximum_bytes": null,
+      "grade": "Hypothesis",
+      "mapping_grade": "Unknown"
+    },
+    {
+      "operation": "13",
+      "direction": "response",
+      "field": "result",
+      "width_bits": null,
+      "signedness": "Unknown",
+      "byte_order": "Unknown",
+      "conversion": "Boolean",
+      "minimum": null,
+      "maximum": null,
+      "recommended_bytes": null,
+      "maximum_bytes": null,
+      "grade": "Hypothesis",
+      "mapping_grade": "Unknown"
+    },
+    {
+      "operation": "34",
+      "direction": "request",
+      "field": "address",
+      "width_bits": 32,
+      "signedness": "unsigned",
+      "byte_order": "little_endian",
+      "conversion": "identity",
+      "minimum": 0,
+      "maximum": 4294967295,
+      "recommended_bytes": null,
+      "maximum_bytes": null,
+      "grade": "Hypothesis",
+      "mapping_grade": "Hypothesis"
+    },
+    {
+      "operation": "34",
+      "direction": "request",
+      "field": "requested_count",
+      "width_bits": 8,
+      "signedness": "unsigned",
+      "byte_order": "not_applicable",
+      "conversion": "identity",
+      "minimum": 0,
+      "maximum": 255,
+      "recommended_bytes": null,
+      "maximum_bytes": null,
+      "grade": "Hypothesis",
+      "mapping_grade": "Hypothesis"
+    },
+    {
+      "operation": "34",
+      "direction": "response",
+      "field": "address",
+      "width_bits": 32,
+      "signedness": "unsigned",
+      "byte_order": "little_endian",
+      "conversion": "identity",
+      "minimum": 0,
+      "maximum": 4294967295,
+      "recommended_bytes": null,
+      "maximum_bytes": null,
+      "grade": "Hypothesis",
+      "mapping_grade": "Hypothesis"
+    },
+    {
+      "operation": "34",
+      "direction": "response",
+      "field": "data",
+      "width_bits": null,
+      "signedness": "Unknown",
+      "byte_order": "Unknown",
+      "conversion": "raw_bytes",
+      "minimum": null,
+      "maximum": null,
+      "recommended_bytes": 10,
+      "maximum_bytes": null,
+      "grade": "Hypothesis",
+      "mapping_grade": "Unknown"
+    },
+    {
+      "operation": "35",
+      "direction": "request",
+      "field": "address",
+      "width_bits": 32,
+      "signedness": "unsigned",
+      "byte_order": "little_endian",
+      "conversion": "identity",
+      "minimum": 0,
+      "maximum": 4294967295,
+      "recommended_bytes": null,
+      "maximum_bytes": null,
+      "grade": "Hypothesis",
+      "mapping_grade": "Hypothesis"
+    },
+    {
+      "operation": "35",
+      "direction": "request",
+      "field": "data",
+      "width_bits": null,
+      "signedness": "Unknown",
+      "byte_order": "Unknown",
+      "conversion": "raw_bytes",
+      "minimum": null,
+      "maximum": null,
+      "recommended_bytes": null,
+      "maximum_bytes": null,
+      "grade": "Hypothesis",
+      "mapping_grade": "Unknown"
+    },
+    {
+      "operation": "35",
+      "direction": "response",
+      "field": "write_status",
+      "width_bits": null,
+      "signedness": "Unknown",
+      "byte_order": "Unknown",
+      "conversion": "status_domain",
+      "minimum": 0,
+      "maximum": 6,
+      "recommended_bytes": null,
+      "maximum_bytes": null,
+      "grade": "Hypothesis",
+      "mapping_grade": "Unknown"
+    },
+    {
+      "operation": "51",
+      "direction": "Unknown",
+      "field": "component",
+      "width_bits": null,
+      "signedness": "Unknown",
+      "byte_order": "Unknown",
+      "conversion": "identity",
+      "minimum": 0,
+      "maximum": 7,
+      "recommended_bytes": null,
+      "maximum_bytes": null,
+      "grade": "Hypothesis",
+      "mapping_grade": "Hypothesis"
+    },
+    {
+      "operation": "51",
+      "direction": "Unknown",
+      "field": "master",
+      "width_bits": 8,
+      "signedness": "unsigned",
+      "byte_order": "not_applicable",
+      "conversion": "identity",
+      "minimum": 0,
+      "maximum": 255,
+      "recommended_bytes": null,
+      "maximum_bytes": null,
+      "grade": "Hypothesis",
+      "mapping_grade": "Hypothesis"
+    },
+    {
+      "operation": "51",
+      "direction": "Unknown",
+      "field": "identity",
+      "width_bits": 40,
+      "signedness": "not_applicable",
+      "byte_order": "not_applicable",
+      "conversion": "ASCII_exact",
+      "minimum": null,
+      "maximum": null,
+      "recommended_bytes": null,
+      "maximum_bytes": null,
+      "grade": "Hypothesis",
+      "mapping_grade": "Hypothesis"
+    },
+    {
+      "operation": "51",
+      "direction": "Unknown",
+      "field": "software_component_1",
+      "width_bits": null,
+      "signedness": "Unknown",
+      "byte_order": "Unknown",
+      "conversion": "decimal_scalar",
+      "minimum": null,
+      "maximum": null,
+      "recommended_bytes": null,
+      "maximum_bytes": null,
+      "grade": "Hypothesis",
+      "mapping_grade": "Unknown"
+    },
+    {
+      "operation": "51",
+      "direction": "Unknown",
+      "field": "software_component_2",
+      "width_bits": null,
+      "signedness": "Unknown",
+      "byte_order": "Unknown",
+      "conversion": "decimal_scalar",
+      "minimum": null,
+      "maximum": null,
+      "recommended_bytes": null,
+      "maximum_bytes": null,
+      "grade": "Hypothesis",
+      "mapping_grade": "Unknown"
+    },
+    {
+      "operation": "51",
+      "direction": "Unknown",
+      "field": "software_component_3",
+      "width_bits": null,
+      "signedness": "Unknown",
+      "byte_order": "Unknown",
+      "conversion": "decimal_scalar",
+      "minimum": null,
+      "maximum": null,
+      "recommended_bytes": null,
+      "maximum_bytes": null,
+      "grade": "Hypothesis",
+      "mapping_grade": "Unknown"
+    },
+    {
+      "operation": "51",
+      "direction": "Unknown",
+      "field": "software_component_4",
+      "width_bits": null,
+      "signedness": "Unknown",
+      "byte_order": "Unknown",
+      "conversion": "decimal_scalar",
+      "minimum": null,
+      "maximum": null,
+      "recommended_bytes": null,
+      "maximum_bytes": null,
+      "grade": "Hypothesis",
+      "mapping_grade": "Unknown"
+    }
+  ],
+  "status_meanings": {
+    "0": null,
+    "1": null,
+    "2": null,
+    "3": null,
+    "4": null,
+    "5": null,
+    "6": null
+  },
+  "cases": [
+    {
+      "case": "address",
+      "operation": "34",
+      "direction": "request",
+      "field": "address",
+      "raw": [
+        120,
+        86,
+        52,
+        18
+      ],
+      "value": 305419896,
+      "fits": true
+    },
+    {
+      "case": "response_address",
+      "operation": "34",
+      "direction": "response",
+      "field": "address",
+      "raw": [
+        120,
+        86,
+        52,
+        18
+      ],
+      "value": 305419896,
+      "fits": true
+    },
+    {
+      "case": "write_address",
+      "operation": "35",
+      "direction": "request",
+      "field": "address",
+      "raw": [
+        120,
+        86,
+        52,
+        18
+      ],
+      "value": 305419896,
+      "fits": true
+    },
+    {
+      "case": "count_zero",
+      "operation": "34",
+      "direction": "request",
+      "field": "requested_count",
+      "raw": [
+        0
+      ],
+      "value": 0,
+      "fits": true
+    },
+    {
+      "case": "count_255",
+      "operation": "34",
+      "direction": "request",
+      "field": "requested_count",
+      "raw": [
+        255
+      ],
+      "value": 255,
+      "fits": true
+    },
+    {
+      "case": "data_eleven",
+      "operation": "34",
+      "direction": "response",
+      "field": "data",
+      "raw": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "value": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "fits": true
+    },
+    {
+      "case": "write_data",
+      "operation": "35",
+      "direction": "request",
+      "field": "data",
+      "raw": [
+        170,
+        85
+      ],
+      "value": [
+        170,
+        85
+      ],
+      "fits": true
+    },
+    {
+      "case": "status_six",
+      "operation": "35",
+      "direction": "response",
+      "field": "write_status",
+      "raw": [
+        6
+      ],
+      "value": 6,
+      "fits": true
+    },
+    {
+      "case": "status_seven",
+      "operation": "35",
+      "direction": "response",
+      "field": "write_status",
+      "raw": [
+        7
+      ],
+      "value": 7,
+      "fits": false
+    },
+    {
+      "case": "identity_five",
+      "operation": "51",
+      "direction": "Unknown",
+      "field": "identity",
+      "raw": [
+        65,
+        66,
+        67,
+        68,
+        69
+      ],
+      "value": "ABCDE",
+      "fits": true
+    },
+    {
+      "case": "identity_short",
+      "operation": "51",
+      "direction": "Unknown",
+      "field": "identity",
+      "raw": [
+        65,
+        66
+      ],
+      "value": "AB",
+      "fits": false
+    },
+    {
+      "case": "identity_long",
+      "operation": "51",
+      "direction": "Unknown",
+      "field": "identity",
+      "raw": [
+        65,
+        66,
+        67,
+        68,
+        69,
+        70
+      ],
+      "value": "ABCDEF",
+      "fits": false
+    },
+    {
+      "case": "identity_non_ascii",
+      "operation": "51",
+      "direction": "Unknown",
+      "field": "identity",
+      "raw": [
+        65,
+        66,
+        67,
+        68,
+        128
+      ],
+      "value": null,
+      "fits": false
+    },
+    {
+      "case": "identity_terminated",
+      "operation": "51",
+      "direction": "Unknown",
+      "field": "identity",
+      "raw": [
+        65,
+        66,
+        67,
+        68,
+        69,
+        0
+      ],
+      "value": "ABCDE\u0000",
+      "fits": false
+    },
+    {
+      "case": "component_seven",
+      "operation": "51",
+      "direction": "Unknown",
+      "field": "component",
+      "raw": [
+        7
+      ],
+      "value": 7,
+      "fits": true
+    },
+    {
+      "case": "component_eight",
+      "operation": "51",
+      "direction": "Unknown",
+      "field": "component",
+      "raw": [
+        8
+      ],
+      "value": 8,
+      "fits": false
+    },
+    {
+      "case": "software_1",
+      "operation": "51",
+      "direction": "Unknown",
+      "field": "software_component_1",
+      "raw": null,
+      "value": 1,
+      "fits": true
+    },
+    {
+      "case": "software_2",
+      "operation": "51",
+      "direction": "Unknown",
+      "field": "software_component_2",
+      "raw": null,
+      "value": 20,
+      "fits": true
+    },
+    {
+      "case": "software_3",
+      "operation": "51",
+      "direction": "Unknown",
+      "field": "software_component_3",
+      "raw": null,
+      "value": 3,
+      "fits": true
+    },
+    {
+      "case": "software_4",
+      "operation": "51",
+      "direction": "Unknown",
+      "field": "software_component_4",
+      "raw": null,
+      "value": 40,
+      "fits": true
+    }
+  ]
+}
