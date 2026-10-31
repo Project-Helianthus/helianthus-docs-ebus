@@ -226,8 +226,12 @@ class TestAb27Ao27SensorViews(unittest.TestCase):
         for ab27ao27Op, ab27ao27Counts in ab27ao27PartialCounts.items():
             for ab27ao27Length, ab27ao27Count in enumerate(ab27ao27Counts):
                 ab27ao27Names = [ab27ao27Name for ab27ao27Name, _ in ab27ao27Sensors[ab27ao27Op]][:ab27ao27Count]
+                ab27ao27Pwm = ["PWM"] if ab27ao27Op == 3 and ab27ao27Length > 15 else []
+                ab27ao27Status = [ab27ao27Name + "_status" for ab27ao27Offset, ab27ao27Group in ab27ao27Statuses[ab27ao27Op]
+                                  if ab27ao27Length > ab27ao27Offset for ab27ao27Name in ab27ao27Group]
                 self.ab27ao27Case(f"partial-{ab27ao27Op}-{ab27ao27Length}", ab27ao27Op, self.ab27ao27Base(ab27ao27Op)[:ab27ao27Length],
-                                 {"state": "partial", "complete_sensors": ab27ao27Names, "numeric_zero_sensors": ab27ao27Names})
+                                 {"state": "partial", "complete_sensors": ab27ao27Names, "numeric_zero_sensors": ab27ao27Names,
+                                  "complete_pwm": ab27ao27Pwm, "complete_status": ab27ao27Status})
             self.ab27ao27Case(f"tail-{ab27ao27Op}", ab27ao27Op, self.ab27ao27Base(ab27ao27Op) + [1, 254, 0],
                              {"state": "Hypothesis", "tail": [1, 254, 0]})
 
