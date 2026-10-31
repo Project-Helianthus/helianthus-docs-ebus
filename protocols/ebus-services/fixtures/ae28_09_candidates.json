@@ -1,0 +1,836 @@
+{
+  "evidence": "synthetic only; no physical qualification",
+  "unknown_grade": "Unknown",
+  "unknowns": [
+    "physical memory space",
+    "peer effects",
+    "address equivalence",
+    "actual packet extent",
+    "empty-request acceptance",
+    "installed support",
+    "unprovided request field positions"
+  ],
+  "entries": [
+    {
+      "key": {
+        "family": "memory-service",
+        "variant": "0900",
+        "primary": 9,
+        "secondary": 0,
+        "operation": null,
+        "direction": "abstract-request",
+        "field": "PB"
+      },
+      "grade": "Hypothesis",
+      "abstract_offset": 0,
+      "physical_offset": null,
+      "width": 1,
+      "encoding": null,
+      "default": null,
+      "minimum": null,
+      "maximum": null,
+      "alternative_maximum": null,
+      "unit": null,
+      "enum": null,
+      "notes": [],
+      "scale": null,
+      "sentinel": null
+    },
+    {
+      "key": {
+        "family": "memory-service",
+        "variant": "0900",
+        "primary": 9,
+        "secondary": 0,
+        "operation": null,
+        "direction": "abstract-request",
+        "field": "SB"
+      },
+      "grade": "Hypothesis",
+      "abstract_offset": 1,
+      "physical_offset": null,
+      "width": 1,
+      "encoding": null,
+      "default": null,
+      "minimum": null,
+      "maximum": null,
+      "alternative_maximum": null,
+      "unit": null,
+      "enum": null,
+      "notes": [],
+      "scale": null,
+      "sentinel": null
+    },
+    {
+      "key": {
+        "family": "memory-service",
+        "variant": "0900",
+        "primary": 9,
+        "secondary": 0,
+        "operation": null,
+        "direction": "abstract-request",
+        "field": "address"
+      },
+      "grade": "Hypothesis",
+      "abstract_offset": null,
+      "physical_offset": null,
+      "width": 2,
+      "encoding": "unsigned-le16",
+      "default": 0,
+      "minimum": 0,
+      "maximum": 65535,
+      "alternative_maximum": null,
+      "unit": null,
+      "enum": null,
+      "notes": [],
+      "scale": null,
+      "sentinel": null
+    },
+    {
+      "key": {
+        "family": "memory-service",
+        "variant": "0900",
+        "primary": 9,
+        "secondary": 0,
+        "operation": null,
+        "direction": "abstract-request",
+        "field": "count"
+      },
+      "grade": "Hypothesis",
+      "abstract_offset": null,
+      "physical_offset": null,
+      "width": 1,
+      "encoding": "unsigned-u8",
+      "default": 0,
+      "minimum": 0,
+      "maximum": 255,
+      "alternative_maximum": null,
+      "unit": null,
+      "enum": null,
+      "notes": [],
+      "scale": null,
+      "sentinel": null
+    },
+    {
+      "key": {
+        "family": "memory-service",
+        "variant": "0900",
+        "primary": 9,
+        "secondary": 0,
+        "operation": null,
+        "direction": "abstract-positive",
+        "field": "PB"
+      },
+      "grade": "Hypothesis",
+      "abstract_offset": 0,
+      "physical_offset": null,
+      "width": 1,
+      "encoding": null,
+      "default": null,
+      "minimum": null,
+      "maximum": null,
+      "alternative_maximum": null,
+      "unit": null,
+      "enum": null,
+      "notes": [],
+      "scale": null,
+      "sentinel": null
+    },
+    {
+      "key": {
+        "family": "memory-service",
+        "variant": "0900",
+        "primary": 9,
+        "secondary": 0,
+        "operation": null,
+        "direction": "abstract-positive",
+        "field": "SB"
+      },
+      "grade": "Hypothesis",
+      "abstract_offset": 1,
+      "physical_offset": null,
+      "width": 1,
+      "encoding": null,
+      "default": null,
+      "minimum": null,
+      "maximum": null,
+      "alternative_maximum": null,
+      "unit": null,
+      "enum": null,
+      "notes": [],
+      "scale": null,
+      "sentinel": null
+    },
+    {
+      "key": {
+        "family": "memory-service",
+        "variant": "0900",
+        "primary": 9,
+        "secondary": 0,
+        "operation": null,
+        "direction": "abstract-positive",
+        "field": "data"
+      },
+      "grade": "Hypothesis",
+      "abstract_offset": 2,
+      "physical_offset": null,
+      "width": null,
+      "encoding": "opaque-to-end",
+      "default": null,
+      "minimum": 0,
+      "maximum": null,
+      "alternative_maximum": null,
+      "unit": null,
+      "enum": null,
+      "notes": [
+        "Empty data is preserved without a success claim."
+      ],
+      "scale": null,
+      "sentinel": null
+    },
+    {
+      "key": {
+        "family": "memory-service",
+        "variant": "0901",
+        "primary": 9,
+        "secondary": 1,
+        "operation": null,
+        "direction": "abstract-request",
+        "field": "PB"
+      },
+      "grade": "Hypothesis",
+      "abstract_offset": 0,
+      "physical_offset": null,
+      "width": 1,
+      "encoding": null,
+      "default": null,
+      "minimum": null,
+      "maximum": null,
+      "alternative_maximum": null,
+      "unit": null,
+      "enum": null,
+      "notes": [],
+      "scale": null,
+      "sentinel": null
+    },
+    {
+      "key": {
+        "family": "memory-service",
+        "variant": "0901",
+        "primary": 9,
+        "secondary": 1,
+        "operation": null,
+        "direction": "abstract-request",
+        "field": "SB"
+      },
+      "grade": "Hypothesis",
+      "abstract_offset": 1,
+      "physical_offset": null,
+      "width": 1,
+      "encoding": null,
+      "default": null,
+      "minimum": null,
+      "maximum": null,
+      "alternative_maximum": null,
+      "unit": null,
+      "enum": null,
+      "notes": [],
+      "scale": null,
+      "sentinel": null
+    },
+    {
+      "key": {
+        "family": "memory-service",
+        "variant": "0901",
+        "primary": 9,
+        "secondary": 1,
+        "operation": null,
+        "direction": "abstract-request",
+        "field": "address"
+      },
+      "grade": "Hypothesis",
+      "abstract_offset": null,
+      "physical_offset": null,
+      "width": 2,
+      "encoding": "unsigned-le16",
+      "default": 0,
+      "minimum": 0,
+      "maximum": 65535,
+      "alternative_maximum": null,
+      "unit": null,
+      "enum": null,
+      "notes": [],
+      "scale": null,
+      "sentinel": null
+    },
+    {
+      "key": {
+        "family": "memory-service",
+        "variant": "0901",
+        "primary": 9,
+        "secondary": 1,
+        "operation": null,
+        "direction": "abstract-positive",
+        "field": "PB"
+      },
+      "grade": "Hypothesis",
+      "abstract_offset": 0,
+      "physical_offset": null,
+      "width": 1,
+      "encoding": null,
+      "default": null,
+      "minimum": null,
+      "maximum": null,
+      "alternative_maximum": null,
+      "unit": null,
+      "enum": null,
+      "notes": [
+        "Prefix-only; no body or success claim."
+      ],
+      "scale": null,
+      "sentinel": null
+    },
+    {
+      "key": {
+        "family": "memory-service",
+        "variant": "0901",
+        "primary": 9,
+        "secondary": 1,
+        "operation": null,
+        "direction": "abstract-positive",
+        "field": "SB"
+      },
+      "grade": "Hypothesis",
+      "abstract_offset": 1,
+      "physical_offset": null,
+      "width": 1,
+      "encoding": null,
+      "default": null,
+      "minimum": null,
+      "maximum": null,
+      "alternative_maximum": null,
+      "unit": null,
+      "enum": null,
+      "notes": [
+        "Prefix-only; no body or success claim."
+      ],
+      "scale": null,
+      "sentinel": null
+    },
+    {
+      "key": {
+        "family": "memory-service",
+        "variant": "0902",
+        "primary": 9,
+        "secondary": 2,
+        "operation": null,
+        "direction": "abstract-request",
+        "field": "PB"
+      },
+      "grade": "Hypothesis",
+      "abstract_offset": 0,
+      "physical_offset": null,
+      "width": 1,
+      "encoding": null,
+      "default": null,
+      "minimum": null,
+      "maximum": null,
+      "alternative_maximum": null,
+      "unit": null,
+      "enum": null,
+      "notes": [],
+      "scale": null,
+      "sentinel": null
+    },
+    {
+      "key": {
+        "family": "memory-service",
+        "variant": "0902",
+        "primary": 9,
+        "secondary": 2,
+        "operation": null,
+        "direction": "abstract-request",
+        "field": "SB"
+      },
+      "grade": "Hypothesis",
+      "abstract_offset": 1,
+      "physical_offset": null,
+      "width": 1,
+      "encoding": null,
+      "default": null,
+      "minimum": null,
+      "maximum": null,
+      "alternative_maximum": null,
+      "unit": null,
+      "enum": null,
+      "notes": [],
+      "scale": null,
+      "sentinel": null
+    },
+    {
+      "key": {
+        "family": "memory-service",
+        "variant": "0902",
+        "primary": 9,
+        "secondary": 2,
+        "operation": null,
+        "direction": "abstract-request",
+        "field": "address_low"
+      },
+      "grade": "Hypothesis",
+      "abstract_offset": null,
+      "physical_offset": null,
+      "width": 1,
+      "encoding": "unsigned-u8",
+      "default": 0,
+      "minimum": 0,
+      "maximum": 255,
+      "alternative_maximum": null,
+      "unit": null,
+      "enum": null,
+      "notes": [],
+      "scale": null,
+      "sentinel": null
+    },
+    {
+      "key": {
+        "family": "memory-service",
+        "variant": "0902",
+        "primary": 9,
+        "secondary": 2,
+        "operation": null,
+        "direction": "abstract-request",
+        "field": "address_high"
+      },
+      "grade": "Hypothesis",
+      "abstract_offset": null,
+      "physical_offset": null,
+      "width": 1,
+      "encoding": "unsigned-u8",
+      "default": 0,
+      "minimum": 0,
+      "maximum": 255,
+      "alternative_maximum": null,
+      "unit": null,
+      "enum": null,
+      "notes": [],
+      "scale": null,
+      "sentinel": null
+    },
+    {
+      "key": {
+        "family": "memory-service",
+        "variant": "0902",
+        "primary": 9,
+        "secondary": 2,
+        "operation": null,
+        "direction": "abstract-request",
+        "field": "count"
+      },
+      "grade": "Hypothesis",
+      "abstract_offset": null,
+      "physical_offset": null,
+      "width": 1,
+      "encoding": "unsigned-u8",
+      "default": 0,
+      "minimum": 0,
+      "maximum": 255,
+      "alternative_maximum": 10,
+      "unit": null,
+      "enum": null,
+      "notes": [
+        "Candidate maximum 10 conflicts with formal maximum 255; neither clips raw values."
+      ],
+      "scale": null,
+      "sentinel": null
+    },
+    {
+      "key": {
+        "family": "memory-service",
+        "variant": "0902",
+        "primary": 9,
+        "secondary": 2,
+        "operation": null,
+        "direction": "abstract-positive",
+        "field": "data"
+      },
+      "grade": "Hypothesis",
+      "abstract_offset": 0,
+      "physical_offset": null,
+      "width": null,
+      "encoding": "opaque-to-end",
+      "default": null,
+      "minimum": 0,
+      "maximum": null,
+      "alternative_maximum": null,
+      "unit": null,
+      "enum": null,
+      "notes": [
+        "Empty data is preserved without a success claim."
+      ],
+      "scale": null,
+      "sentinel": null
+    },
+    {
+      "key": {
+        "family": "memory-service",
+        "variant": "0903",
+        "primary": 9,
+        "secondary": 3,
+        "operation": null,
+        "direction": "abstract-request",
+        "field": "PB"
+      },
+      "grade": "Hypothesis",
+      "abstract_offset": 0,
+      "physical_offset": null,
+      "width": 1,
+      "encoding": null,
+      "default": null,
+      "minimum": null,
+      "maximum": null,
+      "alternative_maximum": null,
+      "unit": null,
+      "enum": null,
+      "notes": [],
+      "scale": null,
+      "sentinel": null
+    },
+    {
+      "key": {
+        "family": "memory-service",
+        "variant": "0903",
+        "primary": 9,
+        "secondary": 3,
+        "operation": null,
+        "direction": "abstract-request",
+        "field": "SB"
+      },
+      "grade": "Hypothesis",
+      "abstract_offset": 1,
+      "physical_offset": null,
+      "width": 1,
+      "encoding": null,
+      "default": null,
+      "minimum": null,
+      "maximum": null,
+      "alternative_maximum": null,
+      "unit": null,
+      "enum": null,
+      "notes": [],
+      "scale": null,
+      "sentinel": null
+    },
+    {
+      "key": {
+        "family": "memory-service",
+        "variant": "0903",
+        "primary": 9,
+        "secondary": 3,
+        "operation": null,
+        "direction": "abstract-request",
+        "field": "address_low"
+      },
+      "grade": "Hypothesis",
+      "abstract_offset": null,
+      "physical_offset": null,
+      "width": 1,
+      "encoding": "unsigned-u8",
+      "default": 0,
+      "minimum": 0,
+      "maximum": 255,
+      "alternative_maximum": null,
+      "unit": null,
+      "enum": null,
+      "notes": [],
+      "scale": null,
+      "sentinel": null
+    },
+    {
+      "key": {
+        "family": "memory-service",
+        "variant": "0903",
+        "primary": 9,
+        "secondary": 3,
+        "operation": null,
+        "direction": "abstract-request",
+        "field": "address_high"
+      },
+      "grade": "Hypothesis",
+      "abstract_offset": null,
+      "physical_offset": null,
+      "width": 1,
+      "encoding": "unsigned-u8",
+      "default": 0,
+      "minimum": 0,
+      "maximum": 255,
+      "alternative_maximum": null,
+      "unit": null,
+      "enum": null,
+      "notes": [],
+      "scale": null,
+      "sentinel": null
+    },
+    {
+      "key": {
+        "family": "memory-service",
+        "variant": "0903",
+        "primary": 9,
+        "secondary": 3,
+        "operation": null,
+        "direction": "abstract-positive",
+        "field": "PB"
+      },
+      "grade": "Hypothesis",
+      "abstract_offset": 0,
+      "physical_offset": null,
+      "width": 1,
+      "encoding": null,
+      "default": null,
+      "minimum": null,
+      "maximum": null,
+      "alternative_maximum": null,
+      "unit": null,
+      "enum": null,
+      "notes": [],
+      "scale": null,
+      "sentinel": null
+    },
+    {
+      "key": {
+        "family": "memory-service",
+        "variant": "0903",
+        "primary": 9,
+        "secondary": 3,
+        "operation": null,
+        "direction": "abstract-positive",
+        "field": "SB"
+      },
+      "grade": "Hypothesis",
+      "abstract_offset": 1,
+      "physical_offset": null,
+      "width": 1,
+      "encoding": null,
+      "default": null,
+      "minimum": null,
+      "maximum": null,
+      "alternative_maximum": null,
+      "unit": null,
+      "enum": null,
+      "notes": [],
+      "scale": null,
+      "sentinel": null
+    },
+    {
+      "key": {
+        "family": "memory-service",
+        "variant": "0903",
+        "primary": 9,
+        "secondary": 3,
+        "operation": null,
+        "direction": "abstract-positive",
+        "field": "data"
+      },
+      "grade": "Hypothesis",
+      "abstract_offset": 2,
+      "physical_offset": null,
+      "width": null,
+      "encoding": "opaque-to-end",
+      "default": null,
+      "minimum": 0,
+      "maximum": null,
+      "alternative_maximum": null,
+      "unit": null,
+      "enum": null,
+      "notes": [
+        "Empty data is preserved without a success claim."
+      ],
+      "scale": null,
+      "sentinel": null
+    }
+  ],
+  "address_cases": [
+    {
+      "service": "0900",
+      "direction": "abstract-request",
+      "raw": [
+        52,
+        18
+      ],
+      "address": 4660
+    },
+    {
+      "service": "0901",
+      "direction": "abstract-request",
+      "raw": [
+        52,
+        18
+      ],
+      "address": 4660
+    },
+    {
+      "service": "0902",
+      "direction": "abstract-request",
+      "raw": [
+        52,
+        18
+      ],
+      "address_low": 52,
+      "address_high": 18
+    },
+    {
+      "service": "0903",
+      "direction": "abstract-request",
+      "raw": [
+        52,
+        18
+      ],
+      "address_low": 52,
+      "address_high": 18
+    }
+  ],
+  "positive_cases": [
+    {
+      "service": "0900",
+      "direction": "abstract-positive",
+      "raw": [
+        9,
+        0,
+        170,
+        85
+      ],
+      "data_position": 2,
+      "data": [
+        170,
+        85
+      ],
+      "empty_raw": [
+        9,
+        0
+      ],
+      "empty_data": [],
+      "success": null
+    },
+    {
+      "service": "0902",
+      "direction": "abstract-positive",
+      "raw": [
+        170,
+        85
+      ],
+      "data_position": 0,
+      "data": [
+        170,
+        85
+      ],
+      "empty_raw": [],
+      "empty_data": [],
+      "success": null
+    },
+    {
+      "service": "0903",
+      "direction": "abstract-positive",
+      "raw": [
+        9,
+        3,
+        170,
+        85
+      ],
+      "data_position": 2,
+      "data": [
+        170,
+        85
+      ],
+      "empty_raw": [
+        9,
+        3
+      ],
+      "empty_data": [],
+      "success": null
+    }
+  ],
+  "prefix_only": {
+    "service": "0901",
+    "direction": "abstract-positive",
+    "raw": [
+      9,
+      1
+    ],
+    "data": null,
+    "success": null
+  },
+  "count_cases": [
+    {
+      "service": "0900",
+      "raw": [
+        0
+      ],
+      "retained": 0,
+      "formal_maximum": 255,
+      "candidate_maximum": null
+    },
+    {
+      "service": "0900",
+      "raw": [
+        10
+      ],
+      "retained": 10,
+      "formal_maximum": 255,
+      "candidate_maximum": null
+    },
+    {
+      "service": "0900",
+      "raw": [
+        11
+      ],
+      "retained": 11,
+      "formal_maximum": 255,
+      "candidate_maximum": null
+    },
+    {
+      "service": "0900",
+      "raw": [
+        255
+      ],
+      "retained": 255,
+      "formal_maximum": 255,
+      "candidate_maximum": null
+    },
+    {
+      "service": "0902",
+      "raw": [
+        0
+      ],
+      "retained": 0,
+      "formal_maximum": 255,
+      "candidate_maximum": 10
+    },
+    {
+      "service": "0902",
+      "raw": [
+        10
+      ],
+      "retained": 10,
+      "formal_maximum": 255,
+      "candidate_maximum": 10
+    },
+    {
+      "service": "0902",
+      "raw": [
+        11
+      ],
+      "retained": 11,
+      "formal_maximum": 255,
+      "candidate_maximum": 10
+    },
+    {
+      "service": "0902",
+      "raw": [
+        255
+      ],
+      "retained": 255,
+      "formal_maximum": 255,
+      "candidate_maximum": 10
+    }
+  ]
+}
