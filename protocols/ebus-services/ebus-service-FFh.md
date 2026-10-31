@@ -189,7 +189,7 @@ flowchart TD
 | Case | Payload | Meaning | Evidence grade |
 |---|---|---|---|
 | Reset dynamic target configuration | `NN=0x00` (empty) | Reset; erase and re-initialize dynamically generated target configuration | Proven |
-| Periodic status announcement | `NN=0x00` (empty) | Not the meaning of FF01; an empty payload does not make this a status announcement | Proven |
+| Periodic status announcement (contradicting interpretation) | `NN=0x00` (empty) | Contradicts the Proven reset meaning above; an empty payload does not make this a status announcement | Proven |
 
 **Unknown:** Physical support and emission admission. These are separate from the service's documented meaning.
 
@@ -258,7 +258,7 @@ flowchart TD
 | 2 | `follow_block`, `nm_status` | 0 | Complete layout | Proven |
 | 10 | `follow_block`, `nm_status`, 8 addresses | 8 | Complete layout | Proven |
 
-Layout completeness is independent of the `follow_block` pagination flag: a complete body can still indicate more blocks. Preserve the raw bytes and any independently available fields from an incomplete body; missing fields remain Unknown and do not invalidate useful prior state. Physical support and emission admission remain Unknown.
+Layout completeness is independent of the `follow_block` pagination flag: a complete body can still indicate more blocks. For `NN=1`, the raw body contains only `follow_block`; `nm_status` and the address list are absent and remain Unknown. Physical support and emission admission remain Unknown.
 
 ---
 
@@ -310,7 +310,7 @@ Layout completeness is independent of the `follow_block` pagination flag: a comp
 | 9 | `follow_block`, four PB/SB pairs | 4 | Complete layout | Proven |
 | 10 | `follow_block`, four PB/SB pairs, trailing PB without SB | 4 | Incomplete: partial pair/raw | Proven |
 
-These are finite-layout checks, not evidence of physical support or emission admission; both remain Unknown. Layout completeness does not mean pagination is finished. Preserve raw bytes, complete pairs and the trailing partial field separately; do not invent the missing SB, publish the partial pair as complete, or replace useful prior state with an incomplete value.
+These are finite-layout checks, not evidence of physical support or emission admission; both remain Unknown. Layout completeness does not mean pagination is finished. For even lengths, the raw body contains complete PB/SB pairs followed by a trailing PB whose SB is absent and remains Unknown; that trailing PB is not a complete pair.
 
 ## Dynamic Target Configuration
 
