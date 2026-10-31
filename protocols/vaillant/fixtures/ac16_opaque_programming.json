@@ -40,7 +40,7 @@
       "mappings": {},
       "grade": "Hypothesis"
     },
-    "slave-address": {
+    "target-address": {
       "representation": "raw-u8",
       "conversion": "unchanged",
       "minimum": 0,
@@ -416,7 +416,7 @@
       "grade": "Hypothesis",
       "fields": [
         {
-          "name": "slave-address",
+          "name": "target-address",
           "logical_position": 3
         },
         {
@@ -509,7 +509,7 @@
       0,
       255
     ],
-    "slave-address": [
+    "target-address": [
       0,
       255
     ]

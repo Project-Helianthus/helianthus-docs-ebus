@@ -3,7 +3,11 @@
 import copy
 import json
 from pathlib import Path
+import re
 import unittest
+
+# Same word-boundary role terms the initiator/target lint rejects.
+_LEGACY_ROLE = re.compile(r"\b(?:" + "m" + "aster" + "|" + "sl" + "ave" + r")\b", re.IGNORECASE)
 
 ROOT = Path(__file__).resolve().parents[1]
 PAGE = ROOT / 'protocols/vaillant/ebus-vaillant-B519.md'
@@ -37,7 +41,7 @@ def expected_rows():
                 elif request == 'data':
                     fields = [{'name': 'data', 'logical_position': 3}]
                 else:
-                    fields = [{'name': 'slave-address', 'logical_position': 3},
+                    fields = [{'name': 'target-address', 'logical_position': 3},
                               {'name': 'data', 'logical_position': 4}]
             elif alternative == 'positive':
                 if positive == 'crc':
@@ -67,7 +71,7 @@ def expected_types():
                  'extent': 'through-end-of-PDU', 'minimum_bytes': 0,
                  'maximum_bytes': None, 'width_bytes': None, 'mappings': {},
                  'grade': 'Hypothesis'},
-        'CRC': dict(raw), 'slave-address': dict(raw),
+        'CRC': dict(raw), 'target-address': dict(raw),
     }
 
 
@@ -119,10 +123,10 @@ class OpaqueProgrammingTests(unittest.TestCase):
         self.assertEqual(self.fixture['field_types'], expected_types())
         self.assertEqual(self.fixture['examples'], {
             'data': [[0, 255, 65], []], 'CRC': [0, 255],
-            'slave-address': [0, 255]})
+            'target-address': [0, 255]})
         self.assertEqual(bytes(self.fixture['examples']['data'][0]), b'\x00\xffA')
         self.assertEqual(len(self.fixture['examples']['data'][0]), 3)
-        for name in ('CRC', 'slave-address'):
+        for name in ('CRC', 'target-address'):
             for value in self.fixture['examples'][name]:
                 self.assertIs(type(value), int)
                 self.assertEqual(json.loads(json.dumps(value)), value)
@@ -149,7 +153,7 @@ class OpaqueProgrammingTests(unittest.TestCase):
              '0 bytes', 'Unknown', 'Unknown', 'none established', 'Hypothesis'],
             ['CRC', 'raw-u8', 'unchanged', '1 byte', '0', '255', '0',
              'none established', 'Hypothesis'],
-            ['slave-address', 'raw-u8', 'unchanged', '1 byte', '0', '255', '0',
+            ['target-address', 'raw-u8', 'unchanged', '1 byte', '0', '255', '0',
              'none established', 'Hypothesis']])
         self.assertEqual(scoped[2], [['Property', 'Grade'], ['---', '---']] +
                          [[key, 'Unknown'] for key in UNKNOWNS])
@@ -171,11 +175,28 @@ class OpaqueProgrammingTests(unittest.TestCase):
             'Positive CRC coordinates on the partial alternatives are absent, never inferred.',
             'It is not scalar, text, a fixed buffer or a promise of unlimited carrier capacity.',
             'The declared minimum of zero does not establish physical acceptance of empty data.',
+            'CRC and target-address retain independent raw numbers; zero and FF have no established sentinel meanings.',
+            'Synthetic CRC and target-address values `00` and `FF` remain the raw numbers 0 and 255.',
             'AA is a separate selector, not a fill-byte/count.',
             'a failed interpretation does not erase last-known-good information',
         ):
             with self.subTest(claim=claim):
                 self.assertIn(claim, prose)
+
+    def test_page_and_fixture_reject_legacy_role_terms(self):
+        # Kills putting the legacy role term back into the selector-08 address
+        # label, including inside a hyphenated field name, on the page or fixture.
+        # Valid control keeps target-address at logical position 3 and data at 4.
+        self.assertIsNone(_LEGACY_ROLE.search(self.page))
+        self.assertIsNone(_LEGACY_ROLE.search(FIXTURE.read_text()))
+        self.assertIn('target-address@3, data@4', self.page)
+        address = next(
+            row for row in self.fixture['rows']
+            if row['operation'] == '08' and row['alternative'] == 'request')
+        self.assertEqual(
+            address['fields'],
+            [{'name': 'target-address', 'logical_position': 3},
+             {'name': 'data', 'logical_position': 4}])
 
     def test_each_fixture_identity_axis_rejected_independently(self):
         # Valid control plus one changed axis at a time for all 30 alternatives.

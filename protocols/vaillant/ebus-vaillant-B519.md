@@ -48,7 +48,7 @@ All rows preserve the raw PDU, including unresolved bytes.
 | Vaillant | Unknown | request | B519 | 07 | request | declared-fields | data@3 | Unknown | Hypothesis |
 | Vaillant | Unknown | response | B519 | 07 | positive | partial | CRC@Unknown | Unknown | Hypothesis |
 | Vaillant | Unknown | response | B519 | 07 | negative | Unknown | none declared | Unknown | Hypothesis |
-| Vaillant | Unknown | request | B519 | 08 | request | declared-fields | slave-address@3, data@4 | Unknown | Hypothesis |
+| Vaillant | Unknown | request | B519 | 08 | request | declared-fields | target-address@3, data@4 | Unknown | Hypothesis |
 | Vaillant | Unknown | response | B519 | 08 | positive | partial | CRC@Unknown | Unknown | Hypothesis |
 | Vaillant | Unknown | response | B519 | 08 | negative | Unknown | none declared | Unknown | Hypothesis |
 | Vaillant | Unknown | request | B519 | AA | request | no-declared-inputs | none declared | Unknown | Hypothesis |
@@ -65,17 +65,17 @@ Negative alternatives remain unresolved independently for each selector.
 |---|---|---|---|---|---|---|---|---|
 | data | opaque-bytefield | unchanged | through-end-of-PDU | 0 bytes | Unknown | Unknown | none established | Hypothesis |
 | CRC | raw-u8 | unchanged | 1 byte | 0 | 255 | 0 | none established | Hypothesis |
-| slave-address | raw-u8 | unchanged | 1 byte | 0 | 255 | 0 | none established | Hypothesis |
+| target-address | raw-u8 | unchanged | 1 byte | 0 | 255 | 0 | none established | Hypothesis |
 
 Data is an unchanged bytefield through end-of-PDU. It is not scalar, text, a
 fixed buffer or a promise of unlimited carrier capacity. No maximum is established.
 The declared minimum of zero does not establish physical acceptance of empty data.
-CRC and slave-address retain independent raw numbers; zero and FF have no
+CRC and target-address retain independent raw numbers; zero and FF have no
 established sentinel meanings. No CRC calculation or address interpretation follows
 from their raw u8 representation. AA is a separate selector, not a fill-byte/count.
 
 Synthetic data `[00, FF, 41]` remains three opaque bytes, including zero and FF;
-`[]` illustrates only the declared minimum. Synthetic CRC and slave-address
+`[]` illustrates only the declared minimum. Synthetic CRC and target-address
 values `00` and `FF` remain the raw numbers 0 and 255.
 
 ## Unresolved properties
