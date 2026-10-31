@@ -288,6 +288,9 @@ echo "==> check B520 simulator actuator and ADC declarations"
 python3 -m pytest -q tests/test_ac20_simulator_adc.py
 python3 -m pytest -q tests/test_am22_standard05_candidate_views.py
 
+echo "==> check Vaillant B51B local-transfer candidate contract"
+python3 -m pytest -q tests/test_ai26_b51b_local_transfer.py
+
 echo "==> check B522 candidate demand and scalar API results"
 python3 -m unittest discover -s tests -p 'test_ao26_b522_demand_views.py' -v
 
