@@ -273,6 +273,7 @@ python3 scripts/check_register_names.py
 python3 -m pytest -q tests/test_register_names.py
 echo "==> check B509 register name correspondence fixture"
 python3 -m pytest -q tests/test_b509_register_name_correspondence.py
+python3 -m pytest -q tests/test_ai24_b555_numeric_units.py
 python3 scripts/validate_b524_op06_observed_windows.py \
   protocols/vaillant/fixtures/b524-op06-observed-windows-v1.json
 echo "==> check BASV0 parameter-description profile"
