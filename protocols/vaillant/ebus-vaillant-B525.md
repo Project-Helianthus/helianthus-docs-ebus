@@ -176,5 +176,9 @@ Request-id lifecycle, RSSI physical unit, CRC algorithm, cipher, padding and
 sender identity remain Unknown. OP04 does not establish echo, mutual exclusion,
 or active/persistent-key meaning. OP10..17 have no known frequency mapping or
 scanning effects. OP18..1B retain unknown bits 1..7 at logical position 3;
+The OP18..1B bit 0 write value (`01`) is not declared: the older candidate
+note in the main Vaillant page maps bit 0 as 0 read, 1 write, but that candidate
+evidence is not part of the finite declaration scope here, so the value `01`
+and its meaning stay Unknown and the raw bit is preserved as received.
 data layout, units, correlation and effects remain Unknown in both directions.
 No sentinel is established. Unknown metadata is not zero or an admission claim.

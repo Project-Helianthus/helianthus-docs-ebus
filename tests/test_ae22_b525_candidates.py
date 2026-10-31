@@ -212,6 +212,17 @@ class B525Candidates(unittest.TestCase):
                 for vector in group:
                     self.assertEqual(vector['bit0'] + vector['unknown_high'], vector['raw'])
 
+    def test_configuration_bit0_write_value_is_recorded_as_undeclared(self):
+        section = self.page.split('## Open questions', 1)[1]
+        self.assertIn('bit 0 write value (`01`) is not declared', section)
+        rows = [r for r in self.page.splitlines()
+                if r.startswith('|') and r.split('|')[1].strip() in ('18', '19', '1A', '1B')
+                and r.split('|')[3].strip() == 'configuration']
+        self.assertEqual(len(rows), 8)
+        for row in rows:
+            self.assertIn('codes: 00=read |', row)
+            self.assertNotIn('01=write', row)
+
 
 if __name__ == '__main__':
     unittest.main()
