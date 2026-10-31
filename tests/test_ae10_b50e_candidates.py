@@ -47,7 +47,8 @@ class B50ECandidates(unittest.TestCase):
         self.assertEqual(self.fixture['entries'], expected)
         self.assertEqual(self.fixture['metadata_presence'], 'Proven')
         self.assertEqual(self.fixture['physical_qualification'], 'Unknown')
-        self.assertEqual(self.fixture['provenance'], 'synthetic only; no device observation')
+        self.assertEqual(self.fixture['provenance'], 'not published')
+        self.assertIn('Provenance is not published.', self.page)
 
     def test_structured_declarations_grade_conflict_and_unknowns(self):
         expected = [

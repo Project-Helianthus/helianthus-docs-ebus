@@ -255,6 +255,9 @@ python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py
 echo "==> check Vaillant B505 sentinel and override candidates"
 python3 -m pytest -q tests/test_ae04_b505_candidates.py
 
+echo "==> check B50E rule comparison and clear-index candidates"
+python3 -m pytest -q tests/test_ae10_b50e_candidates.py
+
 echo "==> check B520 simulator actuator and ADC declarations"
 python3 -m pytest -q tests/test_ac20_simulator_adc.py
 

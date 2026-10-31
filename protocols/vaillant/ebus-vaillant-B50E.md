@@ -44,7 +44,8 @@ Candidate interpretation, unconfirmed on the wire.
 
 ### Bounded rule comparison and clear-index candidates
 
-The following two declarations are **Hypothesis**, not native qualification.
+The following two declarations are **Hypothesis** candidates, not native qualification.
+Provenance is not published.
 They cover only the finite comparison and OP01 positive-index candidates;
 other variants and other rule fields remain separate. Logical positions are
 Unknown; a logical position is not a wire offset. Extents describe candidate
@@ -141,8 +142,6 @@ Candidate interpretation, unconfirmed on the wire: a requester separates buffer 
 - The widths of the opaque value rows (keys `0`, `15`, `16`) are not established.
 
 ## References
-
-- [Finite B50E candidate catalog](https://github.com/Project-Helianthus/helianthus-ebusreg/blob/main/catalog/vaillant/data/ab61_b50e_candidates.json) — corroborating declaration metadata for the two bounded candidates only; not native wire evidence.
 
 - [Vaillant B503 diagnostic and service selectors](ebus-vaillant-B503.md)
 - [Vaillant B509 register access](ebus-vaillant-B509.md)
