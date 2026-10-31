@@ -1,10 +1,9 @@
 # B507 finite library contract
 
-The public [native supplement](../protocols/vaillant/ebus-b507-energy-candidates.md)
-is the first authority for the bounded candidate facts. The merged AJ13
-companion in `helianthus-ebusreg` supplies the finite library interface below.
-This page documents that contract; it introduces no decoder, duplicate catalog,
-generic schema or provider API.
+This bounded contract covers candidate B507 fields and the finite library
+interface below. Field meanings remain Hypothesis and physical support remains
+Unknown. Provenance is not published. No decoder, duplicate catalog, generic
+schema or provider API is introduced.
 
 ```go
 func Ab13Entries() ([]Ab13Entry, error)
@@ -41,9 +40,9 @@ command role must remain distinct, including separate OP02 and OP06 identities.
 `Ab13Entry` keeps `Ab13Grade` independent of `Ab13MetadataPresence`,
 `Ab13PhysicalQualification`, `Ab13Invocation`, raw preservation and unknown
 metadata. Proven metadata presence means the library contains the metadata;
-it does not prove a native meaning or physical support. Capacity, cost,
-and temperature remain Hypothesis. OP08, OP09 and OP0B are omitted from this
-bounded B507 entry set; no preference fields or sentinel mappings are supplied.
+it does not prove a native meaning or physical support. Capacity output, cost of
+primary energy, and current flow temperature remain Hypothesis.
+OP08, OP09 and OP0B are omitted from this bounded B507 entry set; no preference fields or sentinel mappings are supplied.
 Physical qualification and invocation remain Unknown. Absent coordinates,
 converters, references and widths must not become fabricated defaults.
 

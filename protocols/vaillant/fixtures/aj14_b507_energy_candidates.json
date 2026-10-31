@@ -7,7 +7,6 @@
     "direction": null
   },
   "boundaries": {
-    "provenance": "synthetic; not captured telegrams",
     "physical_support": "Unknown",
     "coordinates": null,
     "actual_reference": "Unknown",
@@ -16,13 +15,15 @@
     "preserve_raw": true,
     "capacity_alternative": "negative mode-related prose unresolved",
     "temperature_direct_measurement": "Unknown",
-    "cost_direct_measurement": "Unknown"
+    "cost_direct_measurement": "Unknown",
+    "evidence_class": "Proven",
+    "candidate_status": "Hypothesis"
   },
   "synthetic_tuples": {
     "fields": [
       [
         "06",
-        "capacity",
+        "capacity output",
         "Hypothesis",
         "8",
         "unsigned",
@@ -31,7 +32,7 @@
       ],
       [
         "06",
-        "cost",
+        "cost of primary energy",
         "Hypothesis",
         "Unknown",
         "Unknown",
@@ -40,7 +41,7 @@
       ],
       [
         "06",
-        "temperature",
+        "current flow temperature",
         "Hypothesis",
         "Unknown",
         "Unknown",

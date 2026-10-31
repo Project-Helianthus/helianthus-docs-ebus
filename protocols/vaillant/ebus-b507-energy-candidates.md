@@ -6,12 +6,9 @@ qualification. No supported device or firmware range is established.
 
 ## Evidence and limits
 
-The public [B507 native reference](ebus-vaillant-B507.md#candidate-layouts)
-and its [open questions](ebus-vaillant-B507.md#open-questions) retain the wider
-candidate layout and conflicting capacity readings. This supplement narrows
-only the fields below; it does not resolve those conflicts through observation.
-The [synthetic tuples](fixtures/aj14_b507_energy_candidates.json) are arithmetic
-and scope examples, not captured telegrams or independent wire evidence.
+This supplement narrows only the fields below; conflicting capacity readings
+remain unresolved. The tuples are synthetic arithmetic and scope examples.
+Provenance is not published.
 **Proven** applies only to their synthetic construction and arithmetic, not to
 candidate wire meanings. **Hypothesis** marks candidate meanings; **Unknown**
 marks absent facts. Physical support remains **Unknown** independently of grade.
@@ -20,18 +17,18 @@ No source/destination, payload coordinate, direction, product or firmware is
 established for these tuples. Raw values are isolated field examples, not whole
 frames. Their mode labels are synthetic predicates, not native mode codes.
 All fields have Unknown coordinates and actual reference. Widths other than
-OP06 capacity's candidate byte remain Unknown here.
+OP06 capacity output's candidate byte remain Unknown here.
 The existing half-percent correction is outside this supplement.
 
 ## Field boundaries
 
 | Operation | Field | Grade | Width bits | Encoding | Conversion or role | Quantity origin |
 |---|---|---|---|---|---|---|
-| 06 | capacity | Hypothesis | 8 | unsigned | raw / 10 kW; raw 0..250 only | Unknown |
-| 06 | cost | Hypothesis | Unknown | Unknown | mode and monetary/emissions reference dependent; converter Unknown | calculated or estimated possible |
-| 06 | temperature | Hypothesis | Unknown | Unknown | converter Unknown | calculated or estimated possible |
+| 06 | capacity output | Hypothesis | 8 | unsigned | raw / 10 kW; raw 0..250 only | Unknown |
+| 06 | cost of primary energy | Hypothesis | Unknown | Unknown | mode and monetary/emissions reference dependent; converter Unknown | calculated or estimated possible |
+| 06 | current flow temperature | Hypothesis | Unknown | Unknown | converter Unknown | calculated or estimated possible |
 
-For OP06 capacity, the candidate is an unsigned byte divided by 10. Negative
+For OP06 capacity output, the candidate is an unsigned byte divided by 10. Negative
 mode-related prose remains a separate unresolved alternative; neither signed8
 reinterpretation nor multiplication by 10 is selected. Raw 251 is outside this
 candidate domain and remains raw, without clipping or a candidate kW value.
@@ -45,17 +42,17 @@ candidate domain and remains raw, without clipping or a candidate kW value.
 
 ## Other operations
 
-OP08, OP09 and OP0B are outside these synthetic tuples. Their distinct candidate
-request and response fields remain in the native reference; no shared preference
+OP08, OP09 and OP0B are outside these synthetic tuples; no shared preference
 field is established. OP08 sentinel meanings for `0000` and `FFFF` remain
-Unknown: the cited reference supplies no such mapping.
+Unknown; no sentinel mapping is declared.
 
 ## Cost context and partial knowledge
 
-OP06 cost depends independently on operating mode and on whether the reference
-is monetary or emissions based. The actual reference, exact cost converter,
-unit, field coordinates and physical support remain Unknown. Cost and
-temperature may be calculated or estimated; neither is qualified as a direct
+OP06 cost of primary energy depends independently on operating mode and on
+whether the reference is monetary or emissions based. The actual reference,
+exact cost converter, unit, field coordinates and physical support remain
+Unknown. Cost of primary energy and current flow temperature may be calculated
+or estimated; neither is qualified as a direct
 sensor measurement. No numeric cost value is justified by these examples.
 
 | Synthetic mode | Assumed reference context | Raw cost | Numeric cost | Quantity origin | Direct measurement status |

@@ -12,12 +12,12 @@ API = Path('architecture/aj14_b507_energy_candidates_api.md')
 
 # Independent expectations: no values are derived from the page or fixture.
 FIELD_ROWS = [
-    ['06', 'capacity', 'Hypothesis', '8', 'unsigned',
+    ['06', 'capacity output', 'Hypothesis', '8', 'unsigned',
      'raw / 10 kW; raw 0..250 only', 'Unknown'],
-    ['06', 'cost', 'Hypothesis', 'Unknown', 'Unknown',
+    ['06', 'cost of primary energy', 'Hypothesis', 'Unknown', 'Unknown',
      'mode and monetary/emissions reference dependent; converter Unknown',
      'calculated or estimated possible'],
-    ['06', 'temperature', 'Hypothesis', 'Unknown', 'Unknown',
+    ['06', 'current flow temperature', 'Hypothesis', 'Unknown', 'Unknown',
      'converter Unknown', 'calculated or estimated possible'],
 ]
 CAPACITY_ROWS = [['0', '0', 'inside'], ['1', '0.1', 'inside'],
@@ -31,7 +31,7 @@ TABLES = {'fields': FIELD_ROWS, 'capacity': CAPACITY_ROWS,
 IDENTITY = {'family': 'vaillant', 'variant': 'B507', 'primary': 181,
             'secondary': 7, 'direction': None}
 BOUNDARIES = {
-    'provenance': 'synthetic; not captured telegrams',
+    'evidence_class': 'Proven', 'candidate_status': 'Hypothesis',
     'physical_support': 'Unknown', 'coordinates': None,
     'actual_reference': 'Unknown', 'cost_converter': None,
     'execution_permission': False, 'preserve_raw': True,
@@ -136,7 +136,7 @@ class EnergyCandidatesTest(unittest.TestCase):
                                                       COST_ROWS])
 
     def test_native_evidence_and_partial_boundaries(self):
-        for phrase in ('not captured telegrams', 'Physical support remains **Unknown**',
+        for phrase in ('Provenance is not published', 'Physical support remains **Unknown**',
                        'Negative\nmode-related prose remains a separate unresolved alternative',
                        'neither signed8\nreinterpretation nor multiplication by 10 is selected',
                        'without clipping', 'not native mode codes',
@@ -144,12 +144,10 @@ class EnergyCandidatesTest(unittest.TestCase):
                        'neither is qualified as a direct\nsensor measurement',
                        'partial knowledge must remain partial',
                        'no shared preference\nfield is established',
-                       'reference supplies no such mapping',
+                       'no sentinel mapping is declared',
                        'half-percent correction is outside'):
             self.assertIn(phrase, self.native)
-        self.assertIn('(ebus-vaillant-B507.md#candidate-layouts)', self.native)
-        self.assertIn('(ebus-vaillant-B507.md#open-questions)', self.native)
-        self.assertIn('(fixtures/aj14_b507_energy_candidates.json)', self.native)
+        self.assertNotIn('](ebus-vaillant-B507.md', self.native)
         for forbidden in ('Ab13', 'GraphQL', 'MCP', 'CLI', 'unittest', 'ebusreg'):
             self.assertNotIn(forbidden, self.native)
 
@@ -197,7 +195,7 @@ class EnergyCandidatesTest(unittest.TestCase):
                        'separate OP02 and OP06 identities',
                        'eBUS MCP or GraphQL', 'before 1.0', 'before 0.9', '0.11'):
             self.assertIn(phrase, self.api)
-        self.assertIn('(../protocols/vaillant/ebus-b507-energy-candidates.md)', self.api)
+        self.assertIn('Provenance is not published', self.api)
 
 
 if __name__ == '__main__':
