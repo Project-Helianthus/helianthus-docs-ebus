@@ -241,6 +241,11 @@ def ab21ao21ExpectedCases():
 
 
 class TestAb21Ao21OpaqueViews(unittest.TestCase):
+    def ab21ao21AssertJSONEqual(self, ab21ao21Actual, ab21ao21Expected):
+        # Canonical JSON preserves bool/int/float distinctions at every depth.
+        self.assertEqual(json.dumps(ab21ao21Actual, sort_keys=True).encode(),
+                         json.dumps(ab21ao21Expected, sort_keys=True).encode())
+
     def setUp(self):
         self.ab21ao21Page = (ab21ao21Root / 'architecture/ao22_b519_opaque_views.md').read_text()
         self.ab21ao21Fixture = ab21ao21Load((ab21ao21Root / 'architecture/fixtures/ao22_b519_opaque_views.json').read_text())
@@ -249,35 +254,35 @@ class TestAb21Ao21OpaqueViews(unittest.TestCase):
         self.ab21ao21PageContract = ab21ao21Load(ab21ao21Match[1])
 
     def TestAb21Ao21ExactPageAndFixtureContract(self):
-        self.assertEqual(self.ab21ao21PageContract, ab21ao21Contract())
+        self.ab21ao21AssertJSONEqual(self.ab21ao21PageContract, ab21ao21Contract())
         self.assertEqual(set(self.ab21ao21Fixture), {'ab21ao21_contract', 'ab21ao21_cases'})
-        self.assertEqual(self.ab21ao21Fixture['ab21ao21_contract'], ab21ao21Contract())
+        self.ab21ao21AssertJSONEqual(self.ab21ao21Fixture['ab21ao21_contract'], ab21ao21Contract())
 
     def TestAb21Ao21EveryFiniteTuple(self):
-        self.assertEqual(self.ab21ao21Fixture['ab21ao21_cases'], ab21ao21ExpectedCases())
+        self.ab21ao21AssertJSONEqual(self.ab21ao21Fixture['ab21ao21_cases'], ab21ao21ExpectedCases())
         self.assertEqual(len(self.ab21ao21Fixture['ab21ao21_cases']), 1662)
         self.assertEqual(len({ab21ao21Row[0] for ab21ao21Row in self.ab21ao21Fixture['ab21ao21_cases']}), 1662)
 
     def TestAb21Ao21ProseJSONExamples(self):
         ab21ao21Blocks = re.findall(r'```json\n(.*?)\n```', self.ab21ao21Page, re.S)
         self.assertEqual(len(ab21ao21Blocks), 3)
-        self.assertEqual(ab21ao21Load(ab21ao21Blocks[0]), {
+        self.ab21ao21AssertJSONEqual(ab21ao21Load(ab21ao21Blocks[0]), {
             'context': {'primary': 181, 'secondary': 25, 'operation': 8, 'direction': 'request',
                         'view': 'logical-body', 'family': 'synthetic-family', 'variant': 0},
             'fields': {'logical_object': [0, 0, 0, 127, 0, 255]}, 'arguments': {}})
-        self.assertEqual(ab21ao21Load(ab21ao21Blocks[1]), {
+        self.ab21ao21AssertJSONEqual(ab21ao21Load(ab21ao21Blocks[1]), {
             'slave_address': {'raw': [127], 'state': 'Hypothesis'},
             'opaque': {'raw': [0, 255], 'state': 'Hypothesis'}})
 
     def TestAb21Ao21BoundaryAndErrorVectors(self):
-        self.assertEqual(self.ab21ao21PageContract['boundary_cases'], ab21ao21Boundaries())
-        self.assertEqual(self.ab21ao21PageContract['error_cases'], ab21ao21Errors())
+        self.ab21ao21AssertJSONEqual(self.ab21ao21PageContract['boundary_cases'], ab21ao21Boundaries())
+        self.ab21ao21AssertJSONEqual(self.ab21ao21PageContract['error_cases'], ab21ao21Errors())
         self.assertEqual(len(self.ab21ao21PageContract['boundary_cases']), 17)
         self.assertEqual(len(self.ab21ao21PageContract['error_cases']), 47)
 
     def TestAb21Ao21RoundTripOfPublishedTuples(self):
-        self.assertEqual(ab21ao21Load(json.dumps(self.ab21ao21Fixture)), self.ab21ao21Fixture)
-        self.assertEqual(ab21ao21Load(json.dumps(self.ab21ao21PageContract)), self.ab21ao21PageContract)
+        self.ab21ao21AssertJSONEqual(ab21ao21Load(json.dumps(self.ab21ao21Fixture)), self.ab21ao21Fixture)
+        self.ab21ao21AssertJSONEqual(ab21ao21Load(json.dumps(self.ab21ao21PageContract)), self.ab21ao21PageContract)
 
     def TestAb21Ao21DuplicateAndMalformedPublicationJSON(self):
         # These exercise the artifact parser, not production API rejection.
@@ -288,7 +293,7 @@ class TestAb21Ao21OpaqueViews(unittest.TestCase):
 
     def TestAb21Ao21ContractMutationKills(self):
         # Each control passes first, then a single publication predicate changes.
-        self.assertEqual(self.ab21ao21PageContract, ab21ao21Contract())
+        self.ab21ao21AssertJSONEqual(self.ab21ao21PageContract, ab21ao21Contract())
         ab21ao21Changes = [
             ('ascii', lambda ab21ao21C: ab21ao21C['field_table']['opaque'].update(encoding='ASCII')),
             ('u32', lambda ab21ao21C: ab21ao21C['field_table']['opaque'].update(encoding='u32')),
@@ -304,11 +309,11 @@ class TestAb21Ao21OpaqueViews(unittest.TestCase):
                 ab21ao21Mutant = copy.deepcopy(self.ab21ao21PageContract)
                 ab21ao21Change(ab21ao21Mutant)
                 with self.assertRaises(AssertionError):
-                    self.assertEqual(ab21ao21Mutant, ab21ao21Contract())
+                    self.ab21ao21AssertJSONEqual(ab21ao21Mutant, ab21ao21Contract())
 
     def TestAb21Ao21TupleMutationKills(self):
         ab21ao21Control = self.ab21ao21Fixture['ab21ao21_cases']
-        self.assertEqual(ab21ao21Control, ab21ao21ExpectedCases())
+        self.ab21ao21AssertJSONEqual(ab21ao21Control, ab21ao21ExpectedCases())
         # Changed field, missing zero, missing FF, and discarded unexpected tail.
         for ab21ao21Index, ab21ao21Field, ab21ao21Value in (
                 (120, 'opaque', [0, 255, 66]), (120, 'opaque', [255, 65]),
@@ -317,7 +322,26 @@ class TestAb21Ao21OpaqueViews(unittest.TestCase):
                 ab21ao21Mutant = copy.deepcopy(ab21ao21Control)
                 ab21ao21Mutant[ab21ao21Index][5][ab21ao21Field]['raw'] = ab21ao21Value
                 with self.assertRaises(AssertionError):
-                    self.assertEqual(ab21ao21Mutant, ab21ao21ExpectedCases())
+                    self.ab21ao21AssertJSONEqual(ab21ao21Mutant, ab21ao21ExpectedCases())
+
+    def TestAb21Ao21ByteTypeMutationKills(self):
+        ab21ao21Control = self.ab21ao21Fixture['ab21ao21_cases']
+        self.ab21ao21AssertJSONEqual(ab21ao21Control, ab21ao21ExpectedCases())
+        # Mutate input, output, and both together; numeric equality must not
+        # admit JSON booleans or floats in any published byte position.
+        for ab21ao21Index, ab21ao21Position, ab21ao21Value in (
+                (120, 3, False), (120, 3, 0.0),
+                (127, 3, True), (127, 3, 1.0)):
+            for ab21ao21Side in ('input', 'output', 'both'):
+                with self.subTest(ab21ao21Value=ab21ao21Value, ab21ao21Side=ab21ao21Side):
+                    ab21ao21Mutant = copy.deepcopy(ab21ao21Control)
+                    ab21ao21Row = ab21ao21Mutant[ab21ao21Index]
+                    if ab21ao21Side in ('input', 'both'):
+                        ab21ao21Row[3][ab21ao21Position] = ab21ao21Value
+                    if ab21ao21Side in ('output', 'both'):
+                        ab21ao21Row[5]['opaque']['raw'][0] = ab21ao21Value
+                    with self.assertRaises(AssertionError):
+                        self.ab21ao21AssertJSONEqual(ab21ao21Mutant, ab21ao21ExpectedCases())
 
     def TestAb21Ao21EachIdentityAndPresencePredicateMutation(self):
         for ab21ao21Key in ('identity_axes', 'presence', 'errors', 'ownership', 'selection_rule', 'states'):
@@ -334,7 +358,7 @@ class TestAb21Ao21OpaqueViews(unittest.TestCase):
                     else:
                         ab21ao21Mutant[ab21ao21Key] = 'changed'
                     with self.assertRaises(AssertionError):
-                        self.assertEqual(ab21ao21Mutant, ab21ao21Contract())
+                        self.ab21ao21AssertJSONEqual(ab21ao21Mutant, ab21ao21Contract())
 
 
 def load_tests(ab21ao21Loader, ab21ao21Tests, ab21ao21Pattern):
