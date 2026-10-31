@@ -283,6 +283,9 @@ python3 -m unittest discover -s tests -p 'test_ao26_b522_demand_views.py' -v
 
 python3 -m pytest -q tests/test_am16_b516_statistics_directions.py
 
+echo "==> check B531 ordinary-limit documentation contract"
+python3 -m pytest -q tests/test_ap04_b531_ordinary_limit.py
+
 echo "==> check B509/B524 passive watch-policy documentation contract"
 python3 -m pytest -q tests/test_watch_policy_contract.py
 python3 -m pytest -q tests/test_b524_operation_docs.py
