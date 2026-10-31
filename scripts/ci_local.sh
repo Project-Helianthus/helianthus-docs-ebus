@@ -259,6 +259,9 @@ echo "==> check B520 simulator actuator and ADC declarations"
 python3 -m pytest -q tests/test_ac20_simulator_adc.py
 python3 -m pytest -q tests/test_ap02_b531_capability_state.py
 
+echo "==> check B522 candidate demand and scalar API results"
+python3 -m unittest discover -s tests -p 'test_ao26_b522_demand_views.py' -v
+
 echo "==> check B509/B524 passive watch-policy documentation contract"
 python3 -m pytest -q tests/test_watch_policy_contract.py
 python3 -m pytest -q tests/test_b524_operation_docs.py
