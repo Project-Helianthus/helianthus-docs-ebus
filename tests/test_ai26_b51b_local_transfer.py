@@ -101,10 +101,10 @@ def route(variant, selector, nn, gates):
         return 'Unknown'
     if any(gates.get(key) is False for key in GATES):
         return 'reject'
-    if variant == 'filtered' and 0x06 <= selector <= 0x0E:
-        return 'reject'
     if any(gates.get(key) is not True for key in GATES):
         return 'Unknown'
+    if variant == 'filtered' and 0x06 <= selector <= 0x0E:
+        return 'reject'
     if selector == 0x09:
         return 'accept' if 3 <= nn <= 16 else 'reject'
     shapes = {6: 1, 7: 1, 8: 9, 10: 1, 11: 1, 12: 1, 13: 2, 14: 2}
@@ -208,6 +208,12 @@ class LocalTransferTests(unittest.TestCase):
                     with self.subTest(selector=op, gate=gate, value=value):
                         altered = dict(good, **{gate: value})
                         self.assertEqual(route('unfiltered', op, nn, altered), expected)
+            for gate in GATES:
+                with self.subTest(variant='filtered', selector=op, gate=gate):
+                    self.assertEqual(route('filtered', op, nn, dict(good, **{gate: False})), 'reject')
+                    self.assertEqual(route('filtered', op, nn, dict(good, **{gate: None})), 'Unknown')
+                    absent = {k: v for k, v in good.items() if k != gate}
+                    self.assertEqual(route('filtered', op, nn, absent), 'Unknown')
         self.assertEqual(route('unprovided', 9, 3, good), 'Unknown')
         for op in (5, 15):
             self.assertEqual(route('unfiltered', op, 1, good), 'Unknown')

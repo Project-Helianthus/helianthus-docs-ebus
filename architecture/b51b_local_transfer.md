@@ -9,9 +9,7 @@ before Helianthus 1.0.
 
 Proven means only independently checked synthetic representation or arithmetic.
 Hypothesis marks each supplied local behavior candidate. Unknown marks an
-unprovided branch; it cannot admit a transfer. The source of these candidates
-is the bounded functional specification in issue #817, a partial slice of #736,
-not a capture or vendor wire specification. All tuples in the
+unprovided branch; it cannot admit a transfer. These candidates are not a capture or vendor wire specification. All tuples in the
 [synthetic fixture](fixtures/ai26_b51b_local_transfer.json) are synthetic;
 the [standard-library oracle](../tests/test_ai26_b51b_local_transfer.py)
 checks both publications against independent constants and arithmetic.
