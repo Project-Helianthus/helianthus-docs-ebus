@@ -55,7 +55,8 @@ def history_branch_view(context, marker, remainder, error, cells):
         if (isinstance(remainder, list) and len(remainder) == 7
                 and all(type(b) is int and b == 255 for b in remainder)):
             result['state'] = 'no-item'
-    elif selected and isinstance(cells, list) and len(cells) == 5:
+    elif (selected and isinstance(cells, list) and len(cells) == 5
+          and all(isinstance(cell, dict) for cell in cells)):
         if marker == 1 and error_state == 'present' and not complete:
             result['state'] = 'error-without-complete-time'
         elif marker == 2 and complete:
@@ -217,6 +218,15 @@ class HistoryBranchContractTests(unittest.TestCase):
         inp = copy.deepcopy(self.cases['upper']['input'])
         inp['cells'].append({'state': 'value', 'raw': [0], 'value': 0})
         self.assertEqual(history_branch_view(**inp)['state'], 'unknown-branch')
+
+    def test_marker_one_with_error_and_scalar_cell_is_unknown_branch(self):
+        inp = copy.deepcopy(self.cases['error-only']['input'])
+        self.assertEqual(inp['marker'], 1)
+        inp['cells'][0] = 7
+        result = history_branch_view(**inp)
+        self.assertEqual(result['state'], 'unknown-branch')
+        self.assertEqual(result['error']['state'], 'present')
+        self.assertEqual(result['components'][0]['state'], 'malformed')
 
     def test_relative_page_links_resolve_locally(self):
         links = re.findall(r'\]\(([^)]+)\)', self.text)
