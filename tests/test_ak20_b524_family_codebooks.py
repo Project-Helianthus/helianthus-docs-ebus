@@ -12,6 +12,7 @@ AXES = ('family', 'variant', 'primary', 'secondary', 'operation', 'direction',
 FIELDS = ('Ab30Family', 'Ab30Variant', 'Ab30Primary', 'Ab30Secondary',
           'Ab30Operation', 'Ab30Direction', 'Ab30Field', 'Ab30Alternative',
           'Ab30Group', 'Ab30InstanceScope', 'Ab30Register')
+INSTANCE_FIELD = ('Ab30Instance', '*uint8', 'lookup predicate')
 TYPES = ('string', 'string', 'uint8', '*uint8', '*uint8', 'string', 'string',
          'string', '*uint8', 'string', '*uint16')
 # Independent finite expectations, never loaded from the fixture or page.
@@ -76,10 +77,16 @@ def entries(payload):
     return bytearray(payload)
 
 
-def lookup(payload, identity):
+def instance_matches(scope, instance):
+    if instance is None:
+        return False
+    return instance == 0 if scope == '00' else scope == 'dynamic' and 0 <= instance <= 0xFE
+
+
+def lookup(payload, identity, instance=0):
     rows = json.loads(entries(payload))
     for row in rows:
-        if row['key'] == identity:
+        if row['key'] == identity and instance_matches(identity['instance_scope'], instance):
             return bytearray(json.dumps(row).encode()), True
     return None, False
 
@@ -120,7 +127,17 @@ class FamilyCodebooks(unittest.TestCase):
         actual = [line.split('|')[1:4] for line in self.page.splitlines()
                   if line.startswith('| Ab30')]
         self.assertEqual([[v.strip() for v in row] for row in actual],
-                         [list(x) for x in zip(FIELDS, TYPES, AXES)])
+                         [list(x) for x in zip(FIELDS, TYPES, AXES)] + [list(INSTANCE_FIELD)])
+
+    def test_instance_predicate(self):
+        dyn, single = key('controller-700'), key('controller-700', 1, 3, '00')
+        for instance, want in ((0, True), (1, True), (0xFE, True), (0xFF, False), (None, False)):
+            with self.subTest(scope='dynamic', instance=instance):
+                self.assertEqual(lookup(self.payload, dyn, instance)[1], want)
+        for instance, want in ((0, True), (1, False), (0xFF, False), (None, False)):
+            with self.subTest(scope='00', instance=instance):
+                self.assertEqual(lookup(self.payload, single, instance)[1], want)
+        self.assertIn('Instance FF is the all-instances selector', ' '.join(self.page.split()))
 
     def test_page_boundaries(self):
         normalized = ' '.join(self.page.split())

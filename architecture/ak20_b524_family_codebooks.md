@@ -43,7 +43,8 @@ Ab30Lookup(Ab30Key) (json.RawMessage, bool, error)
 `Ab30Entries` returns a JSON array. `Ab30Lookup` returns exactly one whole row,
 false for a missing exact key and an error for invalid embedded JSON or duplicate
 keys. Invalid data fails closed before any row is returned. No wildcard or
-nearest-key lookup is permitted. The complete key is:
+nearest-key lookup is permitted. The complete key is the eleven row axes plus
+the concrete native instance predicate:
 
 | Go field | Type | JSON axis | Finite value |
 | --- | --- | --- | --- |
@@ -58,8 +59,14 @@ nearest-key lookup is permitted. The complete key is:
 | Ab30Group | *uint8 | group | 1, 2 or 3 |
 | Ab30InstanceScope | string | instance_scope | 00 or dynamic |
 | Ab30Register | *uint16 | register | table register |
+| Ab30Instance | *uint8 | lookup predicate | concrete native instance 00 to FE |
 
-Proven: all eleven axes match exactly, with no cross-family, variant, direction,
+Proven: Ab30Instance is the concrete native instance of the read and is not
+stored in a row. It is mandatory: nil is a miss. Scope `00` matches only
+instance 00. Scope `dynamic` matches only a concrete instance from 00 to FE;
+this is a syntactic selector bound, not installed cardinality or a present slot.
+Instance FF is the all-instances selector, not a concrete instance, and never
+matches. Proven: all eleven row axes and the instance predicate match exactly, with no cross-family, variant, direction,
 field or alternative fallback. Optional absent and explicit zero differ.
 Non-applicable string axes use an explicit none token. Every identity axis is
 present in each JSON key; optional pointer absence is represented by null.
