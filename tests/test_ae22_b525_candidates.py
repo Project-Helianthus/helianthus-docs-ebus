@@ -41,7 +41,7 @@ def expected_declarations():
             ('request-id', 9, 1, 'u8', 255)]:
         add(0, 'Unknown', field, pos, width, codec, 0, maximum, 0,
             unknowns=('lifecycle',) if field == 'request-id' else ())
-    add(0, 'Unknown', 'status', None, 1, 'u8', 0, 255, 0,
+    add(0, 'Unknown', 'status', 6, 1, 'u8', 0, 255, 0,
         bits=dict(enumerate(['repeat', 'group', 'encrypted', 'frame-type',
                              'outdoor-sensor-pairing', 'reserved', 'reserved', 'reserved'])))
     for field, pos in [('sender-role', 7), ('receiver-role', 8)]:
@@ -49,9 +49,9 @@ def expected_declarations():
     for op in [1, 2]:
         add(op, 'Unknown', 'data', 3, None, 'opaque', 0, None, None,
             unknowns=('cipher', 'padding', 'sender-identity'))
-    add(3, 'Unknown', 'RSSI', None, 1, 'signed8', -128, 127, 0,
+    add(3, 'Unknown', 'RSSI', 3, 1, 'signed8', -128, 127, 0,
         unknowns=('physical-unit',))
-    add(3, 'Unknown', 'link-quality', None, 1, 'u8', 0, 255, 0,
+    add(3, 'Unknown', 'link-quality', 4, 1, 'u8', 0, 255, 0,
         bits=dict(enumerate(['link-quality-0', 'link-quality-1', 'link-quality-2',
                             'link-quality-3', 'link-quality-4', 'link-quality-5',
                             'link-quality-6', 'CRC-okay'])), unknowns=('CRC-algorithm',))

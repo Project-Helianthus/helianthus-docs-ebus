@@ -8,11 +8,8 @@ checks can be **Proven** without establishing native behavior: physical and
 native qualification remain **Unknown**. Nothing here is stable before 1.0.
 Other variants remain separate and unspecified.
 
-The finite scope is the 127 entries of the independently merged AE21 companion
-[radio-field catalog](https://github.com/Project-Helianthus/helianthus-ebusreg/pull/252).
-That implementation is corroboration, not primary native wire proof. No public
-native capture or vendor specification establishing these candidates is supplied;
-all unprovided properties remain Unknown. The
+The finite scope is 127 candidate radio-field declarations. Provenance is not
+published. All unprovided properties remain Unknown. The
 [synthetic declaration examples](fixtures/ae22_b525_candidates.json) preserve raw
 values alongside interpretation; they are fabricated, with no real identifiers.
 
@@ -38,8 +35,8 @@ empty-packet acceptance. No radio transport, crypto engine, pairing or native
 scan is established.
 
 <!-- legacy-role-mapping:begin -->
-The supplied role label master-control and the companion label primary-control
-both refer to code 10; this naming difference does not change the raw code.
+The candidate role labels master-control and primary-control both refer to
+code 10; this naming difference does not change the raw code.
 The labels are recorded literally in the bounded legacy vocabulary below.
 
 | Selector | Direction | Field | Grade | Logical position; extent | Raw type/domain | Scale/unit | Default; sentinel; conflict | Bits/codes | Unresolved; relation; raw preservation |
@@ -136,14 +133,14 @@ The labels are recorded literally in the bounded legacy vocabulary below.
 | 1B | positive | selector | Hypothesis | 2; width=1; count=Unknown; start=Unknown | u8; min=27; max=27 | scale=Unknown; unit=Unknown | default=Unknown; sentinel=Unknown; none declared | bits: none declared; codes: none declared | ; relation=Unknown; preserve_all |
 | 00 | Unknown | layer | Hypothesis | 3; width=1; count=Unknown; start=Unknown | u8; min=0; max=255 | scale=Unknown; unit=Unknown | default=0; sentinel=Unknown; none declared | bits: none declared; codes: none declared | ; relation=Unknown; preserve_all |
 | 00 | Unknown | radio-domain | Hypothesis | 4; width=2; count=Unknown; start=Unknown | u16-le; min=0; max=65535 | scale=Unknown; unit=Unknown | default=0; sentinel=Unknown; none declared | bits: none declared; codes: none declared | ; relation=Unknown; preserve_all |
-| 00 | Unknown | status | Hypothesis | Unknown; width=1; count=Unknown; start=Unknown | u8; min=0; max=255 | scale=Unknown; unit=Unknown | default=0; sentinel=Unknown; none declared | bits: 0=repeat, 1=group, 2=encrypted, 3=frame-type, 4=outdoor-sensor-pairing, 5=reserved, 6=reserved, 7=reserved; codes: none declared | ; relation=Unknown; preserve_all |
+| 00 | Unknown | status | Hypothesis | 6; width=1; count=Unknown; start=Unknown | u8; min=0; max=255 | scale=Unknown; unit=Unknown | default=0; sentinel=Unknown; none declared | bits: 0=repeat, 1=group, 2=encrypted, 3=frame-type, 4=outdoor-sensor-pairing, 5=reserved, 6=reserved, 7=reserved; codes: none declared | ; relation=Unknown; preserve_all |
 | 00 | Unknown | sender-role | Hypothesis | 7; width=1; count=Unknown; start=Unknown | u8; min=0; max=255 | scale=Unknown; unit=Unknown | default=1; sentinel=Unknown; 10: primary-control / master-control label alias; other bytes raw | bits: none declared; codes: 01=remote-eight, 0F=outdoor-sensor, 10=primary-control, 15=base-station, 16=base-outdoor-sensor, 17=remote-four, 30=remote-one, 37=remote-five, 70=remote-two, 77=remote-six, F0=remote-three, F7=remote-seven, FD=diagnosis-tool, FE=range-extender | ; relation=Unknown; preserve_all |
 | 00 | Unknown | receiver-role | Hypothesis | 8; width=1; count=Unknown; start=Unknown | u8; min=0; max=255 | scale=Unknown; unit=Unknown | default=1; sentinel=Unknown; 10: primary-control / master-control label alias; other bytes raw | bits: none declared; codes: 01=remote-eight, 0F=outdoor-sensor, 10=primary-control, 15=base-station, 16=base-outdoor-sensor, 17=remote-four, 30=remote-one, 37=remote-five, 70=remote-two, 77=remote-six, F0=remote-three, F7=remote-seven, FD=diagnosis-tool, FE=range-extender | ; relation=Unknown; preserve_all |
 | 00 | Unknown | request-id | Hypothesis | 9; width=1; count=Unknown; start=Unknown | u8; min=0; max=255 | scale=Unknown; unit=Unknown | default=0; sentinel=Unknown; none declared | bits: none declared; codes: none declared | lifecycle; relation=Unknown; preserve_all |
 | 01 | Unknown | data | Hypothesis | 3; width=Unknown; count=Unknown; start=Unknown | opaque; min=0; max=Unknown | scale=Unknown; unit=Unknown | default=Unknown; sentinel=Unknown; none declared | bits: none declared; codes: none declared | cipher; padding; sender-identity; relation=Unknown; preserve_all |
 | 02 | Unknown | data | Hypothesis | 3; width=Unknown; count=Unknown; start=Unknown | opaque; min=0; max=Unknown | scale=Unknown; unit=Unknown | default=Unknown; sentinel=Unknown; none declared | bits: none declared; codes: none declared | cipher; padding; sender-identity; relation=Unknown; preserve_all |
-| 03 | Unknown | RSSI | Hypothesis | Unknown; width=1; count=Unknown; start=Unknown | signed8; min=-128; max=127 | scale=Unknown; unit=Unknown | default=0; sentinel=Unknown; none declared | bits: none declared; codes: none declared | physical-unit; relation=Unknown; preserve_all |
-| 03 | Unknown | link-quality | Hypothesis | Unknown; width=1; count=Unknown; start=Unknown | u8; min=0; max=255 | scale=Unknown; unit=Unknown | default=0; sentinel=Unknown; none declared | bits: 0=link-quality-0, 1=link-quality-1, 2=link-quality-2, 3=link-quality-3, 4=link-quality-4, 5=link-quality-5, 6=link-quality-6, 7=CRC-okay; codes: none declared | CRC-algorithm; relation=Unknown; preserve_all |
+| 03 | Unknown | RSSI | Hypothesis | 3; width=1; count=Unknown; start=Unknown | signed8; min=-128; max=127 | scale=Unknown; unit=Unknown | default=0; sentinel=Unknown; none declared | bits: none declared; codes: none declared | physical-unit; relation=Unknown; preserve_all |
+| 03 | Unknown | link-quality | Hypothesis | 4; width=1; count=Unknown; start=Unknown | u8; min=0; max=255 | scale=Unknown; unit=Unknown | default=0; sentinel=Unknown; none declared | bits: 0=link-quality-0, 1=link-quality-1, 2=link-quality-2, 3=link-quality-3, 4=link-quality-4, 5=link-quality-5, 6=link-quality-6, 7=CRC-okay; codes: none declared | CRC-algorithm; relation=Unknown; preserve_all |
 | 04 | request | bytes | Hypothesis | Unknown; width=16; count=16; start=Unknown | u8; min=0; max=255 | scale=Unknown; unit=Unknown | default=0; sentinel=Unknown; no echo established | bits: none declared; codes: none declared | active-key; persistent-key; echo; relation=Unknown; preserve_all |
 | 04 | positive | bytes | Hypothesis | Unknown; width=16; count=16; start=Unknown | u8; min=0; max=255 | scale=Unknown; unit=Unknown | default=0; sentinel=Unknown; no echo established | bits: none declared; codes: none declared | active-key; persistent-key; echo; relation=Unknown; preserve_all |
 | 04 | positive | feedback | Hypothesis | Unknown; width=1; count=Unknown; start=Unknown | u8; min=0; max=255 | scale=Unknown; unit=Unknown | default=0; sentinel=Unknown; simultaneous flags; no exclusivity established | bits: 0=success, 1=too-short, 2=too-long, 3=reserved, 4=reserved, 5=reserved, 6=reserved, 7=reserved; codes: none declared | exclusivity; relation=independent-bits; preserve_all |

@@ -2415,7 +2415,7 @@
         "field": "status"
       },
       "grade": "Hypothesis",
-      "position": null,
+      "position": 6,
       "width": 1,
       "codec": "u8",
       "minimum": 0,
@@ -2620,7 +2620,7 @@
         "field": "RSSI"
       },
       "grade": "Hypothesis",
-      "position": null,
+      "position": 3,
       "width": 1,
       "codec": "signed8",
       "minimum": -128,
@@ -2648,7 +2648,7 @@
         "field": "link-quality"
       },
       "grade": "Hypothesis",
-      "position": null,
+      "position": 4,
       "width": 1,
       "codec": "u8",
       "minimum": 0,
