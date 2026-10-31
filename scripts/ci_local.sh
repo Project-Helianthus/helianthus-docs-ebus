@@ -270,6 +270,7 @@ python3 -m pytest -q tests/test_ae06_b506_candidates.py
 
 echo "==> check Vaillant B505 sentinel and override candidates"
 python3 -m pytest -q tests/test_ae04_b505_candidates.py
+python3 -m pytest -q tests/test_am20_standard03_candidate_views.py
 
 echo "==> check B510 capability-cache query transition contract"
 python3 -m unittest discover -s tests -p 'test_ao12_b510_cache_transition.py' -v
