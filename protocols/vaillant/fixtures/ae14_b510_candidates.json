@@ -1,0 +1,750 @@
+{
+  "evidence": "synthetic; no observed telegrams",
+  "physical_qualification": "Unknown",
+  "entries": [
+    {
+      "key": {
+        "family": "vaillant",
+        "variant": "B510",
+        "primary": 181,
+        "secondary": 16,
+        "operation": 2,
+        "direction": "request",
+        "field": "remote_status"
+      },
+      "position": null,
+      "width_bits": 8,
+      "grade": "Hypothesis",
+      "raw_domain": [
+        0,
+        255
+      ],
+      "divisor": null,
+      "unit": null,
+      "values": null,
+      "bits": null,
+      "interpretation": "Unknown"
+    },
+    {
+      "key": {
+        "family": "vaillant",
+        "variant": "B510",
+        "primary": 181,
+        "secondary": 16,
+        "operation": 2,
+        "direction": "request",
+        "field": "CH_setpoint_upper_limit"
+      },
+      "position": null,
+      "width_bits": 8,
+      "grade": "Hypothesis",
+      "raw_domain": [
+        0,
+        255
+      ],
+      "divisor": 2,
+      "unit": "degrees Celsius",
+      "values": null,
+      "bits": null,
+      "interpretation": "Unknown"
+    },
+    {
+      "key": {
+        "family": "vaillant",
+        "variant": "B510",
+        "primary": 181,
+        "secondary": 16,
+        "operation": 2,
+        "direction": "request",
+        "field": "DHW_setpoint_upper_limit"
+      },
+      "position": null,
+      "width_bits": 8,
+      "grade": "Hypothesis",
+      "raw_domain": [
+        0,
+        255
+      ],
+      "divisor": 2,
+      "unit": "degrees Celsius",
+      "values": null,
+      "bits": null,
+      "interpretation": "Unknown"
+    },
+    {
+      "key": {
+        "family": "vaillant",
+        "variant": "B510",
+        "primary": 181,
+        "secondary": 16,
+        "operation": 3,
+        "direction": "request",
+        "field": "climate"
+      },
+      "position": null,
+      "width_bits": 8,
+      "grade": "Hypothesis",
+      "raw_domain": [
+        0,
+        255
+      ],
+      "divisor": null,
+      "unit": null,
+      "values": {
+        "0": "off",
+        "1": "heating",
+        "2": "cooling"
+      },
+      "bits": null,
+      "interpretation": "Unknown"
+    },
+    {
+      "key": {
+        "family": "vaillant",
+        "variant": "B510",
+        "primary": 181,
+        "secondary": 16,
+        "operation": 3,
+        "direction": "request",
+        "field": "capacity"
+      },
+      "position": null,
+      "width_bits": 8,
+      "grade": "Hypothesis",
+      "raw_domain": [
+        0,
+        250
+      ],
+      "divisor": 10,
+      "unit": "kW",
+      "values": null,
+      "bits": null,
+      "interpretation": "Unknown"
+    },
+    {
+      "key": {
+        "family": "vaillant",
+        "variant": "B510",
+        "primary": 181,
+        "secondary": 16,
+        "operation": 3,
+        "direction": "request",
+        "field": "cost"
+      },
+      "position": null,
+      "width_bits": 8,
+      "grade": "Hypothesis",
+      "raw_domain": [
+        0,
+        250
+      ],
+      "divisor": null,
+      "unit": "reciprocal-MWh",
+      "values": null,
+      "bits": null,
+      "interpretation": "Unknown"
+    },
+    {
+      "key": {
+        "family": "vaillant",
+        "variant": "B510",
+        "primary": 181,
+        "secondary": 16,
+        "operation": 3,
+        "direction": "request",
+        "field": "force"
+      },
+      "position": null,
+      "width_bits": 8,
+      "grade": "Hypothesis",
+      "raw_domain": [
+        0,
+        255
+      ],
+      "divisor": null,
+      "unit": null,
+      "values": {
+        "0": "normal",
+        "1": "maximum",
+        "2": "minimum",
+        "3": "off",
+        "4": "cooling-leak-test",
+        "5": "cooling-charge-test",
+        "6": "capacity-test",
+        "7": "I/O-test"
+      },
+      "bits": null,
+      "interpretation": "Unknown"
+    },
+    {
+      "key": {
+        "family": "vaillant",
+        "variant": "B510",
+        "primary": 181,
+        "secondary": 16,
+        "operation": 4,
+        "direction": "request",
+        "field": "energy"
+      },
+      "position": null,
+      "width_bits": 8,
+      "grade": "Hypothesis",
+      "raw_domain": [
+        0,
+        255
+      ],
+      "divisor": null,
+      "unit": null,
+      "values": {
+        "0": "unknown",
+        "1": "gas",
+        "2": "electricity-one",
+        "3": "electricity-two",
+        "4": "fuel",
+        "5": "pellet"
+      },
+      "bits": null,
+      "interpretation": "Unknown"
+    },
+    {
+      "key": {
+        "family": "vaillant",
+        "variant": "B510",
+        "primary": 181,
+        "secondary": 16,
+        "operation": 5,
+        "direction": "request",
+        "field": "DHW_setpoint"
+      },
+      "position": null,
+      "width_bits": 8,
+      "grade": "Hypothesis",
+      "raw_domain": [
+        0,
+        255
+      ],
+      "divisor": 2,
+      "unit": "degrees Celsius",
+      "values": null,
+      "bits": null,
+      "interpretation": "Unknown"
+    },
+    {
+      "key": {
+        "family": "vaillant",
+        "variant": "B510",
+        "primary": 181,
+        "secondary": 16,
+        "operation": 5,
+        "direction": "request",
+        "field": "adjustment"
+      },
+      "position": null,
+      "width_bits": 8,
+      "grade": "Hypothesis",
+      "raw_domain": [
+        0,
+        255
+      ],
+      "divisor": null,
+      "unit": null,
+      "values": null,
+      "bits": [
+        {
+          "bit": 0,
+          "grade": "Hypothesis",
+          "values": {
+            "0": "released",
+            "1": "blocked"
+          },
+          "reserved": false,
+          "expected": null,
+          "active_modes": null,
+          "ignored_modes": null,
+          "meaning": "CH",
+          "persists_until_status": null,
+          "commands_termination": null
+        },
+        {
+          "bit": 1,
+          "grade": "Hypothesis",
+          "values": {
+            "0": "released",
+            "1": "blocked"
+          },
+          "reserved": false,
+          "expected": null,
+          "active_modes": null,
+          "ignored_modes": null,
+          "meaning": "DHW",
+          "persists_until_status": null,
+          "commands_termination": null
+        },
+        {
+          "bit": 2,
+          "grade": "Hypothesis",
+          "values": null,
+          "reserved": true,
+          "expected": null,
+          "active_modes": null,
+          "ignored_modes": null,
+          "meaning": null,
+          "persists_until_status": null,
+          "commands_termination": null
+        },
+        {
+          "bit": 3,
+          "grade": "Hypothesis",
+          "values": null,
+          "reserved": true,
+          "expected": null,
+          "active_modes": null,
+          "ignored_modes": null,
+          "meaning": null,
+          "persists_until_status": null,
+          "commands_termination": null
+        },
+        {
+          "bit": 4,
+          "grade": "Hypothesis",
+          "values": null,
+          "reserved": true,
+          "expected": null,
+          "active_modes": null,
+          "ignored_modes": null,
+          "meaning": null,
+          "persists_until_status": null,
+          "commands_termination": null
+        },
+        {
+          "bit": 5,
+          "grade": "Hypothesis",
+          "values": null,
+          "reserved": true,
+          "expected": null,
+          "active_modes": null,
+          "ignored_modes": null,
+          "meaning": null,
+          "persists_until_status": null,
+          "commands_termination": null
+        },
+        {
+          "bit": 6,
+          "grade": "Hypothesis",
+          "values": null,
+          "reserved": true,
+          "expected": null,
+          "active_modes": null,
+          "ignored_modes": null,
+          "meaning": null,
+          "persists_until_status": null,
+          "commands_termination": null
+        },
+        {
+          "bit": 7,
+          "grade": "Hypothesis",
+          "values": null,
+          "reserved": true,
+          "expected": null,
+          "active_modes": null,
+          "ignored_modes": null,
+          "meaning": null,
+          "persists_until_status": null,
+          "commands_termination": null
+        }
+      ],
+      "interpretation": "Unknown"
+    },
+    {
+      "key": {
+        "family": "vaillant",
+        "variant": "B510",
+        "primary": 181,
+        "secondary": 16,
+        "operation": 6,
+        "direction": "request",
+        "field": "status"
+      },
+      "position": null,
+      "width_bits": 8,
+      "grade": "Hypothesis",
+      "raw_domain": [
+        0,
+        255
+      ],
+      "divisor": null,
+      "unit": null,
+      "values": null,
+      "bits": [
+        {
+          "bit": 0,
+          "grade": "Hypothesis",
+          "values": {
+            "0": "off",
+            "1": "on"
+          },
+          "reserved": false,
+          "expected": null,
+          "active_modes": null,
+          "ignored_modes": null,
+          "meaning": null,
+          "persists_until_status": null,
+          "commands_termination": null
+        },
+        {
+          "bit": 1,
+          "grade": "Hypothesis",
+          "values": null,
+          "reserved": true,
+          "expected": 0,
+          "active_modes": null,
+          "ignored_modes": null,
+          "meaning": null,
+          "persists_until_status": null,
+          "commands_termination": null
+        },
+        {
+          "bit": 2,
+          "grade": "Hypothesis",
+          "values": null,
+          "reserved": true,
+          "expected": 0,
+          "active_modes": null,
+          "ignored_modes": null,
+          "meaning": null,
+          "persists_until_status": null,
+          "commands_termination": null
+        },
+        {
+          "bit": 3,
+          "grade": "Hypothesis",
+          "values": null,
+          "reserved": true,
+          "expected": 0,
+          "active_modes": null,
+          "ignored_modes": null,
+          "meaning": null,
+          "persists_until_status": null,
+          "commands_termination": null
+        },
+        {
+          "bit": 4,
+          "grade": "Hypothesis",
+          "values": null,
+          "reserved": true,
+          "expected": 0,
+          "active_modes": null,
+          "ignored_modes": null,
+          "meaning": null,
+          "persists_until_status": null,
+          "commands_termination": null
+        },
+        {
+          "bit": 5,
+          "grade": "Hypothesis",
+          "values": null,
+          "reserved": true,
+          "expected": 0,
+          "active_modes": null,
+          "ignored_modes": null,
+          "meaning": null,
+          "persists_until_status": null,
+          "commands_termination": null
+        },
+        {
+          "bit": 6,
+          "grade": "Hypothesis",
+          "values": null,
+          "reserved": true,
+          "expected": 0,
+          "active_modes": null,
+          "ignored_modes": null,
+          "meaning": null,
+          "persists_until_status": null,
+          "commands_termination": null
+        },
+        {
+          "bit": 7,
+          "grade": "Hypothesis",
+          "values": null,
+          "reserved": true,
+          "expected": 0,
+          "active_modes": null,
+          "ignored_modes": null,
+          "meaning": null,
+          "persists_until_status": null,
+          "commands_termination": null
+        }
+      ],
+      "interpretation": "Unknown"
+    },
+    {
+      "key": {
+        "family": "vaillant",
+        "variant": "B510",
+        "primary": 181,
+        "secondary": 16,
+        "operation": 0,
+        "direction": "request",
+        "field": "disable"
+      },
+      "position": null,
+      "width_bits": 8,
+      "grade": "Hypothesis",
+      "raw_domain": [
+        0,
+        255
+      ],
+      "divisor": null,
+      "unit": null,
+      "values": null,
+      "bits": [
+        {
+          "bit": 0,
+          "grade": "Hypothesis",
+          "values": null,
+          "reserved": false,
+          "expected": null,
+          "active_modes": [
+            "automatic"
+          ],
+          "ignored_modes": [
+            "forced-heating",
+            "forced-DHW",
+            "forced-off"
+          ],
+          "meaning": null,
+          "persists_until_status": null,
+          "commands_termination": null
+        },
+        {
+          "bit": 1,
+          "grade": "Hypothesis",
+          "values": null,
+          "reserved": false,
+          "expected": null,
+          "active_modes": [
+            "automatic"
+          ],
+          "ignored_modes": [
+            "forced-heating",
+            "forced-DHW",
+            "forced-off"
+          ],
+          "meaning": null,
+          "persists_until_status": null,
+          "commands_termination": null
+        },
+        {
+          "bit": 2,
+          "grade": "Hypothesis",
+          "values": null,
+          "reserved": false,
+          "expected": null,
+          "active_modes": [
+            "automatic"
+          ],
+          "ignored_modes": [
+            "forced-heating",
+            "forced-DHW",
+            "forced-off"
+          ],
+          "meaning": null,
+          "persists_until_status": null,
+          "commands_termination": null
+        },
+        {
+          "bit": 3,
+          "grade": "Unknown",
+          "values": null,
+          "reserved": false,
+          "expected": null,
+          "active_modes": null,
+          "ignored_modes": null,
+          "meaning": "timer assignment unresolved",
+          "persists_until_status": null,
+          "commands_termination": null
+        },
+        {
+          "bit": 4,
+          "grade": "Unknown",
+          "values": null,
+          "reserved": false,
+          "expected": null,
+          "active_modes": null,
+          "ignored_modes": null,
+          "meaning": "timer assignment unresolved",
+          "persists_until_status": null,
+          "commands_termination": null
+        },
+        {
+          "bit": 5,
+          "grade": "Unknown",
+          "values": null,
+          "reserved": false,
+          "expected": null,
+          "active_modes": null,
+          "ignored_modes": null,
+          "meaning": null,
+          "persists_until_status": null,
+          "commands_termination": null
+        },
+        {
+          "bit": 6,
+          "grade": "Hypothesis",
+          "values": null,
+          "reserved": false,
+          "expected": null,
+          "active_modes": null,
+          "ignored_modes": null,
+          "meaning": "relates to subsequent flame status",
+          "persists_until_status": null,
+          "commands_termination": null
+        },
+        {
+          "bit": 7,
+          "grade": "Hypothesis",
+          "values": null,
+          "reserved": false,
+          "expected": null,
+          "active_modes": null,
+          "ignored_modes": null,
+          "meaning": "starts legionella protection",
+          "persists_until_status": true,
+          "commands_termination": false
+        }
+      ],
+      "interpretation": "Unknown"
+    }
+  ],
+  "examples": {
+    "capacity": [
+      [
+        0,
+        true,
+        0
+      ],
+      [
+        250,
+        true,
+        25
+      ],
+      [
+        251,
+        false,
+        null
+      ]
+    ],
+    "temperature": [
+      [
+        2,
+        "CH_setpoint_upper_limit",
+        1,
+        0.5
+      ],
+      [
+        2,
+        "DHW_setpoint_upper_limit",
+        1,
+        0.5
+      ],
+      [
+        5,
+        "DHW_setpoint",
+        1,
+        0.5
+      ]
+    ],
+    "force": [
+      [
+        7,
+        "I/O-test"
+      ],
+      [
+        8,
+        null
+      ]
+    ],
+    "energy": [
+      [
+        2,
+        "electricity-one"
+      ],
+      [
+        3,
+        "electricity-two"
+      ]
+    ],
+    "adjustment": [
+      [
+        0,
+        "released",
+        "released",
+        0
+      ],
+      [
+        3,
+        "blocked",
+        "blocked",
+        0
+      ],
+      [
+        252,
+        "released",
+        "released",
+        252
+      ]
+    ],
+    "disable": [
+      [
+        7,
+        "automatic",
+        7,
+        0,
+        0
+      ],
+      [
+        7,
+        "forced-heating",
+        0,
+        0,
+        0
+      ],
+      [
+        7,
+        "forced-DHW",
+        0,
+        0,
+        0
+      ],
+      [
+        7,
+        "forced-off",
+        0,
+        0,
+        0
+      ],
+      [
+        128,
+        "automatic",
+        0,
+        0,
+        128
+      ],
+      [
+        135,
+        "automatic",
+        7,
+        0,
+        128
+      ],
+      [
+        24,
+        "automatic",
+        0,
+        24,
+        0
+      ]
+    ]
+  }
+}
