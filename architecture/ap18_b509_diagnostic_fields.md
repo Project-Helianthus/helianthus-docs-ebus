@@ -52,8 +52,10 @@ Output: `{ "context": {...}, "raw": {...}, "arguments": {...},
 Arguments is omitted exactly when absent on input. Context and supplied arguments
 are unchanged. Raw is a deep independent copy of fields. Semantic field results
 contain raw when present, state and grade, plus only applicable number, label,
-flags, reserved, unmodeled, candidate_domain or alternatives. No missing field
-gets synthetic raw bytes, a number or a label. Data additionally records length.
+flags, reserved, unmodeled, candidate_domain, calculation, length or
+alternatives. calculation=Proven appears on complete address, count and status
+results; length appears on complete data results. No missing field gets
+synthetic raw bytes, a number or a label.
 The formal table below and scenario file fix the local JSON spelling.
 
 ## Arithmetic and transitions

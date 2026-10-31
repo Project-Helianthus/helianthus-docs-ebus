@@ -240,6 +240,18 @@ class Ab17Ap17Contract(unittest.TestCase):
         for ab17ap17_case in ab17ap17_second:
             self.ab17ap17_assert_transition(ab17ap17_case)
 
+    def TestAb17Ap17PermittedSemanticKeys(self):
+        ab17ap17_flat = ' '.join(self.ab17ap17_page.split())
+        ab17ap17_match = re.search(r'plus only applicable (.*?)\. calculation=Proven', ab17ap17_flat)
+        self.assertIsNotNone(ab17ap17_match)
+        ab17ap17_listed = set(re.split(r',\s*(?:or\s+)?|\s+or\s+', ab17ap17_match.group(1)))
+        ab17ap17_permitted = ab17ap17_listed | {'raw', 'state', 'grade'}
+        self.assertEqual(ab17ap17_listed, {'number', 'label', 'flags', 'reserved', 'unmodeled',
+                                           'candidate_domain', 'calculation', 'length', 'alternatives'})
+        for ab17ap17_case in self.ab17ap17_fixture['scenarios']:
+            for ab17ap17_semantic in ab17ap17_case['expected']['fields'].values():
+                self.assertLessEqual(set(ab17ap17_semantic), ab17ap17_permitted)
+
 
 def load_tests(ab17ap17_loader, ab17ap17_tests, ab17ap17_pattern):
     # Standard unittest hook preserves the requested TestAb17Ap17 method prefix.
