@@ -28,7 +28,7 @@ admitted by an offline result.
 | API/result boundary | Finite result and explicit acceptance condition |
 | --- | --- |
 | Scalar read request and normalized result | Request `[OP,00,GG,II,RRlo,RRhi]`, with OP02 and OP06 kept separate; normalized reply `[FLAGS,GG,RRlo,RRhi,VALUE...]`. A usable requested value requires exact GG and full RR correlation. II remains request context, never an echoed reply field. A GG or RR mismatch is uncorrelated, never usable for the requested identity: retain both identities and raw bytes, without attaching requested bounds. |
-| Scalar no-value result | Empty means exactly zero payload bytes. A one-byte status is retained as status with no value; neither outcome establishes presence, absence, or codec qualification. Other incomplete headers are not usable scalar values. |
+| Scalar no-value result | Empty means exactly zero payload bytes. A one-byte status is retained as status with no value; neither outcome establishes presence, absence, or codec qualification. Other incomplete headers are not usable scalar values. A complete four-byte header with no VALUE bytes is a header-only no-value result, never a usable scalar value even when GG and RR correlate; retain its header identity and raw bytes without establishing presence, absence, or codec qualification. |
 | Explicit-codec helper | The caller supplies the codec; its exact value width must match. A label or byte count never selects a codec automatically. Return the interpretation, evidence grade and codec qualification separately, preserving raw fallback on absent, unqualified or failed decoding. Successful decoding alone promotes none of them. |
 | OP03 timer result | Exactly seven bytes: raw configuration plus three start/stop pairs; `slot_count: 3`, never seven. Codes are decimal 0..144 (`00..90` hex), in ten-minute steps. Only `90 90` hex is unused. An active pair requires `start < stop <= 144`; invalid pairs retain raw bytes and have no minute projection for either endpoint. |
 | OP04 offline timer plan | Exactly eleven bytes `[04,GG,II,ADDRESS,DAY,START1,STOP1,START2,STOP2,START3,STOP3]`. ADDRESS precedes DAY; DAY is 0..6. Active pairs require `start < stop <= 144`; unused pairs are `90 90`. Retain an exact seven-byte OP03 baseline and matching family/channel/instance/day identity. A six-byte baseline or mismatched identity rejects the plan; no execution route is added. |
@@ -55,7 +55,9 @@ native qualification implied.
   bounds. Replies `01 01 34 12 2A 00` and `01 03 35 12 2A 00`
   independently mismatch GG and RR: retain the requested and returned
   identities and complete raw payloads, with no requested bounds. An empty
-  payload and status `00` are distinct no-value results. A one-byte value
+  payload and status `00` are distinct no-value results. Reply `01 03 34 12`
+  correlates GG/RR but has no VALUE bytes: retain it as a header-only no-value
+  result, never a usable scalar value. A one-byte value
   `2A` fails that explicitly selected two-byte codec; `2A 00` without an
   explicit codec stays raw.
 - For the VRC700 family, timer identity `channel=zone-heating, instance=02,
