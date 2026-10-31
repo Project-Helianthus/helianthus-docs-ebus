@@ -308,6 +308,9 @@ python3 -m pytest -q tests/test_ap04_b531_ordinary_limit.py
 echo "==> check B519 opaque programming documentation contract"
 python3 -m pytest -q tests/test_ac16_opaque_programming.py
 
+echo "==> check B512 feedback fallback declarations and registry contract"
+python3 -m pytest -q tests/test_ak08_b512_feedback_fallback.py
+
 echo "==> check B509/B524 passive watch-policy documentation contract"
 python3 -m pytest -q tests/test_watch_policy_contract.py
 python3 -m pytest -q tests/test_b524_operation_docs.py
