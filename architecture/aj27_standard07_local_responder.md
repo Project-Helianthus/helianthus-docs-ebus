@@ -2,9 +2,8 @@
 
 Refs #834; partial child of #736, which remains open. This pre-1.0 architecture
 candidate is **Hypothesis**. Nothing here is a stable contract or physical
-qualification. The supplied issue snapshot is the source for local software
-facts; the [synthetic scenarios](fixtures/aj27_standard07_local_responder.json)
-are examples, not captures.
+qualification. The [synthetic scenarios](fixtures/aj27_standard07_local_responder.json)
+illustrate the candidate.
 
 The public native contract comes first: [service 07 identification](../protocols/ebus-services/ebus-service-07h.md#service-0x07-0x04--identification)
 describes the standard ten-byte layout and separately grades the regulator-family

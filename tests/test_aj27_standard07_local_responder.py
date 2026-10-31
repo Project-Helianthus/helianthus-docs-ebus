@@ -26,7 +26,9 @@ def expected_builder(identifier, versions, number):
     narrowed = quotient % 256
     components = [packed(v) for v in [*versions, remainder, narrowed]]
     output = None
-    if len(identifier) == 5 and len(versions) == 2 and None not in components:
+    if (len(identifier) == 5
+            and all(type(n) is int and 0 <= n <= 255 for n in identifier)
+            and len(versions) == 2 and None not in components):
         output = [0xB5, *identifier, *components]
     return remainder, quotient, narrowed, output, output is not None
 
@@ -158,6 +160,27 @@ class AJ27Contract(unittest.TestCase):
                 r['output']=[181,65,66,67,68,69, *[packed(v) for v in versions], 0x17,0x04]
                 r['full_identity']=True
                 with self.assertRaises(AssertionError):
+                    validate(m)
+
+    def test_builder_requires_identifier_bytes(self):
+        for index in range(5):
+            for value in (300, -1, True, 65.0, 'A', None):
+                with self.subTest(index=index, value=value):
+                    m=copy.deepcopy(self.c)
+                    r=m['builders'][0]
+                    r['identifier'][index]=value
+                    r['output'][1+index]=value
+                    self.assertEqual(expected_builder(r['identifier'], r['versions'],
+                                                     r['number']),
+                                     (17,4,4,None,False))
+                    with self.assertRaises(AssertionError):
+                        validate(m)
+            for value in (0, 255):
+                with self.subTest(index=index, value=value):
+                    m=copy.deepcopy(self.c)
+                    r=m['builders'][0]
+                    r['identifier'][index]=value
+                    r['output'][1+index]=value
                     validate(m)
 
     def test_all_fixed_fields_reject_mutation(self):
