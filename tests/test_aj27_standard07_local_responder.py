@@ -15,7 +15,7 @@ UNKNOWN = ('store_a_capacity', 'store_b_capacity', 'copy_ordering',
 
 
 def packed(n):
-    if not 0 <= n <= 99:
+    if type(n) is not int or not 0 <= n <= 99:
         return None
     tens, units = divmod(n, 10)
     return tens * 16 + units
@@ -161,6 +161,18 @@ class AJ27Contract(unittest.TestCase):
                 r['full_identity']=True
                 with self.assertRaises(AssertionError):
                     validate(m)
+
+    def test_builder_requires_integer_versions(self):
+        for index in range(2):
+            for value in (True, False, 12.0, '12', None):
+                with self.subTest(index=index, value=value):
+                    m=copy.deepcopy(self.c)
+                    r=m['builders'][0]
+                    r['versions'][index]=value
+                    self.assertEqual(expected_builder(r['identifier'], r['versions'],
+                                                     r['number'])[3:], (None,False))
+                    with self.assertRaises(AssertionError):
+                        validate(m)
 
     def test_builder_requires_identifier_bytes(self):
         for index in range(5):
