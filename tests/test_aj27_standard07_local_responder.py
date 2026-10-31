@@ -62,36 +62,50 @@ TRANSITION_KEYS = {'event', 'target', 'raw', 'local_success', 'full_identity',
                    'last_known_good', 'other_store', 'scratch'}
 
 
+def exact(a, b):
+    """Equality that also requires identical scalar types (False != 0)."""
+    if type(a) is not type(b) and not (
+            isinstance(a, (list, tuple)) and isinstance(b, (list, tuple))):
+        return False
+    if isinstance(a, dict):
+        return a.keys() == b.keys() and all(exact(a[k], b[k]) for k in a)
+    if isinstance(a, (list, tuple)):
+        return len(a) == len(b) and all(exact(x, y) for x, y in zip(a, b))
+    return a == b
+
+
 def validate(c):
     assert set(c) == TOP_KEYS
     assert all(set(r) == BUILDER_KEYS for r in c['builders'])
     assert all(set(r) == TRANSITION_KEYS for r in c['transitions'])
-    assert (c['grade'], c['native_behavior'], c['physical_qualification'],
-            c['runtime_implemented']) == ('Hypothesis', 'Unknown', 'Unknown', False)
-    assert c['unknown'] == dict.fromkeys(UNKNOWN, 'Unknown')
-    assert c['builder'] == dict(prefix=181, identifier_bytes=5, data_bytes=10,
-                                direction='local_response', grade='Hypothesis')
-    assert c['variants'] == {
+    assert exact((c['grade'], c['native_behavior'], c['physical_qualification'],
+                  c['runtime_implemented']), ('Hypothesis', 'Unknown', 'Unknown', False))
+    assert exact(c['unknown'], dict.fromkeys(UNKNOWN, 'Unknown'))
+    assert exact(c['builder'], dict(prefix=181, identifier_bytes=5, data_bytes=10,
+                                direction='local_response', grade='Hypothesis'))
+    assert exact(c['variants'], {
         'A': dict(sweep_count=230, solar=['06', 'ED', 'EE', 'EF', 'F2'],
                   secondary=['FC', '0A', '12'], controller_jobs=None,
                   attempts_per_job=None, max_attempts=7),
         'B': dict(sweep_count=0, solar=['06'], secondary=['FC'],
-                  controller_jobs=3, attempts_per_job=2, max_attempts=6)}
-    assert c['queue'] == dict(seconds=180, meaning='queue_timeout', physical_timing='Unknown')
-    assert c['lifecycles'] == dict(stores=['store_a', 'store_b'], scratch='shared_scratch',
+                  controller_jobs=3, attempts_per_job=2, max_attempts=6)})
+    assert exact(c['queue'], dict(seconds=180, meaning='queue_timeout', physical_timing='Unknown'))
+    assert exact(c['lifecycles'], dict(stores=['store_a', 'store_b'], scratch='shared_scratch',
         clear_scope='selected_store_only', copy_completion='Unknown',
-        short_success_full_identity=False, setter_persistence='Unknown')
-    assert c['selection'] == dict(paths=['gpio', 'conditional_import'],
-        import_condition='Unknown', unconditional_import=False, precedence='Unknown')
-    assert c['boundaries'] == dict(mutative_follow_up='outside_discovery',
+        short_success_full_identity=False, setter_persistence='Unknown'))
+    assert exact(c['selection'], dict(paths=['gpio', 'conditional_import'],
+        import_condition='Unknown', unconditional_import=False, precedence='Unknown'))
+    assert exact(c['boundaries'], dict(mutative_follow_up='outside_discovery',
         low_nibble_parser='outside_slice', **{'0704_07FE_distinction':'outside_slice'},
         shared_io_ordering='does_not_merge_variants', admission=False,
-        mcp_graphql='no_surface_change', stability='pre_1.0')
+        mcp_graphql='no_surface_change', stability='pre_1.0'))
     assert [r['id'] for r in c['builders']] == ['ordinary', 'narrowed', 'short']
     for r in c['builders']:
-        assert tuple(r[k] for k in ('remainder', 'quotient', 'quotient_low8',
-                                   'output', 'full_identity')) == expected_builder(
-                                       r['identifier'], r['versions'], r['number'])
+        assert all(type(n) is int for n in
+                   [*r['identifier'], *r['versions'], r['number']])
+        assert exact(tuple(r[k] for k in ('remainder', 'quotient', 'quotient_low8',
+                                          'output', 'full_identity')),
+                     expected_builder(r['identifier'], r['versions'], r['number']))
     assert [r['event'] for r in c['transitions']] == ['short_success', 'clear', 'copy']
     for r in c['transitions']:
         assert r['target'] in ('store_a', 'store_b')
@@ -101,7 +115,7 @@ def validate(c):
         assert r['last_known_good'] == {'short_success':'preserved',
             'clear':'cleared_selected', 'copy':'preserved_pending_completion'}[event]
         assert r['local_success'] is (True if event == 'short_success' else None)
-        assert r['raw'] == {'short_success':[65,66,67,68], 'clear':[], 'copy':[65,66]}[event]
+        assert exact(r['raw'], {'short_success':[65,66,67,68], 'clear':[], 'copy':[65,66]}[event])
 
 
 def rows(page):
@@ -295,6 +309,39 @@ class AJ27Contract(unittest.TestCase):
             m['builders'][0]['number']=number
             with self.assertRaises(AssertionError):
                 validate(m)
+
+    def test_boolean_integer_substitution_rejected(self):
+        # Every integer leaf may not become a Boolean and every Boolean leaf may
+        # not become 0/1; False == 0 and True == 1 must not satisfy validation.
+        def scalars(value, path):
+            if isinstance(value, dict):
+                for k, v in value.items():
+                    yield from scalars(v, path + [k])
+            elif isinstance(value, list):
+                for i, v in enumerate(value):
+                    yield from scalars(v, path + [i])
+            else:
+                yield path, value
+        count = 0
+        for path, value in scalars(self.c, []):
+            if type(value) is int:
+                subs = [bool(value)] if value in (0, 1) else []
+                subs.append(float(value))
+            elif type(value) is bool:
+                subs = [int(value)]
+            else:
+                continue
+            for sub in subs:
+                count += 1
+                with self.subTest(path=path, value=sub):
+                    m = copy.deepcopy(self.c)
+                    node = m
+                    for key in path[:-1]:
+                        node = node[key]
+                    node[path[-1]] = sub
+                    with self.assertRaises(AssertionError):
+                        validate(m)
+        self.assertGreater(count, 40)
 
     def test_builder_rejects_boolean_number(self):
         m=copy.deepcopy(self.c)
