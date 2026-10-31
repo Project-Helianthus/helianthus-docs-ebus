@@ -17,7 +17,7 @@ No source/destination, payload coordinate, direction, product or firmware is
 established for these tuples. Raw values are isolated field examples, not whole
 frames. Their mode labels are synthetic predicates, not native mode codes.
 All fields have Unknown coordinates and actual reference. Widths other than
-OP06 capacity output's candidate byte remain Unknown here.
+OP06 capacity output's candidate byte and OP08's candidate word remain Unknown here.
 The existing half-percent correction is outside this supplement.
 
 ## Field boundaries
@@ -27,6 +27,7 @@ The existing half-percent correction is outside this supplement.
 | 06 | capacity output | Hypothesis | 8 | unsigned | raw / 10 kW; raw 0..250 only | Unknown |
 | 06 | cost of primary energy | Hypothesis | Unknown | Unknown | mode and monetary/emissions reference dependent; converter Unknown | calculated or estimated possible |
 | 06 | current flow temperature | Hypothesis | Unknown | Unknown | converter Unknown | calculated or estimated possible |
+| 08 | preference word | Hypothesis | 16 | Unknown | operation-local candidate labels only | Unknown |
 
 For OP06 capacity output, the candidate is an unsigned byte divided by 10. Negative
 mode-related prose remains a separate unresolved alternative; neither signed8
@@ -40,11 +41,21 @@ candidate domain and remains raw, without clipping or a candidate kW value.
 | 250 | 25 | inside |
 | 251 | Unknown | outside |
 
-## Other operations
+## Operation-local words
 
-OP08, OP09 and OP0B are outside these synthetic tuples; no shared preference
-field is established. OP08 sentinel meanings for `0000` and `FFFF` remain
-Unknown; no sentinel mapping is declared.
+Word notation below does not assert byte order or coordinates. OP08's labels
+are candidates only, confer no execution permission and do not transfer to
+OP09, OP0B, another field, or another family. OP09 and OP0B are outside these
+synthetic tuples; no shared preference field is established and their raw
+words carry no labels. OP08 sentinel meanings for `0000` and `FFFF` are
+candidate labels only; no sentinel mapping is declared as established, and the
+raw word is always preserved.
+
+| Operation | Raw word | Interpretation | Grade |
+|---|---|---|---|
+| 08 | 0000 | appliance-unavailable candidate | Hypothesis |
+| 08 | FFFF | maximum-efficiency-preference | Hypothesis |
+| 08 | 0001 | unmapped | Unknown |
 
 ## Cost context and partial knowledge
 

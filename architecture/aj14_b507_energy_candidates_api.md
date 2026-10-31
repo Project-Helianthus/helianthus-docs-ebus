@@ -42,7 +42,9 @@ command role must remain distinct, including separate OP02 and OP06 identities.
 metadata. Proven metadata presence means the library contains the metadata;
 it does not prove a native meaning or physical support. Capacity output, cost of
 primary energy, and current flow temperature remain Hypothesis.
-OP08, OP09 and OP0B are omitted from this bounded B507 entry set; no preference fields or sentinel mappings are supplied.
+OP08 operation-local preference candidate labels are included as Hypothesis
+and do not transfer to OP09 or OP0B, which are omitted from this bounded B507
+entry set; no shared preference field or established sentinel mapping is supplied.
 Physical qualification and invocation remain Unknown. Absent coordinates,
 converters, references and widths must not become fabricated defaults.
 

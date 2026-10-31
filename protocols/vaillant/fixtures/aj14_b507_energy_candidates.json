@@ -47,6 +47,15 @@
         "Unknown",
         "converter Unknown",
         "calculated or estimated possible"
+      ],
+      [
+        "08",
+        "preference word",
+        "Hypothesis",
+        "16",
+        "Unknown",
+        "operation-local candidate labels only",
+        "Unknown"
       ]
     ],
     "capacity": [
@@ -102,6 +111,26 @@
         "173",
         "Unknown",
         "calculated or estimated possible",
+        "Unknown"
+      ]
+    ],
+    "words": [
+      [
+        "08",
+        "0000",
+        "appliance-unavailable candidate",
+        "Hypothesis"
+      ],
+      [
+        "08",
+        "FFFF",
+        "maximum-efficiency-preference",
+        "Hypothesis"
+      ],
+      [
+        "08",
+        "0001",
+        "unmapped",
         "Unknown"
       ]
     ]

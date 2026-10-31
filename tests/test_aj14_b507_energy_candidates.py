@@ -19,7 +19,12 @@ FIELD_ROWS = [
      'calculated or estimated possible'],
     ['06', 'current flow temperature', 'Hypothesis', 'Unknown', 'Unknown',
      'converter Unknown', 'calculated or estimated possible'],
+    ['08', 'preference word', 'Hypothesis', '16', 'Unknown',
+     'operation-local candidate labels only', 'Unknown'],
 ]
+WORD_ROWS = [['08', '0000', 'appliance-unavailable candidate', 'Hypothesis'],
+             ['08', 'FFFF', 'maximum-efficiency-preference', 'Hypothesis'],
+             ['08', '0001', 'unmapped', 'Unknown']]
 CAPACITY_ROWS = [['0', '0', 'inside'], ['1', '0.1', 'inside'],
                  ['250', '25', 'inside'], ['251', 'Unknown', 'outside']]
 COST_ROWS = [
@@ -27,7 +32,8 @@ COST_ROWS = [
     for mode in ('mode-a', 'mode-b') for reference in ('monetary', 'emissions')
 ]
 TABLES = {'fields': FIELD_ROWS, 'capacity': CAPACITY_ROWS,
-          'cost_contexts': COST_ROWS}
+          'words': WORD_ROWS, 'cost_contexts': COST_ROWS}
+PAGE_TABLES = [FIELD_ROWS, CAPACITY_ROWS, WORD_ROWS, COST_ROWS]
 IDENTITY = {'family': 'vaillant', 'variant': 'B507', 'primary': 181,
             'secondary': 7, 'direction': None}
 BOUNDARIES = {
@@ -65,10 +71,10 @@ class EnergyCandidatesTest(unittest.TestCase):
     def test_native_tables_and_tuples_independently(self):
         self.check_fixture(self.fixture)
         self.assertEqual(page_tables(self.native),
-                         [FIELD_ROWS, CAPACITY_ROWS, COST_ROWS])
+                         PAGE_TABLES)
 
-    def test_unsupported_operations_and_sentinels_are_rejected(self):
-        for operation in ('08', '09', '0B'):
+    def test_preference_labels_are_op08_local(self):
+        for operation in ('09', '0B'):
             with self.subTest(operation=operation):
                 mutant = copy.deepcopy(self.fixture)
                 mutant['synthetic_tuples']['fields'].append(
@@ -76,12 +82,18 @@ class EnergyCandidatesTest(unittest.TestCase):
                      'operation-local candidate labels only', 'Unknown'])
                 with self.assertRaises(AssertionError):
                     self.check_fixture(mutant)
+                mutant = copy.deepcopy(self.fixture)
+                mutant['synthetic_tuples']['words'].append(
+                    [operation, '0000', 'appliance-unavailable candidate', 'Hypothesis'])
+                with self.assertRaises(AssertionError):
+                    self.check_fixture(mutant)
         for raw, meaning in (('0000', 'appliance-unavailable candidate'),
                              ('FFFF', 'maximum-efficiency-preference')):
             with self.subTest(raw=raw):
+                # Candidate labels stay Hypothesis; promoting one is rejected.
                 mutant = copy.deepcopy(self.fixture)
-                mutant['synthetic_tuples']['words'] = [
-                    ['08', raw, meaning, 'Hypothesis']]
+                rows = mutant['synthetic_tuples']['words']
+                rows[[r[1] for r in rows].index(raw)][3] = 'Proven'
                 with self.assertRaises(AssertionError):
                     self.check_fixture(mutant)
 
@@ -125,15 +137,14 @@ class EnergyCandidatesTest(unittest.TestCase):
                     self.check_fixture(mutant)
 
     def test_page_table_mutations_are_sensitive(self):
-        for index, rows in enumerate([FIELD_ROWS, CAPACITY_ROWS, COST_ROWS]):
+        for index, rows in enumerate(PAGE_TABLES):
             for row, cells in enumerate(rows):
                 for column in range(len(cells)):
                     with self.subTest(table=index, row=row, column=column):
                         mutant = page_tables(self.native)
                         mutant[index][row][column] = 'fabricated'
                         with self.assertRaises(AssertionError):
-                            self.assertEqual(mutant, [FIELD_ROWS, CAPACITY_ROWS,
-                                                      COST_ROWS])
+                            self.assertEqual(mutant, PAGE_TABLES)
 
     def test_native_evidence_and_partial_boundaries(self):
         for phrase in ('Provenance is not published', 'Physical support remains **Unknown**',
@@ -143,8 +154,9 @@ class EnergyCandidatesTest(unittest.TestCase):
                        'not evidence of an\nactual reference or supported mode',
                        'neither is qualified as a direct\nsensor measurement',
                        'partial knowledge must remain partial',
-                       'no shared preference\nfield is established',
-                       'no sentinel mapping is declared',
+                       'no shared preference field is established',
+                       'candidate labels only; no sentinel mapping is declared as established',
+                       'do not transfer to\nOP09, OP0B',
                        'half-percent correction is outside'):
             self.assertIn(phrase, self.native)
         self.assertNotIn('](ebus-vaillant-B507.md', self.native)
@@ -190,8 +202,10 @@ class EnergyCandidatesTest(unittest.TestCase):
                        'entries yield no usable collection', 'duplicate exact keys',
                        'previously retained, independently owned',
                        'admission on failed data stays closed',
-                       'OP08, OP09 and OP0B are omitted',
-                       'no preference fields or sentinel mappings', 'remain Unknown',
+                       'OP08 operation-local preference candidate labels',
+                       'do not transfer to OP09 or OP0B',
+                       'no shared preference field or established sentinel mapping',
+                       'remain Unknown',
                        'separate OP02 and OP06 identities',
                        'eBUS MCP or GraphQL', 'before 1.0', 'before 0.9', '0.11'):
             self.assertIn(phrase, self.api)
