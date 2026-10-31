@@ -166,7 +166,7 @@ separately qualified candidate layouts above.
 
 | Operation | Field | Logical position | Candidate declaration | Operational default | Grade |
 |---|---|---|---|---|---|
-| OP05 | pump state | Unknown | raw 0 = blocked; raw 1 = released | blocked (candidate) | Hypothesis |
+| OP05 | pump state | Unknown | raw 0 = blocked; raw 1 = released | Unknown | Hypothesis |
 | OP0B | cycle-pause | 3 | interpretation unresolved in this scoped alternative | Unknown | Hypothesis |
 | OP0B | tank-one flag byte | 4 | bit 0 = flag; bits 1..7 reserved | Unknown | Hypothesis |
 | OP0B | tank-two flag byte | 5 | bit 0 = flag; bits 1..7 reserved | Unknown | Hypothesis |
@@ -193,9 +193,16 @@ verification of that representation; physical interpretations remain
 **Hypothesis**. Native adaptation, peer effects and physical qualification
 remain **Unknown**. No runtime capability or permission to send follows.
 
-The OP05 candidate operational default is blocked (**Hypothesis**); released
-is the meaning of raw value 1, not a second default. Physical qualification
-remains **Unknown**.
+The OP05 operational default is **Unknown**. Two default descriptions conflict
+and both are preserved as unresolved alternatives; neither is selected, and
+neither is the meaning of a raw value by itself. Physical qualification remains
+**Unknown**.
+
+| OP05 default description | Raw value it names | Grade |
+|---|---|---|
+| default is blocked | 0 | Hypothesis |
+| default is released | 1 | Hypothesis |
+
 The existing OP02 NoiseReduction broadcast remains a distinct candidate and is
 not replaced by the pump form. A candidate broadcast, timer and later register
 change establish no causal chain, physical support or exclusive use. An actuator

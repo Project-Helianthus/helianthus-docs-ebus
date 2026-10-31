@@ -48,7 +48,17 @@
       "0": "blocked",
       "1": "released"
     },
-    "default": "blocked"
+    "default": "Unknown",
+    "conflicting_default_descriptions": [
+      {
+        "description": "blocked",
+        "raw_value": 0
+      },
+      {
+        "description": "released",
+        "raw_value": 1
+      }
+    ]
   },
   "solar": {
     "cycle_pause_position": 3,

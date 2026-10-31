@@ -60,11 +60,15 @@ class PumpRolesTests(unittest.TestCase):
                         check_entries(self, changed)
 
     def test_pump_raw_values_and_candidate_default(self):
-        # Swapped enums, lost raw 0/1 or a changed candidate default fail.
+        # Swapped enums, lost raw 0/1, an erased conflicting description or any
+        # selected pump state as the default fail.
         self.assertEqual(self.data['pump'], {
             'raw_values': [0, 1],
             'mappings': {'0': 'blocked', '1': 'released'},
-            'default': 'blocked'})
+            'default': 'Unknown',
+            'conflicting_default_descriptions': [
+                {'description': 'blocked', 'raw_value': 0},
+                {'description': 'released', 'raw_value': 1}]})
 
     def test_solar_positions_conversion_and_reserved_bits(self):
         # Catches coupled selectors, mask/shift changes and lost reserved bits.
@@ -114,7 +118,7 @@ class PumpRolesTests(unittest.TestCase):
             ('Operation', 'Field', 'Logical position', 'Candidate declaration',
              'Operational default', 'Grade'),
             ('OP05', 'pump state', 'Unknown', 'raw 0 = blocked; raw 1 = released',
-             'blocked (candidate)', 'Hypothesis'),
+             'Unknown', 'Hypothesis'),
             ('OP0B', 'cycle-pause', '3',
              'interpretation unresolved in this scoped alternative', 'Unknown', 'Hypothesis'),
             ('OP0B', 'tank-one flag byte', '4',
@@ -126,6 +130,9 @@ class PumpRolesTests(unittest.TestCase):
             ('01 / 00', '1', '0', '00 / 00'),
             ('00 / 01', '0', '1', '00 / 00'),
             ('80 / 00', '0', '0', '80 / 00'),
+            ('OP05 default description', 'Raw value it names', 'Grade'),
+            ('default is blocked', '0', 'Hypothesis'),
+            ('default is released', '1', 'Hypothesis'),
         ])
 
     def test_page_claim_boundaries_and_preserved_variants(self):
@@ -143,7 +150,7 @@ class PumpRolesTests(unittest.TestCase):
             '**Proven** applies only to software verification of that representation;',
             'Native adaptation, peer effects and physical qualification remain **Unknown**.',
             'No runtime capability or permission to send follows.',
-            'The OP05 candidate operational default is blocked (**Hypothesis**); released is the meaning of raw value 1, not a second default. Physical qualification remains **Unknown**.',
+            'The OP05 operational default is **Unknown**. Two default descriptions conflict and both are preserved as unresolved alternatives; neither is selected, and neither is the meaning of a raw value by itself.',
             'The existing OP02 NoiseReduction broadcast remains a distinct candidate and is not replaced by the pump form.',
             'A candidate broadcast, timer and later register change establish no causal chain, physical support or exclusive use.',
             'An actuator effect remains **Unknown**.',
