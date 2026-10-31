@@ -73,9 +73,11 @@ There is no import path. The fixture spells the same fields in snake_case.
 `MinimumRaw`, `MaximumRaw`, `MinimumRead`, `MaximumRead`, `PriorMinimum` and
 `PriorMaximum`.
 
-`B531LimitPairResult` carries `Selection`, `AttemptMinimum`,
-`AttemptMaximum`, `PriorRetainedMinimum`, `PriorRetainedMaximum` and
-`FreshPair`. The result echoes Family, Variant, Operation and Direction from
+`B531LimitPairResult` carries `Selection` (`selection`), `AttemptMinimum`
+(`attempt_minimum`), `AttemptMaximum` (`attempt_maximum`), `PriorMinimum`
+(`prior_minimum`), `PriorMaximum` (`prior_maximum`), `FreshPair` (`fresh_pair`)
+and `FFFFSentinel` (`ffff_sentinel`). `FFFFSentinel` is always false.
+The result echoes Family, Variant, Operation and Direction from
 the input. It does not replace a caller token with a default, and it does
 not rewrite another operation to `OP02`.
 
