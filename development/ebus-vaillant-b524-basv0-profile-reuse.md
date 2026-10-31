@@ -83,8 +83,8 @@ raw span. **Hypothesis** remains the grade of a candidate interpretation even
 when its metadata is selector-qualified; unestablished physical properties
 remain **Unknown**.
 
-AC01's index contract is a pure lookup over caller-supplied metadata. Its key
-must retain the exact family, software raw value, hardware raw value, API
+The index contract is a pure lookup over caller-supplied metadata. Its key
+must retain the exact local EID, software raw value, hardware raw value, API
 version, API revision, and `(OP, GG, II, RR)` context. API version and API
 revision are separate identity fields, and neither may stand in for the other.
 A lookup must preserve each axis without wildcard fallback; OP06 never borrows
@@ -98,7 +98,7 @@ those bytes, and returned raw-byte data must be independently owned so caller
 or result mutation cannot change retained evidence or another result. Lookup
 performs no acquisition, current-value promotion, or transmit operation and
 creates no profile seed. This is the companion index contract, not evidence
-that AC01 is routed through a runtime consumer. Its metadata states do not
+that the index is routed through a runtime consumer. Its metadata states do not
 change the range-and-step admission rules below or establish native
 qualification, presence, or write admission.
 
