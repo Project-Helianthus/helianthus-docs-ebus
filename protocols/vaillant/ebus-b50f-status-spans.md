@@ -15,6 +15,18 @@ independent identities, not byte offsets or adjacency. Bit numbers are local to
 each byte, with bit 0 least significant. Each span is eight bits; no unit is
 assigned. No physical PDU is constructed.
 
+## Relation to the existing B50F layout
+
+The [B50F section](ebus-vaillant.md) lists a candidate layout for `B5 0F 02`:
+values in both request and reply, six structures at offsets 3..8, burner state
+at offset 9 and gas-pump state at offset 10. That layout is retained as a
+separate **Hypothesis** and is not superseded or promoted here. This supplement
+adds no evidence for or against its direction or offsets, so those coordinates
+stay Unknown for the purposes of this page; the two statements are not
+competing claims. If the earlier offsets hold, the six structures are the six
+containers below in order and the two later bytes are the separate burner and
+gas-pump raw bytes; the partitions here apply either way.
+
 ## Candidate field partitions
 
 Masks retain all bits, including reserved bits. A category is not an individual

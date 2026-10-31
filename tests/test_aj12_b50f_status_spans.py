@@ -99,6 +99,9 @@ class Ab12StatusSpans(unittest.TestCase):
             'a\npartial tuple retains its available bytes',
             'A last-known-good value remains separate',
             'No entry is Proven', 'No physical PDU is constructed',
+            'retained as a\nseparate **Hypothesis** and is not superseded or promoted here',
+            'values in both request and reply, six structures at offsets 3..8, burner state\nat offset 9 and gas-pump state at offset 10',
+            'the two statements are not\ncompeting claims',
         ):
             self.assertIn(ab12_fact, ab12_native)
         self.assertEqual(set(ab12_data), {
