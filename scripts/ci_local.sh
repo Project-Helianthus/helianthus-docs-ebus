@@ -251,6 +251,7 @@ python3 -m pytest -q tests/test_public_domain_boundary.py
 echo "==> check Vaillant B503 milestone contract"
 python3 scripts/check_vaillant_b503_milestones.py
 python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py
+python3 -m pytest -q tests/test_ae14_b510_candidates.py
 
 echo "==> check AI-28 B510/B511 local-cache contract"
 python3 -m pytest -q tests/test_ai28_b510_b511_local_cache.py
