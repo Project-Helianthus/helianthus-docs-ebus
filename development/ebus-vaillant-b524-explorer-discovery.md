@@ -173,11 +173,16 @@ circuit capacity `3`, and two configured or confirmed zones with zone capacity
 orders, or makes II slots contiguous; each candidate must pass its concrete
 group predicate. II09 remains independent of `circuit_count_maximum`.
 
-**Proven (synthetic capacity example):** capacity `8` from OP00/ID0000 or
-ID0001 never enumerates installed slots. In an independently qualified candidate
-interval II01..II08, positive presence established only at II01 and II08 retains
-exactly those two slots. II02..II07 remain six unknown/unprobed candidates; the
-capacity creates no six negative observations and does not move II08 into II02.
+**Proven:** capacity `8` from OP00/ID0000 or ID0001 never enumerates installed
+slots. The following synthetic illustration is not a device observation:
+assume a candidate subset II01..II08 with positive presence established only at
+II01 and II08. Exactly those two slots are retained; II02..II07 remain six
+unknown/unprobed candidates within that subset. This subset is not either ID's
+mapped interval: ID0000 maps to OP02/GG02 II00..II08, so II00 is also unknown
+(seven unknown candidates total); ID0001 maps to OP02/GG03 II00..II0A, so II00
+and II09..II0A are also unknown (nine total). The independent GG02 virtual II09
+still requires its own qualification. Capacity creates no negative observations
+and does not move II08 into II02.
 Keep capacity, per-slot presence, and probe coverage separate. A failed or
 partial recheck preserves raw replies and each field's useful last-known-good
 state as prior evidence; it neither manufactures false connection results nor
