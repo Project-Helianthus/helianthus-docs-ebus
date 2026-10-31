@@ -73,7 +73,8 @@ class RFSequenceContract(unittest.TestCase):
                 operation='OP14' if field == 'stop' else 'OP13', field=field,
                 choice=choice, grade='Hypothesis', qualification='Unknown',
                 extent_bytes=None, minimum_bytes=None, maximum_bytes=None,
-                field_position=None, raw_form='retain-original-bytes',
+                field_position={'count': 4, 'sequence': 3, 'stop': None}[field],
+                raw_form='retain-original-bytes',
                 unknown={k: 'Unknown' for k in
                          ('native_support', 'physical_effects', 'persistence', 'delivery')})
             if field == 'count':
@@ -82,7 +83,7 @@ class RFSequenceContract(unittest.TestCase):
             elif field == 'sequence':
                 row['extent_class'] = ['rf-class-a', 'rf-class-a', 'rf-class-a', 'rf-class-b'][choice]
             else:
-                row.update(related_operations=['OP12', 'OP13'], activation_order='Unknown',
+                row.update(related_operations=['OP13'], activation_order='Unknown',
                            retry_count=None, timeout=None, delivery_guarantee='Unknown',
                            completed_stop='Unknown')
             expected.append(row)
@@ -91,6 +92,21 @@ class RFSequenceContract(unittest.TestCase):
         self.assertEqual(self.data['qualification'], 'Unknown')
         self.assertEqual(set(self.data), {'grade', 'qualification', 'rows',
                                          'count_cases', 'sequence_cases', 'payload_cases'})
+
+    def test_candidate_positions_and_provenance(self):
+        self.assertEqual([(r['field'], r['field_position']) for r in self.data['rows']],
+                         [('count', 4), ('sequence', 3), ('sequence', 3),
+                          ('sequence', 3), ('sequence', 3), ('stop', None)])
+        for text in (self.native, self.api):
+            flat = ' '.join(text.split())
+            self.assertIn('fixtures/b506-b508-candidate-fields.csv', text)
+            self.assertIn('unconfirmed on the wire', flat)
+        self.assertIn('count is at candidate request offset 4 and sequence at offset 3',
+                      ' '.join(self.native.split()))
+        self.assertIn('offset 0 is PB, 1 is SB and 2 is the operation byte',
+                      ' '.join(self.native.split()))
+        self.assertIn('candidate request offset 4 for count and 3 for sequence', self.flat_api)
+        self.assertIn('stop position remains `null`', self.flat_api)
 
     def test_count_cases_and_independent_page(self):
         self.assertEqual(self.data['count_cases'],
@@ -113,7 +129,7 @@ class RFSequenceContract(unittest.TestCase):
         self.assertEqual(self.data['sequence_cases'], [dict(sequence=n, extent_class=c,
                                                           extent_bytes=None) for n, c in CLASSES])
         self.assertEqual(table(self.native, 'Sequence (decimal)'),
-                         [(str(n), c or 'unmapped', *(['Unknown'] * 4),
+                         [(str(n), c or 'unmapped', *(['Unknown'] * 3), '3',
                            'Hypothesis' if n < 4 else 'Unknown') for n, c in CLASSES])
         declared = {r['choice']: r['extent_class'] for r in self.data['rows']
                     if r['field'] == 'sequence'}
@@ -129,7 +145,7 @@ class RFSequenceContract(unittest.TestCase):
         self.assertEqual(table(self.native, 'Fabricated payload (hex)'),
                          [('empty', 'Unknown', 'Unknown'), ('23 45', 'Unknown', 'Unknown')])
         for row in self.data['rows']:
-            for name in ('extent_bytes', 'minimum_bytes', 'maximum_bytes', 'field_position'):
+            for name in ('extent_bytes', 'minimum_bytes', 'maximum_bytes'):
                 with self.subTest(row=row['id'], metadata=name):
                     self.assertIn(name, row)
                     self.assertIsNone(row[name])
@@ -142,9 +158,9 @@ class RFSequenceContract(unittest.TestCase):
     def test_stop_relations_and_unknowns(self):
         self.assertEqual(table(self.native, 'Stop'), [
             ('OP14', op, 'Hypothesis', 'Unknown', 'Unknown', 'Unknown')
-            for op in ('OP12', 'OP13')])
+            for op in ('OP13',)])
         stop = self.data['rows'][-1]
-        self.assertEqual(stop['related_operations'], ['OP12', 'OP13'])
+        self.assertEqual(stop['related_operations'], ['OP13'])
         for name in ('activation_order', 'delivery_guarantee', 'completed_stop'):
             self.assertEqual(stop[name], 'Unknown')
         for name in ('retry_count', 'timeout'):
@@ -164,7 +180,7 @@ class RFSequenceContract(unittest.TestCase):
             ('ab17-rf-count-none', '13', 'count', 'none', '0 unlimited; 1..255 finite count-value'),
             *[('ab17-rf-sequence-' + str(n), '13', 'sequence', str(n), c)
               for n, c in enumerate(['ab17-class-a', 'ab17-class-a', 'ab17-class-a', 'ab17-class-b'])],
-            ('ab17-rf-stop-none', '14', 'stop', 'none', 'associated with 12 and 13; order Unknown')])
+            ('ab17-rf-stop-none', '14', 'stop', 'none', 'associated with 13; order Unknown')])
         for phrase in ('not hexadecimal-to-decimal conversions',
                        '**Unknown:** their numeric wire adaptation',
                        '`grade: Hypothesis`', '`qualification: Unknown`',

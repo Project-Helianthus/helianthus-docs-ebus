@@ -21,9 +21,9 @@ and embeds `data/ab17_b506_rf_sequence.json` in that owned Go file. This page
 introduces no Go file, pending API, shared registration or general family schema.
 
 The registry's operation integers are 13 for count/sequence and 14 for stop;
-its related-operation integers are 12 and 13. These are the exact AK05 data
-values, not hexadecimal-to-decimal conversions. The native page uses OP12,
-OP13 and OP14 as hexadecimal labels. **Unknown:** their numeric wire adaptation;
+its candidate related-operation integer is 13. These operation labels follow
+the AK05 representation, not hexadecimal-to-decimal conversions. The native
+page uses OP12, OP13 and OP14 as hexadecimal labels. **Unknown:** their numeric wire adaptation;
 no conversion or transmit route follows from the catalog representation.
 
 ## Exact identity
@@ -51,8 +51,13 @@ No wildcard or nearest-key lookup is permitted. There is no cross-family,
 variant, direction, field or alternative fallback. Each production row has an
 `ab17-` prefixed ID, this complete identity, stated fields/relations,
 `grade: Hypothesis`, `qualification: Unknown`, `ab17_raw_form: retain-original-bytes`
-and explicit `ab17_unknown` metadata. All four extent/position fields are
-explicit `null`, never inferred zero.
+and explicit `ab17_unknown` metadata. The three extent fields remain explicit
+`null`, never inferred zero.
+**Hypothesis:** `ab17_field_position` retains candidate request offset 4 for
+count and 3 for sequence, counting PB as offset 0, SB as 1 and the operation
+byte as 2; stop position remains `null`. These positions come from the
+[native candidate fields](../protocols/vaillant/fixtures/b506-b508-candidate-fields.csv)
+and remain unconfirmed on the wire.
 
 | ID | Operation | Field | Alternative | Declared relationship |
 | --- | --- | --- | --- | --- |
@@ -61,7 +66,7 @@ explicit `null`, never inferred zero.
 | ab17-rf-sequence-1 | 13 | sequence | 1 | ab17-class-a |
 | ab17-rf-sequence-2 | 13 | sequence | 2 | ab17-class-a |
 | ab17-rf-sequence-3 | 13 | sequence | 3 | ab17-class-b |
-| ab17-rf-stop-none | 14 | stop | none | associated with 12 and 13; order Unknown |
+| ab17-rf-stop-none | 14 | stop | none | associated with 13; order Unknown |
 
 All other sequence values remain unmapped. Class names are local labels for
 the two native candidate classes; they assert no numeric extent.
@@ -81,8 +86,8 @@ including a later call through the other API. Raw form and candidate grade are
 retained in whole-row results.
 
 **Unknown:** `ab17_extent_bytes`, `ab17_minimum_bytes`, `ab17_maximum_bytes`,
-`ab17_field_position`; stop `ab17_activation_order`, `ab17_retry_count`,
-`ab17_timeout`, `ab17_delivery_guarantee`, `ab17_completed_stop`. Count does not
+wire confirmation of `ab17_field_position`; stop `ab17_activation_order`,
+`ab17_retry_count`, `ab17_timeout`, `ab17_delivery_guarantee`, `ab17_completed_stop`. Count does not
 supply retry policy. Neither empty nor nonempty fabricated payloads become
 qualified with absent extent. Missing extent is not zero.
 

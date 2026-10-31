@@ -16,8 +16,11 @@ uncertainty. Neither declaration supersedes the other's evidence boundary.
 ## Count candidates
 
 **Hypothesis:** count byte 0 denotes unlimited count; 1..255 denotes the finite
-count value. This count is not a retry budget or a payload length. Count field
-position is Unknown.
+count value. This count is not a retry budget or a payload length.
+**Hypothesis:** count is at candidate request offset 4 and sequence at offset 3,
+as recorded in the [candidate fields](fixtures/b506-b508-candidate-fields.csv)
+for OP13. Under the parent contract's offset convention, offset 0 is PB, 1 is
+SB and 2 is the operation byte. These positions remain unconfirmed on the wire.
 
 | Count byte (decimal) | Candidate meaning | Grade |
 | --- | --- | --- |
@@ -34,15 +37,15 @@ length. All other byte values (4..255) remain unmapped.
 
 | Sequence (decimal) | Extent class | Exact bytes | Minimum bytes | Maximum bytes | Field position | Grade |
 | --- | --- | --- | --- | --- | --- | --- |
-| 0 | rf-class-a | Unknown | Unknown | Unknown | Unknown | Hypothesis |
-| 1 | rf-class-a | Unknown | Unknown | Unknown | Unknown | Hypothesis |
-| 2 | rf-class-a | Unknown | Unknown | Unknown | Unknown | Hypothesis |
-| 3 | rf-class-b | Unknown | Unknown | Unknown | Unknown | Hypothesis |
-| 4 | unmapped | Unknown | Unknown | Unknown | Unknown | Unknown |
+| 0 | rf-class-a | Unknown | Unknown | Unknown | 3 | Hypothesis |
+| 1 | rf-class-a | Unknown | Unknown | Unknown | 3 | Hypothesis |
+| 2 | rf-class-a | Unknown | Unknown | Unknown | 3 | Hypothesis |
+| 3 | rf-class-b | Unknown | Unknown | Unknown | 3 | Hypothesis |
+| 4 | unmapped | Unknown | Unknown | Unknown | 3 | Unknown |
 
-**Unknown:** exact, minimum and maximum byte extents and sequence field
-position. Explicit `null` metadata preserves absence; an absent extent is not
-zero. Empty and nonempty fabricated payloads both remain unqualified when
+**Unknown:** exact, minimum and maximum byte extents and wire confirmation
+of the candidate field positions. Explicit `null` metadata preserves absence;
+an absent extent is not zero. Empty and nonempty fabricated payloads both remain unqualified when
 extent is absent. A class match cannot admit a complete payload.
 
 | Fabricated payload (hex) | Qualification | Exact bytes |
@@ -52,12 +55,13 @@ extent is absent. A class match cannot admit a complete payload.
 
 ## Stop associations
 
-**Hypothesis:** stop OP14 is associated independently with activation OP12 and
-activation OP13. The relationship is not an ordered activation sequence.
+**Hypothesis:** stop OP14 is associated with the test telegram configured by
+OP13. The relationship is not an ordered activation sequence. OP12 has its own
+candidate Off/On control; no cited evidence associates OP14 with stopping
+OP12's continuous-wave mode.
 
 | Stop | Related activation | Grade | Activation order | Delivery guarantee | Completed stop |
 | --- | --- | --- | --- | --- | --- |
-| OP14 | OP12 | Hypothesis | Unknown | Unknown | Unknown |
 | OP14 | OP13 | Hypothesis | Unknown | Unknown | Unknown |
 
 **Unknown:** retry count, timeout, delivery guarantee and completed stop.

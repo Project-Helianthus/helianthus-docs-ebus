@@ -16,7 +16,7 @@
       "extent_bytes": null,
       "minimum_bytes": null,
       "maximum_bytes": null,
-      "field_position": null,
+      "field_position": 4,
       "raw_form": "retain-original-bytes",
       "unknown": {
         "native_support": "Unknown",
@@ -45,7 +45,7 @@
       "extent_bytes": null,
       "minimum_bytes": null,
       "maximum_bytes": null,
-      "field_position": null,
+      "field_position": 3,
       "raw_form": "retain-original-bytes",
       "unknown": {
         "native_support": "Unknown",
@@ -69,7 +69,7 @@
       "extent_bytes": null,
       "minimum_bytes": null,
       "maximum_bytes": null,
-      "field_position": null,
+      "field_position": 3,
       "raw_form": "retain-original-bytes",
       "unknown": {
         "native_support": "Unknown",
@@ -93,7 +93,7 @@
       "extent_bytes": null,
       "minimum_bytes": null,
       "maximum_bytes": null,
-      "field_position": null,
+      "field_position": 3,
       "raw_form": "retain-original-bytes",
       "unknown": {
         "native_support": "Unknown",
@@ -117,7 +117,7 @@
       "extent_bytes": null,
       "minimum_bytes": null,
       "maximum_bytes": null,
-      "field_position": null,
+      "field_position": 3,
       "raw_form": "retain-original-bytes",
       "unknown": {
         "native_support": "Unknown",
@@ -150,7 +150,6 @@
         "delivery": "Unknown"
       },
       "related_operations": [
-        "OP12",
         "OP13"
       ],
       "activation_order": "Unknown",
