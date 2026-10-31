@@ -258,12 +258,16 @@ python3 -m pytest -q tests/test_ae04_b505_candidates.py
 echo "==> check B520 simulator actuator and ADC declarations"
 python3 -m pytest -q tests/test_ac20_simulator_adc.py
 
+echo "==> check B522 candidate demand and scalar API results"
+python3 -m unittest discover -s tests -p 'test_ao26_b522_demand_views.py' -v
+
 echo "==> check B509/B524 passive watch-policy documentation contract"
 python3 -m pytest -q tests/test_watch_policy_contract.py
 python3 -m pytest -q tests/test_b524_operation_docs.py
 python3 -m pytest -q tests/test_b524_register_name_correspondence.py
 python3 -m pytest -q tests/test_b524_name_bridge_contract.py
 python3 -m pytest -q tests/test_b524_provisional_name_evidence.py
+python3 -m pytest -q tests/test_ai06_b524_scalar_shapes.py
 echo "==> check canonical register names against the register naming rules"
 python3 scripts/check_register_names.py
 python3 -m pytest -q tests/test_register_names.py
