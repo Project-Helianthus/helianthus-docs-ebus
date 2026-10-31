@@ -287,6 +287,9 @@ python3 -m pytest -q tests/test_an22_b555_numeric_narrowing.py
 echo "==> check B506 RF sequence declarations"
 python3 -m pytest -q tests/test_ak06_b506_rf_sequence.py
 
+echo "==> check Vaillant B507 energy candidates"
+python3 -m pytest -q tests/test_aj14_b507_energy_candidates.py
+
 echo "==> check B520 simulator actuator and ADC declarations"
 python3 -m pytest -q tests/test_ac20_simulator_adc.py
 python3 -m pytest -q tests/test_am22_standard05_candidate_views.py
