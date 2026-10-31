@@ -416,6 +416,30 @@ else
   python3 scripts/validate_opaque_runtime_acquisition.py --root .
 fi
 
+echo "==> run every other tests/test_*.py file (automatic discovery)"
+# New test files need no line in this script. A file whose basename appears
+# anywhere in this script keeps its dedicated invocation and is skipped here;
+# every other file runs in its own interpreter, as the dedicated lines do.
+gate_named_tests="$({ grep -oE '(^|[^A-Za-z0-9_])test_[A-Za-z0-9_]+\.py' "${BASH_SOURCE[0]}" \
+  || [ "$?" -eq 1 ]; } | sed -E 's/^[^A-Za-z0-9_]//' | sort -u)"
+for gate_test_file in tests/test_*.py; do
+  [ -f "$gate_test_file" ] || continue
+  gate_test_name="${gate_test_file#tests/}"
+  case $'\n'"${gate_named_tests}"$'\n' in
+    *$'\n'"${gate_test_name}"$'\n'*) continue ;;
+  esac
+  echo "--> ${gate_test_file}"
+  gate_test_status=0
+  python3 -m pytest -q "$gate_test_file" || gate_test_status=$?
+  if [ "$gate_test_status" -eq 5 ]; then
+    # pytest collected nothing: run load_tests-protocol files through unittest,
+    # like the dedicated unittest steps. Zero tests there exits 5 and fails.
+    python3 -m unittest discover -s tests -p "$gate_test_name" -v
+  elif [ "$gate_test_status" -ne 0 ]; then
+    exit "$gate_test_status"
+  fi
+done
+
 set --
 if [ -n "${PLATFORM_PRIOR_MANIFEST:-}" ]; then
   set -- --prior-manifest "${PLATFORM_PRIOR_MANIFEST}"
