@@ -315,6 +315,7 @@ python3 scripts/check_register_names.py
 python3 -m pytest -q tests/test_register_names.py
 echo "==> check B509 register name correspondence fixture"
 python3 -m pytest -q tests/test_b509_register_name_correspondence.py
+python3 -m pytest -q tests/test_ae28_09_candidates.py
 python3 -m pytest -q tests/test_ai16_b51a_mirror_fields.py
 python3 -m pytest -q tests/test_an08_b509_constraint_word_views.py
 python3 -m pytest -q tests/test_ai14_b514_menu_feedback.py
