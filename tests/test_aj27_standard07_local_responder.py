@@ -26,7 +26,7 @@ def expected_builder(identifier, versions, number):
     narrowed = quotient % 256
     components = [packed(v) for v in [*versions, remainder, narrowed]]
     output = None
-    if len(identifier) == 5 and None not in components:
+    if len(identifier) == 5 and len(versions) == 2 and None not in components:
         output = [0xB5, *identifier, *components]
     return remainder, quotient, narrowed, output, output is not None
 
@@ -146,6 +146,19 @@ class AJ27Contract(unittest.TestCase):
             self.assertIsNone(expected_builder([1,2,3,4,5],v,417)[3])
         for length in (0,4,6):
             self.assertFalse(expected_builder([65]*length,[12,34],417)[4])
+
+    def test_builder_requires_two_versions(self):
+        for versions in ([], [12], [12,34,56], [12,34,56,78]):
+            with self.subTest(versions=versions):
+                self.assertEqual(expected_builder([65,66,67,68,69], versions, 417),
+                                 (17,4,4,None,False))
+                m=copy.deepcopy(self.c)
+                r=m['builders'][0]
+                r['versions']=versions
+                r['output']=[181,65,66,67,68,69, *[packed(v) for v in versions], 0x17,0x04]
+                r['full_identity']=True
+                with self.assertRaises(AssertionError):
+                    validate(m)
 
     def test_all_fixed_fields_reject_mutation(self):
         # Every leaf of the fixed contract is varied independently, including
