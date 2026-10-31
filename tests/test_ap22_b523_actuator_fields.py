@@ -258,7 +258,7 @@ class TestAb21Ap21Specification(unittest.TestCase):
             ab21ap21Raw=ab21ap21Case['raw'][0]; ab21ap21Tuple=ab21ap21Expected[ab21ap21Raw]
             ab21ap21Result = dict(raw=[ab21ap21Raw],state='Unknown',grade='Hypothesis') if ab21ap21Tuple is None else ab21ap21Semantic([ab21ap21Raw],number=ab21ap21Tuple[0],label=ab21ap21Tuple[1],maximum=ab21ap21Tuple[2],unit='percent',calculation='Proven')
             self.ab21ap21Equal(ab21ap21Case['expected'],ab21ap21Result)
-        # Full signed partition: no overlap, gap or unsigned reinterpretation.
+        # Every signed value has exactly one label; preserve signed interpretation.
         for ab21ap21Signed in range(-128,128):
             ab21ap21Labels=[ab21ap21Label for ab21ap21Low,ab21ap21High,ab21ap21Label in self.ab21ap21Contract['movement'] if ab21ap21Low<=ab21ap21Signed<=ab21ap21High]
             self.assertEqual(ab21ap21Labels,['Unknown' if abs(ab21ap21Signed)>100 else 'stopped' if ab21ap21Signed==0 else 'closing' if ab21ap21Signed<0 else 'opening'])
