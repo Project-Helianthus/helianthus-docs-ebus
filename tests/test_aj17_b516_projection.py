@@ -1,6 +1,7 @@
 """Offline document and synthetic scenario checks; no runtime projection."""
 import itertools
 import json
+import re
 from pathlib import Path
 import unittest
 
@@ -133,6 +134,23 @@ class LocalEnergyContract(unittest.TestCase):
         self.assertEqual(self.data['duplicates'], [
             {'duplicate': False, 'materialized_states': 1},
             {'duplicate': True, 'materialized_states': 0}])
+
+    def test_native_reference_omits_private_suffix(self):
+        suffix = 'current'
+        banned = re.compile(r'(?<![\w-])\w[\w-]*-' + suffix + r'\b(?!ly)', re.I)
+        self.assertIsNone(banned.search(self.page))
+        fixture = (ROOT / 'architecture/fixtures/aj17_b516_projection.json').read_text()
+        self.assertIsNone(banned.search(fixture))
+        self.assertIn(
+            '[B516 energy](../protocols/vaillant/ebus-vaillant-B516-energy.md)',
+            self.page)
+        self.assertIn('§9', self.page)
+        self.assertIn('sub-id 0x14', self.page)
+        self.assertIn('current electrical power candidate', self.page)
+        self.assertIn(
+            '../protocols/vaillant/ebus-vaillant-B516-energy.md#11-open-questions',
+            self.page)
+        self.assertIsNone(re.search(r'B516-energy\.md#9-', self.page))
 
 
 if __name__ == '__main__':
