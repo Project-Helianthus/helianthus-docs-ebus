@@ -1,0 +1,2985 @@
+{
+  "schema_name": "an22-b555-numeric-narrowing-examples",
+  "helper_api": "ab21an21",
+  "functions": [
+    "narrowInteger64",
+    "narrowFloat64"
+  ],
+  "integer64_stages": [
+    "low16"
+  ],
+  "float64_stages": [
+    "binary32-round-trip",
+    "widen-to-float64",
+    "multiply-by-10",
+    "truncate-toward-zero-uint32",
+    "low16"
+  ],
+  "forbidden": [
+    "skip-binary32",
+    "round-instead-of-truncate",
+    "saturate-instead-of-low16",
+    "merge-integer-and-float",
+    "admit-negative-nonfinite-overflow"
+  ],
+  "raw_classes": [
+    "negative",
+    "nan",
+    "infinite",
+    "overflow",
+    "malformed_operand"
+  ],
+  "admit_negative": false,
+  "admit_nonfinite": false,
+  "admit_overflow": false,
+  "merge_paths": false,
+  "saturate_low16": false,
+  "skip_binary32": false,
+  "round_instead_of_truncate": false,
+  "examples": [
+    {
+      "id": "integer-zero",
+      "path": "integer64",
+      "operand_literal": "0",
+      "context": {
+        "timer_kind_token": "timer-kind-1",
+        "family": "device-family-1",
+        "software_variant": "software-variant-1",
+        "caller_state": {
+          "module_token": "caller-module-1",
+          "group_token": "caller-group-1",
+          "instance_token": "caller-instance-1",
+          "day_token": "caller-day-1",
+          "constructor_token": "caller-constructor-1",
+          "request_token": "caller-request-1"
+        }
+      },
+      "expect": {
+        "selected_path": "integer64",
+        "timer_kind_token": "timer-kind-1",
+        "family": "device-family-1",
+        "software_variant": "software-variant-1",
+        "caller_state": {
+          "module_token": "caller-module-1",
+          "group_token": "caller-group-1",
+          "instance_token": "caller-instance-1",
+          "day_token": "caller-day-1",
+          "constructor_token": "caller-constructor-1",
+          "request_token": "caller-request-1"
+        },
+        "selects_module": false,
+        "selects_group": false,
+        "selects_instance": false,
+        "selects_day": false,
+        "selects_native_constructor": false,
+        "native_family_qualified": false,
+        "carrier_low16": 0,
+        "carrier_raw_le": [
+          0,
+          0
+        ],
+        "original_literal": "0",
+        "original_raw_le": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "rounded_literal": null,
+        "rounded_raw_le": null,
+        "scaled_literal": null,
+        "truncated_uint32": null,
+        "raw_classification": null,
+        "disposition": "resolved",
+        "grades": {
+          "numeric": "Proven",
+          "semantic": "Hypothesis",
+          "native": "Unknown"
+        },
+        "intermediate_status": {
+          "binary32_round_trip": "not_applicable",
+          "widen_to_float64": "not_applicable",
+          "multiply_by_10": "not_applicable",
+          "truncate_toward_zero_uint32": "not_applicable",
+          "low16": "applied",
+          "rejected_at": null
+        }
+      }
+    },
+    {
+      "id": "integer-65537",
+      "path": "integer64",
+      "operand_literal": "65537",
+      "context": {
+        "timer_kind_token": "timer-kind-2",
+        "family": "device-family-2",
+        "software_variant": "software-variant-2",
+        "caller_state": {
+          "module_token": "caller-module-2",
+          "group_token": "caller-group-2",
+          "instance_token": "caller-instance-2",
+          "day_token": "caller-day-2",
+          "constructor_token": "caller-constructor-2",
+          "request_token": "caller-request-2"
+        }
+      },
+      "expect": {
+        "selected_path": "integer64",
+        "timer_kind_token": "timer-kind-2",
+        "family": "device-family-2",
+        "software_variant": "software-variant-2",
+        "caller_state": {
+          "module_token": "caller-module-2",
+          "group_token": "caller-group-2",
+          "instance_token": "caller-instance-2",
+          "day_token": "caller-day-2",
+          "constructor_token": "caller-constructor-2",
+          "request_token": "caller-request-2"
+        },
+        "selects_module": false,
+        "selects_group": false,
+        "selects_instance": false,
+        "selects_day": false,
+        "selects_native_constructor": false,
+        "native_family_qualified": false,
+        "carrier_low16": 1,
+        "carrier_raw_le": [
+          1,
+          0
+        ],
+        "original_literal": "65537",
+        "original_raw_le": [
+          1,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "rounded_literal": null,
+        "rounded_raw_le": null,
+        "scaled_literal": null,
+        "truncated_uint32": null,
+        "raw_classification": null,
+        "disposition": "resolved",
+        "grades": {
+          "numeric": "Proven",
+          "semantic": "Hypothesis",
+          "native": "Unknown"
+        },
+        "intermediate_status": {
+          "binary32_round_trip": "not_applicable",
+          "widen_to_float64": "not_applicable",
+          "multiply_by_10": "not_applicable",
+          "truncate_toward_zero_uint32": "not_applicable",
+          "low16": "applied",
+          "rejected_at": null
+        }
+      }
+    },
+    {
+      "id": "integer-neg-one",
+      "path": "integer64",
+      "operand_literal": "-1",
+      "context": {
+        "timer_kind_token": "timer-kind-3",
+        "family": "device-family-3",
+        "software_variant": "software-variant-3",
+        "caller_state": {
+          "module_token": "caller-module-3",
+          "group_token": "caller-group-3",
+          "instance_token": "caller-instance-3",
+          "day_token": "caller-day-3",
+          "constructor_token": "caller-constructor-3",
+          "request_token": "caller-request-3"
+        }
+      },
+      "expect": {
+        "selected_path": "integer64",
+        "timer_kind_token": "timer-kind-3",
+        "family": "device-family-3",
+        "software_variant": "software-variant-3",
+        "caller_state": {
+          "module_token": "caller-module-3",
+          "group_token": "caller-group-3",
+          "instance_token": "caller-instance-3",
+          "day_token": "caller-day-3",
+          "constructor_token": "caller-constructor-3",
+          "request_token": "caller-request-3"
+        },
+        "selects_module": false,
+        "selects_group": false,
+        "selects_instance": false,
+        "selects_day": false,
+        "selects_native_constructor": false,
+        "native_family_qualified": false,
+        "carrier_low16": 65535,
+        "carrier_raw_le": [
+          255,
+          255
+        ],
+        "original_literal": "-1",
+        "original_raw_le": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "rounded_literal": null,
+        "rounded_raw_le": null,
+        "scaled_literal": null,
+        "truncated_uint32": null,
+        "raw_classification": null,
+        "disposition": "resolved",
+        "grades": {
+          "numeric": "Proven",
+          "semantic": "Hypothesis",
+          "native": "Unknown"
+        },
+        "intermediate_status": {
+          "binary32_round_trip": "not_applicable",
+          "widen_to_float64": "not_applicable",
+          "multiply_by_10": "not_applicable",
+          "truncate_toward_zero_uint32": "not_applicable",
+          "low16": "applied",
+          "rejected_at": null
+        }
+      }
+    },
+    {
+      "id": "integer-65536",
+      "path": "integer64",
+      "operand_literal": "65536",
+      "context": {
+        "timer_kind_token": "timer-kind-4",
+        "family": "device-family-4",
+        "software_variant": "software-variant-4",
+        "caller_state": {
+          "module_token": "caller-module-4",
+          "group_token": "caller-group-4",
+          "instance_token": "caller-instance-4",
+          "day_token": "caller-day-4",
+          "constructor_token": "caller-constructor-4",
+          "request_token": "caller-request-4"
+        }
+      },
+      "expect": {
+        "selected_path": "integer64",
+        "timer_kind_token": "timer-kind-4",
+        "family": "device-family-4",
+        "software_variant": "software-variant-4",
+        "caller_state": {
+          "module_token": "caller-module-4",
+          "group_token": "caller-group-4",
+          "instance_token": "caller-instance-4",
+          "day_token": "caller-day-4",
+          "constructor_token": "caller-constructor-4",
+          "request_token": "caller-request-4"
+        },
+        "selects_module": false,
+        "selects_group": false,
+        "selects_instance": false,
+        "selects_day": false,
+        "selects_native_constructor": false,
+        "native_family_qualified": false,
+        "carrier_low16": 0,
+        "carrier_raw_le": [
+          0,
+          0
+        ],
+        "original_literal": "65536",
+        "original_raw_le": [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "rounded_literal": null,
+        "rounded_raw_le": null,
+        "scaled_literal": null,
+        "truncated_uint32": null,
+        "raw_classification": null,
+        "disposition": "resolved",
+        "grades": {
+          "numeric": "Proven",
+          "semantic": "Hypothesis",
+          "native": "Unknown"
+        },
+        "intermediate_status": {
+          "binary32_round_trip": "not_applicable",
+          "widen_to_float64": "not_applicable",
+          "multiply_by_10": "not_applicable",
+          "truncate_toward_zero_uint32": "not_applicable",
+          "low16": "applied",
+          "rejected_at": null
+        }
+      }
+    },
+    {
+      "id": "integer-neg-65536",
+      "path": "integer64",
+      "operand_literal": "-65536",
+      "context": {
+        "timer_kind_token": "timer-kind-5",
+        "family": "device-family-5",
+        "software_variant": "software-variant-5",
+        "caller_state": {
+          "module_token": "caller-module-5",
+          "group_token": "caller-group-5",
+          "instance_token": "caller-instance-5",
+          "day_token": "caller-day-5",
+          "constructor_token": "caller-constructor-5",
+          "request_token": "caller-request-5"
+        }
+      },
+      "expect": {
+        "selected_path": "integer64",
+        "timer_kind_token": "timer-kind-5",
+        "family": "device-family-5",
+        "software_variant": "software-variant-5",
+        "caller_state": {
+          "module_token": "caller-module-5",
+          "group_token": "caller-group-5",
+          "instance_token": "caller-instance-5",
+          "day_token": "caller-day-5",
+          "constructor_token": "caller-constructor-5",
+          "request_token": "caller-request-5"
+        },
+        "selects_module": false,
+        "selects_group": false,
+        "selects_instance": false,
+        "selects_day": false,
+        "selects_native_constructor": false,
+        "native_family_qualified": false,
+        "carrier_low16": 0,
+        "carrier_raw_le": [
+          0,
+          0
+        ],
+        "original_literal": "-65536",
+        "original_raw_le": [
+          0,
+          0,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "rounded_literal": null,
+        "rounded_raw_le": null,
+        "scaled_literal": null,
+        "truncated_uint32": null,
+        "raw_classification": null,
+        "disposition": "resolved",
+        "grades": {
+          "numeric": "Proven",
+          "semantic": "Hypothesis",
+          "native": "Unknown"
+        },
+        "intermediate_status": {
+          "binary32_round_trip": "not_applicable",
+          "widen_to_float64": "not_applicable",
+          "multiply_by_10": "not_applicable",
+          "truncate_toward_zero_uint32": "not_applicable",
+          "low16": "applied",
+          "rejected_at": null
+        }
+      }
+    },
+    {
+      "id": "integer-int64-max",
+      "path": "integer64",
+      "operand_literal": "9223372036854775807",
+      "context": {
+        "timer_kind_token": "timer-kind-6",
+        "family": "device-family-6",
+        "software_variant": "software-variant-6",
+        "caller_state": {
+          "module_token": "caller-module-6",
+          "group_token": "caller-group-6",
+          "instance_token": "caller-instance-6",
+          "day_token": "caller-day-6",
+          "constructor_token": "caller-constructor-6",
+          "request_token": "caller-request-6"
+        }
+      },
+      "expect": {
+        "selected_path": "integer64",
+        "timer_kind_token": "timer-kind-6",
+        "family": "device-family-6",
+        "software_variant": "software-variant-6",
+        "caller_state": {
+          "module_token": "caller-module-6",
+          "group_token": "caller-group-6",
+          "instance_token": "caller-instance-6",
+          "day_token": "caller-day-6",
+          "constructor_token": "caller-constructor-6",
+          "request_token": "caller-request-6"
+        },
+        "selects_module": false,
+        "selects_group": false,
+        "selects_instance": false,
+        "selects_day": false,
+        "selects_native_constructor": false,
+        "native_family_qualified": false,
+        "carrier_low16": 65535,
+        "carrier_raw_le": [
+          255,
+          255
+        ],
+        "original_literal": "9223372036854775807",
+        "original_raw_le": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          127
+        ],
+        "rounded_literal": null,
+        "rounded_raw_le": null,
+        "scaled_literal": null,
+        "truncated_uint32": null,
+        "raw_classification": null,
+        "disposition": "resolved",
+        "grades": {
+          "numeric": "Proven",
+          "semantic": "Hypothesis",
+          "native": "Unknown"
+        },
+        "intermediate_status": {
+          "binary32_round_trip": "not_applicable",
+          "widen_to_float64": "not_applicable",
+          "multiply_by_10": "not_applicable",
+          "truncate_toward_zero_uint32": "not_applicable",
+          "low16": "applied",
+          "rejected_at": null
+        }
+      }
+    },
+    {
+      "id": "integer-int64-min",
+      "path": "integer64",
+      "operand_literal": "-9223372036854775808",
+      "context": {
+        "timer_kind_token": "timer-kind-7",
+        "family": "device-family-7",
+        "software_variant": "software-variant-7",
+        "caller_state": {
+          "module_token": "caller-module-7",
+          "group_token": "caller-group-7",
+          "instance_token": "caller-instance-7",
+          "day_token": "caller-day-7",
+          "constructor_token": "caller-constructor-7",
+          "request_token": "caller-request-7"
+        }
+      },
+      "expect": {
+        "selected_path": "integer64",
+        "timer_kind_token": "timer-kind-7",
+        "family": "device-family-7",
+        "software_variant": "software-variant-7",
+        "caller_state": {
+          "module_token": "caller-module-7",
+          "group_token": "caller-group-7",
+          "instance_token": "caller-instance-7",
+          "day_token": "caller-day-7",
+          "constructor_token": "caller-constructor-7",
+          "request_token": "caller-request-7"
+        },
+        "selects_module": false,
+        "selects_group": false,
+        "selects_instance": false,
+        "selects_day": false,
+        "selects_native_constructor": false,
+        "native_family_qualified": false,
+        "carrier_low16": 0,
+        "carrier_raw_le": [
+          0,
+          0
+        ],
+        "original_literal": "-9223372036854775808",
+        "original_raw_le": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          128
+        ],
+        "rounded_literal": null,
+        "rounded_raw_le": null,
+        "scaled_literal": null,
+        "truncated_uint32": null,
+        "raw_classification": null,
+        "disposition": "resolved",
+        "grades": {
+          "numeric": "Proven",
+          "semantic": "Hypothesis",
+          "native": "Unknown"
+        },
+        "intermediate_status": {
+          "binary32_round_trip": "not_applicable",
+          "widen_to_float64": "not_applicable",
+          "multiply_by_10": "not_applicable",
+          "truncate_toward_zero_uint32": "not_applicable",
+          "low16": "applied",
+          "rejected_at": null
+        }
+      }
+    },
+    {
+      "id": "integer-missing-family",
+      "path": "integer64",
+      "operand_literal": "3",
+      "context": {
+        "timer_kind_token": "timer-kind-8",
+        "family": null,
+        "software_variant": "software-variant-8",
+        "caller_state": {
+          "module_token": "caller-module-8",
+          "group_token": "caller-group-8",
+          "instance_token": "caller-instance-8",
+          "day_token": "caller-day-8",
+          "constructor_token": "caller-constructor-8",
+          "request_token": "caller-request-8"
+        }
+      },
+      "expect": {
+        "selected_path": "integer64",
+        "timer_kind_token": "timer-kind-8",
+        "family": null,
+        "software_variant": "software-variant-8",
+        "caller_state": {
+          "module_token": "caller-module-8",
+          "group_token": "caller-group-8",
+          "instance_token": "caller-instance-8",
+          "day_token": "caller-day-8",
+          "constructor_token": "caller-constructor-8",
+          "request_token": "caller-request-8"
+        },
+        "selects_module": false,
+        "selects_group": false,
+        "selects_instance": false,
+        "selects_day": false,
+        "selects_native_constructor": false,
+        "native_family_qualified": false,
+        "carrier_low16": 3,
+        "carrier_raw_le": [
+          3,
+          0
+        ],
+        "original_literal": "3",
+        "original_raw_le": [
+          3,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "rounded_literal": null,
+        "rounded_raw_le": null,
+        "scaled_literal": null,
+        "truncated_uint32": null,
+        "raw_classification": null,
+        "disposition": "resolved",
+        "grades": {
+          "numeric": "Proven",
+          "semantic": "Hypothesis",
+          "native": "Unknown"
+        },
+        "intermediate_status": {
+          "binary32_round_trip": "not_applicable",
+          "widen_to_float64": "not_applicable",
+          "multiply_by_10": "not_applicable",
+          "truncate_toward_zero_uint32": "not_applicable",
+          "low16": "applied",
+          "rejected_at": null
+        }
+      }
+    },
+    {
+      "id": "integer-missing-all-context",
+      "path": "integer64",
+      "operand_literal": "65537",
+      "context": {
+        "timer_kind_token": null,
+        "family": null,
+        "software_variant": null,
+        "caller_state": null
+      },
+      "expect": {
+        "selected_path": "integer64",
+        "timer_kind_token": null,
+        "family": null,
+        "software_variant": null,
+        "caller_state": null,
+        "selects_module": false,
+        "selects_group": false,
+        "selects_instance": false,
+        "selects_day": false,
+        "selects_native_constructor": false,
+        "native_family_qualified": false,
+        "carrier_low16": 1,
+        "carrier_raw_le": [
+          1,
+          0
+        ],
+        "original_literal": "65537",
+        "original_raw_le": [
+          1,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "rounded_literal": null,
+        "rounded_raw_le": null,
+        "scaled_literal": null,
+        "truncated_uint32": null,
+        "raw_classification": null,
+        "disposition": "resolved",
+        "grades": {
+          "numeric": "Proven",
+          "semantic": "Hypothesis",
+          "native": "Unknown"
+        },
+        "intermediate_status": {
+          "binary32_round_trip": "not_applicable",
+          "widen_to_float64": "not_applicable",
+          "multiply_by_10": "not_applicable",
+          "truncate_toward_zero_uint32": "not_applicable",
+          "low16": "applied",
+          "rejected_at": null
+        }
+      }
+    },
+    {
+      "id": "integer-empty-family",
+      "path": "integer64",
+      "operand_literal": "4",
+      "context": {
+        "timer_kind_token": "timer-kind-10",
+        "family": "",
+        "software_variant": "software-variant-10",
+        "caller_state": {
+          "module_token": "caller-module-10",
+          "group_token": "caller-group-10",
+          "instance_token": "caller-instance-10",
+          "day_token": "caller-day-10",
+          "constructor_token": "caller-constructor-10",
+          "request_token": "caller-request-10"
+        }
+      },
+      "expect": {
+        "selected_path": "integer64",
+        "timer_kind_token": "timer-kind-10",
+        "family": "",
+        "software_variant": "software-variant-10",
+        "caller_state": {
+          "module_token": "caller-module-10",
+          "group_token": "caller-group-10",
+          "instance_token": "caller-instance-10",
+          "day_token": "caller-day-10",
+          "constructor_token": "caller-constructor-10",
+          "request_token": "caller-request-10"
+        },
+        "selects_module": false,
+        "selects_group": false,
+        "selects_instance": false,
+        "selects_day": false,
+        "selects_native_constructor": false,
+        "native_family_qualified": false,
+        "carrier_low16": 4,
+        "carrier_raw_le": [
+          4,
+          0
+        ],
+        "original_literal": "4",
+        "original_raw_le": [
+          4,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "rounded_literal": null,
+        "rounded_raw_le": null,
+        "scaled_literal": null,
+        "truncated_uint32": null,
+        "raw_classification": null,
+        "disposition": "resolved",
+        "grades": {
+          "numeric": "Proven",
+          "semantic": "Hypothesis",
+          "native": "Unknown"
+        },
+        "intermediate_status": {
+          "binary32_round_trip": "not_applicable",
+          "widen_to_float64": "not_applicable",
+          "multiply_by_10": "not_applicable",
+          "truncate_toward_zero_uint32": "not_applicable",
+          "low16": "applied",
+          "rejected_at": null
+        }
+      }
+    },
+    {
+      "id": "integer-malformed-fraction",
+      "path": "integer64",
+      "operand_literal": "3.5",
+      "context": {
+        "timer_kind_token": "timer-kind-11",
+        "family": "device-family-11",
+        "software_variant": "software-variant-11",
+        "caller_state": {
+          "module_token": "caller-module-11",
+          "group_token": "caller-group-11",
+          "instance_token": "caller-instance-11",
+          "day_token": "caller-day-11",
+          "constructor_token": "caller-constructor-11",
+          "request_token": "caller-request-11"
+        }
+      },
+      "expect": {
+        "selected_path": "integer64",
+        "timer_kind_token": "timer-kind-11",
+        "family": "device-family-11",
+        "software_variant": "software-variant-11",
+        "caller_state": {
+          "module_token": "caller-module-11",
+          "group_token": "caller-group-11",
+          "instance_token": "caller-instance-11",
+          "day_token": "caller-day-11",
+          "constructor_token": "caller-constructor-11",
+          "request_token": "caller-request-11"
+        },
+        "selects_module": false,
+        "selects_group": false,
+        "selects_instance": false,
+        "selects_day": false,
+        "selects_native_constructor": false,
+        "native_family_qualified": false,
+        "carrier_low16": null,
+        "carrier_raw_le": null,
+        "original_literal": null,
+        "original_raw_le": null,
+        "rounded_literal": null,
+        "rounded_raw_le": null,
+        "scaled_literal": null,
+        "truncated_uint32": null,
+        "raw_classification": "malformed_operand",
+        "disposition": "malformed",
+        "grades": {
+          "numeric": "Unknown",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        },
+        "intermediate_status": {
+          "binary32_round_trip": "not_applicable",
+          "widen_to_float64": "not_applicable",
+          "multiply_by_10": "not_applicable",
+          "truncate_toward_zero_uint32": "not_applicable",
+          "low16": "not_applied",
+          "rejected_at": "operand"
+        }
+      }
+    },
+    {
+      "id": "integer-malformed-above-int64",
+      "path": "integer64",
+      "operand_literal": "9223372036854775808",
+      "context": {
+        "timer_kind_token": "timer-kind-12",
+        "family": "device-family-12",
+        "software_variant": "software-variant-12",
+        "caller_state": {
+          "module_token": "caller-module-12",
+          "group_token": "caller-group-12",
+          "instance_token": "caller-instance-12",
+          "day_token": "caller-day-12",
+          "constructor_token": "caller-constructor-12",
+          "request_token": "caller-request-12"
+        }
+      },
+      "expect": {
+        "selected_path": "integer64",
+        "timer_kind_token": "timer-kind-12",
+        "family": "device-family-12",
+        "software_variant": "software-variant-12",
+        "caller_state": {
+          "module_token": "caller-module-12",
+          "group_token": "caller-group-12",
+          "instance_token": "caller-instance-12",
+          "day_token": "caller-day-12",
+          "constructor_token": "caller-constructor-12",
+          "request_token": "caller-request-12"
+        },
+        "selects_module": false,
+        "selects_group": false,
+        "selects_instance": false,
+        "selects_day": false,
+        "selects_native_constructor": false,
+        "native_family_qualified": false,
+        "carrier_low16": null,
+        "carrier_raw_le": null,
+        "original_literal": null,
+        "original_raw_le": null,
+        "rounded_literal": null,
+        "rounded_raw_le": null,
+        "scaled_literal": null,
+        "truncated_uint32": null,
+        "raw_classification": "malformed_operand",
+        "disposition": "malformed",
+        "grades": {
+          "numeric": "Unknown",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        },
+        "intermediate_status": {
+          "binary32_round_trip": "not_applicable",
+          "widen_to_float64": "not_applicable",
+          "multiply_by_10": "not_applicable",
+          "truncate_toward_zero_uint32": "not_applicable",
+          "low16": "not_applied",
+          "rejected_at": "operand"
+        }
+      }
+    },
+    {
+      "id": "integer-malformed-below-int64",
+      "path": "integer64",
+      "operand_literal": "-9223372036854775809",
+      "context": {
+        "timer_kind_token": "timer-kind-13",
+        "family": "device-family-13",
+        "software_variant": "software-variant-13",
+        "caller_state": {
+          "module_token": "caller-module-13",
+          "group_token": "caller-group-13",
+          "instance_token": "caller-instance-13",
+          "day_token": "caller-day-13",
+          "constructor_token": "caller-constructor-13",
+          "request_token": "caller-request-13"
+        }
+      },
+      "expect": {
+        "selected_path": "integer64",
+        "timer_kind_token": "timer-kind-13",
+        "family": "device-family-13",
+        "software_variant": "software-variant-13",
+        "caller_state": {
+          "module_token": "caller-module-13",
+          "group_token": "caller-group-13",
+          "instance_token": "caller-instance-13",
+          "day_token": "caller-day-13",
+          "constructor_token": "caller-constructor-13",
+          "request_token": "caller-request-13"
+        },
+        "selects_module": false,
+        "selects_group": false,
+        "selects_instance": false,
+        "selects_day": false,
+        "selects_native_constructor": false,
+        "native_family_qualified": false,
+        "carrier_low16": null,
+        "carrier_raw_le": null,
+        "original_literal": null,
+        "original_raw_le": null,
+        "rounded_literal": null,
+        "rounded_raw_le": null,
+        "scaled_literal": null,
+        "truncated_uint32": null,
+        "raw_classification": "malformed_operand",
+        "disposition": "malformed",
+        "grades": {
+          "numeric": "Unknown",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        },
+        "intermediate_status": {
+          "binary32_round_trip": "not_applicable",
+          "widen_to_float64": "not_applicable",
+          "multiply_by_10": "not_applicable",
+          "truncate_toward_zero_uint32": "not_applicable",
+          "low16": "not_applied",
+          "rejected_at": "operand"
+        }
+      }
+    },
+    {
+      "id": "float-zero",
+      "path": "float64",
+      "operand_literal": "0.0",
+      "context": {
+        "timer_kind_token": "timer-kind-14",
+        "family": "device-family-14",
+        "software_variant": "software-variant-14",
+        "caller_state": {
+          "module_token": "caller-module-14",
+          "group_token": "caller-group-14",
+          "instance_token": "caller-instance-14",
+          "day_token": "caller-day-14",
+          "constructor_token": "caller-constructor-14",
+          "request_token": "caller-request-14"
+        }
+      },
+      "expect": {
+        "selected_path": "float64",
+        "timer_kind_token": "timer-kind-14",
+        "family": "device-family-14",
+        "software_variant": "software-variant-14",
+        "caller_state": {
+          "module_token": "caller-module-14",
+          "group_token": "caller-group-14",
+          "instance_token": "caller-instance-14",
+          "day_token": "caller-day-14",
+          "constructor_token": "caller-constructor-14",
+          "request_token": "caller-request-14"
+        },
+        "selects_module": false,
+        "selects_group": false,
+        "selects_instance": false,
+        "selects_day": false,
+        "selects_native_constructor": false,
+        "native_family_qualified": false,
+        "carrier_low16": 0,
+        "carrier_raw_le": [
+          0,
+          0
+        ],
+        "original_literal": "0.0",
+        "original_raw_le": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "rounded_literal": "0.0",
+        "rounded_raw_le": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "scaled_literal": "0.0",
+        "truncated_uint32": 0,
+        "raw_classification": null,
+        "disposition": "resolved",
+        "grades": {
+          "numeric": "Proven",
+          "semantic": "Hypothesis",
+          "native": "Unknown"
+        },
+        "intermediate_status": {
+          "binary32_round_trip": "applied",
+          "widen_to_float64": "applied",
+          "multiply_by_10": "applied",
+          "truncate_toward_zero_uint32": "applied",
+          "low16": "applied",
+          "rejected_at": null
+        }
+      }
+    },
+    {
+      "id": "float-signed-zero",
+      "path": "float64",
+      "operand_literal": "-0.0",
+      "context": {
+        "timer_kind_token": "timer-kind-15",
+        "family": "device-family-15",
+        "software_variant": "software-variant-15",
+        "caller_state": {
+          "module_token": "caller-module-15",
+          "group_token": "caller-group-15",
+          "instance_token": "caller-instance-15",
+          "day_token": "caller-day-15",
+          "constructor_token": "caller-constructor-15",
+          "request_token": "caller-request-15"
+        }
+      },
+      "expect": {
+        "selected_path": "float64",
+        "timer_kind_token": "timer-kind-15",
+        "family": "device-family-15",
+        "software_variant": "software-variant-15",
+        "caller_state": {
+          "module_token": "caller-module-15",
+          "group_token": "caller-group-15",
+          "instance_token": "caller-instance-15",
+          "day_token": "caller-day-15",
+          "constructor_token": "caller-constructor-15",
+          "request_token": "caller-request-15"
+        },
+        "selects_module": false,
+        "selects_group": false,
+        "selects_instance": false,
+        "selects_day": false,
+        "selects_native_constructor": false,
+        "native_family_qualified": false,
+        "carrier_low16": 0,
+        "carrier_raw_le": [
+          0,
+          0
+        ],
+        "original_literal": "-0.0",
+        "original_raw_le": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          128
+        ],
+        "rounded_literal": "-0.0",
+        "rounded_raw_le": [
+          0,
+          0,
+          0,
+          128
+        ],
+        "scaled_literal": "-0.0",
+        "truncated_uint32": 0,
+        "raw_classification": null,
+        "disposition": "resolved",
+        "grades": {
+          "numeric": "Proven",
+          "semantic": "Hypothesis",
+          "native": "Unknown"
+        },
+        "intermediate_status": {
+          "binary32_round_trip": "applied",
+          "widen_to_float64": "applied",
+          "multiply_by_10": "applied",
+          "truncate_toward_zero_uint32": "applied",
+          "low16": "applied",
+          "rejected_at": null
+        }
+      }
+    },
+    {
+      "id": "float-0-7",
+      "path": "float64",
+      "operand_literal": "0.7",
+      "context": {
+        "timer_kind_token": "timer-kind-16",
+        "family": "device-family-16",
+        "software_variant": "software-variant-16",
+        "caller_state": {
+          "module_token": "caller-module-16",
+          "group_token": "caller-group-16",
+          "instance_token": "caller-instance-16",
+          "day_token": "caller-day-16",
+          "constructor_token": "caller-constructor-16",
+          "request_token": "caller-request-16"
+        }
+      },
+      "expect": {
+        "selected_path": "float64",
+        "timer_kind_token": "timer-kind-16",
+        "family": "device-family-16",
+        "software_variant": "software-variant-16",
+        "caller_state": {
+          "module_token": "caller-module-16",
+          "group_token": "caller-group-16",
+          "instance_token": "caller-instance-16",
+          "day_token": "caller-day-16",
+          "constructor_token": "caller-constructor-16",
+          "request_token": "caller-request-16"
+        },
+        "selects_module": false,
+        "selects_group": false,
+        "selects_instance": false,
+        "selects_day": false,
+        "selects_native_constructor": false,
+        "native_family_qualified": false,
+        "carrier_low16": 6,
+        "carrier_raw_le": [
+          6,
+          0
+        ],
+        "original_literal": "0.7",
+        "original_raw_le": [
+          102,
+          102,
+          102,
+          102,
+          102,
+          102,
+          230,
+          63
+        ],
+        "rounded_literal": "0.699999988079071",
+        "rounded_raw_le": [
+          51,
+          51,
+          51,
+          63
+        ],
+        "scaled_literal": "6.9999998807907104",
+        "truncated_uint32": 6,
+        "raw_classification": null,
+        "disposition": "resolved",
+        "grades": {
+          "numeric": "Proven",
+          "semantic": "Hypothesis",
+          "native": "Unknown"
+        },
+        "intermediate_status": {
+          "binary32_round_trip": "applied",
+          "widen_to_float64": "applied",
+          "multiply_by_10": "applied",
+          "truncate_toward_zero_uint32": "applied",
+          "low16": "applied",
+          "rejected_at": null
+        }
+      }
+    },
+    {
+      "id": "float-1-25",
+      "path": "float64",
+      "operand_literal": "1.25",
+      "context": {
+        "timer_kind_token": "timer-kind-17",
+        "family": "device-family-17",
+        "software_variant": "software-variant-17",
+        "caller_state": {
+          "module_token": "caller-module-17",
+          "group_token": "caller-group-17",
+          "instance_token": "caller-instance-17",
+          "day_token": "caller-day-17",
+          "constructor_token": "caller-constructor-17",
+          "request_token": "caller-request-17"
+        }
+      },
+      "expect": {
+        "selected_path": "float64",
+        "timer_kind_token": "timer-kind-17",
+        "family": "device-family-17",
+        "software_variant": "software-variant-17",
+        "caller_state": {
+          "module_token": "caller-module-17",
+          "group_token": "caller-group-17",
+          "instance_token": "caller-instance-17",
+          "day_token": "caller-day-17",
+          "constructor_token": "caller-constructor-17",
+          "request_token": "caller-request-17"
+        },
+        "selects_module": false,
+        "selects_group": false,
+        "selects_instance": false,
+        "selects_day": false,
+        "selects_native_constructor": false,
+        "native_family_qualified": false,
+        "carrier_low16": 12,
+        "carrier_raw_le": [
+          12,
+          0
+        ],
+        "original_literal": "1.25",
+        "original_raw_le": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          244,
+          63
+        ],
+        "rounded_literal": "1.25",
+        "rounded_raw_le": [
+          0,
+          0,
+          160,
+          63
+        ],
+        "scaled_literal": "12.5",
+        "truncated_uint32": 12,
+        "raw_classification": null,
+        "disposition": "resolved",
+        "grades": {
+          "numeric": "Proven",
+          "semantic": "Hypothesis",
+          "native": "Unknown"
+        },
+        "intermediate_status": {
+          "binary32_round_trip": "applied",
+          "widen_to_float64": "applied",
+          "multiply_by_10": "applied",
+          "truncate_toward_zero_uint32": "applied",
+          "low16": "applied",
+          "rejected_at": null
+        }
+      }
+    },
+    {
+      "id": "float-6553-6",
+      "path": "float64",
+      "operand_literal": "6553.6",
+      "context": {
+        "timer_kind_token": "timer-kind-18",
+        "family": "device-family-18",
+        "software_variant": "software-variant-18",
+        "caller_state": {
+          "module_token": "caller-module-18",
+          "group_token": "caller-group-18",
+          "instance_token": "caller-instance-18",
+          "day_token": "caller-day-18",
+          "constructor_token": "caller-constructor-18",
+          "request_token": "caller-request-18"
+        }
+      },
+      "expect": {
+        "selected_path": "float64",
+        "timer_kind_token": "timer-kind-18",
+        "family": "device-family-18",
+        "software_variant": "software-variant-18",
+        "caller_state": {
+          "module_token": "caller-module-18",
+          "group_token": "caller-group-18",
+          "instance_token": "caller-instance-18",
+          "day_token": "caller-day-18",
+          "constructor_token": "caller-constructor-18",
+          "request_token": "caller-request-18"
+        },
+        "selects_module": false,
+        "selects_group": false,
+        "selects_instance": false,
+        "selects_day": false,
+        "selects_native_constructor": false,
+        "native_family_qualified": false,
+        "carrier_low16": 0,
+        "carrier_raw_le": [
+          0,
+          0
+        ],
+        "original_literal": "6553.6",
+        "original_raw_le": [
+          154,
+          153,
+          153,
+          153,
+          153,
+          153,
+          185,
+          64
+        ],
+        "rounded_literal": "6553.60009765625",
+        "rounded_raw_le": [
+          205,
+          204,
+          204,
+          69
+        ],
+        "scaled_literal": "65536.0009765625",
+        "truncated_uint32": 65536,
+        "raw_classification": null,
+        "disposition": "resolved",
+        "grades": {
+          "numeric": "Proven",
+          "semantic": "Hypothesis",
+          "native": "Unknown"
+        },
+        "intermediate_status": {
+          "binary32_round_trip": "applied",
+          "widen_to_float64": "applied",
+          "multiply_by_10": "applied",
+          "truncate_toward_zero_uint32": "applied",
+          "low16": "applied",
+          "rejected_at": null
+        }
+      }
+    },
+    {
+      "id": "float-0-05",
+      "path": "float64",
+      "operand_literal": "0.05",
+      "context": {
+        "timer_kind_token": "timer-kind-19",
+        "family": "device-family-19",
+        "software_variant": "software-variant-19",
+        "caller_state": {
+          "module_token": "caller-module-19",
+          "group_token": "caller-group-19",
+          "instance_token": "caller-instance-19",
+          "day_token": "caller-day-19",
+          "constructor_token": "caller-constructor-19",
+          "request_token": "caller-request-19"
+        }
+      },
+      "expect": {
+        "selected_path": "float64",
+        "timer_kind_token": "timer-kind-19",
+        "family": "device-family-19",
+        "software_variant": "software-variant-19",
+        "caller_state": {
+          "module_token": "caller-module-19",
+          "group_token": "caller-group-19",
+          "instance_token": "caller-instance-19",
+          "day_token": "caller-day-19",
+          "constructor_token": "caller-constructor-19",
+          "request_token": "caller-request-19"
+        },
+        "selects_module": false,
+        "selects_group": false,
+        "selects_instance": false,
+        "selects_day": false,
+        "selects_native_constructor": false,
+        "native_family_qualified": false,
+        "carrier_low16": 0,
+        "carrier_raw_le": [
+          0,
+          0
+        ],
+        "original_literal": "0.05",
+        "original_raw_le": [
+          154,
+          153,
+          153,
+          153,
+          153,
+          153,
+          169,
+          63
+        ],
+        "rounded_literal": "0.05000000074505806",
+        "rounded_raw_le": [
+          205,
+          204,
+          76,
+          61
+        ],
+        "scaled_literal": "0.5000000074505806",
+        "truncated_uint32": 0,
+        "raw_classification": null,
+        "disposition": "resolved",
+        "grades": {
+          "numeric": "Proven",
+          "semantic": "Hypothesis",
+          "native": "Unknown"
+        },
+        "intermediate_status": {
+          "binary32_round_trip": "applied",
+          "widen_to_float64": "applied",
+          "multiply_by_10": "applied",
+          "truncate_toward_zero_uint32": "applied",
+          "low16": "applied",
+          "rejected_at": null
+        }
+      }
+    },
+    {
+      "id": "float-0-25",
+      "path": "float64",
+      "operand_literal": "0.25",
+      "context": {
+        "timer_kind_token": "timer-kind-20",
+        "family": "device-family-20",
+        "software_variant": "software-variant-20",
+        "caller_state": {
+          "module_token": "caller-module-20",
+          "group_token": "caller-group-20",
+          "instance_token": "caller-instance-20",
+          "day_token": "caller-day-20",
+          "constructor_token": "caller-constructor-20",
+          "request_token": "caller-request-20"
+        }
+      },
+      "expect": {
+        "selected_path": "float64",
+        "timer_kind_token": "timer-kind-20",
+        "family": "device-family-20",
+        "software_variant": "software-variant-20",
+        "caller_state": {
+          "module_token": "caller-module-20",
+          "group_token": "caller-group-20",
+          "instance_token": "caller-instance-20",
+          "day_token": "caller-day-20",
+          "constructor_token": "caller-constructor-20",
+          "request_token": "caller-request-20"
+        },
+        "selects_module": false,
+        "selects_group": false,
+        "selects_instance": false,
+        "selects_day": false,
+        "selects_native_constructor": false,
+        "native_family_qualified": false,
+        "carrier_low16": 2,
+        "carrier_raw_le": [
+          2,
+          0
+        ],
+        "original_literal": "0.25",
+        "original_raw_le": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          208,
+          63
+        ],
+        "rounded_literal": "0.25",
+        "rounded_raw_le": [
+          0,
+          0,
+          128,
+          62
+        ],
+        "scaled_literal": "2.5",
+        "truncated_uint32": 2,
+        "raw_classification": null,
+        "disposition": "resolved",
+        "grades": {
+          "numeric": "Proven",
+          "semantic": "Hypothesis",
+          "native": "Unknown"
+        },
+        "intermediate_status": {
+          "binary32_round_trip": "applied",
+          "widen_to_float64": "applied",
+          "multiply_by_10": "applied",
+          "truncate_toward_zero_uint32": "applied",
+          "low16": "applied",
+          "rejected_at": null
+        }
+      }
+    },
+    {
+      "id": "float-tie-below",
+      "path": "float64",
+      "operand_literal": "0.7000000178813933",
+      "context": {
+        "timer_kind_token": "timer-kind-21",
+        "family": "device-family-21",
+        "software_variant": "software-variant-21",
+        "caller_state": {
+          "module_token": "caller-module-21",
+          "group_token": "caller-group-21",
+          "instance_token": "caller-instance-21",
+          "day_token": "caller-day-21",
+          "constructor_token": "caller-constructor-21",
+          "request_token": "caller-request-21"
+        }
+      },
+      "expect": {
+        "selected_path": "float64",
+        "timer_kind_token": "timer-kind-21",
+        "family": "device-family-21",
+        "software_variant": "software-variant-21",
+        "caller_state": {
+          "module_token": "caller-module-21",
+          "group_token": "caller-group-21",
+          "instance_token": "caller-instance-21",
+          "day_token": "caller-day-21",
+          "constructor_token": "caller-constructor-21",
+          "request_token": "caller-request-21"
+        },
+        "selects_module": false,
+        "selects_group": false,
+        "selects_instance": false,
+        "selects_day": false,
+        "selects_native_constructor": false,
+        "native_family_qualified": false,
+        "carrier_low16": 6,
+        "carrier_raw_le": [
+          6,
+          0
+        ],
+        "original_literal": "0.7000000178813933",
+        "original_raw_le": [
+          255,
+          255,
+          255,
+          111,
+          102,
+          102,
+          230,
+          63
+        ],
+        "rounded_literal": "0.699999988079071",
+        "rounded_raw_le": [
+          51,
+          51,
+          51,
+          63
+        ],
+        "scaled_literal": "6.9999998807907104",
+        "truncated_uint32": 6,
+        "raw_classification": null,
+        "disposition": "resolved",
+        "grades": {
+          "numeric": "Proven",
+          "semantic": "Hypothesis",
+          "native": "Unknown"
+        },
+        "intermediate_status": {
+          "binary32_round_trip": "applied",
+          "widen_to_float64": "applied",
+          "multiply_by_10": "applied",
+          "truncate_toward_zero_uint32": "applied",
+          "low16": "applied",
+          "rejected_at": null
+        }
+      }
+    },
+    {
+      "id": "float-tie-mid-to-even-up",
+      "path": "float64",
+      "operand_literal": "0.7000000178813934",
+      "context": {
+        "timer_kind_token": "timer-kind-22",
+        "family": "device-family-22",
+        "software_variant": "software-variant-22",
+        "caller_state": {
+          "module_token": "caller-module-22",
+          "group_token": "caller-group-22",
+          "instance_token": "caller-instance-22",
+          "day_token": "caller-day-22",
+          "constructor_token": "caller-constructor-22",
+          "request_token": "caller-request-22"
+        }
+      },
+      "expect": {
+        "selected_path": "float64",
+        "timer_kind_token": "timer-kind-22",
+        "family": "device-family-22",
+        "software_variant": "software-variant-22",
+        "caller_state": {
+          "module_token": "caller-module-22",
+          "group_token": "caller-group-22",
+          "instance_token": "caller-instance-22",
+          "day_token": "caller-day-22",
+          "constructor_token": "caller-constructor-22",
+          "request_token": "caller-request-22"
+        },
+        "selects_module": false,
+        "selects_group": false,
+        "selects_instance": false,
+        "selects_day": false,
+        "selects_native_constructor": false,
+        "native_family_qualified": false,
+        "carrier_low16": 7,
+        "carrier_raw_le": [
+          7,
+          0
+        ],
+        "original_literal": "0.7000000178813934",
+        "original_raw_le": [
+          0,
+          0,
+          0,
+          112,
+          102,
+          102,
+          230,
+          63
+        ],
+        "rounded_literal": "0.7000000476837158",
+        "rounded_raw_le": [
+          52,
+          51,
+          51,
+          63
+        ],
+        "scaled_literal": "7.000000476837158",
+        "truncated_uint32": 7,
+        "raw_classification": null,
+        "disposition": "resolved",
+        "grades": {
+          "numeric": "Proven",
+          "semantic": "Hypothesis",
+          "native": "Unknown"
+        },
+        "intermediate_status": {
+          "binary32_round_trip": "applied",
+          "widen_to_float64": "applied",
+          "multiply_by_10": "applied",
+          "truncate_toward_zero_uint32": "applied",
+          "low16": "applied",
+          "rejected_at": null
+        }
+      }
+    },
+    {
+      "id": "float-tie-above",
+      "path": "float64",
+      "operand_literal": "0.7000000178813935",
+      "context": {
+        "timer_kind_token": "timer-kind-23",
+        "family": "device-family-23",
+        "software_variant": "software-variant-23",
+        "caller_state": {
+          "module_token": "caller-module-23",
+          "group_token": "caller-group-23",
+          "instance_token": "caller-instance-23",
+          "day_token": "caller-day-23",
+          "constructor_token": "caller-constructor-23",
+          "request_token": "caller-request-23"
+        }
+      },
+      "expect": {
+        "selected_path": "float64",
+        "timer_kind_token": "timer-kind-23",
+        "family": "device-family-23",
+        "software_variant": "software-variant-23",
+        "caller_state": {
+          "module_token": "caller-module-23",
+          "group_token": "caller-group-23",
+          "instance_token": "caller-instance-23",
+          "day_token": "caller-day-23",
+          "constructor_token": "caller-constructor-23",
+          "request_token": "caller-request-23"
+        },
+        "selects_module": false,
+        "selects_group": false,
+        "selects_instance": false,
+        "selects_day": false,
+        "selects_native_constructor": false,
+        "native_family_qualified": false,
+        "carrier_low16": 7,
+        "carrier_raw_le": [
+          7,
+          0
+        ],
+        "original_literal": "0.7000000178813935",
+        "original_raw_le": [
+          1,
+          0,
+          0,
+          112,
+          102,
+          102,
+          230,
+          63
+        ],
+        "rounded_literal": "0.7000000476837158",
+        "rounded_raw_le": [
+          52,
+          51,
+          51,
+          63
+        ],
+        "scaled_literal": "7.000000476837158",
+        "truncated_uint32": 7,
+        "raw_classification": null,
+        "disposition": "resolved",
+        "grades": {
+          "numeric": "Proven",
+          "semantic": "Hypothesis",
+          "native": "Unknown"
+        },
+        "intermediate_status": {
+          "binary32_round_trip": "applied",
+          "widen_to_float64": "applied",
+          "multiply_by_10": "applied",
+          "truncate_toward_zero_uint32": "applied",
+          "low16": "applied",
+          "rejected_at": null
+        }
+      }
+    },
+    {
+      "id": "float-tie-mid-to-even-down",
+      "path": "float64",
+      "operand_literal": "0.7999999821186066",
+      "context": {
+        "timer_kind_token": "timer-kind-24",
+        "family": "device-family-24",
+        "software_variant": "software-variant-24",
+        "caller_state": {
+          "module_token": "caller-module-24",
+          "group_token": "caller-group-24",
+          "instance_token": "caller-instance-24",
+          "day_token": "caller-day-24",
+          "constructor_token": "caller-constructor-24",
+          "request_token": "caller-request-24"
+        }
+      },
+      "expect": {
+        "selected_path": "float64",
+        "timer_kind_token": "timer-kind-24",
+        "family": "device-family-24",
+        "software_variant": "software-variant-24",
+        "caller_state": {
+          "module_token": "caller-module-24",
+          "group_token": "caller-group-24",
+          "instance_token": "caller-instance-24",
+          "day_token": "caller-day-24",
+          "constructor_token": "caller-constructor-24",
+          "request_token": "caller-request-24"
+        },
+        "selects_module": false,
+        "selects_group": false,
+        "selects_instance": false,
+        "selects_day": false,
+        "selects_native_constructor": false,
+        "native_family_qualified": false,
+        "carrier_low16": 7,
+        "carrier_raw_le": [
+          7,
+          0
+        ],
+        "original_literal": "0.7999999821186066",
+        "original_raw_le": [
+          0,
+          0,
+          0,
+          144,
+          153,
+          153,
+          233,
+          63
+        ],
+        "rounded_literal": "0.7999999523162842",
+        "rounded_raw_le": [
+          204,
+          204,
+          76,
+          63
+        ],
+        "scaled_literal": "7.999999523162842",
+        "truncated_uint32": 7,
+        "raw_classification": null,
+        "disposition": "resolved",
+        "grades": {
+          "numeric": "Proven",
+          "semantic": "Hypothesis",
+          "native": "Unknown"
+        },
+        "intermediate_status": {
+          "binary32_round_trip": "applied",
+          "widen_to_float64": "applied",
+          "multiply_by_10": "applied",
+          "truncate_toward_zero_uint32": "applied",
+          "low16": "applied",
+          "rejected_at": null
+        }
+      }
+    },
+    {
+      "id": "float-tie-above-even-down",
+      "path": "float64",
+      "operand_literal": "0.7999999821186067",
+      "context": {
+        "timer_kind_token": "timer-kind-25",
+        "family": "device-family-25",
+        "software_variant": "software-variant-25",
+        "caller_state": {
+          "module_token": "caller-module-25",
+          "group_token": "caller-group-25",
+          "instance_token": "caller-instance-25",
+          "day_token": "caller-day-25",
+          "constructor_token": "caller-constructor-25",
+          "request_token": "caller-request-25"
+        }
+      },
+      "expect": {
+        "selected_path": "float64",
+        "timer_kind_token": "timer-kind-25",
+        "family": "device-family-25",
+        "software_variant": "software-variant-25",
+        "caller_state": {
+          "module_token": "caller-module-25",
+          "group_token": "caller-group-25",
+          "instance_token": "caller-instance-25",
+          "day_token": "caller-day-25",
+          "constructor_token": "caller-constructor-25",
+          "request_token": "caller-request-25"
+        },
+        "selects_module": false,
+        "selects_group": false,
+        "selects_instance": false,
+        "selects_day": false,
+        "selects_native_constructor": false,
+        "native_family_qualified": false,
+        "carrier_low16": 8,
+        "carrier_raw_le": [
+          8,
+          0
+        ],
+        "original_literal": "0.7999999821186067",
+        "original_raw_le": [
+          1,
+          0,
+          0,
+          144,
+          153,
+          153,
+          233,
+          63
+        ],
+        "rounded_literal": "0.800000011920929",
+        "rounded_raw_le": [
+          205,
+          204,
+          76,
+          63
+        ],
+        "scaled_literal": "8.00000011920929",
+        "truncated_uint32": 8,
+        "raw_classification": null,
+        "disposition": "resolved",
+        "grades": {
+          "numeric": "Proven",
+          "semantic": "Hypothesis",
+          "native": "Unknown"
+        },
+        "intermediate_status": {
+          "binary32_round_trip": "applied",
+          "widen_to_float64": "applied",
+          "multiply_by_10": "applied",
+          "truncate_toward_zero_uint32": "applied",
+          "low16": "applied",
+          "rejected_at": null
+        }
+      }
+    },
+    {
+      "id": "float-domain-max",
+      "path": "float64",
+      "operand_literal": "429496704.0",
+      "context": {
+        "timer_kind_token": "timer-kind-26",
+        "family": "device-family-26",
+        "software_variant": "software-variant-26",
+        "caller_state": {
+          "module_token": "caller-module-26",
+          "group_token": "caller-group-26",
+          "instance_token": "caller-instance-26",
+          "day_token": "caller-day-26",
+          "constructor_token": "caller-constructor-26",
+          "request_token": "caller-request-26"
+        }
+      },
+      "expect": {
+        "selected_path": "float64",
+        "timer_kind_token": "timer-kind-26",
+        "family": "device-family-26",
+        "software_variant": "software-variant-26",
+        "caller_state": {
+          "module_token": "caller-module-26",
+          "group_token": "caller-group-26",
+          "instance_token": "caller-instance-26",
+          "day_token": "caller-day-26",
+          "constructor_token": "caller-constructor-26",
+          "request_token": "caller-request-26"
+        },
+        "selects_module": false,
+        "selects_group": false,
+        "selects_instance": false,
+        "selects_day": false,
+        "selects_native_constructor": false,
+        "native_family_qualified": false,
+        "carrier_low16": 65280,
+        "carrier_raw_le": [
+          0,
+          255
+        ],
+        "original_literal": "429496704.0",
+        "original_raw_le": [
+          0,
+          0,
+          0,
+          128,
+          153,
+          153,
+          185,
+          65
+        ],
+        "rounded_literal": "429496704.0",
+        "rounded_raw_le": [
+          204,
+          204,
+          204,
+          77
+        ],
+        "scaled_literal": "4294967040.0",
+        "truncated_uint32": 4294967040,
+        "raw_classification": null,
+        "disposition": "resolved",
+        "grades": {
+          "numeric": "Proven",
+          "semantic": "Hypothesis",
+          "native": "Unknown"
+        },
+        "intermediate_status": {
+          "binary32_round_trip": "applied",
+          "widen_to_float64": "applied",
+          "multiply_by_10": "applied",
+          "truncate_toward_zero_uint32": "applied",
+          "low16": "applied",
+          "rejected_at": null
+        }
+      }
+    },
+    {
+      "id": "float-domain-tie-inside",
+      "path": "float64",
+      "operand_literal": "429496720.0",
+      "context": {
+        "timer_kind_token": "timer-kind-27",
+        "family": "device-family-27",
+        "software_variant": "software-variant-27",
+        "caller_state": {
+          "module_token": "caller-module-27",
+          "group_token": "caller-group-27",
+          "instance_token": "caller-instance-27",
+          "day_token": "caller-day-27",
+          "constructor_token": "caller-constructor-27",
+          "request_token": "caller-request-27"
+        }
+      },
+      "expect": {
+        "selected_path": "float64",
+        "timer_kind_token": "timer-kind-27",
+        "family": "device-family-27",
+        "software_variant": "software-variant-27",
+        "caller_state": {
+          "module_token": "caller-module-27",
+          "group_token": "caller-group-27",
+          "instance_token": "caller-instance-27",
+          "day_token": "caller-day-27",
+          "constructor_token": "caller-constructor-27",
+          "request_token": "caller-request-27"
+        },
+        "selects_module": false,
+        "selects_group": false,
+        "selects_instance": false,
+        "selects_day": false,
+        "selects_native_constructor": false,
+        "native_family_qualified": false,
+        "carrier_low16": 65280,
+        "carrier_raw_le": [
+          0,
+          255
+        ],
+        "original_literal": "429496720.0",
+        "original_raw_le": [
+          0,
+          0,
+          0,
+          144,
+          153,
+          153,
+          185,
+          65
+        ],
+        "rounded_literal": "429496704.0",
+        "rounded_raw_le": [
+          204,
+          204,
+          204,
+          77
+        ],
+        "scaled_literal": "4294967040.0",
+        "truncated_uint32": 4294967040,
+        "raw_classification": null,
+        "disposition": "resolved",
+        "grades": {
+          "numeric": "Proven",
+          "semantic": "Hypothesis",
+          "native": "Unknown"
+        },
+        "intermediate_status": {
+          "binary32_round_trip": "applied",
+          "widen_to_float64": "applied",
+          "multiply_by_10": "applied",
+          "truncate_toward_zero_uint32": "applied",
+          "low16": "applied",
+          "rejected_at": null
+        }
+      }
+    },
+    {
+      "id": "float-domain-just-outside",
+      "path": "float64",
+      "operand_literal": "429496720.00000006",
+      "context": {
+        "timer_kind_token": "timer-kind-28",
+        "family": "device-family-28",
+        "software_variant": "software-variant-28",
+        "caller_state": {
+          "module_token": "caller-module-28",
+          "group_token": "caller-group-28",
+          "instance_token": "caller-instance-28",
+          "day_token": "caller-day-28",
+          "constructor_token": "caller-constructor-28",
+          "request_token": "caller-request-28"
+        }
+      },
+      "expect": {
+        "selected_path": "float64",
+        "timer_kind_token": "timer-kind-28",
+        "family": "device-family-28",
+        "software_variant": "software-variant-28",
+        "caller_state": {
+          "module_token": "caller-module-28",
+          "group_token": "caller-group-28",
+          "instance_token": "caller-instance-28",
+          "day_token": "caller-day-28",
+          "constructor_token": "caller-constructor-28",
+          "request_token": "caller-request-28"
+        },
+        "selects_module": false,
+        "selects_group": false,
+        "selects_instance": false,
+        "selects_day": false,
+        "selects_native_constructor": false,
+        "native_family_qualified": false,
+        "carrier_low16": null,
+        "carrier_raw_le": null,
+        "original_literal": "429496720.00000006",
+        "original_raw_le": [
+          1,
+          0,
+          0,
+          144,
+          153,
+          153,
+          185,
+          65
+        ],
+        "rounded_literal": "429496736.0",
+        "rounded_raw_le": [
+          205,
+          204,
+          204,
+          77
+        ],
+        "scaled_literal": "4294967360.0",
+        "truncated_uint32": null,
+        "raw_classification": "overflow",
+        "disposition": "unresolved",
+        "grades": {
+          "numeric": "Unknown",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        },
+        "intermediate_status": {
+          "binary32_round_trip": "applied",
+          "widen_to_float64": "applied",
+          "multiply_by_10": "applied",
+          "truncate_toward_zero_uint32": "not_applied",
+          "low16": "not_applied",
+          "rejected_at": "domain"
+        }
+      }
+    },
+    {
+      "id": "float-overflow-429496729-5",
+      "path": "float64",
+      "operand_literal": "429496729.5",
+      "context": {
+        "timer_kind_token": "timer-kind-29",
+        "family": "device-family-29",
+        "software_variant": "software-variant-29",
+        "caller_state": {
+          "module_token": "caller-module-29",
+          "group_token": "caller-group-29",
+          "instance_token": "caller-instance-29",
+          "day_token": "caller-day-29",
+          "constructor_token": "caller-constructor-29",
+          "request_token": "caller-request-29"
+        }
+      },
+      "expect": {
+        "selected_path": "float64",
+        "timer_kind_token": "timer-kind-29",
+        "family": "device-family-29",
+        "software_variant": "software-variant-29",
+        "caller_state": {
+          "module_token": "caller-module-29",
+          "group_token": "caller-group-29",
+          "instance_token": "caller-instance-29",
+          "day_token": "caller-day-29",
+          "constructor_token": "caller-constructor-29",
+          "request_token": "caller-request-29"
+        },
+        "selects_module": false,
+        "selects_group": false,
+        "selects_instance": false,
+        "selects_day": false,
+        "selects_native_constructor": false,
+        "native_family_qualified": false,
+        "carrier_low16": null,
+        "carrier_raw_le": null,
+        "original_literal": "429496729.5",
+        "original_raw_le": [
+          0,
+          0,
+          128,
+          153,
+          153,
+          153,
+          185,
+          65
+        ],
+        "rounded_literal": "429496736.0",
+        "rounded_raw_le": [
+          205,
+          204,
+          204,
+          77
+        ],
+        "scaled_literal": "4294967360.0",
+        "truncated_uint32": null,
+        "raw_classification": "overflow",
+        "disposition": "unresolved",
+        "grades": {
+          "numeric": "Unknown",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        },
+        "intermediate_status": {
+          "binary32_round_trip": "applied",
+          "widen_to_float64": "applied",
+          "multiply_by_10": "applied",
+          "truncate_toward_zero_uint32": "not_applied",
+          "low16": "not_applied",
+          "rejected_at": "domain"
+        }
+      }
+    },
+    {
+      "id": "float-overflow-scaled-finite",
+      "path": "float64",
+      "operand_literal": "429496736.0",
+      "context": {
+        "timer_kind_token": "timer-kind-30",
+        "family": "device-family-30",
+        "software_variant": "software-variant-30",
+        "caller_state": {
+          "module_token": "caller-module-30",
+          "group_token": "caller-group-30",
+          "instance_token": "caller-instance-30",
+          "day_token": "caller-day-30",
+          "constructor_token": "caller-constructor-30",
+          "request_token": "caller-request-30"
+        }
+      },
+      "expect": {
+        "selected_path": "float64",
+        "timer_kind_token": "timer-kind-30",
+        "family": "device-family-30",
+        "software_variant": "software-variant-30",
+        "caller_state": {
+          "module_token": "caller-module-30",
+          "group_token": "caller-group-30",
+          "instance_token": "caller-instance-30",
+          "day_token": "caller-day-30",
+          "constructor_token": "caller-constructor-30",
+          "request_token": "caller-request-30"
+        },
+        "selects_module": false,
+        "selects_group": false,
+        "selects_instance": false,
+        "selects_day": false,
+        "selects_native_constructor": false,
+        "native_family_qualified": false,
+        "carrier_low16": null,
+        "carrier_raw_le": null,
+        "original_literal": "429496736.0",
+        "original_raw_le": [
+          0,
+          0,
+          0,
+          160,
+          153,
+          153,
+          185,
+          65
+        ],
+        "rounded_literal": "429496736.0",
+        "rounded_raw_le": [
+          205,
+          204,
+          204,
+          77
+        ],
+        "scaled_literal": "4294967360.0",
+        "truncated_uint32": null,
+        "raw_classification": "overflow",
+        "disposition": "unresolved",
+        "grades": {
+          "numeric": "Unknown",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        },
+        "intermediate_status": {
+          "binary32_round_trip": "applied",
+          "widen_to_float64": "applied",
+          "multiply_by_10": "applied",
+          "truncate_toward_zero_uint32": "not_applied",
+          "low16": "not_applied",
+          "rejected_at": "domain"
+        }
+      }
+    },
+    {
+      "id": "float-overflow-binary32",
+      "path": "float64",
+      "operand_literal": "1e39",
+      "context": {
+        "timer_kind_token": "timer-kind-31",
+        "family": "device-family-31",
+        "software_variant": "software-variant-31",
+        "caller_state": {
+          "module_token": "caller-module-31",
+          "group_token": "caller-group-31",
+          "instance_token": "caller-instance-31",
+          "day_token": "caller-day-31",
+          "constructor_token": "caller-constructor-31",
+          "request_token": "caller-request-31"
+        }
+      },
+      "expect": {
+        "selected_path": "float64",
+        "timer_kind_token": "timer-kind-31",
+        "family": "device-family-31",
+        "software_variant": "software-variant-31",
+        "caller_state": {
+          "module_token": "caller-module-31",
+          "group_token": "caller-group-31",
+          "instance_token": "caller-instance-31",
+          "day_token": "caller-day-31",
+          "constructor_token": "caller-constructor-31",
+          "request_token": "caller-request-31"
+        },
+        "selects_module": false,
+        "selects_group": false,
+        "selects_instance": false,
+        "selects_day": false,
+        "selects_native_constructor": false,
+        "native_family_qualified": false,
+        "carrier_low16": null,
+        "carrier_raw_le": null,
+        "original_literal": "1e+39",
+        "original_raw_le": [
+          29,
+          74,
+          156,
+          244,
+          135,
+          130,
+          7,
+          72
+        ],
+        "rounded_literal": null,
+        "rounded_raw_le": [
+          0,
+          0,
+          128,
+          127
+        ],
+        "scaled_literal": null,
+        "truncated_uint32": null,
+        "raw_classification": "overflow",
+        "disposition": "unresolved",
+        "grades": {
+          "numeric": "Unknown",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        },
+        "intermediate_status": {
+          "binary32_round_trip": "applied",
+          "widen_to_float64": "applied",
+          "multiply_by_10": "applied",
+          "truncate_toward_zero_uint32": "not_applied",
+          "low16": "not_applied",
+          "rejected_at": "domain"
+        }
+      }
+    },
+    {
+      "id": "float-negative-0-1",
+      "path": "float64",
+      "operand_literal": "-0.1",
+      "context": {
+        "timer_kind_token": "timer-kind-32",
+        "family": "device-family-32",
+        "software_variant": "software-variant-32",
+        "caller_state": {
+          "module_token": "caller-module-32",
+          "group_token": "caller-group-32",
+          "instance_token": "caller-instance-32",
+          "day_token": "caller-day-32",
+          "constructor_token": "caller-constructor-32",
+          "request_token": "caller-request-32"
+        }
+      },
+      "expect": {
+        "selected_path": "float64",
+        "timer_kind_token": "timer-kind-32",
+        "family": "device-family-32",
+        "software_variant": "software-variant-32",
+        "caller_state": {
+          "module_token": "caller-module-32",
+          "group_token": "caller-group-32",
+          "instance_token": "caller-instance-32",
+          "day_token": "caller-day-32",
+          "constructor_token": "caller-constructor-32",
+          "request_token": "caller-request-32"
+        },
+        "selects_module": false,
+        "selects_group": false,
+        "selects_instance": false,
+        "selects_day": false,
+        "selects_native_constructor": false,
+        "native_family_qualified": false,
+        "carrier_low16": null,
+        "carrier_raw_le": null,
+        "original_literal": "-0.1",
+        "original_raw_le": [
+          154,
+          153,
+          153,
+          153,
+          153,
+          153,
+          185,
+          191
+        ],
+        "rounded_literal": "-0.10000000149011612",
+        "rounded_raw_le": [
+          205,
+          204,
+          204,
+          189
+        ],
+        "scaled_literal": "-1.0000000149011612",
+        "truncated_uint32": null,
+        "raw_classification": "negative",
+        "disposition": "unresolved",
+        "grades": {
+          "numeric": "Unknown",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        },
+        "intermediate_status": {
+          "binary32_round_trip": "applied",
+          "widen_to_float64": "applied",
+          "multiply_by_10": "applied",
+          "truncate_toward_zero_uint32": "not_applied",
+          "low16": "not_applied",
+          "rejected_at": "domain"
+        }
+      }
+    },
+    {
+      "id": "float-negative-one",
+      "path": "float64",
+      "operand_literal": "-1.0",
+      "context": {
+        "timer_kind_token": "timer-kind-33",
+        "family": "device-family-33",
+        "software_variant": "software-variant-33",
+        "caller_state": {
+          "module_token": "caller-module-33",
+          "group_token": "caller-group-33",
+          "instance_token": "caller-instance-33",
+          "day_token": "caller-day-33",
+          "constructor_token": "caller-constructor-33",
+          "request_token": "caller-request-33"
+        }
+      },
+      "expect": {
+        "selected_path": "float64",
+        "timer_kind_token": "timer-kind-33",
+        "family": "device-family-33",
+        "software_variant": "software-variant-33",
+        "caller_state": {
+          "module_token": "caller-module-33",
+          "group_token": "caller-group-33",
+          "instance_token": "caller-instance-33",
+          "day_token": "caller-day-33",
+          "constructor_token": "caller-constructor-33",
+          "request_token": "caller-request-33"
+        },
+        "selects_module": false,
+        "selects_group": false,
+        "selects_instance": false,
+        "selects_day": false,
+        "selects_native_constructor": false,
+        "native_family_qualified": false,
+        "carrier_low16": null,
+        "carrier_raw_le": null,
+        "original_literal": "-1.0",
+        "original_raw_le": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          240,
+          191
+        ],
+        "rounded_literal": "-1.0",
+        "rounded_raw_le": [
+          0,
+          0,
+          128,
+          191
+        ],
+        "scaled_literal": "-10.0",
+        "truncated_uint32": null,
+        "raw_classification": "negative",
+        "disposition": "unresolved",
+        "grades": {
+          "numeric": "Unknown",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        },
+        "intermediate_status": {
+          "binary32_round_trip": "applied",
+          "widen_to_float64": "applied",
+          "multiply_by_10": "applied",
+          "truncate_toward_zero_uint32": "not_applied",
+          "low16": "not_applied",
+          "rejected_at": "domain"
+        }
+      }
+    },
+    {
+      "id": "float-negative-6553-6",
+      "path": "float64",
+      "operand_literal": "-6553.6",
+      "context": {
+        "timer_kind_token": "timer-kind-34",
+        "family": "device-family-34",
+        "software_variant": "software-variant-34",
+        "caller_state": {
+          "module_token": "caller-module-34",
+          "group_token": "caller-group-34",
+          "instance_token": "caller-instance-34",
+          "day_token": "caller-day-34",
+          "constructor_token": "caller-constructor-34",
+          "request_token": "caller-request-34"
+        }
+      },
+      "expect": {
+        "selected_path": "float64",
+        "timer_kind_token": "timer-kind-34",
+        "family": "device-family-34",
+        "software_variant": "software-variant-34",
+        "caller_state": {
+          "module_token": "caller-module-34",
+          "group_token": "caller-group-34",
+          "instance_token": "caller-instance-34",
+          "day_token": "caller-day-34",
+          "constructor_token": "caller-constructor-34",
+          "request_token": "caller-request-34"
+        },
+        "selects_module": false,
+        "selects_group": false,
+        "selects_instance": false,
+        "selects_day": false,
+        "selects_native_constructor": false,
+        "native_family_qualified": false,
+        "carrier_low16": null,
+        "carrier_raw_le": null,
+        "original_literal": "-6553.6",
+        "original_raw_le": [
+          154,
+          153,
+          153,
+          153,
+          153,
+          153,
+          185,
+          192
+        ],
+        "rounded_literal": "-6553.60009765625",
+        "rounded_raw_le": [
+          205,
+          204,
+          204,
+          197
+        ],
+        "scaled_literal": "-65536.0009765625",
+        "truncated_uint32": null,
+        "raw_classification": "negative",
+        "disposition": "unresolved",
+        "grades": {
+          "numeric": "Unknown",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        },
+        "intermediate_status": {
+          "binary32_round_trip": "applied",
+          "widen_to_float64": "applied",
+          "multiply_by_10": "applied",
+          "truncate_toward_zero_uint32": "not_applied",
+          "low16": "not_applied",
+          "rejected_at": "domain"
+        }
+      }
+    },
+    {
+      "id": "float-negative-tiny",
+      "path": "float64",
+      "operand_literal": "-5e-324",
+      "context": {
+        "timer_kind_token": "timer-kind-35",
+        "family": "device-family-35",
+        "software_variant": "software-variant-35",
+        "caller_state": {
+          "module_token": "caller-module-35",
+          "group_token": "caller-group-35",
+          "instance_token": "caller-instance-35",
+          "day_token": "caller-day-35",
+          "constructor_token": "caller-constructor-35",
+          "request_token": "caller-request-35"
+        }
+      },
+      "expect": {
+        "selected_path": "float64",
+        "timer_kind_token": "timer-kind-35",
+        "family": "device-family-35",
+        "software_variant": "software-variant-35",
+        "caller_state": {
+          "module_token": "caller-module-35",
+          "group_token": "caller-group-35",
+          "instance_token": "caller-instance-35",
+          "day_token": "caller-day-35",
+          "constructor_token": "caller-constructor-35",
+          "request_token": "caller-request-35"
+        },
+        "selects_module": false,
+        "selects_group": false,
+        "selects_instance": false,
+        "selects_day": false,
+        "selects_native_constructor": false,
+        "native_family_qualified": false,
+        "carrier_low16": null,
+        "carrier_raw_le": null,
+        "original_literal": "-5e-324",
+        "original_raw_le": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          128
+        ],
+        "rounded_literal": "-0.0",
+        "rounded_raw_le": [
+          0,
+          0,
+          0,
+          128
+        ],
+        "scaled_literal": "-0.0",
+        "truncated_uint32": null,
+        "raw_classification": "negative",
+        "disposition": "unresolved",
+        "grades": {
+          "numeric": "Unknown",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        },
+        "intermediate_status": {
+          "binary32_round_trip": "applied",
+          "widen_to_float64": "applied",
+          "multiply_by_10": "applied",
+          "truncate_toward_zero_uint32": "not_applied",
+          "low16": "not_applied",
+          "rejected_at": "domain"
+        }
+      }
+    },
+    {
+      "id": "float-negative-huge",
+      "path": "float64",
+      "operand_literal": "-1e39",
+      "context": {
+        "timer_kind_token": "timer-kind-36",
+        "family": "device-family-36",
+        "software_variant": "software-variant-36",
+        "caller_state": {
+          "module_token": "caller-module-36",
+          "group_token": "caller-group-36",
+          "instance_token": "caller-instance-36",
+          "day_token": "caller-day-36",
+          "constructor_token": "caller-constructor-36",
+          "request_token": "caller-request-36"
+        }
+      },
+      "expect": {
+        "selected_path": "float64",
+        "timer_kind_token": "timer-kind-36",
+        "family": "device-family-36",
+        "software_variant": "software-variant-36",
+        "caller_state": {
+          "module_token": "caller-module-36",
+          "group_token": "caller-group-36",
+          "instance_token": "caller-instance-36",
+          "day_token": "caller-day-36",
+          "constructor_token": "caller-constructor-36",
+          "request_token": "caller-request-36"
+        },
+        "selects_module": false,
+        "selects_group": false,
+        "selects_instance": false,
+        "selects_day": false,
+        "selects_native_constructor": false,
+        "native_family_qualified": false,
+        "carrier_low16": null,
+        "carrier_raw_le": null,
+        "original_literal": "-1e+39",
+        "original_raw_le": [
+          29,
+          74,
+          156,
+          244,
+          135,
+          130,
+          7,
+          200
+        ],
+        "rounded_literal": null,
+        "rounded_raw_le": [
+          0,
+          0,
+          128,
+          255
+        ],
+        "scaled_literal": null,
+        "truncated_uint32": null,
+        "raw_classification": "negative",
+        "disposition": "unresolved",
+        "grades": {
+          "numeric": "Unknown",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        },
+        "intermediate_status": {
+          "binary32_round_trip": "applied",
+          "widen_to_float64": "applied",
+          "multiply_by_10": "applied",
+          "truncate_toward_zero_uint32": "not_applied",
+          "low16": "not_applied",
+          "rejected_at": "domain"
+        }
+      }
+    },
+    {
+      "id": "float-missing-timer",
+      "path": "float64",
+      "operand_literal": "1.25",
+      "context": {
+        "timer_kind_token": null,
+        "family": "device-family-37",
+        "software_variant": "software-variant-37",
+        "caller_state": {
+          "module_token": "caller-module-37",
+          "group_token": "caller-group-37",
+          "instance_token": "caller-instance-37",
+          "day_token": "caller-day-37",
+          "constructor_token": "caller-constructor-37",
+          "request_token": "caller-request-37"
+        }
+      },
+      "expect": {
+        "selected_path": "float64",
+        "timer_kind_token": null,
+        "family": "device-family-37",
+        "software_variant": "software-variant-37",
+        "caller_state": {
+          "module_token": "caller-module-37",
+          "group_token": "caller-group-37",
+          "instance_token": "caller-instance-37",
+          "day_token": "caller-day-37",
+          "constructor_token": "caller-constructor-37",
+          "request_token": "caller-request-37"
+        },
+        "selects_module": false,
+        "selects_group": false,
+        "selects_instance": false,
+        "selects_day": false,
+        "selects_native_constructor": false,
+        "native_family_qualified": false,
+        "carrier_low16": 12,
+        "carrier_raw_le": [
+          12,
+          0
+        ],
+        "original_literal": "1.25",
+        "original_raw_le": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          244,
+          63
+        ],
+        "rounded_literal": "1.25",
+        "rounded_raw_le": [
+          0,
+          0,
+          160,
+          63
+        ],
+        "scaled_literal": "12.5",
+        "truncated_uint32": 12,
+        "raw_classification": null,
+        "disposition": "resolved",
+        "grades": {
+          "numeric": "Proven",
+          "semantic": "Hypothesis",
+          "native": "Unknown"
+        },
+        "intermediate_status": {
+          "binary32_round_trip": "applied",
+          "widen_to_float64": "applied",
+          "multiply_by_10": "applied",
+          "truncate_toward_zero_uint32": "applied",
+          "low16": "applied",
+          "rejected_at": null
+        }
+      }
+    },
+    {
+      "id": "float-missing-variant",
+      "path": "float64",
+      "operand_literal": "0.7",
+      "context": {
+        "timer_kind_token": "timer-kind-38",
+        "family": "device-family-38",
+        "software_variant": null,
+        "caller_state": {
+          "module_token": "caller-module-38",
+          "group_token": "caller-group-38",
+          "instance_token": "caller-instance-38",
+          "day_token": "caller-day-38",
+          "constructor_token": "caller-constructor-38",
+          "request_token": "caller-request-38"
+        }
+      },
+      "expect": {
+        "selected_path": "float64",
+        "timer_kind_token": "timer-kind-38",
+        "family": "device-family-38",
+        "software_variant": null,
+        "caller_state": {
+          "module_token": "caller-module-38",
+          "group_token": "caller-group-38",
+          "instance_token": "caller-instance-38",
+          "day_token": "caller-day-38",
+          "constructor_token": "caller-constructor-38",
+          "request_token": "caller-request-38"
+        },
+        "selects_module": false,
+        "selects_group": false,
+        "selects_instance": false,
+        "selects_day": false,
+        "selects_native_constructor": false,
+        "native_family_qualified": false,
+        "carrier_low16": 6,
+        "carrier_raw_le": [
+          6,
+          0
+        ],
+        "original_literal": "0.7",
+        "original_raw_le": [
+          102,
+          102,
+          102,
+          102,
+          102,
+          102,
+          230,
+          63
+        ],
+        "rounded_literal": "0.699999988079071",
+        "rounded_raw_le": [
+          51,
+          51,
+          51,
+          63
+        ],
+        "scaled_literal": "6.9999998807907104",
+        "truncated_uint32": 6,
+        "raw_classification": null,
+        "disposition": "resolved",
+        "grades": {
+          "numeric": "Proven",
+          "semantic": "Hypothesis",
+          "native": "Unknown"
+        },
+        "intermediate_status": {
+          "binary32_round_trip": "applied",
+          "widen_to_float64": "applied",
+          "multiply_by_10": "applied",
+          "truncate_toward_zero_uint32": "applied",
+          "low16": "applied",
+          "rejected_at": null
+        }
+      }
+    },
+    {
+      "id": "float-malformed-text",
+      "path": "float64",
+      "operand_literal": "not-a-number",
+      "context": {
+        "timer_kind_token": "timer-kind-39",
+        "family": "device-family-39",
+        "software_variant": "software-variant-39",
+        "caller_state": {
+          "module_token": "caller-module-39",
+          "group_token": "caller-group-39",
+          "instance_token": "caller-instance-39",
+          "day_token": "caller-day-39",
+          "constructor_token": "caller-constructor-39",
+          "request_token": "caller-request-39"
+        }
+      },
+      "expect": {
+        "selected_path": "float64",
+        "timer_kind_token": "timer-kind-39",
+        "family": "device-family-39",
+        "software_variant": "software-variant-39",
+        "caller_state": {
+          "module_token": "caller-module-39",
+          "group_token": "caller-group-39",
+          "instance_token": "caller-instance-39",
+          "day_token": "caller-day-39",
+          "constructor_token": "caller-constructor-39",
+          "request_token": "caller-request-39"
+        },
+        "selects_module": false,
+        "selects_group": false,
+        "selects_instance": false,
+        "selects_day": false,
+        "selects_native_constructor": false,
+        "native_family_qualified": false,
+        "carrier_low16": null,
+        "carrier_raw_le": null,
+        "original_literal": null,
+        "original_raw_le": null,
+        "rounded_literal": null,
+        "rounded_raw_le": null,
+        "scaled_literal": null,
+        "truncated_uint32": null,
+        "raw_classification": "malformed_operand",
+        "disposition": "malformed",
+        "grades": {
+          "numeric": "Unknown",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        },
+        "intermediate_status": {
+          "binary32_round_trip": "not_applied",
+          "widen_to_float64": "not_applied",
+          "multiply_by_10": "not_applied",
+          "truncate_toward_zero_uint32": "not_applied",
+          "low16": "not_applied",
+          "rejected_at": "operand"
+        }
+      }
+    },
+    {
+      "id": "float-malformed-blank",
+      "path": "float64",
+      "operand_literal": "",
+      "context": {
+        "timer_kind_token": "timer-kind-40",
+        "family": "device-family-40",
+        "software_variant": "software-variant-40",
+        "caller_state": {
+          "module_token": "caller-module-40",
+          "group_token": "caller-group-40",
+          "instance_token": "caller-instance-40",
+          "day_token": "caller-day-40",
+          "constructor_token": "caller-constructor-40",
+          "request_token": "caller-request-40"
+        }
+      },
+      "expect": {
+        "selected_path": "float64",
+        "timer_kind_token": "timer-kind-40",
+        "family": "device-family-40",
+        "software_variant": "software-variant-40",
+        "caller_state": {
+          "module_token": "caller-module-40",
+          "group_token": "caller-group-40",
+          "instance_token": "caller-instance-40",
+          "day_token": "caller-day-40",
+          "constructor_token": "caller-constructor-40",
+          "request_token": "caller-request-40"
+        },
+        "selects_module": false,
+        "selects_group": false,
+        "selects_instance": false,
+        "selects_day": false,
+        "selects_native_constructor": false,
+        "native_family_qualified": false,
+        "carrier_low16": null,
+        "carrier_raw_le": null,
+        "original_literal": null,
+        "original_raw_le": null,
+        "rounded_literal": null,
+        "rounded_raw_le": null,
+        "scaled_literal": null,
+        "truncated_uint32": null,
+        "raw_classification": "malformed_operand",
+        "disposition": "malformed",
+        "grades": {
+          "numeric": "Unknown",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        },
+        "intermediate_status": {
+          "binary32_round_trip": "not_applied",
+          "widen_to_float64": "not_applied",
+          "multiply_by_10": "not_applied",
+          "truncate_toward_zero_uint32": "not_applied",
+          "low16": "not_applied",
+          "rejected_at": "operand"
+        }
+      }
+    }
+  ]
+}
