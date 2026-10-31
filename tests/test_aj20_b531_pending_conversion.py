@@ -102,8 +102,13 @@ class PendingConversionContract(unittest.TestCase):
         for number, scale, expected in ARITHMETIC:
             with self.subTest(number=number, scale=scale):
                 self.assertEqual(finite_oracle(number, scale), expected)
-        self.assertNotEqual(math.ceil(123 * 0.1), 12)
-        self.assertNotEqual(4294967296 % (2**32), 4294967295)
+        fractional = self.data['arithmetic'][0]
+        self.assertNotEqual(math.ceil(fractional['number'] *
+                                      10.0 ** fractional['scale']),
+                            fractional['expected'])
+        above_u32 = self.data['arithmetic'][-1]
+        self.assertNotEqual(above_u32['number'] % (2**32),
+                            above_u32['expected'])
 
     def test_page_tables(self):
         def text(value):
