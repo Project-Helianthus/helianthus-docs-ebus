@@ -240,6 +240,7 @@ python3 -m pytest -q -p no:cacheprovider tests/test_system_config_bound_contract
 python3 -m pytest -q tests/test_semantic_snapshot_read_contract.py
 python3 -m pytest -q tests/test_semantic_operation_route_contract.py
 python3 -m pytest -q tests/test_aj17_b516_projection.py
+python3 -m pytest -q tests/test_aj28_ff_local_liveness.py
 python3 -m pytest -q tests/test_aj19_b531_distribution_consumers.py
 
 echo "==> check contribution-driven Portal UX contract"
@@ -282,6 +283,7 @@ python3 -m pytest -q tests/test_b524_operation_docs.py
 python3 -m pytest -q tests/test_b524_register_name_correspondence.py
 python3 -m pytest -q tests/test_b524_name_bridge_contract.py
 python3 -m pytest -q tests/test_b524_provisional_name_evidence.py
+python3 -m pytest -q tests/test_an04_b524_codebook_views.py
 python3 -m pytest -q tests/test_am10_b524_unscoped_hints.py
 python3 -m pytest -q tests/test_ai06_b524_scalar_shapes.py
 echo "==> check canonical register names against the register naming rules"
