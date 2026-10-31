@@ -103,7 +103,7 @@ success or acceptance. The raw counts 0, 10, 11 and 255 remain intact; the
 alternatives and absent metadata. They are examples of declarations, not packet
 captures or evidence of peer effects.
 
-## Vaillant family variants
+## Vaillant variants
 
 **Hypothesis:** candidate layouts for `0x0900`–`0x0902` and the `0x0903`
 request follow the standard layout. Whether the `0x0903` reply is always empty
