@@ -53,7 +53,19 @@ def budget(variant, jobs):
     return False
 
 
+TOP_KEYS = {'grade', 'native_behavior', 'physical_qualification',
+            'runtime_implemented', 'unknown', 'builder', 'variants', 'queue',
+            'lifecycles', 'selection', 'boundaries', 'builders', 'transitions'}
+BUILDER_KEYS = {'id', 'identifier', 'versions', 'number', 'remainder', 'quotient',
+                'quotient_low8', 'output', 'full_identity'}
+TRANSITION_KEYS = {'event', 'target', 'raw', 'local_success', 'full_identity',
+                   'last_known_good', 'other_store', 'scratch'}
+
+
 def validate(c):
+    assert set(c) == TOP_KEYS
+    assert all(set(r) == BUILDER_KEYS for r in c['builders'])
+    assert all(set(r) == TRANSITION_KEYS for r in c['transitions'])
     assert (c['grade'], c['native_behavior'], c['physical_qualification'],
             c['runtime_implemented']) == ('Hypothesis', 'Unknown', 'Unknown', False)
     assert c['unknown'] == dict.fromkeys(UNKNOWN, 'Unknown')
@@ -317,6 +329,30 @@ class AJ27Contract(unittest.TestCase):
                     m['transitions'][i][field]='fabricated'
                     with self.assertRaises((AssertionError,KeyError)):
                         validate(m)
+
+    def test_extra_or_missing_fields_rejected(self):
+        claims = (('admission', True), ('physical_qualification', 'Proven'))
+        records = [(None, 'top')] + [(('builders', i), 'builder') for i in range(3)] \
+            + [(('transitions', i), 'transition') for i in range(3)]
+        for loc, name in records:
+            for key, value in claims:
+                if loc is None and key == 'physical_qualification':
+                    continue
+                with self.subTest(record=loc, key=key):
+                    m = copy.deepcopy(self.c)
+                    node = m if loc is None else m[loc[0]][loc[1]]
+                    node[key] = value
+                    with self.assertRaises(AssertionError):
+                        validate(m)
+            if loc is not None:
+                m = copy.deepcopy(self.c)
+                del m[loc[0]][loc[1]]['full_identity']
+                with self.assertRaises(AssertionError):
+                    validate(m)
+        m = copy.deepcopy(self.c)
+        m['builders'][0]['physical_qualification'] = 'Proven'
+        with self.assertRaises(AssertionError):
+            validate(m)
 
     def test_selection_paths_and_predicates(self):
         for condition in (True,False,None):
