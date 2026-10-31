@@ -1,0 +1,275 @@
+{
+  "contract": "AM04",
+  "provenance": "synthetic; no physical qualification",
+  "native_support": "Unknown",
+  "bindings": [
+    {
+      "context": {
+        "family": "controller-720",
+        "software": 0,
+        "hardware": 0,
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 1,
+        "instance": 0,
+        "register": 4
+      },
+      "codec": "float32",
+      "declared_unit": "°C",
+      "codec_grade": "Hypothesis",
+      "examples": [
+        {
+          "reply": {
+            "kind": "echo_payload",
+            "returned_group": 1,
+            "returned_register": 4,
+            "value_hex": "0000c03f"
+          },
+          "value": 1.5,
+          "value_grade": "Hypothesis"
+        },
+        {
+          "reply": {
+            "kind": "echo_payload",
+            "returned_group": 1,
+            "returned_register": 4,
+            "value_hex": "000080bf"
+          },
+          "value": -1,
+          "value_grade": "Hypothesis"
+        },
+        {
+          "reply": {
+            "kind": "echo_payload",
+            "returned_group": 1,
+            "returned_register": 4,
+            "value_hex": "0000807f"
+          },
+          "value": null,
+          "value_grade": "Unknown"
+        }
+      ]
+    },
+    {
+      "context": {
+        "family": "controller-720",
+        "software": 0,
+        "hardware": 0,
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 1,
+        "instance": 0,
+        "register": 5
+      },
+      "codec": "float32",
+      "declared_unit": "°C",
+      "codec_grade": "Hypothesis",
+      "examples": [
+        {
+          "reply": {
+            "kind": "echo_payload",
+            "returned_group": 1,
+            "returned_register": 5,
+            "value_hex": "0000c03f"
+          },
+          "value": 1.5,
+          "value_grade": "Hypothesis"
+        },
+        {
+          "reply": {
+            "kind": "echo_payload",
+            "returned_group": 1,
+            "returned_register": 5,
+            "value_hex": "000080bf"
+          },
+          "value": -1,
+          "value_grade": "Hypothesis"
+        },
+        {
+          "reply": {
+            "kind": "echo_payload",
+            "returned_group": 1,
+            "returned_register": 5,
+            "value_hex": "0000807f"
+          },
+          "value": null,
+          "value_grade": "Unknown"
+        }
+      ]
+    },
+    {
+      "context": {
+        "family": "controller-720",
+        "software": 0,
+        "hardware": 0,
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 9,
+        "instance": 0,
+        "register": 13
+      },
+      "codec": "uint16",
+      "declared_unit": "Unknown",
+      "codec_grade": "Hypothesis",
+      "examples": [
+        {
+          "reply": {
+            "kind": "echo_payload",
+            "returned_group": 9,
+            "returned_register": 13,
+            "value_hex": "3412"
+          },
+          "value": 4660,
+          "value_grade": "Hypothesis"
+        },
+        {
+          "reply": {
+            "kind": "echo_payload",
+            "returned_group": 9,
+            "returned_register": 13,
+            "value_hex": "ffff"
+          },
+          "value": 65535,
+          "value_grade": "Hypothesis"
+        }
+      ]
+    },
+    {
+      "context": {
+        "family": "controller-720",
+        "software": 0,
+        "hardware": 0,
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 9,
+        "instance": 0,
+        "register": 14
+      },
+      "codec": "uint16",
+      "declared_unit": "Unknown",
+      "codec_grade": "Hypothesis",
+      "examples": [
+        {
+          "reply": {
+            "kind": "echo_payload",
+            "returned_group": 9,
+            "returned_register": 14,
+            "value_hex": "3412"
+          },
+          "value": 4660,
+          "value_grade": "Hypothesis"
+        },
+        {
+          "reply": {
+            "kind": "echo_payload",
+            "returned_group": 9,
+            "returned_register": 14,
+            "value_hex": "ffff"
+          },
+          "value": 65535,
+          "value_grade": "Hypothesis"
+        }
+      ]
+    },
+    {
+      "context": {
+        "family": "controller-700",
+        "software": 0,
+        "hardware": 0,
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 1,
+        "instance": 0,
+        "register": 4
+      },
+      "codec": "float32",
+      "declared_unit": "°C",
+      "codec_grade": "Hypothesis",
+      "examples": [
+        {
+          "reply": {
+            "kind": "echo_payload",
+            "returned_group": 1,
+            "returned_register": 4,
+            "value_hex": "0000c03f"
+          },
+          "value": 1.5,
+          "value_grade": "Hypothesis"
+        },
+        {
+          "reply": {
+            "kind": "echo_payload",
+            "returned_group": 1,
+            "returned_register": 4,
+            "value_hex": "000080bf"
+          },
+          "value": -1,
+          "value_grade": "Hypothesis"
+        },
+        {
+          "reply": {
+            "kind": "echo_payload",
+            "returned_group": 1,
+            "returned_register": 4,
+            "value_hex": "0000807f"
+          },
+          "value": null,
+          "value_grade": "Unknown"
+        }
+      ]
+    },
+    {
+      "context": {
+        "family": "controller-700",
+        "software": 0,
+        "hardware": 0,
+        "api_version": 0,
+        "api_revision": 0,
+        "opcode": 2,
+        "group": 1,
+        "instance": 0,
+        "register": 5
+      },
+      "codec": "float32",
+      "declared_unit": "°C",
+      "codec_grade": "Hypothesis",
+      "examples": [
+        {
+          "reply": {
+            "kind": "echo_payload",
+            "returned_group": 1,
+            "returned_register": 5,
+            "value_hex": "0000c03f"
+          },
+          "value": 1.5,
+          "value_grade": "Hypothesis"
+        },
+        {
+          "reply": {
+            "kind": "echo_payload",
+            "returned_group": 1,
+            "returned_register": 5,
+            "value_hex": "000080bf"
+          },
+          "value": -1,
+          "value_grade": "Hypothesis"
+        },
+        {
+          "reply": {
+            "kind": "echo_payload",
+            "returned_group": 1,
+            "returned_register": 5,
+            "value_hex": "0000807f"
+          },
+          "value": null,
+          "value_grade": "Unknown"
+        }
+      ]
+    }
+  ]
+}
