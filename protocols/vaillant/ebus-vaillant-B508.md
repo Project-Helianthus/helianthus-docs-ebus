@@ -171,6 +171,11 @@ separately qualified candidate layouts above.
 | OP0B | tank-one flag byte | 4 | bit 0 = flag; bits 1..7 reserved | Unknown | Hypothesis |
 | OP0B | tank-two flag byte | 5 | bit 0 = flag; bits 1..7 reserved | Unknown | Hypothesis |
 
+Cycle-pause is a **Hypothesis** candidate label at logical position 3.
+Here, "interpretation unresolved" leaves its physical meaning and operational
+default **Unknown**; the earlier candidate flag declaration remains a separate
+qualified layout.
+
 Each tank byte is unsigned and one byte wide. Its candidate flag conversion is
 `(raw & 1) >> 0`; 0 means flag clear and 1 means flag set. No bit in one tank
 byte supplies the other tank's state. Preserve the complete raw bytes, including
