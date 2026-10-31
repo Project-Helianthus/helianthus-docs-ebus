@@ -239,6 +239,8 @@ python3 -m pytest -q tests/test_graphql_face_provenance_checker.py
 python3 -m pytest -q -p no:cacheprovider tests/test_system_config_bound_contract.py
 python3 -m pytest -q tests/test_semantic_snapshot_read_contract.py
 python3 -m pytest -q tests/test_semantic_operation_route_contract.py
+python3 -m pytest -q tests/test_aj28_ff_local_liveness.py
+python3 -m pytest -q tests/test_aj19_b531_distribution_consumers.py
 
 echo "==> check contribution-driven Portal UX contract"
 python3 scripts/check_portal_ux_contract.py
@@ -251,6 +253,16 @@ python3 -m pytest -q tests/test_public_domain_boundary.py
 echo "==> check Vaillant B503 milestone contract"
 python3 scripts/check_vaillant_b503_milestones.py
 python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py
+python3 -m pytest -q tests/test_ae14_b510_candidates.py
+
+echo "==> check AI-28 B510/B511 local-cache contract"
+python3 -m pytest -q tests/test_ai28_b510_b511_local_cache.py
+
+echo "==> check AI=22 B523 sensor-field contract"
+python3 -m pytest -q tests/test_ai22_b523_sensor_fields.py
+
+echo "==> check B506 scoped candidate declarations"
+python3 -m pytest -q tests/test_ae06_b506_candidates.py
 
 echo "==> check Vaillant B505 sentinel and override candidates"
 python3 -m pytest -q tests/test_ae04_b505_candidates.py
@@ -258,8 +270,14 @@ python3 -m pytest -q tests/test_ae04_b505_candidates.py
 echo "==> check B510 capability-cache query transition contract"
 python3 -m unittest discover -s tests -p 'test_ao12_b510_cache_transition.py' -v
 
+echo "==> check B51A diagnostic variants and replication flags"
+python3 -m pytest -q tests/test_aj08_b51a_diagnostic_variants.py
+
 echo "==> check B520 simulator actuator and ADC declarations"
 python3 -m pytest -q tests/test_ac20_simulator_adc.py
+
+echo "==> check B522 candidate demand and scalar API results"
+python3 -m unittest discover -s tests -p 'test_ao26_b522_demand_views.py' -v
 
 echo "==> check B509/B524 passive watch-policy documentation contract"
 python3 -m pytest -q tests/test_watch_policy_contract.py
@@ -267,12 +285,16 @@ python3 -m pytest -q tests/test_b524_operation_docs.py
 python3 -m pytest -q tests/test_b524_register_name_correspondence.py
 python3 -m pytest -q tests/test_b524_name_bridge_contract.py
 python3 -m pytest -q tests/test_b524_provisional_name_evidence.py
+python3 -m pytest -q tests/test_an04_b524_codebook_views.py
+python3 -m pytest -q tests/test_am10_b524_unscoped_hints.py
 python3 -m pytest -q tests/test_ai06_b524_scalar_shapes.py
 echo "==> check canonical register names against the register naming rules"
 python3 scripts/check_register_names.py
 python3 -m pytest -q tests/test_register_names.py
 echo "==> check B509 register name correspondence fixture"
 python3 -m pytest -q tests/test_b509_register_name_correspondence.py
+python3 -m pytest -q tests/test_an08_b509_constraint_word_views.py
+python3 -m pytest -q tests/test_ai14_b514_menu_feedback.py
 python3 scripts/validate_b524_op06_observed_windows.py \
   protocols/vaillant/fixtures/b524-op06-observed-windows-v1.json
 echo "==> check BASV0 parameter-description profile"
@@ -311,6 +333,7 @@ done
 jv development/fixtures/b524-operation-edit-plan-schema-v1.json development/fixtures/b524-operation-edit-plan-synthetic-v1.json
 jv development/fixtures/b524-native-write-qualification-schema-v1.json development/fixtures/b524-native-write-qualification-synthetic-v1.json
 python3 -m pytest -q tests/test_b524_operation_reads.py
+python3 -m pytest -q tests/test_al08_b524_system_information.py
 
 echo "==> check cross-runtime platform contracts (MSP-DOCS-CLEAN)"
 python3 -m pytest -q tests/test_m625_cross_seed_contract.py
