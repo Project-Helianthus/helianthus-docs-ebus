@@ -16,16 +16,18 @@ For detailed coverage of selector-heavy identifiers, see:
 - `0xB5 0x12` (B512, circulation pump / VR65-style state): [`ebus-vaillant-B512.md`](ebus-vaillant-B512.md)
 - `0xB5 0x13` (B513, value-range query): [`ebus-vaillant-B513.md`](ebus-vaillant-B513.md)
 - `0xB5 0x14` (B514, service test-menu values): [`ebus-vaillant-B514.md`](ebus-vaillant-B514.md)
+  — [diagnostic-menu feedback and pressure candidates supplement](ebus-b514-menu-feedback.md) (**Hypothesis**)
 - `0xB5 0x15` (B515, legacy timer template): [`ebus-vaillant-B515.md`](ebus-vaillant-B515.md)
 - `0xB5 0x16` (B516, Energy statistics): [`ebus-vaillant-B516-energy.md`](ebus-vaillant-B516-energy.md)
 - `0xB5 0x1A` (B51A, heat-pump statistics and live-monitor): [`ebus-vaillant-B51A.md`](ebus-vaillant-B51A.md)
+- `0xB5 0x20` (B520, simulator actuator ranges and ADC quantities): [`ebus-vaillant-B520.md`](ebus-vaillant-B520.md)
 - `0xB5 0x21` (B521, OMU service registers): [`ebus-vaillant-B521.md`](ebus-vaillant-B521.md)
 - `0xB5 0x22` (B522, recoVAIR ventilation commands): [`ebus-vaillant-B522.md`](ebus-vaillant-B522.md)
 - `0xB5 0x23` (B523, functional-module actor/sensor data): [`ebus-vaillant-B523.md`](ebus-vaillant-B523.md)
 - `0xB5 0x24` (B524, GetExtendedRegisters): [`ebus-vaillant-B524.md`](ebus-vaillant-B524.md)
 - `0xB5 0x55` (B555, timer/schedule protocol): [`ebus-vaillant-b555-timer-protocol.md`](ebus-vaillant-b555-timer-protocol.md)
 - VR90 room controller protocol: [`ebus-vaillant-vr90-emulation.md`](ebus-vaillant-vr90-emulation.md)
-- B5 services without a dedicated page (B501, B502, B50A, B50C, B50D, B50F, B517 to B519, B520, B525, header-only identities): [Other B5 services](#other-b5-services-candidate-layouts)
+- B5 services without a dedicated page (B501, B502, B50A, B50C, B50D, B50F, B517 to B519, B525, header-only identities): [Other B5 services](#other-b5-services-candidate-layouts)
 
 ## Scope
 
@@ -476,8 +478,9 @@ On heat pump systems with VWZIO (0x76), B511 traffic involving that device has a
 
 ## Other B5 services (candidate layouts)
 
-The services below have no dedicated page. Every layout in this section is a
-candidate layout, unconfirmed on the wire. No exchange of any of these services
+The services below have no dedicated page except for
+[B520](ebus-vaillant-B520.md). Every layout in this section is a candidate layout,
+unconfirmed on the wire. No exchange of any of these services
 on the wire is known (see [Open questions](#open-questions)). No service in this
 section is documented as safe to send; the state-changing ones (including, but
 not limited to, the B501 write, the `B5 09 35` write, the B50B writes, the B519

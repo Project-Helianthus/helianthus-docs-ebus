@@ -227,7 +227,8 @@ def test_rollout_is_mcp_first_and_one_release_acceptance_is_explicit() -> None:
         "one consolidated add-on release",
         "one multi-architecture build",
         "one CI/CD publication",
-        "all three driver IDs",
+        "all registered driver IDs, including configured-disabled entries, are listed "
+        "using only the closed G5 wire projection, without unregistered placeholders;",
         "startup failure injection",
         "process remains ready",
     ):

@@ -1,0 +1,160 @@
+{
+  "grade": "Hypothesis",
+  "native_behavior": "Unknown",
+  "qualification": "Unknown",
+  "implemented": false,
+  "unknowns": {
+    "integral_units": "Unknown",
+    "capability_formula": "Unknown",
+    "capability_result": "Unknown",
+    "capability_units": "Unknown",
+    "eligibility_predicates": "Unknown",
+    "cadence": "Unknown",
+    "native_identity": "Unknown",
+    "replay_a": "Unknown",
+    "replay_b": "Unknown"
+  },
+  "reset": {
+    "before": {
+      "cap": 11,
+      "sequence": 2,
+      "limited": true,
+      "changed": true,
+      "current_integral": 7,
+      "aggregate_integral": 19,
+      "sequence_count": 4,
+      "energy_flag": true,
+      "counter": 3,
+      "gates": 5
+    },
+    "arguments": {
+      "new_current": 0,
+      "new_energy": false
+    },
+    "after": {
+      "cap": 11,
+      "sequence": 2,
+      "limited": true,
+      "changed": true,
+      "current_integral": 0,
+      "aggregate_integral": 19,
+      "sequence_count": 4,
+      "energy_flag": false,
+      "counter": 3,
+      "gates": 5
+    }
+  },
+  "status": [
+    {
+      "raw": 0,
+      "class": "in_range"
+    },
+    {
+      "raw": 1,
+      "class": "in_range"
+    },
+    {
+      "raw": 2,
+      "class": "in_range"
+    },
+    {
+      "raw": 3,
+      "class": "in_range"
+    },
+    {
+      "raw": 4,
+      "class": "in_range"
+    },
+    {
+      "raw": 5,
+      "class": "above_range"
+    }
+  ],
+  "markers": [
+    {
+      "width": 32,
+      "raw": "FFFFFFFF",
+      "class": "null"
+    },
+    {
+      "width": 32,
+      "raw": 0,
+      "class": "value"
+    },
+    {
+      "width": 16,
+      "raw": "FFFF",
+      "class": "null"
+    },
+    {
+      "width": 16,
+      "raw": 0,
+      "class": "value"
+    }
+  ],
+  "use_cases": [
+    "limit-control",
+    "temperature-control"
+  ],
+  "completion": {
+    "variant": "ignored_completion",
+    "before": 9,
+    "requested": 12,
+    "completion": false,
+    "after": 12
+  },
+  "replay": [
+    {
+      "variant": "replay_a",
+      "behavior": "Unknown"
+    },
+    {
+      "variant": "replay_b",
+      "behavior": "Unknown"
+    }
+  ],
+  "recalculation": [
+    {
+      "variant": "direct",
+      "mode": "direct_recalculation"
+    },
+    {
+      "variant": "timer",
+      "mode": "timer_driven_recalculation"
+    }
+  ],
+  "job": {
+    "label": "daily",
+    "cadence": "Unknown"
+  },
+  "acknowledgments": [
+    {
+      "operation": "set_limit",
+      "acknowledged": true,
+      "executed": false
+    },
+    {
+      "operation": "set_limited",
+      "acknowledged": true,
+      "executed": false
+    }
+  ],
+  "capability": {
+    "inputs": {
+      "input_a": 3,
+      "input_b": 8
+    },
+    "formula": "Unknown",
+    "result": "Unknown"
+  },
+  "partial": {
+    "raw": [
+      7,
+      19
+    ],
+    "last_known_good": 7,
+    "requested": 12,
+    "observed": "Unknown",
+    "admitted": false
+  }
+}
