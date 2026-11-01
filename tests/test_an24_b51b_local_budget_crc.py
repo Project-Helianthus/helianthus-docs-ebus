@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import copy
 import json
-import os
 import re
 import unittest
 from pathlib import Path
@@ -734,14 +733,14 @@ def advance_with_rules(prior, accepted, actual, width_bits, overflow, add_when_r
     limit = 1 << width_bits
     prior_int = _as_int(prior, bool_is_integer)
     actual_int = _as_int(actual, bool_is_integer)
+    prior_known = prior_int if prior_int is not None and 0 <= prior_int < limit else None
     if prior_int is None or actual_int is None:
         return {
             "outcome": "rejected",
             "reason": "malformed_integer",
-            "last_known_good": None,
+            "last_known_good": prior_known,
             "next": None,
         }
-    prior_known = prior_int if 0 <= prior_int < limit else None
     if not isinstance(accepted, bool):
         return {
             "outcome": "rejected",
@@ -1680,6 +1679,22 @@ class BudgetAndChecksumHelpers(unittest.TestCase):
             self.assertIsNone(got["next"], bad)
             self.assertEqual(got["last_known_good"], 10, bad)
 
+    def test_malformed_actual_counts_preserve_valid_prior_progress(self):
+        for prior in (0, 10, UINT64_MAX):
+            for accepted in (True, False):
+                for actual in (None, True, False, "17", 17.0, []):
+                    with self.subTest(prior=prior, accepted=accepted, actual=actual):
+                        got = advance_reference(prior, accepted, actual)
+                        self.assertEqual(got["outcome"], "rejected")
+                        self.assertEqual(got["reason"], "malformed_integer")
+                        self.assertEqual(got["last_known_good"], prior)
+                        self.assertIsNone(got["next"])
+        for prior in (None, True, -1, UINT64_MAX + 1):
+            with self.subTest(prior=prior):
+                got = advance_reference(prior, True, None)
+                self.assertIsNone(got["last_known_good"])
+                self.assertIsNone(got["next"])
+
     def test_progress_overflow_and_negative_counts_fail_closed(self):
         overflow = advance_reference(UINT64_MAX, True, 1)
         self.assertEqual(overflow["reason"], "overflow")
@@ -1845,7 +1860,6 @@ class PublishedContract(unittest.TestCase):
             "default_initial_0": ("crc.initial_default", "65535", "0", "behavior:crc:0:9:None"),
             "bit_order_lsb": ("crc.bit_order", "msb_first", "lsb_first", "behavior:crc:0:9:None"),
         }
-        root = Path(os.environ.get("TMPDIR", str(ROOT / ".tmp"))) / "an24-mutants"
         for name, (key, old, new, fragment) in mutants.items():
             for side in ("page", "fixture"):
                 with self.subTest(mutant=name, side=side):
@@ -1855,17 +1869,7 @@ class PublishedContract(unittest.TestCase):
                     else:
                         fixture = copy.deepcopy(fixture)
                         fixture["policy"][key] = new
-                    directory = root / name / side
-                    directory.mkdir(parents=True, exist_ok=True)
-                    page_path = directory / "page.md"
-                    fixture_path = directory / "fixture.json"
-                    page_path.write_text(page)
-                    fixture_path.write_text(json.dumps(fixture))
-                    errors = contract_errors(
-                        page_path.read_text(),
-                        json.loads(fixture_path.read_text()),
-                        PAGE,
-                    )
+                    errors = contract_errors(page, fixture, PAGE)
                     self.assertTrue(self._mutant_detected(errors, side, fragment), errors)
 
         with self.subTest(mutant="final_xor_collusion"):
