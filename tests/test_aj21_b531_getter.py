@@ -45,7 +45,7 @@ def expected_fixture():
             'raw_outcome': 'failed', 'after': copy.deepcopy(before),
             'preceding_metadata': old_metadata,
             'retained_metadata': copy.deepcopy(old_metadata),
-            'new_metadata': {}, 'freshness': 'Unknown',
+            'new_metadata': {}, 'freshness': False,
         })
     getter = []
     for value in (0, 9, 10, 655359, 655360, 4294967295):
@@ -94,9 +94,9 @@ def expected_tables():
          ['Physical cadence', 'Unknown']],
         [['Case', 'Before min', 'Before max', 'Read outcome', 'After min',
           'After max', 'Freshness', 'New metadata'],
-         ['base', '4', '7', 'failed', '4', '7', 'Unknown', 'none'],
-         ['minimum-only', '5', '7', 'failed', '5', '7', 'Unknown', 'none'],
-         ['maximum-only', '4', '8', 'failed', '4', '8', 'Unknown', 'none']],
+         ['base', '4', '7', 'failed', '4', '7', 'false', 'none'],
+         ['minimum-only', '5', '7', 'failed', '5', '7', 'false', 'none'],
+         ['maximum-only', '4', '8', 'failed', '4', '8', 'false', 'none']],
         [['Raw u32', 'Floor quotient', 'Low16 result'],
          ['0', '0', '0'], ['9', '0', '0'], ['10', '1', '1'],
          ['655359', '65535', '65535'], ['655360', '65536', '0'],
@@ -239,7 +239,8 @@ class AJ21Contract(unittest.TestCase):
         original = json.loads((root / FIXTURE).read_text())
         mutations = [
             (('cache_cases', 0, 'after'), {'min': None, 'max': None}),
-            (('cache_cases', 0, 'freshness'), 'fresh'),
+            (('cache_cases', 0, 'freshness'), 'Unknown'),
+            (('cache_cases', 0, 'freshness'), True),
             (('grade',), 'Proven'),
             (('unknown', 'native_behavior'), 'Proven'),
             (('getter_cases', 5, 'result'), 6553),

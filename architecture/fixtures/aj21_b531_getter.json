@@ -34,7 +34,7 @@
         "quality": "Unknown"
       },
       "new_metadata": {},
-      "freshness": "Unknown"
+      "freshness": false
     },
     {
       "case": "minimum-only",
@@ -55,7 +55,7 @@
         "quality": "Unknown"
       },
       "new_metadata": {},
-      "freshness": "Unknown"
+      "freshness": false
     },
     {
       "case": "maximum-only",
@@ -76,7 +76,7 @@
         "quality": "Unknown"
       },
       "new_metadata": {},
-      "freshness": "Unknown"
+      "freshness": false
     }
   ],
   "getter_cases": [

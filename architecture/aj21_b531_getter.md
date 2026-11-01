@@ -32,15 +32,16 @@ from this page. Missing evidence keeps admission closed.
 
 For this candidate, an OP02 failure retains the preceding cached minimum and
 maximum independently. Preserve the failed raw outcome alongside that last-known-good
-state. The failure adds no fresh metadata; retained values do not establish
-freshness. A preceding metadata record remains separate from new metadata.
+state. A failed attempt has freshness `false`, matching `FreshPair`; retained
+values cannot make the pair fresh. The failure adds no fresh metadata. A preceding
+metadata record remains separate from new metadata.
 The following are synthetic controls, with no capture or installation identity.
 
 | Case | Before min | Before max | Read outcome | After min | After max | Freshness | New metadata |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| base | 4 | 7 | failed | 4 | 7 | Unknown | none |
-| minimum-only | 5 | 7 | failed | 5 | 7 | Unknown | none |
-| maximum-only | 4 | 8 | failed | 4 | 8 | Unknown | none |
+| base | 4 | 7 | failed | 4 | 7 | false | none |
+| minimum-only | 5 | 7 | failed | 5 | 7 | false | none |
+| maximum-only | 4 | 8 | failed | 4 | 8 | false | none |
 
 ## Getter arithmetic
 
