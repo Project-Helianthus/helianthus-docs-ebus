@@ -1,0 +1,1393 @@
+{
+  "provenance": "synthetic; no physical PDU",
+  "selectors": {
+    "family": "vaillant",
+    "variant": "B50F",
+    "primary": 181,
+    "secondary": 15,
+    "operation": 2,
+    "direction": null
+  },
+  "grade": "Hypothesis",
+  "coordinate_grade": "Unknown",
+  "qualification": "Unknown",
+  "position": null,
+  "cases": [
+    {
+      "case": "container_1_bit_0_raw_0",
+      "raw": {
+        "status_container_1": 1,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 254,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_1_bit_0_raw_1",
+      "raw": {
+        "status_container_1": 1,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 254
+      }
+    },
+    {
+      "case": "container_1_bit_1_raw_0",
+      "raw": {
+        "status_container_1": 2,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 253,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_1_bit_1_raw_1",
+      "raw": {
+        "status_container_1": 2,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 253
+      }
+    },
+    {
+      "case": "container_1_bit_2_raw_0",
+      "raw": {
+        "status_container_1": 4,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 251,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_1_bit_2_raw_1",
+      "raw": {
+        "status_container_1": 4,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 251
+      }
+    },
+    {
+      "case": "container_1_bit_3_raw_0",
+      "raw": {
+        "status_container_1": 8,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 247,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_1_bit_3_raw_1",
+      "raw": {
+        "status_container_1": 8,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 247
+      }
+    },
+    {
+      "case": "container_1_bit_4_raw_0",
+      "raw": {
+        "status_container_1": 16,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 239,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_1_bit_4_raw_1",
+      "raw": {
+        "status_container_1": 16,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 239
+      }
+    },
+    {
+      "case": "container_1_bit_5_raw_0",
+      "raw": {
+        "status_container_1": 32,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 223,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_1_bit_5_raw_1",
+      "raw": {
+        "status_container_1": 32,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 223
+      }
+    },
+    {
+      "case": "container_1_bit_6_raw_0",
+      "raw": {
+        "status_container_1": 64,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 191,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_1_bit_6_raw_1",
+      "raw": {
+        "status_container_1": 64,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 191
+      }
+    },
+    {
+      "case": "container_1_bit_7_raw_0",
+      "raw": {
+        "status_container_1": 128,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 127,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_1_bit_7_raw_1",
+      "raw": {
+        "status_container_1": 128,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 127
+      }
+    },
+    {
+      "case": "container_2_bit_0_raw_0",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 1,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 254,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_2_bit_0_raw_1",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 1,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 254
+      }
+    },
+    {
+      "case": "container_2_bit_1_raw_0",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 2,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 253,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_2_bit_1_raw_1",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 2,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 253
+      }
+    },
+    {
+      "case": "container_2_bit_2_raw_0",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 4,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 251,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_2_bit_2_raw_1",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 4,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 251
+      }
+    },
+    {
+      "case": "container_2_bit_3_raw_0",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 8,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 247,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_2_bit_3_raw_1",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 8,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 247
+      }
+    },
+    {
+      "case": "container_2_bit_4_raw_0",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 16,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 239,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_2_bit_4_raw_1",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 16,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 239
+      }
+    },
+    {
+      "case": "container_2_bit_5_raw_0",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 32,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 223,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_2_bit_5_raw_1",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 32,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 223
+      }
+    },
+    {
+      "case": "container_2_bit_6_raw_0",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 64,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 191,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_2_bit_6_raw_1",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 64,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 191
+      }
+    },
+    {
+      "case": "container_2_bit_7_raw_0",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 128,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 127,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_2_bit_7_raw_1",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 128,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 127
+      }
+    },
+    {
+      "case": "container_3_bit_0_raw_0",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 1,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 254,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_3_bit_0_raw_1",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 1,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 254
+      }
+    },
+    {
+      "case": "container_3_bit_1_raw_0",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 2,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 253,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_3_bit_1_raw_1",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 2,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 253
+      }
+    },
+    {
+      "case": "container_3_bit_2_raw_0",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 4,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 251,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_3_bit_2_raw_1",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 4,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 251
+      }
+    },
+    {
+      "case": "container_3_bit_3_raw_0",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 8,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 247,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_3_bit_3_raw_1",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 8,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 247
+      }
+    },
+    {
+      "case": "container_3_bit_4_raw_0",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 16,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 239,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_3_bit_4_raw_1",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 16,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 239
+      }
+    },
+    {
+      "case": "container_3_bit_5_raw_0",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 32,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 223,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_3_bit_5_raw_1",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 32,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 223
+      }
+    },
+    {
+      "case": "container_3_bit_6_raw_0",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 64,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 191,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_3_bit_6_raw_1",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 64,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 191
+      }
+    },
+    {
+      "case": "container_3_bit_7_raw_0",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 128,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 127,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_3_bit_7_raw_1",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 128,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 127
+      }
+    },
+    {
+      "case": "container_4_bit_0_raw_0",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 1,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 254,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_4_bit_0_raw_1",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 1,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 254
+      }
+    },
+    {
+      "case": "container_4_bit_1_raw_0",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 2,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 253,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_4_bit_1_raw_1",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 2,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 253
+      }
+    },
+    {
+      "case": "container_4_bit_2_raw_0",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 4,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 251,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_4_bit_2_raw_1",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 4,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 251
+      }
+    },
+    {
+      "case": "container_4_bit_3_raw_0",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 8,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 247,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_4_bit_3_raw_1",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 8,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 247
+      }
+    },
+    {
+      "case": "container_4_bit_4_raw_0",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 16,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 239,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_4_bit_4_raw_1",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 16,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 239
+      }
+    },
+    {
+      "case": "container_4_bit_5_raw_0",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 32,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 223,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_4_bit_5_raw_1",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 32,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 223
+      }
+    },
+    {
+      "case": "container_4_bit_6_raw_0",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 64,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 191,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_4_bit_6_raw_1",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 64,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 191
+      }
+    },
+    {
+      "case": "container_4_bit_7_raw_0",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 128,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 127,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_4_bit_7_raw_1",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 128,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 127
+      }
+    },
+    {
+      "case": "container_5_bit_0_raw_0",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 1,
+        "status_container_6": 0,
+        "burner_status": 254,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_5_bit_0_raw_1",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 1,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 254
+      }
+    },
+    {
+      "case": "container_5_bit_1_raw_0",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 2,
+        "status_container_6": 0,
+        "burner_status": 253,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_5_bit_1_raw_1",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 2,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 253
+      }
+    },
+    {
+      "case": "container_5_bit_2_raw_0",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 4,
+        "status_container_6": 0,
+        "burner_status": 251,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_5_bit_2_raw_1",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 4,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 251
+      }
+    },
+    {
+      "case": "container_5_bit_3_raw_0",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 8,
+        "status_container_6": 0,
+        "burner_status": 247,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_5_bit_3_raw_1",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 8,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 247
+      }
+    },
+    {
+      "case": "container_5_bit_4_raw_0",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 16,
+        "status_container_6": 0,
+        "burner_status": 239,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_5_bit_4_raw_1",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 16,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 239
+      }
+    },
+    {
+      "case": "container_5_bit_5_raw_0",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 32,
+        "status_container_6": 0,
+        "burner_status": 223,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_5_bit_5_raw_1",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 32,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 223
+      }
+    },
+    {
+      "case": "container_5_bit_6_raw_0",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 64,
+        "status_container_6": 0,
+        "burner_status": 191,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_5_bit_6_raw_1",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 64,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 191
+      }
+    },
+    {
+      "case": "container_5_bit_7_raw_0",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 128,
+        "status_container_6": 0,
+        "burner_status": 127,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_5_bit_7_raw_1",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 128,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 127
+      }
+    },
+    {
+      "case": "container_6_bit_0_raw_0",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 1,
+        "burner_status": 254,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_6_bit_0_raw_1",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 1,
+        "burner_status": 0,
+        "gas_pump_status": 254
+      }
+    },
+    {
+      "case": "container_6_bit_1_raw_0",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 2,
+        "burner_status": 253,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_6_bit_1_raw_1",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 2,
+        "burner_status": 0,
+        "gas_pump_status": 253
+      }
+    },
+    {
+      "case": "container_6_bit_2_raw_0",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 4,
+        "burner_status": 251,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_6_bit_2_raw_1",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 4,
+        "burner_status": 0,
+        "gas_pump_status": 251
+      }
+    },
+    {
+      "case": "container_6_bit_3_raw_0",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 8,
+        "burner_status": 247,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_6_bit_3_raw_1",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 8,
+        "burner_status": 0,
+        "gas_pump_status": 247
+      }
+    },
+    {
+      "case": "container_6_bit_4_raw_0",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 16,
+        "burner_status": 239,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_6_bit_4_raw_1",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 16,
+        "burner_status": 0,
+        "gas_pump_status": 239
+      }
+    },
+    {
+      "case": "container_6_bit_5_raw_0",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 32,
+        "burner_status": 223,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_6_bit_5_raw_1",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 32,
+        "burner_status": 0,
+        "gas_pump_status": 223
+      }
+    },
+    {
+      "case": "container_6_bit_6_raw_0",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 64,
+        "burner_status": 191,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_6_bit_6_raw_1",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 64,
+        "burner_status": 0,
+        "gas_pump_status": 191
+      }
+    },
+    {
+      "case": "container_6_bit_7_raw_0",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 128,
+        "burner_status": 127,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "container_6_bit_7_raw_1",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 128,
+        "burner_status": 0,
+        "gas_pump_status": 127
+      }
+    },
+    {
+      "case": "partition_1_128",
+      "raw": {
+        "status_container_1": 128,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "partition_1_127",
+      "raw": {
+        "status_container_1": 127,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "partition_2_128",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 128,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "partition_2_127",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 127,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "partition_3_128",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 128,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "partition_3_127",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 127,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "partition_4_255",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 255,
+        "status_container_5": 0,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "partition_5_240",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 240,
+        "status_container_6": 0,
+        "burner_status": 0,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "partition_6_248",
+      "raw": {
+        "status_container_1": 0,
+        "status_container_2": 0,
+        "status_container_3": 0,
+        "status_container_4": 0,
+        "status_container_5": 0,
+        "status_container_6": 248,
+        "burner_status": 0,
+        "gas_pump_status": 0
+      }
+    },
+    {
+      "case": "partial",
+      "raw": {
+        "status_container_2": 0,
+        "burner_status": 165
+      },
+      "last_known_good": {
+        "status_container_1": 128,
+        "gas_pump_status": 90
+      }
+    }
+  ]
+}
