@@ -420,7 +420,9 @@ echo "==> run every other tests/test_*.py file (automatic discovery)"
 # New test files need no line in this script. A file whose basename appears
 # anywhere in this script keeps its dedicated invocation and is skipped here;
 # every other file runs in its own interpreter, as the dedicated lines do.
-gate_named_tests="$({ grep -oE '(^|[^A-Za-z0-9_])test_[A-Za-z0-9_]+\.py' "${BASH_SOURCE[0]}" \
+# Read this script through its resolved path: BASH_SOURCE stays relative to the
+# caller's directory, and the header already changed into the repository root.
+gate_named_tests="$({ grep -oE '(^|[^A-Za-z0-9_])test_[A-Za-z0-9_]+\.py' "${repo_root}/scripts/ci_local.sh" \
   || [ "$?" -eq 1 ]; } | sed -E 's/^[^A-Za-z0-9_]//' | sort -u)"
 for gate_test_file in tests/test_*.py; do
   [ -f "$gate_test_file" ] || continue
