@@ -284,12 +284,18 @@ python3 -m pytest -q tests/test_aj06_b512_dhw_stepper.py
 echo "==> check AN22 B555 numeric narrowing contract"
 python3 -m pytest -q tests/test_an22_b555_numeric_narrowing.py
 
-echo "==> check B50E rule comparison and clear-index candidates"
-python3 -m pytest -q tests/test_ae10_b50e_candidates.py
+echo "==> check B506 RF sequence declarations"
+python3 -m pytest -q tests/test_ak06_b506_rf_sequence.py
+
+echo "==> check Vaillant B507 energy candidates"
+python3 -m pytest -q tests/test_aj14_b507_energy_candidates.py
 
 echo "==> check B520 simulator actuator and ADC declarations"
 python3 -m pytest -q tests/test_ac20_simulator_adc.py
 python3 -m pytest -q tests/test_am22_standard05_candidate_views.py
+
+echo "==> check Vaillant B51B local-transfer candidate contract"
+python3 -m pytest -q tests/test_ai26_b51b_local_transfer.py
 
 echo "==> check B522 candidate demand and scalar API results"
 python3 -m unittest discover -s tests -p 'test_ao26_b522_demand_views.py' -v
@@ -298,6 +304,12 @@ python3 -m pytest -q tests/test_am16_b516_statistics_directions.py
 
 echo "==> check B531 ordinary-limit documentation contract"
 python3 -m pytest -q tests/test_ap04_b531_ordinary_limit.py
+
+echo "==> check B519 opaque programming documentation contract"
+python3 -m pytest -q tests/test_ac16_opaque_programming.py
+
+echo "==> check B512 feedback fallback declarations and registry contract"
+python3 -m pytest -q tests/test_ak08_b512_feedback_fallback.py
 
 echo "==> check B509/B524 passive watch-policy documentation contract"
 python3 -m pytest -q tests/test_watch_policy_contract.py
@@ -315,6 +327,7 @@ python3 scripts/check_register_names.py
 python3 -m pytest -q tests/test_register_names.py
 echo "==> check B509 register name correspondence fixture"
 python3 -m pytest -q tests/test_b509_register_name_correspondence.py
+python3 -m pytest -q tests/test_ae28_09_candidates.py
 python3 -m pytest -q tests/test_ai16_b51a_mirror_fields.py
 python3 -m pytest -q tests/test_an08_b509_constraint_word_views.py
 python3 -m pytest -q tests/test_ai14_b514_menu_feedback.py
@@ -435,6 +448,39 @@ if [ -n "${MODBUS_PRIOR_ROOT:-}" ]; then
 else
   python3 scripts/validate_opaque_runtime_acquisition.py --root .
 fi
+
+echo "==> run every other tests/test_*.py file (automatic discovery)"
+# New test files need no line in this script. A file whose basename appears
+# anywhere in this script keeps its dedicated invocation and is skipped here;
+# every other file runs in its own interpreter, as the dedicated lines do.
+# Read this script through its resolved path: BASH_SOURCE stays relative to the
+# caller's directory, and the header already changed into the repository root.
+gate_named_tests="$({ grep -oE '(^|[^A-Za-z0-9_])test_[A-Za-z0-9_]+\.py' "${repo_root}/scripts/ci_local.sh" \
+  || [ "$?" -eq 1 ]; } | sed -E 's/^[^A-Za-z0-9_]//' | sort -u)"
+for gate_test_file in tests/test_*.py; do
+  [ -f "$gate_test_file" ] || continue
+  gate_test_name="${gate_test_file#tests/}"
+  case $'\n'"${gate_named_tests}"$'\n' in
+    *$'\n'"${gate_test_name}"$'\n'*) continue ;;
+  esac
+  echo "--> ${gate_test_file}"
+  gate_test_status=0
+  python3 -m pytest -q "$gate_test_file" || gate_test_status=$?
+  if [ "$gate_test_status" -eq 5 ]; then
+    # pytest collected nothing: run load_tests-protocol files through unittest,
+    # like the dedicated unittest steps. Do not rely on unittest's own exit
+    # status for an empty run: require a nonzero test count, so an empty or
+    # misnamed suite fails here instead of passing silently.
+    gate_unittest_log="$(mktemp "${gate_temp_dir}/unittest.XXXXXXXX")"
+    python3 -m unittest discover -s tests -p "$gate_test_name" -v 2>&1 | tee "$gate_unittest_log"
+    if ! grep -qE '^Ran [1-9][0-9]* tests? in ' "$gate_unittest_log"; then
+      echo "${gate_test_file}: neither pytest nor unittest collected any test (empty or misnamed suite)." >&2
+      exit 5
+    fi
+  elif [ "$gate_test_status" -ne 0 ]; then
+    exit "$gate_test_status"
+  fi
+done
 
 set --
 if [ -n "${PLATFORM_PRIOR_MANIFEST:-}" ]; then
