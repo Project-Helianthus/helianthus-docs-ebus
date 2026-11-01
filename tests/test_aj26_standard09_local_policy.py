@@ -36,7 +36,10 @@ def forwarding(frame):
     known = (frame['variant'] in {'A', 'B'} and
              frame['path'] in {'direct', 'scheduled'} and
              frame['direction'] in {'request', 'reply'})
-    return selector, bool(known and selector and structural)
+    # Bound the synthetic support set independently of selector absence.
+    supported = (frame['operation'] in {'0902', '0903'} and
+                 frame['destination'] in {'15', '35'})
+    return selector, bool(known and supported and selector and structural)
 
 
 def identity(row):
@@ -64,7 +67,7 @@ def merge_pair(state, row):
     pair['result'] = verification(row)
     pair['last_known_good'] = copy.deepcopy(
         row['read'] if pair['result'] == 'synthetic_verified'
-        else retained[key]['last_known_good'])
+        else retained.get(key, {}).get('last_known_good'))
     retained[key] = pair
     return retained
 
@@ -133,6 +136,18 @@ class LocalPolicyTest(unittest.TestCase):
             ('A', '0902', '35', 'pass'), ('A', '0902', '15', 'fail'),
             ('A', '0903', '15', 'pass'), ('A', '0903', '35', 'fail'),
             ('B', 'any', 'any', 'absent')])
+
+    def test_selector_absence_does_not_admit_unsupported_frames(self):
+        for path in ('direct', 'scheduled'):
+            for direction in ('request', 'reply'):
+                for operation, destination in (('DEAD', '35'), ('0902', 'ZZ'),
+                                               ('DEAD', 'ZZ')):
+                    with self.subTest(path=path, direction=direction,
+                                      operation=operation, destination=destination):
+                        frame = copy.deepcopy(self.fixture['forwarding'][0]['input'])
+                        frame.update(variant='B', path=path, direction=direction,
+                                     operation=operation, destination=destination)
+                        self.assertEqual(forwarding(frame), (True, False))
 
     def test_structural_predicates_independently(self):
         cases = {row['name']: row for row in self.fixture['forwarding']}
@@ -237,6 +252,20 @@ class LocalPolicyTest(unittest.TestCase):
         self.assertEqual(self.fixture['no_match'], dict(length=0, transmission='Unknown', ack='Unknown'))
         self.assertIn('partial successes', self.page)
         self.assertIn('last-known-good', self.page)
+
+    def test_uncached_pair_failures_retain_raw_outcomes(self):
+        for row in self.fixture['partial_sequence'][1:]:
+            with self.subTest(result=row['result']):
+                state = {}
+                before_row = copy.deepcopy(row)
+                after = merge_pair(state, row)
+                self.assertEqual(state, {})
+                self.assertEqual(row, before_row)
+                self.assertEqual(after, {identity(row): row | {'last_known_good': None}})
+                # Repeating a failure keeps absence explicit and the input intact.
+                before_state = copy.deepcopy(after)
+                self.assertEqual(merge_pair(after, row), before_state)
+                self.assertEqual(after, before_state)
 
     def test_grades_unknowns_and_nonimplementation(self):
         self.assertEqual(self.fixture['grade'], 'Hypothesis')

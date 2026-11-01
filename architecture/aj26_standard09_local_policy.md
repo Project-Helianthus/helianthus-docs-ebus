@@ -54,6 +54,8 @@ A's predicate applies on direct and scheduled paths; remaining data selectors
 are unconstrained by that predicate. B lacks that predicate only: it is not
 universal admission and does not assert support for any operation or target.
 The scenario oracle's `selector=true` for B means no selector veto.
+Its separate synthetic support predicate accepts only operations `0902`/`0903`
+and destinations `15`/`35`; this test bound asserts no native support.
 
 | Structural field | Required predicate |
 | --- | --- |
