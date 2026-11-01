@@ -1,0 +1,1334 @@
+{
+  "grade": "Hypothesis",
+  "unknown": {
+    "native_behavior": "Unknown",
+    "numeric_identity": "Unknown",
+    "receipt": "Unknown",
+    "word_offsets": "Unknown",
+    "word1_type": "Unknown",
+    "physical_qualification": "Unknown",
+    "variant_callback_mapping": "Unknown"
+  },
+  "extent": [
+    {
+      "declared": 8,
+      "raw": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "expected": "incomplete/raw",
+      "retained_raw": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "last_known_good": 7,
+      "retained_last_known_good": 7
+    },
+    {
+      "declared": 9,
+      "raw": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "expected": "incomplete/raw",
+      "retained_raw": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "last_known_good": 7,
+      "retained_last_known_good": 7
+    },
+    {
+      "declared": 9,
+      "raw": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "expected": "complete",
+      "retained_raw": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "last_known_good": 7,
+      "retained_last_known_good": 7
+    },
+    {
+      "declared": 10,
+      "raw": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "expected": "complete",
+      "retained_raw": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "last_known_good": 7,
+      "retained_last_known_good": 7
+    },
+    {
+      "declared": 0,
+      "raw": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "expected": "incomplete/raw",
+      "retained_raw": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "last_known_good": 7,
+      "retained_last_known_good": 7
+    },
+    {
+      "declared": 9,
+      "raw": [],
+      "expected": "incomplete/raw",
+      "retained_raw": [],
+      "last_known_good": 7,
+      "retained_last_known_good": 7
+    }
+  ],
+  "actors": {
+    "actor0": {
+      "type": "u32",
+      "unit": "W",
+      "domain": [
+        0,
+        1,
+        2
+      ],
+      "rating": null
+    },
+    "actor1": {
+      "minimum": 0,
+      "maximum": "maximum",
+      "step": 100
+    }
+  },
+  "scales": [
+    {
+      "number": 0,
+      "effective_scale": 0
+    },
+    {
+      "number": 0,
+      "scale": 0,
+      "effective_scale": 0
+    }
+  ],
+  "actor_predicates": [
+    {
+      "domain": -1,
+      "available": false,
+      "changed": false,
+      "admitted": false,
+      "change_notification": false
+    },
+    {
+      "domain": -1,
+      "available": false,
+      "changed": true,
+      "admitted": false,
+      "change_notification": false
+    },
+    {
+      "domain": -1,
+      "available": true,
+      "changed": false,
+      "admitted": false,
+      "change_notification": false
+    },
+    {
+      "domain": -1,
+      "available": true,
+      "changed": true,
+      "admitted": false,
+      "change_notification": false
+    },
+    {
+      "domain": 0,
+      "available": false,
+      "changed": false,
+      "admitted": false,
+      "change_notification": false
+    },
+    {
+      "domain": 0,
+      "available": false,
+      "changed": true,
+      "admitted": false,
+      "change_notification": false
+    },
+    {
+      "domain": 0,
+      "available": true,
+      "changed": false,
+      "admitted": true,
+      "change_notification": false
+    },
+    {
+      "domain": 0,
+      "available": true,
+      "changed": true,
+      "admitted": true,
+      "change_notification": true
+    },
+    {
+      "domain": 1,
+      "available": false,
+      "changed": false,
+      "admitted": false,
+      "change_notification": false
+    },
+    {
+      "domain": 1,
+      "available": false,
+      "changed": true,
+      "admitted": false,
+      "change_notification": false
+    },
+    {
+      "domain": 1,
+      "available": true,
+      "changed": false,
+      "admitted": true,
+      "change_notification": false
+    },
+    {
+      "domain": 1,
+      "available": true,
+      "changed": true,
+      "admitted": true,
+      "change_notification": true
+    },
+    {
+      "domain": 2,
+      "available": false,
+      "changed": false,
+      "admitted": false,
+      "change_notification": false
+    },
+    {
+      "domain": 2,
+      "available": false,
+      "changed": true,
+      "admitted": false,
+      "change_notification": false
+    },
+    {
+      "domain": 2,
+      "available": true,
+      "changed": false,
+      "admitted": true,
+      "change_notification": false
+    },
+    {
+      "domain": 2,
+      "available": true,
+      "changed": true,
+      "admitted": true,
+      "change_notification": true
+    },
+    {
+      "domain": 3,
+      "available": false,
+      "changed": false,
+      "admitted": false,
+      "change_notification": false
+    },
+    {
+      "domain": 3,
+      "available": false,
+      "changed": true,
+      "admitted": false,
+      "change_notification": false
+    },
+    {
+      "domain": 3,
+      "available": true,
+      "changed": false,
+      "admitted": false,
+      "change_notification": false
+    },
+    {
+      "domain": 3,
+      "available": true,
+      "changed": true,
+      "admitted": false,
+      "change_notification": false
+    }
+  ],
+  "powers": [
+    {
+      "raw": 0,
+      "current_power": 0,
+      "entry": {
+        "participant_address": "synthetic-a",
+        "coupler_address": 0,
+        "current_power": 0
+      }
+    },
+    {
+      "raw": 4294967295,
+      "current_power": null,
+      "entry": {
+        "participant_address": "synthetic-a",
+        "coupler_address": 0,
+        "current_power": null
+      }
+    },
+    {
+      "raw": 7,
+      "current_power": 7,
+      "entry": {
+        "participant_address": "synthetic-a",
+        "coupler_address": 0,
+        "current_power": 7
+      }
+    },
+    {
+      "raw": 4294967294,
+      "current_power": 4294967294,
+      "entry": {
+        "participant_address": "synthetic-a",
+        "coupler_address": 0,
+        "current_power": 4294967294
+      }
+    }
+  ],
+  "slots": [
+    {
+      "registered": false,
+      "capable": false,
+      "participant_address": "synthetic-a",
+      "reread": false,
+      "entry": null
+    },
+    {
+      "registered": false,
+      "capable": false,
+      "participant_address": "synthetic-b",
+      "reread": false,
+      "entry": null
+    },
+    {
+      "registered": false,
+      "capable": true,
+      "participant_address": "synthetic-a",
+      "reread": false,
+      "entry": null
+    },
+    {
+      "registered": false,
+      "capable": true,
+      "participant_address": "synthetic-b",
+      "reread": false,
+      "entry": null
+    },
+    {
+      "registered": true,
+      "capable": false,
+      "participant_address": "synthetic-a",
+      "reread": false,
+      "entry": null
+    },
+    {
+      "registered": true,
+      "capable": false,
+      "participant_address": "synthetic-b",
+      "reread": false,
+      "entry": null
+    },
+    {
+      "registered": true,
+      "capable": true,
+      "participant_address": "synthetic-a",
+      "reread": true,
+      "entry": {
+        "participant_address": "synthetic-a",
+        "coupler_address": 0,
+        "current_power": 7
+      }
+    },
+    {
+      "registered": true,
+      "capable": true,
+      "participant_address": "synthetic-b",
+      "reread": true,
+      "entry": {
+        "participant_address": "synthetic-b",
+        "coupler_address": 0,
+        "current_power": 7
+      }
+    }
+  ],
+  "publication": [
+    {
+      "eligible": false,
+      "power": null,
+      "variant": "callback-present",
+      "membership": true,
+      "restriction": true,
+      "connection": true,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": false,
+      "delivered": "Unknown",
+      "callback_available": true
+    },
+    {
+      "eligible": false,
+      "power": null,
+      "variant": "callback-present",
+      "membership": false,
+      "restriction": true,
+      "connection": true,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": false,
+      "delivered": "Unknown",
+      "callback_available": true
+    },
+    {
+      "eligible": false,
+      "power": null,
+      "variant": "callback-present",
+      "membership": true,
+      "restriction": false,
+      "connection": true,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": false,
+      "delivered": "Unknown",
+      "callback_available": true
+    },
+    {
+      "eligible": false,
+      "power": null,
+      "variant": "callback-present",
+      "membership": true,
+      "restriction": true,
+      "connection": false,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": false,
+      "delivered": "Unknown",
+      "callback_available": true
+    },
+    {
+      "eligible": false,
+      "power": null,
+      "variant": "callback-absent",
+      "membership": true,
+      "restriction": true,
+      "connection": true,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": false,
+      "delivered": "Unknown",
+      "callback_available": false
+    },
+    {
+      "eligible": false,
+      "power": null,
+      "variant": "callback-absent",
+      "membership": false,
+      "restriction": true,
+      "connection": true,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": false,
+      "delivered": "Unknown",
+      "callback_available": false
+    },
+    {
+      "eligible": false,
+      "power": null,
+      "variant": "callback-absent",
+      "membership": true,
+      "restriction": false,
+      "connection": true,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": false,
+      "delivered": "Unknown",
+      "callback_available": false
+    },
+    {
+      "eligible": false,
+      "power": null,
+      "variant": "callback-absent",
+      "membership": true,
+      "restriction": true,
+      "connection": false,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": false,
+      "delivered": "Unknown",
+      "callback_available": false
+    },
+    {
+      "eligible": false,
+      "power": 0,
+      "variant": "callback-present",
+      "membership": true,
+      "restriction": true,
+      "connection": true,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": false,
+      "delivered": "Unknown",
+      "callback_available": true
+    },
+    {
+      "eligible": false,
+      "power": 0,
+      "variant": "callback-present",
+      "membership": false,
+      "restriction": true,
+      "connection": true,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": false,
+      "delivered": "Unknown",
+      "callback_available": true
+    },
+    {
+      "eligible": false,
+      "power": 0,
+      "variant": "callback-present",
+      "membership": true,
+      "restriction": false,
+      "connection": true,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": false,
+      "delivered": "Unknown",
+      "callback_available": true
+    },
+    {
+      "eligible": false,
+      "power": 0,
+      "variant": "callback-present",
+      "membership": true,
+      "restriction": true,
+      "connection": false,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": false,
+      "delivered": "Unknown",
+      "callback_available": true
+    },
+    {
+      "eligible": false,
+      "power": 0,
+      "variant": "callback-absent",
+      "membership": true,
+      "restriction": true,
+      "connection": true,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": false,
+      "delivered": "Unknown",
+      "callback_available": false
+    },
+    {
+      "eligible": false,
+      "power": 0,
+      "variant": "callback-absent",
+      "membership": false,
+      "restriction": true,
+      "connection": true,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": false,
+      "delivered": "Unknown",
+      "callback_available": false
+    },
+    {
+      "eligible": false,
+      "power": 0,
+      "variant": "callback-absent",
+      "membership": true,
+      "restriction": false,
+      "connection": true,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": false,
+      "delivered": "Unknown",
+      "callback_available": false
+    },
+    {
+      "eligible": false,
+      "power": 0,
+      "variant": "callback-absent",
+      "membership": true,
+      "restriction": true,
+      "connection": false,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": false,
+      "delivered": "Unknown",
+      "callback_available": false
+    },
+    {
+      "eligible": false,
+      "power": 7,
+      "variant": "callback-present",
+      "membership": true,
+      "restriction": true,
+      "connection": true,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": false,
+      "delivered": "Unknown",
+      "callback_available": true
+    },
+    {
+      "eligible": false,
+      "power": 7,
+      "variant": "callback-present",
+      "membership": false,
+      "restriction": true,
+      "connection": true,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": false,
+      "delivered": "Unknown",
+      "callback_available": true
+    },
+    {
+      "eligible": false,
+      "power": 7,
+      "variant": "callback-present",
+      "membership": true,
+      "restriction": false,
+      "connection": true,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": false,
+      "delivered": "Unknown",
+      "callback_available": true
+    },
+    {
+      "eligible": false,
+      "power": 7,
+      "variant": "callback-present",
+      "membership": true,
+      "restriction": true,
+      "connection": false,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": false,
+      "delivered": "Unknown",
+      "callback_available": true
+    },
+    {
+      "eligible": false,
+      "power": 7,
+      "variant": "callback-absent",
+      "membership": true,
+      "restriction": true,
+      "connection": true,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": false,
+      "delivered": "Unknown",
+      "callback_available": false
+    },
+    {
+      "eligible": false,
+      "power": 7,
+      "variant": "callback-absent",
+      "membership": false,
+      "restriction": true,
+      "connection": true,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": false,
+      "delivered": "Unknown",
+      "callback_available": false
+    },
+    {
+      "eligible": false,
+      "power": 7,
+      "variant": "callback-absent",
+      "membership": true,
+      "restriction": false,
+      "connection": true,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": false,
+      "delivered": "Unknown",
+      "callback_available": false
+    },
+    {
+      "eligible": false,
+      "power": 7,
+      "variant": "callback-absent",
+      "membership": true,
+      "restriction": true,
+      "connection": false,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": false,
+      "delivered": "Unknown",
+      "callback_available": false
+    },
+    {
+      "eligible": true,
+      "power": null,
+      "variant": "callback-present",
+      "membership": true,
+      "restriction": true,
+      "connection": true,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": true,
+      "delivered": "Unknown",
+      "callback_available": true
+    },
+    {
+      "eligible": true,
+      "power": null,
+      "variant": "callback-present",
+      "membership": false,
+      "restriction": true,
+      "connection": true,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": false,
+      "delivered": "Unknown",
+      "callback_available": true
+    },
+    {
+      "eligible": true,
+      "power": null,
+      "variant": "callback-present",
+      "membership": true,
+      "restriction": false,
+      "connection": true,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": false,
+      "delivered": "Unknown",
+      "callback_available": true
+    },
+    {
+      "eligible": true,
+      "power": null,
+      "variant": "callback-present",
+      "membership": true,
+      "restriction": true,
+      "connection": false,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": false,
+      "delivered": "Unknown",
+      "callback_available": true
+    },
+    {
+      "eligible": true,
+      "power": null,
+      "variant": "callback-absent",
+      "membership": true,
+      "restriction": true,
+      "connection": true,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": true,
+      "delivered": "Unknown",
+      "callback_available": false
+    },
+    {
+      "eligible": true,
+      "power": null,
+      "variant": "callback-absent",
+      "membership": false,
+      "restriction": true,
+      "connection": true,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": false,
+      "delivered": "Unknown",
+      "callback_available": false
+    },
+    {
+      "eligible": true,
+      "power": null,
+      "variant": "callback-absent",
+      "membership": true,
+      "restriction": false,
+      "connection": true,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": false,
+      "delivered": "Unknown",
+      "callback_available": false
+    },
+    {
+      "eligible": true,
+      "power": null,
+      "variant": "callback-absent",
+      "membership": true,
+      "restriction": true,
+      "connection": false,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": false,
+      "delivered": "Unknown",
+      "callback_available": false
+    },
+    {
+      "eligible": true,
+      "power": 0,
+      "variant": "callback-present",
+      "membership": true,
+      "restriction": true,
+      "connection": true,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": true,
+      "delivered": "Unknown",
+      "callback_available": true
+    },
+    {
+      "eligible": true,
+      "power": 0,
+      "variant": "callback-present",
+      "membership": false,
+      "restriction": true,
+      "connection": true,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": false,
+      "delivered": "Unknown",
+      "callback_available": true
+    },
+    {
+      "eligible": true,
+      "power": 0,
+      "variant": "callback-present",
+      "membership": true,
+      "restriction": false,
+      "connection": true,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": false,
+      "delivered": "Unknown",
+      "callback_available": true
+    },
+    {
+      "eligible": true,
+      "power": 0,
+      "variant": "callback-present",
+      "membership": true,
+      "restriction": true,
+      "connection": false,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": false,
+      "delivered": "Unknown",
+      "callback_available": true
+    },
+    {
+      "eligible": true,
+      "power": 0,
+      "variant": "callback-absent",
+      "membership": true,
+      "restriction": true,
+      "connection": true,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": true,
+      "delivered": "Unknown",
+      "callback_available": false
+    },
+    {
+      "eligible": true,
+      "power": 0,
+      "variant": "callback-absent",
+      "membership": false,
+      "restriction": true,
+      "connection": true,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": false,
+      "delivered": "Unknown",
+      "callback_available": false
+    },
+    {
+      "eligible": true,
+      "power": 0,
+      "variant": "callback-absent",
+      "membership": true,
+      "restriction": false,
+      "connection": true,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": false,
+      "delivered": "Unknown",
+      "callback_available": false
+    },
+    {
+      "eligible": true,
+      "power": 0,
+      "variant": "callback-absent",
+      "membership": true,
+      "restriction": true,
+      "connection": false,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": false,
+      "delivered": "Unknown",
+      "callback_available": false
+    },
+    {
+      "eligible": true,
+      "power": 7,
+      "variant": "callback-present",
+      "membership": true,
+      "restriction": true,
+      "connection": true,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": true,
+      "delivered": "Unknown",
+      "callback_available": true
+    },
+    {
+      "eligible": true,
+      "power": 7,
+      "variant": "callback-present",
+      "membership": false,
+      "restriction": true,
+      "connection": true,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": false,
+      "delivered": "Unknown",
+      "callback_available": true
+    },
+    {
+      "eligible": true,
+      "power": 7,
+      "variant": "callback-present",
+      "membership": true,
+      "restriction": false,
+      "connection": true,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": false,
+      "delivered": "Unknown",
+      "callback_available": true
+    },
+    {
+      "eligible": true,
+      "power": 7,
+      "variant": "callback-present",
+      "membership": true,
+      "restriction": true,
+      "connection": false,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": false,
+      "delivered": "Unknown",
+      "callback_available": true
+    },
+    {
+      "eligible": true,
+      "power": 7,
+      "variant": "callback-absent",
+      "membership": true,
+      "restriction": true,
+      "connection": true,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": true,
+      "delivered": "Unknown",
+      "callback_available": false
+    },
+    {
+      "eligible": true,
+      "power": 7,
+      "variant": "callback-absent",
+      "membership": false,
+      "restriction": true,
+      "connection": true,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": false,
+      "delivered": "Unknown",
+      "callback_available": false
+    },
+    {
+      "eligible": true,
+      "power": 7,
+      "variant": "callback-absent",
+      "membership": true,
+      "restriction": false,
+      "connection": true,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": false,
+      "delivered": "Unknown",
+      "callback_available": false
+    },
+    {
+      "eligible": true,
+      "power": 7,
+      "variant": "callback-absent",
+      "membership": true,
+      "restriction": true,
+      "connection": false,
+      "local_ack": true,
+      "trace": [
+        "local_ack",
+        "membership",
+        "restriction",
+        "connection"
+      ],
+      "attempt": false,
+      "delivered": "Unknown",
+      "callback_available": false
+    }
+  ],
+  "serialization": [
+    {
+      "bytes": [
+        0,
+        255,
+        7
+      ],
+      "count": 3,
+      "serialized_bytes": [
+        0,
+        255,
+        7
+      ],
+      "serialized_count": 3
+    },
+    {
+      "bytes": [],
+      "count": 0,
+      "serialized_bytes": [],
+      "serialized_count": 0
+    }
+  ],
+  "duplicates": [
+    {
+      "duplicate": false,
+      "materialized_states": 1
+    },
+    {
+      "duplicate": true,
+      "materialized_states": 0
+    }
+  ]
+}
