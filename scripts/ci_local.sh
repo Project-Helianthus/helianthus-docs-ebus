@@ -239,6 +239,9 @@ python3 -m pytest -q tests/test_graphql_face_provenance_checker.py
 python3 -m pytest -q -p no:cacheprovider tests/test_system_config_bound_contract.py
 python3 -m pytest -q tests/test_semantic_snapshot_read_contract.py
 python3 -m pytest -q tests/test_semantic_operation_route_contract.py
+python3 -m pytest -q tests/test_aj17_b516_projection.py
+python3 -m pytest -q tests/test_aj28_ff_local_liveness.py
+python3 -m pytest -q tests/test_aj19_b531_distribution_consumers.py
 
 echo "==> check contribution-driven Portal UX contract"
 python3 scripts/check_portal_ux_contract.py
@@ -248,22 +251,86 @@ echo "==> check CC0 and AGPL documentation boundary"
 python3 scripts/check_public_domain_boundary.py
 python3 -m pytest -q tests/test_public_domain_boundary.py
 
+echo "==> check Vaillant room-action and return-service declarations"
+python3 -m pytest -q tests/test_ac06_room_actions.py
+
 echo "==> check Vaillant B503 milestone contract"
 python3 scripts/check_vaillant_b503_milestones.py
 python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py
+python3 -m pytest -q tests/test_ae14_b510_candidates.py
+
+echo "==> check AI-28 B510/B511 local-cache contract"
+python3 -m pytest -q tests/test_ai28_b510_b511_local_cache.py
+
+echo "==> check AI=22 B523 sensor-field contract"
+python3 -m pytest -q tests/test_ai22_b523_sensor_fields.py
+
+echo "==> check B506 scoped candidate declarations"
+python3 -m pytest -q tests/test_ae06_b506_candidates.py
+
+echo "==> check Vaillant B505 sentinel and override candidates"
+python3 -m pytest -q tests/test_ae04_b505_candidates.py
+python3 -m pytest -q tests/test_am20_standard03_candidate_views.py
+
+echo "==> check B510 capability-cache query transition contract"
+python3 -m unittest discover -s tests -p 'test_ao12_b510_cache_transition.py' -v
+
+echo "==> check B51A diagnostic variants and replication flags"
+python3 -m pytest -q tests/test_aj08_b51a_diagnostic_variants.py
+
+echo "==> check B512 DHW and stepper documentation contract"
+python3 -m pytest -q tests/test_aj06_b512_dhw_stepper.py
+
+echo "==> check AN22 B555 numeric narrowing contract"
+python3 -m pytest -q tests/test_an22_b555_numeric_narrowing.py
+
+echo "==> check B506 RF sequence declarations"
+python3 -m pytest -q tests/test_ak06_b506_rf_sequence.py
+
+echo "==> check Vaillant B507 energy candidates"
+python3 -m pytest -q tests/test_aj14_b507_energy_candidates.py
+
+echo "==> check B520 simulator actuator and ADC declarations"
+python3 -m pytest -q tests/test_ac20_simulator_adc.py
+python3 -m pytest -q tests/test_am22_standard05_candidate_views.py
+
+echo "==> check Vaillant B51B local-transfer candidate contract"
+python3 -m pytest -q tests/test_ai26_b51b_local_transfer.py
+
+echo "==> check B522 candidate demand and scalar API results"
+python3 -m unittest discover -s tests -p 'test_ao26_b522_demand_views.py' -v
+
+python3 -m pytest -q tests/test_am16_b516_statistics_directions.py
+
+echo "==> check B531 ordinary-limit documentation contract"
+python3 -m pytest -q tests/test_ap04_b531_ordinary_limit.py
+
+echo "==> check B519 opaque programming documentation contract"
+python3 -m pytest -q tests/test_ac16_opaque_programming.py
+
+echo "==> check B512 feedback fallback declarations and registry contract"
+python3 -m pytest -q tests/test_ak08_b512_feedback_fallback.py
 
 echo "==> check B509/B524 passive watch-policy documentation contract"
 python3 -m pytest -q tests/test_watch_policy_contract.py
 python3 -m pytest -q tests/test_b524_operation_docs.py
+python3 -m pytest -q tests/test_am04_b524_dhw_ventilation_scalars.py
 python3 -m pytest -q tests/test_b524_register_name_correspondence.py
 python3 -m pytest -q tests/test_b524_name_bridge_contract.py
 python3 -m pytest -q tests/test_b524_provisional_name_evidence.py
+python3 -m pytest -q tests/test_an04_b524_codebook_views.py
+python3 -m pytest -q tests/test_am10_b524_unscoped_hints.py
+python3 -m pytest -q tests/test_ai06_b524_scalar_shapes.py
+python3 -m pytest -q tests/test_ai27_b531_local_predicates.py
 echo "==> check canonical register names against the register naming rules"
 python3 scripts/check_register_names.py
 python3 -m pytest -q tests/test_register_names.py
 echo "==> check B509 register name correspondence fixture"
 python3 -m pytest -q tests/test_b509_register_name_correspondence.py
-python3 -m pytest -q tests/test_ae08_b509_candidates.py
+python3 -m pytest -q tests/test_ae28_09_candidates.py
+python3 -m pytest -q tests/test_ai16_b51a_mirror_fields.py
+python3 -m pytest -q tests/test_an08_b509_constraint_word_views.py
+python3 -m pytest -q tests/test_ai14_b514_menu_feedback.py
 python3 scripts/validate_b524_op06_observed_windows.py \
   protocols/vaillant/fixtures/b524-op06-observed-windows-v1.json
 echo "==> check BASV0 parameter-description profile"
@@ -302,6 +369,7 @@ done
 jv development/fixtures/b524-operation-edit-plan-schema-v1.json development/fixtures/b524-operation-edit-plan-synthetic-v1.json
 jv development/fixtures/b524-native-write-qualification-schema-v1.json development/fixtures/b524-native-write-qualification-synthetic-v1.json
 python3 -m pytest -q tests/test_b524_operation_reads.py
+python3 -m pytest -q tests/test_al08_b524_system_information.py
 
 echo "==> check cross-runtime platform contracts (MSP-DOCS-CLEAN)"
 python3 -m pytest -q tests/test_m625_cross_seed_contract.py
@@ -318,6 +386,7 @@ python3 -m pytest -q tests/test_leaf_promotion_dossier_contract.py
 python3 -m pytest -q tests/test_captured_multi_leaf_promotion_contract.py
 python3 -m pytest -q tests/test_msp085_live_completion.py
 python3 -m pytest -q tests/test_msp085_final_18_leaf_completion.py
+python3 -m pytest -q tests/test_aj23_b555_narrow_refresh.py
 
 echo "==> check Modbus M1/M2 companion contract"
 python3 -m pytest -q \
@@ -379,6 +448,39 @@ if [ -n "${MODBUS_PRIOR_ROOT:-}" ]; then
 else
   python3 scripts/validate_opaque_runtime_acquisition.py --root .
 fi
+
+echo "==> run every other tests/test_*.py file (automatic discovery)"
+# New test files need no line in this script. A file whose basename appears
+# anywhere in this script keeps its dedicated invocation and is skipped here;
+# every other file runs in its own interpreter, as the dedicated lines do.
+# Read this script through its resolved path: BASH_SOURCE stays relative to the
+# caller's directory, and the header already changed into the repository root.
+gate_named_tests="$({ grep -oE '(^|[^A-Za-z0-9_])test_[A-Za-z0-9_]+\.py' "${repo_root}/scripts/ci_local.sh" \
+  || [ "$?" -eq 1 ]; } | sed -E 's/^[^A-Za-z0-9_]//' | sort -u)"
+for gate_test_file in tests/test_*.py; do
+  [ -f "$gate_test_file" ] || continue
+  gate_test_name="${gate_test_file#tests/}"
+  case $'\n'"${gate_named_tests}"$'\n' in
+    *$'\n'"${gate_test_name}"$'\n'*) continue ;;
+  esac
+  echo "--> ${gate_test_file}"
+  gate_test_status=0
+  python3 -m pytest -q "$gate_test_file" || gate_test_status=$?
+  if [ "$gate_test_status" -eq 5 ]; then
+    # pytest collected nothing: run load_tests-protocol files through unittest,
+    # like the dedicated unittest steps. Do not rely on unittest's own exit
+    # status for an empty run: require a nonzero test count, so an empty or
+    # misnamed suite fails here instead of passing silently.
+    gate_unittest_log="$(mktemp "${gate_temp_dir}/unittest.XXXXXXXX")"
+    python3 -m unittest discover -s tests -p "$gate_test_name" -v 2>&1 | tee "$gate_unittest_log"
+    if ! grep -qE '^Ran [1-9][0-9]* tests? in ' "$gate_unittest_log"; then
+      echo "${gate_test_file}: neither pytest nor unittest collected any test (empty or misnamed suite)." >&2
+      exit 5
+    fi
+  elif [ "$gate_test_status" -ne 0 ]; then
+    exit "$gate_test_status"
+  fi
+done
 
 set --
 if [ -n "${PLATFORM_PRIOR_MANIFEST:-}" ]; then

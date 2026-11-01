@@ -1,0 +1,1423 @@
+{
+  "service": "B512",
+  "operation": "01",
+  "family": "Vaillant B512 family",
+  "provenance": "synthetic",
+  "grade": "Hypothesis",
+  "entries": [
+    {
+      "field": "secondary-heating-pump",
+      "logical_position": 3,
+      "direction": "request",
+      "type": "u8",
+      "grade": "Hypothesis",
+      "physical_offset": "Unknown",
+      "values": {
+        "FF": "leave-unchanged"
+      },
+      "other_values": "retain-raw",
+      "polarity": "Unknown",
+      "raw_retention": "preserve each independent raw token"
+    },
+    {
+      "field": "circulation-pump",
+      "logical_position": 4,
+      "direction": "request",
+      "type": "u8",
+      "grade": "Hypothesis",
+      "physical_offset": "Unknown",
+      "values": {
+        "FF": "leave-unchanged"
+      },
+      "other_values": "retain-raw",
+      "polarity": "Unknown",
+      "raw_retention": "preserve each independent raw token"
+    },
+    {
+      "field": "solar-pump",
+      "logical_position": 5,
+      "direction": "request",
+      "type": "u8",
+      "grade": "Hypothesis",
+      "physical_offset": "Unknown",
+      "values": {
+        "FF": "leave-unchanged"
+      },
+      "other_values": "retain-raw",
+      "polarity": "Unknown",
+      "raw_retention": "preserve each independent raw token"
+    },
+    {
+      "field": "error-relay",
+      "logical_position": 6,
+      "direction": "request",
+      "type": "u8",
+      "grade": "Hypothesis",
+      "physical_offset": "Unknown",
+      "values": {
+        "0F": "state-0F",
+        "F0": "state-F0"
+      },
+      "other_values": "no-action",
+      "polarity": "Unknown",
+      "raw_retention": "preserve each independent raw token"
+    },
+    {
+      "field": "loading-pump",
+      "logical_position": 7,
+      "direction": "request",
+      "type": "u8",
+      "grade": "Hypothesis",
+      "physical_offset": "Unknown",
+      "values": {
+        "FF": "leave-unchanged"
+      },
+      "other_values": "retain-raw",
+      "polarity": "Unknown",
+      "raw_retention": "preserve each independent raw token"
+    },
+    {
+      "field": "fume-flap",
+      "logical_position": 8,
+      "direction": "request",
+      "type": "u8",
+      "grade": "Hypothesis",
+      "physical_offset": "Unknown",
+      "values": {
+        "0F": "state-0F",
+        "F0": "state-F0"
+      },
+      "other_values": "no-action",
+      "polarity": "Unknown",
+      "raw_retention": "preserve each independent raw token"
+    },
+    {
+      "field": "secondary-heating-pump",
+      "logical_position": 3,
+      "direction": "positive",
+      "type": "u8",
+      "grade": "Hypothesis",
+      "physical_offset": "Unknown",
+      "values": {
+        "FF": "function-unavailable"
+      },
+      "other_values": "retain-raw",
+      "polarity": "Unknown",
+      "raw_retention": "preserve each independent raw token"
+    },
+    {
+      "field": "circulation-pump",
+      "logical_position": 4,
+      "direction": "positive",
+      "type": "u8",
+      "grade": "Hypothesis",
+      "physical_offset": "Unknown",
+      "values": {
+        "FF": "function-unavailable"
+      },
+      "other_values": "retain-raw",
+      "polarity": "Unknown",
+      "raw_retention": "preserve each independent raw token"
+    },
+    {
+      "field": "solar-pump",
+      "logical_position": 5,
+      "direction": "positive",
+      "type": "u8",
+      "grade": "Hypothesis",
+      "physical_offset": "Unknown",
+      "values": {
+        "FF": "function-unavailable"
+      },
+      "other_values": "retain-raw",
+      "polarity": "Unknown",
+      "raw_retention": "preserve each independent raw token"
+    },
+    {
+      "field": "error-relay",
+      "logical_position": 6,
+      "direction": "positive",
+      "type": "u8",
+      "grade": "Hypothesis",
+      "physical_offset": "Unknown",
+      "values": {
+        "0F": "state-0F",
+        "F0": "state-F0"
+      },
+      "other_values": "no-action",
+      "polarity": "Unknown",
+      "raw_retention": "preserve each independent raw token"
+    },
+    {
+      "field": "loading-pump",
+      "logical_position": 7,
+      "direction": "positive",
+      "type": "u8",
+      "grade": "Hypothesis",
+      "physical_offset": "Unknown",
+      "values": {
+        "FF": "function-unavailable"
+      },
+      "other_values": "retain-raw",
+      "polarity": "Unknown",
+      "raw_retention": "preserve each independent raw token"
+    },
+    {
+      "field": "fume-flap",
+      "logical_position": 8,
+      "direction": "positive",
+      "type": "u8",
+      "grade": "Hypothesis",
+      "physical_offset": "Unknown",
+      "values": {
+        "0F": "state-0F",
+        "F0": "state-F0"
+      },
+      "other_values": "no-action",
+      "polarity": "Unknown",
+      "raw_retention": "preserve each independent raw token"
+    }
+  ],
+  "feedback": {
+    "actual_signal_absent": "setpoint-fallback",
+    "actual_signal_present": "actual-signal",
+    "equal_to_setpoint_establishes_actual": false,
+    "wire_discriminator": "Unknown",
+    "physical_value": "Unknown"
+  },
+  "defaults": {
+    "boolean_default": true,
+    "raw_default": null,
+    "raw_default_encoding": "Unknown"
+  },
+  "qualification": {
+    "native_support": "Unknown",
+    "physical_effects": "Unknown",
+    "persistence": "Unknown",
+    "delivery": "Unknown"
+  },
+  "cases": {
+    "independent_fields": [
+      {
+        "field": "secondary-heating-pump",
+        "direction": "request",
+        "before": [
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26"
+        ],
+        "raw": [
+          "71",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26"
+        ]
+      },
+      {
+        "field": "circulation-pump",
+        "direction": "request",
+        "before": [
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26"
+        ],
+        "raw": [
+          "21",
+          "72",
+          "23",
+          "24",
+          "25",
+          "26"
+        ]
+      },
+      {
+        "field": "solar-pump",
+        "direction": "request",
+        "before": [
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26"
+        ],
+        "raw": [
+          "21",
+          "22",
+          "73",
+          "24",
+          "25",
+          "26"
+        ]
+      },
+      {
+        "field": "error-relay",
+        "direction": "request",
+        "before": [
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26"
+        ],
+        "raw": [
+          "21",
+          "22",
+          "23",
+          "74",
+          "25",
+          "26"
+        ]
+      },
+      {
+        "field": "loading-pump",
+        "direction": "request",
+        "before": [
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26"
+        ],
+        "raw": [
+          "21",
+          "22",
+          "23",
+          "24",
+          "75",
+          "26"
+        ]
+      },
+      {
+        "field": "fume-flap",
+        "direction": "request",
+        "before": [
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26"
+        ],
+        "raw": [
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "76"
+        ]
+      },
+      {
+        "field": "secondary-heating-pump",
+        "direction": "positive",
+        "before": [
+          "31",
+          "32",
+          "33",
+          "34",
+          "35",
+          "36"
+        ],
+        "raw": [
+          "71",
+          "32",
+          "33",
+          "34",
+          "35",
+          "36"
+        ]
+      },
+      {
+        "field": "circulation-pump",
+        "direction": "positive",
+        "before": [
+          "31",
+          "32",
+          "33",
+          "34",
+          "35",
+          "36"
+        ],
+        "raw": [
+          "31",
+          "72",
+          "33",
+          "34",
+          "35",
+          "36"
+        ]
+      },
+      {
+        "field": "solar-pump",
+        "direction": "positive",
+        "before": [
+          "31",
+          "32",
+          "33",
+          "34",
+          "35",
+          "36"
+        ],
+        "raw": [
+          "31",
+          "32",
+          "73",
+          "34",
+          "35",
+          "36"
+        ]
+      },
+      {
+        "field": "error-relay",
+        "direction": "positive",
+        "before": [
+          "31",
+          "32",
+          "33",
+          "34",
+          "35",
+          "36"
+        ],
+        "raw": [
+          "31",
+          "32",
+          "33",
+          "74",
+          "35",
+          "36"
+        ]
+      },
+      {
+        "field": "loading-pump",
+        "direction": "positive",
+        "before": [
+          "31",
+          "32",
+          "33",
+          "34",
+          "35",
+          "36"
+        ],
+        "raw": [
+          "31",
+          "32",
+          "33",
+          "34",
+          "75",
+          "36"
+        ]
+      },
+      {
+        "field": "fume-flap",
+        "direction": "positive",
+        "before": [
+          "31",
+          "32",
+          "33",
+          "34",
+          "35",
+          "36"
+        ],
+        "raw": [
+          "31",
+          "32",
+          "33",
+          "34",
+          "35",
+          "76"
+        ]
+      }
+    ],
+    "pump_ff": [
+      {
+        "field": "secondary-heating-pump",
+        "direction": "request",
+        "previous": [
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26"
+        ],
+        "raw": [
+          "FF",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26"
+        ],
+        "retained": [
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26"
+        ],
+        "meaning": "leave-unchanged"
+      },
+      {
+        "field": "circulation-pump",
+        "direction": "request",
+        "previous": [
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26"
+        ],
+        "raw": [
+          "21",
+          "FF",
+          "23",
+          "24",
+          "25",
+          "26"
+        ],
+        "retained": [
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26"
+        ],
+        "meaning": "leave-unchanged"
+      },
+      {
+        "field": "solar-pump",
+        "direction": "request",
+        "previous": [
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26"
+        ],
+        "raw": [
+          "21",
+          "22",
+          "FF",
+          "24",
+          "25",
+          "26"
+        ],
+        "retained": [
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26"
+        ],
+        "meaning": "leave-unchanged"
+      },
+      {
+        "field": "loading-pump",
+        "direction": "request",
+        "previous": [
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26"
+        ],
+        "raw": [
+          "21",
+          "22",
+          "23",
+          "24",
+          "FF",
+          "26"
+        ],
+        "retained": [
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26"
+        ],
+        "meaning": "leave-unchanged"
+      },
+      {
+        "field": "secondary-heating-pump",
+        "direction": "positive",
+        "previous": [
+          "31",
+          "32",
+          "33",
+          "34",
+          "35",
+          "36"
+        ],
+        "raw": [
+          "FF",
+          "32",
+          "33",
+          "34",
+          "35",
+          "36"
+        ],
+        "retained": [
+          "FF",
+          "32",
+          "33",
+          "34",
+          "35",
+          "36"
+        ],
+        "meaning": "function-unavailable"
+      },
+      {
+        "field": "circulation-pump",
+        "direction": "positive",
+        "previous": [
+          "31",
+          "32",
+          "33",
+          "34",
+          "35",
+          "36"
+        ],
+        "raw": [
+          "31",
+          "FF",
+          "33",
+          "34",
+          "35",
+          "36"
+        ],
+        "retained": [
+          "31",
+          "FF",
+          "33",
+          "34",
+          "35",
+          "36"
+        ],
+        "meaning": "function-unavailable"
+      },
+      {
+        "field": "solar-pump",
+        "direction": "positive",
+        "previous": [
+          "31",
+          "32",
+          "33",
+          "34",
+          "35",
+          "36"
+        ],
+        "raw": [
+          "31",
+          "32",
+          "FF",
+          "34",
+          "35",
+          "36"
+        ],
+        "retained": [
+          "31",
+          "32",
+          "FF",
+          "34",
+          "35",
+          "36"
+        ],
+        "meaning": "function-unavailable"
+      },
+      {
+        "field": "loading-pump",
+        "direction": "positive",
+        "previous": [
+          "31",
+          "32",
+          "33",
+          "34",
+          "35",
+          "36"
+        ],
+        "raw": [
+          "31",
+          "32",
+          "33",
+          "34",
+          "FF",
+          "36"
+        ],
+        "retained": [
+          "31",
+          "32",
+          "33",
+          "34",
+          "FF",
+          "36"
+        ],
+        "meaning": "function-unavailable"
+      }
+    ],
+    "declared_states": [
+      {
+        "field": "error-relay",
+        "direction": "request",
+        "previous": [
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26"
+        ],
+        "raw": [
+          "21",
+          "22",
+          "23",
+          "0F",
+          "25",
+          "26"
+        ],
+        "retained": [
+          "21",
+          "22",
+          "23",
+          "0F",
+          "25",
+          "26"
+        ],
+        "meaning": "state-0F"
+      },
+      {
+        "field": "error-relay",
+        "direction": "request",
+        "previous": [
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26"
+        ],
+        "raw": [
+          "21",
+          "22",
+          "23",
+          "F0",
+          "25",
+          "26"
+        ],
+        "retained": [
+          "21",
+          "22",
+          "23",
+          "F0",
+          "25",
+          "26"
+        ],
+        "meaning": "state-F0"
+      },
+      {
+        "field": "error-relay",
+        "direction": "request",
+        "previous": [
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26"
+        ],
+        "raw": [
+          "21",
+          "22",
+          "23",
+          "00",
+          "25",
+          "26"
+        ],
+        "retained": [
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26"
+        ],
+        "meaning": "no-action"
+      },
+      {
+        "field": "error-relay",
+        "direction": "request",
+        "previous": [
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26"
+        ],
+        "raw": [
+          "21",
+          "22",
+          "23",
+          "01",
+          "25",
+          "26"
+        ],
+        "retained": [
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26"
+        ],
+        "meaning": "no-action"
+      },
+      {
+        "field": "error-relay",
+        "direction": "request",
+        "previous": [
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26"
+        ],
+        "raw": [
+          "21",
+          "22",
+          "23",
+          "FF",
+          "25",
+          "26"
+        ],
+        "retained": [
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26"
+        ],
+        "meaning": "no-action"
+      },
+      {
+        "field": "fume-flap",
+        "direction": "request",
+        "previous": [
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26"
+        ],
+        "raw": [
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "0F"
+        ],
+        "retained": [
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "0F"
+        ],
+        "meaning": "state-0F"
+      },
+      {
+        "field": "fume-flap",
+        "direction": "request",
+        "previous": [
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26"
+        ],
+        "raw": [
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "F0"
+        ],
+        "retained": [
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "F0"
+        ],
+        "meaning": "state-F0"
+      },
+      {
+        "field": "fume-flap",
+        "direction": "request",
+        "previous": [
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26"
+        ],
+        "raw": [
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "00"
+        ],
+        "retained": [
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26"
+        ],
+        "meaning": "no-action"
+      },
+      {
+        "field": "fume-flap",
+        "direction": "request",
+        "previous": [
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26"
+        ],
+        "raw": [
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "01"
+        ],
+        "retained": [
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26"
+        ],
+        "meaning": "no-action"
+      },
+      {
+        "field": "fume-flap",
+        "direction": "request",
+        "previous": [
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26"
+        ],
+        "raw": [
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "FF"
+        ],
+        "retained": [
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26"
+        ],
+        "meaning": "no-action"
+      },
+      {
+        "field": "error-relay",
+        "direction": "positive",
+        "previous": [
+          "31",
+          "32",
+          "33",
+          "34",
+          "35",
+          "36"
+        ],
+        "raw": [
+          "31",
+          "32",
+          "33",
+          "0F",
+          "35",
+          "36"
+        ],
+        "retained": [
+          "31",
+          "32",
+          "33",
+          "0F",
+          "35",
+          "36"
+        ],
+        "meaning": "state-0F"
+      },
+      {
+        "field": "error-relay",
+        "direction": "positive",
+        "previous": [
+          "31",
+          "32",
+          "33",
+          "34",
+          "35",
+          "36"
+        ],
+        "raw": [
+          "31",
+          "32",
+          "33",
+          "F0",
+          "35",
+          "36"
+        ],
+        "retained": [
+          "31",
+          "32",
+          "33",
+          "F0",
+          "35",
+          "36"
+        ],
+        "meaning": "state-F0"
+      },
+      {
+        "field": "error-relay",
+        "direction": "positive",
+        "previous": [
+          "31",
+          "32",
+          "33",
+          "34",
+          "35",
+          "36"
+        ],
+        "raw": [
+          "31",
+          "32",
+          "33",
+          "00",
+          "35",
+          "36"
+        ],
+        "retained": [
+          "31",
+          "32",
+          "33",
+          "34",
+          "35",
+          "36"
+        ],
+        "meaning": "no-action"
+      },
+      {
+        "field": "error-relay",
+        "direction": "positive",
+        "previous": [
+          "31",
+          "32",
+          "33",
+          "34",
+          "35",
+          "36"
+        ],
+        "raw": [
+          "31",
+          "32",
+          "33",
+          "01",
+          "35",
+          "36"
+        ],
+        "retained": [
+          "31",
+          "32",
+          "33",
+          "34",
+          "35",
+          "36"
+        ],
+        "meaning": "no-action"
+      },
+      {
+        "field": "error-relay",
+        "direction": "positive",
+        "previous": [
+          "31",
+          "32",
+          "33",
+          "34",
+          "35",
+          "36"
+        ],
+        "raw": [
+          "31",
+          "32",
+          "33",
+          "FF",
+          "35",
+          "36"
+        ],
+        "retained": [
+          "31",
+          "32",
+          "33",
+          "34",
+          "35",
+          "36"
+        ],
+        "meaning": "no-action"
+      },
+      {
+        "field": "fume-flap",
+        "direction": "positive",
+        "previous": [
+          "31",
+          "32",
+          "33",
+          "34",
+          "35",
+          "36"
+        ],
+        "raw": [
+          "31",
+          "32",
+          "33",
+          "34",
+          "35",
+          "0F"
+        ],
+        "retained": [
+          "31",
+          "32",
+          "33",
+          "34",
+          "35",
+          "0F"
+        ],
+        "meaning": "state-0F"
+      },
+      {
+        "field": "fume-flap",
+        "direction": "positive",
+        "previous": [
+          "31",
+          "32",
+          "33",
+          "34",
+          "35",
+          "36"
+        ],
+        "raw": [
+          "31",
+          "32",
+          "33",
+          "34",
+          "35",
+          "F0"
+        ],
+        "retained": [
+          "31",
+          "32",
+          "33",
+          "34",
+          "35",
+          "F0"
+        ],
+        "meaning": "state-F0"
+      },
+      {
+        "field": "fume-flap",
+        "direction": "positive",
+        "previous": [
+          "31",
+          "32",
+          "33",
+          "34",
+          "35",
+          "36"
+        ],
+        "raw": [
+          "31",
+          "32",
+          "33",
+          "34",
+          "35",
+          "00"
+        ],
+        "retained": [
+          "31",
+          "32",
+          "33",
+          "34",
+          "35",
+          "36"
+        ],
+        "meaning": "no-action"
+      },
+      {
+        "field": "fume-flap",
+        "direction": "positive",
+        "previous": [
+          "31",
+          "32",
+          "33",
+          "34",
+          "35",
+          "36"
+        ],
+        "raw": [
+          "31",
+          "32",
+          "33",
+          "34",
+          "35",
+          "01"
+        ],
+        "retained": [
+          "31",
+          "32",
+          "33",
+          "34",
+          "35",
+          "36"
+        ],
+        "meaning": "no-action"
+      },
+      {
+        "field": "fume-flap",
+        "direction": "positive",
+        "previous": [
+          "31",
+          "32",
+          "33",
+          "34",
+          "35",
+          "36"
+        ],
+        "raw": [
+          "31",
+          "32",
+          "33",
+          "34",
+          "35",
+          "FF"
+        ],
+        "retained": [
+          "31",
+          "32",
+          "33",
+          "34",
+          "35",
+          "36"
+        ],
+        "meaning": "no-action"
+      }
+    ],
+    "feedback": [
+      {
+        "field": "secondary-heating-pump",
+        "setpoint": "21",
+        "actual_signal_present": false,
+        "actual_token": null,
+        "feedback_token": "21",
+        "source": "setpoint-fallback",
+        "physical_value": "Unknown"
+      },
+      {
+        "field": "secondary-heating-pump",
+        "setpoint": "21",
+        "actual_signal_present": true,
+        "actual_token": "21",
+        "feedback_token": "21",
+        "source": "actual-signal",
+        "physical_value": "Unknown"
+      },
+      {
+        "field": "secondary-heating-pump",
+        "setpoint": "21",
+        "actual_signal_present": true,
+        "actual_token": "31",
+        "feedback_token": "31",
+        "source": "actual-signal",
+        "physical_value": "Unknown"
+      },
+      {
+        "field": "circulation-pump",
+        "setpoint": "22",
+        "actual_signal_present": false,
+        "actual_token": null,
+        "feedback_token": "22",
+        "source": "setpoint-fallback",
+        "physical_value": "Unknown"
+      },
+      {
+        "field": "circulation-pump",
+        "setpoint": "22",
+        "actual_signal_present": true,
+        "actual_token": "22",
+        "feedback_token": "22",
+        "source": "actual-signal",
+        "physical_value": "Unknown"
+      },
+      {
+        "field": "circulation-pump",
+        "setpoint": "22",
+        "actual_signal_present": true,
+        "actual_token": "32",
+        "feedback_token": "32",
+        "source": "actual-signal",
+        "physical_value": "Unknown"
+      },
+      {
+        "field": "solar-pump",
+        "setpoint": "23",
+        "actual_signal_present": false,
+        "actual_token": null,
+        "feedback_token": "23",
+        "source": "setpoint-fallback",
+        "physical_value": "Unknown"
+      },
+      {
+        "field": "solar-pump",
+        "setpoint": "23",
+        "actual_signal_present": true,
+        "actual_token": "23",
+        "feedback_token": "23",
+        "source": "actual-signal",
+        "physical_value": "Unknown"
+      },
+      {
+        "field": "solar-pump",
+        "setpoint": "23",
+        "actual_signal_present": true,
+        "actual_token": "33",
+        "feedback_token": "33",
+        "source": "actual-signal",
+        "physical_value": "Unknown"
+      },
+      {
+        "field": "error-relay",
+        "setpoint": "24",
+        "actual_signal_present": false,
+        "actual_token": null,
+        "feedback_token": "24",
+        "source": "setpoint-fallback",
+        "physical_value": "Unknown"
+      },
+      {
+        "field": "error-relay",
+        "setpoint": "24",
+        "actual_signal_present": true,
+        "actual_token": "24",
+        "feedback_token": "24",
+        "source": "actual-signal",
+        "physical_value": "Unknown"
+      },
+      {
+        "field": "error-relay",
+        "setpoint": "24",
+        "actual_signal_present": true,
+        "actual_token": "34",
+        "feedback_token": "34",
+        "source": "actual-signal",
+        "physical_value": "Unknown"
+      },
+      {
+        "field": "loading-pump",
+        "setpoint": "25",
+        "actual_signal_present": false,
+        "actual_token": null,
+        "feedback_token": "25",
+        "source": "setpoint-fallback",
+        "physical_value": "Unknown"
+      },
+      {
+        "field": "loading-pump",
+        "setpoint": "25",
+        "actual_signal_present": true,
+        "actual_token": "25",
+        "feedback_token": "25",
+        "source": "actual-signal",
+        "physical_value": "Unknown"
+      },
+      {
+        "field": "loading-pump",
+        "setpoint": "25",
+        "actual_signal_present": true,
+        "actual_token": "35",
+        "feedback_token": "35",
+        "source": "actual-signal",
+        "physical_value": "Unknown"
+      },
+      {
+        "field": "fume-flap",
+        "setpoint": "26",
+        "actual_signal_present": false,
+        "actual_token": null,
+        "feedback_token": "26",
+        "source": "setpoint-fallback",
+        "physical_value": "Unknown"
+      },
+      {
+        "field": "fume-flap",
+        "setpoint": "26",
+        "actual_signal_present": true,
+        "actual_token": "26",
+        "feedback_token": "26",
+        "source": "actual-signal",
+        "physical_value": "Unknown"
+      },
+      {
+        "field": "fume-flap",
+        "setpoint": "26",
+        "actual_signal_present": true,
+        "actual_token": "36",
+        "feedback_token": "36",
+        "source": "actual-signal",
+        "physical_value": "Unknown"
+      }
+    ]
+  }
+}

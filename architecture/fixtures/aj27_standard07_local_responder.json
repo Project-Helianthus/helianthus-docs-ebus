@@ -1,0 +1,202 @@
+{
+  "grade": "Hypothesis",
+  "native_behavior": "Unknown",
+  "physical_qualification": "Unknown",
+  "runtime_implemented": false,
+  "unknown": {
+    "store_a_capacity": "Unknown",
+    "store_b_capacity": "Unknown",
+    "copy_ordering": "Unknown",
+    "short_read_completion": "Unknown",
+    "identity_override_predicates": "Unknown",
+    "sweep_destinations": "Unknown",
+    "decimal_above_99_output": "Unknown",
+    "persistence": "Unknown",
+    "physical_response_seconds": "Unknown"
+  },
+  "builder": {
+    "prefix": 181,
+    "identifier_bytes": 5,
+    "data_bytes": 10,
+    "direction": "local_response",
+    "grade": "Hypothesis"
+  },
+  "variants": {
+    "A": {
+      "sweep_count": 230,
+      "solar": [
+        "06",
+        "ED",
+        "EE",
+        "EF",
+        "F2"
+      ],
+      "secondary": [
+        "FC",
+        "0A",
+        "12"
+      ],
+      "controller_jobs": null,
+      "attempts_per_job": null,
+      "max_attempts": 7
+    },
+    "B": {
+      "sweep_count": 0,
+      "solar": [
+        "06"
+      ],
+      "secondary": [
+        "FC"
+      ],
+      "controller_jobs": 3,
+      "attempts_per_job": 2,
+      "max_attempts": 6
+    }
+  },
+  "queue": {
+    "seconds": 180,
+    "meaning": "queue_timeout",
+    "physical_timing": "Unknown"
+  },
+  "lifecycles": {
+    "stores": [
+      "store_a",
+      "store_b"
+    ],
+    "scratch": "shared_scratch",
+    "clear_scope": "selected_store_only",
+    "copy_completion": "Unknown",
+    "short_success_full_identity": false,
+    "setter_persistence": "Unknown"
+  },
+  "selection": {
+    "paths": [
+      "gpio",
+      "conditional_import"
+    ],
+    "import_condition": "Unknown",
+    "unconditional_import": false,
+    "precedence": "Unknown"
+  },
+  "boundaries": {
+    "mutative_follow_up": "outside_discovery",
+    "low_nibble_parser": "outside_slice",
+    "0704_07FE_distinction": "outside_slice",
+    "shared_io_ordering": "does_not_merge_variants",
+    "admission": false,
+    "mcp_graphql": "no_surface_change",
+    "stability": "pre_1.0"
+  },
+  "builders": [
+    {
+      "id": "ordinary",
+      "identifier": [
+        65,
+        66,
+        67,
+        68,
+        69
+      ],
+      "versions": [
+        12,
+        34
+      ],
+      "number": 417,
+      "remainder": 17,
+      "quotient": 4,
+      "quotient_low8": 4,
+      "output": [
+        181,
+        65,
+        66,
+        67,
+        68,
+        69,
+        18,
+        52,
+        23,
+        4
+      ],
+      "full_identity": true
+    },
+    {
+      "id": "narrowed",
+      "identifier": [
+        65,
+        66,
+        67,
+        68,
+        69
+      ],
+      "versions": [
+        12,
+        34
+      ],
+      "number": 65535,
+      "remainder": 35,
+      "quotient": 655,
+      "quotient_low8": 143,
+      "output": null,
+      "full_identity": false
+    },
+    {
+      "id": "short",
+      "identifier": [
+        65,
+        66,
+        67,
+        68
+      ],
+      "versions": [
+        12,
+        34
+      ],
+      "number": 417,
+      "remainder": 17,
+      "quotient": 4,
+      "quotient_low8": 4,
+      "output": null,
+      "full_identity": false
+    }
+  ],
+  "transitions": [
+    {
+      "event": "short_success",
+      "target": "store_a",
+      "raw": [
+        65,
+        66,
+        67,
+        68
+      ],
+      "local_success": true,
+      "full_identity": false,
+      "last_known_good": "preserved",
+      "other_store": "preserved",
+      "scratch": "separate"
+    },
+    {
+      "event": "clear",
+      "target": "store_a",
+      "raw": [],
+      "local_success": null,
+      "full_identity": false,
+      "last_known_good": "cleared_selected",
+      "other_store": "preserved",
+      "scratch": "separate"
+    },
+    {
+      "event": "copy",
+      "target": "store_b",
+      "raw": [
+        65,
+        66
+      ],
+      "local_success": null,
+      "full_identity": false,
+      "last_known_good": "preserved_pending_completion",
+      "other_store": "preserved",
+      "scratch": "separate"
+    }
+  ]
+}
