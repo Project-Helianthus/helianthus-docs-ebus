@@ -8,9 +8,9 @@ distribution path, transport, or API change.
 
 ## Evidence and admission
 
-The supplied bounded issue requirements are the sole basis for the synthetic
-candidate. The [synthetic scenarios](fixtures/aj21_b531_getter.json) preserve
-raw inputs beside expected software outcomes. Arithmetic checks prove only the
+The synthetic candidate is bounded to the cases below. The
+[synthetic scenarios](fixtures/aj21_b531_getter.json) preserve raw inputs beside
+expected software outcomes. Arithmetic checks prove only the
 internal consistency of these examples; they do not promote the candidate.
 A native protocol claim would first require the public native documentation
 contract and its primary evidence. No physical qualification or admission follows
@@ -32,16 +32,18 @@ from this page. Missing evidence keeps admission closed.
 
 For this candidate, an OP02 failure retains the preceding cached minimum and
 maximum independently. Preserve the failed raw outcome alongside that last-known-good
-state. A failed attempt has freshness `false`, matching `FreshPair`; retained
-values cannot make the pair fresh. The failure adds no fresh metadata. A preceding
-metadata record remains separate from new metadata.
+state. This slice's freshness field grades the retained cached values as
+`Unknown`. `FreshPair` answers whether the attempt produced a fresh pair and is
+`false` for a failed read; retaining cached values does not change that result.
+The failure adds no fresh metadata. A preceding metadata record remains separate
+from new metadata.
 The following are synthetic controls, with no capture or installation identity.
 
 | Case | Before min | Before max | Read outcome | After min | After max | Freshness | New metadata |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| base | 4 | 7 | failed | 4 | 7 | false | none |
-| minimum-only | 5 | 7 | failed | 5 | 7 | false | none |
-| maximum-only | 4 | 8 | failed | 4 | 8 | false | none |
+| base | 4 | 7 | failed | 4 | 7 | Unknown | none |
+| minimum-only | 5 | 7 | failed | 5 | 7 | Unknown | none |
+| maximum-only | 4 | 8 | failed | 4 | 8 | Unknown | none |
 
 ## Getter arithmetic
 
