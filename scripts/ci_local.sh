@@ -433,8 +433,15 @@ for gate_test_file in tests/test_*.py; do
   python3 -m pytest -q "$gate_test_file" || gate_test_status=$?
   if [ "$gate_test_status" -eq 5 ]; then
     # pytest collected nothing: run load_tests-protocol files through unittest,
-    # like the dedicated unittest steps. Zero tests there exits 5 and fails.
-    python3 -m unittest discover -s tests -p "$gate_test_name" -v
+    # like the dedicated unittest steps. Do not rely on unittest's own exit
+    # status for an empty run: require a nonzero test count, so an empty or
+    # misnamed suite fails here instead of passing silently.
+    gate_unittest_log="$(mktemp "${gate_temp_dir}/unittest.XXXXXXXX")"
+    python3 -m unittest discover -s tests -p "$gate_test_name" -v 2>&1 | tee "$gate_unittest_log"
+    if ! grep -qE '^Ran [1-9][0-9]* tests? in ' "$gate_unittest_log"; then
+      echo "${gate_test_file}: neither pytest nor unittest collected any test (empty or misnamed suite)." >&2
+      exit 5
+    fi
   elif [ "$gate_test_status" -ne 0 ]; then
     exit "$gate_test_status"
   fi
