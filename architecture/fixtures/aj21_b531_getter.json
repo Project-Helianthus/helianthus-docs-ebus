@@ -1,0 +1,233 @@
+{
+  "grade": "Hypothesis",
+  "unknown": {
+    "native_behavior": "Unknown",
+    "physical_qualification": "Unknown",
+    "factor_operation_order": "Unknown",
+    "factor_application": "Unknown",
+    "timer_argument": "Unknown",
+    "initial_job_timing": "Unknown",
+    "physical_cadence": "Unknown",
+    "native_unit": "Unknown",
+    "native_encoding": "Unknown",
+    "outside_u32": "Unknown",
+    "lifecycle_relationship": "Unknown"
+  },
+  "admission": "closed",
+  "cache_cases": [
+    {
+      "case": "base",
+      "opcode": "OP02",
+      "before": {
+        "min": 4,
+        "max": 7
+      },
+      "raw_outcome": "failed",
+      "after": {
+        "min": 4,
+        "max": 7
+      },
+      "preceding_metadata": {
+        "quality": "Unknown"
+      },
+      "retained_metadata": {
+        "quality": "Unknown"
+      },
+      "new_metadata": {},
+      "freshness": false
+    },
+    {
+      "case": "minimum-only",
+      "opcode": "OP02",
+      "before": {
+        "min": 5,
+        "max": 7
+      },
+      "raw_outcome": "failed",
+      "after": {
+        "min": 5,
+        "max": 7
+      },
+      "preceding_metadata": {
+        "quality": "Unknown"
+      },
+      "retained_metadata": {
+        "quality": "Unknown"
+      },
+      "new_metadata": {},
+      "freshness": false
+    },
+    {
+      "case": "maximum-only",
+      "opcode": "OP02",
+      "before": {
+        "min": 4,
+        "max": 8
+      },
+      "raw_outcome": "failed",
+      "after": {
+        "min": 4,
+        "max": 8
+      },
+      "preceding_metadata": {
+        "quality": "Unknown"
+      },
+      "retained_metadata": {
+        "quality": "Unknown"
+      },
+      "new_metadata": {},
+      "freshness": false
+    }
+  ],
+  "getter_cases": [
+    {
+      "raw_u32": 0,
+      "floor_quotient": 0,
+      "result": 0
+    },
+    {
+      "raw_u32": 9,
+      "floor_quotient": 0,
+      "result": 0
+    },
+    {
+      "raw_u32": 10,
+      "floor_quotient": 1,
+      "result": 1
+    },
+    {
+      "raw_u32": 655359,
+      "floor_quotient": 65535,
+      "result": 65535
+    },
+    {
+      "raw_u32": 655360,
+      "floor_quotient": 65536,
+      "result": 0
+    },
+    {
+      "raw_u32": 4294967295,
+      "floor_quotient": 429496729,
+      "result": 39321
+    }
+  ],
+  "distribution": [
+    {
+      "alternative": "direct",
+      "factor_metadata": "Unknown",
+      "identities_before": [
+        {
+          "participant": "synthetic-a",
+          "slot": 2,
+          "route": "route-a"
+        },
+        {
+          "participant": "synthetic-b",
+          "slot": 2,
+          "route": "route-a"
+        },
+        {
+          "participant": "synthetic-a",
+          "slot": 3,
+          "route": "route-a"
+        },
+        {
+          "participant": "synthetic-a",
+          "slot": 2,
+          "route": "route-b"
+        }
+      ],
+      "identities_after": [
+        {
+          "participant": "synthetic-a",
+          "slot": 2,
+          "route": "route-a"
+        },
+        {
+          "participant": "synthetic-b",
+          "slot": 2,
+          "route": "route-a"
+        },
+        {
+          "participant": "synthetic-a",
+          "slot": 3,
+          "route": "route-a"
+        },
+        {
+          "participant": "synthetic-a",
+          "slot": 2,
+          "route": "route-b"
+        }
+      ],
+      "output_value": "Unknown"
+    },
+    {
+      "alternative": "aggregate",
+      "factor_metadata": 86500,
+      "identities_before": [
+        {
+          "participant": "synthetic-a",
+          "slot": 2,
+          "route": "route-a"
+        },
+        {
+          "participant": "synthetic-b",
+          "slot": 2,
+          "route": "route-a"
+        },
+        {
+          "participant": "synthetic-a",
+          "slot": 3,
+          "route": "route-a"
+        },
+        {
+          "participant": "synthetic-a",
+          "slot": 2,
+          "route": "route-b"
+        }
+      ],
+      "identities_after": [
+        {
+          "participant": "synthetic-a",
+          "slot": 2,
+          "route": "route-a"
+        },
+        {
+          "participant": "synthetic-b",
+          "slot": 2,
+          "route": "route-a"
+        },
+        {
+          "participant": "synthetic-a",
+          "slot": 3,
+          "route": "route-a"
+        },
+        {
+          "participant": "synthetic-a",
+          "slot": 2,
+          "route": "route-b"
+        }
+      ],
+      "output_value": "Unknown"
+    }
+  ],
+  "lifecycle": [
+    {
+      "event": "timer",
+      "argument": "Unknown",
+      "timing": "Unknown",
+      "physical_cadence": "Unknown"
+    },
+    {
+      "event": "delayed-initial-job",
+      "argument": "Unknown",
+      "timing": "Unknown",
+      "physical_cadence": "Unknown"
+    }
+  ],
+  "outside_slice": [
+    "raw-word*10",
+    "capability predicates",
+    "special index 1 branch"
+  ]
+}
