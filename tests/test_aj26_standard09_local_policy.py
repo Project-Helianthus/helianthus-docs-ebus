@@ -56,6 +56,19 @@ def verification(row, read_identity=None):
     return 'positive_unverified'
 
 
+def merge_pair(state, row):
+    retained = copy.deepcopy(state)
+    key = identity(row)
+    pair = {field: copy.deepcopy(row[field]) for field in
+            ('low', 'high', 'written', 'positive', 'verify', 'read')}
+    pair['result'] = verification(row)
+    pair['last_known_good'] = copy.deepcopy(
+        row['read'] if pair['result'] == 'synthetic_verified'
+        else retained[key]['last_known_good'])
+    retained[key] = pair
+    return retained
+
+
 def table(page, header):
     lines = page.splitlines()
     start = lines.index(header) + 2
@@ -195,6 +208,20 @@ class LocalPolicyTest(unittest.TestCase):
             self.assertEqual(verification(row), outcome)
         self.assertEqual(sequence[0]['result'], 'synthetic_verified')
         self.assertEqual([r['last_known_good'] for r in sequence], [['11'], ['10'], ['20']])
+        state = {
+            ('00', '00', 1): {'last_known_good': ['00']},
+            ('01', '00', 1): {'last_known_good': ['10']},
+            ('00', '01', 1): {'last_known_good': ['20']}}
+        expected_state = copy.deepcopy(state)
+        for row in sequence:
+            before_state = copy.deepcopy(state)
+            after_state = merge_pair(state, row)
+            self.assertEqual(state, before_state)
+            expected_state[identity(row)] = copy.deepcopy(row)
+            # Compare every pair after each transition, including both later
+            # failures: earlier outcomes and raw data must survive the merge.
+            self.assertEqual(after_state, expected_state)
+            state = after_state
         # Pairs with identical bytes are told apart only by read identity.
         twin = dict(sequence[0])
         self.assertEqual(verification(twin, identity(twin)), 'synthetic_verified')
