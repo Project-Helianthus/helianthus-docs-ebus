@@ -84,6 +84,11 @@ A circuit name occupies exactly ten ASCII characters (ten bytes). Nine and
 eleven ASCII bytes do not match that declaration. Padding, trimming, NUL
 termination, UTF-8 and truncation are Unknown; no text repair is implied.
 
+The candidate default of ten ASCII zero characters (`0000000000`) conflicts
+with the unspecified default retained here. That candidate remains
+**Hypothesis**; the disagreement is unresolved and the physical default remains
+**Unknown**.
+
 ## Unresolved write alternatives
 
 These alternatives remain separate. Their direction, operation, offsets and
