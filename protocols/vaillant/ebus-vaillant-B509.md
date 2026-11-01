@@ -15,10 +15,6 @@ the [subcommand catalogue](#subcommand-catalogue). The register form documented
 under Wire Shape uses the operation bytes `0D` and `0E`; the falsification tests
 below concern the bytes after those two operation bytes.
 
-Evidence labels:
-
-- `PUBLIC_CONFIG`: public john30 `ebusd-configuration` repository.
-
 Confidence markers follow the repository vocabulary: **Proven**,
 **Hypothesis** and **Unknown**. A statement described as unconfirmed on the wire
 has not been captured on an eBUS exchange.
@@ -115,13 +111,17 @@ the boiler and heat-pump maps give the full register lists.
 ## Subcommand catalogue
 
 `B509` selects its function with the first payload byte (`DB1`). The table
-lists the subcommands covered by this page, with the Vaillant name of each.
+lists the subcommands detailed below before the bounded alternatives section,
+with the Vaillant name of each.
 Presence on a given target is target-specific and unconfirmed on the wire for
 every row, and a byte pattern needs the target product before it can be decoded.
-Every documented subcommand is available on both the eBUS and the PeBUS profile
+Every subcommand in this table is available on both the eBUS and the PeBUS profile
 (candidate availability, unconfirmed on the wire; PeBUS denotes the second
-Vaillant protocol profile). No subcommand of this family is known to be available
-only on PeBUS (candidate).
+Vaillant protocol profile).
+
+Operations `06`, `07`, `32`, `33`, `39`, `41`, `44` and `59` are covered
+separately under **Bounded width and feedback alternatives**. Their eBUS/PeBUS
+availability, wire adaptation and installed support remain **Unknown**.
 
 | `DB1` | Vaillant name | Purpose | Candidate availability |
 |---|---|---|---|
@@ -147,8 +147,8 @@ only on PeBUS (candidate).
 
 ### Symbolic-address reads and writes: 0D, 0E, 0F, 10 and 29
 
-Candidate request shapes and behaviour, unconfirmed on the wire; a
-`PUBLIC_CONFIG` mark denotes public community configuration evidence. `a1 a2` is the symbolic address in wire order (see
+Candidate request shapes and behaviour, unconfirmed on the wire.
+`a1 a2` is the symbolic address in wire order (see
 [Address byte order](#address-byte-order)). `NN` is the payload length byte.
 
 ```text
@@ -162,9 +162,8 @@ Candidate request shapes and behaviour, unconfirmed on the wire; a
 - `0D`: the reply carries the register data. Its width and codec depend on the
   target product; no universal decoder is known (**Unknown**).
 - `29`: the reply is an address followed by data selected by that address.
-  `PUBLIC_CONFIG`: the community heat-pump configuration decodes `29`
-  replies as two ignored address bytes followed by the register value, with the
-  same ids as `0D`.
+  **Hypothesis** (unconfirmed on the wire): heat-pump replies contain two
+  address bytes followed by the register value, with the same ids as `0D`.
 - `0E`: the value follows the address; its codec comes from the target
   product. The reply carries no data.
 - `0F`: as `0E`, and it also enables remote control of the value. Candidate
@@ -356,8 +355,7 @@ only in the explicit feedback alternative. Prefix-only-positive and
 ambiguous-negative remain separate states; an apparent shared prefix supplies
 no alternative discriminator, physical NACK or successful-reset evidence.
 
-The independently merged [AE07 finite catalog](https://github.com/Project-Helianthus/helianthus-ebusreg/pull/245)
-is corroborating implementation evidence for exactly these 21 entries, not
+The scope is exactly these 21 entries; they remain candidates, not
 proof of the native wire contract or a broader completed catalog. Generic
 OP0D/0E access and identity scanning are outside these entries. Synthetic
 correctness provides no physical qualification, freshness or execution authority.
@@ -392,9 +390,9 @@ different identity.
 | `selector` | Complete selector: the two-byte register id in map notation, or the five-byte selector of the heat pump interface unit section. Empty for the two operation rows. |
 | `name` | Canonical name: `snake_case`, describing the quantity. Unit, codec, scaling and access are separate fields; names carry no API prefix. A name is provisional when its `open_question` says so; it stays provisional until the conflict recorded there is resolved. |
 | `unit` | Unit of the value after the map's scaling. Empty when there is none or when it is unresolved. |
-| `vaillant_friendly_name` | For boiler entries, the diagnostic menu code with its label (for example `d.40 Supply temperature`); the label text follows the community ebusd comments. For the two operation rows, a descriptive expansion of the service name. |
+| `vaillant_friendly_name` | For boiler entries, the diagnostic menu code with its label (for example `d.40 Supply temperature`). For the two operation rows, a descriptive expansion of the service name. |
 | `vaillant_name` | Vaillant symbolic name for the register, or the service name for the operation rows. Empty where no Vaillant name is known. Vaillant names can differ between devices of one class for the same id; the cell then holds one of them (for example `0x4904`). |
-| `ebusd_name` | Name in the community ebusd configurations. For the heat pump interface unit selectors the second name is the one used in the heat pump map. |
+| `ebusd_name` | Alternative name. For the heat pump interface unit selectors the second name is the one used in the heat pump map. |
 | `legacy_api_path` | Earlier API path (`state.*`, `config.*`, `diagnostics.*`, `identity.*`, `energy.*`), kept as correspondence only. It is not a name and not a Vaillant name. |
 | `open_question` | Open item for the entry. |
 
@@ -421,7 +419,7 @@ name is known; it does not mean that the register or a name does not exist.
 - Whether every target accepts both echoed-op and address-only response forms.
 - Whether B509/`0x9A00` (DSN) is available on EHP00/HMU devices for product-type
   gating, or if B514 must be used exclusively for heat pump identification.
-- Heat pump interface unit `540200xx` sub-addressing: single-source candidate;
+- Heat pump interface unit `540200xx` sub-addressing: candidate;
   live validation priority items: CompressorSpeed, Fan1Speed,
   ElectricPowerConsumption, AirInletTemp.
 - EHP `01`-suffix register semantics: page/bank selector vs instance selector.
@@ -477,11 +475,8 @@ name is known; it does not mean that the register or a name does not exist.
 
 ## References
 
-- Public TypeSpec: [_templates.tsp](https://github.com/john30/ebusd-configuration/blob/HEAD/src/vaillant/_templates.tsp)
-- Public Vaillant configurations: [john30/ebusd-configuration](https://github.com/john30/ebusd-configuration/tree/HEAD/src/vaillant)
 - Boiler register map: [`ebus-vaillant-B509-boiler-register-map.md`](ebus-vaillant-B509-boiler-register-map.md)
 - Heat pump register map: [`ebus-vaillant-B509-heatpump-register-map.md`](ebus-vaillant-B509-heatpump-register-map.md)
 - Register name correspondence fixture: [`fixtures/b509-register-name-correspondence.csv`](fixtures/b509-register-name-correspondence.csv)
 - Diagnostic selector family: [`ebus-vaillant-B503.md`](ebus-vaillant-B503.md)
 - Consolidated local reference: [`ebus-vaillant.md`](ebus-vaillant.md)
-- Historical Vaillant reference: [Pittnerovi eBUS page](https://www.pittnerovi.com/jiri/hobby/electronics/ebus/)
