@@ -90,8 +90,8 @@ The descriptions are plain-language and are not canonical names.
 | `B5 06 0C` | testing heat-pump inputs 3 | 1 | 10 |
 | `B5 06 0D` | testing heat-pump inputs 4 | 1 | 10 |
 | `B5 06 0E` | testing heat-pump inputs 5 | 1 | 10 |
-| `B5 06 0F` | EEPROM checksum or CRC request | 2 | 3 |
-| `B5 06 10` | EEPROM check response (carried in the request) | 4 | 0 |
+| `B5 06 0F` | EEPROM check request; field association unresolved below | 2 (older candidate shape) | Unknown |
+| `B5 06 10` | EEPROM check response (older candidate association) | Unknown | 0 (older candidate shape) |
 | `B5 06 11` | test mode for hardware validation | ≥2 | ≥1 |
 | `B5 06 12` | radio test: send continuous wave | 2 | 0 |
 | `B5 06 13` | radio test: configure test telegram | 5 | 0 |
@@ -112,15 +112,14 @@ The descriptions are plain-language and are not canonical names.
 
 The `01` (stop test) and `02 <value>` (select or start test) forms above are
 consistent with the candidate ops `01` (disable remote control of all outputs)
-and `02` (outputs, one bit per output).
+and `02` (two distinct output variants; see the scoped declarations below).
 
 ## Candidate encodings and enumerations
 
 Every item in this section is a candidate layout, unconfirmed on the wire.
 
-- **Outputs** (`B5 06 02`): candidate, unconfirmed on the wire: bit 0 is output
-  1, bit 1 output 2, bit 2 output 3 at offset 3; on some controllers only bit 0
-  (backlight) is a candidate, unresolved. `B5 06 00` sets all outputs (candidate):
+- **Outputs** (`B5 06 02`): the two independent candidate variants are
+  declared in the scoped table below. `B5 06 00` sets all outputs (candidate):
   `1` on, any other value off.
 - **Inputs and sensors** (`04`..`07`, `0A`..`0E`, `1C`..`20`): candidate,
   unconfirmed on the wire: temperatures are mostly `i16` LE ÷16 °C. Several
@@ -129,13 +128,14 @@ Every item in this section is a candidate layout, unconfirmed on the wire.
   as a temperature value; the unit of these fields is unresolved. The unit of the
   water-pressure field of `1F` is bar (`u16` LE ÷16) and the frequency inputs of
   `20` are in l/min (candidate).
-- **ROM and EEPROM check** (`08`, `0F`): candidate, unconfirmed on the wire: the
-  check-type byte in the request is `0` send back the supported types, `2` 16-bit
-  checksum for the whole ROM (the relevant EEPROM for `0F`), `4` 16-bit CRC, `8`
-  8-bit CRC, `16` 8-bit CRC with the eBUS polynomial, `255` read the CRC. The
-  reply is two byte fields (check type, check) even for the 8-bit modes. No
-  polynomial, initial value or covered range is known for these numbers. `09` and
-  `10` carry the same two fields in the request.
+- **ROM check** (`08`): candidate, unconfirmed on the wire: the check-type
+  byte in the request is `0` send back the supported types, `2` 16-bit checksum
+  for the whole ROM, `4` 16-bit CRC, `8` 8-bit CRC, `16` 8-bit CRC with the eBUS
+  polynomial, `255` read the CRC. The candidate reply has check-type and check
+  fields; no polynomial, initial value or covered range is established. `09`
+  carries the candidate check fields in the request. These ROM declarations do
+  not establish EEPROM algorithms, returned widths or operation association;
+  the bounded EEPROM declaration is below.
 - **Radio details**: candidate, unconfirmed on the wire: `13` wait time between
   two test telegrams at offset 5 is a raw `u8` × 100 ms (1..255); `15` selects
   the transceiver mode `0` sleep, `1` wake and idle, `2` standby, `3` receive, `4`
@@ -167,7 +167,49 @@ combine modes 3 and 4; `7`, `8` and `9` product-specific EMC, long-term and
 external flash-ROM test modes; `10` enter low-power mode; `32`..`37` radio tests
 (unmodulated carrier; pseudo-random sequence with modulation, continuous or not;
 with listen-before-talk; listening with a statistical counter). The parameter
-sets, reply bodies and framing beyond this byte are unknown.
+representations are declared below by explicit decimal key; their bounds where
+absent, reply bodies and framing remain Unknown.
+
+## Scoped parameter and checksum declarations
+
+**Hypothesis**: the following finite declarations concern only the Vaillant
+family, PB `B5`, SB `06`. Native wire qualification and physical qualification
+are **Unknown**. The public native contract is this table; the independently
+merged [AE05 catalog](https://github.com/Project-Helianthus/helianthus-ebusreg/pull/239)
+is corroborating implementation evidence for exactly the production-test,
+backlight-only, three-output and EEPROM checksum entries, not proof of a
+broader completed catalog. The [synthetic cases](fixtures/ae06_b506_candidates.json)
+retain raw representations without qualifying device behavior.
+
+Keys in the parameter union are decimal selectors, explicitly associated with
+representations; row order has no meaning. All other keys remain unmapped.
+Logical position is not a wire offset. Direction and logical position are
+Unknown in this bounded declaration, even where older enclosing service shapes
+above suggest a request layout. The EEPROM entry does not assign an operation
+or inherit the older `0F`/`10` field associations.
+The five `B5 06 0F`/`B5 06 10` EEPROM rows in the linked field-level CSV
+are superseded by this declaration. Their algorithm assignments, operation
+associations and fixed 16-bit checksum width are withdrawn; those properties
+remain Unknown. The rows are retained only as superseded candidate history.
+
+| Grade | Identity (PB B5 / SB 06, Vaillant family) | Direction | Logical position / extent | Raw type / domain | Scale | Sentinel / default / conflict | Unresolved properties |
+|---|---|---|---|---|---|---|---|
+| Hypothesis | OP11 production-test parameter; keys 0,1,2,4,5 | Unknown | Position Unknown; through end-of-data | Opaque bytes | Unknown | Sentinel Unknown; default Unknown; row order is not key association | Minimum/maximum length Unknown; zero length representable; empty-request acceptance Unknown |
+| Hypothesis | OP11 production-test parameter; keys 3,6,7,8,9,32,33,34,35,36,37 | Unknown | Position Unknown; one byte | Raw byte 00..FF | Unknown | Sentinel Unknown; default Unknown; row order is not key association | Meaning, unit and additional constraints Unknown |
+| Hypothesis | OP11 production-test parameter; key 10 | Unknown | Position Unknown; one byte | Boolean 0=no, 1=yes; 2 unmapped | Unknown | Sentinel Unknown; default Unknown; no meaning invented for other values | Behavior for unmapped values Unknown |
+| Hypothesis | OP02 backlight-only outputs | Unknown | Position Unknown; one byte | Bit 0 backlight; mask 01; reserved mask FE | Unknown | Sentinel Unknown; default Unknown; reserved bits retained raw | Bits 1..7 reserved; variant selection Unknown; no automatic choice |
+| Hypothesis | OP02 three-output outputs | Unknown | Position Unknown; one byte | Bits 0..2 outputs 1..3; mask 07; reserved mask F8 | Unknown | Sentinel Unknown; default Unknown; reserved bits retained raw | Bits 3..7 reserved; variant selection Unknown; no automatic choice |
+| Hypothesis | EEPROM checksum_type; operation Unknown | Unknown | Position Unknown; type one byte; returned width Unknown | 00=query-supported-types; 01..7F=scalar-type; 80 unmapped | Unknown | Sentinel Unknown; default Unknown; scalar, not flags; conflicting EEPROM algorithm assignments withdrawn | Algorithm Unknown; returned checksum width Unknown; completion Unknown; checksum data Unknown |
+
+For the same raw `07`, backlight-only retains active bits `01` and reserved
+bits `06`; three-output retains active bits `07` and reserved bits `00`.
+Both reconstruct raw `07`. This does not select a variant. Opaque `00 AA FF`
+and zero-length representations retain all bytes; neither establishes accepted
+request lengths. Checksum `03` is one scalar type, not flags `01` and `02`;
+`80` has no new declared type. Algorithm, returned checksum width, completion
+and checksum data remain independently Unknown, including for query `00`.
+No declaration establishes writable behavior, execution authority or admission.
+No stability guarantee is made before 1.0.
 
 ## Profiles
 
@@ -183,25 +225,27 @@ whether the service is available under the PeBUS profile is not established (see
 - The candidate ops are known only as candidate layouts; no exchange of them was
   observed beyond the examples on this page, and whether any device implements
   them is not established.
-- The check-byte algorithms and coverage of the ROM and EEPROM check requests
-  (`08`, `09`, `0F`, `10`) are not established.
+- ROM check algorithms and coverage (`08`, `09`) remain unestablished. EEPROM
+  algorithm, returned checksum width, completion, checksum data and operation
+  association remain independently Unknown; scalar type declarations do not
+  resolve them.
 - The units of the heat-pump input fields that may be non-temperature quantities
   but are carried as temperatures (`0B`, `0C`) are unresolved.
-- The parameter sets, reply body lengths and framing of the `B5 06 11` test modes
-  beyond the candidate test-mode byte are unknown; the values given for that
-  byte are unconfirmed on the wire.
+- OP11 parameter representations have the explicit keyed Hypothesis declarations
+  above. Opaque bounds, empty-request acceptance, reply body lengths and framing
+  remain Unknown; the test-mode values are unconfirmed on the wire.
 - Several candidate default values lie outside their candidate intervals (see the
   fixture; for example the `13` wait time default 0 against 1..255 and the `18`
   configuration default 0 against 1..6); the intended defaults are unresolved.
 - How the candidate response offsets map onto the data bytes of a bus response is
   unconfirmed on the wire.
-- Whether `B5 06 02` carries the output bits 0..2 or, on some controllers, only
-  bit 0 (backlight) is unresolved.
+- OP02 backlight-only and three-output remain independent Hypothesis variants;
+  which applies to a device family remains Unknown. Reserved bits stay raw.
 - Whether the RSSI of `B5 06 1B` at offset 4 is a raw `u8` or a signed value in
   half-dB steps that is valid only when the detection state is 1 is unresolved.
 
 ## References
 
-- Public TypeSpec: [iotesthp_inc.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/iotesthp_inc.tsp)
-- Public TypeSpec: [iotestbsol_inc.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/iotestbsol_inc.tsp)
-- Public TypeSpec: [iotestbmc_inc.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/iotestbmc_inc.tsp)
+- Public TypeSpec: [iotesthp_inc.tsp](https://github.com/john30/ebusd-configuration/blob/HEAD/src/vaillant/iotesthp_inc.tsp)
+- Public TypeSpec: [iotestbsol_inc.tsp](https://github.com/john30/ebusd-configuration/blob/HEAD/src/vaillant/iotestbsol_inc.tsp)
+- Public TypeSpec: [iotestbmc_inc.tsp](https://github.com/john30/ebusd-configuration/blob/HEAD/src/vaillant/iotestbmc_inc.tsp)
