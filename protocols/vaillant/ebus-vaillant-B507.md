@@ -65,9 +65,23 @@ not established.
 
 ### D1C Encoding
 
-ebusd Data type 1C -- signed 1-byte, 0.5 unit/LSB. Operational range
-0-100%. Values above `0x63` (99.5%) or negative likely indicate a sentinel
-or error state.
+ebusd Data type 1C -- signed 1-byte, 0.5 unit/LSB. Carrier range
+-128..127, numeric range -64.0 to +63.5%. Proven numeric contract (signed
+eight-bit half-percent carrier), with worked examples:
+
+| Raw byte (hex) | Signed carrier (decimal) | Decoded percentage |
+|---|---:|---:|
+| `63` | 99 | 49.5% |
+| `7F` | 127 | 63.5% |
+| `80` | -128 | -64.0% |
+
+Raw `63` is therefore 49.5%, not 99.5%.
+
+**Unresolved conflict:** the advertised operational range of 0-100% cannot be
+reconciled with this signed carrier. Clipping negative bytes to zero or
+inventing sentinel values does not resolve it, and no physical unavailable,
+sentinel or error meaning for any byte is established. The physical meaning of
+the response is Unknown.
 
 ### ID 0900 Response
 
@@ -198,7 +212,7 @@ replicate the 60-second poll entry.
    with PBSB=`B507` and QQ=`0x15` / ZZ=`0x08` at approximately 60-second
    intervals.
 2. The `HeatpumpLoadSensor` (ID `0931`) returns a D1C byte that tracks
-   compressor load percentage in real time when the heat pump is active.
+   compressor load percentage in real time (claimed; physical meaning Unknown) when the heat pump is active.
 3. B507 frames do not appear on the tested gas boiler installation (VRC720-family
    controller + boiler); whether they appear on other boiler installations is not
    established.
