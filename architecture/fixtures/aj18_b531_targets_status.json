@@ -1,0 +1,943 @@
+{
+  "grade": "Hypothesis",
+  "qualification": "Unknown",
+  "unknowns": {
+    "family_prefix": null,
+    "record_matcher": null,
+    "native_behavior": null,
+    "status_encoding": null,
+    "physical_unit": null
+  },
+  "status": {
+    "lpc_effective": 2,
+    "lpc_possible": 7,
+    "lpc_active": 0,
+    "lpc_device_status": 9
+  },
+  "status_variants": [
+    {
+      "field": "lpc_effective",
+      "value": 3
+    },
+    {
+      "field": "lpc_possible",
+      "value": 8
+    },
+    {
+      "field": "lpc_active",
+      "value": 1
+    },
+    {
+      "field": "lpc_device_status",
+      "value": 10
+    }
+  ],
+  "cases": [
+    {
+      "name": "base",
+      "slot": {
+        "slot_index": 2,
+        "participant_address": "76",
+        "route_address": "08",
+        "spn": 375,
+        "family_match": true,
+        "record_match": true,
+        "generic_heat_generator_class": 3,
+        "other_classifier": 3,
+        "registered": true,
+        "capability": true,
+        "eligibility": 1,
+        "failure": null
+      },
+      "limit_present": false,
+      "raw": {
+        "power_limit": 7,
+        "min": 2,
+        "max": 11
+      },
+      "expected": {
+        "marker_1": true,
+        "entry": true,
+        "fields": [
+          "participant_address",
+          "route_address",
+          "min",
+          "max"
+        ]
+      }
+    },
+    {
+      "name": "participant",
+      "slot": {
+        "slot_index": 2,
+        "participant_address": "78",
+        "route_address": "08",
+        "spn": 375,
+        "family_match": true,
+        "record_match": true,
+        "generic_heat_generator_class": 3,
+        "other_classifier": 3,
+        "registered": true,
+        "capability": true,
+        "eligibility": 1,
+        "failure": null
+      },
+      "limit_present": false,
+      "raw": {
+        "power_limit": 7,
+        "min": 2,
+        "max": 11
+      },
+      "expected": {
+        "marker_1": false,
+        "entry": true,
+        "fields": [
+          "participant_address",
+          "route_address",
+          "min",
+          "max"
+        ]
+      }
+    },
+    {
+      "name": "spn",
+      "slot": {
+        "slot_index": 2,
+        "participant_address": "76",
+        "route_address": "08",
+        "spn": 376,
+        "family_match": true,
+        "record_match": true,
+        "generic_heat_generator_class": 3,
+        "other_classifier": 3,
+        "registered": true,
+        "capability": true,
+        "eligibility": 1,
+        "failure": null
+      },
+      "limit_present": false,
+      "raw": {
+        "power_limit": 7,
+        "min": 2,
+        "max": 11
+      },
+      "expected": {
+        "marker_1": false,
+        "entry": true,
+        "fields": [
+          "participant_address",
+          "route_address",
+          "min",
+          "max"
+        ]
+      }
+    },
+    {
+      "name": "family_false",
+      "slot": {
+        "slot_index": 2,
+        "participant_address": "76",
+        "route_address": "08",
+        "spn": 375,
+        "family_match": false,
+        "record_match": true,
+        "generic_heat_generator_class": 3,
+        "other_classifier": 3,
+        "registered": true,
+        "capability": true,
+        "eligibility": 1,
+        "failure": null
+      },
+      "limit_present": false,
+      "raw": {
+        "power_limit": 7,
+        "min": 2,
+        "max": 11
+      },
+      "expected": {
+        "marker_1": false,
+        "entry": true,
+        "fields": [
+          "participant_address",
+          "route_address",
+          "min",
+          "max"
+        ]
+      }
+    },
+    {
+      "name": "record_false",
+      "slot": {
+        "slot_index": 2,
+        "participant_address": "76",
+        "route_address": "08",
+        "spn": 375,
+        "family_match": true,
+        "record_match": false,
+        "generic_heat_generator_class": 3,
+        "other_classifier": 3,
+        "registered": true,
+        "capability": true,
+        "eligibility": 1,
+        "failure": null
+      },
+      "limit_present": false,
+      "raw": {
+        "power_limit": 7,
+        "min": 2,
+        "max": 11
+      },
+      "expected": {
+        "marker_1": false,
+        "entry": true,
+        "fields": [
+          "participant_address",
+          "route_address",
+          "min",
+          "max"
+        ]
+      }
+    },
+    {
+      "name": "family_unknown",
+      "slot": {
+        "slot_index": 2,
+        "participant_address": "76",
+        "route_address": "08",
+        "spn": 375,
+        "family_match": null,
+        "record_match": true,
+        "generic_heat_generator_class": 3,
+        "other_classifier": 3,
+        "registered": true,
+        "capability": true,
+        "eligibility": 1,
+        "failure": null
+      },
+      "limit_present": false,
+      "raw": {
+        "power_limit": 7,
+        "min": 2,
+        "max": 11
+      },
+      "expected": {
+        "marker_1": false,
+        "entry": true,
+        "fields": [
+          "participant_address",
+          "route_address",
+          "min",
+          "max"
+        ]
+      }
+    },
+    {
+      "name": "record_unknown",
+      "slot": {
+        "slot_index": 2,
+        "participant_address": "76",
+        "route_address": "08",
+        "spn": 375,
+        "family_match": true,
+        "record_match": null,
+        "generic_heat_generator_class": 3,
+        "other_classifier": 3,
+        "registered": true,
+        "capability": true,
+        "eligibility": 1,
+        "failure": null
+      },
+      "limit_present": false,
+      "raw": {
+        "power_limit": 7,
+        "min": 2,
+        "max": 11
+      },
+      "expected": {
+        "marker_1": false,
+        "entry": true,
+        "fields": [
+          "participant_address",
+          "route_address",
+          "min",
+          "max"
+        ]
+      }
+    },
+    {
+      "name": "generic_other",
+      "slot": {
+        "slot_index": 2,
+        "participant_address": "76",
+        "route_address": "08",
+        "spn": 375,
+        "family_match": true,
+        "record_match": true,
+        "generic_heat_generator_class": 9,
+        "other_classifier": 3,
+        "registered": true,
+        "capability": true,
+        "eligibility": 1,
+        "failure": null
+      },
+      "limit_present": false,
+      "raw": {
+        "power_limit": 7,
+        "min": 2,
+        "max": 11
+      },
+      "expected": {
+        "marker_1": true,
+        "entry": true,
+        "fields": [
+          "participant_address",
+          "route_address",
+          "min",
+          "max"
+        ]
+      }
+    },
+    {
+      "name": "other_classifier",
+      "slot": {
+        "slot_index": 2,
+        "participant_address": "76",
+        "route_address": "08",
+        "spn": 375,
+        "family_match": true,
+        "record_match": true,
+        "generic_heat_generator_class": 3,
+        "other_classifier": 9,
+        "registered": true,
+        "capability": true,
+        "eligibility": 1,
+        "failure": null
+      },
+      "limit_present": false,
+      "raw": {
+        "power_limit": 7,
+        "min": 2,
+        "max": 11
+      },
+      "expected": {
+        "marker_1": true,
+        "entry": true,
+        "fields": [
+          "participant_address",
+          "route_address",
+          "min",
+          "max"
+        ]
+      }
+    },
+    {
+      "name": "slot",
+      "slot": {
+        "slot_index": 5,
+        "participant_address": "76",
+        "route_address": "08",
+        "spn": 375,
+        "family_match": true,
+        "record_match": true,
+        "generic_heat_generator_class": 3,
+        "other_classifier": 3,
+        "registered": true,
+        "capability": true,
+        "eligibility": 1,
+        "failure": null
+      },
+      "limit_present": false,
+      "raw": {
+        "power_limit": 7,
+        "min": 2,
+        "max": 11
+      },
+      "expected": {
+        "marker_1": true,
+        "entry": true,
+        "fields": [
+          "participant_address",
+          "route_address",
+          "min",
+          "max"
+        ]
+      }
+    },
+    {
+      "name": "route",
+      "slot": {
+        "slot_index": 2,
+        "participant_address": "76",
+        "route_address": "18",
+        "spn": 375,
+        "family_match": true,
+        "record_match": true,
+        "generic_heat_generator_class": 3,
+        "other_classifier": 3,
+        "registered": true,
+        "capability": true,
+        "eligibility": 1,
+        "failure": null
+      },
+      "limit_present": false,
+      "raw": {
+        "power_limit": 7,
+        "min": 2,
+        "max": 11
+      },
+      "expected": {
+        "marker_1": true,
+        "entry": true,
+        "fields": [
+          "participant_address",
+          "route_address",
+          "min",
+          "max"
+        ]
+      }
+    },
+    {
+      "name": "failure",
+      "slot": {
+        "slot_index": 2,
+        "participant_address": "76",
+        "route_address": "08",
+        "spn": 375,
+        "family_match": true,
+        "record_match": true,
+        "generic_heat_generator_class": 3,
+        "other_classifier": 3,
+        "registered": true,
+        "capability": true,
+        "eligibility": 1,
+        "failure": "synthetic_failure"
+      },
+      "limit_present": false,
+      "raw": {
+        "power_limit": 7,
+        "min": 2,
+        "max": 11
+      },
+      "expected": {
+        "marker_1": true,
+        "entry": true,
+        "fields": [
+          "participant_address",
+          "route_address",
+          "min",
+          "max"
+        ]
+      }
+    },
+    {
+      "name": "eligibility",
+      "slot": {
+        "slot_index": 2,
+        "participant_address": "76",
+        "route_address": "08",
+        "spn": 375,
+        "family_match": true,
+        "record_match": true,
+        "generic_heat_generator_class": 3,
+        "other_classifier": 3,
+        "registered": true,
+        "capability": true,
+        "eligibility": 0,
+        "failure": null
+      },
+      "limit_present": false,
+      "raw": {
+        "power_limit": 7,
+        "min": 2,
+        "max": 11
+      },
+      "expected": {
+        "marker_1": true,
+        "entry": true,
+        "fields": [
+          "participant_address",
+          "route_address",
+          "min",
+          "max"
+        ]
+      }
+    },
+    {
+      "name": "class_alone",
+      "slot": {
+        "slot_index": 2,
+        "participant_address": "78",
+        "route_address": "08",
+        "spn": 376,
+        "family_match": false,
+        "record_match": false,
+        "generic_heat_generator_class": 3,
+        "other_classifier": 3,
+        "registered": true,
+        "capability": true,
+        "eligibility": 1,
+        "failure": null
+      },
+      "limit_present": false,
+      "raw": {
+        "power_limit": 7,
+        "min": 2,
+        "max": 11
+      },
+      "expected": {
+        "marker_1": false,
+        "entry": true,
+        "fields": [
+          "participant_address",
+          "route_address",
+          "min",
+          "max"
+        ]
+      }
+    },
+    {
+      "name": "unregistered",
+      "slot": {
+        "slot_index": 2,
+        "participant_address": "76",
+        "route_address": "08",
+        "spn": 375,
+        "family_match": true,
+        "record_match": true,
+        "generic_heat_generator_class": 3,
+        "other_classifier": 3,
+        "registered": false,
+        "capability": true,
+        "eligibility": 1,
+        "failure": null
+      },
+      "limit_present": false,
+      "raw": {
+        "power_limit": 7,
+        "min": 2,
+        "max": 11
+      },
+      "expected": {
+        "marker_1": true,
+        "entry": false,
+        "fields": []
+      }
+    },
+    {
+      "name": "incapable",
+      "slot": {
+        "slot_index": 2,
+        "participant_address": "76",
+        "route_address": "08",
+        "spn": 375,
+        "family_match": true,
+        "record_match": true,
+        "generic_heat_generator_class": 3,
+        "other_classifier": 3,
+        "registered": true,
+        "capability": false,
+        "eligibility": 1,
+        "failure": null
+      },
+      "limit_present": false,
+      "raw": {
+        "power_limit": 7,
+        "min": 2,
+        "max": 11
+      },
+      "expected": {
+        "marker_1": true,
+        "entry": false,
+        "fields": []
+      }
+    },
+    {
+      "name": "limit",
+      "slot": {
+        "slot_index": 2,
+        "participant_address": "76",
+        "route_address": "08",
+        "spn": 375,
+        "family_match": true,
+        "record_match": true,
+        "generic_heat_generator_class": 3,
+        "other_classifier": 3,
+        "registered": true,
+        "capability": true,
+        "eligibility": 1,
+        "failure": null
+      },
+      "limit_present": true,
+      "raw": {
+        "power_limit": 7,
+        "min": 2,
+        "max": 11
+      },
+      "expected": {
+        "marker_1": true,
+        "entry": true,
+        "fields": [
+          "participant_address",
+          "route_address",
+          "power_limit",
+          "min",
+          "max"
+        ]
+      }
+    },
+    {
+      "name": "limit_unregistered",
+      "slot": {
+        "slot_index": 2,
+        "participant_address": "76",
+        "route_address": "08",
+        "spn": 375,
+        "family_match": true,
+        "record_match": true,
+        "generic_heat_generator_class": 3,
+        "other_classifier": 3,
+        "registered": false,
+        "capability": true,
+        "eligibility": 1,
+        "failure": null
+      },
+      "limit_present": true,
+      "raw": {
+        "power_limit": 7,
+        "min": 2,
+        "max": 11
+      },
+      "expected": {
+        "marker_1": true,
+        "entry": false,
+        "fields": []
+      }
+    },
+    {
+      "name": "limit_incapable",
+      "slot": {
+        "slot_index": 2,
+        "participant_address": "76",
+        "route_address": "08",
+        "spn": 375,
+        "family_match": true,
+        "record_match": true,
+        "generic_heat_generator_class": 3,
+        "other_classifier": 3,
+        "registered": true,
+        "capability": false,
+        "eligibility": 1,
+        "failure": null
+      },
+      "limit_present": true,
+      "raw": {
+        "power_limit": 7,
+        "min": 2,
+        "max": 11
+      },
+      "expected": {
+        "marker_1": true,
+        "entry": false,
+        "fields": []
+      }
+    }
+  ],
+  "transitions": [
+    {
+      "name": "connection_denial",
+      "inputs": {
+        "acknowledgement": true,
+        "connection": false,
+        "membership": true,
+        "restriction_allowed": true,
+        "duplicate": false,
+        "startup_restriction": 1,
+        "subsequent_control": false
+      },
+      "prior": {
+        "power_limit": 5,
+        "min": 2,
+        "max": 11
+      },
+      "proposed": {
+        "power_limit": 7
+      },
+      "expected": {
+        "local_acknowledgement": true,
+        "receipt": "Unknown",
+        "delivery": "Unknown",
+        "materialized": {
+          "power_limit": 5,
+          "min": 2,
+          "max": 11
+        }
+      }
+    },
+    {
+      "name": "membership_denial",
+      "inputs": {
+        "acknowledgement": true,
+        "connection": true,
+        "membership": false,
+        "restriction_allowed": true,
+        "duplicate": false,
+        "startup_restriction": 1,
+        "subsequent_control": false
+      },
+      "prior": {
+        "power_limit": 5,
+        "min": 2,
+        "max": 11
+      },
+      "proposed": {
+        "power_limit": 7
+      },
+      "expected": {
+        "local_acknowledgement": true,
+        "receipt": "Unknown",
+        "delivery": "Unknown",
+        "materialized": {
+          "power_limit": 5,
+          "min": 2,
+          "max": 11
+        }
+      }
+    },
+    {
+      "name": "restriction_denial",
+      "inputs": {
+        "acknowledgement": true,
+        "connection": true,
+        "membership": true,
+        "restriction_allowed": false,
+        "duplicate": false,
+        "startup_restriction": 1,
+        "subsequent_control": false
+      },
+      "prior": {
+        "power_limit": 5,
+        "min": 2,
+        "max": 11
+      },
+      "proposed": {
+        "power_limit": 7
+      },
+      "expected": {
+        "local_acknowledgement": true,
+        "receipt": "Unknown",
+        "delivery": "Unknown",
+        "materialized": {
+          "power_limit": 5,
+          "min": 2,
+          "max": 11
+        }
+      }
+    },
+    {
+      "name": "duplicate",
+      "inputs": {
+        "acknowledgement": true,
+        "connection": true,
+        "membership": true,
+        "restriction_allowed": true,
+        "duplicate": true,
+        "startup_restriction": 1,
+        "subsequent_control": false
+      },
+      "prior": {
+        "power_limit": 5,
+        "min": 2,
+        "max": 11
+      },
+      "proposed": {
+        "power_limit": 7
+      },
+      "expected": {
+        "local_acknowledgement": true,
+        "receipt": "Unknown",
+        "delivery": "Unknown",
+        "materialized": {
+          "power_limit": 5,
+          "min": 2,
+          "max": 11
+        }
+      }
+    },
+    {
+      "name": "local_control",
+      "inputs": {
+        "acknowledgement": true,
+        "connection": true,
+        "membership": true,
+        "restriction_allowed": true,
+        "duplicate": false,
+        "startup_restriction": 1,
+        "subsequent_control": false
+      },
+      "prior": {
+        "power_limit": 5,
+        "min": 2,
+        "max": 11
+      },
+      "proposed": {
+        "power_limit": 7
+      },
+      "expected": {
+        "local_acknowledgement": true,
+        "receipt": "Unknown",
+        "delivery": "Unknown",
+        "materialized": {
+          "power_limit": 7,
+          "min": 2,
+          "max": 11
+        }
+      }
+    },
+    {
+      "name": "no_ack",
+      "inputs": {
+        "acknowledgement": false,
+        "connection": true,
+        "membership": true,
+        "restriction_allowed": true,
+        "duplicate": false,
+        "startup_restriction": 1,
+        "subsequent_control": false
+      },
+      "prior": {
+        "power_limit": 5,
+        "min": 2,
+        "max": 11
+      },
+      "proposed": {
+        "power_limit": 7
+      },
+      "expected": {
+        "local_acknowledgement": false,
+        "receipt": "Unknown",
+        "delivery": "Unknown",
+        "materialized": {
+          "power_limit": 7,
+          "min": 2,
+          "max": 11
+        }
+      }
+    },
+    {
+      "name": "startup_zero",
+      "inputs": {
+        "acknowledgement": true,
+        "connection": true,
+        "membership": true,
+        "restriction_allowed": true,
+        "duplicate": false,
+        "startup_restriction": 0,
+        "subsequent_control": false
+      },
+      "prior": {
+        "power_limit": 5,
+        "min": 2,
+        "max": 11
+      },
+      "proposed": {
+        "power_limit": 7
+      },
+      "expected": {
+        "local_acknowledgement": true,
+        "receipt": "Unknown",
+        "delivery": "Unknown",
+        "materialized": {
+          "power_limit": 7,
+          "min": 2,
+          "max": 11
+        }
+      }
+    },
+    {
+      "name": "control_true",
+      "inputs": {
+        "acknowledgement": true,
+        "connection": true,
+        "membership": true,
+        "restriction_allowed": true,
+        "duplicate": false,
+        "startup_restriction": 1,
+        "subsequent_control": true
+      },
+      "prior": {
+        "power_limit": 5,
+        "min": 2,
+        "max": 11
+      },
+      "proposed": {
+        "power_limit": 7
+      },
+      "expected": {
+        "local_acknowledgement": true,
+        "receipt": "Unknown",
+        "delivery": "Unknown",
+        "materialized": {
+          "power_limit": 7,
+          "min": 2,
+          "max": 11
+        }
+      }
+    }
+  ],
+  "partial_observations": [
+    {
+      "name": "limit_only",
+      "prior": {
+        "power_limit": 5,
+        "min": 2,
+        "max": 11
+      },
+      "observed": {
+        "power_limit": 7
+      },
+      "expected": {
+        "power_limit": 7,
+        "min": 2,
+        "max": 11
+      }
+    },
+    {
+      "name": "min_only",
+      "prior": {
+        "power_limit": 5,
+        "min": 2,
+        "max": 11
+      },
+      "observed": {
+        "min": 3
+      },
+      "expected": {
+        "power_limit": 5,
+        "min": 3,
+        "max": 11
+      }
+    },
+    {
+      "name": "max_only",
+      "prior": {
+        "power_limit": 5,
+        "min": 2,
+        "max": 11
+      },
+      "observed": {
+        "max": 13
+      },
+      "expected": {
+        "power_limit": 5,
+        "min": 2,
+        "max": 13
+      }
+    }
+  ],
+  "arithmetic": {
+    "raw_min": 2,
+    "raw_max": 11,
+    "expected_span": 9,
+    "physical_unit": "Unknown"
+  }
+}

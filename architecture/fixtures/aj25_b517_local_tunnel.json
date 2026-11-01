@@ -1,0 +1,1772 @@
+{
+  "grade": "Hypothesis",
+  "unknown": {
+    "native_behavior": "Unknown",
+    "physical_route": "Unknown",
+    "fragmentation": "Unknown",
+    "timeout": "Unknown",
+    "correlation": "Unknown",
+    "negative_code_mapping": "Unknown",
+    "trust": "Unknown",
+    "channel_number": "Unknown",
+    "code_meanings": "Unknown",
+    "physical_qualification": "Unknown"
+  },
+  "admission": "withheld",
+  "clients": [
+    {
+      "id": "destination-zero",
+      "direction": "client_request_and_returned_data",
+      "input": {
+        "tunnel_destination": 0,
+        "original_destination": 42,
+        "original_pdu": [
+          181,
+          24,
+          0,
+          255
+        ],
+        "original_service": [
+          181,
+          9
+        ],
+        "returned_data": [
+          181,
+          24,
+          9
+        ]
+      },
+      "expected": {
+        "state": "ineligible",
+        "admission": "withheld",
+        "raw": {
+          "tunnel_destination": 0,
+          "original_destination": 42,
+          "original_pdu": [
+            181,
+            24,
+            0,
+            255
+          ],
+          "original_service": [
+            181,
+            9
+          ],
+          "returned_data": [
+            181,
+            24,
+            9
+          ]
+        },
+        "envelope": null,
+        "returned": null
+      }
+    },
+    {
+      "id": "control",
+      "direction": "client_request_and_returned_data",
+      "input": {
+        "tunnel_destination": 1,
+        "original_destination": 42,
+        "original_pdu": [
+          181,
+          24,
+          0,
+          255
+        ],
+        "original_service": [
+          181,
+          9
+        ],
+        "returned_data": [
+          181,
+          24,
+          9
+        ]
+      },
+      "expected": {
+        "state": "candidate",
+        "admission": "withheld",
+        "raw": {
+          "tunnel_destination": 1,
+          "original_destination": 42,
+          "original_pdu": [
+            181,
+            24,
+            0,
+            255
+          ],
+          "original_service": [
+            181,
+            9
+          ],
+          "returned_data": [
+            181,
+            24,
+            9
+          ]
+        },
+        "envelope": {
+          "channel": "fixed-channel",
+          "outer_destination": 1,
+          "inner": {
+            "original_destination": 42,
+            "original_pdu": [
+              181,
+              24,
+              0,
+              255
+            ]
+          }
+        },
+        "returned": {
+          "context": [
+            181,
+            9
+          ],
+          "raw": [
+            181,
+            24,
+            9
+          ]
+        }
+      }
+    },
+    {
+      "id": "matching-destinations",
+      "direction": "client_request_and_returned_data",
+      "input": {
+        "tunnel_destination": 42,
+        "original_destination": 42,
+        "original_pdu": [
+          181,
+          24,
+          0,
+          255
+        ],
+        "original_service": [
+          181,
+          9
+        ],
+        "returned_data": [
+          181,
+          24,
+          9
+        ]
+      },
+      "expected": {
+        "state": "candidate",
+        "admission": "withheld",
+        "raw": {
+          "tunnel_destination": 42,
+          "original_destination": 42,
+          "original_pdu": [
+            181,
+            24,
+            0,
+            255
+          ],
+          "original_service": [
+            181,
+            9
+          ],
+          "returned_data": [
+            181,
+            24,
+            9
+          ]
+        },
+        "envelope": {
+          "channel": "fixed-channel",
+          "outer_destination": 42,
+          "inner": {
+            "original_destination": 42,
+            "original_pdu": [
+              181,
+              24,
+              0,
+              255
+            ]
+          }
+        },
+        "returned": {
+          "context": [
+            181,
+            9
+          ],
+          "raw": [
+            181,
+            24,
+            9
+          ]
+        }
+      }
+    },
+    {
+      "id": "destination-max",
+      "direction": "client_request_and_returned_data",
+      "input": {
+        "tunnel_destination": 254,
+        "original_destination": 42,
+        "original_pdu": [
+          181,
+          24,
+          0,
+          255
+        ],
+        "original_service": [
+          181,
+          9
+        ],
+        "returned_data": [
+          181,
+          24,
+          9
+        ]
+      },
+      "expected": {
+        "state": "candidate",
+        "admission": "withheld",
+        "raw": {
+          "tunnel_destination": 254,
+          "original_destination": 42,
+          "original_pdu": [
+            181,
+            24,
+            0,
+            255
+          ],
+          "original_service": [
+            181,
+            9
+          ],
+          "returned_data": [
+            181,
+            24,
+            9
+          ]
+        },
+        "envelope": {
+          "channel": "fixed-channel",
+          "outer_destination": 254,
+          "inner": {
+            "original_destination": 42,
+            "original_pdu": [
+              181,
+              24,
+              0,
+              255
+            ]
+          }
+        },
+        "returned": {
+          "context": [
+            181,
+            9
+          ],
+          "raw": [
+            181,
+            24,
+            9
+          ]
+        }
+      }
+    },
+    {
+      "id": "destination-255",
+      "direction": "client_request_and_returned_data",
+      "input": {
+        "tunnel_destination": 255,
+        "original_destination": 42,
+        "original_pdu": [
+          181,
+          24,
+          0,
+          255
+        ],
+        "original_service": [
+          181,
+          9
+        ],
+        "returned_data": [
+          181,
+          24,
+          9
+        ]
+      },
+      "expected": {
+        "state": "ineligible",
+        "admission": "withheld",
+        "raw": {
+          "tunnel_destination": 255,
+          "original_destination": 42,
+          "original_pdu": [
+            181,
+            24,
+            0,
+            255
+          ],
+          "original_service": [
+            181,
+            9
+          ],
+          "returned_data": [
+            181,
+            24,
+            9
+          ]
+        },
+        "envelope": null,
+        "returned": null
+      }
+    },
+    {
+      "id": "original-destination",
+      "direction": "client_request_and_returned_data",
+      "input": {
+        "tunnel_destination": 1,
+        "original_destination": 43,
+        "original_pdu": [
+          181,
+          24,
+          0,
+          255
+        ],
+        "original_service": [
+          181,
+          9
+        ],
+        "returned_data": [
+          181,
+          24,
+          9
+        ]
+      },
+      "expected": {
+        "state": "candidate",
+        "admission": "withheld",
+        "raw": {
+          "tunnel_destination": 1,
+          "original_destination": 43,
+          "original_pdu": [
+            181,
+            24,
+            0,
+            255
+          ],
+          "original_service": [
+            181,
+            9
+          ],
+          "returned_data": [
+            181,
+            24,
+            9
+          ]
+        },
+        "envelope": {
+          "channel": "fixed-channel",
+          "outer_destination": 1,
+          "inner": {
+            "original_destination": 43,
+            "original_pdu": [
+              181,
+              24,
+              0,
+              255
+            ]
+          }
+        },
+        "returned": {
+          "context": [
+            181,
+            9
+          ],
+          "raw": [
+            181,
+            24,
+            9
+          ]
+        }
+      }
+    },
+    {
+      "id": "original-pdu",
+      "direction": "client_request_and_returned_data",
+      "input": {
+        "tunnel_destination": 1,
+        "original_destination": 42,
+        "original_pdu": [
+          181,
+          24,
+          1,
+          254
+        ],
+        "original_service": [
+          181,
+          9
+        ],
+        "returned_data": [
+          181,
+          24,
+          9
+        ]
+      },
+      "expected": {
+        "state": "candidate",
+        "admission": "withheld",
+        "raw": {
+          "tunnel_destination": 1,
+          "original_destination": 42,
+          "original_pdu": [
+            181,
+            24,
+            1,
+            254
+          ],
+          "original_service": [
+            181,
+            9
+          ],
+          "returned_data": [
+            181,
+            24,
+            9
+          ]
+        },
+        "envelope": {
+          "channel": "fixed-channel",
+          "outer_destination": 1,
+          "inner": {
+            "original_destination": 42,
+            "original_pdu": [
+              181,
+              24,
+              1,
+              254
+            ]
+          }
+        },
+        "returned": {
+          "context": [
+            181,
+            9
+          ],
+          "raw": [
+            181,
+            24,
+            9
+          ]
+        }
+      }
+    },
+    {
+      "id": "original-pb",
+      "direction": "client_request_and_returned_data",
+      "input": {
+        "tunnel_destination": 1,
+        "original_destination": 42,
+        "original_pdu": [
+          181,
+          24,
+          0,
+          255
+        ],
+        "original_service": [
+          180,
+          9
+        ],
+        "returned_data": [
+          181,
+          24,
+          9
+        ]
+      },
+      "expected": {
+        "state": "candidate",
+        "admission": "withheld",
+        "raw": {
+          "tunnel_destination": 1,
+          "original_destination": 42,
+          "original_pdu": [
+            181,
+            24,
+            0,
+            255
+          ],
+          "original_service": [
+            180,
+            9
+          ],
+          "returned_data": [
+            181,
+            24,
+            9
+          ]
+        },
+        "envelope": {
+          "channel": "fixed-channel",
+          "outer_destination": 1,
+          "inner": {
+            "original_destination": 42,
+            "original_pdu": [
+              181,
+              24,
+              0,
+              255
+            ]
+          }
+        },
+        "returned": {
+          "context": [
+            180,
+            9
+          ],
+          "raw": [
+            181,
+            24,
+            9
+          ]
+        }
+      }
+    },
+    {
+      "id": "original-sb",
+      "direction": "client_request_and_returned_data",
+      "input": {
+        "tunnel_destination": 1,
+        "original_destination": 42,
+        "original_pdu": [
+          181,
+          24,
+          0,
+          255
+        ],
+        "original_service": [
+          181,
+          10
+        ],
+        "returned_data": [
+          181,
+          24,
+          9
+        ]
+      },
+      "expected": {
+        "state": "candidate",
+        "admission": "withheld",
+        "raw": {
+          "tunnel_destination": 1,
+          "original_destination": 42,
+          "original_pdu": [
+            181,
+            24,
+            0,
+            255
+          ],
+          "original_service": [
+            181,
+            10
+          ],
+          "returned_data": [
+            181,
+            24,
+            9
+          ]
+        },
+        "envelope": {
+          "channel": "fixed-channel",
+          "outer_destination": 1,
+          "inner": {
+            "original_destination": 42,
+            "original_pdu": [
+              181,
+              24,
+              0,
+              255
+            ]
+          }
+        },
+        "returned": {
+          "context": [
+            181,
+            10
+          ],
+          "raw": [
+            181,
+            24,
+            9
+          ]
+        }
+      }
+    },
+    {
+      "id": "returned-data",
+      "direction": "client_request_and_returned_data",
+      "input": {
+        "tunnel_destination": 1,
+        "original_destination": 42,
+        "original_pdu": [
+          181,
+          24,
+          0,
+          255
+        ],
+        "original_service": [
+          181,
+          9
+        ],
+        "returned_data": [
+          181,
+          24,
+          8
+        ]
+      },
+      "expected": {
+        "state": "candidate",
+        "admission": "withheld",
+        "raw": {
+          "tunnel_destination": 1,
+          "original_destination": 42,
+          "original_pdu": [
+            181,
+            24,
+            0,
+            255
+          ],
+          "original_service": [
+            181,
+            9
+          ],
+          "returned_data": [
+            181,
+            24,
+            8
+          ]
+        },
+        "envelope": {
+          "channel": "fixed-channel",
+          "outer_destination": 1,
+          "inner": {
+            "original_destination": 42,
+            "original_pdu": [
+              181,
+              24,
+              0,
+              255
+            ]
+          }
+        },
+        "returned": {
+          "context": [
+            181,
+            9
+          ],
+          "raw": [
+            181,
+            24,
+            8
+          ]
+        }
+      }
+    }
+  ],
+  "adaptations": [
+    {
+      "id": "control",
+      "direction": "logical_request_and_input",
+      "input": {
+        "ready": 3,
+        "final_option": 1,
+        "request_service": [
+          181,
+          23
+        ],
+        "input_service": [
+          181,
+          24
+        ],
+        "input": [
+          181,
+          24,
+          0,
+          0,
+          4,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "last_known_good": {
+          "original_destination": 42,
+          "original_service": [
+            181,
+            9
+          ],
+          "raw": [
+            181,
+            24,
+            55
+          ]
+        }
+      },
+      "expected": {
+        "state": "eligible",
+        "admission": "withheld",
+        "raw": [
+          181,
+          24,
+          0,
+          0,
+          4,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "last_known_good": {
+          "original_destination": 42,
+          "original_service": [
+            181,
+            9
+          ],
+          "raw": [
+            181,
+            24,
+            55
+          ]
+        }
+      }
+    },
+    {
+      "id": "ready",
+      "direction": "logical_request_and_input",
+      "input": {
+        "ready": 2,
+        "final_option": 1,
+        "request_service": [
+          181,
+          23
+        ],
+        "input_service": [
+          181,
+          24
+        ],
+        "input": [
+          181,
+          24,
+          0,
+          0,
+          4,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "last_known_good": {
+          "original_destination": 42,
+          "original_service": [
+            181,
+            9
+          ],
+          "raw": [
+            181,
+            24,
+            55
+          ]
+        }
+      },
+      "expected": {
+        "state": "ineligible",
+        "admission": "withheld",
+        "raw": [
+          181,
+          24,
+          0,
+          0,
+          4,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "last_known_good": {
+          "original_destination": 42,
+          "original_service": [
+            181,
+            9
+          ],
+          "raw": [
+            181,
+            24,
+            55
+          ]
+        }
+      }
+    },
+    {
+      "id": "option-zero",
+      "direction": "logical_request_and_input",
+      "input": {
+        "ready": 3,
+        "final_option": 0,
+        "request_service": [
+          181,
+          23
+        ],
+        "input_service": [
+          181,
+          24
+        ],
+        "input": [
+          181,
+          24,
+          0,
+          0,
+          4,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "last_known_good": {
+          "original_destination": 42,
+          "original_service": [
+            181,
+            9
+          ],
+          "raw": [
+            181,
+            24,
+            55
+          ]
+        }
+      },
+      "expected": {
+        "state": "ineligible",
+        "admission": "withheld",
+        "raw": [
+          181,
+          24,
+          0,
+          0,
+          4,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "last_known_good": {
+          "original_destination": 42,
+          "original_service": [
+            181,
+            9
+          ],
+          "raw": [
+            181,
+            24,
+            55
+          ]
+        }
+      }
+    },
+    {
+      "id": "option-nonunit",
+      "direction": "logical_request_and_input",
+      "input": {
+        "ready": 3,
+        "final_option": 2,
+        "request_service": [
+          181,
+          23
+        ],
+        "input_service": [
+          181,
+          24
+        ],
+        "input": [
+          181,
+          24,
+          0,
+          0,
+          4,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "last_known_good": {
+          "original_destination": 42,
+          "original_service": [
+            181,
+            9
+          ],
+          "raw": [
+            181,
+            24,
+            55
+          ]
+        }
+      },
+      "expected": {
+        "state": "eligible",
+        "admission": "withheld",
+        "raw": [
+          181,
+          24,
+          0,
+          0,
+          4,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "last_known_good": {
+          "original_destination": 42,
+          "original_service": [
+            181,
+            9
+          ],
+          "raw": [
+            181,
+            24,
+            55
+          ]
+        }
+      }
+    },
+    {
+      "id": "length-byte",
+      "direction": "logical_request_and_input",
+      "input": {
+        "ready": 3,
+        "final_option": 1,
+        "request_service": [
+          181,
+          23
+        ],
+        "input_service": [
+          181,
+          24
+        ],
+        "input": [
+          181,
+          24,
+          0,
+          0,
+          3,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "last_known_good": {
+          "original_destination": 42,
+          "original_service": [
+            181,
+            9
+          ],
+          "raw": [
+            181,
+            24,
+            55
+          ]
+        }
+      },
+      "expected": {
+        "state": "ineligible",
+        "admission": "withheld",
+        "raw": [
+          181,
+          24,
+          0,
+          0,
+          3,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "last_known_good": {
+          "original_destination": 42,
+          "original_service": [
+            181,
+            9
+          ],
+          "raw": [
+            181,
+            24,
+            55
+          ]
+        }
+      }
+    },
+    {
+      "id": "actual-length",
+      "direction": "logical_request_and_input",
+      "input": {
+        "ready": 3,
+        "final_option": 1,
+        "request_service": [
+          181,
+          23
+        ],
+        "input_service": [
+          181,
+          24
+        ],
+        "input": [
+          181,
+          24,
+          0,
+          0,
+          4,
+          0,
+          0,
+          0,
+          0
+        ],
+        "last_known_good": {
+          "original_destination": 42,
+          "original_service": [
+            181,
+            9
+          ],
+          "raw": [
+            181,
+            24,
+            55
+          ]
+        }
+      },
+      "expected": {
+        "state": "ineligible",
+        "admission": "withheld",
+        "raw": [
+          181,
+          24,
+          0,
+          0,
+          4,
+          0,
+          0,
+          0,
+          0
+        ],
+        "last_known_good": {
+          "original_destination": 42,
+          "original_service": [
+            181,
+            9
+          ],
+          "raw": [
+            181,
+            24,
+            55
+          ]
+        }
+      }
+    },
+    {
+      "id": "request-pb",
+      "direction": "logical_request_and_input",
+      "input": {
+        "ready": 3,
+        "final_option": 1,
+        "request_service": [
+          180,
+          23
+        ],
+        "input_service": [
+          181,
+          24
+        ],
+        "input": [
+          181,
+          24,
+          0,
+          0,
+          4,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "last_known_good": {
+          "original_destination": 42,
+          "original_service": [
+            181,
+            9
+          ],
+          "raw": [
+            181,
+            24,
+            55
+          ]
+        }
+      },
+      "expected": {
+        "state": "ineligible",
+        "admission": "withheld",
+        "raw": [
+          181,
+          24,
+          0,
+          0,
+          4,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "last_known_good": {
+          "original_destination": 42,
+          "original_service": [
+            181,
+            9
+          ],
+          "raw": [
+            181,
+            24,
+            55
+          ]
+        }
+      }
+    },
+    {
+      "id": "request-sb",
+      "direction": "logical_request_and_input",
+      "input": {
+        "ready": 3,
+        "final_option": 1,
+        "request_service": [
+          181,
+          22
+        ],
+        "input_service": [
+          181,
+          24
+        ],
+        "input": [
+          181,
+          24,
+          0,
+          0,
+          4,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "last_known_good": {
+          "original_destination": 42,
+          "original_service": [
+            181,
+            9
+          ],
+          "raw": [
+            181,
+            24,
+            55
+          ]
+        }
+      },
+      "expected": {
+        "state": "ineligible",
+        "admission": "withheld",
+        "raw": [
+          181,
+          24,
+          0,
+          0,
+          4,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "last_known_good": {
+          "original_destination": 42,
+          "original_service": [
+            181,
+            9
+          ],
+          "raw": [
+            181,
+            24,
+            55
+          ]
+        }
+      }
+    },
+    {
+      "id": "input-pb",
+      "direction": "logical_request_and_input",
+      "input": {
+        "ready": 3,
+        "final_option": 1,
+        "request_service": [
+          181,
+          23
+        ],
+        "input_service": [
+          180,
+          24
+        ],
+        "input": [
+          181,
+          24,
+          0,
+          0,
+          4,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "last_known_good": {
+          "original_destination": 42,
+          "original_service": [
+            181,
+            9
+          ],
+          "raw": [
+            181,
+            24,
+            55
+          ]
+        }
+      },
+      "expected": {
+        "state": "ineligible",
+        "admission": "withheld",
+        "raw": [
+          181,
+          24,
+          0,
+          0,
+          4,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "last_known_good": {
+          "original_destination": 42,
+          "original_service": [
+            181,
+            9
+          ],
+          "raw": [
+            181,
+            24,
+            55
+          ]
+        }
+      }
+    },
+    {
+      "id": "input-sb",
+      "direction": "logical_request_and_input",
+      "input": {
+        "ready": 3,
+        "final_option": 1,
+        "request_service": [
+          181,
+          23
+        ],
+        "input_service": [
+          181,
+          25
+        ],
+        "input": [
+          181,
+          24,
+          0,
+          0,
+          4,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "last_known_good": {
+          "original_destination": 42,
+          "original_service": [
+            181,
+            9
+          ],
+          "raw": [
+            181,
+            24,
+            55
+          ]
+        }
+      },
+      "expected": {
+        "state": "ineligible",
+        "admission": "withheld",
+        "raw": [
+          181,
+          24,
+          0,
+          0,
+          4,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "last_known_good": {
+          "original_destination": 42,
+          "original_service": [
+            181,
+            9
+          ],
+          "raw": [
+            181,
+            24,
+            55
+          ]
+        }
+      }
+    },
+    {
+      "id": "raw-body",
+      "direction": "logical_request_and_input",
+      "input": {
+        "ready": 3,
+        "final_option": 1,
+        "request_service": [
+          181,
+          23
+        ],
+        "input_service": [
+          181,
+          24
+        ],
+        "input": [
+          181,
+          24,
+          99,
+          88,
+          4,
+          77,
+          66,
+          55,
+          44,
+          33
+        ],
+        "last_known_good": {
+          "original_destination": 42,
+          "original_service": [
+            181,
+            9
+          ],
+          "raw": [
+            181,
+            24,
+            55
+          ]
+        }
+      },
+      "expected": {
+        "state": "eligible",
+        "admission": "withheld",
+        "raw": [
+          181,
+          24,
+          99,
+          88,
+          4,
+          77,
+          66,
+          55,
+          44,
+          33
+        ],
+        "last_known_good": {
+          "original_destination": 42,
+          "original_service": [
+            181,
+            9
+          ],
+          "raw": [
+            181,
+            24,
+            55
+          ]
+        }
+      }
+    },
+    {
+      "id": "short-0",
+      "direction": "logical_request_and_input",
+      "input": {
+        "ready": 3,
+        "final_option": 1,
+        "request_service": [
+          181,
+          23
+        ],
+        "input_service": [
+          181,
+          24
+        ],
+        "input": [],
+        "last_known_good": {
+          "original_destination": 42,
+          "original_service": [
+            181,
+            9
+          ],
+          "raw": [
+            181,
+            24,
+            55
+          ]
+        }
+      },
+      "expected": {
+        "state": "incomplete",
+        "admission": "withheld",
+        "raw": [],
+        "last_known_good": {
+          "original_destination": 42,
+          "original_service": [
+            181,
+            9
+          ],
+          "raw": [
+            181,
+            24,
+            55
+          ]
+        }
+      }
+    },
+    {
+      "id": "short-1",
+      "direction": "logical_request_and_input",
+      "input": {
+        "ready": 3,
+        "final_option": 1,
+        "request_service": [
+          181,
+          23
+        ],
+        "input_service": [
+          181,
+          24
+        ],
+        "input": [
+          181
+        ],
+        "last_known_good": {
+          "original_destination": 42,
+          "original_service": [
+            181,
+            9
+          ],
+          "raw": [
+            181,
+            24,
+            55
+          ]
+        }
+      },
+      "expected": {
+        "state": "incomplete",
+        "admission": "withheld",
+        "raw": [
+          181
+        ],
+        "last_known_good": {
+          "original_destination": 42,
+          "original_service": [
+            181,
+            9
+          ],
+          "raw": [
+            181,
+            24,
+            55
+          ]
+        }
+      }
+    },
+    {
+      "id": "short-2",
+      "direction": "logical_request_and_input",
+      "input": {
+        "ready": 3,
+        "final_option": 1,
+        "request_service": [
+          181,
+          23
+        ],
+        "input_service": [
+          181,
+          24
+        ],
+        "input": [
+          181,
+          24
+        ],
+        "last_known_good": {
+          "original_destination": 42,
+          "original_service": [
+            181,
+            9
+          ],
+          "raw": [
+            181,
+            24,
+            55
+          ]
+        }
+      },
+      "expected": {
+        "state": "incomplete",
+        "admission": "withheld",
+        "raw": [
+          181,
+          24
+        ],
+        "last_known_good": {
+          "original_destination": 42,
+          "original_service": [
+            181,
+            9
+          ],
+          "raw": [
+            181,
+            24,
+            55
+          ]
+        }
+      }
+    },
+    {
+      "id": "short-3",
+      "direction": "logical_request_and_input",
+      "input": {
+        "ready": 3,
+        "final_option": 1,
+        "request_service": [
+          181,
+          23
+        ],
+        "input_service": [
+          181,
+          24
+        ],
+        "input": [
+          181,
+          24,
+          0
+        ],
+        "last_known_good": {
+          "original_destination": 42,
+          "original_service": [
+            181,
+            9
+          ],
+          "raw": [
+            181,
+            24,
+            55
+          ]
+        }
+      },
+      "expected": {
+        "state": "incomplete",
+        "admission": "withheld",
+        "raw": [
+          181,
+          24,
+          0
+        ],
+        "last_known_good": {
+          "original_destination": 42,
+          "original_service": [
+            181,
+            9
+          ],
+          "raw": [
+            181,
+            24,
+            55
+          ]
+        }
+      }
+    },
+    {
+      "id": "short-4",
+      "direction": "logical_request_and_input",
+      "input": {
+        "ready": 3,
+        "final_option": 1,
+        "request_service": [
+          181,
+          23
+        ],
+        "input_service": [
+          181,
+          24
+        ],
+        "input": [
+          181,
+          24,
+          0,
+          0
+        ],
+        "last_known_good": {
+          "original_destination": 42,
+          "original_service": [
+            181,
+            9
+          ],
+          "raw": [
+            181,
+            24,
+            55
+          ]
+        }
+      },
+      "expected": {
+        "state": "incomplete",
+        "admission": "withheld",
+        "raw": [
+          181,
+          24,
+          0,
+          0
+        ],
+        "last_known_good": {
+          "original_destination": 42,
+          "original_service": [
+            181,
+            9
+          ],
+          "raw": [
+            181,
+            24,
+            55
+          ]
+        }
+      }
+    },
+    {
+      "id": "short-and-unready",
+      "direction": "logical_request_and_input",
+      "input": {
+        "ready": 2,
+        "final_option": 1,
+        "request_service": [
+          181,
+          23
+        ],
+        "input_service": [
+          181,
+          24
+        ],
+        "input": [],
+        "last_known_good": {
+          "original_destination": 42,
+          "original_service": [
+            181,
+            9
+          ],
+          "raw": [
+            181,
+            24,
+            55
+          ]
+        }
+      },
+      "expected": {
+        "state": "incomplete",
+        "admission": "withheld",
+        "raw": [],
+        "last_known_good": {
+          "original_destination": 42,
+          "original_service": [
+            181,
+            9
+          ],
+          "raw": [
+            181,
+            24,
+            55
+          ]
+        }
+      }
+    }
+  ],
+  "outcomes": [
+    {
+      "direction": "local_result",
+      "local_code": 10,
+      "remote_feedback": null,
+      "expected": {
+        "local_code": 10,
+        "meaning": "Unknown",
+        "remote_feedback": null,
+        "admission": "withheld"
+      }
+    },
+    {
+      "direction": "local_result",
+      "local_code": 6,
+      "remote_feedback": null,
+      "expected": {
+        "local_code": 6,
+        "meaning": "Unknown",
+        "remote_feedback": null,
+        "admission": "withheld"
+      }
+    },
+    {
+      "direction": "local_result",
+      "local_code": 7,
+      "remote_feedback": null,
+      "expected": {
+        "local_code": 7,
+        "meaning": "Unknown",
+        "remote_feedback": null,
+        "admission": "withheld"
+      }
+    },
+    {
+      "direction": "remote_feedback",
+      "local_code": null,
+      "remote_feedback": "negative",
+      "expected": {
+        "local_code": null,
+        "meaning": "Unknown",
+        "remote_feedback": "negative",
+        "admission": "withheld"
+      }
+    }
+  ]
+}

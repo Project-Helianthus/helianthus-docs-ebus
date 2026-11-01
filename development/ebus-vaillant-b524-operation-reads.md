@@ -5,6 +5,86 @@ preserves exact request identity and raw response evidence. It does not
 qualify target support, native Event semantics, a setter, or a scalar RR
 namespace.
 
+## Finite registry read and offline plan results
+
+The public [native B524 contract](../protocols/vaillant/ebus-vaillant-B524.md)
+defines the opcode-scoped identities and the limits of native evidence. Its
+[timer selector evidence](../protocols/vaillant/fixtures/b524-op03-op04-program-selectors.csv)
+and [Event selector candidates](../protocols/vaillant/fixtures/b524-event-selector-candidates.csv)
+retain unresolved assignments; a library result does not resolve them. The
+contracts below are **Proven implementation contracts**, including offline byte
+shapes, rather than proof that a device family supports an operation. Candidate
+native interpretations remain **Hypothesis**; unqualified semantics and physical
+support remain **Unknown**. Codec qualification is independent of that evidence
+grade. These contracts carry no pre-1.0 stability promise.
+
+This section describes registry library results, not additional Explorer
+artifact fields or operation-selection schema entries. Explorer records retain
+their existing schemas and qualification rules below. A successful library
+parse or offline plan must not promote native qualification, register a router,
+or add a runtime transmit route. Event execution remains **Unknown** and is not
+admitted by an offline result.
+
+| API/result boundary | Finite result and explicit acceptance condition |
+| --- | --- |
+| Scalar read request and normalized result | Request `[OP,00,GG,II,RRlo,RRhi]`, with OP02 and OP06 kept separate; normalized reply `[FLAGS,GG,RRlo,RRhi,VALUE...]`. A usable requested value requires exact GG and full RR correlation. II remains request context, never an echoed reply field. A GG or RR mismatch is uncorrelated, never usable for the requested identity: retain both identities and raw bytes, without attaching requested bounds. |
+| Scalar no-value result | Empty means exactly zero payload bytes. A one-byte status is retained as status with no value; neither outcome establishes presence, absence, or codec qualification. Other incomplete headers are not usable scalar values. A complete four-byte header with no VALUE bytes is a header-only no-value result, never a usable scalar value even when GG and RR correlate; retain its header identity and raw bytes without establishing presence, absence, or codec qualification. |
+| Explicit-codec helper | The caller supplies the codec; its exact value width must match. A label or byte count never selects a codec automatically. Return the interpretation, evidence grade and codec qualification separately, preserving raw fallback on absent, unqualified or failed decoding. Successful decoding alone promotes none of them. |
+| OP03 timer result | Exactly seven bytes: raw configuration plus three start/stop pairs; `slot_count: 3`, never seven. Codes are decimal 0..144 (`00..90` hex), in ten-minute steps. Only `90 90` hex is unused. An active pair requires `start < stop <= 144`; invalid pairs retain raw bytes and have no minute projection for either endpoint. |
+| OP04 offline timer plan | Exactly eleven bytes `[04,GG,II,ADDRESS,DAY,START1,STOP1,START2,STOP2,START3,STOP3]`. ADDRESS precedes DAY; DAY is 0..6. Active pairs require `start < stop <= 144`; unused pairs are `90 90`. Retain an exact seven-byte OP03 baseline and matching family/channel/instance/day identity. A six-byte baseline or mismatched identity rejects the plan; no execution route is added. |
+| OP08 raw result | Exactly eight bytes, in order: binding, special function, heating mode, cooling mode, status, frost protection, raw temperature 1, raw temperature 2. Length alone qualifies neither temperature codec nor field semantics or physical support. |
+| OP09/OP0B paired raw results | Each is exactly eight bytes: raw configuration plus seven raw values. Pair identity includes family, instance, system type (GG), address and raw code. Every identity field must match; a raw code is never automatically a weekday. Keep both baselines and all values schema-unqualified. |
+| OP0A/OP0C offline Event plans | Each is twelve bytes: the five-byte prefix `[OP,GG,II,ADDRESS,RAW_CODE]` followed by seven explicit raw values. OP0A corresponds to OP09 and OP0C to OP0B; retain both matched eight-byte paired baselines with the complete pair identity. Missing, wrong-length or mismatched baselines reject the plan. Event semantics stay schema-unqualified; execution is **Unknown**. An OP0A offline result cannot authorize execution, and OP0C has the same boundary. |
+
+Failed, partial, empty or uncorrelated results preserve their own evidence and
+each useful prior field with its original identity and qualification. They do
+not erase last-known-good values, replace them with invented defaults, or
+present retained values as fresh observations. Unknown stays Unknown; plan
+admission fails closed when required identity or baseline evidence is missing.
+
+### Finite synthetic examples
+
+All bytes below are synthetic payloads after transport normalization, in hex.
+They establish only software/document contracts, with no device observation or
+native qualification implied.
+
+- Scalar request `02 00 03 02 34 12` retains identity
+  `(OP=02, GG=03, II=02, RR=1234)`. Reply `01 03 34 12 2A 00`
+  correlates GG/RR. An explicitly supplied unsigned 16-bit little-endian codec
+  can interpret its two value bytes as 42 without proving native meaning or
+  bounds. Replies `01 01 34 12 2A 00` and `01 03 35 12 2A 00`
+  independently mismatch GG and RR: retain the requested and returned
+  identities and complete raw payloads, with no requested bounds. An empty
+  payload and status `00` are distinct no-value results. Reply `01 03 34 12`
+  correlates GG/RR but has no VALUE bytes: retain it as a header-only no-value
+  result, never a usable scalar value. A one-byte value
+  `2A` fails that explicitly selected two-byte codec; `2A 00` without an
+  explicit codec stays raw.
+- For the VRC700 family, timer identity `channel=zone-heating, instance=02,
+  day=04` retains baseline `A5 06 0C 12 18 90 90`: seven bytes, raw
+  configuration `A5`, and three slots. The first two pairs project to
+  60..120 and 180..240 minutes; the third is unused. Pair `91 92` is invalid
+  and has no minute projection; neither does `0C 06`. Pair `06 90` is active
+  through minute 1440, not unused. The offline payload
+  `04 03 02 02 04 06 0C 12 18 90 90` is eleven bytes, with ADDRESS `02`
+  before DAY `04`, retaining that exact baseline and identity. Baseline
+  `A5 06 0C 12 18 90` is six bytes and must be rejected. Three pairs are
+  not seven slots, and these bytes do not establish timer support.
+- OP08 payload `01 02 03 04 05 06 07 08` has exactly eight raw fields;
+  the final `07` and `08` stay raw temperatures without an explicit qualified
+  codec. No enum meaning is inferred from the other six bytes.
+- Paired Event identity `(family=VRC700 family, instance=02, system_type=03,
+  address=01, raw_code=07)` retains OP09 baseline
+  `A0 01 02 03 04 05 06 07` and OP0B baseline
+  `B0 08 09 0A 0B 0C 0D 0E`, each eight bytes. Offline OP0A payload
+  `0A 03 02 01 07 11 12 13 14 15 16 17` and OP0C payload
+  `0C 03 02 01 07 21 22 23 24 25 26 27` each contain five prefix bytes
+  and seven explicit raw values. Each retains both exact paired baselines.
+  Changing any one of family, instance, system type, address or raw code
+  breaks the pair; matching lengths do not repair it. Raw code `07` is not
+  assigned a weekday. Both plans remain schema-unqualified and confer no
+  execution permission.
+
 ## Automatic Event programs
 
 Normal scans offer Event programs through selected planner configuration. After
