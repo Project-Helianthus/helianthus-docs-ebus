@@ -1,0 +1,2930 @@
+{
+  "grade": "Hypothesis",
+  "native_behavior": "Unknown",
+  "qualification": "Unknown",
+  "unknown": [
+    "physical_effect",
+    "periodicity",
+    "service_mode_meaning",
+    "blocksize",
+    "extra_endian_rules"
+  ],
+  "implemented": {
+    "memory_client": false,
+    "writer": false,
+    "authorization_gate": false,
+    "forwarder": false
+  },
+  "refresh": [
+    {
+      "outcomes": [
+        "fail",
+        "success"
+      ],
+      "attempts": 2,
+      "identification": "success",
+      "refresh": "success"
+    },
+    {
+      "outcomes": [
+        "success"
+      ],
+      "attempts": 1,
+      "identification": "success",
+      "refresh": "success"
+    },
+    {
+      "outcomes": [
+        "fail",
+        "fail",
+        "success"
+      ],
+      "attempts": 2,
+      "identification": "success",
+      "refresh": "failed"
+    }
+  ],
+  "forwarding": [
+    {
+      "name": "A-direct-request-0902-35-00",
+      "input": {
+        "variant": "A",
+        "path": "direct",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "A-direct-request-0902-35-FF",
+      "input": {
+        "variant": "A",
+        "path": "direct",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "FF",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "A-direct-request-0902-15-00",
+      "input": {
+        "variant": "A",
+        "path": "direct",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "15",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": false,
+      "admitted": false
+    },
+    {
+      "name": "A-direct-request-0902-15-FF",
+      "input": {
+        "variant": "A",
+        "path": "direct",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "15",
+        "data_selector": "FF",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": false,
+      "admitted": false
+    },
+    {
+      "name": "A-direct-request-0903-15-00",
+      "input": {
+        "variant": "A",
+        "path": "direct",
+        "direction": "request",
+        "operation": "0903",
+        "destination": "15",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "A-direct-request-0903-15-FF",
+      "input": {
+        "variant": "A",
+        "path": "direct",
+        "direction": "request",
+        "operation": "0903",
+        "destination": "15",
+        "data_selector": "FF",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "A-direct-request-0903-35-00",
+      "input": {
+        "variant": "A",
+        "path": "direct",
+        "direction": "request",
+        "operation": "0903",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": false,
+      "admitted": false
+    },
+    {
+      "name": "A-direct-request-0903-35-FF",
+      "input": {
+        "variant": "A",
+        "path": "direct",
+        "direction": "request",
+        "operation": "0903",
+        "destination": "35",
+        "data_selector": "FF",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": false,
+      "admitted": false
+    },
+    {
+      "name": "A-direct-reply-0902-35-00",
+      "input": {
+        "variant": "A",
+        "path": "direct",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "A-direct-reply-0902-35-FF",
+      "input": {
+        "variant": "A",
+        "path": "direct",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "FF",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "A-direct-reply-0902-15-00",
+      "input": {
+        "variant": "A",
+        "path": "direct",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "15",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": false,
+      "admitted": false
+    },
+    {
+      "name": "A-direct-reply-0902-15-FF",
+      "input": {
+        "variant": "A",
+        "path": "direct",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "15",
+        "data_selector": "FF",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": false,
+      "admitted": false
+    },
+    {
+      "name": "A-direct-reply-0903-15-00",
+      "input": {
+        "variant": "A",
+        "path": "direct",
+        "direction": "reply",
+        "operation": "0903",
+        "destination": "15",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "A-direct-reply-0903-15-FF",
+      "input": {
+        "variant": "A",
+        "path": "direct",
+        "direction": "reply",
+        "operation": "0903",
+        "destination": "15",
+        "data_selector": "FF",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "A-direct-reply-0903-35-00",
+      "input": {
+        "variant": "A",
+        "path": "direct",
+        "direction": "reply",
+        "operation": "0903",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": false,
+      "admitted": false
+    },
+    {
+      "name": "A-direct-reply-0903-35-FF",
+      "input": {
+        "variant": "A",
+        "path": "direct",
+        "direction": "reply",
+        "operation": "0903",
+        "destination": "35",
+        "data_selector": "FF",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": false,
+      "admitted": false
+    },
+    {
+      "name": "A-scheduled-request-0902-35-00",
+      "input": {
+        "variant": "A",
+        "path": "scheduled",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "A-scheduled-request-0902-35-FF",
+      "input": {
+        "variant": "A",
+        "path": "scheduled",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "FF",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "A-scheduled-request-0902-15-00",
+      "input": {
+        "variant": "A",
+        "path": "scheduled",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "15",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": false,
+      "admitted": false
+    },
+    {
+      "name": "A-scheduled-request-0902-15-FF",
+      "input": {
+        "variant": "A",
+        "path": "scheduled",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "15",
+        "data_selector": "FF",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": false,
+      "admitted": false
+    },
+    {
+      "name": "A-scheduled-request-0903-15-00",
+      "input": {
+        "variant": "A",
+        "path": "scheduled",
+        "direction": "request",
+        "operation": "0903",
+        "destination": "15",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "A-scheduled-request-0903-15-FF",
+      "input": {
+        "variant": "A",
+        "path": "scheduled",
+        "direction": "request",
+        "operation": "0903",
+        "destination": "15",
+        "data_selector": "FF",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "A-scheduled-request-0903-35-00",
+      "input": {
+        "variant": "A",
+        "path": "scheduled",
+        "direction": "request",
+        "operation": "0903",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": false,
+      "admitted": false
+    },
+    {
+      "name": "A-scheduled-request-0903-35-FF",
+      "input": {
+        "variant": "A",
+        "path": "scheduled",
+        "direction": "request",
+        "operation": "0903",
+        "destination": "35",
+        "data_selector": "FF",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": false,
+      "admitted": false
+    },
+    {
+      "name": "A-scheduled-reply-0902-35-00",
+      "input": {
+        "variant": "A",
+        "path": "scheduled",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "A-scheduled-reply-0902-35-FF",
+      "input": {
+        "variant": "A",
+        "path": "scheduled",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "FF",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "A-scheduled-reply-0902-15-00",
+      "input": {
+        "variant": "A",
+        "path": "scheduled",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "15",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": false,
+      "admitted": false
+    },
+    {
+      "name": "A-scheduled-reply-0902-15-FF",
+      "input": {
+        "variant": "A",
+        "path": "scheduled",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "15",
+        "data_selector": "FF",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": false,
+      "admitted": false
+    },
+    {
+      "name": "A-scheduled-reply-0903-15-00",
+      "input": {
+        "variant": "A",
+        "path": "scheduled",
+        "direction": "reply",
+        "operation": "0903",
+        "destination": "15",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "A-scheduled-reply-0903-15-FF",
+      "input": {
+        "variant": "A",
+        "path": "scheduled",
+        "direction": "reply",
+        "operation": "0903",
+        "destination": "15",
+        "data_selector": "FF",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "A-scheduled-reply-0903-35-00",
+      "input": {
+        "variant": "A",
+        "path": "scheduled",
+        "direction": "reply",
+        "operation": "0903",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": false,
+      "admitted": false
+    },
+    {
+      "name": "A-scheduled-reply-0903-35-FF",
+      "input": {
+        "variant": "A",
+        "path": "scheduled",
+        "direction": "reply",
+        "operation": "0903",
+        "destination": "35",
+        "data_selector": "FF",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": false,
+      "admitted": false
+    },
+    {
+      "name": "B-direct-request-0902-35-00",
+      "input": {
+        "variant": "B",
+        "path": "direct",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "B-direct-request-0902-35-FF",
+      "input": {
+        "variant": "B",
+        "path": "direct",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "FF",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "B-direct-request-0902-15-00",
+      "input": {
+        "variant": "B",
+        "path": "direct",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "15",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "B-direct-request-0902-15-FF",
+      "input": {
+        "variant": "B",
+        "path": "direct",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "15",
+        "data_selector": "FF",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "B-direct-request-0903-15-00",
+      "input": {
+        "variant": "B",
+        "path": "direct",
+        "direction": "request",
+        "operation": "0903",
+        "destination": "15",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "B-direct-request-0903-15-FF",
+      "input": {
+        "variant": "B",
+        "path": "direct",
+        "direction": "request",
+        "operation": "0903",
+        "destination": "15",
+        "data_selector": "FF",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "B-direct-request-0903-35-00",
+      "input": {
+        "variant": "B",
+        "path": "direct",
+        "direction": "request",
+        "operation": "0903",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "B-direct-request-0903-35-FF",
+      "input": {
+        "variant": "B",
+        "path": "direct",
+        "direction": "request",
+        "operation": "0903",
+        "destination": "35",
+        "data_selector": "FF",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "B-direct-reply-0902-35-00",
+      "input": {
+        "variant": "B",
+        "path": "direct",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "B-direct-reply-0902-35-FF",
+      "input": {
+        "variant": "B",
+        "path": "direct",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "FF",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "B-direct-reply-0902-15-00",
+      "input": {
+        "variant": "B",
+        "path": "direct",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "15",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "B-direct-reply-0902-15-FF",
+      "input": {
+        "variant": "B",
+        "path": "direct",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "15",
+        "data_selector": "FF",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "B-direct-reply-0903-15-00",
+      "input": {
+        "variant": "B",
+        "path": "direct",
+        "direction": "reply",
+        "operation": "0903",
+        "destination": "15",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "B-direct-reply-0903-15-FF",
+      "input": {
+        "variant": "B",
+        "path": "direct",
+        "direction": "reply",
+        "operation": "0903",
+        "destination": "15",
+        "data_selector": "FF",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "B-direct-reply-0903-35-00",
+      "input": {
+        "variant": "B",
+        "path": "direct",
+        "direction": "reply",
+        "operation": "0903",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "B-direct-reply-0903-35-FF",
+      "input": {
+        "variant": "B",
+        "path": "direct",
+        "direction": "reply",
+        "operation": "0903",
+        "destination": "35",
+        "data_selector": "FF",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "B-scheduled-request-0902-35-00",
+      "input": {
+        "variant": "B",
+        "path": "scheduled",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "B-scheduled-request-0902-35-FF",
+      "input": {
+        "variant": "B",
+        "path": "scheduled",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "FF",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "B-scheduled-request-0902-15-00",
+      "input": {
+        "variant": "B",
+        "path": "scheduled",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "15",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "B-scheduled-request-0902-15-FF",
+      "input": {
+        "variant": "B",
+        "path": "scheduled",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "15",
+        "data_selector": "FF",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "B-scheduled-request-0903-15-00",
+      "input": {
+        "variant": "B",
+        "path": "scheduled",
+        "direction": "request",
+        "operation": "0903",
+        "destination": "15",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "B-scheduled-request-0903-15-FF",
+      "input": {
+        "variant": "B",
+        "path": "scheduled",
+        "direction": "request",
+        "operation": "0903",
+        "destination": "15",
+        "data_selector": "FF",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "B-scheduled-request-0903-35-00",
+      "input": {
+        "variant": "B",
+        "path": "scheduled",
+        "direction": "request",
+        "operation": "0903",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "B-scheduled-request-0903-35-FF",
+      "input": {
+        "variant": "B",
+        "path": "scheduled",
+        "direction": "request",
+        "operation": "0903",
+        "destination": "35",
+        "data_selector": "FF",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "B-scheduled-reply-0902-35-00",
+      "input": {
+        "variant": "B",
+        "path": "scheduled",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "B-scheduled-reply-0902-35-FF",
+      "input": {
+        "variant": "B",
+        "path": "scheduled",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "FF",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "B-scheduled-reply-0902-15-00",
+      "input": {
+        "variant": "B",
+        "path": "scheduled",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "15",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "B-scheduled-reply-0902-15-FF",
+      "input": {
+        "variant": "B",
+        "path": "scheduled",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "15",
+        "data_selector": "FF",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "B-scheduled-reply-0903-15-00",
+      "input": {
+        "variant": "B",
+        "path": "scheduled",
+        "direction": "reply",
+        "operation": "0903",
+        "destination": "15",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "B-scheduled-reply-0903-15-FF",
+      "input": {
+        "variant": "B",
+        "path": "scheduled",
+        "direction": "reply",
+        "operation": "0903",
+        "destination": "15",
+        "data_selector": "FF",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "B-scheduled-reply-0903-35-00",
+      "input": {
+        "variant": "B",
+        "path": "scheduled",
+        "direction": "reply",
+        "operation": "0903",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "B-scheduled-reply-0903-35-FF",
+      "input": {
+        "variant": "B",
+        "path": "scheduled",
+        "direction": "reply",
+        "operation": "0903",
+        "destination": "35",
+        "data_selector": "FF",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "A-direct-request-extent-low",
+      "input": {
+        "variant": "A",
+        "path": "direct",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 4,
+        "nn": -1,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "A-direct-request-extent-high",
+      "input": {
+        "variant": "A",
+        "path": "direct",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 22,
+        "nn": 17,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "A-direct-request-extent-min",
+      "input": {
+        "variant": "A",
+        "path": "direct",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 5,
+        "nn": 0,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "A-direct-request-nn",
+      "input": {
+        "variant": "A",
+        "path": "direct",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 15,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "A-direct-request-request-max",
+      "input": {
+        "variant": "A",
+        "path": "direct",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 17,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "A-direct-request-reply-max",
+      "input": {
+        "variant": "A",
+        "path": "direct",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 22,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "A-direct-request-role",
+      "input": {
+        "variant": "A",
+        "path": "direct",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": false,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "A-direct-request-state",
+      "input": {
+        "variant": "A",
+        "path": "direct",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": false,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "A-direct-request-capacity",
+      "input": {
+        "variant": "A",
+        "path": "direct",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": false
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "A-direct-reply-extent-low",
+      "input": {
+        "variant": "A",
+        "path": "direct",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 4,
+        "nn": -1,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "A-direct-reply-extent-high",
+      "input": {
+        "variant": "A",
+        "path": "direct",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 22,
+        "nn": 17,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "A-direct-reply-extent-min",
+      "input": {
+        "variant": "A",
+        "path": "direct",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 5,
+        "nn": 0,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "A-direct-reply-nn",
+      "input": {
+        "variant": "A",
+        "path": "direct",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 15,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "A-direct-reply-request-max",
+      "input": {
+        "variant": "A",
+        "path": "direct",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 17,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "A-direct-reply-reply-max",
+      "input": {
+        "variant": "A",
+        "path": "direct",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 22,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "A-direct-reply-role",
+      "input": {
+        "variant": "A",
+        "path": "direct",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": false,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "A-direct-reply-state",
+      "input": {
+        "variant": "A",
+        "path": "direct",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": false,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "A-direct-reply-capacity",
+      "input": {
+        "variant": "A",
+        "path": "direct",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": false
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "A-scheduled-request-extent-low",
+      "input": {
+        "variant": "A",
+        "path": "scheduled",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 4,
+        "nn": -1,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "A-scheduled-request-extent-high",
+      "input": {
+        "variant": "A",
+        "path": "scheduled",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 22,
+        "nn": 17,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "A-scheduled-request-extent-min",
+      "input": {
+        "variant": "A",
+        "path": "scheduled",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 5,
+        "nn": 0,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "A-scheduled-request-nn",
+      "input": {
+        "variant": "A",
+        "path": "scheduled",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 15,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "A-scheduled-request-request-max",
+      "input": {
+        "variant": "A",
+        "path": "scheduled",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 17,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "A-scheduled-request-reply-max",
+      "input": {
+        "variant": "A",
+        "path": "scheduled",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 22,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "A-scheduled-request-role",
+      "input": {
+        "variant": "A",
+        "path": "scheduled",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": false,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "A-scheduled-request-state",
+      "input": {
+        "variant": "A",
+        "path": "scheduled",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": false,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "A-scheduled-request-capacity",
+      "input": {
+        "variant": "A",
+        "path": "scheduled",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": false
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "A-scheduled-reply-extent-low",
+      "input": {
+        "variant": "A",
+        "path": "scheduled",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 4,
+        "nn": -1,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "A-scheduled-reply-extent-high",
+      "input": {
+        "variant": "A",
+        "path": "scheduled",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 22,
+        "nn": 17,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "A-scheduled-reply-extent-min",
+      "input": {
+        "variant": "A",
+        "path": "scheduled",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 5,
+        "nn": 0,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "A-scheduled-reply-nn",
+      "input": {
+        "variant": "A",
+        "path": "scheduled",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 15,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "A-scheduled-reply-request-max",
+      "input": {
+        "variant": "A",
+        "path": "scheduled",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 17,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "A-scheduled-reply-reply-max",
+      "input": {
+        "variant": "A",
+        "path": "scheduled",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 22,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "A-scheduled-reply-role",
+      "input": {
+        "variant": "A",
+        "path": "scheduled",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": false,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "A-scheduled-reply-state",
+      "input": {
+        "variant": "A",
+        "path": "scheduled",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": false,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "A-scheduled-reply-capacity",
+      "input": {
+        "variant": "A",
+        "path": "scheduled",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": false
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "B-direct-request-extent-low",
+      "input": {
+        "variant": "B",
+        "path": "direct",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 4,
+        "nn": -1,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "B-direct-request-extent-high",
+      "input": {
+        "variant": "B",
+        "path": "direct",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 22,
+        "nn": 17,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "B-direct-request-extent-min",
+      "input": {
+        "variant": "B",
+        "path": "direct",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 5,
+        "nn": 0,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "B-direct-request-nn",
+      "input": {
+        "variant": "B",
+        "path": "direct",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 15,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "B-direct-request-request-max",
+      "input": {
+        "variant": "B",
+        "path": "direct",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 17,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "B-direct-request-reply-max",
+      "input": {
+        "variant": "B",
+        "path": "direct",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 22,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "B-direct-request-role",
+      "input": {
+        "variant": "B",
+        "path": "direct",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": false,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "B-direct-request-state",
+      "input": {
+        "variant": "B",
+        "path": "direct",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": false,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "B-direct-request-capacity",
+      "input": {
+        "variant": "B",
+        "path": "direct",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": false
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "B-direct-reply-extent-low",
+      "input": {
+        "variant": "B",
+        "path": "direct",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 4,
+        "nn": -1,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "B-direct-reply-extent-high",
+      "input": {
+        "variant": "B",
+        "path": "direct",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 22,
+        "nn": 17,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "B-direct-reply-extent-min",
+      "input": {
+        "variant": "B",
+        "path": "direct",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 5,
+        "nn": 0,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "B-direct-reply-nn",
+      "input": {
+        "variant": "B",
+        "path": "direct",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 15,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "B-direct-reply-request-max",
+      "input": {
+        "variant": "B",
+        "path": "direct",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 17,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "B-direct-reply-reply-max",
+      "input": {
+        "variant": "B",
+        "path": "direct",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 22,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "B-direct-reply-role",
+      "input": {
+        "variant": "B",
+        "path": "direct",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": false,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "B-direct-reply-state",
+      "input": {
+        "variant": "B",
+        "path": "direct",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": false,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "B-direct-reply-capacity",
+      "input": {
+        "variant": "B",
+        "path": "direct",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": false
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "B-scheduled-request-extent-low",
+      "input": {
+        "variant": "B",
+        "path": "scheduled",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 4,
+        "nn": -1,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "B-scheduled-request-extent-high",
+      "input": {
+        "variant": "B",
+        "path": "scheduled",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 22,
+        "nn": 17,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "B-scheduled-request-extent-min",
+      "input": {
+        "variant": "B",
+        "path": "scheduled",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 5,
+        "nn": 0,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "B-scheduled-request-nn",
+      "input": {
+        "variant": "B",
+        "path": "scheduled",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 15,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "B-scheduled-request-request-max",
+      "input": {
+        "variant": "B",
+        "path": "scheduled",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 17,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "B-scheduled-request-reply-max",
+      "input": {
+        "variant": "B",
+        "path": "scheduled",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 22,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "B-scheduled-request-role",
+      "input": {
+        "variant": "B",
+        "path": "scheduled",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": false,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "B-scheduled-request-state",
+      "input": {
+        "variant": "B",
+        "path": "scheduled",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": false,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "B-scheduled-request-capacity",
+      "input": {
+        "variant": "B",
+        "path": "scheduled",
+        "direction": "request",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": false
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "B-scheduled-reply-extent-low",
+      "input": {
+        "variant": "B",
+        "path": "scheduled",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 4,
+        "nn": -1,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "B-scheduled-reply-extent-high",
+      "input": {
+        "variant": "B",
+        "path": "scheduled",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 22,
+        "nn": 17,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "B-scheduled-reply-extent-min",
+      "input": {
+        "variant": "B",
+        "path": "scheduled",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 5,
+        "nn": 0,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": true
+    },
+    {
+      "name": "B-scheduled-reply-nn",
+      "input": {
+        "variant": "B",
+        "path": "scheduled",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 15,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "B-scheduled-reply-request-max",
+      "input": {
+        "variant": "B",
+        "path": "scheduled",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 17,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "B-scheduled-reply-reply-max",
+      "input": {
+        "variant": "B",
+        "path": "scheduled",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 22,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "B-scheduled-reply-role",
+      "input": {
+        "variant": "B",
+        "path": "scheduled",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": false,
+        "state_ok": true,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "B-scheduled-reply-state",
+      "input": {
+        "variant": "B",
+        "path": "scheduled",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": false,
+        "capacity_ok": true
+      },
+      "selector": true,
+      "admitted": false
+    },
+    {
+      "name": "B-scheduled-reply-capacity",
+      "input": {
+        "variant": "B",
+        "path": "scheduled",
+        "direction": "reply",
+        "operation": "0902",
+        "destination": "35",
+        "data_selector": "00",
+        "extent": 21,
+        "nn": 16,
+        "request_length": 16,
+        "reply_length": 21,
+        "role_ok": true,
+        "state_ok": true,
+        "capacity_ok": false
+      },
+      "selector": true,
+      "admitted": false
+    }
+  ],
+  "no_match": {
+    "length": 0,
+    "transmission": "Unknown",
+    "ack": "Unknown"
+  },
+  "client_reads": [
+    {
+      "low": "00",
+      "high": "00",
+      "count": "09",
+      "data": [
+        "11",
+        "22"
+      ]
+    },
+    {
+      "low": "01",
+      "high": "00",
+      "count": "09",
+      "data": [
+        "11",
+        "22"
+      ]
+    },
+    {
+      "low": "00",
+      "high": "01",
+      "count": "09",
+      "data": [
+        "11",
+        "22"
+      ]
+    },
+    {
+      "low": "00",
+      "high": "00",
+      "count": "08",
+      "data": [
+        "11",
+        "22"
+      ]
+    },
+    {
+      "low": "00",
+      "high": "00",
+      "count": "09",
+      "data": [
+        "33",
+        "22"
+      ]
+    }
+  ],
+  "verification": [
+    {
+      "positive": true,
+      "verify": true,
+      "written": [
+        "11",
+        "22"
+      ],
+      "read": [
+        "11",
+        "23"
+      ],
+      "result": "positive_unverified"
+    },
+    {
+      "positive": true,
+      "verify": true,
+      "written": [
+        "11",
+        "22"
+      ],
+      "read": [
+        "11",
+        "22"
+      ],
+      "result": "synthetic_verified"
+    },
+    {
+      "positive": true,
+      "verify": false,
+      "written": [
+        "11",
+        "22"
+      ],
+      "read": [
+        "11",
+        "22"
+      ],
+      "result": "positive_unverified"
+    },
+    {
+      "positive": false,
+      "verify": true,
+      "written": [
+        "11",
+        "22"
+      ],
+      "read": [
+        "11",
+        "22"
+      ],
+      "result": "not_positive"
+    }
+  ],
+  "partial_sequence": [
+    {
+      "low": "00",
+      "high": "00",
+      "written": [
+        "11"
+      ],
+      "positive": true,
+      "verify": true,
+      "read": [
+        "11"
+      ],
+      "result": "synthetic_verified",
+      "last_known_good": [
+        "11"
+      ]
+    },
+    {
+      "low": "01",
+      "high": "00",
+      "written": [
+        "22"
+      ],
+      "positive": true,
+      "verify": true,
+      "read": [
+        "23"
+      ],
+      "result": "positive_unverified",
+      "last_known_good": [
+        "10"
+      ]
+    },
+    {
+      "low": "00",
+      "high": "01",
+      "written": [
+        "33"
+      ],
+      "positive": false,
+      "verify": false,
+      "read": [],
+      "result": "not_positive",
+      "last_known_good": [
+        "20"
+      ]
+    }
+  ],
+  "refresh_request": {
+    "operation": "0902",
+    "address": "0000",
+    "count": "09",
+    "after": "identification_success",
+    "maximum_attempts": 2
+  }
+}
