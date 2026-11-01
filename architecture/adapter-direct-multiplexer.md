@@ -88,31 +88,180 @@ that RESETTED as part of their normal startup sequence.
 
 ### AD06: Owner Arbitration Model
 
-The embedded mux arbitrates between two request classes:
+The embedded mux does not queue START requests. Every session, including
+gateway session 0 (used by `gateway.Bus`) and each external session (ebusd or
+VRC Explorer clients on the compatibility listener), submits a bid and waits
+for the bus to reach an idle SYN. The decision is taken from the initiator
+address alone, the way the wire would take it.
 
-- gateway session 0, used by `gateway.Bus`
-- external sessions, such as ebusd or VRC Explorer clients connected through
-  the compatibility listener
+#### Selection at an idle SYN
 
-When only one class has a pending START request, that class is granted. When
-both classes are pending, the mux treats the decision as real contention even if
-the wire is currently between frames. It applies the configured fairness ratio
-(`FairnessRatio`, default `2`) so the contended rotation is gateway, external,
-gateway, external, and so on. The external side is FIFO within the external
-class.
+- **Bids accumulate.** A session holds at most one bid. A new bid from the same
+  session withdraws the old one; the old waiter is cancelled and receives
+  neither STARTED nor FAILED.
+- **One winner per SYN.** When the mux observes a SYN, nobody owns the bus and no
+  barrier below is outstanding, it selects exactly one bidder and forwards
+  exactly one native START, carrying the winner's initiator address, to the
+  adapter. Only bids present while that SYN is processed are eligible; a bid
+  submitted afterwards, or a replacement, waits for the next SYN.
+- **Barriers that postpone selection.** A SYN does not select while an earlier
+  START still has an unconsumed adapter response, while a blocking START call
+  is in flight, or while an abandoned win is fenced until the next SYN (see
+  [Undeliverable wins](#undeliverable-wins)). Bids stay queued and are
+  reconsidered at the following SYN.
+- **Priority order.** The mux compares the low nibble of the initiator address
+  first (smaller wins), then the high nibble (smaller wins). If two sessions bid
+  the identical address, the lower session ID wins; this is only a
+  deterministic local tie-break, and deployments should give every initiator a
+  distinct address. Gateway session 0 has no special rank. For example, a bid
+  from `0x31` beats `0x7f` (low nibbles `1` and `f`), and `0x10` beats `0x30`
+  (equal low nibble, high nibbles `1` and `3`).
+- **Losers.** Every other eligible bidder is told it lost, with the winner's
+  address in the FAILED, in the same SYN interval, and re-bids on its own
+  schedule. An external loser's FAILED is queued before the next wire byte; if
+  the START then cannot be sent to the adapter, that local loss is undone. The
+  gateway session's loss is different: the gateway bus cannot take back a
+  collision, so it is reported only once the START outcome is known, and the
+  mux then delivers the fixed number of resynchronization SYNs the gateway bus
+  waits for before it bids again.
+- **Source byte.** A losing session is given the winner's source byte once, so
+  the telegram that follows parses correctly. After the next observed SYN, a
+  later STARTED supplies the source again for losing sessions so their view of
+  the telegram stays complete. The synthesized byte is a session-local
+  boundary and is never emitted as passive wire evidence.
+- **Physical loss.** A selection can still lose on the wire to an initiator
+  outside the mux. The adapter then answers the selected bidder with a FAILED
+  naming that initiator, and the local losers see the actual winner's source
+  instead.
+- **Deadlines.** A gateway bid that never sees a SYN expires after the START
+  deadline with a timeout error. Once the bid is selected, a separate START
+  deadline bounds the adapter response, and expiry of the admission wait never
+  cancels a selected win that can still be delivered.
 
-The bus-idle fast path is intentionally narrower: if the wire is idle and only
-external sessions are pending, the external FIFO head may be granted immediately
-without consuming a fairness rotation. That avoids wasting ebusd's local START
-deadline on a quiet bus. The fast path must not run when gateway is also pending,
-because a continuous external scanner with a lower eBUS source address, for
-example `0x31`, can otherwise monopolize idle-boundary grants and hold the
-gateway source (`0x7f`/configured gateway source) near zero until the scanner
-stops.
+#### Starvation is address priority
 
-This is gateway-side scheduling only. It does not rewrite eBUS physical
-arbitration priority: if `0x31` and `0x7f` reach the actual wire at the same
-time, the lower-priority/later source still loses according to the bus rules.
+The gateway's selected initiator address is its priority control. For example,
+a configured address of `0x7f` is in the lowest priority class, so a
+higher-priority initiator that bids at every SYN can legitimately keep the
+gateway waiting, exactly as it would on a shared
+physical bus. This is standard eBUS behaviour, not a scheduling fault, and the
+mux adds no rotation, age-based preference or queue to compensate for it. A
+deliverable STARTED always reaches its session, however long the bid waited.
+
+This is local selection among the mux's own sessions. It does not change
+physical arbitration: initiators outside the mux still arbitrate on the wire.
+
+#### Undeliverable wins
+
+A won STARTED can become undeliverable only when the winner is gone before the
+mux commits it: its bid was cancelled or replaced after selection, or its session
+closed or disconnected before it received the grant. The mux then:
+
+1. does not deliver STARTED and does not commit (or immediately releases) the
+   ownership;
+2. fences selection until the next logical structural SYN, so queued bids are
+   reconsidered at that SYN without an upstream reconnect;
+3. increments `ActiveTxnSnapshot.UndeliverableStarted`.
+
+The same applies when the STARTED arrives after its waiter was already retired
+(the outstanding response is absorbed and counted). A lifecycle boundary (reset,
+reconnect, close) retires the response without being counted.
+
+#### Post-arbitration recovery
+
+Whenever a START ends without a clean ownership, the mux fences selection until
+the next SYN and also has to bring two trackers back in step: the wire-phase
+tracker and the AA-injection classifier (see the
+[frame-atomic visibility v8 design](adaptermux/frame-atomic-visibility-v8.md)). A fence is raised by
+cancellation, replacement or expiry of the selected bid before its result, an
+undeliverable STARTED, a STARTED naming a different address than the pending
+bid, a FAILED naming a foreign winner or a bit-arbitration artifact, and a START
+deadline expiry.
+
+Recovery is a small state machine. It is advanced only by the read loop, which
+is the single producer of the classifier; timers and cancellations only request
+a state under the mux state lock.
+
+| State | Meaning | Leaves the state when |
+| --- | --- | --- |
+| none | No recovery pending. | A fence is raised. |
+| at SYN | Selection is fenced and no telegram is expected. | The first logical structural SYN arrives. Before the classifier can filter that SYN, the abandoned header and the wire-phase tracker are reset; the SYN is then processed normally and clears the fence. |
+| foreign | A telegram is live on the wire and its bytes follow. | See the exits below. |
+| foreign after AA | As foreign, and the previous item was an unescaped AA. | See the exits below. |
+| reset | A lifecycle boundary ended the stream. | Applied before the next item. |
+
+The foreign states are entered in two cases, and only the first needs the
+classifier in enforce mode:
+
+- a response (STARTED or FAILED) named a real foreign winner. A winner counts
+  as real when it differs from the selected bidder's own source and is not
+  rejected by the configured phantom-initiator predicate (bit-arbitration
+  artifacts are not initiators);
+- an external owner wrote at least one request byte after its source, then
+  cancelled or disconnected. The wire-phase tracker keeps following that
+  telegram, so the first SYN of an at-SYN fence could equally be the
+  telegram's terminator or an injected AA inside it, and is judged like a
+  foreign winner's.
+
+While in a foreign state the AA filter keeps running for the live telegram: an
+unescaped AA inside it is subject to the filter and can be dropped as an
+injected symbol, because idle repeats SYN and an injected AA is followed by
+telegram bytes. A raw-only AA and
+an escaped payload AA are never SYNs and never clear a fence.
+
+Exits from the foreign states:
+
+| Exit | Condition | Effect |
+| --- | --- | --- |
+| Telegram terminator | The classifier completes the telegram and the SYN is not dropped. | The SYN reaches the mux SYN handling, which clears the fence and the recovery state. |
+| Second consecutive AA | Two unescaped AA items with nothing between them. | The classifier and wire-phase tracker are reset and the second AA is processed as an idle SYN. |
+| First SYN with an aborted classifier | The classifier already aborted the telegram; an aborted classifier filters nothing and only a reset revives it. | The first SYN resets the classifier and wire-phase tracker. |
+| Lifecycle reset | Adapter reset, reconnect or close. | State, selection, local-loser bookkeeping and barriers are retired and the classifier reset is requested before the next item. A result from an earlier lifecycle cannot restore ownership, a fence or a synthesized source. |
+
+Recovery resets are local state changes. They are never presented as a RESETTED
+observation from the wire.
+
+Known limits:
+
+- **Two adjacent injected AAs look like idle.** Two consecutive unescaped AAs
+  inside a live telegram are indistinguishable from an idle bus, so recovery
+  ends early and the rest of that telegram is no longer protected by the
+  filter.
+- **Shadow mode.** The classifier observes and counts but drops nothing, and it
+  does not enter the foreign states for a foreign winner. No item is dropped, so
+  the first SYN reaches the mux SYN handling and ends the fence.
+- **Off mode (the default when no mode is configured).** There is no classifier;
+  selection is still fenced until the next SYN, and that SYN ends the fence.
+- **Owner telegrams are recognised only for external sessions** that wrote at
+  least one request byte; a grant that wrote nothing is not a live telegram.
+
+#### Timing knobs
+
+| Knob | Default | Meaning |
+| --- | --- | --- |
+| `--adapter-mux-idle-release-grace` | 200 ms | Time after bus acquisition before an idle SYN may release a gateway ownership. The grace is skipped when an external bid is already pending. |
+| `--adapter-mux-max-ownership-duration` | 10 s | Hard limit on continuous ownership, measured from the grant. |
+| `--adapter-mux-read-timeout` | 50 ms | Adapter read timeout. It is separate from the generic transport `--read-timeout`. |
+
+Each flag must be positive. Three limits are fixed and have no flag: the START
+deadline (5 s, for both the gateway admission wait and the adapter response),
+the gateway ownership guard (1.5 s, see [AD11](#ad11-ownership-lifecycle-and-duration-guard)),
+and the wire-silence grace before an idle SYN releases an external owner (250 ms).
+A mux configuration embedded elsewhere that leaves the read timeout unset falls
+back to 200 ms; the gateway always supplies the flag value.
+
+The fairness ratio, the external-start staleness budget, the post-external-release
+grace and the pending-start TTL no longer exist, neither as configuration
+fields nor as flags.
+
+Evidence status: **Proven** as the gateway implementation contract described by
+[gateway issue #1402](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1402)
+and its code change in gateway
+[PR #1410](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/1410),
+covered by synthetic unit fixtures. These are gateway scheduling rules built on the native
+START/STARTED/FAILED contract in [ENH](../protocols/enh.md#start--started--failed);
+they are not a native eBUS wire contract. Scanner latency and live-transport
+behaviour under this model are **Unknown** here.
 
 ### AD07: Echo Suppression
 
@@ -150,9 +299,11 @@ reason `arbitration_collision`. These abnormal endings do not hold ownership
 until the next idle SYN or until the duration guard expires.
 
 For a normal transaction, idle SYN release retains the 200 ms grace period
-following bus acquisition. The hard limit on continuous ownership defaults to
-1.5 s and serves as a last-resort guard, rather than the normal release mechanism
-for a failed transaction.
+following bus acquisition. The grace is skipped when an external bid is already
+pending. The hard limit on continuous ownership defaults to 10 s; gateway grants
+are additionally bounded by a 1.5 s guard, and the shorter limit applies. Both
+are last-resort guards, rather than the normal release mechanism for a failed
+transaction.
 
 Stale active-path bytes belonging to a finished or failed transaction are
 discarded and counted. They are never drained into the next grant; the next
