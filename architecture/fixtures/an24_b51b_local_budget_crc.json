@@ -9,8 +9,8 @@
   "authorization_gate_added": false,
   "signatures": {
     "plan": "PlanLocalBudget(procedure, input) -> (procedure, outcome, reason, chunks, consumed, unplanned, raw)",
-    "progress": "AdvanceLocalProgress(prior, accepted, actual) -> (outcome, last_known_good, next)",
-    "checksum": "LocalChecksum(payload, start, length, initial) -> (outcome, value, raw, start, length)"
+    "progress": "AdvanceLocalProgress(prior, accepted, actual) -> (outcome, reason, last_known_good, next)",
+    "checksum": "LocalChecksum(payload, start, length, initial) -> (outcome, reason, value, raw, start, length)"
   },
   "boundary": {
     "transfer_client": "false",

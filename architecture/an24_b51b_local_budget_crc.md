@@ -32,8 +32,8 @@ These signatures are hypothetical and are the names used for the whole contract.
 | Role | Signature |
 | --- | --- |
 | plan | PlanLocalBudget(procedure, input) -> (procedure, outcome, reason, chunks, consumed, unplanned, raw) |
-| progress | AdvanceLocalProgress(prior, accepted, actual) -> (outcome, last_known_good, next) |
-| checksum | LocalChecksum(payload, start, length, initial) -> (outcome, value, raw, start, length) |
+| progress | AdvanceLocalProgress(prior, accepted, actual) -> (outcome, reason, last_known_good, next) |
+| checksum | LocalChecksum(payload, start, length, initial) -> (outcome, reason, value, raw, start, length) |
 
 `PlanLocalBudget` copies input bytes into owned mutable chunk buffers and returns those chunks, the consumed count, and the unplanned count. The procedure identity, outcome, and reason are returned with them. An unknown procedure returns `outcome=rejected`, `reason=unknown_procedure`, and an owned copy of the input in `raw`; `raw` is absent on a planned result. Empty input returns no chunks. That result is not a peer-empty-packet claim.
 

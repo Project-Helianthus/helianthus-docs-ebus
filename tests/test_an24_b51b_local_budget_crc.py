@@ -50,11 +50,11 @@ SIGNATURES = {
     ),
     "progress": (
         "AdvanceLocalProgress(prior, accepted, actual) -> "
-        "(outcome, last_known_good, next)"
+        "(outcome, reason, last_known_good, next)"
     ),
     "checksum": (
         "LocalChecksum(payload, start, length, initial) -> "
-        "(outcome, value, raw, start, length)"
+        "(outcome, reason, value, raw, start, length)"
     ),
 }
 BOUNDARY = {
