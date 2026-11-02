@@ -106,7 +106,7 @@ byte first. Decimal ranges are inclusive; FE and FF denote hexadecimal bytes.
 | --- | --- | --- | --- |
 | OP00 | request | `setpoint`, u8 | 0 `off`; 1..100 `on-or-speed`; 101..255 `unmapped`. Percent is raw identity, with no clipping. |
 | OP02 | request | `valve`, u8 | 0 `CH`; 50 `midpoint`; 100 `DHW`; FE `standby`; FF `unchanged`; other values have Unknown meaning and remain raw. |
-| OP02 | positive | `valve`, u8 | Raw numeric identity, with alternatives `actual` and `setpoint-fallback`; no source selected. |
+| OP02 | positive | `valve`, u8 | Raw numeric identity, with `alternatives` (below); no source selected. |
 | OP02 | positive | `contact`, u8 | 0 `open`; 1 `closed`; other values `unmapped`. |
 | OP02 | positive | `tank`, signedLE16 | Divide the signed integer by 16 for candidate Celsius; no additional sentinel declared. |
 | OP02 | positive | `virtual_error`, LEu16 | FFFF `no-error` in this field only; other values retain the numeric error token, with semantic error labels Unknown. |
@@ -116,6 +116,13 @@ byte first. Decimal ranges are inclusive; FE and FF denote hexadecimal bytes.
 | OP04 | request | `setpoint`, u8 | 0 `off`, independent of internal demand; 1..100 `on-or-speed`; FF `replacement/no-remote-control`; 101..254 `unmapped`. |
 | OP04 | positive | `feedback`, u8 | 1 `accepted`; every other byte `rejected`. Acceptance is a candidate label, not proof of a physical action or readback. |
 | OP05 | request | `channel0`, `channel1`, `channel2`, each u8 | Independently: 0 `off`; 1..100 `on-or-speed`; FF `unchanged`; 101..254 `unmapped`. |
+
+For OP02 positive `valve`, a complete result carries `alternatives` as a JSON
+array of exactly two strings in this fixed order: `["actual","setpoint-fallback"]`.
+Each string names a candidate source of the number; the array holds no nested
+objects, no selection flag and no per-source number. An incomplete `valve`
+result has no `alternatives` member. Source selection stays Unknown and is
+serialized only by the absence of any selected-source member.
 
 Every supported OP04 request result (complete or partial) additionally carries
 the root member `timeout` with exactly
@@ -184,6 +191,27 @@ the same context except operation 4 serializes as:
   "qualified":false
 }
 ```
+
+A complete OP02 positive object, with all four declared sibling fields, serializes as:
+
+```json
+{
+  "context": {"primary":181,"secondary":18,"operation":2,"direction":"positive","view":"actuator-fields"},
+  "fields": {"valve":[50],"contact":[2],"tank":[240,255],"virtual_error":[255,255]},
+  "state":"complete",
+  "results": {
+    "valve":{"raw":[50],"state":"complete","number":50,"alternatives":["actual","setpoint-fallback"],"grade":"Hypothesis","calculation":"Proven"},
+    "contact":{"raw":[2],"state":"complete","number":2,"label":"unmapped","grade":"Hypothesis","calculation":"Proven"},
+    "tank":{"raw":[240,255],"state":"complete","number":-1,"signed":-16,"grade":"Hypothesis","calculation":"Proven"},
+    "virtual_error":{"raw":[255,255],"state":"complete","number":65535,"label":"no-error","grade":"Hypothesis","calculation":"Proven"}
+  },
+  "physical":"Unknown",
+  "qualified":false
+}
+```
+
+For tank, `signed` is the signed integer and `number` is the candidate Celsius
+value (signed integer divided by 16).
 
 For an independent partial example, use the same context and arguments with
 `fields: {"channel0":[100],"channel1":[],"channel2":[255,0]}`. The envelope is
