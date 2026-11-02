@@ -257,7 +257,10 @@ class TestAb27Ao27SensorViews(unittest.TestCase):
         for ab27ao27Key, ab27ao27Value in (("operation", 0), ("operation", 255), ("direction", "negative"), ("direction", ""), ("view", "unknown"), ("view", "")):
             self.ab27ao27Case(f"selection-{ab27ao27Key}-{ab27ao27Value}", 3, self.ab27ao27Base(3), {"state": "Unknown", "fields": {}}, ab27ao27Context={ab27ao27Key: ab27ao27Value})
         for ab27ao27Key, ab27ao27Value in (("primary", 0), ("secondary", 0), ("family", "other-family"), ("variant", {"opaque": [0, False]}), ("extra", {"nested": ["opaque", 0]})):
-            self.ab27ao27Case("context-" + ab27ao27Key, 3, self.ab27ao27Base(3), {"preserve_context": True, "physical": "Unknown", "qualified": False}, ab27ao27Context={ab27ao27Key: ab27ao27Value})
+            ab27ao27Expect = {"preserve_context": True, "physical": "Unknown", "qualified": False}
+            if ab27ao27Key in ("primary", "secondary"):
+                ab27ao27Expect.update(state="Unknown", fields={})
+            self.ab27ao27Case("context-" + ab27ao27Key, 3, self.ab27ao27Base(3), ab27ao27Expect, ab27ao27Context={ab27ao27Key: ab27ao27Value})
 
     def test_ab27ao27_missing_empty_zero_and_unmodelled_fields(self):
         for ab27ao27Key, ab27ao27Fields in (("missing", {}), ("empty", {"logical_object": []}), ("zero", {"logical_object": [0]}), ("extra", {"logical_object": self.ab27ao27Base(3), "unmodelled": [0, 255]}), ("only-other", {"unmodelled": [0, 255]})):

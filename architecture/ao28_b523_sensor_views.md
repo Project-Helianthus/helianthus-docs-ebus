@@ -40,11 +40,11 @@ or select by family, field name resemblance or payload length.
 
 The positive direction and explicit `status-zero-valid` or
 `status-zero-valid-or-low` view select the software layouts for operations 3, 6
-and 7. Unknown operation, direction or view yields raw-only `state:"Unknown"`
-and `fields:{}`. A view selects interpretation, never family applicability.
-Changing primary or secondary is not evidence of applicability: the finite
-context cases assert preservation and nonqualification only; they do not specify
-selection for a different service. Opaque family and variant never qualify it.
+and 7 within the declared `primary:181`, `secondary:35` service. A mismatched
+primary or secondary, or unknown operation, direction or view, yields raw-only
+`state:"Unknown"` and `fields:{}` while preserving context and nonqualification.
+A view selects interpretation, never family applicability. Opaque family and
+variant never qualify it.
 
 Reject malformed JSON, duplicate object keys at any depth, wrong JSON kinds and
 invalid byte elements, including booleans, fractions, strings, null, negative
