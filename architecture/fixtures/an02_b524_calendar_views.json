@@ -1,0 +1,8666 @@
+{
+  "contract": {
+    "encoding": "unsigned-byte",
+    "family_fallback": false,
+    "opcode": 2,
+    "echo_match_required": true,
+    "context_fields": [
+      "family",
+      "software",
+      "hardware",
+      "api_version",
+      "api_revision",
+      "opcode",
+      "group",
+      "instance",
+      "register"
+    ],
+    "missing_fill": null,
+    "timestamp": false,
+    "edit_permission": false,
+    "joint_date_validation": false,
+    "date_domains": [
+      [
+        1,
+        31
+      ],
+      [
+        1,
+        12
+      ],
+      [
+        0,
+        99
+      ]
+    ],
+    "time_domains": [
+      [
+        0,
+        255
+      ],
+      [
+        0,
+        255
+      ],
+      [
+        0,
+        255
+      ]
+    ],
+    "numeric_grade": "Proven",
+    "semantic_grade": "Hypothesis",
+    "native_grade": "Unknown"
+  },
+  "selectors": [
+    {
+      "family": "controller-700",
+      "opcode": 2,
+      "group": 0,
+      "instance": 0,
+      "register": 52,
+      "alternative": "date"
+    },
+    {
+      "family": "controller-700",
+      "opcode": 2,
+      "group": 0,
+      "instance": 0,
+      "register": 113,
+      "alternative": "date"
+    },
+    {
+      "family": "controller-700",
+      "opcode": 2,
+      "group": 0,
+      "instance": 0,
+      "register": 114,
+      "alternative": "date"
+    },
+    {
+      "family": "controller-700",
+      "opcode": 2,
+      "group": 0,
+      "instance": 0,
+      "register": 53,
+      "alternative": "time"
+    },
+    {
+      "family": "controller-700",
+      "opcode": 2,
+      "group": 1,
+      "instance": 0,
+      "register": 9,
+      "alternative": "date"
+    },
+    {
+      "family": "controller-700",
+      "opcode": 2,
+      "group": 1,
+      "instance": 0,
+      "register": 10,
+      "alternative": "date"
+    },
+    {
+      "family": "controller-700",
+      "opcode": 2,
+      "group": 3,
+      "instance": "caller",
+      "register": 3,
+      "alternative": "date"
+    },
+    {
+      "family": "controller-700",
+      "opcode": 2,
+      "group": 3,
+      "instance": "caller",
+      "register": 4,
+      "alternative": "date"
+    },
+    {
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 0,
+      "instance": 0,
+      "register": 52,
+      "alternative": "date"
+    },
+    {
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 0,
+      "instance": 0,
+      "register": 218,
+      "alternative": "date"
+    },
+    {
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 0,
+      "instance": 0,
+      "register": 219,
+      "alternative": "date"
+    },
+    {
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 0,
+      "instance": 0,
+      "register": 53,
+      "alternative": "time"
+    },
+    {
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 1,
+      "instance": 0,
+      "register": 9,
+      "alternative": "date"
+    },
+    {
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 1,
+      "instance": 0,
+      "register": 10,
+      "alternative": "date"
+    },
+    {
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 1,
+      "instance": 0,
+      "register": 16,
+      "alternative": "time"
+    },
+    {
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 1,
+      "instance": 0,
+      "register": 17,
+      "alternative": "time"
+    },
+    {
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 3,
+      "instance": "caller",
+      "register": 3,
+      "alternative": "date"
+    },
+    {
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 3,
+      "instance": "caller",
+      "register": 4,
+      "alternative": "date"
+    },
+    {
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 3,
+      "instance": "caller",
+      "register": 36,
+      "alternative": "date"
+    },
+    {
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 3,
+      "instance": "caller",
+      "register": 30,
+      "alternative": "time"
+    },
+    {
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 3,
+      "instance": "caller",
+      "register": 32,
+      "alternative": "time"
+    },
+    {
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 3,
+      "instance": "caller",
+      "register": 33,
+      "alternative": "time"
+    },
+    {
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 9,
+      "instance": 0,
+      "register": 7,
+      "alternative": "date"
+    },
+    {
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 9,
+      "instance": 0,
+      "register": 9,
+      "alternative": "date"
+    },
+    {
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 9,
+      "instance": 0,
+      "register": 8,
+      "alternative": "time"
+    },
+    {
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 9,
+      "instance": 0,
+      "register": 10,
+      "alternative": "time"
+    }
+  ],
+  "cases": [
+    {
+      "name": "selector-1",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 52,
+        "raw": [
+          0,
+          0,
+          52,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 52,
+          "raw": [
+            0,
+            0,
+            52,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "candidate",
+            "raw": 31,
+            "value": 31
+          },
+          {
+            "state": "candidate",
+            "raw": 12,
+            "value": 12
+          },
+          {
+            "state": "candidate",
+            "raw": 99,
+            "value": 99
+          }
+        ],
+        "complete_candidate": true,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "selector-2",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 113
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 113,
+        "raw": [
+          0,
+          0,
+          113,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 113
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 113,
+          "raw": [
+            0,
+            0,
+            113,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "candidate",
+            "raw": 31,
+            "value": 31
+          },
+          {
+            "state": "candidate",
+            "raw": 12,
+            "value": 12
+          },
+          {
+            "state": "candidate",
+            "raw": 99,
+            "value": 99
+          }
+        ],
+        "complete_candidate": true,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "selector-3",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 114
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 114,
+        "raw": [
+          0,
+          0,
+          114,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 114
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 114,
+          "raw": [
+            0,
+            0,
+            114,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "candidate",
+            "raw": 31,
+            "value": 31
+          },
+          {
+            "state": "candidate",
+            "raw": 12,
+            "value": 12
+          },
+          {
+            "state": "candidate",
+            "raw": 99,
+            "value": 99
+          }
+        ],
+        "complete_candidate": true,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "selector-4",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 53
+      },
+      "alternative": "time",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 53,
+        "raw": [
+          0,
+          0,
+          53,
+          0,
+          23,
+          59,
+          58
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 23
+        },
+        {
+          "state": "present",
+          "raw": 59
+        },
+        {
+          "state": "present",
+          "raw": 58
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 53
+        },
+        "alternative": "time",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 53,
+          "raw": [
+            0,
+            0,
+            53,
+            0,
+            23,
+            59,
+            58
+          ]
+        },
+        "components": [
+          {
+            "state": "candidate",
+            "raw": 23,
+            "value": 23
+          },
+          {
+            "state": "candidate",
+            "raw": 59,
+            "value": 59
+          },
+          {
+            "state": "candidate",
+            "raw": 58,
+            "value": 58
+          }
+        ],
+        "complete_candidate": true,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 23
+          },
+          {
+            "state": "present",
+            "raw": 59
+          },
+          {
+            "state": "present",
+            "raw": 58
+          }
+        ]
+      },
+      "raw_hex": [
+        "17",
+        "3B",
+        "3A"
+      ]
+    },
+    {
+      "name": "selector-5",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 1,
+        "instance": 0,
+        "register": 9
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 1,
+        "register": 9,
+        "raw": [
+          0,
+          1,
+          9,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 1,
+          "instance": 0,
+          "register": 9
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 1,
+          "register": 9,
+          "raw": [
+            0,
+            1,
+            9,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "candidate",
+            "raw": 31,
+            "value": 31
+          },
+          {
+            "state": "candidate",
+            "raw": 12,
+            "value": 12
+          },
+          {
+            "state": "candidate",
+            "raw": 99,
+            "value": 99
+          }
+        ],
+        "complete_candidate": true,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "selector-6",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 1,
+        "instance": 0,
+        "register": 10
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 1,
+        "register": 10,
+        "raw": [
+          0,
+          1,
+          10,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 1,
+          "instance": 0,
+          "register": 10
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 1,
+          "register": 10,
+          "raw": [
+            0,
+            1,
+            10,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "candidate",
+            "raw": 31,
+            "value": 31
+          },
+          {
+            "state": "candidate",
+            "raw": 12,
+            "value": 12
+          },
+          {
+            "state": "candidate",
+            "raw": 99,
+            "value": 99
+          }
+        ],
+        "complete_candidate": true,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "selector-7",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 3,
+        "instance": 7,
+        "register": 3
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 3,
+        "register": 3,
+        "raw": [
+          0,
+          3,
+          3,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 3,
+          "instance": 7,
+          "register": 3
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 3,
+          "register": 3,
+          "raw": [
+            0,
+            3,
+            3,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "candidate",
+            "raw": 31,
+            "value": 31
+          },
+          {
+            "state": "candidate",
+            "raw": 12,
+            "value": 12
+          },
+          {
+            "state": "candidate",
+            "raw": 99,
+            "value": 99
+          }
+        ],
+        "complete_candidate": true,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "selector-8",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 3,
+        "instance": 7,
+        "register": 4
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 3,
+        "register": 4,
+        "raw": [
+          0,
+          3,
+          4,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 3,
+          "instance": 7,
+          "register": 4
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 3,
+          "register": 4,
+          "raw": [
+            0,
+            3,
+            4,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "candidate",
+            "raw": 31,
+            "value": 31
+          },
+          {
+            "state": "candidate",
+            "raw": 12,
+            "value": 12
+          },
+          {
+            "state": "candidate",
+            "raw": 99,
+            "value": 99
+          }
+        ],
+        "complete_candidate": true,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "selector-9",
+      "context": {
+        "family": "controller-720",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 52,
+        "raw": [
+          0,
+          0,
+          52,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-720",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 52,
+          "raw": [
+            0,
+            0,
+            52,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "candidate",
+            "raw": 31,
+            "value": 31
+          },
+          {
+            "state": "candidate",
+            "raw": 12,
+            "value": 12
+          },
+          {
+            "state": "candidate",
+            "raw": 99,
+            "value": 99
+          }
+        ],
+        "complete_candidate": true,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "selector-10",
+      "context": {
+        "family": "controller-720",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 218
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 218,
+        "raw": [
+          0,
+          0,
+          218,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-720",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 218
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 218,
+          "raw": [
+            0,
+            0,
+            218,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "candidate",
+            "raw": 31,
+            "value": 31
+          },
+          {
+            "state": "candidate",
+            "raw": 12,
+            "value": 12
+          },
+          {
+            "state": "candidate",
+            "raw": 99,
+            "value": 99
+          }
+        ],
+        "complete_candidate": true,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "selector-11",
+      "context": {
+        "family": "controller-720",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 219
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 219,
+        "raw": [
+          0,
+          0,
+          219,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-720",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 219
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 219,
+          "raw": [
+            0,
+            0,
+            219,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "candidate",
+            "raw": 31,
+            "value": 31
+          },
+          {
+            "state": "candidate",
+            "raw": 12,
+            "value": 12
+          },
+          {
+            "state": "candidate",
+            "raw": 99,
+            "value": 99
+          }
+        ],
+        "complete_candidate": true,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "selector-12",
+      "context": {
+        "family": "controller-720",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 53
+      },
+      "alternative": "time",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 53,
+        "raw": [
+          0,
+          0,
+          53,
+          0,
+          23,
+          59,
+          58
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 23
+        },
+        {
+          "state": "present",
+          "raw": 59
+        },
+        {
+          "state": "present",
+          "raw": 58
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-720",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 53
+        },
+        "alternative": "time",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 53,
+          "raw": [
+            0,
+            0,
+            53,
+            0,
+            23,
+            59,
+            58
+          ]
+        },
+        "components": [
+          {
+            "state": "candidate",
+            "raw": 23,
+            "value": 23
+          },
+          {
+            "state": "candidate",
+            "raw": 59,
+            "value": 59
+          },
+          {
+            "state": "candidate",
+            "raw": 58,
+            "value": 58
+          }
+        ],
+        "complete_candidate": true,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 23
+          },
+          {
+            "state": "present",
+            "raw": 59
+          },
+          {
+            "state": "present",
+            "raw": 58
+          }
+        ]
+      },
+      "raw_hex": [
+        "17",
+        "3B",
+        "3A"
+      ]
+    },
+    {
+      "name": "selector-13",
+      "context": {
+        "family": "controller-720",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 1,
+        "instance": 0,
+        "register": 9
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 1,
+        "register": 9,
+        "raw": [
+          0,
+          1,
+          9,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-720",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 1,
+          "instance": 0,
+          "register": 9
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 1,
+          "register": 9,
+          "raw": [
+            0,
+            1,
+            9,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "candidate",
+            "raw": 31,
+            "value": 31
+          },
+          {
+            "state": "candidate",
+            "raw": 12,
+            "value": 12
+          },
+          {
+            "state": "candidate",
+            "raw": 99,
+            "value": 99
+          }
+        ],
+        "complete_candidate": true,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "selector-14",
+      "context": {
+        "family": "controller-720",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 1,
+        "instance": 0,
+        "register": 10
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 1,
+        "register": 10,
+        "raw": [
+          0,
+          1,
+          10,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-720",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 1,
+          "instance": 0,
+          "register": 10
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 1,
+          "register": 10,
+          "raw": [
+            0,
+            1,
+            10,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "candidate",
+            "raw": 31,
+            "value": 31
+          },
+          {
+            "state": "candidate",
+            "raw": 12,
+            "value": 12
+          },
+          {
+            "state": "candidate",
+            "raw": 99,
+            "value": 99
+          }
+        ],
+        "complete_candidate": true,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "selector-15",
+      "context": {
+        "family": "controller-720",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 1,
+        "instance": 0,
+        "register": 16
+      },
+      "alternative": "time",
+      "reply": {
+        "state": "echo-payload",
+        "group": 1,
+        "register": 16,
+        "raw": [
+          0,
+          1,
+          16,
+          0,
+          23,
+          59,
+          58
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 23
+        },
+        {
+          "state": "present",
+          "raw": 59
+        },
+        {
+          "state": "present",
+          "raw": 58
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-720",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 1,
+          "instance": 0,
+          "register": 16
+        },
+        "alternative": "time",
+        "reply": {
+          "state": "echo-payload",
+          "group": 1,
+          "register": 16,
+          "raw": [
+            0,
+            1,
+            16,
+            0,
+            23,
+            59,
+            58
+          ]
+        },
+        "components": [
+          {
+            "state": "candidate",
+            "raw": 23,
+            "value": 23
+          },
+          {
+            "state": "candidate",
+            "raw": 59,
+            "value": 59
+          },
+          {
+            "state": "candidate",
+            "raw": 58,
+            "value": 58
+          }
+        ],
+        "complete_candidate": true,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 23
+          },
+          {
+            "state": "present",
+            "raw": 59
+          },
+          {
+            "state": "present",
+            "raw": 58
+          }
+        ]
+      },
+      "raw_hex": [
+        "17",
+        "3B",
+        "3A"
+      ]
+    },
+    {
+      "name": "selector-16",
+      "context": {
+        "family": "controller-720",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 1,
+        "instance": 0,
+        "register": 17
+      },
+      "alternative": "time",
+      "reply": {
+        "state": "echo-payload",
+        "group": 1,
+        "register": 17,
+        "raw": [
+          0,
+          1,
+          17,
+          0,
+          23,
+          59,
+          58
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 23
+        },
+        {
+          "state": "present",
+          "raw": 59
+        },
+        {
+          "state": "present",
+          "raw": 58
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-720",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 1,
+          "instance": 0,
+          "register": 17
+        },
+        "alternative": "time",
+        "reply": {
+          "state": "echo-payload",
+          "group": 1,
+          "register": 17,
+          "raw": [
+            0,
+            1,
+            17,
+            0,
+            23,
+            59,
+            58
+          ]
+        },
+        "components": [
+          {
+            "state": "candidate",
+            "raw": 23,
+            "value": 23
+          },
+          {
+            "state": "candidate",
+            "raw": 59,
+            "value": 59
+          },
+          {
+            "state": "candidate",
+            "raw": 58,
+            "value": 58
+          }
+        ],
+        "complete_candidate": true,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 23
+          },
+          {
+            "state": "present",
+            "raw": 59
+          },
+          {
+            "state": "present",
+            "raw": 58
+          }
+        ]
+      },
+      "raw_hex": [
+        "17",
+        "3B",
+        "3A"
+      ]
+    },
+    {
+      "name": "selector-17",
+      "context": {
+        "family": "controller-720",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 3,
+        "instance": 7,
+        "register": 3
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 3,
+        "register": 3,
+        "raw": [
+          0,
+          3,
+          3,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-720",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 3,
+          "instance": 7,
+          "register": 3
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 3,
+          "register": 3,
+          "raw": [
+            0,
+            3,
+            3,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "candidate",
+            "raw": 31,
+            "value": 31
+          },
+          {
+            "state": "candidate",
+            "raw": 12,
+            "value": 12
+          },
+          {
+            "state": "candidate",
+            "raw": 99,
+            "value": 99
+          }
+        ],
+        "complete_candidate": true,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "selector-18",
+      "context": {
+        "family": "controller-720",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 3,
+        "instance": 7,
+        "register": 4
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 3,
+        "register": 4,
+        "raw": [
+          0,
+          3,
+          4,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-720",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 3,
+          "instance": 7,
+          "register": 4
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 3,
+          "register": 4,
+          "raw": [
+            0,
+            3,
+            4,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "candidate",
+            "raw": 31,
+            "value": 31
+          },
+          {
+            "state": "candidate",
+            "raw": 12,
+            "value": 12
+          },
+          {
+            "state": "candidate",
+            "raw": 99,
+            "value": 99
+          }
+        ],
+        "complete_candidate": true,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "selector-19",
+      "context": {
+        "family": "controller-720",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 3,
+        "instance": 7,
+        "register": 36
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 3,
+        "register": 36,
+        "raw": [
+          0,
+          3,
+          36,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-720",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 3,
+          "instance": 7,
+          "register": 36
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 3,
+          "register": 36,
+          "raw": [
+            0,
+            3,
+            36,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "candidate",
+            "raw": 31,
+            "value": 31
+          },
+          {
+            "state": "candidate",
+            "raw": 12,
+            "value": 12
+          },
+          {
+            "state": "candidate",
+            "raw": 99,
+            "value": 99
+          }
+        ],
+        "complete_candidate": true,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "selector-20",
+      "context": {
+        "family": "controller-720",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 3,
+        "instance": 7,
+        "register": 30
+      },
+      "alternative": "time",
+      "reply": {
+        "state": "echo-payload",
+        "group": 3,
+        "register": 30,
+        "raw": [
+          0,
+          3,
+          30,
+          0,
+          23,
+          59,
+          58
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 23
+        },
+        {
+          "state": "present",
+          "raw": 59
+        },
+        {
+          "state": "present",
+          "raw": 58
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-720",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 3,
+          "instance": 7,
+          "register": 30
+        },
+        "alternative": "time",
+        "reply": {
+          "state": "echo-payload",
+          "group": 3,
+          "register": 30,
+          "raw": [
+            0,
+            3,
+            30,
+            0,
+            23,
+            59,
+            58
+          ]
+        },
+        "components": [
+          {
+            "state": "candidate",
+            "raw": 23,
+            "value": 23
+          },
+          {
+            "state": "candidate",
+            "raw": 59,
+            "value": 59
+          },
+          {
+            "state": "candidate",
+            "raw": 58,
+            "value": 58
+          }
+        ],
+        "complete_candidate": true,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 23
+          },
+          {
+            "state": "present",
+            "raw": 59
+          },
+          {
+            "state": "present",
+            "raw": 58
+          }
+        ]
+      },
+      "raw_hex": [
+        "17",
+        "3B",
+        "3A"
+      ]
+    },
+    {
+      "name": "selector-21",
+      "context": {
+        "family": "controller-720",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 3,
+        "instance": 7,
+        "register": 32
+      },
+      "alternative": "time",
+      "reply": {
+        "state": "echo-payload",
+        "group": 3,
+        "register": 32,
+        "raw": [
+          0,
+          3,
+          32,
+          0,
+          23,
+          59,
+          58
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 23
+        },
+        {
+          "state": "present",
+          "raw": 59
+        },
+        {
+          "state": "present",
+          "raw": 58
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-720",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 3,
+          "instance": 7,
+          "register": 32
+        },
+        "alternative": "time",
+        "reply": {
+          "state": "echo-payload",
+          "group": 3,
+          "register": 32,
+          "raw": [
+            0,
+            3,
+            32,
+            0,
+            23,
+            59,
+            58
+          ]
+        },
+        "components": [
+          {
+            "state": "candidate",
+            "raw": 23,
+            "value": 23
+          },
+          {
+            "state": "candidate",
+            "raw": 59,
+            "value": 59
+          },
+          {
+            "state": "candidate",
+            "raw": 58,
+            "value": 58
+          }
+        ],
+        "complete_candidate": true,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 23
+          },
+          {
+            "state": "present",
+            "raw": 59
+          },
+          {
+            "state": "present",
+            "raw": 58
+          }
+        ]
+      },
+      "raw_hex": [
+        "17",
+        "3B",
+        "3A"
+      ]
+    },
+    {
+      "name": "selector-22",
+      "context": {
+        "family": "controller-720",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 3,
+        "instance": 7,
+        "register": 33
+      },
+      "alternative": "time",
+      "reply": {
+        "state": "echo-payload",
+        "group": 3,
+        "register": 33,
+        "raw": [
+          0,
+          3,
+          33,
+          0,
+          23,
+          59,
+          58
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 23
+        },
+        {
+          "state": "present",
+          "raw": 59
+        },
+        {
+          "state": "present",
+          "raw": 58
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-720",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 3,
+          "instance": 7,
+          "register": 33
+        },
+        "alternative": "time",
+        "reply": {
+          "state": "echo-payload",
+          "group": 3,
+          "register": 33,
+          "raw": [
+            0,
+            3,
+            33,
+            0,
+            23,
+            59,
+            58
+          ]
+        },
+        "components": [
+          {
+            "state": "candidate",
+            "raw": 23,
+            "value": 23
+          },
+          {
+            "state": "candidate",
+            "raw": 59,
+            "value": 59
+          },
+          {
+            "state": "candidate",
+            "raw": 58,
+            "value": 58
+          }
+        ],
+        "complete_candidate": true,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 23
+          },
+          {
+            "state": "present",
+            "raw": 59
+          },
+          {
+            "state": "present",
+            "raw": 58
+          }
+        ]
+      },
+      "raw_hex": [
+        "17",
+        "3B",
+        "3A"
+      ]
+    },
+    {
+      "name": "selector-23",
+      "context": {
+        "family": "controller-720",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 9,
+        "instance": 0,
+        "register": 7
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 9,
+        "register": 7,
+        "raw": [
+          0,
+          9,
+          7,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-720",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 9,
+          "instance": 0,
+          "register": 7
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 9,
+          "register": 7,
+          "raw": [
+            0,
+            9,
+            7,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "candidate",
+            "raw": 31,
+            "value": 31
+          },
+          {
+            "state": "candidate",
+            "raw": 12,
+            "value": 12
+          },
+          {
+            "state": "candidate",
+            "raw": 99,
+            "value": 99
+          }
+        ],
+        "complete_candidate": true,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "selector-24",
+      "context": {
+        "family": "controller-720",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 9,
+        "instance": 0,
+        "register": 9
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 9,
+        "register": 9,
+        "raw": [
+          0,
+          9,
+          9,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-720",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 9,
+          "instance": 0,
+          "register": 9
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 9,
+          "register": 9,
+          "raw": [
+            0,
+            9,
+            9,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "candidate",
+            "raw": 31,
+            "value": 31
+          },
+          {
+            "state": "candidate",
+            "raw": 12,
+            "value": 12
+          },
+          {
+            "state": "candidate",
+            "raw": 99,
+            "value": 99
+          }
+        ],
+        "complete_candidate": true,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "selector-25",
+      "context": {
+        "family": "controller-720",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 9,
+        "instance": 0,
+        "register": 8
+      },
+      "alternative": "time",
+      "reply": {
+        "state": "echo-payload",
+        "group": 9,
+        "register": 8,
+        "raw": [
+          0,
+          9,
+          8,
+          0,
+          23,
+          59,
+          58
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 23
+        },
+        {
+          "state": "present",
+          "raw": 59
+        },
+        {
+          "state": "present",
+          "raw": 58
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-720",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 9,
+          "instance": 0,
+          "register": 8
+        },
+        "alternative": "time",
+        "reply": {
+          "state": "echo-payload",
+          "group": 9,
+          "register": 8,
+          "raw": [
+            0,
+            9,
+            8,
+            0,
+            23,
+            59,
+            58
+          ]
+        },
+        "components": [
+          {
+            "state": "candidate",
+            "raw": 23,
+            "value": 23
+          },
+          {
+            "state": "candidate",
+            "raw": 59,
+            "value": 59
+          },
+          {
+            "state": "candidate",
+            "raw": 58,
+            "value": 58
+          }
+        ],
+        "complete_candidate": true,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 23
+          },
+          {
+            "state": "present",
+            "raw": 59
+          },
+          {
+            "state": "present",
+            "raw": 58
+          }
+        ]
+      },
+      "raw_hex": [
+        "17",
+        "3B",
+        "3A"
+      ]
+    },
+    {
+      "name": "selector-26",
+      "context": {
+        "family": "controller-720",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 9,
+        "instance": 0,
+        "register": 10
+      },
+      "alternative": "time",
+      "reply": {
+        "state": "echo-payload",
+        "group": 9,
+        "register": 10,
+        "raw": [
+          0,
+          9,
+          10,
+          0,
+          23,
+          59,
+          58
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 23
+        },
+        {
+          "state": "present",
+          "raw": 59
+        },
+        {
+          "state": "present",
+          "raw": 58
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-720",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 9,
+          "instance": 0,
+          "register": 10
+        },
+        "alternative": "time",
+        "reply": {
+          "state": "echo-payload",
+          "group": 9,
+          "register": 10,
+          "raw": [
+            0,
+            9,
+            10,
+            0,
+            23,
+            59,
+            58
+          ]
+        },
+        "components": [
+          {
+            "state": "candidate",
+            "raw": 23,
+            "value": 23
+          },
+          {
+            "state": "candidate",
+            "raw": 59,
+            "value": 59
+          },
+          {
+            "state": "candidate",
+            "raw": 58,
+            "value": 58
+          }
+        ],
+        "complete_candidate": true,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 23
+          },
+          {
+            "state": "present",
+            "raw": 59
+          },
+          {
+            "state": "present",
+            "raw": 58
+          }
+        ]
+      },
+      "raw_hex": [
+        "17",
+        "3B",
+        "3A"
+      ]
+    },
+    {
+      "name": "plain-hex-12",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 52,
+        "raw": [
+          0,
+          0,
+          52,
+          0,
+          18,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 18
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 52,
+          "raw": [
+            0,
+            0,
+            52,
+            0,
+            18,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "candidate",
+            "raw": 18,
+            "value": 18
+          },
+          {
+            "state": "candidate",
+            "raw": 12,
+            "value": 12
+          },
+          {
+            "state": "candidate",
+            "raw": 99,
+            "value": 99
+          }
+        ],
+        "complete_candidate": true,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 18
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "12",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "missing-month",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 52,
+        "raw": [
+          0,
+          0,
+          52,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "missing",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 52,
+          "raw": [
+            0,
+            0,
+            52,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "candidate",
+            "raw": 31,
+            "value": 31
+          },
+          {
+            "state": "missing",
+            "raw": 12,
+            "value": null
+          },
+          {
+            "state": "candidate",
+            "raw": 99,
+            "value": 99
+          }
+        ],
+        "complete_candidate": false,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "missing",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "domain-0",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 52,
+        "raw": [
+          0,
+          0,
+          52,
+          0,
+          0,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 0
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 52,
+          "raw": [
+            0,
+            0,
+            52,
+            0,
+            0,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "out-of-domain",
+            "raw": 0,
+            "value": null
+          },
+          {
+            "state": "candidate",
+            "raw": 12,
+            "value": 12
+          },
+          {
+            "state": "candidate",
+            "raw": 99,
+            "value": 99
+          }
+        ],
+        "complete_candidate": false,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 0
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "00",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "domain-1",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 52,
+        "raw": [
+          0,
+          0,
+          52,
+          0,
+          31,
+          13,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 13
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 52,
+          "raw": [
+            0,
+            0,
+            52,
+            0,
+            31,
+            13,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "candidate",
+            "raw": 31,
+            "value": 31
+          },
+          {
+            "state": "out-of-domain",
+            "raw": 13,
+            "value": null
+          },
+          {
+            "state": "candidate",
+            "raw": 99,
+            "value": 99
+          }
+        ],
+        "complete_candidate": false,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 13
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0D",
+        "63"
+      ]
+    },
+    {
+      "name": "domain-2",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 52,
+        "raw": [
+          0,
+          0,
+          52,
+          0,
+          31,
+          12,
+          100
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 100
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 52,
+          "raw": [
+            0,
+            0,
+            52,
+            0,
+            31,
+            12,
+            100
+          ]
+        },
+        "components": [
+          {
+            "state": "candidate",
+            "raw": 31,
+            "value": 31
+          },
+          {
+            "state": "candidate",
+            "raw": 12,
+            "value": 12
+          },
+          {
+            "state": "out-of-domain",
+            "raw": 100,
+            "value": null
+          }
+        ],
+        "complete_candidate": false,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 100
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "64"
+      ]
+    },
+    {
+      "name": "domain-3",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 52,
+        "raw": [
+          0,
+          0,
+          52,
+          0,
+          31,
+          2,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 2
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 52,
+          "raw": [
+            0,
+            0,
+            52,
+            0,
+            31,
+            2,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "candidate",
+            "raw": 31,
+            "value": 31
+          },
+          {
+            "state": "candidate",
+            "raw": 2,
+            "value": 2
+          },
+          {
+            "state": "candidate",
+            "raw": 99,
+            "value": 99
+          }
+        ],
+        "complete_candidate": true,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 2
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "02",
+        "63"
+      ]
+    },
+    {
+      "name": "byte-0",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 52,
+        "raw": [
+          0,
+          0,
+          52,
+          0,
+          30,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 30
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 52,
+          "raw": [
+            0,
+            0,
+            52,
+            0,
+            30,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "candidate",
+            "raw": 30,
+            "value": 30
+          },
+          {
+            "state": "candidate",
+            "raw": 12,
+            "value": 12
+          },
+          {
+            "state": "candidate",
+            "raw": 99,
+            "value": 99
+          }
+        ],
+        "complete_candidate": true,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 30
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1E",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "failed-0",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 52,
+        "raw": [
+          0,
+          0,
+          52,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "failed",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 52,
+          "raw": [
+            0,
+            0,
+            52,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "failed",
+            "raw": 31,
+            "value": null
+          },
+          {
+            "state": "candidate",
+            "raw": 12,
+            "value": 12
+          },
+          {
+            "state": "candidate",
+            "raw": 99,
+            "value": 99
+          }
+        ],
+        "complete_candidate": false,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "failed",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "byte-1",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 52,
+        "raw": [
+          0,
+          0,
+          52,
+          0,
+          31,
+          11,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 11
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 52,
+          "raw": [
+            0,
+            0,
+            52,
+            0,
+            31,
+            11,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "candidate",
+            "raw": 31,
+            "value": 31
+          },
+          {
+            "state": "candidate",
+            "raw": 11,
+            "value": 11
+          },
+          {
+            "state": "candidate",
+            "raw": 99,
+            "value": 99
+          }
+        ],
+        "complete_candidate": true,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 11
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0B",
+        "63"
+      ]
+    },
+    {
+      "name": "failed-1",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 52,
+        "raw": [
+          0,
+          0,
+          52,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "failed",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 52,
+          "raw": [
+            0,
+            0,
+            52,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "candidate",
+            "raw": 31,
+            "value": 31
+          },
+          {
+            "state": "failed",
+            "raw": 12,
+            "value": null
+          },
+          {
+            "state": "candidate",
+            "raw": 99,
+            "value": 99
+          }
+        ],
+        "complete_candidate": false,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "failed",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "byte-2",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 52,
+        "raw": [
+          0,
+          0,
+          52,
+          0,
+          31,
+          12,
+          98
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 98
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 52,
+          "raw": [
+            0,
+            0,
+            52,
+            0,
+            31,
+            12,
+            98
+          ]
+        },
+        "components": [
+          {
+            "state": "candidate",
+            "raw": 31,
+            "value": 31
+          },
+          {
+            "state": "candidate",
+            "raw": 12,
+            "value": 12
+          },
+          {
+            "state": "candidate",
+            "raw": 98,
+            "value": 98
+          }
+        ],
+        "complete_candidate": true,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 98
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "62"
+      ]
+    },
+    {
+      "name": "failed-2",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 52,
+        "raw": [
+          0,
+          0,
+          52,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "failed",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 52,
+          "raw": [
+            0,
+            0,
+            52,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "candidate",
+            "raw": 31,
+            "value": 31
+          },
+          {
+            "state": "candidate",
+            "raw": 12,
+            "value": 12
+          },
+          {
+            "state": "failed",
+            "raw": 99,
+            "value": null
+          }
+        ],
+        "complete_candidate": false,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "failed",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "missing-family",
+      "context": {
+        "family": null,
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 52,
+        "raw": [
+          0,
+          0,
+          52,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": null,
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 52,
+          "raw": [
+            0,
+            0,
+            52,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "raw-only",
+            "raw": 31,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 12,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 99,
+            "value": null
+          }
+        ],
+        "complete_candidate": false,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Unknown",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "vary-family",
+      "context": {
+        "family": "controller-unknown",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 52,
+        "raw": [
+          0,
+          0,
+          52,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-unknown",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 52,
+          "raw": [
+            0,
+            0,
+            52,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "raw-only",
+            "raw": 31,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 12,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 99,
+            "value": null
+          }
+        ],
+        "complete_candidate": false,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Unknown",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "missing-software",
+      "context": {
+        "family": "controller-700",
+        "software": null,
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 52,
+        "raw": [
+          0,
+          0,
+          52,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": null,
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 52,
+          "raw": [
+            0,
+            0,
+            52,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "raw-only",
+            "raw": 31,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 12,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 99,
+            "value": null
+          }
+        ],
+        "complete_candidate": false,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Unknown",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "vary-software",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-b",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 52,
+        "raw": [
+          0,
+          0,
+          52,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-b",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 52,
+          "raw": [
+            0,
+            0,
+            52,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "candidate",
+            "raw": 31,
+            "value": 31
+          },
+          {
+            "state": "candidate",
+            "raw": 12,
+            "value": 12
+          },
+          {
+            "state": "candidate",
+            "raw": 99,
+            "value": 99
+          }
+        ],
+        "complete_candidate": true,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "missing-hardware",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": null,
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 52,
+        "raw": [
+          0,
+          0,
+          52,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": null,
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 52,
+          "raw": [
+            0,
+            0,
+            52,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "raw-only",
+            "raw": 31,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 12,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 99,
+            "value": null
+          }
+        ],
+        "complete_candidate": false,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Unknown",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "vary-hardware",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-b",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 52,
+        "raw": [
+          0,
+          0,
+          52,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-b",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 52,
+          "raw": [
+            0,
+            0,
+            52,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "candidate",
+            "raw": 31,
+            "value": 31
+          },
+          {
+            "state": "candidate",
+            "raw": 12,
+            "value": 12
+          },
+          {
+            "state": "candidate",
+            "raw": 99,
+            "value": 99
+          }
+        ],
+        "complete_candidate": true,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "missing-api_version",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": null,
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 52,
+        "raw": [
+          0,
+          0,
+          52,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": null,
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 52,
+          "raw": [
+            0,
+            0,
+            52,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "raw-only",
+            "raw": 31,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 12,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 99,
+            "value": null
+          }
+        ],
+        "complete_candidate": false,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Unknown",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "vary-api_version",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-b",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 52,
+        "raw": [
+          0,
+          0,
+          52,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-b",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 52,
+          "raw": [
+            0,
+            0,
+            52,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "candidate",
+            "raw": 31,
+            "value": 31
+          },
+          {
+            "state": "candidate",
+            "raw": 12,
+            "value": 12
+          },
+          {
+            "state": "candidate",
+            "raw": 99,
+            "value": 99
+          }
+        ],
+        "complete_candidate": true,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "missing-api_revision",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": null,
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 52,
+        "raw": [
+          0,
+          0,
+          52,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": null,
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 52,
+          "raw": [
+            0,
+            0,
+            52,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "raw-only",
+            "raw": 31,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 12,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 99,
+            "value": null
+          }
+        ],
+        "complete_candidate": false,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Unknown",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "vary-api_revision",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-b",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 52,
+        "raw": [
+          0,
+          0,
+          52,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-b",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 52,
+          "raw": [
+            0,
+            0,
+            52,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "candidate",
+            "raw": 31,
+            "value": 31
+          },
+          {
+            "state": "candidate",
+            "raw": 12,
+            "value": 12
+          },
+          {
+            "state": "candidate",
+            "raw": 99,
+            "value": 99
+          }
+        ],
+        "complete_candidate": true,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "missing-opcode",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": null,
+        "group": 0,
+        "instance": 0,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 52,
+        "raw": [
+          0,
+          0,
+          52,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": null,
+          "group": 0,
+          "instance": 0,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 52,
+          "raw": [
+            0,
+            0,
+            52,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "raw-only",
+            "raw": 31,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 12,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 99,
+            "value": null
+          }
+        ],
+        "complete_candidate": false,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Unknown",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "vary-opcode",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 6,
+        "group": 0,
+        "instance": 0,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 52,
+        "raw": [
+          0,
+          0,
+          52,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 6,
+          "group": 0,
+          "instance": 0,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 52,
+          "raw": [
+            0,
+            0,
+            52,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "raw-only",
+            "raw": 31,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 12,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 99,
+            "value": null
+          }
+        ],
+        "complete_candidate": false,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Unknown",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "missing-group",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": null,
+        "instance": 0,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": null,
+        "register": 52,
+        "raw": [
+          0,
+          null,
+          52,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": null,
+          "instance": 0,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": null,
+          "register": 52,
+          "raw": [
+            0,
+            null,
+            52,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "raw-only",
+            "raw": 31,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 12,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 99,
+            "value": null
+          }
+        ],
+        "complete_candidate": false,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Unknown",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "vary-group",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 2,
+        "instance": 0,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 2,
+        "register": 52,
+        "raw": [
+          0,
+          2,
+          52,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 2,
+          "instance": 0,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 2,
+          "register": 52,
+          "raw": [
+            0,
+            2,
+            52,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "raw-only",
+            "raw": 31,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 12,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 99,
+            "value": null
+          }
+        ],
+        "complete_candidate": false,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Unknown",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "missing-instance",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": null,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 52,
+        "raw": [
+          0,
+          0,
+          52,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": null,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 52,
+          "raw": [
+            0,
+            0,
+            52,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "raw-only",
+            "raw": 31,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 12,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 99,
+            "value": null
+          }
+        ],
+        "complete_candidate": false,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Unknown",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "vary-instance",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 1,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 52,
+        "raw": [
+          0,
+          0,
+          52,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 1,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 52,
+          "raw": [
+            0,
+            0,
+            52,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "raw-only",
+            "raw": 31,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 12,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 99,
+            "value": null
+          }
+        ],
+        "complete_candidate": false,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Unknown",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "missing-register",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": null
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": null,
+        "raw": [
+          0,
+          0,
+          0,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": null
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": null,
+          "raw": [
+            0,
+            0,
+            0,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "raw-only",
+            "raw": 31,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 12,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 99,
+            "value": null
+          }
+        ],
+        "complete_candidate": false,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Unknown",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "vary-register",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 65535
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 65535,
+        "raw": [
+          0,
+          0,
+          255,
+          255,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 65535
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 65535,
+          "raw": [
+            0,
+            0,
+            255,
+            255,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "raw-only",
+            "raw": 31,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 12,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 99,
+            "value": null
+          }
+        ],
+        "complete_candidate": false,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Unknown",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "unmatched-controller-700",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 218
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 218,
+        "raw": [
+          0,
+          0,
+          218,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 218
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 218,
+          "raw": [
+            0,
+            0,
+            218,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "raw-only",
+            "raw": 31,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 12,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 99,
+            "value": null
+          }
+        ],
+        "complete_candidate": false,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Unknown",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "unmatched-controller-720",
+      "context": {
+        "family": "controller-720",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 113
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 113,
+        "raw": [
+          0,
+          0,
+          113,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-720",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 113
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 113,
+          "raw": [
+            0,
+            0,
+            113,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "raw-only",
+            "raw": 31,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 12,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 99,
+            "value": null
+          }
+        ],
+        "complete_candidate": false,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Unknown",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "wrong-alternative",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 52
+      },
+      "alternative": "time",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 52,
+        "raw": [
+          0,
+          0,
+          52,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 52
+        },
+        "alternative": "time",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 52,
+          "raw": [
+            0,
+            0,
+            52,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "raw-only",
+            "raw": 31,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 12,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 99,
+            "value": null
+          }
+        ],
+        "complete_candidate": false,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Unknown",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "echo-group",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 1,
+        "register": 52,
+        "raw": [
+          0,
+          0,
+          52,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 1,
+          "register": 52,
+          "raw": [
+            0,
+            0,
+            52,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "raw-only",
+            "raw": 31,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 12,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 99,
+            "value": null
+          }
+        ],
+        "complete_candidate": false,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Unknown",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "echo-register",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 53,
+        "raw": [
+          0,
+          0,
+          52,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 53,
+          "raw": [
+            0,
+            0,
+            52,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "raw-only",
+            "raw": 31,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 12,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 99,
+            "value": null
+          }
+        ],
+        "complete_candidate": false,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Unknown",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "status",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "status",
+        "group": null,
+        "register": null,
+        "raw": [
+          0
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "status",
+          "group": null,
+          "register": null,
+          "raw": [
+            0
+          ]
+        },
+        "components": [
+          {
+            "state": "raw-only",
+            "raw": 31,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 12,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 99,
+            "value": null
+          }
+        ],
+        "complete_candidate": false,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Unknown",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "transport-error",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "transport-error",
+        "group": null,
+        "register": null,
+        "raw": []
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "transport-error",
+          "group": null,
+          "register": null,
+          "raw": []
+        },
+        "components": [
+          {
+            "state": "raw-only",
+            "raw": 31,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 12,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 99,
+            "value": null
+          }
+        ],
+        "complete_candidate": false,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Unknown",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "unknown",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "unknown",
+        "group": null,
+        "register": null,
+        "raw": [
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "unknown",
+          "group": null,
+          "register": null,
+          "raw": [
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "raw-only",
+            "raw": 31,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 12,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 99,
+            "value": null
+          }
+        ],
+        "complete_candidate": false,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Unknown",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "time-plain-bytes",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 53
+      },
+      "alternative": "time",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 53,
+        "raw": [
+          0,
+          0,
+          53,
+          0,
+          255,
+          255,
+          255
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 255
+        },
+        {
+          "state": "present",
+          "raw": 255
+        },
+        {
+          "state": "present",
+          "raw": 255
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 53
+        },
+        "alternative": "time",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 53,
+          "raw": [
+            0,
+            0,
+            53,
+            0,
+            255,
+            255,
+            255
+          ]
+        },
+        "components": [
+          {
+            "state": "candidate",
+            "raw": 255,
+            "value": 255
+          },
+          {
+            "state": "candidate",
+            "raw": 255,
+            "value": 255
+          },
+          {
+            "state": "candidate",
+            "raw": 255,
+            "value": 255
+          }
+        ],
+        "complete_candidate": true,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 255
+          },
+          {
+            "state": "present",
+            "raw": 255
+          },
+          {
+            "state": "present",
+            "raw": 255
+          }
+        ]
+      },
+      "raw_hex": [
+        "FF",
+        "FF",
+        "FF"
+      ]
+    },
+    {
+      "name": "malformed-short",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 52,
+        "raw": [
+          0,
+          0,
+          52,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 52,
+          "raw": [
+            0,
+            0,
+            52,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "raw-only",
+            "raw": 31,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 12,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": null,
+            "value": null
+          }
+        ],
+        "complete_candidate": false,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Unknown",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C"
+      ]
+    },
+    {
+      "name": "malformed-long",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 52,
+        "raw": [
+          0,
+          0,
+          52,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        },
+        {
+          "state": "present",
+          "raw": 1
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 52,
+          "raw": [
+            0,
+            0,
+            52,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "raw-only",
+            "raw": 31,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 12,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 99,
+            "value": null
+          }
+        ],
+        "complete_candidate": false,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Unknown",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          },
+          {
+            "state": "present",
+            "raw": 1
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63",
+        "01"
+      ]
+    },
+    {
+      "name": "malformed-state",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 52,
+        "raw": [
+          0,
+          0,
+          52,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "invalid",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 52,
+          "raw": [
+            0,
+            0,
+            52,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "raw-only",
+            "raw": 31,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 12,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 99,
+            "value": null
+          }
+        ],
+        "complete_candidate": false,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Unknown",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "invalid",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "malformed-byte",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 52,
+        "raw": [
+          0,
+          0,
+          52,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 256
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 52,
+          "raw": [
+            0,
+            0,
+            52,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "raw-only",
+            "raw": 256,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 12,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 99,
+            "value": null
+          }
+        ],
+        "complete_candidate": false,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Unknown",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 256
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        null,
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "malformed-null",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 52,
+        "raw": [
+          0,
+          0,
+          52,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": null
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 52,
+          "raw": [
+            0,
+            0,
+            52,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "raw-only",
+            "raw": null,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 12,
+            "value": null
+          },
+          {
+            "state": "raw-only",
+            "raw": 99,
+            "value": null
+          }
+        ],
+        "complete_candidate": false,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Unknown",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": null
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        null,
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "missing-cell-0-raw",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 52,
+        "raw": [
+          0,
+          0,
+          52,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "missing",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 52,
+          "raw": [
+            0,
+            0,
+            52,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "missing",
+            "raw": 31,
+            "value": null
+          },
+          {
+            "state": "candidate",
+            "raw": 12,
+            "value": 12
+          },
+          {
+            "state": "candidate",
+            "raw": 99,
+            "value": 99
+          }
+        ],
+        "complete_candidate": false,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "missing",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "missing-cell-0-null",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 52,
+        "raw": [
+          0,
+          0,
+          52,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "missing",
+          "raw": null
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 52,
+          "raw": [
+            0,
+            0,
+            52,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "missing",
+            "raw": null,
+            "value": null
+          },
+          {
+            "state": "candidate",
+            "raw": 12,
+            "value": 12
+          },
+          {
+            "state": "candidate",
+            "raw": 99,
+            "value": 99
+          }
+        ],
+        "complete_candidate": false,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "missing",
+            "raw": null
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        null,
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "missing-cell-1-raw",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 52,
+        "raw": [
+          0,
+          0,
+          52,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "missing",
+          "raw": 12
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 52,
+          "raw": [
+            0,
+            0,
+            52,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "candidate",
+            "raw": 31,
+            "value": 31
+          },
+          {
+            "state": "missing",
+            "raw": 12,
+            "value": null
+          },
+          {
+            "state": "candidate",
+            "raw": 99,
+            "value": 99
+          }
+        ],
+        "complete_candidate": false,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "missing",
+            "raw": 12
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "missing-cell-1-null",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 52,
+        "raw": [
+          0,
+          0,
+          52,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "missing",
+          "raw": null
+        },
+        {
+          "state": "present",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 52,
+          "raw": [
+            0,
+            0,
+            52,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "candidate",
+            "raw": 31,
+            "value": 31
+          },
+          {
+            "state": "missing",
+            "raw": null,
+            "value": null
+          },
+          {
+            "state": "candidate",
+            "raw": 99,
+            "value": 99
+          }
+        ],
+        "complete_candidate": false,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "missing",
+            "raw": null
+          },
+          {
+            "state": "present",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        null,
+        "63"
+      ]
+    },
+    {
+      "name": "missing-cell-2-raw",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 52,
+        "raw": [
+          0,
+          0,
+          52,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "missing",
+          "raw": 99
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 52,
+          "raw": [
+            0,
+            0,
+            52,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "candidate",
+            "raw": 31,
+            "value": 31
+          },
+          {
+            "state": "candidate",
+            "raw": 12,
+            "value": 12
+          },
+          {
+            "state": "missing",
+            "raw": 99,
+            "value": null
+          }
+        ],
+        "complete_candidate": false,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "missing",
+            "raw": 99
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ]
+    },
+    {
+      "name": "missing-cell-2-null",
+      "context": {
+        "family": "controller-700",
+        "software": "synthetic-a",
+        "hardware": "synthetic-a",
+        "api_version": "synthetic-a",
+        "api_revision": "synthetic-a",
+        "opcode": 2,
+        "group": 0,
+        "instance": 0,
+        "register": 52
+      },
+      "alternative": "date",
+      "reply": {
+        "state": "echo-payload",
+        "group": 0,
+        "register": 52,
+        "raw": [
+          0,
+          0,
+          52,
+          0,
+          31,
+          12,
+          99
+        ]
+      },
+      "cells": [
+        {
+          "state": "present",
+          "raw": 31
+        },
+        {
+          "state": "present",
+          "raw": 12
+        },
+        {
+          "state": "missing",
+          "raw": null
+        }
+      ],
+      "expected": {
+        "context": {
+          "family": "controller-700",
+          "software": "synthetic-a",
+          "hardware": "synthetic-a",
+          "api_version": "synthetic-a",
+          "api_revision": "synthetic-a",
+          "opcode": 2,
+          "group": 0,
+          "instance": 0,
+          "register": 52
+        },
+        "alternative": "date",
+        "reply": {
+          "state": "echo-payload",
+          "group": 0,
+          "register": 52,
+          "raw": [
+            0,
+            0,
+            52,
+            0,
+            31,
+            12,
+            99
+          ]
+        },
+        "components": [
+          {
+            "state": "candidate",
+            "raw": 31,
+            "value": 31
+          },
+          {
+            "state": "candidate",
+            "raw": 12,
+            "value": 12
+          },
+          {
+            "state": "missing",
+            "raw": null,
+            "value": null
+          }
+        ],
+        "complete_candidate": false,
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "input_cells": [
+          {
+            "state": "present",
+            "raw": 31
+          },
+          {
+            "state": "present",
+            "raw": 12
+          },
+          {
+            "state": "missing",
+            "raw": null
+          }
+        ]
+      },
+      "raw_hex": [
+        "1F",
+        "0C",
+        null
+      ]
+    }
+  ]
+}

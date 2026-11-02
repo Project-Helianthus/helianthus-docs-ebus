@@ -1,0 +1,219 @@
+{
+  "grade": "Hypothesis",
+  "qualification": "Unknown",
+  "rows": [
+    {
+      "id": "ak06-rf-count",
+      "family": "vaillant",
+      "variant": "B506-RF",
+      "primary": "0xB5",
+      "secondary": "0x06",
+      "operation": "OP13",
+      "field": "count",
+      "choice": null,
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "extent_bytes": null,
+      "minimum_bytes": null,
+      "maximum_bytes": null,
+      "field_position": 4,
+      "raw_form": "retain-original-bytes",
+      "unknown": {
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      },
+      "count": {
+        "zero_meaning": "unlimited",
+        "finite_minimum": 1,
+        "finite_maximum": 255,
+        "finite_meaning": "count-value"
+      }
+    },
+    {
+      "id": "ak06-rf-sequence-0",
+      "family": "vaillant",
+      "variant": "B506-RF",
+      "primary": "0xB5",
+      "secondary": "0x06",
+      "operation": "OP13",
+      "field": "sequence",
+      "choice": 0,
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "extent_bytes": null,
+      "minimum_bytes": null,
+      "maximum_bytes": null,
+      "field_position": 3,
+      "raw_form": "retain-original-bytes",
+      "unknown": {
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      },
+      "extent_class": "rf-class-a"
+    },
+    {
+      "id": "ak06-rf-sequence-1",
+      "family": "vaillant",
+      "variant": "B506-RF",
+      "primary": "0xB5",
+      "secondary": "0x06",
+      "operation": "OP13",
+      "field": "sequence",
+      "choice": 1,
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "extent_bytes": null,
+      "minimum_bytes": null,
+      "maximum_bytes": null,
+      "field_position": 3,
+      "raw_form": "retain-original-bytes",
+      "unknown": {
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      },
+      "extent_class": "rf-class-a"
+    },
+    {
+      "id": "ak06-rf-sequence-2",
+      "family": "vaillant",
+      "variant": "B506-RF",
+      "primary": "0xB5",
+      "secondary": "0x06",
+      "operation": "OP13",
+      "field": "sequence",
+      "choice": 2,
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "extent_bytes": null,
+      "minimum_bytes": null,
+      "maximum_bytes": null,
+      "field_position": 3,
+      "raw_form": "retain-original-bytes",
+      "unknown": {
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      },
+      "extent_class": "rf-class-a"
+    },
+    {
+      "id": "ak06-rf-sequence-3",
+      "family": "vaillant",
+      "variant": "B506-RF",
+      "primary": "0xB5",
+      "secondary": "0x06",
+      "operation": "OP13",
+      "field": "sequence",
+      "choice": 3,
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "extent_bytes": null,
+      "minimum_bytes": null,
+      "maximum_bytes": null,
+      "field_position": 3,
+      "raw_form": "retain-original-bytes",
+      "unknown": {
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      },
+      "extent_class": "rf-class-b"
+    },
+    {
+      "id": "ak06-rf-stop",
+      "family": "vaillant",
+      "variant": "B506-RF",
+      "primary": "0xB5",
+      "secondary": "0x06",
+      "operation": "OP14",
+      "field": "stop",
+      "choice": null,
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "extent_bytes": null,
+      "minimum_bytes": null,
+      "maximum_bytes": null,
+      "field_position": null,
+      "raw_form": "retain-original-bytes",
+      "unknown": {
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      },
+      "related_operations": [
+        "OP13"
+      ],
+      "activation_order": "Unknown",
+      "retry_count": null,
+      "timeout": null,
+      "delivery_guarantee": "Unknown",
+      "completed_stop": "Unknown"
+    }
+  ],
+  "count_cases": [
+    {
+      "count": 0,
+      "meaning": "unlimited"
+    },
+    {
+      "count": 1,
+      "meaning": "finite-1"
+    },
+    {
+      "count": 2,
+      "meaning": "finite-2"
+    },
+    {
+      "count": 255,
+      "meaning": "finite-255"
+    }
+  ],
+  "sequence_cases": [
+    {
+      "sequence": 0,
+      "extent_class": "rf-class-a",
+      "extent_bytes": null
+    },
+    {
+      "sequence": 1,
+      "extent_class": "rf-class-a",
+      "extent_bytes": null
+    },
+    {
+      "sequence": 2,
+      "extent_class": "rf-class-a",
+      "extent_bytes": null
+    },
+    {
+      "sequence": 3,
+      "extent_class": "rf-class-b",
+      "extent_bytes": null
+    },
+    {
+      "sequence": 4,
+      "extent_class": null,
+      "extent_bytes": null
+    }
+  ],
+  "payload_cases": [
+    {
+      "raw_hex": "",
+      "qualification": "Unknown",
+      "extent_bytes": null
+    },
+    {
+      "raw_hex": "23 45",
+      "qualification": "Unknown",
+      "extent_bytes": null
+    }
+  ]
+}
