@@ -45,13 +45,15 @@ combinations return raw-only `Unknown` without applying any formula.
 Names do not imply byte positions. Explicit empty opaque data `[]` differs from
 missing opaque data and is retained; it does not invent a conversion. Empty
 fixed-width arrays are incomplete. These two views require no typed arguments;
-`arguments` may be absent or `{}`. Extra input keys are retained unchanged,
+`arguments` may be absent or `{}`. Extra top-level input keys are retained unchanged,
 independently of interpreted fields; they are not new supported arguments,
-fields or context combinations. Other opaque fields stay raw and `Unknown`.
+fields or context combinations. The top-level keys `state`, `results`,
+`physical` and `qualified` are reserved for generated output; an input that
+carries any of them is an admission error, never overwritten or renamed. Other opaque fields stay raw and `Unknown`.
 
 Reject malformed or trailing JSON, duplicate keys at any depth, wrong kinds,
 nonfinite numbers, fractional or out-of-range bytes or integer arguments, and
-missing required typed arguments with an error and no successful result.
+missing required typed arguments, or reserved top-level output keys, with an error and no successful result.
 Strings, `null` and Booleans are never coerced into numbers. No typed arguments
 are required by this finite view set. A missing, short or overlong fixed-width
 field is instead a per-field incomplete result: preserve the supplied raw form
@@ -119,8 +121,11 @@ present, and extra keys independently, plus `state`, `results`,
 alternatives. `unit` records the metadata above and `grade` records candidate
 meaning. Missing raw data stays absent, not `null`, zero or `[]`.
 
-`complete` means local representation only; `partial` means an expected
-fixed-width field is missing or has the wrong length. Unsupported context is
+A field result is `complete` (local representation only) or `incomplete` (an
+expected fixed-width field is missing or has the wrong length). The aggregate
+`state` is `complete` when every supplied field result is complete, `partial`
+when at least one expected field result is incomplete, and `Unknown` for an
+unsupported context. Unsupported context is
 `Unknown`. An unresolved semantic label can coexist with complete raw
 arithmetic. Unknown opaque fields do not establish additional supported views.
 Retain absent, null, zero, false and explicit empty values independently wherever
@@ -174,11 +179,11 @@ values arise from supplied bytes, not defaults.
 For an independent partial example, remove only `temperature1` from the complete
 positive input. The result retains that exact remaining input, has
 `state: "partial"`, `physical: "Unknown"` and `qualified: false`, and replaces
-only the temperature1 result with `{"state":"partial","grade":"Hypothesis"}`.
+only the temperature1 result with `{"state":"incomplete","grade":"Hypothesis"}`.
 Its raw member and number are absent. Temperature0 still returns -0.125 and all
 other complete sibling results above remain useful and unchanged. Supplying
 `temperature1: [0]`, `[]` or `[0,128,0]` instead retains that array as `raw` in
-its partial result without a number. No partial field erases last-known-good
+its incomplete result without a number. No incomplete field erases last-known-good
 independent sibling results; the evaluator itself has no persistent state.
 
 For an independent unsupported-context example:
