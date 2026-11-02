@@ -33,7 +33,9 @@ from earlier `abNN` names.
 Input is one JSON object containing `context`, `fields` and optional
 `arguments`. Context contains `primary`, `secondary`, `direction`, `view`,
 optional `operation`, and opaque family/variant keys. Primary, secondary and
-operation, where present, are integer bytes (`0..255`). Operation absence is
+operation, where present, are integer bytes (`0..255`); `direction` and `view`
+are required non-empty strings, and a missing, null or non-string value is
+rejected. Operation absence is
 distinct from explicit zero and null; null is a wrong kind and is rejected.
 Identifiers select a local candidate view and never qualify a family.
 

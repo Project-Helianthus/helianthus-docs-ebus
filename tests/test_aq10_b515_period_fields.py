@@ -67,6 +67,9 @@ def evaluate(text):
     for key in ('primary', 'secondary'):
         if not is_int(context.get(key), 0, 255):
             raise Rejected(key)
+    for key in ('direction', 'view'):
+        if type(context.get(key)) is not str or not context[key]:
+            raise Rejected(key)
     if 'operation' in context and not is_int(context['operation'], 0, 255):
         raise Rejected('operation')
     for value in fields.values():
@@ -209,6 +212,13 @@ class PeriodFieldContract(unittest.TestCase):
             '{"context":{"primary":181,"secondary":21,"view":"periods"},'
             '"fields":{"period0":[0,0]},"fields":{}}',
             intervals([[1, 1], [2, 3]]),
+            json.dumps({'context': {'primary': 181, 'secondary': 21,
+                                    'view': 'periods'}, 'fields': FULL}),
+            json.dumps({'context': {'primary': 181, 'secondary': 21,
+                                    'direction': 'positive'}, 'fields': FULL}),
+            periods(FULL, direction=None), periods(FULL, view=None),
+            periods(FULL, view=[]), periods(FULL, direction=[]),
+            periods(FULL, direction=''), periods(FULL, view=7),
             intervals([[1, 1], [2, 3]], direction='positive'),
             json.dumps({'context': {'primary': 181, 'secondary': 21,
                                     'direction': 'positive',
