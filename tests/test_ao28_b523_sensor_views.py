@@ -67,6 +67,7 @@ ab27ao27Contract = {'api': {'package': 'vaillant',
  'errors': ['malformed-json',
             'duplicate-root',
             'duplicate-context',
+            'duplicate-nested-context',
             'duplicate-fields',
             'duplicate-arguments',
             'root-array',
@@ -173,7 +174,7 @@ class TestAb27Ao27SensorViews(unittest.TestCase):
         self.ab27ao27Fixture = ab27ao27Strict(ab27ao27Fixture.read_text())
         self.ab27ao27Rows = {ab27ao27Row["id"]: ab27ao27Row for ab27ao27Row in self.ab27ao27Fixture["cases"]}
         self.assertEqual(len(self.ab27ao27Rows), len(self.ab27ao27Fixture["cases"]))
-        self.assertEqual(len(self.ab27ao27Rows), 370)
+        self.assertEqual(len(self.ab27ao27Rows), 371)
         self.assertEqual(self.ab27ao27Fixture["id"], "ab27ao27SensorViews")
         ab27ao27Match = re.search(r"<!-- ab27ao27-contract:start -->\s*```json\s*(.*?)\s*```\s*<!-- ab27ao27-contract:end -->", ab27ao27Page.read_text(), re.S)
         self.assertIsNotNone(ab27ao27Match)
@@ -260,6 +261,9 @@ class TestAb27Ao27SensorViews(unittest.TestCase):
             ab27ao27Expect = {"preserve_context": True, "physical": "Unknown", "qualified": False}
             if ab27ao27Key in ("primary", "secondary"):
                 ab27ao27Expect.update(state="Unknown", fields={})
+            else:
+                ab27ao27Expect.update(state="Hypothesis", field="S1",
+                                     result={"raw": 0, "state": "Hypothesis", "number": 0, "calculation": "Proven"})
             self.ab27ao27Case("context-" + ab27ao27Key, 3, self.ab27ao27Base(3), ab27ao27Expect, ab27ao27Context={ab27ao27Key: ab27ao27Value})
 
     def test_ab27ao27_missing_empty_zero_and_unmodelled_fields(self):
@@ -275,6 +279,7 @@ class TestAb27Ao27SensorViews(unittest.TestCase):
             "duplicate-context": '{"context":{"operation":3,"operation":6},"fields":{}}',
             "duplicate-fields": '{"context":{},"fields":{"logical_object":[],"logical_object":[]}}',
             "duplicate-arguments": '{"context":{},"fields":{},"arguments":{"x":0,"x":1}}',
+            "duplicate-nested-context": '{"context":{"primary":181,"secondary":35,"operation":3,"direction":"positive","view":"status-zero-valid","extra":{"nested":[{"x":0,"x":1}]}},"fields":{"logical_object":[165,90,222,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]}}',
             "root-array": "[]",
         }
         ab27ao27Valid = {"context": {"primary": 181, "secondary": 35, "operation": 3, "direction": "positive", "view": "status-zero-valid"}, "fields": {"logical_object": []}}
@@ -300,7 +305,7 @@ class TestAb27Ao27SensorViews(unittest.TestCase):
         ab27ao27Counts = {"word": 114, "status": 152, "reserved": 10,
                          "partial": 55, "tail": 3, "pwm": 1, "opaque": 1,
                          "selection": 6, "context": 5, "raw": 5,
-                         "arguments": 1, "error": 17}
+                         "arguments": 1, "error": 18}
         for ab27ao27Family, ab27ao27Count in ab27ao27Counts.items():
             self.assertEqual(sum(ab27ao27Id.startswith("ab27ao27" + ab27ao27Family + "-") or ab27ao27Id == "ab27ao27" + ab27ao27Family for ab27ao27Id in self.ab27ao27Rows), ab27ao27Count)
         for ab27ao27Row in self.ab27ao27Rows.values():

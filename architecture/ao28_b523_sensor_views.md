@@ -111,9 +111,9 @@ present with exactly `{"raw":[0],"state":"Unknown"}` and no `number`.
 `complete_sensors` and `numeric_zero_sensors` assert retained sibling sets,
 `complete_pwm` and `complete_status` the retained complete PWM and status fields;
 `reserved` and `opaque` assert retained raw evidence. `preserve_*` assertions
-require exact input copies, not inferred values. Context-only rows make no
-unstated decoding claim. Error rows retain input text because parsing would lose
-duplicate keys. The standard-library suite checks this table and every fixture
+require exact input copies, not inferred values. Opaque-context rows also
+require successful sensor decoding. Error rows retain input text because parsing
+would lose duplicate keys. The standard-library suite checks this table and every fixture
 row against separate constants; it does not supply another interpreter or invoke
 an unavailable production function. Production error, aliasing, serialization
 and mutation behavior requires the companion library's tests.
@@ -399,6 +399,7 @@ and mutation behavior requires the companion library's tests.
     "malformed-json",
     "duplicate-root",
     "duplicate-context",
+    "duplicate-nested-context",
     "duplicate-fields",
     "duplicate-arguments",
     "root-array",
