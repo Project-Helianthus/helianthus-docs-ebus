@@ -34,7 +34,7 @@ abstract coordinates that coincide with the older candidate's CRC positions.
 
 | Grade | Identity | Direction | Logical position / extent | Raw type / domain | Scale / unit | Sentinel / default / conflict | Unresolved properties |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Hypothesis | vaillant / B50F / PB=B5 / SB=0F / OP=03 / demand | Unknown | Unknown / 8 bits | uint8 00..FF; bits 0..4: burner, reformer-gas-valve, gas-flow, fan-power, valve; bits 5..7 reserved | none | Sentinel/default Unknown; demand is not applied actuation | Reserved semantics and physical effect Unknown; preserve all bits |
+| Hypothesis | vaillant / B50F / PB=B5 / SB=0F / OP=03 / demand | Unknown | Unknown / 8 bits | uint8 00..FF; bits 0..4: five positional flags, individual meanings Unknown; bits 5..7 reserved | none | Sentinel/default Unknown; demand is not applied actuation | Reserved semantics and physical effect Unknown; preserve all bits |
 | Hypothesis | vaillant / B50F / PB=B5 / SB=0F / OP=00 / temperature_1 | Unknown | Unknown / 16 bits | signed int16 little-endian -32768..32767 | divide by 16 / degrees Celsius | Sentinel/default Unknown | Absolute scalar position and channel meaning Unknown |
 | Hypothesis | vaillant / B50F / PB=B5 / SB=0F / OP=00 / error_1 | Unknown | immediately after temperature_1 / 8 bits | uint8 00..FF | none | Sentinel/default Unknown; independent raw error byte | Absolute scalar position and error meanings Unknown |
 | Hypothesis | vaillant / B50F / PB=B5 / SB=0F / OP=00 / temperature_2 | Unknown | Unknown / 16 bits | signed int16 little-endian -32768..32767 | divide by 16 / degrees Celsius | Sentinel/default Unknown | Absolute scalar position and channel meaning Unknown |
@@ -59,8 +59,8 @@ abstract coordinates that coincide with the older candidate's CRC positions.
 
 The [synthetic examples](fixtures/ae12_b50f_candidates.json) are independent
 arithmetic illustrations, not captured telegrams or evidence of physical
-support. Demand flags are ordered burner, reformer-gas-valve, gas-flow,
-fan-power, valve. Demand values 00, 01, 1F, E0 and FF retain all reserved bits;
+support. Demand flags are five positional bits 0..4 with Unknown individual meanings.
+Demand values 00, 01, 1F, E0 and FF retain all reserved bits;
 single-bit controls also distinguish every allocated and reserved bit.
 No demand establishes applied actuation.
 

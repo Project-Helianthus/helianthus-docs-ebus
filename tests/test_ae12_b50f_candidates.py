@@ -18,7 +18,7 @@ def expected_rows():
                      'Unknown', position, raw, scale, conflict, unresolved])
 
     add('03', 'demand', 'Unknown / 8 bits',
-        'uint8 00..FF; bits 0..4: burner, reformer-gas-valve, gas-flow, fan-power, valve; bits 5..7 reserved',
+        'uint8 00..FF; bits 0..4: five positional flags, individual meanings Unknown; bits 5..7 reserved',
         'none', 'Sentinel/default Unknown; demand is not applied actuation',
         'Reserved semantics and physical effect Unknown; preserve all bits')
     for op, fields in [('00', (1, 2, 3)), ('01', (1, 2))]:
