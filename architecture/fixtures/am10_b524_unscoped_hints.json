@@ -1,0 +1,115 @@
+{
+  "kind": "AM10SyntheticHintPackage",
+  "catalog_contract": {
+    "source": "b524StaticConstraintsCatalog",
+    "count": 46,
+    "key": [
+      "opcode",
+      "group",
+      "register"
+    ],
+    "sort": [
+      "opcode",
+      "group",
+      "register"
+    ],
+    "result_type": "AM09B524UnscopedHint",
+    "status": "unscoped_hint",
+    "qualified": false,
+    "grade": "Unknown",
+    "properties": [
+      "Type",
+      "Min",
+      "Max",
+      "Step"
+    ],
+    "no_hint": null
+  },
+  "controls": [
+    {
+      "key": {
+        "opcode": 2,
+        "group": 0,
+        "register": 2
+      },
+      "hint": {
+        "Type": "f32_range",
+        "Min": -26,
+        "Max": 10,
+        "Step": 1
+      }
+    },
+    {
+      "key": {
+        "opcode": 2,
+        "group": 0,
+        "register": 4
+      },
+      "hint": {
+        "Type": "u16_range",
+        "Min": 0,
+        "Max": 300,
+        "Step": 10
+      }
+    },
+    {
+      "key": {
+        "opcode": 2,
+        "group": 3,
+        "register": 2
+      },
+      "hint": {
+        "Type": "f32_range",
+        "Min": 15,
+        "Max": 30,
+        "Step": 0.5
+      }
+    }
+  ],
+  "no_hint_keys": [
+    {
+      "opcode": 2,
+      "group": 0,
+      "register": 1
+    },
+    {
+      "opcode": 6,
+      "group": 0,
+      "register": 2
+    },
+    {
+      "opcode": 6,
+      "group": 0,
+      "register": 4
+    },
+    {
+      "opcode": 6,
+      "group": 3,
+      "register": 2
+    }
+  ],
+  "grades": {
+    "table_structure": "Proven",
+    "numeric_interpretation": "Hypothesis",
+    "applicability": "Unknown"
+  },
+  "unknown": [
+    "family_applicability",
+    "physical_support",
+    "presence",
+    "freshness",
+    "execution",
+    "effects",
+    "persistence",
+    "delivery"
+  ],
+  "partial": {
+    "raw_hex": "0000020000",
+    "last_known_good": {
+      "independent_field": 0
+    },
+    "hint_error": "malformed",
+    "qualified": false
+  },
+  "scope": "Synthetic application contract examples; no device observation or complete production catalog."
+}
