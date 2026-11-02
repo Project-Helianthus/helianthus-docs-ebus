@@ -243,8 +243,8 @@ selector, and response length in every specimen.
 
 ## References
 
-- Public TypeSpec: [hcmode_inc.tsp](https://github.com/john30/ebusd-configuration/blob/master/src/vaillant/hcmode_inc.tsp)
-- Public TypeSpec: [08.hmu.tsp](https://github.com/john30/ebusd-configuration/blob/master/src/vaillant/08.hmu.tsp)
-- Public TypeSpec: [08.hmu.HW5103.tsp](https://github.com/john30/ebusd-configuration/blob/master/src/vaillant/08.hmu.HW5103.tsp)
+- Public TypeSpec: [hcmode_inc.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/hcmode_inc.tsp)
+- Public TypeSpec: [08.hmu.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/08.hmu.tsp)
+- Public TypeSpec: [08.hmu.HW5103.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/08.hmu.HW5103.tsp)
 - Public capture/reference: [Pittnerovi eBUS page](https://www.pittnerovi.com/jiri/hobby/electronics/ebus/)
 - Historical PDF: [Vaillant_ebus.pdf](https://www.pittnerovi.com/jiri/hobby/electronics/ebus/Vaillant_ebus.pdf)
