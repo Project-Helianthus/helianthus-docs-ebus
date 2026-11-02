@@ -7,8 +7,9 @@ The [public native B512 contract](../protocols/vaillant/ebus-vaillant-B512.md)
 provides the candidate service context first. It leaves native exchanges and
 physical layouts unconfirmed. This architecture page defines a finite pre-1.0
 local API; its additional branch declarations are local candidate meanings,
-not new native evidence. In particular, the native page's OP03 Celsius wording
-does not authorize a temperature conversion of the raw OP03 value here.
+not new native evidence. In particular, the native page describes the OP03
+reply only as the state of an NTC or analogue input and a value, with no unit,
+so this page applies no temperature conversion to the raw OP03 value.
 
 ## Callable surface and admission
 
@@ -46,7 +47,11 @@ not become additional typed arguments or fields with inferred meaning.
 The root names `state`, `results`, `physical`, `qualified` and `timeout` are
 reserved for derived output: an input object containing any of them at its root
 is an admission error, never overwritten and never nested. Nested names are not
-reserved.
+reserved. This reservation is a local addition beyond the explicit contract,
+which lists no such admission error: the contract both retains unknown extra
+keys unchanged and adds derived members at the same root, and one JSON object
+cannot hold a retained extra key and a derived member under the same name.
+It is the only admission error this page adds to the contract's list.
 
 Malformed or trailing JSON, duplicate keys at any depth, wrong kinds,
 nonfinite numbers, fractional or out-of-range bytes or integer arguments, and
@@ -74,7 +79,9 @@ A successful output is one JSON object retaining `context`, raw `fields`,
 `results`, `physical: "Unknown"`, and `qualified: false`, plus `timeout` only
 for the OP04 request selection described below. Each field result
 retains `raw` when present, `state`, and applicable `number`, `label`, `flags`,
-`reserved`, `unmodeled`, `candidate_domain` or `alternatives`. These optional
+`reserved`, `unmodeled`, `candidate_domain` or `alternatives`, plus the
+contract's `grade`, optional `calculation` and, for OP05 request channels, its
+`prerequisite`. No other field-result member is defined. These optional
 members do not imply unspecified flags, reserved-bit meanings or conversions.
 Unknown extra input keys are retained at the root unchanged; because the
 derived root names are reserved at admission, no retained key can coincide with
@@ -134,8 +141,12 @@ serialized only by the absence of any selected-source member.
 
 Every supported OP04 request result (complete or partial) additionally carries
 the root member `timeout` with exactly
-`{"seconds":900,"policy":"reset-on-every-service","grade":"Hypothesis"}`
-(`seconds` is the JSON integer 900). No other result, including every OP05
+`{"timeout_seconds":900,"policy":"reset-on-every-service","grade":"Hypothesis"}`
+(`timeout_seconds` is the JSON integer 900). The contract's literal label
+`timeout_seconds` and its value `reset-on-every-service` keep their spelling;
+the container name `timeout` and the member name `policy` are local
+serialization names beyond the explicit contract, which assigns the declaration
+no location. No other result, including every OP05
 result and every `Unknown` result, has a `timeout` member; its absence means the
 timeout is Unknown. This is a declaration only, not a running timer,
 observed expiry, persistence promise or admission rule. OP05 timeout is
@@ -194,7 +205,7 @@ the same context except operation 4 serializes as:
   "results": {
     "setpoint":{"raw":[255],"state":"complete","number":255,"label":"replacement/no-remote-control","grade":"Hypothesis","calculation":"Proven"}
   },
-  "timeout": {"seconds":900,"policy":"reset-on-every-service","grade":"Hypothesis"},
+  "timeout": {"timeout_seconds":900,"policy":"reset-on-every-service","grade":"Hypothesis"},
   "physical":"Unknown",
   "qualified":false
 }
@@ -210,7 +221,7 @@ A complete OP02 positive object, with all four declared sibling fields, serializ
   "results": {
     "valve":{"raw":[50],"state":"complete","number":50,"alternatives":["actual","setpoint-fallback"],"grade":"Hypothesis","calculation":"Proven"},
     "contact":{"raw":[2],"state":"complete","number":2,"label":"unmapped","grade":"Hypothesis","calculation":"Proven"},
-    "tank":{"raw":[240,255],"state":"complete","number":-1,"signed":-16,"grade":"Hypothesis","calculation":"Proven"},
+    "tank":{"raw":[240,255],"state":"complete","number":-1,"grade":"Hypothesis","calculation":"Proven"},
     "virtual_error":{"raw":[255,255],"state":"complete","number":65535,"label":"no-error","grade":"Hypothesis","calculation":"Proven"}
   },
   "physical":"Unknown",
@@ -218,14 +229,16 @@ A complete OP02 positive object, with all four declared sibling fields, serializ
 }
 ```
 
-For tank, `signed` is the signed integer and `number` is the candidate Celsius
-value (signed integer divided by 16).
+For tank, `number` is the candidate Celsius value: the signedLE16 integer of
+`raw` (here -16) divided by 16. The signed integer is not a separate member.
 
 For an independent partial example, use the same context and arguments with
 `fields: {"channel0":[100],"channel1":[],"channel2":[255,0]}`. The envelope is
 `partial`; channel0 retains its complete result and prerequisite true. Channel1
 is `incomplete` with raw `[]`; channel2 is `incomplete` with raw `[255,0]`.
-Neither incomplete channel has a number or inferred label. Omitting channel1
+Neither incomplete channel has a number or inferred label. Each still carries
+its `prerequisite` (channel1 false, channel2 true), because it depends only on
+that channel's mode argument. Omitting channel1
 instead leaves its raw member absent; it does not synthesize `[]` or zero.
 
 For an independent unknown example, change operation to 1 while retaining the
