@@ -78,6 +78,10 @@ def ab25aq25_admit(ab25aq25_wire):
         if ab25aq25_key in ab25aq25_value['context'] and not ab25aq25_is_byte(
                 ab25aq25_value['context'][ab25aq25_key]):
             raise ValueError('context byte')
+    for ab25aq25_key in ('direction', 'view'):
+        if ab25aq25_key in ab25aq25_value['context'] and type(
+                ab25aq25_value['context'][ab25aq25_key]) is not str:
+            raise ValueError('context selector')
     for ab25aq25_raw in ab25aq25_value['fields'].values():
         if type(ab25aq25_raw) is not list or not all(map(ab25aq25_is_byte, ab25aq25_raw)):
             raise ValueError('field bytes')
@@ -130,7 +134,7 @@ def ab25aq25_full(ab25aq25_input):
     for ab25aq25_name, ab25aq25_item in ab25aq25_results.items():
         ab25aq25_entry = {}
         if ab25aq25_name in ab25aq25_input['fields']:
-            ab25aq25_entry['raw'] = ab25aq25_input['fields'][ab25aq25_name]
+            ab25aq25_entry['raw'] = ab25aq25_copy.deepcopy(ab25aq25_input['fields'][ab25aq25_name])
         ab25aq25_entry.update(ab25aq25_item)
         ab25aq25_entry['grade'] = 'Hypothesis'
         if ab25aq25_item['state'] == 'complete' and ab25aq25_name != 'status':
@@ -191,6 +195,26 @@ class Ab25Aq25PowerStepperTests(ab25aq25_unittest.TestCase):
             with self.subTest(ab25aq25_case['id']):
                 with self.assertRaises(ValueError):
                     ab25aq25_admit(ab25aq25_case['wire'])
+
+    def test_selector_kinds_fail_admission(self):
+        for ab25aq25_key in ('direction', 'view'):
+            for ab25aq25_bad in ('false', '0', 'null', '[]', '{}', '1.5'):
+                ab25aq25_wire = '{"context":{"%s":%s},"fields":{}}' % (ab25aq25_key, ab25aq25_bad)
+                with self.subTest(ab25aq25_wire):
+                    with self.assertRaises(ValueError):
+                        ab25aq25_admit(ab25aq25_wire)
+
+    def test_result_raw_independent_of_input_storage(self):
+        ab25aq25_input = ab25aq25_admit(
+            '{"context":{"primary":181,"secondary":18,"operation":8,'
+            '"direction":"positive","view":"power-stepper"},'
+            '"fields":{"setpoint":[1,2],"stepper":[1]}}')
+        ab25aq25_out = ab25aq25_full(ab25aq25_input)
+        ab25aq25_input['fields']['setpoint'][0] = 99
+        ab25aq25_input['fields']['stepper'].append(7)
+        self.assertEqual([1, 2], ab25aq25_out['fields']['setpoint'])
+        self.assertEqual([1, 2], ab25aq25_out['results']['setpoint']['raw'])
+        self.assertEqual([1], ab25aq25_out['results']['stepper']['raw'])
 
     def test_exponent_overflow_fails_admission(self):
         for ab25aq25_wire in (
