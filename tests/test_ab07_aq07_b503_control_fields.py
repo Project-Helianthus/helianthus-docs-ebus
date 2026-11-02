@@ -64,6 +64,9 @@ def evaluate(text):
     for key in ('primary', 'secondary', 'operation'):
         if key in ctx and not is_byte(ctx[key]):
             raise Rejected(key)
+    for key in ('view', 'direction'):
+        if key in ctx and type(ctx[key]) is not str:
+            raise Rejected(key)
     for raw in fields.values():
         if type(raw) is not list or not all(is_byte(b) for b in raw):
             raise Rejected('field bytes')
@@ -144,6 +147,10 @@ class Ab07Aq07Test(unittest.TestCase):
                base(a=[1]).replace('"operation": 7', '"operation": null'),
                base(a=[1]).replace('181', '181.5'),
                '{"context":{},"fields":{},"arguments":[]}',
+               base(a=[1]).replace('"view": "current-errors"', '"view": 7'),
+               base(a=[1]).replace('"view": "current-errors"', '"view": ["x"]'),
+               base(a=[1]).replace('"direction": "positive"', '"direction": 1'),
+               base(a=[1]).replace('"direction": "positive"', '"direction": ["positive"]'),
                '{"context":{},"fields":{},"extra":1e400}',
                '{"context":{},"fields":{},"extra":-1e400}']
         for text in bad:
