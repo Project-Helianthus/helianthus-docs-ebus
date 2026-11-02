@@ -192,6 +192,13 @@ class Ab25Aq25PowerStepperTests(ab25aq25_unittest.TestCase):
                         for ab25aq25_k in ('number', 'label', 'flags', 'reserved'):
                             self.assertNotIn(ab25aq25_k, ab25aq25_item)
 
+    def test_fixture_ids_use_contract_stem(self):
+        for ab25aq25_group in ('cases', 'rejections'):
+            ab25aq25_seen = [ab25aq25_c['id'] for ab25aq25_c in self.ab25aq25_data[ab25aq25_group]]
+            self.assertEqual(len(ab25aq25_seen), len(set(ab25aq25_seen)))
+            for ab25aq25_id in ab25aq25_seen:
+                self.assertTrue(ab25aq25_id.startswith('ab25aq25-'), ab25aq25_id)
+
     def test_rejections_fail_admission(self):
         for ab25aq25_case in self.ab25aq25_data['rejections']:
             with self.subTest(ab25aq25_case['id']):
@@ -225,6 +232,28 @@ class Ab25Aq25PowerStepperTests(ab25aq25_unittest.TestCase):
         self.assertEqual([1, 2], ab25aq25_out['results']['setpoint']['raw'])
         self.assertEqual([1], ab25aq25_out['results']['stepper']['raw'])
 
+    def test_output_storage_independent_across_calls(self):
+        ab25aq25_wire = (
+            '{"context":{"primary":181,"secondary":18,"operation":8,'
+            '"direction":"positive","view":"power-stepper"},'
+            '"fields":{"setpoint":[1,2],"stepper":[1]},'
+            '"arguments":{"a":[1]},"extra":{"b":[2]}}')
+        ab25aq25_input = ab25aq25_admit(ab25aq25_wire)
+        ab25aq25_first = ab25aq25_full(ab25aq25_input)
+        ab25aq25_first['context']['operation'] = 0
+        ab25aq25_first['fields']['setpoint'][0] = 99
+        ab25aq25_first['results']['setpoint']['raw'][1] = 98
+        ab25aq25_first['results']['setpoint']['number'] = -1
+        ab25aq25_first['results']['stepper']['raw'].append(7)
+        ab25aq25_first['arguments']['a'].append(5)
+        ab25aq25_first['extra']['b'][0] = 6
+        ab25aq25_second = ab25aq25_full(ab25aq25_input)
+        self.assertEqual(ab25aq25_full(ab25aq25_admit(ab25aq25_wire)), ab25aq25_second)
+        self.assertEqual(ab25aq25_admit(ab25aq25_wire), ab25aq25_input)
+        ab25aq25_second['fields']['stepper'].append(3)
+        ab25aq25_second['results']['setpoint']['raw'][0] = 55
+        self.assertEqual(ab25aq25_full(ab25aq25_admit(ab25aq25_wire)), ab25aq25_full(ab25aq25_input))
+
     def test_exponent_overflow_fails_admission(self):
         for ab25aq25_wire in (
                 '{"context":{"x":1e999},"fields":{}}',
@@ -250,16 +279,16 @@ class Ab25Aq25PowerStepperTests(ab25aq25_unittest.TestCase):
     def test_fixture_covers_every_branch_and_boundary(self):
         ab25aq25_ids = {ab25aq25_case['id'] for ab25aq25_case in self.ab25aq25_data['cases']}
         for ab25aq25_id in (
-                'op07-request-empty', 'op07-positive-max', 'op07-positive-minimum-ff',
-                'op07-positive-minimum-zero', 'op07-positive-empty', 'op08-request-partial',
-                'op08-request-complete', 'op08-positive-complete',
-                'op08-positive-status-extra-not-interpreted', 'op09-request-release',
-                'op09-positive-reserved', 'unsupported-op0a',
-                'unsupported-absent-operation', 'unsupported-explicit-zero', 'unsupported-primary',
-                'unsupported-secondary', 'unsupported-view',
-                'op07-positive-minimum-251', 'op08-request-inlet-high-byte',
-                'op08-request-inlet-sign-boundary', 'op09-request-reserved-middle-bits',
-                'op09-positive-reserved-low-bit-set'):
+                'ab25aq25-op07-request-empty', 'ab25aq25-op07-positive-max', 'ab25aq25-op07-positive-minimum-ff',
+                'ab25aq25-op07-positive-minimum-zero', 'ab25aq25-op07-positive-empty', 'ab25aq25-op08-request-partial',
+                'ab25aq25-op08-request-complete', 'ab25aq25-op08-positive-complete',
+                'ab25aq25-op08-positive-status-extra-not-interpreted', 'ab25aq25-op09-request-release',
+                'ab25aq25-op09-positive-reserved', 'ab25aq25-unsupported-op0a',
+                'ab25aq25-unsupported-absent-operation', 'ab25aq25-unsupported-explicit-zero', 'ab25aq25-unsupported-primary',
+                'ab25aq25-unsupported-secondary', 'ab25aq25-unsupported-view',
+                'ab25aq25-op07-positive-minimum-251', 'ab25aq25-op08-request-inlet-high-byte',
+                'ab25aq25-op08-request-inlet-sign-boundary', 'ab25aq25-op09-request-reserved-middle-bits',
+                'ab25aq25-op09-positive-reserved-low-bit-set'):
             self.assertIn(ab25aq25_id, ab25aq25_ids)
         ab25aq25_branches = {
             (ab25aq25_case['input']['context'].get('operation'),

@@ -1,7 +1,7 @@
 {
  "cases": [
   {
-   "id": "op07-request-empty",
+   "id": "ab25aq25-op07-request-empty",
    "input": {
     "context": {
      "primary": 181,
@@ -16,7 +16,7 @@
    "results": {}
   },
   {
-   "id": "op07-positive-max",
+   "id": "ab25aq25-op07-positive-max",
    "input": {
     "context": {
      "primary": 181,
@@ -48,7 +48,7 @@
    }
   },
   {
-   "id": "op07-positive-minimum-ff",
+   "id": "ab25aq25-op07-positive-minimum-ff",
    "input": {
     "context": {
      "primary": 181,
@@ -80,7 +80,7 @@
    }
   },
   {
-   "id": "op07-positive-minimum-251",
+   "id": "ab25aq25-op07-positive-minimum-251",
    "input": {
     "context": {
      "primary": 181,
@@ -112,7 +112,7 @@
    }
   },
   {
-   "id": "op07-positive-minimum-zero",
+   "id": "ab25aq25-op07-positive-minimum-zero",
    "input": {
     "context": {
      "primary": 181,
@@ -144,7 +144,7 @@
    }
   },
   {
-   "id": "op07-positive-empty",
+   "id": "ab25aq25-op07-positive-empty",
    "input": {
     "context": {
      "primary": 181,
@@ -166,7 +166,7 @@
    }
   },
   {
-   "id": "op08-request-partial",
+   "id": "ab25aq25-op08-request-partial",
    "input": {
     "context": {
      "primary": 181,
@@ -206,7 +206,7 @@
    }
   },
   {
-   "id": "op08-request-empty-inlet",
+   "id": "ab25aq25-op08-request-empty-inlet",
    "input": {
     "context": {
      "primary": 181,
@@ -244,7 +244,7 @@
    }
   },
   {
-   "id": "op08-request-overlong-inlet",
+   "id": "ab25aq25-op08-request-overlong-inlet",
    "input": {
     "context": {
      "primary": 181,
@@ -286,7 +286,7 @@
    }
   },
   {
-   "id": "op08-request-complete",
+   "id": "ab25aq25-op08-request-complete",
    "input": {
     "context": {
      "primary": 181,
@@ -328,7 +328,7 @@
    }
   },
   {
-   "id": "op08-request-inlet-high-byte",
+   "id": "ab25aq25-op08-request-inlet-high-byte",
    "input": {
     "context": {
      "primary": 181,
@@ -370,7 +370,7 @@
    }
   },
   {
-   "id": "op08-request-inlet-sign-boundary",
+   "id": "ab25aq25-op08-request-inlet-sign-boundary",
    "input": {
     "context": {
      "primary": 181,
@@ -412,7 +412,7 @@
    }
   },
   {
-   "id": "op08-request-disconnected",
+   "id": "ab25aq25-op08-request-disconnected",
    "input": {
     "context": {
      "primary": 181,
@@ -454,7 +454,7 @@
    }
   },
   {
-   "id": "op08-request-unmapped-complete-inlet",
+   "id": "ab25aq25-op08-request-unmapped-complete-inlet",
    "input": {
     "context": {
      "primary": 181,
@@ -496,7 +496,7 @@
    }
   },
   {
-   "id": "op08-positive-complete",
+   "id": "ab25aq25-op08-positive-complete",
    "input": {
     "context": {
      "primary": 181,
@@ -531,7 +531,7 @@
    }
   },
   {
-   "id": "op08-positive-status-extra-not-interpreted",
+   "id": "ab25aq25-op08-positive-status-extra-not-interpreted",
    "input": {
     "context": {
      "primary": 181,
@@ -569,7 +569,7 @@
    }
   },
   {
-   "id": "op09-request-release",
+   "id": "ab25aq25-op09-request-release",
    "input": {
     "context": {
      "primary": 181,
@@ -596,7 +596,7 @@
    }
   },
   {
-   "id": "op09-positive-reserved",
+   "id": "ab25aq25-op09-positive-reserved",
    "input": {
     "context": {
      "primary": 181,
@@ -623,7 +623,7 @@
    }
   },
   {
-   "id": "op09-request-reserved-middle-bits",
+   "id": "ab25aq25-op09-request-reserved-middle-bits",
    "input": {
     "context": {
      "primary": 181,
@@ -650,7 +650,7 @@
    }
   },
   {
-   "id": "op09-positive-reserved-low-bit-set",
+   "id": "ab25aq25-op09-positive-reserved-low-bit-set",
    "input": {
     "context": {
      "primary": 181,
@@ -677,7 +677,7 @@
    }
   },
   {
-   "id": "unsupported-op0a",
+   "id": "ab25aq25-unsupported-op0a",
    "input": {
     "context": {
      "primary": 181,
@@ -696,7 +696,7 @@
    "results": {}
   },
   {
-   "id": "unsupported-absent-operation",
+   "id": "ab25aq25-unsupported-absent-operation",
    "input": {
     "context": {
      "primary": 181,
@@ -714,7 +714,7 @@
    "results": {}
   },
   {
-   "id": "unsupported-explicit-zero",
+   "id": "ab25aq25-unsupported-explicit-zero",
    "input": {
     "context": {
      "primary": 181,
@@ -733,7 +733,7 @@
    "results": {}
   },
   {
-   "id": "unsupported-direction",
+   "id": "ab25aq25-unsupported-direction",
    "input": {
     "context": {
      "primary": 181,
@@ -752,7 +752,7 @@
    "results": {}
   },
   {
-   "id": "unsupported-primary",
+   "id": "ab25aq25-unsupported-primary",
    "input": {
     "context": {
      "primary": 180,
@@ -771,7 +771,7 @@
    "results": {}
   },
   {
-   "id": "unsupported-secondary",
+   "id": "ab25aq25-unsupported-secondary",
    "input": {
     "context": {
      "primary": 181,
@@ -790,7 +790,7 @@
    "results": {}
   },
   {
-   "id": "unsupported-view",
+   "id": "ab25aq25-unsupported-view",
    "input": {
     "context": {
      "primary": 181,
@@ -811,55 +811,55 @@
  ],
  "rejections": [
   {
-   "id": "null-operation",
+   "id": "ab25aq25-null-operation",
    "wire": "{\"context\":{\"primary\":181,\"secondary\":18,\"operation\":null,\"direction\":\"positive\",\"view\":\"power-stepper\"},\"fields\":{}}"
   },
   {
-   "id": "trailing-json",
+   "id": "ab25aq25-trailing-json",
    "wire": "{\"context\":{},\"fields\":{}} {}"
   },
   {
-   "id": "duplicate-nested-key",
+   "id": "ab25aq25-duplicate-nested-key",
    "wire": "{\"context\":{},\"fields\":{\"release\":[1],\"release\":[2]}}"
   },
   {
-   "id": "fractional-byte",
+   "id": "ab25aq25-fractional-byte",
    "wire": "{\"context\":{},\"fields\":{\"release\":[1.5]}}"
   },
   {
-   "id": "out-of-range-byte",
+   "id": "ab25aq25-out-of-range-byte",
    "wire": "{\"context\":{},\"fields\":{\"release\":[256]}}"
   },
   {
-   "id": "negative-byte",
+   "id": "ab25aq25-negative-byte",
    "wire": "{\"context\":{},\"fields\":{\"release\":[-1]}}"
   },
   {
-   "id": "string-byte",
+   "id": "ab25aq25-string-byte",
    "wire": "{\"context\":{},\"fields\":{\"release\":[\"1\"]}}"
   },
   {
-   "id": "boolean-byte",
+   "id": "ab25aq25-boolean-byte",
    "wire": "{\"context\":{},\"fields\":{\"release\":[true]}}"
   },
   {
-   "id": "nonfinite-number",
+   "id": "ab25aq25-nonfinite-number",
    "wire": "{\"context\":{},\"fields\":{\"release\":[NaN]}}"
   },
   {
-   "id": "string-primary",
+   "id": "ab25aq25-string-primary",
    "wire": "{\"context\":{\"primary\":\"181\"},\"fields\":{}}"
   },
   {
-   "id": "fields-not-object",
+   "id": "ab25aq25-fields-not-object",
    "wire": "{\"context\":{},\"fields\":[]}"
   },
   {
-   "id": "missing-fields",
+   "id": "ab25aq25-missing-fields",
    "wire": "{\"context\":{}}"
   },
   {
-   "id": "malformed",
+   "id": "ab25aq25-malformed",
    "wire": "{\"context\":"
   }
  ]
