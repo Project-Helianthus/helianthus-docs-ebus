@@ -83,6 +83,11 @@ bit extraction and numeric arithmetic may additionally carry
 | positive | temperature0 | 2 | Signed little-endian 16-bit integer divided by 16, Celsius metadata |
 | positive | temperature1 | 2 | Independent signed little-endian 16-bit integer divided by 16, Celsius metadata |
 
+The status bit labels below are candidate names only: evidence class
+`Hypothesis`, candidate status unconfirmed on the wire, never `Proven`. Provenance
+for the names is not published; the protocol page lists the corresponding
+response bytes as `Unknown`, and these labels do not change that.
+
 | bit | status0 | status1 |
 | --- | --- | --- |
 | 0 | ready | heater |
