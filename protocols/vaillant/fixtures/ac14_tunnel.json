@@ -1,0 +1,190 @@
+{
+  "synthetic": true,
+  "representation_grade": "Proven",
+  "candidate_grade": "Hypothesis",
+  "physical_qualification": "Unknown",
+  "records": [
+    {
+      "family": "B517",
+      "variant": null,
+      "direction": "request",
+      "service": [
+        181,
+        23
+      ],
+      "operation": null,
+      "alternative": "tunnel-request",
+      "grade": "Hypothesis",
+      "constants": [
+        {
+          "logical": 0,
+          "value": 181,
+          "bits": 8
+        },
+        {
+          "logical": 1,
+          "value": 23,
+          "bits": 8
+        }
+      ],
+      "destination": {
+        "logical": 2,
+        "type": "u8",
+        "minimum": 0,
+        "maximum": 255,
+        "default": 8
+      },
+      "data": {
+        "logical": 3,
+        "kind": "opaque",
+        "extent": "end-of-PDU",
+        "minimum": 0,
+        "abstract_maximum": 65535
+      }
+    },
+    {
+      "family": "B517",
+      "variant": null,
+      "direction": "positive",
+      "service": [
+        181,
+        24
+      ],
+      "operation": null,
+      "alternative": "tunnel-positive",
+      "grade": "Hypothesis",
+      "constants": [
+        {
+          "logical": 0,
+          "value": 181,
+          "bits": 8
+        },
+        {
+          "logical": 1,
+          "value": 24,
+          "bits": 8
+        }
+      ],
+      "data": {
+        "logical": 2,
+        "kind": "opaque",
+        "extent": "end-of-PDU",
+        "minimum": 0,
+        "abstract_maximum": 65535
+      }
+    },
+    {
+      "family": "B518",
+      "variant": null,
+      "direction": "request",
+      "service": null,
+      "operation": null,
+      "alternative": "partial-identity-request",
+      "grade": "Hypothesis",
+      "constants": [
+        {
+          "logical": 0,
+          "value": 181,
+          "bits": 8
+        }
+      ]
+    },
+    {
+      "family": "B518",
+      "variant": null,
+      "direction": "positive",
+      "service": null,
+      "operation": null,
+      "alternative": "partial-identity-positive",
+      "grade": "Hypothesis",
+      "constants": [
+        {
+          "logical": 0,
+          "value": 245,
+          "bits": 8
+        }
+      ]
+    }
+  ],
+  "policy": {
+    "grade": "Hypothesis",
+    "destination_domain": [
+      1,
+      254
+    ],
+    "inner_destination": "original destination",
+    "inner_data": "original PDU",
+    "returned_context": "original service",
+    "local_codes": [
+      10,
+      6,
+      7
+    ],
+    "remote_feedback": "separate",
+    "implemented": false
+  },
+  "adaptation": {
+    "grade": "Hypothesis",
+    "ready": 3,
+    "final_option": "nonzero",
+    "length_index": 4,
+    "length_bias": 6,
+    "request_service": [
+      181,
+      23
+    ],
+    "input_service": [
+      181,
+      24
+    ],
+    "universal_prefix_removal": false
+  },
+  "unknowns": [
+    "physical relationship of B517/B518",
+    "destination roles",
+    "forwarder",
+    "correlation",
+    "timeout",
+    "refusal",
+    "fragmentation",
+    "transport/peer support",
+    "scheduling",
+    "write permission",
+    "native adaptation",
+    "peer effects",
+    "physical qualification"
+  ],
+  "examples": {
+    "empty_data": [],
+    "opaque_data": [
+      181,
+      24,
+      0,
+      245
+    ],
+    "length_control": [
+      0,
+      0,
+      0,
+      0,
+      4,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "length_changed": [
+      0,
+      0,
+      0,
+      0,
+      5,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  }
+}
