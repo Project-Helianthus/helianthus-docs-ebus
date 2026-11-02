@@ -22,12 +22,14 @@ u16-context|numeric|synthetic replacement condition|16|little-endian|divide by 1
 a3-min|A3 minimum setpoint|generic|8|not applicable|identity|0|255|0|255|Hypothesis
 a3-max|A3 maximum setpoint|generic|8|not applicable|identity|0|255|0|255|Hypothesis
 a3-qualified|A3 minimum setpoint|synthetic Celsius condition|8|not applicable|identity|0|255|0|255|Hypothesis
+a3-max-qualified|A3 maximum setpoint|synthetic Celsius condition|8|not applicable|identity|0|255|0|255|Hypothesis
 unit2|raw numeric material|unqualified unit 2|Unknown|Unknown|Unknown|Unknown|Unknown|Unknown|Unknown|Unknown''',
     'Interpretations': '''u16|Unknown|Unknown|Unknown|none selected|none selected|Unknown
 u16-context|Unknown|Unknown|Unknown|65535|contextual replacement|Hypothesis
 a3-min|Unknown|Unknown|Unknown|none selected|none selected|Unknown
 a3-max|Unknown|Unknown|Unknown|none selected|none selected|Unknown
 a3-qualified|Unknown|degrees C|Hypothesis|255|unavailable|Hypothesis
+a3-max-qualified|Unknown|degrees C|Hypothesis|255|unavailable|Hypothesis
 unit2|2|Unknown|Unknown|none selected|none selected|Unknown''',
     'Synthetic tuples': '''zero|u16|00 00|0|0|none selected|Unknown|Hypothesis
 tenth|u16|01 00|1|0.1|none selected|Unknown|Hypothesis
@@ -37,6 +39,7 @@ replacement|u16-context|FF FF|65535|6553.5|contextual replacement|Unknown|Hypoth
 minimum-ff|a3-min|FF|255|255|none selected|Unknown|Hypothesis
 maximum-ff|a3-max|FF|255|255|none selected|Unknown|Hypothesis
 qualified-ff|a3-qualified|FF|255|255|unavailable|Unknown|Hypothesis
+qualified-max-ff|a3-max-qualified|FF|255|255|unavailable|Unknown|Hypothesis
 unit2-one|unit2|01 00|1|Unknown|none selected|Unknown|Unknown
 unit2-ff|unit2|FF FF|65535|Unknown|none selected|Unknown|Unknown''',
     'Boundaries': '''physical qualification|Unknown
@@ -161,6 +164,8 @@ class NumericUnitsTests(unittest.TestCase):
                 self.assertEqual(meanings[key]['replacement_role'], 'none selected')
             self.assertEqual(meanings['a3-qualified']['unit'], 'degrees C')
             self.assertEqual(meanings['a3-qualified']['replacement_role'], 'unavailable')
+            self.assertEqual(meanings['a3-max-qualified']['unit'], 'degrees C')
+            self.assertEqual(meanings['a3-max-qualified']['replacement_role'], 'unavailable')
             self.assertEqual(meanings['u16-context']['replacement_role'], 'contextual replacement')
             self.assertTrue(all(r['grade'] == 'Unknown' for r in source['Boundaries']))
 

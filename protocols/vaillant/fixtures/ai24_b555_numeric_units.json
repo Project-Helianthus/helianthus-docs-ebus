@@ -66,6 +66,19 @@
       "grade": "Hypothesis"
     },
     {
+      "id": "a3-max-qualified",
+      "field": "A3 maximum setpoint",
+      "context": "synthetic Celsius condition",
+      "bits": "8",
+      "byte_order": "not applicable",
+      "conversion": "identity",
+      "raw_min": "0",
+      "raw_max": "255",
+      "numeric_min": "0",
+      "numeric_max": "255",
+      "grade": "Hypothesis"
+    },
+    {
       "id": "unit2",
       "field": "raw numeric material",
       "context": "unqualified unit 2",
@@ -118,6 +131,15 @@
     },
     {
       "id": "a3-qualified",
+      "unit_code": "Unknown",
+      "unit": "degrees C",
+      "unit_grade": "Hypothesis",
+      "replacement_raw": "255",
+      "replacement_role": "unavailable",
+      "replacement_grade": "Hypothesis"
+    },
+    {
+      "id": "a3-max-qualified",
       "unit_code": "Unknown",
       "unit": "degrees C",
       "unit_grade": "Hypothesis",
@@ -209,6 +231,16 @@
     {
       "id": "qualified-ff",
       "declaration": "a3-qualified",
+      "raw_bytes": "FF",
+      "raw_numeric_material": "255",
+      "formal_numeric": "255",
+      "contextual_branch": "unavailable",
+      "semantic_value": "Unknown",
+      "grade": "Hypothesis"
+    },
+    {
+      "id": "qualified-max-ff",
+      "declaration": "a3-max-qualified",
       "raw_bytes": "FF",
       "raw_numeric_material": "255",
       "formal_numeric": "255",

@@ -37,6 +37,7 @@ The two synthetic conditions are illustrative branches, not device variants.
 | a3-min | A3 minimum setpoint | generic | 8 | not applicable | identity | 0 | 255 | 0 | 255 | Hypothesis |
 | a3-max | A3 maximum setpoint | generic | 8 | not applicable | identity | 0 | 255 | 0 | 255 | Hypothesis |
 | a3-qualified | A3 minimum setpoint | synthetic Celsius condition | 8 | not applicable | identity | 0 | 255 | 0 | 255 | Hypothesis |
+| a3-max-qualified | A3 maximum setpoint | synthetic Celsius condition | 8 | not applicable | identity | 0 | 255 | 0 | 255 | Hypothesis |
 | unit2 | raw numeric material | unqualified unit 2 | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown | Unknown |
 
 ## Interpretations
@@ -51,6 +52,7 @@ numeric value is retained alongside it; it is not a physical setpoint claim.
 | a3-min | Unknown | Unknown | Unknown | none selected | none selected | Unknown |
 | a3-max | Unknown | Unknown | Unknown | none selected | none selected | Unknown |
 | a3-qualified | Unknown | degrees C | Hypothesis | 255 | unavailable | Hypothesis |
+| a3-max-qualified | Unknown | degrees C | Hypothesis | 255 | unavailable | Hypothesis |
 | unit2 | 2 | Unknown | Unknown | none selected | none selected | Unknown |
 
 ## Synthetic tuples
@@ -70,6 +72,7 @@ semantic value. In particular, no Celsius or fan-stage conversion is inherited.
 | minimum-ff | a3-min | FF | 255 | 255 | none selected | Unknown | Hypothesis |
 | maximum-ff | a3-max | FF | 255 | 255 | none selected | Unknown | Hypothesis |
 | qualified-ff | a3-qualified | FF | 255 | 255 | unavailable | Unknown | Hypothesis |
+| qualified-max-ff | a3-max-qualified | FF | 255 | 255 | unavailable | Unknown | Hypothesis |
 | unit2-one | unit2 | 01 00 | 1 | Unknown | none selected | Unknown | Unknown |
 | unit2-ff | unit2 | FF FF | 65535 | Unknown | none selected | Unknown | Unknown |
 
