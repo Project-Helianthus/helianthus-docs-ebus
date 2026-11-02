@@ -29,7 +29,7 @@ byte) and "reply length" is the declared payload length.
 |---:|---|---|---|
 | `00` | known only by its number | no layout known | no layout known |
 | `01` | power-limitation token | `QQ ZZ B5 31 03 01 <tokLo> <tokHi>` | feedback byte |
-| `02` | minimum and maximum nominal electrical power | `QQ ZZ B5 31 01 02` | minimum u16 LE, maximum u16 LE |
+| `02` | minimum and maximum candidate raw quantities | `QQ ZZ B5 31 01 02` | minimum u16 LE, maximum u16 LE |
 | `03` | system-control limitation status | `QQ 15 B5 31 02 03 <state>` | one byte, not interpreted |
 
 Profile availability of B531 is not established; no sub-command is known to be
@@ -49,8 +49,8 @@ QQ ZZ B5 31 03 01 <tokLo> <tokHi>
 
 - `NN` = `0x03`: the sub-command byte and the token as one u16 little-endian
   value.
-- The token is one u16 little-endian value in the same counts as the
-  sub-command `02` values (**Hypothesis**: a power value in units of 10 W);
+- The token is one u16 little-endian value. Correlation with sub-command
+  `02`, including any shared unit or scale, is Unknown;
   its meaning is not established on the wire. A start-up request sends the
   literal token `FFFF`;
   `FFFF` is not shown to reset or delete anything in the target.
@@ -60,22 +60,25 @@ QQ ZZ B5 31 03 01 <tokLo> <tokHi>
   test; no feedback enumeration is established and whether the target applies
   the token is not established.
 
-### `02` - minimum and maximum nominal electrical power (candidate, unconfirmed on the wire)
+### `02` - minimum and maximum candidate raw quantities
 
-```text
-QQ ZZ B5 31 01 02
-```
+**Hypothesis**: B531 OP02 has two independent unsigned little-endian words.
+OP02 names sub-command `02` here, not a B524 opcode. Direction is the
+candidate reply from target to requester; actual endpoint support and reply
+adaptation remain Unknown. Logical positions below order the two candidate
+quantities; they are not wire offsets and do not establish reply framing.
 
-- `NN` = `0x01`, payload `02`. One request per eligible target.
-- The reply is decoded only when its length is at least 4:
+| Grade | Identity | Direction | Logical position / extent | Raw type / domain | Native unit / scale | Sentinel / default / conflict | Unresolved |
+|---|---|---|---|---|---|---|---|
+| Hypothesis | B531 OP02 minimum | target to requester (candidate reply) | first quantity / 2 octets; wire offset Unknown | unsigned LE16 / 0..65535 | Unknown / Unknown | FFFF sentinel Unknown; default Unknown; minimum greater than maximum retained as an independent alternative | endpoint support; native units; correlation; reply adaptation; cache freshness; target eligibility; applied limits: Unknown |
+| Hypothesis | B531 OP02 maximum | target to requester (candidate reply) | second quantity / 2 octets; wire offset Unknown | unsigned LE16 / 0..65535 | Unknown / Unknown | FFFF sentinel Unknown; default Unknown; minimum greater than maximum retained as an independent alternative | endpoint support; native units; correlation; reply adaptation; cache freshness; target eligibility; applied limits: Unknown |
 
-| Reply bytes | Candidate meaning | Encoding |
-|---|---|---|
-| 0..1 | minimum nominal electrical power | u16 little-endian |
-| 2..3 | maximum nominal electrical power | u16 little-endian |
-
-- The requester reads each value as 10 W per count (candidate unit, see
-  "Unit"); it attaches no other unit or scale information.
+These declarations grant no native qualification. In particular, FFFF has no
+established sentinel interpretation, and a minimum above the maximum is not
+native evidence of invalidity. See the local [synthetic examples](fixtures/ae24_b531_candidates.json).
+Representation and arithmetic are described separately in the
+[local projection boundary](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/ae24_b531_local_projection.md);
+that boundary does not establish a native unit or physical behavior.
 
 ### `03` - system-control limitation status (candidate, unconfirmed on the wire)
 
@@ -94,22 +97,19 @@ QQ 15 B5 31 02 03 <state>
 
 ## Token and state
 
-The token of sub-command `01` is in the same counts as the values of
-sub-command `02`. The relation of the token to the maxima of sub-command `02`
-is not established on the wire; a token below the maximum, a zero token and a
-token that changes between requests are all candidates. The condition under
+Correlation between the token of sub-command `01` and either raw quantity
+of sub-command `02` is Unknown. A token below the maximum, a zero token and a
+token that changes between requests are independent candidates. The condition under
 which each state of sub-command `03` is sent is not established; candidate
 reading: state `2` while a limitation is active, state `1` without limitation,
 state `0` when limitation is not possible.
 
 ## Unit
 
-Candidate scale: one raw count of sub-command `02` is 10 W (raw 65535 would
-be 655,350 W). The unit the heat pump itself uses for sub-command `02` is not
-established. **Hypothesis**: 10 W per count; unresolved. No eBUS datum carries a unit.
-The token of sub-command `01` is in the same counts as the sub-command `02`
-values, so the same candidate unit applies to it; the token unit at the target
-is not established.
+The native units and native scales of both OP02 quantities are Unknown, as
+recorded in the scoped table above. No native 10 W-per-count claim follows
+from local arithmetic. The token unit of sub-command `01` and its correlation
+with either OP02 quantity also remain Unknown.
 
 ## Targets
 
@@ -214,8 +214,10 @@ frame:
   reset or a delete, whether the target applies the token, and the unit of the
   token at the target.
 - The meaning of reply byte 0 of sub-command `03`.
-- The physical unit of sub-command `02` as a heat pump uses it (candidate: 10 W
-  per raw count).
+- The native units and scales of both OP02 quantities, their correlation,
+  endpoint support, reply adaptation, cache freshness, target eligibility and
+  applied limits remain Unknown; the scoped table records these unresolved
+  properties. Local arithmetic does not resolve them.
 - The live bytes and the unit of the compressor-power values; for some
   targets no candidate name, type or unit is known for the read address.
 - No assignment of software product numbers to read forms or units is
