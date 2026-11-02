@@ -280,7 +280,7 @@ No publishable capture is included in this reference.
 
 ## References
 
-- Public TypeSpec: [timer_inc.tsp](https://github.com/john30/ebusd-configuration/blob/master/src/vaillant/timer_inc.tsp)
-- Public TypeSpec: [hcmode_inc.tsp](https://github.com/john30/ebusd-configuration/blob/master/src/vaillant/hcmode_inc.tsp)
-- Public TypeSpec: [tempsetpoints_inc.tsp](https://github.com/john30/ebusd-configuration/blob/master/src/vaillant/tempsetpoints_inc.tsp)
+- Public TypeSpec: [timer_inc.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/timer_inc.tsp)
+- Public TypeSpec: [hcmode_inc.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/hcmode_inc.tsp)
+- Public TypeSpec: [tempsetpoints_inc.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/tempsetpoints_inc.tsp)
 - Consolidated local reference: [`ebus-vaillant.md`](ebus-vaillant.md)
