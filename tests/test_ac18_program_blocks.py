@@ -45,7 +45,7 @@ CLAIMS = (
     'OP06 retains three independent raw numbers without BCD or version conversion.',
     'OP07 requests programming; OP0A requests block commit; OP0B requests CRC.',
     'OP0C has no request arguments; OP0D and OP0E have only their listed input.',
-    'Constant 08 at position 2 is an operation, not a block number; FFFFFFFF is not a sentinel.',
+    'Constant 08 at position 2 is an operation, not a block number; bytes FF FF FF FF are not a sentinel.',
     'Empty OP09 data does not establish peer acceptance.',
     'OP0D byte 0F stays 15 minutes, without encoding 900 or converting to seconds.',
     'Commit feedback does not prove persistence.',
@@ -128,7 +128,8 @@ class ProgramBlocksTests(unittest.TestCase):
         self.assertEqual(bytes(examples['op09']), b'\xb5\x1b\x09' + examples['offset'].to_bytes(2, 'little') + bytes(examples['data']))
         self.assertEqual(int.from_bytes(bytes(examples['crc']['raw']), 'little'), 0x1234)
         self.assertEqual(len(b'\xb5\x1b\x09\x00\x00' + bytes(examples['empty_data'])), 5)
-        for literal in ('B5 1B 08 04 03 02 01 08 07 06 05', 'B5 1B 09 34 12 00 FF', '34 12', '0x1234'):
+        for literal in ('OP08 block 16909060 (decimal), segment 84281096 (decimal)',
+                        'B5 1B 08 04 03 02 01 08 07 06 05', 'B5 1B 09 34 12 00 FF', '34 12', '0x1234'):
             self.assertIn(literal, self.page)
 
     def test_each_identity_axis_independently(self):

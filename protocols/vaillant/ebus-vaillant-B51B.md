@@ -17,7 +17,7 @@ OP07 requests programming; OP0A requests block commit; OP0B requests CRC.
 
 OP0C has no request arguments; OP0D and OP0E have only their listed input.
 
-Constant 08 at position 2 is an operation, not a block number; FFFFFFFF is not a sentinel.
+Constant 08 at position 2 is an operation, not a block number; bytes FF FF FF FF are not a sentinel.
 
 Empty OP09 data does not establish peer acceptance.
 
@@ -110,7 +110,7 @@ Other qualified variants remain separate; this partial catalog does not replace 
 
 The [synthetic fixture](fixtures/ac18_program_blocks.json) validates declarations only.
 
-- OP08 block `0x01020304`, segment `0x05060708`: `B5 1B 08 04 03 02 01 08 07 06 05`.
+- OP08 block 16909060 (decimal), segment 84281096 (decimal): `B5 1B 08 04 03 02 01 08 07 06 05`.
 - OP09 offset `0x1234`, data `[00, FF]`: `B5 1B 09 34 12 00 FF`; extent is `5+k`.
 - OP0B raw CRC `34 12` is numeric `0x1234`; peer algorithm and coverage are Unknown.
 - State 6 remains unlabeled. Feedback 55 is accepted only by the OP08 table, rejected by generic feedback; AA is protected only by OP08.
