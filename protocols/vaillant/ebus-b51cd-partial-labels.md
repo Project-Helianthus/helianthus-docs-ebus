@@ -23,6 +23,11 @@ physical framing remain unresolved. The starting contract and this partial
 Hypothesis are retained side by side; neither resolves the missing wire evidence.
 No complete alternative wire layout is supplied, so none is synthesized.
 
+The B5 and F5 constants are candidate declarations with evidence class
+Hypothesis. Their provenance is not published, and the synthetic fixture only
+restates them, so it is not independent evidence. Readers should treat the
+constants as unvalidated candidates until independent evidence is available.
+
 ## Synthetic partial tuples
 
 All rows in the [synthetic fixture](fixtures/ai18_b51cd_partial_labels.json)
