@@ -41,9 +41,14 @@ view and never qualify a family.
 data is `[]`, distinct from missing data. `arguments`, when supplied, contains
 exactly the explicitly stated typed values for the selected view; none of the
 views below requires an argument. Unknown extra input keys are retained unchanged
-at their original scope, independently of interpreted data.
+at their original scope, independently of interpreted data. The top-level keys
+`state`, `results`, `physical` and `qualified` are reserved for computed output:
+an input carrying any of them at the top level is rejected with an error, so a
+retained extra never collides with a computed value. Nested keys of retained
+extras are not reserved.
 
-Reject malformed or trailing JSON, duplicate keys at any depth, wrong kinds,
+Reject malformed or trailing JSON, duplicate keys at any depth, reserved
+output keys, wrong kinds,
 nonfinite numbers, fractional/out-of-range bytes or integer arguments, and
 missing required arguments: return an error and no successful result. Never
 coerce strings, null or Booleans into numbers. Missing, short or overlong
@@ -153,6 +158,15 @@ five separate results: big-endian decoding or collapsing the words violates this
 contract. Missing acceptance is incomplete, never a synthesized false default.
 Invalid byte input such as `acceptance:[true]` returns an error, not a partial
 successful result.
+
+## Owned validation
+
+`tests/test_ab07_aq07_b503_control_fields.py` is the owned validator. It holds
+an independent reference oracle for the admission, width, arithmetic,
+reserved-key and preservation rules above and checks every JSON example on this
+page against it, so these transitions cannot drift unnoticed. It is a
+synthetic oracle only: it exercises no production implementation, and a future
+implementation must pass the same cases.
 
 ## Remaining Unknowns and companion scope
 
