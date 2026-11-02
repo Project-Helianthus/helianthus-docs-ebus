@@ -37,40 +37,12 @@ successful exchange. Raw bytes and independent useful fields remain preserved;
 incomplete evidence does not erase partial last-known-good state or turn it
 into a fresh result.
 
-## Policy and distinct adaptation alternative
-
-The following **Hypothesis** policy metadata is separate from native field
-ranges. No client or transport is implemented by these declarations.
-
-| Policy | Declared value | Grade |
-|---|---|---|
-| tunnel destination domain | 1..254 | Hypothesis |
-| inner destination | original destination | Hypothesis |
-| inner opaque data | original PDU | Hypothesis |
-| returned data context | original service | Hypothesis |
-| local result codes | raw 10, 6, 7; meanings Unknown | Hypothesis |
-| remote feedback | separate from local result codes | Hypothesis |
-
-A separate adaptation alternative requires every predicate below. It is not a
-universal prefix-removal rule. Missing byte 4 leaves the equation unresolved;
-a length match alone establishes only the declared length equation.
-
-| Predicate | Required value | Grade |
-|---|---|---|
-| ready-state | 3 | Hypothesis |
-| final option | nonzero | Hypothesis |
-| length equation | input byte 4 + 6 equals available length | Hypothesis |
-| request service | B5/17 | Hypothesis |
-| input service | B5/18 | Hypothesis |
-
-A synthetic envelope of length 10 with byte4=4 satisfies only that equation.
-Changing byte4 to 5 fails the equation and does not establish a valid
-alternative. All other qualification requirements remain independent.
-
 ## Evidence and limits
 
 The [synthetic examples](fixtures/ac14_tunnel.json) validate the declared
-representation only. **Proven** applies only to mechanically checked software
+wire representation only. Local software rules for a tunnel client are kept
+outside this protocol tree, in the
+[local tunnel contract](../../architecture/aj25_b517_local_tunnel.md). **Proven** applies only to mechanically checked software
 representation; all physical interpretations remain **Hypothesis**.
 Qualification is separate from either grade.
 
@@ -90,5 +62,5 @@ Qualification is separate from either grade.
 | peer effects | Unknown |
 | physical qualification | Unknown |
 
-No runtime capability, transmit route, automatic native qualification or write
+No client or transport is implemented by these declarations. No runtime capability, transmit route, automatic native qualification or write
 admission follows. Unsupported or incomplete evidence keeps admission withheld.

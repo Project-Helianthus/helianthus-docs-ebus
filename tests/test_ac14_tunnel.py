@@ -39,37 +39,12 @@ def expected_records():
     ]
 
 
-POLICY = {'grade': 'Hypothesis', 'destination_domain': [1, 254],
-          'inner_destination': 'original destination', 'inner_data': 'original PDU',
-          'returned_context': 'original service', 'local_codes': [10, 6, 7],
-          'remote_feedback': 'separate', 'implemented': False}
-ADAPTATION = {'grade': 'Hypothesis', 'ready': 3, 'final_option': 'nonzero',
-              'length_index': 4, 'length_bias': 6, 'request_service': [181, 23],
-              'input_service': [181, 24], 'universal_prefix_removal': False}
-
-
-def equation(data, declaration):
-    index = declaration['length_index']
-    if len(data) <= index:
-        return None
-    return data[index] + declaration['length_bias'] == len(data)
-
-
-def eligible(data, declaration, ready=3, option=1, request=(181, 23), incoming=(181, 24)):
-    """Synthetic conjunction only; establishes no native adaptation."""
-    return (equation(data, declaration) is True and ready == declaration['ready']
-            and declaration['final_option'] == 'nonzero' and option != 0
-            and list(request) == declaration['request_service']
-            and list(incoming) == declaration['input_service'])
-
-
 def table(page, heading):
     section = page.split(heading + '\n', 1)[1].split('\n## ', 1)[0]
     rows = [tuple(cell.strip() for cell in line.strip('|').split('|'))
             for line in section.splitlines() if line.startswith('|')]
     headers = {
         '## Candidate fields': ('Family', 'Direction', 'Service declaration', 'Logical fields', 'Grade'),
-        '## Policy and distinct adaptation alternative': ('Policy', 'Declared value', 'Grade'),
         '## Evidence and limits': ('Unresolved property', 'Grade'),
     }
     if rows[0] != headers[heading] or rows[1] != ('---',) * len(headers[heading]):
@@ -86,7 +61,7 @@ class TunnelDeclarations(unittest.TestCase):
         # Kills numeric, selector, extent, grade, codec and alternative changes.
         self.assertEqual(self.data['records'], expected_records())
         self.assertEqual(set(self.data), {'synthetic', 'representation_grade', 'candidate_grade',
-                         'physical_qualification', 'records', 'policy', 'adaptation', 'unknowns', 'examples'})
+                         'physical_qualification', 'records', 'unknowns', 'examples'})
 
     def test_each_record_identity_axis(self):
         # Valid control plus independent family/variant/direction/service/operation/alternative changes.
@@ -126,30 +101,6 @@ class TunnelDeclarations(unittest.TestCase):
         self.assertEqual(self.data['records'][0]['destination'],
                          {'logical': 2, 'type': 'u8', 'minimum': 0, 'maximum': 255, 'default': 8})
 
-    def test_policy_and_local_remote_separation(self):
-        self.assertEqual(self.data['policy'], POLICY)
-        self.assertFalse(self.data['policy']['implemented'])
-
-    def test_adaptation_all_predicates_independently(self):
-        rule = self.data['adaptation']
-        self.assertEqual(rule, ADAPTATION)
-        control = self.data['examples']['length_control']
-        self.assertEqual(control, [0, 0, 0, 0, 4, 0, 0, 0, 0, 0])
-        self.assertTrue(eligible(control, rule))
-        for kwargs in ({'ready': 2}, {'option': 0}, {'request': (180, 23)},
-                       {'request': (181, 22)}, {'incoming': (180, 24)},
-                       {'incoming': (181, 25)}):
-            with self.subTest(kwargs=kwargs):
-                self.assertFalse(eligible(control, rule, **kwargs))
-        changed = self.data['examples']['length_changed']
-        self.assertEqual(changed, [0, 0, 0, 0, 5, 0, 0, 0, 0, 0])
-        self.assertFalse(equation(changed, rule))
-        self.assertFalse(eligible(changed, rule))
-        self.assertFalse(eligible(control + [0], rule))
-        for size in range(5):
-            self.assertIsNone(equation([0] * size, rule))
-            self.assertFalse(eligible([0] * size, rule))
-
     def test_grades_and_unknowns(self):
         self.assertIs(self.data['synthetic'], True)
         self.assertEqual(self.data['representation_grade'], 'Proven')
@@ -169,19 +120,12 @@ class TunnelDeclarations(unittest.TestCase):
             ('B517 request data', '0..65535 bytes, through end-of-PDU', 'absent', 'opaque; abstract maximum only', 'Hypothesis'),
             ('B517 positive data', '0..65535 bytes, through end-of-PDU', 'absent', 'opaque; abstract maximum only', 'Hypothesis')])
 
-    def test_page_policy_tables(self):
-        self.assertEqual(table(self.page, '## Policy and distinct adaptation alternative'), [
-            ('tunnel destination domain', '1..254', 'Hypothesis'),
-            ('inner destination', 'original destination', 'Hypothesis'),
-            ('inner opaque data', 'original PDU', 'Hypothesis'),
-            ('returned data context', 'original service', 'Hypothesis'),
-            ('local result codes', 'raw 10, 6, 7; meanings Unknown', 'Hypothesis'),
-            ('remote feedback', 'separate from local result codes', 'Hypothesis'),
-            ('Predicate', 'Required value', 'Grade'), ('---', '---', '---'),
-            ('ready-state', '3', 'Hypothesis'), ('final option', 'nonzero', 'Hypothesis'),
-            ('length equation', 'input byte 4 + 6 equals available length', 'Hypothesis'),
-            ('request service', 'B5/17', 'Hypothesis'), ('input service', 'B5/18', 'Hypothesis')])
+    def test_page_limits_table_and_no_local_policy(self):
         self.assertEqual(table(self.page, '## Evidence and limits'), [(key, 'Unknown') for key in UNKNOWN])
+        self.assertNotIn('## Policy', self.page)
+        self.assertNotIn('Predicate', self.page)
+        self.assertNotIn('policy', self.data)
+        self.assertNotIn('adaptation', self.data)
 
     def test_page_scoped_claims(self):
         normalized = ' '.join(self.page.split())
@@ -198,8 +142,6 @@ class TunnelDeclarations(unittest.TestCase):
             'Empty opaque data remains empty/partial;',
             'incomplete evidence does not erase partial last-known-good state',
             'No client or transport is implemented',
-            'It is not a universal prefix-removal rule.',
-            'Changing byte4 to 5 fails the equation and does not establish a valid alternative.',
             '**Proven** applies only to mechanically checked software representation;',
             'all physical interpretations remain **Hypothesis**.',
             'No runtime capability, transmit route, automatic native qualification or write admission follows.',
