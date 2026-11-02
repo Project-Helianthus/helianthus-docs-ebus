@@ -55,6 +55,14 @@ def _bits(byte, names):
     return flags, reserved
 
 
+def _supported(context):
+    return (
+        context.get('primary') == 181 and context.get('secondary') == 33
+        and 'operation' not in context and context.get('view') == 'module-fields'
+        and context.get('direction') in WIDTHS
+    )
+
+
 def evaluate(text):
     data = json.loads(text, object_pairs_hook=_reject_duplicates,
                       parse_constant=_reject_constant, parse_float=_parse_float)
@@ -75,12 +83,7 @@ def evaluate(text):
         _byte_array(raw)
     out = dict(data)
     out.update(physical='Unknown', qualified=False)
-    supported = (
-        context.get('primary') == 181 and context.get('secondary') == 33
-        and 'operation' not in context and context.get('view') == 'module-fields'
-        and context.get('direction') in WIDTHS
-    )
-    if not supported:
+    if not _supported(context):
         out.update(state='Unknown', results={})
         return out
     widths = WIDTHS[context['direction']]
@@ -208,6 +211,55 @@ class Aq14B521FieldViews(unittest.TestCase):
         for direction, name, width in rows:
             table.setdefault(direction, {})[name] = int(width)
         self.assertEqual(table, WIDTHS)
+
+    def test_status_bits_match_documented_table(self):
+        rows = re.findall(r'^\| (\d) \| ([^|]+?) \| ([^|]+?) \|$', PAGE.read_text(), re.M)
+        self.assertEqual([int(r[0]) for r in rows], list(range(8)))
+        doc0 = tuple(None if r[1].startswith('reserved') else r[1] for r in rows)
+        doc1 = tuple(r[2] for r in rows)
+        self.assertEqual(doc0, STATUS0)
+        self.assertEqual(doc1, STATUS1)
+        context = self.blocks[0]['context']
+        for name, names in (('status0', doc0), ('status1', doc1)):
+            for bit in range(8):
+                fields = {n: [0] * w for n, w in WIDTHS['positive'].items()}
+                fields[name] = [1 << bit]
+                entry = evaluate(json.dumps({'context': context, 'fields': fields}))['results'][name]
+                flags = entry['flags']
+                label = names[bit]
+                if label:
+                    self.assertEqual([k for k, v in flags.items() if v], [label])
+                    self.assertEqual(len(flags), sum(1 for n in names if n))
+                    self.assertFalse(any(entry.get('reserved', {}).values()))
+                else:
+                    self.assertFalse(any(flags.values()))
+                    self.assertEqual([k for k, v in entry['reserved'].items() if v],
+                                     ['bit%d' % bit])
+
+    def test_supported_context_matches_documented_table(self):
+        text = PAGE.read_text()
+        section = text.split('entire supported context set:', 1)[1].split('\n\n', 2)[1]
+        rows = [[c.strip() for c in line.strip('|').split('|')]
+                for line in section.splitlines()[2:]]
+        self.assertTrue(rows)
+        documented = set()
+        for primary, secondary, operation, view, direction, _ in rows:
+            self.assertEqual(operation, 'absent')
+            documented.add((int(primary), int(secondary), view, direction))
+        base = self.blocks[0]['context']
+        for primary in (180, 181, 182):
+            for secondary in (32, 33, 34):
+                for view in ('module-fields', 'other'):
+                    for direction in ('request', 'positive', 'negative'):
+                        for operation in (None, 0):
+                            context = dict(base, primary=primary, secondary=secondary,
+                                           view=view, direction=direction)
+                            context.pop('operation', None)
+                            if operation is not None:
+                                context['operation'] = operation
+                            expected = (operation is None
+                                        and (primary, secondary, view, direction) in documented)
+                            self.assertEqual(_supported(context), expected, msg=context)
 
     def test_request_vectors_cover_every_field(self):
         context = dict(self.blocks[0]['context'], direction='request')
