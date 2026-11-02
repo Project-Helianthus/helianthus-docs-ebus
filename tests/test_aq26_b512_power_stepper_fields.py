@@ -1,4 +1,6 @@
 """Synthetic specification checks; no Python runtime evaluator or Go API binding."""
+import copy as ab25aq25_copy
+from decimal import Decimal as Ab25Aq25Decimal
 import json as ab25aq25_json
 import os as ab25aq25_os
 from pathlib import Path as Ab25Aq25Path
@@ -34,10 +36,23 @@ def ab25aq25_constant(ab25aq25_value):
 
 
 def ab25aq25_float(ab25aq25_text):
-    ab25aq25_value = float(ab25aq25_text)
-    if ab25aq25_value != ab25aq25_value or ab25aq25_value in (float('inf'), float('-inf')):
+    # Overflow beyond binary64 is nonfinite; finite decimals are kept losslessly.
+    if float(ab25aq25_text) in (float('inf'), float('-inf')):
         raise ValueError('nonfinite number')
-    return ab25aq25_value
+    return Ab25Aq25Decimal(ab25aq25_text)
+
+
+def ab25aq25_dumps(ab25aq25_value):
+    """Serialize retained values, emitting decimals with their exact digits."""
+    if isinstance(ab25aq25_value, Ab25Aq25Decimal):
+        return str(ab25aq25_value)
+    if type(ab25aq25_value) is dict:
+        return '{' + ','.join(
+            ab25aq25_json.dumps(ab25aq25_k) + ':' + ab25aq25_dumps(ab25aq25_v)
+            for ab25aq25_k, ab25aq25_v in ab25aq25_value.items()) + '}'
+    if type(ab25aq25_value) is list:
+        return '[' + ','.join(map(ab25aq25_dumps, ab25aq25_value)) + ']'
+    return ab25aq25_json.dumps(ab25aq25_value)
 
 
 def ab25aq25_load(ab25aq25_wire):
@@ -110,7 +125,7 @@ def ab25aq25_oracle(ab25aq25_input):
 def ab25aq25_full(ab25aq25_input):
     """Complete successful output envelope the contract requires."""
     ab25aq25_state, ab25aq25_results = ab25aq25_oracle(ab25aq25_input)
-    ab25aq25_out = ab25aq25_json.loads(ab25aq25_json.dumps(ab25aq25_input))
+    ab25aq25_out = ab25aq25_copy.deepcopy(ab25aq25_input)
     ab25aq25_full_results = {}
     for ab25aq25_name, ab25aq25_item in ab25aq25_results.items():
         ab25aq25_entry = {}
@@ -135,7 +150,7 @@ class Ab25Aq25PowerStepperTests(ab25aq25_unittest.TestCase):
     def test_cases_match_independent_oracle(self):
         for ab25aq25_case in self.ab25aq25_data['cases']:
             with self.subTest(ab25aq25_case['id']):
-                ab25aq25_input = ab25aq25_admit(ab25aq25_json.dumps(ab25aq25_case['input']))
+                ab25aq25_input = ab25aq25_admit(ab25aq25_dumps(ab25aq25_case['input']))
                 self.assertEqual(
                     (ab25aq25_case['state'], ab25aq25_case['results']),
                     ab25aq25_oracle(ab25aq25_input))
@@ -143,7 +158,7 @@ class Ab25Aq25PowerStepperTests(ab25aq25_unittest.TestCase):
     def test_full_success_envelope(self):
         for ab25aq25_case in self.ab25aq25_data['cases']:
             with self.subTest(ab25aq25_case['id']):
-                ab25aq25_input = ab25aq25_admit(ab25aq25_json.dumps(ab25aq25_case['input']))
+                ab25aq25_input = ab25aq25_admit(ab25aq25_dumps(ab25aq25_case['input']))
                 ab25aq25_out = ab25aq25_full(ab25aq25_input)
                 for ab25aq25_key, ab25aq25_value in ab25aq25_input.items():
                     self.assertEqual(ab25aq25_value, ab25aq25_out[ab25aq25_key])
@@ -185,6 +200,19 @@ class Ab25Aq25PowerStepperTests(ab25aq25_unittest.TestCase):
             with self.subTest(ab25aq25_wire):
                 with self.assertRaises(ValueError):
                     ab25aq25_admit(ab25aq25_wire)
+
+    def test_opaque_decimals_retained_without_rounding(self):
+        for ab25aq25_text in ('1e-999', '0.1000000000000000055511151231257827',
+                              '12345678901234567890.123456789', '-0.0'):
+            with self.subTest(ab25aq25_text):
+                ab25aq25_wire = '{"context":{},"fields":{},"extra":{"a":[%s]}}' % ab25aq25_text
+                ab25aq25_out = ab25aq25_full(ab25aq25_admit(ab25aq25_wire))
+                ab25aq25_kept = ab25aq25_out['extra']['a'][0]
+                self.assertIs(Ab25Aq25Decimal, type(ab25aq25_kept))
+                self.assertEqual(Ab25Aq25Decimal(ab25aq25_text).as_tuple(),
+                                 ab25aq25_kept.as_tuple())
+                self.assertEqual(Ab25Aq25Decimal(ab25aq25_text),
+                                 ab25aq25_load(ab25aq25_dumps(ab25aq25_out))['extra']['a'][0])
 
     def test_fixture_covers_every_branch_and_boundary(self):
         ab25aq25_ids = {ab25aq25_case['id'] for ab25aq25_case in self.ab25aq25_data['cases']}
