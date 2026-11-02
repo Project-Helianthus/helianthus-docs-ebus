@@ -149,6 +149,12 @@ ab27ao27PartialCounts = {
     6: (0, 0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7),
     7: (0, 0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 4, 5, 5, 6, 6),
 }
+# Truncations retaining exactly one byte of a sensor, independently enumerated.
+ab27ao27IncompleteSensors = {
+    3: {4: "S1", 6: "S2", 8: "S3", 10: "S4", 12: "S5", 14: "S6"},
+    6: {4: "S1", 6: "S2", 8: "S3", 10: "S4", 12: "S5", 14: "S6", 16: "S7"},
+    7: {4: "S8", 6: "S9", 8: "S10", 10: "S11", 13: "S12", 15: "S13"},
+}
 
 
 def ab27ao27Strict(ab27ao27Text):
@@ -229,9 +235,13 @@ class TestAb27Ao27SensorViews(unittest.TestCase):
                 ab27ao27Pwm = ["PWM"] if ab27ao27Op == 3 and ab27ao27Length > 15 else []
                 ab27ao27Status = [ab27ao27Name + "_status" for ab27ao27Offset, ab27ao27Group in ab27ao27Statuses[ab27ao27Op]
                                   if ab27ao27Length > ab27ao27Offset for ab27ao27Name in ab27ao27Group]
+                ab27ao27Expect = {"state": "partial", "complete_sensors": ab27ao27Names, "numeric_zero_sensors": ab27ao27Names,
+                                  "complete_pwm": ab27ao27Pwm, "complete_status": ab27ao27Status}
+                if ab27ao27Length in ab27ao27IncompleteSensors[ab27ao27Op]:
+                    ab27ao27Expect.update(field=ab27ao27IncompleteSensors[ab27ao27Op][ab27ao27Length],
+                                         result={"raw": [0], "state": "Unknown"})
                 self.ab27ao27Case(f"partial-{ab27ao27Op}-{ab27ao27Length}", ab27ao27Op, self.ab27ao27Base(ab27ao27Op)[:ab27ao27Length],
-                                 {"state": "partial", "complete_sensors": ab27ao27Names, "numeric_zero_sensors": ab27ao27Names,
-                                  "complete_pwm": ab27ao27Pwm, "complete_status": ab27ao27Status})
+                                 ab27ao27Expect)
             self.ab27ao27Case(f"tail-{ab27ao27Op}", ab27ao27Op, self.ab27ao27Base(ab27ao27Op) + [1, 254, 0],
                              {"state": "Hypothesis", "tail": [1, 254, 0]})
 

@@ -106,6 +106,8 @@ every status pair receives all four values under both views; every reserved bit
 is toggled separately. Partial cases cover every shorter length. Fixture rows
 contain complete synthetic inputs and explicit expected assertions, not complete
 serialized outputs. `field`/`result` is one selected output-field assertion;
+in partial rows ending inside a sensor, it requires that sensor to remain
+present with exactly `{"raw":[0],"state":"Unknown"}` and no `number`.
 `complete_sensors` and `numeric_zero_sensors` assert retained sibling sets,
 `complete_pwm` and `complete_status` the retained complete PWM and status fields;
 `reserved` and `opaque` assert retained raw evidence. `preserve_*` assertions
