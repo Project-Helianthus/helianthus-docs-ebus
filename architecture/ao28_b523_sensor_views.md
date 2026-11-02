@@ -31,7 +31,9 @@ Literal JSON and protocol field labels retain their names.
 
 Input is an object with `context`, `fields`, and optional `arguments`.
 `context` contains `primary:181`, `secondary:35`, integer `operation`, `direction`
-and explicit `view`; preserve every supplied context key, including opaque
+and explicit `view`; primary, secondary and operation must be JSON integers
+(booleans are rejected), while direction and view must be JSON strings. Preserve
+every supplied context key, including opaque
 `family`, `variant` and nested unknown values. `fields` maps names to arrays of
 integer bytes in 0..255. The selected array is `logical_object`; other fields
 and tails are preserved without interpretation. Its first three positions are
@@ -71,7 +73,9 @@ An explicit Unknown branch remains `Unknown`. Unknown siblings cannot erase
 complete fields and defaults never fill missing data. Per-field `raw` retains
 the unsigned word carrier, PWM byte or selected two-bit status; the output `raw`
 object additionally retains the exact original arrays. Each complete semantic
-field has `state:"Hypothesis"`. Numeric fields may additionally carry
+field has `state:"Hypothesis"`. Every field with `number` requires `unit`,
+exactly `"Celsius"` for sensors or `"percent"` for PWM. Missing or unlisted units
+are invalid result shapes. Numeric fields may additionally carry
 `calculation:"Proven"` for exact arithmetic; this never replaces the family
 grade. Incomplete or unmapped fields remain `Unknown` with available raw bytes
 and no `number`; unit-conflict and unknown-order fields likewise have no number.
@@ -116,7 +120,10 @@ require exact input copies, not inferred values. Opaque-context rows also
 require successful sensor decoding. Error rows retain input text because parsing
 would lose duplicate keys. The standard-library suite checks this table and every fixture
 row against separate constants; it does not supply another interpreter or invoke
-an unavailable production function. Production error, aliasing, serialization
+an unavailable production function. `field-shape` rows instead contain a candidate
+`field_result` with `field` and
+`result`; `accepted:false` requires rejection of that output shape, not an input
+admission error. Production error, aliasing, serialization
 and mutation behavior requires the companion library's tests.
 
 <!-- ab27ao27-contract:start -->
@@ -449,7 +456,34 @@ and mutation behavior requires the companion library's tests.
     "unmodelled-field-null",
     "unmodelled-field-string",
     "unmodelled-field-bool",
-    "unmodelled-field-object"
+    "unmodelled-field-object",
+    "primary-string",
+    "primary-null",
+    "primary-bool",
+    "primary-fraction",
+    "primary-array",
+    "primary-object",
+    "secondary-string",
+    "secondary-null",
+    "secondary-bool",
+    "secondary-fraction",
+    "secondary-array",
+    "secondary-object",
+    "direction-number",
+    "direction-null",
+    "direction-bool",
+    "direction-array",
+    "direction-object",
+    "view-number",
+    "view-null",
+    "view-bool",
+    "view-array",
+    "view-object",
+    "operation-null",
+    "operation-bool",
+    "operation-fraction",
+    "operation-array",
+    "operation-object"
   ],
   "scope": {
     "wire_codec": false,
@@ -470,7 +504,8 @@ and mutation behavior requires the companion library's tests.
     "context",
     "raw-field",
     "arguments",
-    "error"
+    "error",
+    "field-shape"
   ],
   "json_shapes": {
     "input_required": [
@@ -504,6 +539,7 @@ and mutation behavior requires the companion library's tests.
     ],
     "field_optional": [
       "number",
+      "unit",
       "label",
       "flags",
       "reserved",
@@ -519,7 +555,19 @@ and mutation behavior requires the companion library's tests.
     "qualified": false,
     "copy": "independent deep copies",
     "unknown_selection_fields": {},
-    "undefined_arguments": []
+    "undefined_arguments": [],
+    "numeric_field_required": [
+      "raw",
+      "state",
+      "number",
+      "unit"
+    ],
+    "numeric_field_units": [
+      "Celsius",
+      "percent"
+    ],
+    "sensor_unit": "Celsius",
+    "pwm_unit": "percent"
   }
 }
 ```

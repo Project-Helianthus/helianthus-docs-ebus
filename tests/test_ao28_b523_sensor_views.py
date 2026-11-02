@@ -116,7 +116,16 @@ ab27ao27Contract = {'api': {'package': 'vaillant',
             'unmodelled-field-null',
             'unmodelled-field-string',
             'unmodelled-field-bool',
-            'unmodelled-field-object'],
+            'unmodelled-field-object',
+            'primary-string', 'primary-null', 'primary-bool', 'primary-fraction',
+            'primary-array', 'primary-object',
+            'secondary-string', 'secondary-null', 'secondary-bool', 'secondary-fraction',
+            'secondary-array', 'secondary-object',
+            'direction-number', 'direction-null', 'direction-bool',
+            'direction-array', 'direction-object',
+            'view-number', 'view-null', 'view-bool', 'view-array', 'view-object',
+            'operation-null', 'operation-bool', 'operation-fraction',
+            'operation-array', 'operation-object'],
  'scope': {'wire_codec': False,
            'request_encoder': False,
            'runtime_call_site': False,
@@ -133,7 +142,8 @@ ab27ao27Contract = {'api': {'package': 'vaillant',
                    'context',
                    'raw-field',
                    'arguments',
-                   'error']}
+                   'error',
+                   'field-shape']}
 
 ab27ao27Contract["json_shapes"] = {'input_required': ['context', 'fields'],
  'input_optional': ['arguments'],
@@ -141,7 +151,11 @@ ab27ao27Contract["json_shapes"] = {'input_required': ['context', 'fields'],
  'output_required': ['context', 'raw', 'state', 'fields', 'physical', 'qualified'],
  'output_optional': ['arguments'],
  'field_required': ['raw', 'state'],
- 'field_optional': ['number', 'label', 'flags', 'reserved', 'candidate_domain', 'calculation'],
+ 'field_optional': ['number', 'unit', 'label', 'flags', 'reserved', 'candidate_domain', 'calculation'],
+ 'numeric_field_required': ['raw', 'state', 'number', 'unit'],
+ 'numeric_field_units': ['Celsius', 'percent'],
+ 'sensor_unit': 'Celsius',
+ 'pwm_unit': 'percent',
  'complete_state': 'Hypothesis',
  'partial_state': 'partial',
  'unknown_state': 'Unknown',
@@ -163,11 +177,11 @@ ab27ao27Sensors = {
 ab27ao27Extents = {3: 18, 6: 19, 7: 18}
 ab27ao27WordCases = (
     ([0, 128], {"raw": 32768, "state": "Hypothesis", "label": "replacement"}),
-    ([16, 0], {"raw": 16, "state": "Hypothesis", "number": 1, "calculation": "Proven"}),
-    ([240, 255], {"raw": 65520, "state": "Hypothesis", "number": -1, "calculation": "Proven"}),
-    ([255, 127], {"raw": 32767, "state": "Hypothesis", "number": 2047.9375, "calculation": "Proven"}),
-    ([1, 128], {"raw": 32769, "state": "Hypothesis", "number": -2047.9375, "calculation": "Proven"}),
-    ([0, 0], {"raw": 0, "state": "Hypothesis", "number": 0, "calculation": "Proven"}),
+    ([16, 0], {"raw": 16, "state": "Hypothesis", "number": 1, "calculation": "Proven", "unit": "Celsius"}),
+    ([240, 255], {"raw": 65520, "state": "Hypothesis", "number": -1, "calculation": "Proven", "unit": "Celsius"}),
+    ([255, 127], {"raw": 32767, "state": "Hypothesis", "number": 2047.9375, "calculation": "Proven", "unit": "Celsius"}),
+    ([1, 128], {"raw": 32769, "state": "Hypothesis", "number": -2047.9375, "calculation": "Proven", "unit": "Celsius"}),
+    ([0, 0], {"raw": 0, "state": "Hypothesis", "number": 0, "calculation": "Proven", "unit": "Celsius"}),
 )
 ab27ao27Statuses = {
     3: ((16, ("S1", "S2", "S3", "S4")), (17, ("S5", "S6"))),
@@ -209,7 +223,7 @@ class TestAb27Ao27SensorViews(unittest.TestCase):
         self.ab27ao27Fixture = ab27ao27Strict(ab27ao27Fixture.read_text())
         self.ab27ao27Rows = {ab27ao27Row["id"]: ab27ao27Row for ab27ao27Row in self.ab27ao27Fixture["cases"]}
         self.assertEqual(len(self.ab27ao27Rows), len(self.ab27ao27Fixture["cases"]))
-        self.assertEqual(len(self.ab27ao27Rows), 414)
+        self.assertEqual(len(self.ab27ao27Rows), 445)
         self.assertEqual(self.ab27ao27Fixture["id"], "ab27ao27SensorViews")
         ab27ao27Match = re.search(r"<!-- ab27ao27-contract:start -->\s*```json\s*(.*?)\s*```\s*<!-- ab27ao27-contract:end -->", ab27ao27Page.read_text(), re.S)
         self.assertIsNotNone(ab27ao27Match)
@@ -247,7 +261,8 @@ class TestAb27Ao27SensorViews(unittest.TestCase):
                 for ab27ao27Name, _ in ab27ao27Sensors[ab27ao27Op][:ab27ao27Count]
             }
             if ab27ao27Op == 3 and ab27ao27Length > 15:
-                ab27ao27Decoded["PWM"] = copy.deepcopy(ab27ao27WordCases[5][1])
+                ab27ao27Decoded["PWM"] = {"raw": 0, "state": "Hypothesis",
+                                         "number": 0, "calculation": "Proven", "unit": "percent"}
             for ab27ao27Offset, ab27ao27Names in ab27ao27Statuses[ab27ao27Op]:
                 if ab27ao27Length > ab27ao27Offset:
                     for ab27ao27Name in ab27ao27Names:
@@ -322,10 +337,10 @@ class TestAb27Ao27SensorViews(unittest.TestCase):
     def test_ab27ao27_pwm_and_opaque_separation(self):
         ab27ao27Data = self.ab27ao27Base(3)
         ab27ao27Data[15] = 255
-        self.ab27ao27Case("pwm", 3, ab27ao27Data, {"state": "Hypothesis", "field": "PWM", "result": {"raw": 255, "state": "Hypothesis", "number": 127.5, "calculation": "Proven"}})
+        self.ab27ao27Case("pwm", 3, ab27ao27Data, {"state": "Hypothesis", "field": "PWM", "result": {"raw": 255, "state": "Hypothesis", "number": 127.5, "calculation": "Proven", "unit": "percent"}})
         ab27ao27Data = self.ab27ao27Base(7)
         ab27ao27Data[11:14] = [231, 16, 0]
-        self.ab27ao27Case("opaque", 7, ab27ao27Data, {"state": "Hypothesis", "opaque": {"offset": 11, "raw": 231}, "field": "S12", "result": {"raw": 16, "state": "Hypothesis", "number": 1, "calculation": "Proven"}})
+        self.ab27ao27Case("opaque", 7, ab27ao27Data, {"state": "Hypothesis", "opaque": {"offset": 11, "raw": 231}, "field": "S12", "result": {"raw": 16, "state": "Hypothesis", "number": 1, "calculation": "Proven", "unit": "Celsius"}})
 
     def test_ab27ao27_selection_and_opaque_context_axes(self):
         for ab27ao27Key, ab27ao27Value in (("operation", 0), ("operation", 255), ("direction", "negative"), ("direction", ""), ("view", "unknown"), ("view", "")):
@@ -336,7 +351,7 @@ class TestAb27Ao27SensorViews(unittest.TestCase):
                 ab27ao27Expect.update(state="Unknown", fields={})
             else:
                 ab27ao27Expect.update(state="Hypothesis", field="S1",
-                                     result={"raw": 0, "state": "Hypothesis", "number": 0, "calculation": "Proven"})
+                                     result={"raw": 0, "state": "Hypothesis", "number": 0, "calculation": "Proven", "unit": "Celsius"})
             self.ab27ao27Case("context-" + ab27ao27Key, 3, self.ab27ao27Base(3), ab27ao27Expect, ab27ao27Context={ab27ao27Key: ab27ao27Value})
 
     def test_ab27ao27_missing_empty_zero_and_unmodelled_fields(self):
@@ -348,7 +363,7 @@ class TestAb27Ao27SensorViews(unittest.TestCase):
                              ab27ao27Expect=ab27ao27Expect)
         ab27ao27Complete = {
             "state": "Hypothesis", "field": "S1",
-            "result": {"raw": 0, "state": "Hypothesis", "number": 0, "calculation": "Proven"},
+            "result": {"raw": 0, "state": "Hypothesis", "number": 0, "calculation": "Proven", "unit": "Celsius"},
             "complete_sensors": ["S1", "S2", "S3", "S4", "S5", "S6"],
             "numeric_zero_sensors": ["S1", "S2", "S3", "S4", "S5", "S6"],
             "complete_pwm": ["PWM"],
@@ -411,21 +426,67 @@ class TestAb27Ao27SensorViews(unittest.TestCase):
         ab27ao27Input = copy.deepcopy(ab27ao27Valid)
         ab27ao27Input["context"]["operation"] = "3"
         ab27ao27Errors["operation-string"] = json.dumps(ab27ao27Input, separators=(",", ":"))
+        for ab27ao27Key in ("primary", "secondary", "direction", "view", "operation"):
+            ab27ao27Kinds = [("null", None), ("bool", False), ("array", []), ("object", {})]
+            if ab27ao27Key in ("primary", "secondary"):
+                ab27ao27Kinds += [("string", "181"), ("fraction", 0.5)]
+            elif ab27ao27Key == "operation":
+                ab27ao27Kinds += [("fraction", 0.5)]
+            else:
+                ab27ao27Kinds += [("number", 0)]
+            for ab27ao27Kind, ab27ao27Value in ab27ao27Kinds:
+                ab27ao27Input = copy.deepcopy(ab27ao27Valid)
+                ab27ao27Input["fields"]["logical_object"] = self.ab27ao27Base(3)
+                ab27ao27Input["context"][ab27ao27Key] = ab27ao27Value
+                ab27ao27Errors[ab27ao27Key + "-" + ab27ao27Kind] = json.dumps(ab27ao27Input, separators=(",", ":"))
         self.assertEqual(set(ab27ao27Errors), set(ab27ao27Contract["errors"]) | set(ab27ao27Omissions))
         for ab27ao27Name, ab27ao27Text in ab27ao27Errors.items():
             with self.subTest(ab27ao27Error=ab27ao27Name):
                 self.assertEqual(self.ab27ao27Rows["ab27ao27error-" + ab27ao27Name], {"id": "ab27ao27error-" + ab27ao27Name, "input_json": ab27ao27Text, "expect": {"error": True, "successful_result": False}})
+
+    def ab27ao27CheckNumericField(self, ab27ao27Name, ab27ao27Result):
+        for ab27ao27Key in ("raw", "state", "number", "unit"):
+            self.assertIn(ab27ao27Key, ab27ao27Result)
+        self.assertIn(ab27ao27Result["unit"], ("Celsius", "percent"))
+        self.assertEqual(ab27ao27Result["unit"], "percent" if ab27ao27Name == "PWM" else "Celsius")
+
+    def test_ab27ao27_numeric_units_and_rejected_shapes(self):
+        for ab27ao27Row in self.ab27ao27Rows.values():
+            ab27ao27Expect = ab27ao27Row["expect"]
+            ab27ao27Fields = dict(ab27ao27Expect.get("decoded_fields", {}))
+            if "field" in ab27ao27Expect:
+                ab27ao27Fields[ab27ao27Expect["field"]] = ab27ao27Expect["result"]
+            for ab27ao27Name, ab27ao27Result in ab27ao27Fields.items():
+                if "number" in ab27ao27Result:
+                    with self.subTest(ab27ao27Row=ab27ao27Row["id"], ab27ao27Field=ab27ao27Name):
+                        self.ab27ao27CheckNumericField(ab27ao27Name, ab27ao27Result)
+        for ab27ao27Name, ab27ao27Raw, ab27ao27Number in (("S1", 16, 1), ("PWM", 255, 127.5)):
+            for ab27ao27Kind in ("unlisted-unit", "missing-unit"):
+                ab27ao27Result = {"raw": ab27ao27Raw, "state": "Hypothesis",
+                                  "number": ab27ao27Number, "calculation": "Proven"}
+                if ab27ao27Kind == "unlisted-unit":
+                    ab27ao27Result["unit"] = "unlisted"
+                ab27ao27Id = "ab27ao27field-shape-" + ab27ao27Name + "-" + ab27ao27Kind
+                with self.subTest(ab27ao27Id=ab27ao27Id):
+                    self.assertEqual(self.ab27ao27Rows[ab27ao27Id], {
+                        "id": ab27ao27Id,
+                        "field_result": {"field": ab27ao27Name, "result": ab27ao27Result},
+                        "expect": {"accepted": False},
+                    })
+                    with self.assertRaises(AssertionError):
+                        self.ab27ao27CheckNumericField(ab27ao27Name, ab27ao27Result)
 
     def test_ab27ao27_case_family_counts_and_schema(self):
         self.assertEqual(set(self.ab27ao27Fixture), {"id", "cases"})
         ab27ao27Counts = {"word": 114, "status": 152, "reserved": 10,
                          "partial": 55, "tail": 3, "pwm": 1, "opaque": 1,
                          "selection": 6, "context": 5, "raw": 6,
-                         "arguments": 1, "error": 60}
+                         "arguments": 1, "error": 87, "field-shape": 4}
         for ab27ao27Family, ab27ao27Count in ab27ao27Counts.items():
             self.assertEqual(sum(ab27ao27Id.startswith("ab27ao27" + ab27ao27Family + "-") or ab27ao27Id == "ab27ao27" + ab27ao27Family for ab27ao27Id in self.ab27ao27Rows), ab27ao27Count)
         for ab27ao27Row in self.ab27ao27Rows.values():
-            self.assertEqual(set(ab27ao27Row), {"id", "input_json" if "input_json" in ab27ao27Row else "input", "expect"})
+            self.assertEqual(set(ab27ao27Row), {"id", "field_result" if "field_result" in ab27ao27Row else
+                                               "input_json" if "input_json" in ab27ao27Row else "input", "expect"})
 
 
 if __name__ == "__main__":
