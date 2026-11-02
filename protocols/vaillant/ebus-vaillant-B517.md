@@ -1,8 +1,9 @@
 # B517 tunnel declarations and partial B518 identity
 
 The [native overview](ebus-vaillant.md#b517-and-b518-sub-ebus-tunnel)
-preserves two unresolved readings. The declarations below retain both objects;
-B518 is not an alias for the B517 positive form. Other qualified variants in
+preserves two unresolved readings. The declarations below retain both objects.
+B518 is recorded as a separate declaration from the B517 positive form; whether
+they describe the same service is Unknown. Other qualified variants in
 the overview remain separate. These are family declarations, not observations
 of an installed device.
 

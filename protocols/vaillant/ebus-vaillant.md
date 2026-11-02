@@ -28,9 +28,8 @@ For detailed coverage of selector-heavy identifiers, see:
 - `0xB5 0x24` (B524, GetExtendedRegisters): [`ebus-vaillant-B524.md`](ebus-vaillant-B524.md)
 - `0xB5 0x55` (B555, timer/schedule protocol): [`ebus-vaillant-b555-timer-protocol.md`](ebus-vaillant-b555-timer-protocol.md)
 - VR90 room controller protocol: [`ebus-vaillant-vr90-emulation.md`](ebus-vaillant-vr90-emulation.md)
-- `0xB5 0x17` (B517, sub-eBUS tunnel declarations and partial B518 identity): [`ebus-vaillant-B517.md`](ebus-vaillant-B517.md)
 - `0xB5 0x0F` (B50F, demand and integrity candidates): [`ebus-vaillant-B50F.md`](ebus-vaillant-B50F.md)
-- B5 services without a dedicated page (B501, B502, B50A, B50C, B50D, B518, B525, header-only identities): [Other B5 services](#other-b5-services-candidate-layouts)
+- B5 services without a dedicated page (B501, B502, B50A, B50C, B50D, B517, B518, B525, header-only identities): [Other B5 services](#other-b5-services-candidate-layouts)
 
 ## Scope
 
@@ -668,8 +667,7 @@ header-only identity (see
 [Header-only service identities](#header-only-service-identities)). Two
 candidate readings are not reconciled: `B5 18` as the B517 positive above, and
 B518 as a header-only service identity that may be a separate service; which
-reading holds is unresolved. Declarations for both objects are on the
-[B517 family page](ebus-vaillant-B517.md).
+reading holds is unresolved.
 
 ### B519: test and echo services
 

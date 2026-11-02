@@ -1,5 +1,4 @@
 """Synthetic declaration checks; no transport or physical qualification."""
-import copy
 import json
 from pathlib import Path
 import unittest
@@ -39,15 +38,29 @@ def expected_records():
     ]
 
 
-def table(page, heading):
+HEADERS = {
+    ('## Candidate fields', 0): ('Family', 'Direction', 'Service declaration', 'Logical fields', 'Grade'),
+    ('## Candidate fields', 1): ('Field', 'Domain or extent', 'Default', 'Interpretation', 'Grade'),
+    ('## Evidence and limits', 0): ('Unresolved property', 'Grade'),
+}
+
+
+def table(page, heading, index=0):
+    # One table only: the index-th run of consecutive table lines under the heading, up to the next '## '.
     section = page.split(heading + '\n', 1)[1].split('\n## ', 1)[0]
-    rows = [tuple(cell.strip() for cell in line.strip('|').split('|'))
-            for line in section.splitlines() if line.startswith('|')]
-    headers = {
-        '## Candidate fields': ('Family', 'Direction', 'Service declaration', 'Logical fields', 'Grade'),
-        '## Evidence and limits': ('Unresolved property', 'Grade'),
-    }
-    if rows[0] != headers[heading] or rows[1] != ('---',) * len(headers[heading]):
+    runs, current = [], []
+    for line in section.splitlines():
+        if line.startswith('|'):
+            current.append(tuple(cell.strip() for cell in line.strip('|').split('|')))
+        elif current:
+            runs.append(current)
+            current = []
+    if current:
+        runs.append(current)
+    if index >= len(runs):
+        raise AssertionError('Scoped table missing')
+    rows, header = runs[index], HEADERS[(heading, index)]
+    if rows[0] != header or rows[1] != ('---',) * len(header):
         raise AssertionError('Scoped table header changed')
     return rows[2:]
 
@@ -64,22 +77,25 @@ class TunnelDeclarations(unittest.TestCase):
                          'physical_qualification', 'records', 'unknowns', 'examples'})
 
     def test_each_record_identity_axis(self):
-        # Valid control plus independent family/variant/direction/service/operation/alternative changes.
-        self.assertEqual(self.data['records'], expected_records())
-        for row in range(4):
+        # Each identity axis of each fixture record is compared on its own with the independent literals, so a
+        # change to any single family/variant/direction/service/operation/alternative value fails with that axis
+        # named. The four identities stay pairwise distinct, and the page's first field table names the same
+        # family and direction in the same row order as the fixture.
+        expected = expected_records()
+        self.assertEqual(len(self.data['records']), len(expected))
+        for row, (record, want) in enumerate(zip(self.data['records'], expected)):
             for axis in AXES:
                 with self.subTest(row=row, axis=axis):
-                    changed = copy.deepcopy(self.data['records'])
-                    changed[row][axis] = 'synthetic-other'
-                    self.assertNotEqual(changed, expected_records())
-            if self.data['records'][row]['service'] is not None:
-                for component in (0, 1):
-                    with self.subTest(row=row, service_component=component):
-                        changed = copy.deepcopy(self.data['records'])
-                        changed[row]['service'][component] += 1
-                        self.assertNotEqual(changed, expected_records())
+                    self.assertIn(axis, record)
+                    self.assertEqual(record[axis], want[axis])
+        identities = [tuple(json.dumps(record[axis], sort_keys=True) for axis in AXES)
+                      for record in self.data['records']]
+        self.assertEqual(len(set(identities)), len(identities))
+        page_rows = table(self.page, '## Candidate fields', 0)
+        self.assertEqual([(row[0], row[1]) for row in page_rows],
+                         [(record['family'], record['direction']) for record in self.data['records']])
 
-    def test_partial_identity_not_alias_or_zero_extent(self):
+    def test_partial_identity_separate_and_no_zero_extent(self):
         positive = self.data['records'][3]
         self.assertEqual(positive['constants'], [])
         for row in self.data['records'][2:]:
@@ -109,13 +125,12 @@ class TunnelDeclarations(unittest.TestCase):
         self.assertEqual(self.data['unknowns'], UNKNOWN)
 
     def test_page_field_tables(self):
-        self.assertEqual(table(self.page, '## Candidate fields'), [
+        self.assertEqual(table(self.page, '## Candidate fields', 0), [
             ('B517', 'request', 'B5/17', 'B5 at 0; 17 at 1; destination at 2; opaque data at 3 through end-of-PDU', 'Hypothesis'),
             ('B517', 'positive', 'B5/18', 'B5 at 0; 18 at 1; opaque data at 2 through end-of-PDU', 'Hypothesis'),
             ('B518', 'request', 'Unknown', 'no constants established; body extent absent', 'Hypothesis'),
-            ('B518', 'positive', 'Unknown', 'no constants established; body extent absent', 'Hypothesis'),
-            ('Field', 'Domain or extent', 'Default', 'Interpretation', 'Grade'),
-            ('---', '---', '---', '---', '---'),
+            ('B518', 'positive', 'Unknown', 'no constants established; body extent absent', 'Hypothesis')])
+        self.assertEqual(table(self.page, '## Candidate fields', 1), [
             ('B517 destination', 'raw u8 0..255', '8', 'raw destination; installed address Unknown', 'Hypothesis'),
             ('B517 request data', '0..65535 bytes, through end-of-PDU', 'absent', 'opaque; abstract maximum only', 'Hypothesis'),
             ('B517 positive data', '0..65535 bytes, through end-of-PDU', 'absent', 'opaque; abstract maximum only', 'Hypothesis')])
@@ -130,7 +145,8 @@ class TunnelDeclarations(unittest.TestCase):
     def test_page_scoped_claims(self):
         normalized = ' '.join(self.page.split())
         for claim in (
-            'B518 is not an alias for the B517 positive form.',
+            'B518 is recorded as a separate declaration from the B517 positive form; '
+            'whether they describe the same service is Unknown.',
             'Every row is **Hypothesis**.',
             'An absent body extent is **Unknown**, not zero.',
             'Unset encoding, width and byte order remain absent.',
