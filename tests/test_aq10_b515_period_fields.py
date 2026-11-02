@@ -5,6 +5,7 @@ admission rules and calculations so later edits to the page cannot silently
 contradict them.
 """
 import json
+from decimal import Decimal
 from pathlib import Path
 import unittest
 
@@ -33,10 +34,9 @@ def reject_constant(name):
 
 
 def parse_float(text):
-    value = float(text)
-    if value in (float('inf'), float('-inf')):
+    if float(text) in (float('inf'), float('-inf')):
         raise Rejected('nonfinite number')
-    return value
+    return Decimal(text)
 
 
 def convert(raw):
@@ -89,9 +89,10 @@ def evaluate(text):
                 type(p) is list and len(p) == 2 and all(is_int(b, 0, 255) for b in p)
                 for p in pairs)):
             raise Rejected('pairs')
+    if view == 'periods' and 'minutes' in arguments \
+            and not is_int(arguments['minutes'], 0, 1440):
+        raise Rejected('minutes')
     if view == 'periods' and supported and direction in ('request', 'positive'):
-        if 'minutes' in arguments and not is_int(arguments['minutes'], 0, 1440):
-            raise Rejected('minutes')
         results = {}
         for name in ('period0', 'period1', 'period2'):
             raw = fields.get(name)
@@ -202,6 +203,14 @@ class PeriodFieldContract(unittest.TestCase):
         body['extra'] = extra
         self.assertEqual(evaluate(json.dumps(body))['extra'], extra)
 
+    def test_finite_decimals_retained_losslessly(self):
+        text = periods(FULL).replace(
+            '"fields"', '"extra":{"tiny":1e-9999,"fine":0.1234567890123456789},"fields"')
+        out = evaluate(text)
+        self.assertEqual(out['extra']['tiny'], Decimal('1e-9999'))
+        self.assertNotEqual(out['extra']['tiny'], 0)
+        self.assertEqual(out['extra']['fine'], Decimal('0.1234567890123456789'))
+
     def test_rejections(self):
         collide = []
         for key in ('state', 'results', 'physical', 'qualified'):
@@ -212,6 +221,8 @@ class PeriodFieldContract(unittest.TestCase):
             periods(FULL, {'minutes': 1441}), periods(FULL, {'minutes': -1}),
             periods(FULL, {'minutes': 1.5}), periods(FULL, {'minutes': '540'}),
             periods(FULL, {'minutes': None}), periods(FULL, {'minutes': True}),
+            periods(FULL, {'minutes': None}, operation=0),
+            periods(FULL, {'minutes': 1441}, direction='response'),
             periods(dict(FULL, period0='0')), periods(dict(FULL, period0=[256])),
             periods(FULL, operation=None), periods(FULL, primary=256),
             periods(FULL) + ' {}', '{"context":{},"context":{}}',
