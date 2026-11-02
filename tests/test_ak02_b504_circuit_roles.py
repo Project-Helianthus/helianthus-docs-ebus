@@ -261,6 +261,24 @@ class ArchitectureContract(unittest.TestCase):
             [list(row) for row in zip(KEY_FIELDS, KEY_TYPES, KEY_AXES, rules)]))
         self.assertIn('Package `vaillant`', self.text)
 
+    def test_context_is_encoded_in_variant_and_selects_distinct_rows(self):
+        for phrase in ('native Context column is encoded only in `Ab15Variant`',
+                       '`Ab15Alternative` stays `none` for every production row',
+                       'each context therefore selects its own whole row'.capitalize(),
+                       'a key with any other variant is a miss'):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, self.prose)
+        variants = sorted({row[3] for row in RELATIONS})
+        for variant in variants:
+            self.assertIn(f'`{variant}`', self.prose)
+        # Keys built from (operation, direction, field, variant) must be unique.
+        keys = [row[:4] for row in RELATIONS]
+        self.assertEqual(len(keys), len(set(keys)))
+        for field in ('circuit-temperature', 'desired-temperature'):
+            self.assertEqual(
+                sorted(row[3] for row in RELATIONS if row[0] == '0D' and row[2] == field),
+                ['burner', 'dhw', 'mixer'])
+
     def test_documented_identity_controls_independent_expectations(self):
         self.assertEqual(tables(self.text)[1], (
             ['Axis', 'Left control', 'Right control', 'Mutation detected'],

@@ -46,6 +46,16 @@ use an explicit `none` token. Instance scope is an explicit string such as `00`
 or `dynamic`; numeric instances are not invented. This supplement selects no
 new instance scope, group or register value.
 
+**Proven (local API contract):** The native Context column is encoded only in
+`Ab15Variant`; `Ab15Alternative` stays `none` for every production row. The
+finite production `Ab15Variant` values are `solar-storage`, `mixer`,
+`inverter-indoor`, `system`, `dhw`, `burner`, `heating`, `tank-charging`,
+`circuit` and `solar`. Operation, direction and field remain separate axes, so
+the three OP0D `circuit-temperature` rows differ only by variant `burner`,
+`mixer` and `dhw`, and the three OP0D `desired-temperature` rows likewise.
+Each context therefore selects its own whole row, and a key with any other
+variant is a miss.
+
 Each production row has an `ab15-` ticket-prefixed ID, this complete identity,
 stated fields/relations, candidate grade `Hypothesis`, explicit `Unknown`
 metadata and retained `raw_form`. An unclassified role retains the raw token
