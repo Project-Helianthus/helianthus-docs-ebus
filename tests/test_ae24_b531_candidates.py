@@ -96,7 +96,7 @@ def check_contract(test, root):
          'absent', 'endpoint support; cache freshness; target eligibility; applied limits: Unknown')
         for index in ('0', '8')])
     test.assertIn('](fixtures/ae24_b531_candidates.json)', native)
-    test.assertIn('/blob/main/architecture/ae24_b531_local_projection.md)', native)
+    test.assertNotIn('architecture/ae24_b531_local_projection.md', native)
     test.assertIn('Logical positions below order the two candidate', native)
     test.assertIn('they are not wire offsets', native)
     test.assertIn('No native 10 W-per-count claim follows', native)

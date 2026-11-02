@@ -76,9 +76,9 @@ quantities; they are not wire offsets and do not establish reply framing.
 These declarations grant no native qualification. In particular, FFFF has no
 established sentinel interpretation, and a minimum above the maximum is not
 native evidence of invalidity. See the local [synthetic examples](fixtures/ae24_b531_candidates.json).
-Representation and arithmetic are described separately in the
-[local projection boundary](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/ae24_b531_local_projection.md);
-that boundary does not establish a native unit or physical behavior.
+Representation and arithmetic are described separately in the local
+projection boundary on the architecture side; that boundary does not
+establish a native unit or physical behavior.
 
 ### `03` - system-control limitation status (candidate, unconfirmed on the wire)
 
