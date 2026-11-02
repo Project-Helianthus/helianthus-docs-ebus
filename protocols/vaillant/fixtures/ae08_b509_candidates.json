@@ -1,0 +1,177 @@
+{
+  "grade": "Hypothesis",
+  "wire_adaptation": null,
+  "installed_support": null,
+  "op07": [
+    {
+      "variant": "positive-u16",
+      "raw": "34 12",
+      "value": 4660,
+      "state": "positive-candidate",
+      "default": 0
+    },
+    {
+      "variant": "positive-u32",
+      "raw": "78 56 34 12",
+      "value": 305419896,
+      "state": "positive-candidate",
+      "default": 0
+    },
+    {
+      "variant": "positive-u16",
+      "raw": "78 56 34 12",
+      "value": null,
+      "state": "incomplete/raw",
+      "default": 0
+    },
+    {
+      "variant": "positive-u32",
+      "raw": "34 12",
+      "value": null,
+      "state": "incomplete/raw",
+      "default": 0
+    }
+  ],
+  "op33": {
+    "address": null,
+    "fields": [
+      "minimum",
+      "maximum",
+      "default",
+      "step",
+      "factor"
+    ],
+    "cases": [
+      {
+        "raw_words": [
+          "FF FF",
+          "02 00",
+          "00 00",
+          "01 00",
+          "FE FF"
+        ],
+        "raw_values": [
+          -1,
+          2,
+          0,
+          1,
+          -2
+        ]
+      },
+      {
+        "raw_words": [
+          "02 00",
+          "FF FF",
+          "00 00",
+          "01 00",
+          "FE FF"
+        ],
+        "raw_values": [
+          2,
+          -1,
+          0,
+          1,
+          -2
+        ]
+      }
+    ],
+    "conversion": null,
+    "minimum_le_maximum_enforcement": null
+  },
+  "op39": {
+    "raw": "FF FF",
+    "value": 65535,
+    "complement_algorithm": null,
+    "byte_order": null
+  },
+  "op41": {
+    "raw_values": [
+      "0F",
+      "F0"
+    ],
+    "other_labels": null
+  },
+  "op44": {
+    "default": 0,
+    "lower": 1,
+    "upper": 255,
+    "unit": "minutes",
+    "conflict": "unresolved"
+  },
+  "op59": [
+    {
+      "field": "temperature",
+      "raw": "F0 FF",
+      "raw_value": -16,
+      "divisor": 16,
+      "value": -1
+    },
+    {
+      "field": "flow",
+      "raw": "64 00",
+      "raw_value": 100,
+      "divisor": 100,
+      "value": 1
+    },
+    {
+      "field": "flow",
+      "raw": "FF FF",
+      "raw_value": 65535,
+      "divisor": 100,
+      "value": 655.35
+    },
+    {
+      "field": "volume",
+      "raw": "0A 00",
+      "raw_value": 10,
+      "divisor": 10,
+      "value": 1
+    },
+    {
+      "field": "minimum_volume",
+      "raw": "0A 00",
+      "raw_value": null,
+      "divisor": null,
+      "value": null
+    },
+    {
+      "field": "maximum_volume",
+      "raw": "64 00",
+      "raw_value": null,
+      "divisor": null,
+      "value": null
+    }
+  ],
+  "op06": {
+    "positive-with-feedback": [
+      {
+        "raw": "00",
+        "state": "rejected"
+      },
+      {
+        "raw": "01",
+        "state": "accepted"
+      },
+      {
+        "raw": "02",
+        "state": "rejected"
+      },
+      {
+        "raw": "FF",
+        "state": "rejected"
+      }
+    ],
+    "prefix-only-positive": {
+      "raw_prefix": null,
+      "state": "prefix-only-positive",
+      "feedback": null
+    },
+    "negative-without-extra-discriminator": {
+      "raw_prefix": null,
+      "state": "ambiguous-negative",
+      "feedback": null
+    },
+    "successful_reset": null,
+    "physical_nack": null
+  }
+}

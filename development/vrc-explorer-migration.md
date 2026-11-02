@@ -71,6 +71,10 @@ If a Portal workflow is unavailable or defective:
 4. Keep evidence from the two tools distinguishable and do not claim parity
    without direct validation.
 
+VRC Explorer's planned [logical-request deadline and evidence-retention contract](vrc-explorer-request-deadlines.md)
+describes bounded transport recovery and retained partial evidence; it does not
+change this coexistence policy or assert completed qualification.
+
 ## Validation Checklist
 
 - [ ] Portal endpoint health verified for the selected internal workflow

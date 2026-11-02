@@ -10,6 +10,7 @@ For detailed coverage of selector-heavy identifiers, see:
 - `0xB5 0x07` (B507, heat pump load/poll): [`ebus-vaillant-B507.md`](ebus-vaillant-B507.md)
 - `0xB5 0x08` (B508, NoiseReduction broadcast): [`ebus-vaillant-B508.md`](ebus-vaillant-B508.md)
 - `0xB5 0x09` (B509, register access / scan-id): [`ebus-vaillant-B509.md`](ebus-vaillant-B509.md)
+- `0xB5 0x0B` (B50B, candidate holiday field declarations — **Hypothesis**): [`ebus-vaillant-B50B.md`](ebus-vaillant-B50B.md)
 - `0xB5 0x10` (B510, SetMode): [`ebus-vaillant-B510.md`](ebus-vaillant-B510.md)
 - `0xB5 0x11` (B511, remote control): [`ebus-vaillant-B511.md`](ebus-vaillant-B511.md)
 - `0xB5 0x12` (B512, circulation pump / VR65-style state): [`ebus-vaillant-B512.md`](ebus-vaillant-B512.md)
@@ -27,7 +28,8 @@ For detailed coverage of selector-heavy identifiers, see:
 - `0xB5 0x24` (B524, GetExtendedRegisters): [`ebus-vaillant-B524.md`](ebus-vaillant-B524.md)
 - `0xB5 0x55` (B555, timer/schedule protocol): [`ebus-vaillant-b555-timer-protocol.md`](ebus-vaillant-b555-timer-protocol.md)
 - VR90 room controller protocol: [`ebus-vaillant-vr90-emulation.md`](ebus-vaillant-vr90-emulation.md)
-- B5 services without a dedicated page (B501, B502, B50A to B50D, B50F, B517, B518, B525, header-only identities): [Other B5 services](#other-b5-services-candidate-layouts)
+- `0xB5 0x0F` (B50F, demand and integrity candidates): [`ebus-vaillant-B50F.md`](ebus-vaillant-B50F.md)
+- B5 services without a dedicated page (B501, B502, B50A, B50C, B50D, B517, B518, B525, header-only identities): [Other B5 services](#other-b5-services-candidate-layouts)
 
 ## Scope
 
@@ -61,7 +63,8 @@ PeBUS is not known, so this repository does not expand it.
   and for the operations those pages leave open, whether they are available
   under the PeBUS profile is not established.
 - An endpoint that is available only on PeBUS is marked inline where it is
-  described. The layout of `B5 09 34` is not established (see the
+  described. The layout of `B5 09 34` is a candidate only (see the
+  [diagnostic shapes page](ebus-b509-diagnostic-shapes.md) and the
   [identifier index](#identifier-index)).
 
 The word PeBus also has other meanings in candidate layouts:
@@ -115,7 +118,7 @@ Notes:
 0xB5 0x07  Heat pump load/poll (B507; VRC720-family controller -> heat-pump unit at 0x08, heat-pump-only (candidate; see the B507 Open questions); not live-validated)
 0xB5 0x08  NoiseReduction broadcast (B508; ZZ=FE broadcast; not live-validated) and candidate controller-to-heat-generator ops, of which `0A` and `0B` have a reply (candidate layouts)
 0xB5 0x09  Register access / scan-id chunk discovery (selector-dependent payload forms)
-0xB5 0x09 0x34 / 0x35  Absolute-address read / write (candidate memory access services; layouts not established; `B5 09 34` may be available only under PeBUS on some installations: candidate, unresolved)
+0xB5 0x09 0x34 / 0x35  Absolute-address read / write (candidate memory access services; layouts: see the diagnostic shapes page, which declares candidate field shapes only; `B5 09 34` may be available only under PeBUS on some installations: candidate, unresolved)
 0xB5 0x0A  Room temperature status of a remote control (B50A; candidate layout)
 0xB5 0x0B  Remote-control room action, holiday period and setpoint, keycode and circuit-name writes (B50B; candidate layout)
 0xB5 0x0C  Remote-control keycode-digits (OP00), signed-value (OP01; unit Unknown) and heating-circuit-name (OP02) reads (B50C; Hypothesis)
@@ -491,7 +494,7 @@ On heat pump systems with VWZIO (0x76), B511 traffic involving that device has a
 ## Other B5 services (candidate layouts)
 
 The services below have no dedicated page except for
-[B520](ebus-vaillant-B520.md). Every layout in this section is a candidate layout,
+[B520](ebus-vaillant-B520.md) and [B50B](ebus-vaillant-B50B.md). Every layout in this section is a candidate layout,
 unconfirmed on the wire. No exchange of any of these services
 on the wire is known (see [Open questions](#open-questions)). No service in this
 section is documented as safe to send; the state-changing ones (including, but
@@ -501,6 +504,9 @@ separately established safety procedure and target qualification, and an ACK
 does not show the resulting device state. The B51A reset and parameter write are
 documented on [`ebus-vaillant-B51A.md`](ebus-vaillant-B51A.md), which states
 the same rule for its ops.
+
+Candidate field shapes for `B5 09 13`, `34`, `35` and `51` are declared on the
+[diagnostic shapes page](ebus-b509-diagnostic-shapes.md).
 
 Offset convention of the candidate layouts: offsets count from the first byte of
 the service prefix (PB, SB and the op byte). Offset 0 is `B5` (PB), offset 1 is
@@ -630,6 +636,11 @@ B50D fields or establish physical behavior for another family.
 
 ### B50F: safety-relevant temperature, status and demand
 
+The scoped declarations for this family are on the
+[B50F candidate page](ebus-vaillant-B50F.md). The layout below is a separate,
+older Hypothesis; where it differs from that page (direction, absolute
+positions), neither is Proven and both stay Unknown on the wire.
+
 Candidate layout: all four services put their values in the request and reply
 with a `u8` feedback @3 (1 accepted; 0 and 2..255 not accepted).
 
@@ -716,7 +727,12 @@ interpretation, unconfirmed on the wire: the service is mutative and intended to
 bind an RF device; its effect on a target is unknown. `B5 09 51`, and `B5 09 34`
 and `B5 09 35` in the [identifier index](#identifier-index), are documented on
 this page; they are not in the subcommand table of
-[`ebus-vaillant-B509.md`](ebus-vaillant-B509.md).
+[`ebus-vaillant-B509.md`](ebus-vaillant-B509.md). The
+[diagnostic shapes page](ebus-b509-diagnostic-shapes.md) declares the same `51` fields
+as four separate software decimal components with widths and ranges Unknown and
+declares no packed word. The packed-BCD reading and the 0..99 ranges above remain
+candidates here and are not confirmed or contradicted by that page; the
+component range 0..7, the five ASCII characters and the initiator byte agree.
 
 ### Header-only service identities
 
@@ -792,7 +808,8 @@ B512 `14` and B514 `09`.
 - The expansion of the name PeBUS is not known.
 - Whether the appliance symbolic addresses of B501/B502 are the same key space as
   the B5 09 54 / B5 13 04 reads is not established.
-- The layouts of B5 1B, of B5 09 34 and B5 09 35 and of B5 25 04 are not
-  established.
+- The layouts of B5 1B and of B5 25 04 are not established. The layouts of
+  B5 09 34 and B5 09 35 are candidate field shapes only (see the
+  [diagnostic shapes page](ebus-b509-diagnostic-shapes.md)); offsets and correlation are Unknown.
 - The wire layout (subcommand byte, request and reply data) of the header-only
   service identities is not established.
