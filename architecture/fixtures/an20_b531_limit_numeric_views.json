@@ -1,0 +1,412 @@
+{
+  "contract": {
+    "api": "ab19an19",
+    "decode": "unsigned_le16",
+    "scale": "mul10_to_u32",
+    "ffff_sentinel": false,
+    "min_max_order": "retain",
+    "getter": "floor_div_10_then_low16",
+    "fresh_pair": "both_attempt_fields_complete",
+    "native_unit": "Unknown",
+    "numeric_grade": "Proven",
+    "semantic_grade": "Hypothesis",
+    "getter_numeric_grade": "Hypothesis",
+    "raw_buffers": "copied_per_call"
+  },
+  "pair_grades": {
+    "numeric": "Proven",
+    "semantic": "Hypothesis",
+    "native": "Unknown"
+  },
+  "getter_grades": {
+    "numeric": "Hypothesis",
+    "semantic": "Hypothesis",
+    "native": "Unknown"
+  },
+  "pair_examples": [
+    {
+      "id": "limits-ffff",
+      "selection": {"family": "heat-pump", "variant": "primary", "operation": "OP02", "direction": "request"},
+      "minimum": {"read": "succeeded", "raw_hex": "0100"},
+      "maximum": {"read": "succeeded", "raw_hex": "ffff"},
+      "prior_minimum": {"raw_hex": "0200", "state": "complete", "scaled_u32": 20},
+      "prior_maximum": {"raw_hex": "0300", "state": "complete", "scaled_u32": 30},
+      "expect": {
+        "selection": {"family": "heat-pump", "variant": "primary", "operation": "OP02", "direction": "request"},
+        "attempt_minimum": {"raw_hex": "0100", "state": "complete", "scaled_u32": 10},
+        "attempt_maximum": {"raw_hex": "ffff", "state": "complete", "scaled_u32": 655350},
+        "prior_minimum": {"raw_hex": "0200", "state": "complete", "scaled_u32": 20},
+        "prior_maximum": {"raw_hex": "0300", "state": "complete", "scaled_u32": 30},
+        "fresh_pair": true,
+        "ffff_sentinel": false
+      }
+    },
+    {
+      "id": "limits-unsorted",
+      "selection": {"family": "heat-pump", "variant": "primary", "operation": "OP02", "direction": "request"},
+      "minimum": {"read": "succeeded", "raw_hex": "0a00"},
+      "maximum": {"read": "succeeded", "raw_hex": "0500"},
+      "prior_minimum": {"raw_hex": "0200", "state": "complete", "scaled_u32": 20},
+      "prior_maximum": {"raw_hex": "0300", "state": "complete", "scaled_u32": 30},
+      "expect": {
+        "selection": {"family": "heat-pump", "variant": "primary", "operation": "OP02", "direction": "request"},
+        "attempt_minimum": {"raw_hex": "0a00", "state": "complete", "scaled_u32": 100},
+        "attempt_maximum": {"raw_hex": "0500", "state": "complete", "scaled_u32": 50},
+        "prior_minimum": {"raw_hex": "0200", "state": "complete", "scaled_u32": 20},
+        "prior_maximum": {"raw_hex": "0300", "state": "complete", "scaled_u32": 30},
+        "fresh_pair": true,
+        "ffff_sentinel": false
+      }
+    },
+    {
+      "id": "identity-family",
+      "selection": {"family": "controller", "variant": "primary", "operation": "OP02", "direction": "request"},
+      "minimum": {"read": "succeeded", "raw_hex": "0100"},
+      "maximum": {"read": "succeeded", "raw_hex": "ffff"},
+      "prior_minimum": {"raw_hex": "0200", "state": "complete", "scaled_u32": 20},
+      "prior_maximum": {"raw_hex": "0300", "state": "complete", "scaled_u32": 30},
+      "expect": {
+        "selection": {"family": "controller", "variant": "primary", "operation": "OP02", "direction": "request"},
+        "attempt_minimum": {"raw_hex": "0100", "state": "complete", "scaled_u32": 10},
+        "attempt_maximum": {"raw_hex": "ffff", "state": "complete", "scaled_u32": 655350},
+        "prior_minimum": {"raw_hex": "0200", "state": "complete", "scaled_u32": 20},
+        "prior_maximum": {"raw_hex": "0300", "state": "complete", "scaled_u32": 30},
+        "fresh_pair": true,
+        "ffff_sentinel": false
+      }
+    },
+    {
+      "id": "identity-variant",
+      "selection": {"family": "heat-pump", "variant": "alternate", "operation": "OP02", "direction": "request"},
+      "minimum": {"read": "succeeded", "raw_hex": "0100"},
+      "maximum": {"read": "succeeded", "raw_hex": "ffff"},
+      "prior_minimum": {"raw_hex": "0200", "state": "complete", "scaled_u32": 20},
+      "prior_maximum": {"raw_hex": "0300", "state": "complete", "scaled_u32": 30},
+      "expect": {
+        "selection": {"family": "heat-pump", "variant": "alternate", "operation": "OP02", "direction": "request"},
+        "attempt_minimum": {"raw_hex": "0100", "state": "complete", "scaled_u32": 10},
+        "attempt_maximum": {"raw_hex": "ffff", "state": "complete", "scaled_u32": 655350},
+        "prior_minimum": {"raw_hex": "0200", "state": "complete", "scaled_u32": 20},
+        "prior_maximum": {"raw_hex": "0300", "state": "complete", "scaled_u32": 30},
+        "fresh_pair": true,
+        "ffff_sentinel": false
+      }
+    },
+    {
+      "id": "identity-operation",
+      "selection": {"family": "heat-pump", "variant": "primary", "operation": "OP03", "direction": "request"},
+      "minimum": {"read": "succeeded", "raw_hex": "0100"},
+      "maximum": {"read": "succeeded", "raw_hex": "ffff"},
+      "prior_minimum": {"raw_hex": "0200", "state": "complete", "scaled_u32": 20},
+      "prior_maximum": {"raw_hex": "0300", "state": "complete", "scaled_u32": 30},
+      "expect": {
+        "selection": {"family": "heat-pump", "variant": "primary", "operation": "OP03", "direction": "request"},
+        "attempt_minimum": {"raw_hex": "0100", "state": "complete", "scaled_u32": 10},
+        "attempt_maximum": {"raw_hex": "ffff", "state": "complete", "scaled_u32": 655350},
+        "prior_minimum": {"raw_hex": "0200", "state": "complete", "scaled_u32": 20},
+        "prior_maximum": {"raw_hex": "0300", "state": "complete", "scaled_u32": 30},
+        "fresh_pair": true,
+        "ffff_sentinel": false
+      }
+    },
+    {
+      "id": "identity-direction",
+      "selection": {"family": "heat-pump", "variant": "primary", "operation": "OP02", "direction": "reply"},
+      "minimum": {"read": "succeeded", "raw_hex": "0100"},
+      "maximum": {"read": "succeeded", "raw_hex": "ffff"},
+      "prior_minimum": {"raw_hex": "0200", "state": "complete", "scaled_u32": 20},
+      "prior_maximum": {"raw_hex": "0300", "state": "complete", "scaled_u32": 30},
+      "expect": {
+        "selection": {"family": "heat-pump", "variant": "primary", "operation": "OP02", "direction": "reply"},
+        "attempt_minimum": {"raw_hex": "0100", "state": "complete", "scaled_u32": 10},
+        "attempt_maximum": {"raw_hex": "ffff", "state": "complete", "scaled_u32": 655350},
+        "prior_minimum": {"raw_hex": "0200", "state": "complete", "scaled_u32": 20},
+        "prior_maximum": {"raw_hex": "0300", "state": "complete", "scaled_u32": 30},
+        "fresh_pair": true,
+        "ffff_sentinel": false
+      }
+    },
+    {
+      "id": "word-min-0001",
+      "selection": {"family": "heat-pump", "variant": "primary", "operation": "OP02", "direction": "request"},
+      "minimum": {"read": "succeeded", "raw_hex": "0001"},
+      "maximum": {"read": "succeeded", "raw_hex": "ffff"},
+      "prior_minimum": {"raw_hex": "0200", "state": "complete", "scaled_u32": 20},
+      "prior_maximum": {"raw_hex": "0300", "state": "complete", "scaled_u32": 30},
+      "expect": {
+        "selection": {"family": "heat-pump", "variant": "primary", "operation": "OP02", "direction": "request"},
+        "attempt_minimum": {"raw_hex": "0001", "state": "complete", "scaled_u32": 2560},
+        "attempt_maximum": {"raw_hex": "ffff", "state": "complete", "scaled_u32": 655350},
+        "prior_minimum": {"raw_hex": "0200", "state": "complete", "scaled_u32": 20},
+        "prior_maximum": {"raw_hex": "0300", "state": "complete", "scaled_u32": 30},
+        "fresh_pair": true,
+        "ffff_sentinel": false
+      }
+    },
+    {
+      "id": "word-min-00ff",
+      "selection": {"family": "heat-pump", "variant": "primary", "operation": "OP02", "direction": "request"},
+      "minimum": {"read": "succeeded", "raw_hex": "00ff"},
+      "maximum": {"read": "succeeded", "raw_hex": "ffff"},
+      "prior_minimum": {"raw_hex": "0200", "state": "complete", "scaled_u32": 20},
+      "prior_maximum": {"raw_hex": "0300", "state": "complete", "scaled_u32": 30},
+      "expect": {
+        "selection": {"family": "heat-pump", "variant": "primary", "operation": "OP02", "direction": "request"},
+        "attempt_minimum": {"raw_hex": "00ff", "state": "complete", "scaled_u32": 652800},
+        "attempt_maximum": {"raw_hex": "ffff", "state": "complete", "scaled_u32": 655350},
+        "prior_minimum": {"raw_hex": "0200", "state": "complete", "scaled_u32": 20},
+        "prior_maximum": {"raw_hex": "0300", "state": "complete", "scaled_u32": 30},
+        "fresh_pair": true,
+        "ffff_sentinel": false
+      }
+    },
+    {
+      "id": "word-max-00ff",
+      "selection": {"family": "heat-pump", "variant": "primary", "operation": "OP02", "direction": "request"},
+      "minimum": {"read": "succeeded", "raw_hex": "0100"},
+      "maximum": {"read": "succeeded", "raw_hex": "00ff"},
+      "prior_minimum": {"raw_hex": "0200", "state": "complete", "scaled_u32": 20},
+      "prior_maximum": {"raw_hex": "0300", "state": "complete", "scaled_u32": 30},
+      "expect": {
+        "selection": {"family": "heat-pump", "variant": "primary", "operation": "OP02", "direction": "request"},
+        "attempt_minimum": {"raw_hex": "0100", "state": "complete", "scaled_u32": 10},
+        "attempt_maximum": {"raw_hex": "00ff", "state": "complete", "scaled_u32": 652800},
+        "prior_minimum": {"raw_hex": "0200", "state": "complete", "scaled_u32": 20},
+        "prior_maximum": {"raw_hex": "0300", "state": "complete", "scaled_u32": 30},
+        "fresh_pair": true,
+        "ffff_sentinel": false
+      }
+    },
+    {
+      "id": "length-min-missing",
+      "selection": {"family": "heat-pump", "variant": "primary", "operation": "OP02", "direction": "request"},
+      "minimum": {"read": "succeeded", "raw_hex": ""},
+      "maximum": {"read": "succeeded", "raw_hex": "ffff"},
+      "prior_minimum": {"raw_hex": "0200", "state": "complete", "scaled_u32": 20},
+      "prior_maximum": {"raw_hex": "0300", "state": "complete", "scaled_u32": 30},
+      "expect": {
+        "selection": {"family": "heat-pump", "variant": "primary", "operation": "OP02", "direction": "request"},
+        "attempt_minimum": {"raw_hex": "", "state": "missing", "scaled_u32": null},
+        "attempt_maximum": {"raw_hex": "ffff", "state": "complete", "scaled_u32": 655350},
+        "prior_minimum": {"raw_hex": "0200", "state": "complete", "scaled_u32": 20},
+        "prior_maximum": {"raw_hex": "0300", "state": "complete", "scaled_u32": 30},
+        "fresh_pair": false,
+        "ffff_sentinel": false
+      }
+    },
+    {
+      "id": "length-min-one",
+      "selection": {"family": "heat-pump", "variant": "primary", "operation": "OP02", "direction": "request"},
+      "minimum": {"read": "succeeded", "raw_hex": "01"},
+      "maximum": {"read": "succeeded", "raw_hex": "ffff"},
+      "prior_minimum": {"raw_hex": "0200", "state": "complete", "scaled_u32": 20},
+      "prior_maximum": {"raw_hex": "0300", "state": "complete", "scaled_u32": 30},
+      "expect": {
+        "selection": {"family": "heat-pump", "variant": "primary", "operation": "OP02", "direction": "request"},
+        "attempt_minimum": {"raw_hex": "01", "state": "malformed", "scaled_u32": null},
+        "attempt_maximum": {"raw_hex": "ffff", "state": "complete", "scaled_u32": 655350},
+        "prior_minimum": {"raw_hex": "0200", "state": "complete", "scaled_u32": 20},
+        "prior_maximum": {"raw_hex": "0300", "state": "complete", "scaled_u32": 30},
+        "fresh_pair": false,
+        "ffff_sentinel": false
+      }
+    },
+    {
+      "id": "length-min-three",
+      "selection": {"family": "heat-pump", "variant": "primary", "operation": "OP02", "direction": "request"},
+      "minimum": {"read": "succeeded", "raw_hex": "0100ff"},
+      "maximum": {"read": "succeeded", "raw_hex": "ffff"},
+      "prior_minimum": {"raw_hex": "0200", "state": "complete", "scaled_u32": 20},
+      "prior_maximum": {"raw_hex": "0300", "state": "complete", "scaled_u32": 30},
+      "expect": {
+        "selection": {"family": "heat-pump", "variant": "primary", "operation": "OP02", "direction": "request"},
+        "attempt_minimum": {"raw_hex": "0100ff", "state": "malformed", "scaled_u32": null},
+        "attempt_maximum": {"raw_hex": "ffff", "state": "complete", "scaled_u32": 655350},
+        "prior_minimum": {"raw_hex": "0200", "state": "complete", "scaled_u32": 20},
+        "prior_maximum": {"raw_hex": "0300", "state": "complete", "scaled_u32": 30},
+        "fresh_pair": false,
+        "ffff_sentinel": false
+      }
+    },
+    {
+      "id": "length-max-one",
+      "selection": {"family": "heat-pump", "variant": "primary", "operation": "OP02", "direction": "request"},
+      "minimum": {"read": "succeeded", "raw_hex": "0100"},
+      "maximum": {"read": "succeeded", "raw_hex": "ff"},
+      "prior_minimum": {"raw_hex": "0200", "state": "complete", "scaled_u32": 20},
+      "prior_maximum": {"raw_hex": "0300", "state": "complete", "scaled_u32": 30},
+      "expect": {
+        "selection": {"family": "heat-pump", "variant": "primary", "operation": "OP02", "direction": "request"},
+        "attempt_minimum": {"raw_hex": "0100", "state": "complete", "scaled_u32": 10},
+        "attempt_maximum": {"raw_hex": "ff", "state": "malformed", "scaled_u32": null},
+        "prior_minimum": {"raw_hex": "0200", "state": "complete", "scaled_u32": 20},
+        "prior_maximum": {"raw_hex": "0300", "state": "complete", "scaled_u32": 30},
+        "fresh_pair": false,
+        "ffff_sentinel": false
+      }
+    },
+    {
+      "id": "outcome-min-failed",
+      "selection": {"family": "heat-pump", "variant": "primary", "operation": "OP02", "direction": "request"},
+      "minimum": {"read": "failed", "raw_hex": "0100"},
+      "maximum": {"read": "succeeded", "raw_hex": "ffff"},
+      "prior_minimum": {"raw_hex": "0200", "state": "complete", "scaled_u32": 20},
+      "prior_maximum": {"raw_hex": "0300", "state": "complete", "scaled_u32": 30},
+      "expect": {
+        "selection": {"family": "heat-pump", "variant": "primary", "operation": "OP02", "direction": "request"},
+        "attempt_minimum": {"raw_hex": "0100", "state": "failed", "scaled_u32": null},
+        "attempt_maximum": {"raw_hex": "ffff", "state": "complete", "scaled_u32": 655350},
+        "prior_minimum": {"raw_hex": "0200", "state": "complete", "scaled_u32": 20},
+        "prior_maximum": {"raw_hex": "0300", "state": "complete", "scaled_u32": 30},
+        "fresh_pair": false,
+        "ffff_sentinel": false
+      }
+    },
+    {
+      "id": "outcome-max-failed",
+      "selection": {"family": "heat-pump", "variant": "primary", "operation": "OP02", "direction": "request"},
+      "minimum": {"read": "succeeded", "raw_hex": "0100"},
+      "maximum": {"read": "failed", "raw_hex": "ffff"},
+      "prior_minimum": {"raw_hex": "0200", "state": "complete", "scaled_u32": 20},
+      "prior_maximum": {"raw_hex": "0300", "state": "complete", "scaled_u32": 30},
+      "expect": {
+        "selection": {"family": "heat-pump", "variant": "primary", "operation": "OP02", "direction": "request"},
+        "attempt_minimum": {"raw_hex": "0100", "state": "complete", "scaled_u32": 10},
+        "attempt_maximum": {"raw_hex": "ffff", "state": "failed", "scaled_u32": null},
+        "prior_minimum": {"raw_hex": "0200", "state": "complete", "scaled_u32": 20},
+        "prior_maximum": {"raw_hex": "0300", "state": "complete", "scaled_u32": 30},
+        "fresh_pair": false,
+        "ffff_sentinel": false
+      }
+    },
+    {
+      "id": "outcome-both-failed",
+      "selection": {"family": "heat-pump", "variant": "primary", "operation": "OP02", "direction": "request"},
+      "minimum": {"read": "failed", "raw_hex": "0100"},
+      "maximum": {"read": "failed", "raw_hex": "ffff"},
+      "prior_minimum": {"raw_hex": "0200", "state": "complete", "scaled_u32": 20},
+      "prior_maximum": {"raw_hex": "0300", "state": "complete", "scaled_u32": 30},
+      "expect": {
+        "selection": {"family": "heat-pump", "variant": "primary", "operation": "OP02", "direction": "request"},
+        "attempt_minimum": {"raw_hex": "0100", "state": "failed", "scaled_u32": null},
+        "attempt_maximum": {"raw_hex": "ffff", "state": "failed", "scaled_u32": null},
+        "prior_minimum": {"raw_hex": "0200", "state": "complete", "scaled_u32": 20},
+        "prior_maximum": {"raw_hex": "0300", "state": "complete", "scaled_u32": 30},
+        "fresh_pair": false,
+        "ffff_sentinel": false
+      }
+    },
+    {
+      "id": "outcome-min-failed-empty",
+      "selection": {"family": "heat-pump", "variant": "primary", "operation": "OP02", "direction": "request"},
+      "minimum": {"read": "failed", "raw_hex": ""},
+      "maximum": {"read": "succeeded", "raw_hex": "ffff"},
+      "prior_minimum": {"raw_hex": "0200", "state": "complete", "scaled_u32": 20},
+      "prior_maximum": {"raw_hex": "0300", "state": "complete", "scaled_u32": 30},
+      "expect": {
+        "selection": {"family": "heat-pump", "variant": "primary", "operation": "OP02", "direction": "request"},
+        "attempt_minimum": {"raw_hex": "", "state": "failed", "scaled_u32": null},
+        "attempt_maximum": {"raw_hex": "ffff", "state": "complete", "scaled_u32": 655350},
+        "prior_minimum": {"raw_hex": "0200", "state": "complete", "scaled_u32": 20},
+        "prior_maximum": {"raw_hex": "0300", "state": "complete", "scaled_u32": 30},
+        "fresh_pair": false,
+        "ffff_sentinel": false
+      }
+    },
+    {
+      "id": "prior-min-state-missing",
+      "selection": {"family": "heat-pump", "variant": "primary", "operation": "OP02", "direction": "request"},
+      "minimum": {"read": "succeeded", "raw_hex": "0100"},
+      "maximum": {"read": "succeeded", "raw_hex": "ffff"},
+      "prior_minimum": {"raw_hex": "", "state": "missing", "scaled_u32": null},
+      "prior_maximum": {"raw_hex": "0300", "state": "complete", "scaled_u32": 30},
+      "expect": {
+        "selection": {"family": "heat-pump", "variant": "primary", "operation": "OP02", "direction": "request"},
+        "attempt_minimum": {"raw_hex": "0100", "state": "complete", "scaled_u32": 10},
+        "attempt_maximum": {"raw_hex": "ffff", "state": "complete", "scaled_u32": 655350},
+        "prior_minimum": {"raw_hex": "", "state": "missing", "scaled_u32": null},
+        "prior_maximum": {"raw_hex": "0300", "state": "complete", "scaled_u32": 30},
+        "fresh_pair": true,
+        "ffff_sentinel": false
+      }
+    },
+    {
+      "id": "prior-max-state-missing",
+      "selection": {"family": "heat-pump", "variant": "primary", "operation": "OP02", "direction": "request"},
+      "minimum": {"read": "succeeded", "raw_hex": "0100"},
+      "maximum": {"read": "succeeded", "raw_hex": "ffff"},
+      "prior_minimum": {"raw_hex": "0200", "state": "complete", "scaled_u32": 20},
+      "prior_maximum": {"raw_hex": "", "state": "missing", "scaled_u32": null},
+      "expect": {
+        "selection": {"family": "heat-pump", "variant": "primary", "operation": "OP02", "direction": "request"},
+        "attempt_minimum": {"raw_hex": "0100", "state": "complete", "scaled_u32": 10},
+        "attempt_maximum": {"raw_hex": "ffff", "state": "complete", "scaled_u32": 655350},
+        "prior_minimum": {"raw_hex": "0200", "state": "complete", "scaled_u32": 20},
+        "prior_maximum": {"raw_hex": "", "state": "missing", "scaled_u32": null},
+        "fresh_pair": true,
+        "ffff_sentinel": false
+      }
+    },
+    {
+      "id": "prior-min-state-malformed",
+      "selection": {"family": "heat-pump", "variant": "primary", "operation": "OP02", "direction": "request"},
+      "minimum": {"read": "succeeded", "raw_hex": "0100"},
+      "maximum": {"read": "succeeded", "raw_hex": "ffff"},
+      "prior_minimum": {"raw_hex": "01", "state": "malformed", "scaled_u32": null},
+      "prior_maximum": {"raw_hex": "0300", "state": "complete", "scaled_u32": 30},
+      "expect": {
+        "selection": {"family": "heat-pump", "variant": "primary", "operation": "OP02", "direction": "request"},
+        "attempt_minimum": {"raw_hex": "0100", "state": "complete", "scaled_u32": 10},
+        "attempt_maximum": {"raw_hex": "ffff", "state": "complete", "scaled_u32": 655350},
+        "prior_minimum": {"raw_hex": "01", "state": "malformed", "scaled_u32": null},
+        "prior_maximum": {"raw_hex": "0300", "state": "complete", "scaled_u32": 30},
+        "fresh_pair": true,
+        "ffff_sentinel": false
+      }
+    },
+    {
+      "id": "prior-min-value",
+      "selection": {"family": "heat-pump", "variant": "primary", "operation": "OP02", "direction": "request"},
+      "minimum": {"read": "succeeded", "raw_hex": "0100"},
+      "maximum": {"read": "succeeded", "raw_hex": "ffff"},
+      "prior_minimum": {"raw_hex": "0200", "state": "complete", "scaled_u32": 77},
+      "prior_maximum": {"raw_hex": "0300", "state": "complete", "scaled_u32": 30},
+      "expect": {
+        "selection": {"family": "heat-pump", "variant": "primary", "operation": "OP02", "direction": "request"},
+        "attempt_minimum": {"raw_hex": "0100", "state": "complete", "scaled_u32": 10},
+        "attempt_maximum": {"raw_hex": "ffff", "state": "complete", "scaled_u32": 655350},
+        "prior_minimum": {"raw_hex": "0200", "state": "complete", "scaled_u32": 77},
+        "prior_maximum": {"raw_hex": "0300", "state": "complete", "scaled_u32": 30},
+        "fresh_pair": true,
+        "ffff_sentinel": false
+      }
+    },
+    {
+      "id": "prior-max-value",
+      "selection": {"family": "heat-pump", "variant": "primary", "operation": "OP02", "direction": "request"},
+      "minimum": {"read": "succeeded", "raw_hex": "0100"},
+      "maximum": {"read": "succeeded", "raw_hex": "ffff"},
+      "prior_minimum": {"raw_hex": "0200", "state": "complete", "scaled_u32": 20},
+      "prior_maximum": {"raw_hex": "0300", "state": "complete", "scaled_u32": 88},
+      "expect": {
+        "selection": {"family": "heat-pump", "variant": "primary", "operation": "OP02", "direction": "request"},
+        "attempt_minimum": {"raw_hex": "0100", "state": "complete", "scaled_u32": 10},
+        "attempt_maximum": {"raw_hex": "ffff", "state": "complete", "scaled_u32": 655350},
+        "prior_minimum": {"raw_hex": "0200", "state": "complete", "scaled_u32": 20},
+        "prior_maximum": {"raw_hex": "0300", "state": "complete", "scaled_u32": 88},
+        "fresh_pair": true,
+        "ffff_sentinel": false
+      }
+    }
+  ],
+  "getter_examples": [
+    {"id": "getter-655360", "raw_u32": 655360, "result_u16": 0},
+    {"id": "getter-655359", "raw_u32": 655359, "result_u16": 65535},
+    {"id": "getter-19", "raw_u32": 19, "result_u16": 1},
+    {"id": "getter-15", "raw_u32": 15, "result_u16": 1},
+    {"id": "getter-9", "raw_u32": 9, "result_u16": 0},
+    {"id": "getter-10", "raw_u32": 10, "result_u16": 1},
+    {"id": "getter-0", "raw_u32": 0, "result_u16": 0},
+    {"id": "getter-ffff-scale", "raw_u32": 655350, "result_u16": 65535}
+  ]
+}

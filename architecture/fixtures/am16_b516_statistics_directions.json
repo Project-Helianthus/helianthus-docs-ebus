@@ -1,0 +1,241 @@
+{
+  "catalog": [
+    {"key":{"family":"vaillant","variant":"ab72-statistics-read","operation":16,"direction":"request","field":"layout"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","length":7,"rules":["Lengths are after the sub-ID."]},
+    {"key":{"family":"vaillant","variant":"ab72-statistics-read","operation":16,"direction":"request","field":"flags"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","bits":{"time-base-low":0,"time-base-high":1,"access":2},"values":{"time-base:0":"total","time-base:1":"daily","time-base:2":"monthly","time-base:3":"yearly","access:0":"read","access:1":"write"}},
+    {"key":{"family":"vaillant","variant":"ab72-statistics-read","operation":16,"direction":"request","field":"period-index","selector":0},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["date packing","offsets","defaults"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","rules":["Total ignores period index and date.","Select table row; ignore date."]},
+    {"key":{"family":"vaillant","variant":"ab72-statistics-read","operation":16,"direction":"request","field":"energy-index","selector":0},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","rules":["Ignore energy type and operation mode."]},
+    {"key":{"family":"vaillant","variant":"ab72-statistics-read","operation":16,"direction":"request","field":"period-index","selector":255},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["date packing","offsets","defaults"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","rules":["Total ignores period index and date.","Select by date."]},
+    {"key":{"family":"vaillant","variant":"ab72-statistics-read","operation":16,"direction":"request","field":"energy-index","selector":255},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","rules":["Select energy type and operation mode."]},
+    {"key":{"family":"vaillant","variant":"ab72-statistics-read","operation":16,"direction":"positive","field":"layout"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","length":11,"rules":["Lengths are after the sub-ID."]},
+    {"key":{"family":"vaillant","variant":"ab72-statistics-read","operation":16,"direction":"positive","field":"flags"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","bits":{"time-base-low":0,"time-base-high":1},"values":{"time-base:0":"total","time-base:1":"daily","time-base:2":"monthly","time-base:3":"yearly"}},
+    {"key":{"family":"vaillant","variant":"ab72-statistics-read","operation":16,"direction":"positive","field":"energy-value"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","width":32,"encoding":"binary32 LE","unit":"Wh"},
+    {"key":{"family":"vaillant","variant":"ab72-statistics-read","operation":16,"direction":"positive","field":"period-index","selector":0},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["date packing","offsets","defaults"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","rules":["Total ignores period index and date.","Select table row; ignore date."]},
+    {"key":{"family":"vaillant","variant":"ab72-statistics-read","operation":16,"direction":"positive","field":"energy-index","selector":0},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","rules":["Ignore energy type and operation mode."]},
+    {"key":{"family":"vaillant","variant":"ab72-statistics-read","operation":16,"direction":"positive","field":"period-index","selector":255},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["date packing","offsets","defaults"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","rules":["Total ignores period index and date.","Select by date."]},
+    {"key":{"family":"vaillant","variant":"ab72-statistics-read","operation":16,"direction":"positive","field":"energy-index","selector":255},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","rules":["Select energy type and operation mode."]},
+    {"key":{"family":"vaillant","variant":"ab72-statistics-read","operation":16,"direction":"positive","field":"return-nibble"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["meanings 2..15","offsets"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","width":4,"values":{"0":"value-contained","1":"NOK"}},
+    {"key":{"family":"vaillant","variant":"ab72-statistics-write","operation":16,"direction":"request","field":"layout"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","length":11,"rules":["Lengths are after the sub-ID."]},
+    {"key":{"family":"vaillant","variant":"ab72-statistics-write","operation":16,"direction":"request","field":"flags"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","bits":{"time-base-low":0,"time-base-high":1,"access":2},"values":{"time-base:0":"total","time-base:1":"daily","time-base:2":"monthly","time-base:3":"yearly","access:0":"read","access:1":"write"}},
+    {"key":{"family":"vaillant","variant":"ab72-statistics-write","operation":16,"direction":"request","field":"energy-value"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","width":32,"encoding":"binary32 LE","unit":"Wh"},
+    {"key":{"family":"vaillant","variant":"ab72-statistics-write","operation":16,"direction":"request","field":"period-index","selector":0},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["date packing","offsets","defaults"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","rules":["Total ignores period index and date.","Select table row; ignore date."]},
+    {"key":{"family":"vaillant","variant":"ab72-statistics-write","operation":16,"direction":"request","field":"energy-index","selector":0},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","rules":["Ignore energy type and operation mode."]},
+    {"key":{"family":"vaillant","variant":"ab72-statistics-write","operation":16,"direction":"request","field":"period-index","selector":255},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["date packing","offsets","defaults"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","rules":["Total ignores period index and date.","Select by date."]},
+    {"key":{"family":"vaillant","variant":"ab72-statistics-write","operation":16,"direction":"request","field":"energy-index","selector":255},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","rules":["Select energy type and operation mode."]},
+    {"key":{"family":"vaillant","variant":"ab72-statistics-write","operation":16,"direction":"positive","field":"layout"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","length":7,"rules":["Lengths are after the sub-ID."]},
+    {"key":{"family":"vaillant","variant":"ab72-statistics-write","operation":16,"direction":"positive","field":"flags"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","bits":{"time-base-low":0,"time-base-high":1,"access":3},"values":{"time-base:0":"total","time-base:1":"daily","time-base:2":"monthly","time-base:3":"yearly"}},
+    {"key":{"family":"vaillant","variant":"ab72-statistics-write","operation":16,"direction":"positive","field":"period-index","selector":0},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["date packing","offsets","defaults"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","rules":["Total ignores period index and date.","Select table row; ignore date."]},
+    {"key":{"family":"vaillant","variant":"ab72-statistics-write","operation":16,"direction":"positive","field":"energy-index","selector":0},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","rules":["Ignore energy type and operation mode."]},
+    {"key":{"family":"vaillant","variant":"ab72-statistics-write","operation":16,"direction":"positive","field":"period-index","selector":255},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["date packing","offsets","defaults"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","rules":["Total ignores period index and date.","Select by date."]},
+    {"key":{"family":"vaillant","variant":"ab72-statistics-write","operation":16,"direction":"positive","field":"energy-index","selector":255},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","rules":["Select energy type and operation mode."]},
+    {"key":{"family":"vaillant","variant":"ab72-statistics-write","operation":16,"direction":"positive","field":"return-nibble"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["meanings 2..15","offsets"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","width":4,"values":{"0":"value-contained","1":"NOK"}},
+    {"key":{"family":"vaillant","variant":"ab72-statistics-index","operation":17,"direction":"request","field":"layout"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","length":0},
+    {"key":{"family":"vaillant","variant":"ab72-statistics-index","operation":17,"direction":"positive","field":"ordered-fields"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","order":["Version","Build","TotalEnergies","Days","DailyEnergies","Months","MonthlyEnergies","Years","YearlyEnergies"],"rules":["Counts are returned metadata, not installed counts or enforced bounds."]},
+    {"key":{"family":"vaillant","variant":"ab72-statistics-index","operation":17,"direction":"positive","field":"Version"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","position":0,"width":8,"encoding":"u8"},
+    {"key":{"family":"vaillant","variant":"ab72-statistics-index","operation":17,"direction":"positive","field":"Build"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","position":1,"width":8,"encoding":"u8"},
+    {"key":{"family":"vaillant","variant":"ab72-statistics-index","operation":17,"direction":"positive","field":"TotalEnergies"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","position":2,"width":8,"encoding":"u8"},
+    {"key":{"family":"vaillant","variant":"ab72-statistics-index","operation":17,"direction":"positive","field":"Days"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","position":3,"width":8,"encoding":"u8"},
+    {"key":{"family":"vaillant","variant":"ab72-statistics-index","operation":17,"direction":"positive","field":"DailyEnergies"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","position":4,"width":8,"encoding":"u8"},
+    {"key":{"family":"vaillant","variant":"ab72-statistics-index","operation":17,"direction":"positive","field":"Months"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","position":5,"width":8,"encoding":"u8"},
+    {"key":{"family":"vaillant","variant":"ab72-statistics-index","operation":17,"direction":"positive","field":"MonthlyEnergies"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","position":6,"width":8,"encoding":"u8"},
+    {"key":{"family":"vaillant","variant":"ab72-statistics-index","operation":17,"direction":"positive","field":"Years"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","position":7,"width":8,"encoding":"u8"},
+    {"key":{"family":"vaillant","variant":"ab72-statistics-index","operation":17,"direction":"positive","field":"YearlyEnergies"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","position":8,"width":8,"encoding":"u8"},
+    {"key":{"family":"vaillant","variant":"ab72-meter-scalar-u8","operation":18,"direction":"request","field":"flags"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","bits":{"total":0,"daily":1,"monthly":2,"yearly":3},"rules":["Four independent request bits."]},
+    {"key":{"family":"vaillant","variant":"ab72-meter-scalar-u8","operation":18,"direction":"request","field":"energy-selector"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","width":8,"encoding":"u8","rules":["Scalar u8 selector."],"bits":{}},
+    {"key":{"family":"vaillant","variant":"ab72-meter-scalar-u8","operation":18,"direction":"request","field":"mode"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","width":8,"encoding":"u8"},
+    {"key":{"family":"vaillant","variant":"ab72-meter-scalar-u8","operation":18,"direction":"positive","field":"flags"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["packing precedence","offsets","defaults","full variant-specific meter/clear tables"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","bits":{"not-supported":0,"energy-unavailable":1,"mode-unavailable":2},"conflicts":["Nested and outer duplicate flags; packing precedence Unknown."]},
+    {"key":{"family":"vaillant","variant":"ab72-meter-low-six-bits","operation":18,"direction":"request","field":"flags"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","bits":{"total":0,"daily":1,"monthly":2,"yearly":3},"rules":["Four independent request bits."]},
+    {"key":{"family":"vaillant","variant":"ab72-meter-low-six-bits","operation":18,"direction":"request","field":"energy-selector"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","width":8,"encoding":"u8","rules":["Low six bits selector; independent sum bits 6 and 7."],"bits":{"sum-6":6,"sum-7":7}},
+    {"key":{"family":"vaillant","variant":"ab72-meter-low-six-bits","operation":18,"direction":"request","field":"mode"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","width":8,"encoding":"u8"},
+    {"key":{"family":"vaillant","variant":"ab72-meter-low-six-bits","operation":18,"direction":"positive","field":"flags"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["packing precedence","offsets","defaults","full variant-specific meter/clear tables"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","bits":{"not-supported":0,"energy-unavailable":1,"mode-unavailable":2},"conflicts":["Nested and outer duplicate flags; packing precedence Unknown."]},
+    {"key":{"family":"vaillant","variant":"ab72-clear-scalar-u8","operation":18,"direction":"request","field":"flags"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","bits":{"total":0,"daily":1,"monthly":2,"yearly":3},"rules":["Four independent request bits."]},
+    {"key":{"family":"vaillant","variant":"ab72-clear-scalar-u8","operation":18,"direction":"request","field":"energy-selector"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","width":8,"encoding":"u8","rules":["Scalar u8 selector."],"bits":{}},
+    {"key":{"family":"vaillant","variant":"ab72-clear-scalar-u8","operation":18,"direction":"request","field":"mode"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","width":8,"encoding":"u8"},
+    {"key":{"family":"vaillant","variant":"ab72-clear-scalar-u8","operation":18,"direction":"positive","field":"flags"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["packing precedence","offsets","defaults","full variant-specific meter/clear tables"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","bits":{"not-supported":0,"energy-unavailable":1,"mode-unavailable":2},"conflicts":["Nested and outer duplicate flags; packing precedence Unknown."]},
+    {"key":{"family":"vaillant","variant":"ab72-clear-low-six-bits","operation":18,"direction":"request","field":"flags"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","bits":{"total":0,"daily":1,"monthly":2,"yearly":3},"rules":["Four independent request bits."]},
+    {"key":{"family":"vaillant","variant":"ab72-clear-low-six-bits","operation":18,"direction":"request","field":"energy-selector"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","width":8,"encoding":"u8","rules":["Low six bits selector; independent sum bits 6 and 7."],"bits":{"sum-6":6,"sum-7":7}},
+    {"key":{"family":"vaillant","variant":"ab72-clear-low-six-bits","operation":18,"direction":"request","field":"mode"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","width":8,"encoding":"u8"},
+    {"key":{"family":"vaillant","variant":"ab72-clear-low-six-bits","operation":18,"direction":"positive","field":"flags"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["packing precedence","offsets","defaults","full variant-specific meter/clear tables"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","bits":{"not-supported":0,"energy-unavailable":1,"mode-unavailable":2},"conflicts":["Nested and outer duplicate flags; packing precedence Unknown."]},
+    {"key":{"family":"vaillant","variant":"ab72-yield-read","operation":24,"direction":"request","field":"yield-type"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","width":8,"values":{"0":"solar","1":"environment","2":"energy","3":"gas-or-oil"}},
+    {"key":{"family":"vaillant","variant":"ab72-yield-read","operation":24,"direction":"positive","field":"yield-type"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","width":8,"values":{"0":"solar","1":"environment","2":"energy","3":"gas-or-oil"}},
+    {"key":{"family":"vaillant","variant":"ab72-yield-read","operation":24,"direction":"positive","field":"yield-value"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","width":32,"encoding":"LEu32","unit":"kWh","rules":["All u32 values retain their raw numeric meaning; no sentinel inferred."]},
+    {"key":{"family":"vaillant","variant":"ab72-yield-write","operation":24,"direction":"request","field":"yield-type"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","width":8,"values":{"0":"solar","1":"environment","2":"energy","3":"gas-or-oil"}},
+    {"key":{"family":"vaillant","variant":"ab72-yield-write","operation":24,"direction":"request","field":"yield-value"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","width":32,"encoding":"LEu32","unit":"kWh","rules":["All u32 values retain their raw numeric meaning; no sentinel inferred."]},
+    {"key":{"family":"vaillant","variant":"ab72-yield-write","operation":24,"direction":"positive","field":"yield-type"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","width":8,"values":{"0":"solar","1":"environment","2":"energy","3":"gas-or-oil"}},
+    {"key":{"family":"vaillant","variant":"ab72-yield-reset","operation":25,"direction":"request","field":"yield-type"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","physical support"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","width":8,"values":{"0":"solar","1":"environment","2":"energy","3":"gas-or-oil"}},
+    {"key":{"family":"vaillant","variant":"ab72-yield-reset","operation":25,"direction":"positive","field":"feedback"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["other feedback meanings","effects","persistence"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","width":8,"values":{"1":"accepted"}},
+    {"key":{"family":"vaillant","variant":"ab72-yield-month","operation":26,"direction":"positive","field":"yield-type"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","packing precedence","unit"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","values":{"0":"solar","1":"environment","2":"energy","3":"gas-or-oil"},"conflicts":["Unit-type overlaps second sum byte.","Month 10/11 conflict."]},
+    {"key":{"family":"vaillant","variant":"ab72-yield-month","operation":26,"direction":"positive","field":"month"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","packing precedence","unit"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","values":{},"conflicts":["Unit-type overlaps second sum byte.","Month 10/11 conflict."]},
+    {"key":{"family":"vaillant","variant":"ab72-yield-month","operation":26,"direction":"positive","field":"year-index"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","packing precedence","unit"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","values":{"0":"this-year","1":"last-year"},"conflicts":["Unit-type overlaps second sum byte.","Month 10/11 conflict."]},
+    {"key":{"family":"vaillant","variant":"ab72-yield-month","operation":26,"direction":"positive","field":"mode"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","packing precedence","unit"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","values":{"0":"all","1":"heating","2":"DHW"},"conflicts":["Unit-type overlaps second sum byte.","Month 10/11 conflict."]},
+    {"key":{"family":"vaillant","variant":"ab72-yield-month","operation":26,"direction":"positive","field":"sum"},"grade":"Hypothesis","software_contract":"Proven","native_contract":"https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ebus-services/ebus-overview.md","unknown":["offsets","defaults","packing precedence","unit"],"physical_support":"Unknown","presence":"Unknown","freshness":"Unknown","execution":"Unknown","effects":"Unknown","persistence":"Unknown","delivery":"Unknown","values":{},"width":32,"encoding":"LEu32","conflicts":["Unit-type overlaps second sum byte.","Month 10/11 conflict."]}
+  ],
+  "examples": [
+  {
+    "case": "op10-wh",
+    "variant": "ab72-statistics-read",
+    "operation": 16,
+    "direction": "positive",
+    "field": "energy-value",
+    "raw": [
+      0,
+      0,
+      128,
+      63
+    ],
+    "value": 1.0,
+    "unit": "Wh",
+    "status": "candidate"
+  },
+  {
+    "case": "op10-write-wh",
+    "variant": "ab72-statistics-write",
+    "operation": 16,
+    "direction": "request",
+    "field": "energy-value",
+    "raw": [
+      0,
+      0,
+      0,
+      64
+    ],
+    "value": 2.0,
+    "unit": "Wh",
+    "status": "candidate"
+  },
+  {
+    "case": "op18-maximum",
+    "variant": "ab72-yield-read",
+    "operation": 24,
+    "direction": "positive",
+    "field": "yield-value",
+    "raw": [
+      255,
+      255,
+      255,
+      255
+    ],
+    "value": 4294967295,
+    "unit": "kWh",
+    "status": "candidate"
+  },
+  {
+    "case": "op18-write-zero",
+    "variant": "ab72-yield-write",
+    "operation": 24,
+    "direction": "request",
+    "field": "yield-value",
+    "raw": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "value": 0,
+    "unit": "kWh",
+    "status": "candidate"
+  },
+  {
+    "case": "op18-partial",
+    "variant": "ab72-yield-read",
+    "operation": 24,
+    "direction": "positive",
+    "field": "yield-value",
+    "raw": [
+      255,
+      255
+    ],
+    "value": null,
+    "unit": "kWh",
+    "status": "partial"
+  },
+  {
+    "case": "op18-extra",
+    "variant": "ab72-yield-read",
+    "operation": 24,
+    "direction": "positive",
+    "field": "yield-value",
+    "raw": [
+      1,
+      0,
+      0,
+      0,
+      2
+    ],
+    "value": null,
+    "unit": "kWh",
+    "status": "extra"
+  },
+  {
+    "case": "op1a-conflict",
+    "variant": "ab72-yield-month",
+    "operation": 26,
+    "direction": "positive",
+    "field": "sum",
+    "raw": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "value": null,
+    "unit": null,
+    "status": "conflict"
+  },
+  {
+    "case": "op10-unknown-date",
+    "variant": "ab72-statistics-read",
+    "operation": 16,
+    "direction": "request",
+    "field": "period-index",
+    "selector": 255,
+    "raw": [
+      0,
+      0
+    ],
+    "value": null,
+    "unit": null,
+    "status": "unknown"
+  }
+],
+  "conflict_evidence": [
+  {
+    "case": "duplicate-flags",
+    "variant": "ab72-meter-low-six-bits",
+    "operation": 18,
+    "direction": "positive",
+    "outer_flags": [
+      1
+    ],
+    "nested_flags": [
+      2
+    ],
+    "packing_precedence": "Unknown"
+  },
+  {
+    "case": "month-overlap",
+    "variant": "ab72-yield-month",
+    "operation": 26,
+    "direction": "positive",
+    "sum_raw": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "unit_type_raw": [
+      2
+    ],
+    "month_alternatives": [
+      [
+        10
+      ],
+      [
+        11
+      ]
+    ],
+    "positions": null,
+    "unit": null,
+    "packing_precedence": "Unknown"
+  }
+]
+}
