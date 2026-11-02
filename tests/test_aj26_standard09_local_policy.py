@@ -42,6 +42,21 @@ def forwarding(frame):
     return selector, bool(known and supported and selector and structural)
 
 
+def client_read(steps):
+    setup = {}
+    consumed = []
+    for operation, value in steps:
+        if operation in {'low', 'high', 'count'}:
+            setup[operation] = copy.deepcopy(value)
+        elif operation == 'consume':
+            if set(setup) != {'low', 'high', 'count'}:
+                raise ValueError('client setup incomplete before consumption')
+            consumed.append(copy.deepcopy(setup) | {'data': copy.deepcopy(value)})
+        else:
+            raise ValueError('unknown client operation')
+    return consumed
+
+
 def identity(row):
     return (row['low'], row['high'], len(row['written']))
 
@@ -206,7 +221,8 @@ class LocalPolicyTest(unittest.TestCase):
         baseline = dict(low='00', high='00', count='09', data=['11', '22'])
         expected = [baseline, baseline | {'low': '01'}, baseline | {'high': '01'},
                     baseline | {'count': '08'}, baseline | {'data': ['33', '22']}]
-        self.assertEqual(self.fixture['client_reads'], expected)
+        self.assertEqual([{k: v for k, v in row.items() if k != 'steps'}
+                          for row in self.fixture['client_reads']], expected)
         # Low, high and count are independent identity axes, never a guessed endian address.
         keys = [tuple(row[k] for k in ('low', 'high', 'count')) for row in expected[:4]]
         self.assertEqual(len(set(keys)), 4)
@@ -252,6 +268,28 @@ class LocalPolicyTest(unittest.TestCase):
         self.assertEqual(self.fixture['no_match'], dict(length=0, transmission='Unknown', ack='Unknown'))
         self.assertIn('partial successes', self.page)
         self.assertIn('last-known-good', self.page)
+
+    def test_client_setup_before_consumption(self):
+        for row in self.fixture['client_reads']:
+            steps = row['steps']
+            expected = {field: row[field] for field in ('low', 'high', 'count', 'data')}
+            self.assertEqual(steps, [['low', row['low']], ['high', row['high']],
+                                     ['count', row['count']], ['consume', row['data']]])
+            before = copy.deepcopy(steps)
+            self.assertEqual(client_read(steps), [expected])
+            self.assertEqual(steps, before)
+            # Setup fields may be assigned in any order, but all must precede consumption.
+            self.assertEqual(client_read(list(reversed(steps[:3])) + steps[3:]), [expected])
+            for index, field in enumerate(('low', 'high', 'count')):
+                with self.subTest(row=expected, missing=field):
+                    early = copy.deepcopy(steps)
+                    early.insert(index, early.pop())
+                    with self.assertRaisesRegex(ValueError, 'setup incomplete'):
+                        client_read(early)
+                    # Isolate each required assignment while the other two are present.
+                    omitted = steps[:index] + steps[index + 1:]
+                    with self.assertRaisesRegex(ValueError, 'setup incomplete'):
+                        client_read(omitted)
 
     def test_uncached_pair_failures_retain_raw_outcomes(self):
         for row in self.fixture['partial_sequence'][1:]:
