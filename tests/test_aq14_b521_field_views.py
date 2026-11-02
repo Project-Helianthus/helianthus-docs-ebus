@@ -202,6 +202,31 @@ class Aq14B521FieldViews(unittest.TestCase):
         self.assertEqual(result['results']['flags'], {'raw': [0], 'state': 'Unknown'})
         self.assertEqual(result['results']['status_request_only']['raw'], [7, 8])
 
+    def test_widths_match_documented_table(self):
+        rows = re.findall(r'^\| (request|positive) \| (\w+) \| (\d+) \|', PAGE.read_text(), re.M)
+        table = {}
+        for direction, name, width in rows:
+            table.setdefault(direction, {})[name] = int(width)
+        self.assertEqual(table, WIDTHS)
+
+    def test_request_vectors_cover_every_field(self):
+        context = dict(self.blocks[0]['context'], direction='request')
+        fields = {'flags': [0x3F], 'appliance_bits': [31], 'noise_percent': [40],
+                  'frost_temperature': [5]}
+        result = evaluate(json.dumps({'context': context, 'fields': fields}))
+        self.assertEqual(result['state'], 'complete')
+        out = result['results']
+        self.assertEqual(set(out), set(WIDTHS['request']))
+        self.assertEqual(out['flags']['flags'], {'bit%d' % i: True for i in range(6)})
+        self.assertEqual(out['flags']['reserved'], {'bit6': False, 'bit7': False})
+        self.assertEqual(out['appliance_bits']['flags'], {'bit%d' % i: True for i in range(5)})
+        self.assertEqual(out['appliance_bits']['reserved'],
+                         {'bit5': False, 'bit6': False, 'bit7': False})
+        self.assertEqual((out['noise_percent']['number'], out['noise_percent']['unit']),
+                         (40, 'percent'))
+        self.assertEqual((out['frost_temperature']['number'], out['frost_temperature']['unit']),
+                         (5, 'Celsius'))
+
     def test_page_vocabulary(self):
         text = PAGE.read_text()
         self.assertIn('`incomplete`', text)
