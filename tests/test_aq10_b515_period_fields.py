@@ -75,6 +75,8 @@ def evaluate(text):
     for value in fields.values():
         if type(value) is not list or not all(is_int(b, 0, 255) for b in value):
             raise Rejected('field')
+    if {'state', 'results', 'physical', 'qualified'} & set(data):
+        raise Rejected('reserved output member')
     out = dict(data)
     out.update({'physical': UNKNOWN, 'qualified': False})
     view, direction = context.get('view'), context.get('direction')
@@ -201,7 +203,12 @@ class PeriodFieldContract(unittest.TestCase):
         self.assertEqual(evaluate(json.dumps(body))['extra'], extra)
 
     def test_rejections(self):
-        bad = [
+        collide = []
+        for key in ('state', 'results', 'physical', 'qualified'):
+            body = json.loads(periods(FULL))
+            body[key] = None
+            collide.append(json.dumps(body))
+        bad = collide + [
             periods(FULL, {'minutes': 1441}), periods(FULL, {'minutes': -1}),
             periods(FULL, {'minutes': 1.5}), periods(FULL, {'minutes': '540'}),
             periods(FULL, {'minutes': None}), periods(FULL, {'minutes': True}),

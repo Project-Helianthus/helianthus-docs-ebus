@@ -58,7 +58,10 @@ not decoded. Empty opaque data differs from missing data.
 Arguments have exactly the stated typed meanings for the selected view. Unknown
 extra keys at every level are retained unchanged and independently of context,
 fields and arguments; they acquire no conversion meaning. Reject malformed or
-trailing JSON, duplicate keys at any depth, wrong kinds, nonfinite numbers,
+trailing JSON, duplicate keys at any depth, top-level input members named
+`state`, `results`, `physical` or `qualified` (generated output members; an
+input member never overwrites them and is never silently replaced, so the
+collision is an admission error), wrong kinds, nonfinite numbers,
 fractional or out-of-range byte/integer arguments, and missing required
 arguments, with an error and no successful result. Never coerce strings, null
 or Booleans into numbers. Wrong-kind field values are admission errors; missing,
