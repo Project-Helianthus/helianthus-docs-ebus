@@ -51,7 +51,10 @@ Opaque spans have no fixed-width admission requirement.
 
 ## Finite candidate views
 
-All combinations in this table have candidate meaning **Hypothesis**. Primary
+All combinations in this table have candidate meaning **Hypothesis**, including
+the positive-response flag bits and the conditional `dsn`/`start`/`offset`
+behavior; they are candidate local representation, not a native or response
+layout contract, and their provenance is not published. Primary
 is decimal 181 (`0xB5`) and secondary is decimal 26 (`0x1A`) throughout.
 No other context combination applies these formulas.
 
@@ -95,13 +98,17 @@ Return one JSON object retaining `context`, original raw `fields`, supplied
 `arguments` and extra keys independently, with `state`, `results`,
 `physical="Unknown"` and `qualified=false`. Every result retains `raw` when
 supplied, a `state`, and applicable `number`, `label`, `flags`, `reserved`,
-`unmodeled`, `candidate_domain` or `alternatives`. A missing field's result is
-incomplete without a fabricated `raw`. These examples use `grade` to keep
+`unmodeled`, `candidate_domain` or `alternatives`. A missing fixed-width field's result is
+incomplete without a fabricated `raw`; a missing opaque span's result has state
+`absent`, also without a fabricated `raw`. These examples use `grade` to keep
 candidate meaning **Hypothesis**, with `calculation="Proven"` for exact local
 arithmetic/bit extraction. Calculation grade never replaces candidate grade.
 
 Top-level `complete` means local representation only; missing or incorrectly
-sized fixed-width fields yield `partial`. Unsupported contexts yield `Unknown`
+sized fixed-width fields, and incomplete positive flags, yield `partial`.
+Opaque `dsn`, `start` and `offset` spans are optional in every branch, including
+request and change-positive input: an absent span is result state `absent` and
+alone never makes the top level `partial`. Unsupported contexts yield `Unknown`
 and raw-only results. An unresolved semantic label can coexist with complete
 raw arithmetic, as for `family_code`. A conditional span's semantic
 `absent-unless-change` state does not discard its raw value. These states do
@@ -166,9 +173,10 @@ success. The CRC numeric value proves only LEu16 arithmetic, never validation.
 | --- | --- |
 | Reset positive: `sequence=[255]`, missing `ack` | Top-level `partial`; sequence remains complete with number 255; ack is incomplete with raw absent and no denied inference. |
 | Handshake request: `sequence=[7]`, `flags=[2]`, `dsn=[17]`, `start=[]`, `offset=[51]`, `crc=[52]` | Top-level `partial`; CRC raw `[52]` is incomplete with no number. Sequence, flags and independent opaque arrays remain available. CRC `[]` or `[52,18,0]` is likewise incomplete, not rejected for width alone. |
-| Handshake positive: `sequence=[7]`, `flags=[]`, `family_code=[9]`, `dsn=[17]` | Top-level `partial`; flags incomplete, conditional branch Unknown, DSN raw retained, family raw number 9 still complete with semantic meaning Unknown. |
+| Handshake positive: `sequence=[7]`, `flags=[]`, `family_code=[9]`, `dsn=[17]` | Top-level `partial`; flags incomplete, conditional branch Unknown, DSN raw retained, family raw number 9 still complete with semantic meaning Unknown. Absent `start` and `offset` are result state `absent`. |
 | Reset context with explicit `operation=0` and valid byte arrays | Raw-only `Unknown`; no ack formula or sequence correlation. |
 | Primary 180 with otherwise valid handshake request input | Raw-only `Unknown`; raw fields and extras survive without a CRC conversion. |
+| Handshake request: `sequence=[7]`, `flags=[2]`, `crc=[52,18]`, no `dsn`, `start` or `offset` | Top-level `complete`; each absent span is result state `absent` with raw absent. |
 | Operation null, `crc=[52.5,18]`, byte 256, Boolean byte, duplicate nested key, trailing object, or malformed JSON | Error, no successful result; none becomes a partial numeric conversion. |
 
 ## Remaining boundaries
