@@ -76,6 +76,8 @@ def ab25aq25_admit(ab25aq25_wire):
     for ab25aq25_key in ('context', 'fields', 'arguments'):
         if ab25aq25_key in ab25aq25_value and type(ab25aq25_value[ab25aq25_key]) is not dict:
             raise ValueError('object kind')
+    if ab25aq25_value.get('arguments'):
+        raise ValueError('undeclared argument')
     for ab25aq25_key in ('primary', 'secondary', 'operation'):
         if ab25aq25_key in ab25aq25_value['context'] and not ab25aq25_is_byte(
                 ab25aq25_value['context'][ab25aq25_key]):
@@ -237,7 +239,7 @@ class Ab25Aq25PowerStepperTests(ab25aq25_unittest.TestCase):
             '{"context":{"primary":181,"secondary":18,"operation":8,'
             '"direction":"positive","view":"power-stepper"},'
             '"fields":{"setpoint":[1,2],"stepper":[1]},'
-            '"arguments":{"a":[1]},"extra":{"b":[2]}}')
+            '"arguments":{},"extra":{"a":[1],"b":[2]}}')
         ab25aq25_input = ab25aq25_admit(ab25aq25_wire)
         ab25aq25_first = ab25aq25_full(ab25aq25_input)
         ab25aq25_first['context']['operation'] = 0
@@ -245,7 +247,7 @@ class Ab25Aq25PowerStepperTests(ab25aq25_unittest.TestCase):
         ab25aq25_first['results']['setpoint']['raw'][1] = 98
         ab25aq25_first['results']['setpoint']['number'] = -1
         ab25aq25_first['results']['stepper']['raw'].append(7)
-        ab25aq25_first['arguments']['a'].append(5)
+        ab25aq25_first['extra']['a'].append(5)
         ab25aq25_first['extra']['b'][0] = 6
         ab25aq25_second = ab25aq25_full(ab25aq25_input)
         self.assertEqual(ab25aq25_full(ab25aq25_admit(ab25aq25_wire)), ab25aq25_second)
@@ -254,10 +256,17 @@ class Ab25Aq25PowerStepperTests(ab25aq25_unittest.TestCase):
         ab25aq25_second['results']['setpoint']['raw'][0] = 55
         self.assertEqual(ab25aq25_full(ab25aq25_admit(ab25aq25_wire)), ab25aq25_full(ab25aq25_input))
 
+    def test_undeclared_arguments_rejected(self):
+        for ab25aq25_args in ('{"a":[1]}', '{"a":null}', '[]', 'null', '1'):
+            with self.subTest(ab25aq25_args):
+                with self.assertRaises(ValueError):
+                    ab25aq25_admit('{"context":{},"fields":{},"arguments":%s}' % ab25aq25_args)
+        self.assertEqual({}, ab25aq25_admit('{"context":{},"fields":{},"arguments":{}}')['arguments'])
+
     def test_exponent_overflow_fails_admission(self):
         for ab25aq25_wire in (
                 '{"context":{"x":1e999},"fields":{}}',
-                '{"context":{},"fields":{},"arguments":{"a":[-1e999]}}',
+                '{"context":{},"fields":{},"extra":{"a":[-1e999]}}',
                 '{"context":{},"fields":{},"extra":{"a":1E400}}'):
             with self.subTest(ab25aq25_wire):
                 with self.assertRaises(ValueError):

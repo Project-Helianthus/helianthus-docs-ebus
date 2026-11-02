@@ -43,13 +43,15 @@ explicit data, not absence: an explicitly opaque empty field remains empty;
 for a fixed-width field an empty array is incomplete. No extra opaque conversion
 is defined here. `arguments`, when present, is an object containing exactly the
 explicitly stated typed arguments for the selected view. None of these six
-branches requires an argument. Unknown extra keys remain uninterpreted and
+branches declares an argument, so a present `arguments` must be an empty object
+and any entry in it is rejected. Unknown extra keys remain uninterpreted and
 retained; they do not create additional typed arguments or supported fields.
 
 Reject malformed or trailing JSON, duplicate keys at any depth, wrong kinds,
 root keys named `state`, `results`, `physical` or `qualified` (reserved for the
 output envelope, so retained extra keys are never overwritten),
-nonfinite numbers, fractional or out-of-range bytes or integer arguments, and
+nonfinite numbers, fractional or out-of-range bytes or integer arguments,
+undeclared arguments, and
 missing required arguments with an error and no successful result. No string,
 `null` or Boolean is coerced to a number. Malformed byte arrays are admission
 errors; valid arrays with missing, short or overlong fixed-width data instead
