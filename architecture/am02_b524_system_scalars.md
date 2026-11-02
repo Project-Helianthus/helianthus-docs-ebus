@@ -43,13 +43,18 @@ has no binding here. Do not choose by width, name, another family or a fallback.
 
 Call `interpret(context, reply, codec_grade, bindings)` explicitly. `bindings`
 is the immutable finite declaration set in the [synthetic package](fixtures/am02_b524_system_scalars.json).
-It is not a caller extension point. Context has exactly nine keys: `family`,
-`software`, `hardware`, `api_version`, `api_revision`, `opcode`, `group`,
-`instance`, `register`. Family is an explicit candidate selection, never
+It is not a caller extension point: the interpreter checks the complete ordered
+declaration against internal constants and uses only those constants for lookup.
+An altered, incomplete, duplicated or extended declaration returns raw-only.
+Context has exactly ten keys: `family`,
+`software`, `hardware`, `api_version`, `api_revision`, `operation_type`, `opcode`,
+`group`, `instance`, `register`. Family is an explicit candidate selection, never
 qualified device identity. Software, hardware, API version and API revision
 are independent opaque caller context: a nonempty string or nonnegative integer
 is accepted, including explicit zero; missing, null, booleans and empty strings
 are incomplete. They do not select a binding and are never inferred.
+Operation type must be the integer zero (`OT=0x00`, read); write (`OT=0x01`),
+missing and malformed operation types return raw-only before binding selection.
 Opcode, group and instance are integers in 0..255; register is in 0..65535.
 Booleans are not integers for this API. Missing differs from explicit zero.
 
@@ -99,7 +104,7 @@ import math
 import struct
 
 CONTEXT_KEYS = {"family", "software", "hardware", "api_version", "api_revision",
-                "opcode", "group", "instance", "register"}
+                "operation_type", "opcode", "group", "instance", "register"}
 REPLY_KEYS = {"kind", "group", "register", "value"}
 
 
@@ -120,6 +125,42 @@ def interpret(context, reply, codec_grade=None, bindings=()):
                   raw=copy.deepcopy(reply.get("value")),
                   codec_grade=copy.deepcopy(codec_grade), value=None,
                   grade="Unknown", unit="Unknown", outcome="raw-only")
+    rows = (
+        ('controller-720', '00', 'float32', '°C',
+         "0002 0022 0023 0026 0038 0046 004B 0067 0068 0073 0095 009D 009E 009F 00A0 00EF"),
+        ('controller-720', '00', 'uint16', 'min',
+         "0004 0017 0018"),
+        ('controller-720', '00', 'float32', 'K',
+         "0029"),
+        ('controller-720', '00', 'uint16', 'Unknown',
+         "002F 0036"),
+        ('controller-720', '00', 'float32', 'bar',
+         "0039"),
+        ('controller-700', '00', 'float32', '°C',
+         "0002 0022 0023 0026 0038 0046 004B 0067 0068 0073 0095 009D 009E 009F 00A0"),
+        ('controller-700', '00', 'uint16', 'Unknown',
+         "0006 002F 0036"),
+        ('controller-700', '00', 'uint16', 'min',
+         "0017"),
+        ('controller-700', '00', 'float32', 'K',
+         "0029"),
+        ('controller-700', '00', 'float32', 'bar',
+         "0039"),
+        ('controller-700', 'dynamic', 'uint16', 'Unknown',
+         "0042 0043"),
+    )
+    declared = [dict(family=f, opcode=2, group=0, instance_rule=i,
+                     register=int(r, 16), codec=c, unit=u, grade="Hypothesis")
+                for f, i, c, u, registers in rows for r in registers.split()]
+    if type(bindings) not in (list, tuple) or len(bindings) != len(declared):
+        return result
+    for supplied, fixed in zip(bindings, declared):
+        if (type(supplied) is not dict or supplied.keys() != fixed.keys()
+                or any(type(supplied[k]) is not type(v) or supplied[k] != v
+                       for k, v in fixed.items())):
+            return result
+    if type(context.get("operation_type")) is not int or context["operation_type"] != 0:
+        return result
     complete = set(context) == CONTEXT_KEYS
     for key in ("software", "hardware", "api_version", "api_revision"):
         value = context.get(key)
@@ -129,7 +170,7 @@ def interpret(context, reply, codec_grade=None, bindings=()):
                          ("instance", 255), ("register", 65535)):
         if not unsigned(context.get(key), maximum):
             return result
-    binding = next((b for b in bindings
+    binding = next((b for b in declared
                     if b["family"] == context.get("family")
                     and b["opcode"] == context["opcode"]
                     and b["group"] == context["group"]
@@ -190,6 +231,8 @@ retains the supplied bytes and context.
 | width minus/plus one | truncated or extra byte | raw-only |
 | unlisted neighbor | nearest unlisted RR | raw-only |
 | different operation | OP06, other inputs valid | raw-only |
+| request operation type | OT01, absent or malformed OT | raw-only |
+| altered declaration | changed, missing, duplicate or added binding | raw-only |
 | unknown family | otherwise valid selector | raw-only |
 | fixed instance | II00 versus II01 | candidate versus raw-only |
 | dynamic instance | concrete II00 versus II01 | both candidate; II retained |

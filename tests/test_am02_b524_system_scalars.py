@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PAGE = ROOT / 'architecture/am02_b524_system_scalars.md'
 PACKAGE = ROOT / 'architecture/fixtures/am02_b524_system_scalars.json'
 
-# Independent finite oracle transcribed from the bounded issue, not the package.
+# Independent finite oracle for candidate declarations.
 ROWS = [
     ('controller-720', '00', 'float32', '°C',
      '0002 0022 0023 0026 0038 0046 004B 0067 0068 0073 0095 009D 009E 009F 00A0 00EF'),
@@ -32,7 +32,7 @@ EXPECTED = [dict(family=f, opcode=2, group=0, instance_rule=i,
                  register=int(r, 16), codec=c, unit=u, grade='Hypothesis')
             for f, i, c, u, registers in ROWS for r in registers.split()]
 AXES = ('family', 'software', 'hardware', 'api_version', 'api_revision',
-        'opcode', 'group', 'instance', 'register')
+        'operation_type', 'opcode', 'group', 'instance', 'register')
 NON_ECHO = ('empty', 'status_only', 'short', 'header_only', 'nack_or_crc',
             'timeout', 'transport_error', 'failed', 'unknown')
 
@@ -56,7 +56,7 @@ class SystemScalars(unittest.TestCase):
     def inputs(self, binding):
         context = dict(family=binding['family'], software='synthetic-software',
                        hardware='synthetic-hardware', api_version=0, api_revision=0,
-                       opcode=2, group=0,
+                       operation_type=0, opcode=2, group=0,
                        instance=1 if binding['instance_rule'] == 'dynamic' else 0,
                        register=binding['register'])
         raw = bytes.fromhex('0000c03f' if binding['codec'] == 'float32' else '3412')
@@ -103,6 +103,50 @@ class SystemScalars(unittest.TestCase):
             ('physical_support', 'presence', 'freshness', 'effects', 'persistence',
              'delivery', 'execution'), 'Unknown'))
         self.assertEqual(self.package['non_echo_kinds'], list(NON_ECHO))
+
+    def test_altered_declarations_cannot_select_or_change_bindings(self):
+        for index, binding in enumerate(EXPECTED):
+            ctx, reply = self.inputs(binding)
+            for key, value in (('family', 'unlisted-family'), ('opcode', 6),
+                               ('group', 1), ('register', 65535),
+                               ('instance_rule', 'dynamic' if binding['instance_rule'] == '00' else '00'),
+                               ('codec', 'uint16' if binding['codec'] == 'float32' else 'float32'),
+                               ('unit', 'arbitrary'), ('grade', 'Proven'),
+                               ('opcode', True), ('group', False),
+                               ('register', float(binding['register']))):
+                changed = copy.deepcopy(self.package['bindings'])
+                changed[index][key] = value
+                contexts = [ctx]
+                if key in ('family', 'opcode', 'group', 'register'):
+                    contexts.append(dict(ctx, **{key: value}))
+                for context in contexts:
+                    with self.subTest(index=index, key=key, value=value):
+                        result = self.interpret(context, reply, 'Hypothesis', changed)
+                        self.retained(result, context, reply, 'Hypothesis')
+                        self.assertEqual((result['value'], result['grade'],
+                                          result['unit'], result['outcome']),
+                                         (None, 'Unknown', 'Unknown', 'raw-only'))
+            changed = copy.deepcopy(self.package['bindings'])
+            del changed[index]['codec']
+            for declaration in (changed, EXPECTED[:index] + EXPECTED[index + 1:],
+                                EXPECTED + [binding], [binding], None, {},
+                                list(reversed(EXPECTED))):
+                result = self.interpret(ctx, reply, 'Hypothesis', declaration)
+                self.retained(result, ctx, reply, 'Hypothesis')
+                self.assertEqual(result['outcome'], 'raw-only')
+            number = 1.5 if binding['codec'] == 'float32' else 4660
+            self.candidate(ctx, reply, number, binding['unit'])
+
+    def test_request_operation_type_for_every_binding(self):
+        for binding in EXPECTED:
+            ctx, reply = self.inputs(binding)
+            for value in (1, 2, 255, -1, 256, False, True, 0.0, '00', None, []):
+                with self.subTest(binding=binding, operation_type=value):
+                    self.assertEqual(self.raw_only(dict(ctx, operation_type=value), reply)['unit'],
+                                     'Unknown')
+            missing = dict(ctx)
+            del missing['operation_type']
+            self.assertEqual(self.raw_only(missing, reply)['unit'], 'Unknown')
 
     def test_package_controls_match_independent_page_cases(self):
         self.assertEqual(self.package['controls'], {
@@ -350,6 +394,8 @@ class SystemScalars(unittest.TestCase):
             '| width minus/plus one | truncated or extra byte | raw-only |',
             '| unlisted neighbor | nearest unlisted RR | raw-only |',
             '| different operation | OP06, other inputs valid | raw-only |',
+            '| request operation type | OT01, absent or malformed OT | raw-only |',
+            '| altered declaration | changed, missing, duplicate or added binding | raw-only |',
             '| unknown family | otherwise valid selector | raw-only |',
             '| fixed instance | II00 versus II01 | candidate versus raw-only |',
             '| dynamic instance | concrete II00 versus II01 | both candidate; II retained |',
