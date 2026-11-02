@@ -115,6 +115,9 @@ def evaluate(text):
         else:
             entry.update(number=raw[0], unit='percent')
         results[name] = entry
+    for name, raw in fields.items():
+        if name not in widths:
+            results[name] = {'raw': raw, 'state': 'Unknown'}
     out.update(state='complete' if complete else 'partial', results=results)
     return out
 
@@ -187,6 +190,17 @@ class Aq14B521FieldViews(unittest.TestCase):
         absent = {k: v for k, v in base.items() if k != 'arguments'}
         self.assertEqual(evaluate(json.dumps(absent))['state'], 'complete')
         self.assertEqual(evaluate(with_context(operation=0))['state'], 'Unknown')
+
+    def test_opaque_fields_are_retained_as_unknown(self):
+        given = json.loads(json.dumps(self.blocks[0]))
+        given['fields']['vendor_blob'] = []
+        given['fields']['status_request_only'] = [7, 8]
+        given['fields']['flags'] = [0]
+        result = evaluate(json.dumps(given))
+        self.assertEqual(result['state'], 'complete')
+        self.assertEqual(result['results']['vendor_blob'], {'raw': [], 'state': 'Unknown'})
+        self.assertEqual(result['results']['flags'], {'raw': [0], 'state': 'Unknown'})
+        self.assertEqual(result['results']['status_request_only']['raw'], [7, 8])
 
     def test_page_vocabulary(self):
         text = PAGE.read_text()

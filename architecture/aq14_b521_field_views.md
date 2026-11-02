@@ -124,8 +124,11 @@ alternatives. `unit` records the metadata above and `grade` records candidate
 meaning. Missing raw data stays absent, not `null`, zero or `[]`.
 
 A field result is `complete` (local representation only) or `incomplete` (an
-expected fixed-width field is missing or has the wrong length). The aggregate
-`state` is `complete` when every supplied field result is complete, `partial`
+expected fixed-width field is missing or has the wrong length). A supplied
+field outside the finite mapping of a supported context is opaque: its result
+is exactly `{"raw":<supplied array>,"state":"Unknown"}`, with no grade,
+number or calculation, and it does not affect the aggregate. The aggregate
+`state` is `complete` when every expected field result is complete, `partial`
 when at least one expected field result is incomplete, and `Unknown` for an
 unsupported context. Unsupported context is
 `Unknown`. An unresolved semantic label can coexist with complete raw
