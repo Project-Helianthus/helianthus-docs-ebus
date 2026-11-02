@@ -43,6 +43,10 @@ OP05 request requires `external_modes`, an array of exactly three u8 integers.
 No other required argument is declared here. Unknown extra input keys remain
 unchanged at their original level, independently of recognized data; they do
 not become additional typed arguments or fields with inferred meaning.
+The root names `state`, `results`, `physical`, `qualified` and `timeout` are
+reserved for derived output: an input object containing any of them at its root
+is an admission error, never overwritten and never nested. Nested names are not
+reserved.
 
 Malformed or trailing JSON, duplicate keys at any depth, wrong kinds,
 nonfinite numbers, fractional or out-of-range bytes or integer arguments, and
@@ -67,12 +71,14 @@ Family/variant keys are retained without inferring supported hardware.
 
 A successful output is one JSON object retaining `context`, raw `fields`,
 `arguments` when supplied, and extra keys independently. It adds `state`,
-`results`, `physical: "Unknown"`, and `qualified: false`. Each field result
+`results`, `physical: "Unknown"`, and `qualified: false`, plus `timeout` only
+for the OP04 request selection described below. Each field result
 retains `raw` when present, `state`, and applicable `number`, `label`, `flags`,
 `reserved`, `unmodeled`, `candidate_domain` or `alternatives`. These optional
 members do not imply unspecified flags, reserved-bit meanings or conversions.
-Unknown input data remains independently retained even if its name coincides
-with an output member; derived data must not overwrite the original input.
+Unknown extra input keys are retained at the root unchanged; because the
+derived root names are reserved at admission, no retained key can coincide with
+an output member.
 
 Envelope `complete` means all declared fixed-width fields are complete local
 representations. `partial` means at least one is missing or wrong-width;
@@ -111,10 +117,15 @@ byte first. Decimal ranges are inclusive; FE and FF denote hexadecimal bytes.
 | OP04 | positive | `feedback`, u8 | 1 `accepted`; every other byte `rejected`. Acceptance is a candidate label, not proof of a physical action or readback. |
 | OP05 | request | `channel0`, `channel1`, `channel2`, each u8 | Independently: 0 `off`; 1..100 `on-or-speed`; FF `unchanged`; 101..254 `unmapped`. |
 
-OP04 request additionally declares candidate `timeout_seconds: 900` and
-`reset-on-every-service`. This is a declaration only, not a running timer,
+Every supported OP04 request result (complete or partial) additionally carries
+the root member `timeout` with exactly
+`{"seconds":900,"policy":"reset-on-every-service","grade":"Hypothesis"}`
+(`seconds` is the JSON integer 900). No other result, including every OP05
+result and every `Unknown` result, has a `timeout` member; its absence means the
+timeout is Unknown. This is a declaration only, not a running timer,
 observed expiry, persistence promise or admission rule. OP05 timeout is
-unspecified (`Unknown`); it never inherits 900 or the OP04 reset declaration.
+unspecified (`Unknown`) and serialized only by that absence; it never inherits
+900 or the OP04 reset declaration.
 
 For OP05 request, result `channel0.prerequisite` depends only on
 `arguments.external_modes[0] == 8`; channel1 uses index 1 and channel2 index 2.
@@ -154,8 +165,25 @@ One corresponding complete result (the unchanged input members are shown) is:
 }
 ```
 
-The absence of timeout metadata in this OP05 result is deliberate; timeout
+The absence of a `timeout` member in this OP05 result is deliberate; timeout
 remains Unknown. The extra null is retained, not turned into an absent key.
+
+A complete OP04 request with fields `{"setpoint":[255]}`, no arguments and
+the same context except operation 4 serializes as:
+
+```json
+{
+  "context": {"primary":181,"secondary":18,"operation":4,"direction":"request","view":"actuator-fields"},
+  "fields": {"setpoint":[255]},
+  "state":"complete",
+  "results": {
+    "setpoint":{"raw":[255],"state":"complete","number":255,"label":"replacement/no-remote-control","grade":"Hypothesis","calculation":"Proven"}
+  },
+  "timeout": {"seconds":900,"policy":"reset-on-every-service","grade":"Hypothesis"},
+  "physical":"Unknown",
+  "qualified":false
+}
+```
 
 For an independent partial example, use the same context and arguments with
 `fields: {"channel0":[100],"channel1":[],"channel2":[255,0]}`. The envelope is
@@ -180,9 +208,9 @@ error, not either of these successful results.
 | OP02 positive virtual_error | `[255,255]` | Number 65535, label `no-error`; no sentinel transferred to another field. |
 | OP02 positive contact | `[2]` | Number 2, label `unmapped`. |
 | OP03 positive value | `[52,18]` (3412) | Number 4660 raw; no temperature number or unit inferred. |
-| OP04 request setpoint | `[255]` | `replacement/no-remote-control`, candidate timeout declaration 900 seconds only. |
+| OP04 request setpoint | `[255]` | `replacement/no-remote-control`, root `timeout` object as serialized above, declaration only. |
 | OP04 positive feedback | `[1]`; `[0]`; `[255]` | `accepted`; `rejected`; `rejected`. |
-| OP05 request channel0/1/2 | Each `[255]`, modes `[8,0,8]` | Each `unchanged`; prerequisites true/false/true independently; timeout Unknown. |
+| OP05 request channel0/1/2 | Each `[255]`, modes `[8,0,8]` | Each `unchanged`; prerequisites true/false/true independently; no `timeout` member (Unknown). |
 
 The individual OP02 and OP03 vectors describe field results; a complete positive
 object also needs their other declared sibling fields at the widths above.
