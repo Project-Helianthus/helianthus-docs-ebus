@@ -117,6 +117,14 @@ byte first. Decimal ranges are inclusive; FE and FF denote hexadecimal bytes.
 | OP04 | positive | `feedback`, u8 | 1 `accepted`; every other byte `rejected`. Acceptance is a candidate label, not proof of a physical action or readback. |
 | OP05 | request | `channel0`, `channel1`, `channel2`, each u8 | Independently: 0 `off`; 1..100 `on-or-speed`; FF `unchanged`; 101..254 `unmapped`. |
 
+For a complete result whose byte falls in an "Unknown meaning" branch (OP02
+request `valve` other values, OP03 request `selector` other values, OP03
+positive `status` other values), the field result carries `raw`, `state`,
+`number` (the unchanged byte), `unmodeled: true`, `grade` and `calculation`, and
+no `label`. For example, OP02 request `valve: [42]` yields
+`{"raw":[42],"state":"complete","number":42,"unmodeled":true,"grade":"Hypothesis","calculation":"Proven"}`.
+The five special OP02 request codes carry `label` and no `unmodeled` member.
+
 For OP02 positive `valve`, a complete result carries `alternatives` as a JSON
 array of exactly two strings in this fixed order: `["actual","setpoint-fallback"]`.
 Each string names a candidate source of the number; the array holds no nested
@@ -231,6 +239,7 @@ error, not either of these successful results.
 | --- | --- | --- |
 | OP00 request setpoint | `[100]`; `[101]`; `[255]` | 100 `on-or-speed`; 101 and 255 `unmapped`, each number unchanged. |
 | OP02 request valve | `[0]`; `[50]`; `[100]`; `[254]`; `[255]` | Five distinct labels: `CH`, `midpoint`, `DHW`, `standby`, `unchanged`. |
+| OP02 request valve, other value | `[42]` | Number 42, `unmodeled: true`, no `label`; meaning Unknown. |
 | OP02 positive valve | `[50]` | Number 50; alternatives `actual`, `setpoint-fallback`; selected source Unknown. |
 | OP02 positive tank | `[240,255]` (F0FF) | Signed integer -16; candidate Celsius -1; calculation Proven, meaning Hypothesis. |
 | OP02 positive virtual_error | `[255,255]` | Number 65535, label `no-error`; no sentinel transferred to another field. |

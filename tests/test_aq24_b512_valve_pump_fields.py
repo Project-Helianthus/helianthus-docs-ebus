@@ -114,6 +114,12 @@ class Aq24BranchTableTest(unittest.TestCase):
                        'raw-only `Unknown`', 'exactly three u8 integers'):
             self.assertIn(phrase, text)
 
+    def test_unknown_valve_value_shape_is_specified(self):
+        text = AQ24_PAGE.read_text()
+        self.assertIn('{"raw":[42],"state":"complete","number":42,"unmodeled":true,'
+                      '"grade":"Hypothesis","calculation":"Proven"}', text)
+        self.assertIn('| OP02 request valve, other value | `[42]` | Number 42, `unmodeled: true`, no `label`', text)
+
     def test_op02_alternatives_shape_and_tank_oracle(self):
         block = next(b for b in aq24_blocks() if b['context']['operation'] == 2)
         valve = block['results']['valve']
