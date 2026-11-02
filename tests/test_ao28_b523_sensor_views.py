@@ -81,7 +81,42 @@ ab27ao27Contract = {'api': {'package': 'vaillant',
             'byte-string',
             'byte-null',
             'field-scalar',
-            'operation-string'],
+            'operation-string',
+            'root-null',
+            'root-string',
+            'root-number',
+            'root-bool',
+            'context-null',
+            'context-string',
+            'context-number',
+            'context-bool',
+            'fields-null',
+            'fields-string',
+            'fields-number',
+            'fields-bool',
+            'arguments-null',
+            'arguments-string',
+            'arguments-number',
+            'arguments-bool',
+            'byte-array',
+            'byte-object',
+            'field-null',
+            'field-string',
+            'field-bool',
+            'field-object',
+            'unmodelled-byte-negative',
+            'unmodelled-byte-overflow',
+            'unmodelled-byte-fraction',
+            'unmodelled-byte-bool',
+            'unmodelled-byte-string',
+            'unmodelled-byte-null',
+            'unmodelled-byte-array',
+            'unmodelled-byte-object',
+            'unmodelled-field-scalar',
+            'unmodelled-field-null',
+            'unmodelled-field-string',
+            'unmodelled-field-bool',
+            'unmodelled-field-object'],
  'scope': {'wire_codec': False,
            'request_encoder': False,
            'runtime_call_site': False,
@@ -174,7 +209,7 @@ class TestAb27Ao27SensorViews(unittest.TestCase):
         self.ab27ao27Fixture = ab27ao27Strict(ab27ao27Fixture.read_text())
         self.ab27ao27Rows = {ab27ao27Row["id"]: ab27ao27Row for ab27ao27Row in self.ab27ao27Fixture["cases"]}
         self.assertEqual(len(self.ab27ao27Rows), len(self.ab27ao27Fixture["cases"]))
-        self.assertEqual(len(self.ab27ao27Rows), 371)
+        self.assertEqual(len(self.ab27ao27Rows), 407)
         self.assertEqual(self.ab27ao27Fixture["id"], "ab27ao27SensorViews")
         ab27ao27Match = re.search(r"<!-- ab27ao27-contract:start -->\s*```json\s*(.*?)\s*```\s*<!-- ab27ao27-contract:end -->", ab27ao27Page.read_text(), re.S)
         self.assertIsNotNone(ab27ao27Match)
@@ -238,6 +273,8 @@ class TestAb27Ao27SensorViews(unittest.TestCase):
                                   if ab27ao27Length > ab27ao27Offset for ab27ao27Name in ab27ao27Group]
                 ab27ao27Expect = {"state": "partial", "complete_sensors": ab27ao27Names, "numeric_zero_sensors": ab27ao27Names,
                                   "complete_pwm": ab27ao27Pwm, "complete_status": ab27ao27Status}
+                if ab27ao27Length == 0:
+                    ab27ao27Expect["preserve_raw"] = True
                 if ab27ao27Length in ab27ao27IncompleteSensors[ab27ao27Op]:
                     ab27ao27Expect.update(field=ab27ao27IncompleteSensors[ab27ao27Op][ab27ao27Length],
                                          result={"raw": [0], "state": "Unknown"})
@@ -268,9 +305,24 @@ class TestAb27Ao27SensorViews(unittest.TestCase):
 
     def test_ab27ao27_missing_empty_zero_and_unmodelled_fields(self):
         for ab27ao27Key, ab27ao27Fields in (("missing", {}), ("empty", {"logical_object": []}), ("zero", {"logical_object": [0]}), ("extra", {"logical_object": self.ab27ao27Base(3), "unmodelled": [0, 255]}), ("only-other", {"unmodelled": [0, 255]})):
+            ab27ao27Expect = {"preserve_raw": True, "state": "Hypothesis" if ab27ao27Key == "extra" else "partial"}
+            if ab27ao27Key in ("missing", "empty"):
+                ab27ao27Expect.update(complete_sensors=[], numeric_zero_sensors=[], complete_pwm=[], complete_status=[])
             self.ab27ao27Case("raw-field-" + ab27ao27Key, ab27ao27Fields=ab27ao27Fields,
-                             ab27ao27Expect={"preserve_raw": True, "state": "Hypothesis" if ab27ao27Key == "extra" else "partial"})
-        self.ab27ao27Case("arguments-empty", 3, self.ab27ao27Base(3), {"preserve_arguments": {}}, ab27ao27Args={})
+                             ab27ao27Expect=ab27ao27Expect)
+        ab27ao27Complete = {
+            "state": "Hypothesis", "field": "S1",
+            "result": {"raw": 0, "state": "Hypothesis", "number": 0, "calculation": "Proven"},
+            "complete_sensors": ["S1", "S2", "S3", "S4", "S5", "S6"],
+            "numeric_zero_sensors": ["S1", "S2", "S3", "S4", "S5", "S6"],
+            "complete_pwm": ["PWM"],
+            "complete_status": ["S1_status", "S2_status", "S3_status", "S4_status", "S5_status", "S6_status"],
+            "preserve_raw": True,
+        }
+        self.ab27ao27Case("raw-field-extra-empty", ab27ao27Fields={"logical_object": self.ab27ao27Base(3), "unmodelled": []},
+                         ab27ao27Expect=ab27ao27Complete)
+        self.ab27ao27Case("arguments-empty", 3, self.ab27ao27Base(3),
+                         dict(ab27ao27Complete, preserve_arguments={}), ab27ao27Args={})
 
     def test_ab27ao27_error_vectors(self):
         ab27ao27Errors = {
@@ -283,18 +335,30 @@ class TestAb27Ao27SensorViews(unittest.TestCase):
             "root-array": "[]",
         }
         ab27ao27Valid = {"context": {"primary": 181, "secondary": 35, "operation": 3, "direction": "positive", "view": "status-zero-valid"}, "fields": {"logical_object": []}}
-        for ab27ao27Key in ("context", "fields", "arguments"):
-            ab27ao27Input = copy.deepcopy(ab27ao27Valid)
-            ab27ao27Input[ab27ao27Key] = []
-            ab27ao27Errors[ab27ao27Key + "-array"] = json.dumps(ab27ao27Input, separators=(",", ":"))
-        for ab27ao27Key, ab27ao27Value in (("negative", -1), ("overflow", 256), ("fraction", 0.5), ("bool", True), ("string", "0"), ("null", None)):
-            ab27ao27Input = copy.deepcopy(ab27ao27Valid)
-            ab27ao27Input["fields"]["logical_object"] = [ab27ao27Value]
-            ab27ao27Errors["byte-" + ab27ao27Key] = json.dumps(ab27ao27Input, separators=(",", ":"))
-        for ab27ao27Name, ab27ao27Key, ab27ao27Value in (("field-scalar", "fields", 0), ("operation-string", "context", "3")):
-            ab27ao27Input = copy.deepcopy(ab27ao27Valid)
-            ab27ao27Input[ab27ao27Key]["logical_object" if ab27ao27Key == "fields" else "operation"] = ab27ao27Value
-            ab27ao27Errors[ab27ao27Name] = json.dumps(ab27ao27Input, separators=(",", ":"))
+        for ab27ao27Key in ("root", "context", "fields", "arguments"):
+            for ab27ao27Kind, ab27ao27Value in (("array", []), ("null", None), ("string", ""), ("number", 0), ("bool", False)):
+                ab27ao27Input = copy.deepcopy(ab27ao27Valid)
+                if ab27ao27Key == "root":
+                    ab27ao27Input = ab27ao27Value
+                else:
+                    ab27ao27Input[ab27ao27Key] = ab27ao27Value
+                ab27ao27Errors[ab27ao27Key + "-" + ab27ao27Kind] = json.dumps(ab27ao27Input, separators=(",", ":"))
+        for ab27ao27Field in ("logical_object", "unmodelled"):
+            for ab27ao27Key, ab27ao27Value in (("negative", -1), ("overflow", 256), ("fraction", 0.5), ("bool", True), ("string", "0"), ("null", None), ("array", []), ("object", {})):
+                ab27ao27Input = copy.deepcopy(ab27ao27Valid)
+                ab27ao27Input["fields"]["logical_object"] = self.ab27ao27Base(3)
+                ab27ao27Input["fields"][ab27ao27Field] = [ab27ao27Value]
+                ab27ao27Prefix = "byte-" if ab27ao27Field == "logical_object" else "unmodelled-byte-"
+                ab27ao27Errors[ab27ao27Prefix + ab27ao27Key] = json.dumps(ab27ao27Input, separators=(",", ":"))
+            for ab27ao27Kind, ab27ao27Value in (("scalar", 0), ("null", None), ("string", ""), ("bool", False), ("object", {})):
+                ab27ao27Input = copy.deepcopy(ab27ao27Valid)
+                ab27ao27Input["fields"]["logical_object"] = self.ab27ao27Base(3)
+                ab27ao27Input["fields"][ab27ao27Field] = ab27ao27Value
+                ab27ao27Prefix = "field-" if ab27ao27Field == "logical_object" else "unmodelled-field-"
+                ab27ao27Errors[ab27ao27Prefix + ab27ao27Kind] = json.dumps(ab27ao27Input, separators=(",", ":"))
+        ab27ao27Input = copy.deepcopy(ab27ao27Valid)
+        ab27ao27Input["context"]["operation"] = "3"
+        ab27ao27Errors["operation-string"] = json.dumps(ab27ao27Input, separators=(",", ":"))
         self.assertEqual(set(ab27ao27Errors), set(ab27ao27Contract["errors"]))
         for ab27ao27Name, ab27ao27Text in ab27ao27Errors.items():
             with self.subTest(ab27ao27Error=ab27ao27Name):
@@ -304,8 +368,8 @@ class TestAb27Ao27SensorViews(unittest.TestCase):
         self.assertEqual(set(self.ab27ao27Fixture), {"id", "cases"})
         ab27ao27Counts = {"word": 114, "status": 152, "reserved": 10,
                          "partial": 55, "tail": 3, "pwm": 1, "opaque": 1,
-                         "selection": 6, "context": 5, "raw": 5,
-                         "arguments": 1, "error": 18}
+                         "selection": 6, "context": 5, "raw": 6,
+                         "arguments": 1, "error": 53}
         for ab27ao27Family, ab27ao27Count in ab27ao27Counts.items():
             self.assertEqual(sum(ab27ao27Id.startswith("ab27ao27" + ab27ao27Family + "-") or ab27ao27Id == "ab27ao27" + ab27ao27Family for ab27ao27Id in self.ab27ao27Rows), ab27ao27Count)
         for ab27ao27Row in self.ab27ao27Rows.values():
