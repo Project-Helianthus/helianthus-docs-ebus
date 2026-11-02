@@ -4,15 +4,27 @@ This AGPL architecture document holds product routing rules that were removed fr
 
 ## 1. Status
 
-**Normative.** Formerly reverse-engineered selector family. The seven selectors
-listed in §3 are locked per plan AD01..AD15 as the v1 delivery surface. The
-wire shape is stable; decoder structure, invoke-safety classification, session
-model, error model, and public-surface normalization rules are frozen for v1.
+**Pre-1.0 implementation contract.** This page defines the current B503
+routing and session behavior. No wire shape, decoder structure, safety
+classification, session model, error model, or public surface is promised
+stable or frozen before Helianthus 1.0. State names and transition rules below
+remain the current contract; references to stable session observations describe
+those observations, not a pre-release compatibility guarantee.
 
-Amendment-1 (2026-04-25) keeps the v1 wire/safety surface unchanged and
-extends the document with the production dispatcher contract in §12
-(plan AD16 + AD18). The amendment is additive within that archived amendment:
-no v1 selector, wire shape, or invoke-safety classification is altered.
+Implementation requirements on this page do not qualify candidate wire details.
+Native conclusions use **Proven**, **Hypothesis**, and **Unknown** per claim in
+[the native status and evidence](../protocols/vaillant/ebus-vaillant-B503.md#status-and-evidence).
+**Proven:** a candidate form cannot inherit native authority from a blanket
+normative label. Candidate layouts remain **Hypothesis**; unresolved native
+settlement remains **Unknown**. Implementation behavior, codec qualification,
+and physical support do not promote a native evidence grade.
+
+The retained read selectors are `00 01`, `01 01`, `00 02`, and `01 02`;
+`00 03` is stateful, and `02 01` / `02 02` are writes. The five-state session,
+exact native outcomes, and MCP / GraphQL parity below are unchanged by this
+qualification rule. Amendment-1 added the production dispatcher contract in
+§12; that implementation contract establishes no blanket native-wire authority
+or pre-1.0 freeze.
 
 **Current public contract authority.** The five-state public session contract in
 §6–§8 and the exact eight-row public capability table in §12.5 are governed by
@@ -131,8 +143,9 @@ session_key   = (transport_key, issuer_token)
 ```
 
 - `transport_key` is the bus-level identity: at most one live-monitor
-  session may be ACTIVE per `transport_key` (physical bus constraint —
-  HMU cannot multiplex simultaneous live-monitor streams).
+  session may be ACTIVE per `transport_key` under the Gateway
+  serialization policy. This local policy establishes no peer multiplexing
+  property.
 - `issuer_token` is an **opaque, gateway-issued token** returned to the
   client on successful ENABLE. It scopes session control authority (disable,
   idle-extend) to the specific caller that claimed the session.
@@ -461,9 +474,9 @@ including defensive cleanup while the FSM is already `DISABLED`; `IDLE` or
   explicit regression scenario (plan AD12) proving B524 baseline throughput is
   unchanged with the new mutex in place.
 
-### 7.8 Stable API error model
+### 7.8 Public API error model
 
-The stable API (GraphQL `B503Availability` enum + MCP error code) exposes:
+The current API (GraphQL `B503Availability` enum + MCP error code) exposes:
 
 - `AVAILABLE`
 - `NOT_SUPPORTED`
@@ -570,8 +583,7 @@ This section is the `M0b_DOC_DISPATCHER_BRIDGE` deliverable for execution-plans#
 amendment-1 and is the doc-gate companion for `M6_DISPATCHER_BRIDGE`
 (helianthus-ebusgateway). It mirrors plan decisions AD16 (production raw-frame
 dispatcher contract) and AD18 (capability-signal 8-state truth table +
-stale-epoch discipline) from plan canonical SHA
-`86495340799be9340dc191c371a49a958f65c357c76a1e0a2974502c8489b508`. Those plan
+stale-epoch discipline) from the archived plan. Those plan
 chunks are archived design traceability. This current public document is the
 normative implementation contract; §12.5 records the cleanup-aware capability
 refinement and its exact checker-backed eight-row parity surface.
