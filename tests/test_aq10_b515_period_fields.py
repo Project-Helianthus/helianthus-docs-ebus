@@ -32,6 +32,13 @@ def reject_constant(name):
     raise Rejected('nonfinite number')
 
 
+def parse_float(text):
+    value = float(text)
+    if value in (float('inf'), float('-inf')):
+        raise Rejected('nonfinite number')
+    return value
+
+
 def convert(raw):
     if not is_int(raw, 0, 255):
         raise Rejected('byte')
@@ -46,7 +53,8 @@ def convert(raw):
 def evaluate(text):
     try:
         data = json.loads(text, object_pairs_hook=reject_duplicates,
-                          parse_constant=reject_constant)
+                          parse_constant=reject_constant,
+                          parse_float=parse_float)
     except ValueError as error:
         raise Rejected(str(error))
     if type(data) is not dict:
@@ -69,6 +77,13 @@ def evaluate(text):
     view, direction = context.get('view'), context.get('direction')
     supported = (context['primary'] == 181 and context['secondary'] == 21
                  and 'operation' not in context)
+    if view == 'intervals' and context['primary'] == 181 \
+            and context['secondary'] == 21 and 'operation' not in context:
+        pairs = arguments.get('pairs')
+        if (type(pairs) is not list or len(pairs) != 3 or not all(
+                type(p) is list and len(p) == 2 and all(is_int(b, 0, 255) for b in p)
+                for p in pairs)):
+            raise Rejected('pairs')
     if view == 'periods' and supported and direction in ('request', 'positive'):
         if 'minutes' in arguments and not is_int(arguments['minutes'], 0, 1440):
             raise Rejected('minutes')
@@ -81,23 +96,22 @@ def evaluate(text):
                 results[name] = {'raw': raw, 'state': 'incomplete'}
             else:
                 results[name] = dict(convert(raw[0]), raw=raw)
+                if results[name]['state'] == 'complete':
+                    results[name].update(grade='Hypothesis', calculation='Proven')
         if 'minutes' in arguments:
             minutes = arguments['minutes']
             entry = {'raw': minutes}
             if minutes % 10:
                 entry['state'] = UNKNOWN
             else:
-                entry.update(state='complete', encoded=minutes // 10)
+                entry.update(state='complete', encoded=minutes // 10,
+                             grade='Hypothesis', calculation='Proven')
             results['minutes'] = entry
         out['results'] = results
         out['state'] = 'complete' if all(
             r['state'] == 'complete' for r in results.values()) else 'partial'
     elif view == 'intervals' and supported and direction == 'request':
-        pairs = arguments.get('pairs')
-        if (type(pairs) is not list or len(pairs) != 3 or not all(
-                type(p) is list and len(p) == 2 and all(is_int(b, 0, 255) for b in p)
-                for p in pairs)):
-            raise Rejected('pairs')
+        pairs = arguments['pairs']
         rows = [{'raw': p, 'state': 'complete',
                  'label': 'disabled' if p[0] == p[1] else 'enabled-candidate',
                  'grade': 'Hypothesis', 'start': convert(p[0]),
@@ -194,7 +208,12 @@ class PeriodFieldContract(unittest.TestCase):
             periods(FULL, {'minutes': 540}).replace('540', 'NaN'),
             '{"context":{"primary":181,"secondary":21,"view":"periods"},'
             '"fields":{"period0":[0,0]},"fields":{}}',
-            intervals([[1, 1], [2, 3]]), intervals([[1, 1], [2, 3], [4, 256]]),
+            intervals([[1, 1], [2, 3]]),
+            intervals([[1, 1], [2, 3]], direction='positive'),
+            json.dumps({'context': {'primary': 181, 'secondary': 21,
+                                    'direction': 'positive',
+                                    'view': 'intervals'}, 'fields': {}}),
+            periods(FULL).replace('"fields"', '"extra":{"big":1e999},"fields"'), intervals([[1, 1], [2, 3], [4, 256]]),
             intervals([[1, 1], [2, 3], [4]]),
             json.dumps({'context': {'primary': 181, 'secondary': 21,
                                     'direction': 'request', 'view': 'intervals'},
@@ -260,10 +279,9 @@ class DocumentAgreement(unittest.TestCase):
         for key in ('context', 'fields', 'arguments', 'extra', 'state',
                     'physical', 'qualified'):
             self.assertEqual(out[key], data[1][key])
-        for name in ('period0', 'period1', 'period2'):
-            documented = {k: v for k, v in data[1]['results'][name].items()
-                          if k not in ('grade', 'calculation')}
-            self.assertEqual(out['results'][name], documented)
+        self.assertEqual(out['results'], data[1]['results'])
+        self.assertEqual(set(out['results']),
+                         {'period0', 'period1', 'period2', 'minutes'})
         interval = evaluate(intervals([[10, 10], [20, 30], [40, 50]]))
         documented = json.loads(json.dumps(data[2]))
         for row in documented['pairs']:
