@@ -63,6 +63,14 @@ Run `./scripts/ci_local.sh` before pushing. The gate requires the locked Python
 dependencies in `requirements-ci.txt`, actionlint v1.7.7, jv v0.7.0, ShellCheck,
 and the existing provenance inputs required by the platform validators.
 
+The gate discovers test files automatically: every `tests/test_*.py` file that
+the script does not already name runs in its own `python3 -m pytest -q`
+process, or through `python3 -m unittest discover` when pytest collects no
+tests from it. Do not add a line to `scripts/ci_local.sh` for a new test file,
+and do not add tests that assert their own invocation line is present in the
+script. Edit the script only when a test needs special arguments, a
+dedicated position next to a checker, or a new non-pytest step.
+
 Workflow validation runs actionlint with `-shellcheck=` and a separate
 ShellCheck pass over every `.yml` and `.yaml` workflow's `run:` steps. This
 avoids actionlint v1.7.7's blocking stdin write to its embedded ShellCheck

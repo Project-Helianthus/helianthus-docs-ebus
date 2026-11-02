@@ -1,0 +1,557 @@
+{
+  "synthetic_only": true,
+  "representation_grade": "Proven",
+  "candidate_grade": "Hypothesis",
+  "physical_qualification": "Unknown",
+  "rows": [
+    {
+      "family": "B50A",
+      "variant": "room-action-temperature",
+      "direction": "read",
+      "service": "B50A",
+      "operation": "OP00",
+      "alternative": "request",
+      "extent_bytes": 0,
+      "absolute_offset": null,
+      "grade": "Hypothesis",
+      "physical_qualification": "Unknown",
+      "fields": {},
+      "relative_order": []
+    },
+    {
+      "family": "B50A",
+      "variant": "room-action-temperature",
+      "direction": "read",
+      "service": "B50A",
+      "operation": "OP00",
+      "alternative": "positive",
+      "extent_bytes": 3,
+      "absolute_offset": null,
+      "grade": "Hypothesis",
+      "physical_qualification": "Unknown",
+      "fields": {
+        "room_action": {
+          "width": 1,
+          "carrier": [
+            0,
+            255
+          ],
+          "signed": false,
+          "byte_order": "not applicable",
+          "factor": 1,
+          "offset": 0,
+          "unit": null,
+          "default": null,
+          "labels": {
+            "0": "no-action",
+            "1": "switch-on",
+            "2": "thermostat"
+          },
+          "sentinel": "Unknown"
+        },
+        "temperature": {
+          "width": 2,
+          "carrier": [
+            -32768,
+            32767
+          ],
+          "signed": true,
+          "byte_order": "little-endian",
+          "factor": 0.0625,
+          "offset": 0,
+          "unit": "degrees C",
+          "default": null,
+          "labels": {},
+          "sentinel": "Unknown",
+          "candidate_range": [
+            -2048,
+            2047.9375
+          ]
+        }
+      },
+      "relative_order": [
+        "room_action",
+        "temperature"
+      ]
+    },
+    {
+      "family": "B50A",
+      "variant": "room-action-temperature",
+      "direction": "read",
+      "service": "B50A",
+      "operation": "OP00",
+      "alternative": "negative",
+      "extent_bytes": null,
+      "absolute_offset": null,
+      "grade": "Hypothesis",
+      "physical_qualification": "Unknown",
+      "fields": {},
+      "relative_order": []
+    },
+    {
+      "family": "B50C",
+      "variant": "keycode-digits",
+      "direction": "read",
+      "service": "B50C",
+      "operation": "OP00",
+      "alternative": "request",
+      "extent_bytes": 0,
+      "absolute_offset": null,
+      "grade": "Hypothesis",
+      "physical_qualification": "Unknown",
+      "fields": {},
+      "relative_order": []
+    },
+    {
+      "family": "B50C",
+      "variant": "keycode-digits",
+      "direction": "read",
+      "service": "B50C",
+      "operation": "OP00",
+      "alternative": "positive",
+      "extent_bytes": 4,
+      "absolute_offset": null,
+      "grade": "Hypothesis",
+      "physical_qualification": "Unknown",
+      "fields": {
+        "digit_1": {
+          "width": 1,
+          "carrier": [
+            0,
+            255
+          ],
+          "candidate_domain": [
+            0,
+            9
+          ],
+          "signed": false,
+          "byte_order": "not applicable",
+          "factor": 1,
+          "offset": 0,
+          "unit": null,
+          "default": 0,
+          "labels": {},
+          "sentinel": "Unknown"
+        },
+        "digit_2": {
+          "width": 1,
+          "carrier": [
+            0,
+            255
+          ],
+          "candidate_domain": [
+            0,
+            9
+          ],
+          "signed": false,
+          "byte_order": "not applicable",
+          "factor": 1,
+          "offset": 0,
+          "unit": null,
+          "default": 0,
+          "labels": {},
+          "sentinel": "Unknown"
+        },
+        "digit_3": {
+          "width": 1,
+          "carrier": [
+            0,
+            255
+          ],
+          "candidate_domain": [
+            0,
+            9
+          ],
+          "signed": false,
+          "byte_order": "not applicable",
+          "factor": 1,
+          "offset": 0,
+          "unit": null,
+          "default": 0,
+          "labels": {},
+          "sentinel": "Unknown"
+        },
+        "digit_4": {
+          "width": 1,
+          "carrier": [
+            0,
+            255
+          ],
+          "candidate_domain": [
+            0,
+            9
+          ],
+          "signed": false,
+          "byte_order": "not applicable",
+          "factor": 1,
+          "offset": 0,
+          "unit": null,
+          "default": 0,
+          "labels": {},
+          "sentinel": "Unknown"
+        }
+      },
+      "relative_order": [
+        "digit_1",
+        "digit_2",
+        "digit_3",
+        "digit_4"
+      ]
+    },
+    {
+      "family": "B50C",
+      "variant": "keycode-digits",
+      "direction": "read",
+      "service": "B50C",
+      "operation": "OP00",
+      "alternative": "negative",
+      "extent_bytes": null,
+      "absolute_offset": null,
+      "grade": "Hypothesis",
+      "physical_qualification": "Unknown",
+      "fields": {},
+      "relative_order": []
+    },
+    {
+      "family": "B50C",
+      "variant": "signed-value",
+      "direction": "read",
+      "service": "B50C",
+      "operation": "OP01",
+      "alternative": "request",
+      "extent_bytes": 0,
+      "absolute_offset": null,
+      "grade": "Hypothesis",
+      "physical_qualification": "Unknown",
+      "fields": {},
+      "relative_order": []
+    },
+    {
+      "family": "B50C",
+      "variant": "signed-value",
+      "direction": "read",
+      "service": "B50C",
+      "operation": "OP01",
+      "alternative": "positive",
+      "extent_bytes": 2,
+      "absolute_offset": null,
+      "grade": "Hypothesis",
+      "physical_qualification": "Unknown",
+      "fields": {
+        "value": {
+          "width": 2,
+          "carrier": [
+            -32768,
+            32767
+          ],
+          "signed": true,
+          "byte_order": "little-endian",
+          "factor": 1,
+          "offset": 0,
+          "unit": null,
+          "default": null,
+          "labels": {},
+          "sentinel": "Unknown"
+        }
+      },
+      "relative_order": [
+        "value"
+      ]
+    },
+    {
+      "family": "B50C",
+      "variant": "signed-value",
+      "direction": "read",
+      "service": "B50C",
+      "operation": "OP01",
+      "alternative": "negative",
+      "extent_bytes": null,
+      "absolute_offset": null,
+      "grade": "Hypothesis",
+      "physical_qualification": "Unknown",
+      "fields": {},
+      "relative_order": []
+    },
+    {
+      "family": "B50C",
+      "variant": "circuit-names",
+      "direction": "read",
+      "service": "B50C",
+      "operation": "OP02",
+      "alternative": "request",
+      "extent_bytes": null,
+      "absolute_offset": null,
+      "grade": "Hypothesis",
+      "physical_qualification": "Unknown",
+      "fields": {},
+      "relative_order": []
+    },
+    {
+      "family": "B50C",
+      "variant": "circuit-names",
+      "direction": "read",
+      "service": "B50C",
+      "operation": "OP02",
+      "alternative": "positive",
+      "extent_bytes": null,
+      "absolute_offset": null,
+      "grade": "Hypothesis",
+      "physical_qualification": "Unknown",
+      "fields": {
+        "circuit_name": {
+          "width": null,
+          "unit": null,
+          "sentinel": "Unknown"
+        }
+      },
+      "relative_order": [
+        "circuit_name"
+      ]
+    },
+    {
+      "family": "B50C",
+      "variant": "circuit-names",
+      "direction": "read",
+      "service": "B50C",
+      "operation": "OP02",
+      "alternative": "negative",
+      "extent_bytes": null,
+      "absolute_offset": null,
+      "grade": "Hypothesis",
+      "physical_qualification": "Unknown",
+      "fields": {},
+      "relative_order": []
+    },
+    {
+      "family": "B50D",
+      "variant": "ui-room-action",
+      "direction": "UI-write",
+      "service": "B50D",
+      "operation": "OP00",
+      "alternative": "request",
+      "extent_bytes": 1,
+      "absolute_offset": null,
+      "grade": "Hypothesis",
+      "physical_qualification": "Unknown",
+      "fields": {
+        "room_action": {
+          "width": 1,
+          "carrier": [
+            0,
+            255
+          ],
+          "signed": false,
+          "byte_order": "not applicable",
+          "factor": 1,
+          "offset": 0,
+          "unit": null,
+          "default": 0,
+          "labels": {
+            "0": "no-action",
+            "1": "switch-on",
+            "2": "thermostat"
+          },
+          "sentinel": "Unknown"
+        }
+      },
+      "relative_order": [
+        "room_action"
+      ]
+    },
+    {
+      "family": "B50D",
+      "variant": "ui-room-action",
+      "direction": "UI-write",
+      "service": "B50D",
+      "operation": "OP00",
+      "alternative": "positive",
+      "extent_bytes": null,
+      "absolute_offset": null,
+      "grade": "Hypothesis",
+      "physical_qualification": "Unknown",
+      "fields": {},
+      "relative_order": []
+    },
+    {
+      "family": "B50D",
+      "variant": "ui-room-action",
+      "direction": "UI-write",
+      "service": "B50D",
+      "operation": "OP00",
+      "alternative": "negative",
+      "extent_bytes": null,
+      "absolute_offset": null,
+      "grade": "Hypothesis",
+      "physical_qualification": "Unknown",
+      "fields": {},
+      "relative_order": []
+    },
+    {
+      "family": "B50D",
+      "variant": "ui-holiday-status",
+      "direction": "UI-write",
+      "service": "B50D",
+      "operation": "OP01",
+      "alternative": "request",
+      "extent_bytes": 1,
+      "absolute_offset": null,
+      "grade": "Hypothesis",
+      "physical_qualification": "Unknown",
+      "fields": {
+        "holiday_status": {
+          "width": 1,
+          "carrier": [
+            0,
+            255
+          ],
+          "signed": false,
+          "byte_order": "not applicable",
+          "factor": 1,
+          "offset": 0,
+          "unit": null,
+          "default": 0,
+          "labels": {
+            "0": "0",
+            "1": "1"
+          },
+          "sentinel": "Unknown"
+        }
+      },
+      "relative_order": [
+        "holiday_status"
+      ]
+    },
+    {
+      "family": "B50D",
+      "variant": "ui-holiday-status",
+      "direction": "UI-write",
+      "service": "B50D",
+      "operation": "OP01",
+      "alternative": "positive",
+      "extent_bytes": null,
+      "absolute_offset": null,
+      "grade": "Hypothesis",
+      "physical_qualification": "Unknown",
+      "fields": {},
+      "relative_order": []
+    },
+    {
+      "family": "B50D",
+      "variant": "ui-holiday-status",
+      "direction": "UI-write",
+      "service": "B50D",
+      "operation": "OP01",
+      "alternative": "negative",
+      "extent_bytes": null,
+      "absolute_offset": null,
+      "grade": "Hypothesis",
+      "physical_qualification": "Unknown",
+      "fields": {},
+      "relative_order": []
+    }
+  ],
+  "unknowns": [
+    "B50A unavailable sentinel: neither 8000 nor FFFF qualified",
+    "B50C OP01 unit and sentinel",
+    "B50C OP02 echoed circuit",
+    "B50C OP02 string trimming",
+    "B50C OP02 B524 namespace equivalence",
+    "B50C OP02 wildcard semantics of zero",
+    "absolute offsets",
+    "native adaptation",
+    "peer effects"
+  ],
+  "b50a_examples": [
+    {
+      "raw": "02 80 FF",
+      "action": 2,
+      "label": "thermostat",
+      "temperature": -8
+    },
+    {
+      "raw": "03 00 00",
+      "action": 3,
+      "label": null,
+      "temperature": 0
+    },
+    {
+      "raw": "00 00 80",
+      "action": 0,
+      "label": "no-action",
+      "temperature": -2048
+    },
+    {
+      "raw": "00 FF FF",
+      "action": 0,
+      "label": "no-action",
+      "temperature": -0.0625
+    },
+    {
+      "raw": "01 FF 7F",
+      "action": 1,
+      "label": "switch-on",
+      "temperature": 2047.9375
+    }
+  ],
+  "digits": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "signed_example": {
+    "raw": "FE FF",
+    "value": -2,
+    "unit": null
+  },
+  "ui_examples": [
+    {
+      "operation": "OP00",
+      "raw": 255,
+      "label": null
+    },
+    {
+      "operation": "OP01",
+      "raw": 255,
+      "label": null
+    }
+  ],
+  "return_examples": [
+    {
+      "tag": "B501-status",
+      "service": "B501",
+      "alternative": "positive-status",
+      "raw": "B5 02 00",
+      "interpretation": "status",
+      "grade": "Hypothesis"
+    },
+    {
+      "tag": "B502-data",
+      "service": "B502",
+      "alternative": "return-data",
+      "raw": "B5 02 00",
+      "interpretation": "opaque",
+      "grade": "Hypothesis"
+    }
+  ],
+  "service_qualifications": [
+    {
+      "service": "07/04",
+      "path": "working identification response, 10 bytes",
+      "grade": "Proven",
+      "boundary": "observed targets only"
+    },
+    {
+      "service": "09/00",
+      "path": "RAM target response",
+      "grade": "Proven",
+      "boundary": "observed controller only"
+    },
+    {
+      "service": "09/02",
+      "path": "EEPROM target response",
+      "grade": "Proven",
+      "boundary": "observed controller only"
+    }
+  ]
+}
