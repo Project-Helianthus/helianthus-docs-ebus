@@ -75,7 +75,8 @@ not establish a full OP08 frame. No century or timezone is inferred.
 
 For each clock component, retain raw FF and select replacement before decimal
 validation. No replacement value or native effect is invented. Raw 12 yields
-12 under packed-decimal conversion, not binary 18; FA has no decoded value.
+12 under packed-decimal conversion, not 18 as a plain unsigned byte; FA has no
+decoded value.
 The synthetic vector 12/23/31/12/99 yields 12/23/31/12/99 in that exact order.
 If only one component is invalid, preserve every independent valid component
 and retain the previous useful value for the failed component separately from

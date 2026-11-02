@@ -58,7 +58,7 @@ REQUIRED_PROSE = (
     'Independently useful fields survive a partial interpretation failure;',
     'The clock has exactly five components, **minute/hour/day/month/year**, with no seconds.',
     'For each clock component, retain raw FF and select replacement before decimal validation.',
-    'Raw 12 yields 12 under packed-decimal conversion, not binary 18; FA has no decoded value.',
+    'Raw 12 yields 12 under packed-decimal conversion, not 18 as a plain unsigned byte; FA has no decoded value.',
     'OP0D words 00 00, 01 00, 00 01, FF FF yield 0, 1, 256, 65535.',
     'OP0E page width stays null, not u8 by analogy.',
     'Variable data has no established maximum.',
