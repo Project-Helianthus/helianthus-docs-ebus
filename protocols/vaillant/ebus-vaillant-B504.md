@@ -207,6 +207,9 @@ independent; their union is not a qualified range or an inferred encoding.
 
 Grade describes a claim, independently of native qualification: no row is
 physically qualified, and synthetic arithmetic is not Proven wire behavior.
+The OP20, OP21 and OP26 meanings (no-demand zero, protection activation,
+setpoint-change permission, contextual FF) are Hypothesis candidates only; the
+correspondence supplies raw fields and offsets, not these meanings.
 Unknown polling permission supplies no basis for polling. No physical reply is
 constructed by the [synthetic field cases](fixtures/ae02_b504_candidates.json).
 
