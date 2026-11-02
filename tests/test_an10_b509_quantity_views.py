@@ -269,12 +269,8 @@ def _admitted(selection: dict[str, object]) -> bool:
     )
 
 
-def _echo(selection: dict[str, object]) -> dict[str, str | None]:
-    echoed: dict[str, str | None] = {}
-    for key in SELECTION_AXES:
-        value = selection.get(key, OMITTED)
-        echoed[key] = None if value is OMITTED else str(value)
-    return echoed
+def _echo(selection: dict[str, object]) -> dict[str, object]:
+    return {key: value for key, value in selection.items() if value is not OMITTED}
 
 
 def _field(state: str, raw: str | None, numeric: str | None, unit: str | None, numeric_grade: str | None) -> dict[str, object]:
@@ -331,7 +327,7 @@ def reference_view(selection: dict[str, object], slices: dict[str, object]) -> d
 def reference_view_bytes(selection: dict[str, str], slices: dict[str, bytearray | None]) -> dict[str, object]:
     """Byte-oriented reference. Returned raw values are fresh bytearrays."""
 
-    selection_copy = {key: selection[key] for key in SELECTION_AXES}
+    selection_copy = dict(selection)
     admitted = _admitted(selection_copy)
     copied = {
         name: None if slices.get(name) is None else bytes(slices[name])
@@ -469,7 +465,7 @@ def example_cells(record: dict[str, object]) -> list[str]:
     fields = record["fields"]
     return [
         str(record["id"]),
-        *[_cell(selection[key]) for key in SELECTION_AXES],
+        *[_cell(selection.get(key, OMITTED)) for key in SELECTION_AXES],
         *[_cell(slices[key]) for key in SLICE_AXES],
         "yes" if record["admitted"] else "no",
         *[outcome_token(fields[key]) for key in SLICE_AXES],
@@ -853,6 +849,24 @@ class B509Op59QuantityViews(unittest.TestCase):
                     self.assertEqual(slice_width(rows[example_id][field_name]), width)
                     seen[width] = example_id
             self.assertEqual(set(seen), set(widths))
+
+    def test_selection_omissions_stay_absent(self) -> None:
+        canonical = {"family": "B509", "variant": "alpha", "operation": "59", "direction": "response"}
+        by_id = {item["id"]: item for item in self.fixture["examples"]}
+        for axis in SELECTION_AXES:
+            expected = dict(canonical)
+            del expected[axis]
+            with self.subTest(axis=axis):
+                self.assertEqual(by_id[ABSENCE[axis]]["selection"], expected)
+                for view in (reference_view, reference_view_bytes):
+                    result = view(expected, {})
+                    self.assertNotIn(axis, result["selection"])
+                    self.assertEqual(result["selection"], expected)
+                    self.assertIsNot(result["selection"], expected)
+                    self.assertFalse(result["admitted"])
+                    explicit_null = dict(expected, **{axis: None})
+                    self.assertEqual(view(explicit_null, {})["selection"], explicit_null)
+                self.assertEqual(reference_view(dict(expected, **{axis: OMITTED}), {})["selection"], expected)
 
     def test_malformed_temperature_keeps_flow_and_volume(self) -> None:
         example = next(item for item in self.fixture["examples"] if item["id"] == "temperature-truncated")

@@ -2012,7 +2012,6 @@
     {
       "id": "family-omitted",
       "selection": {
-        "family": null,
         "variant": "alpha",
         "operation": "59",
         "direction": "response"
@@ -2205,7 +2204,6 @@
       "id": "variant-omitted",
       "selection": {
         "family": "B509",
-        "variant": null,
         "operation": "59",
         "direction": "response"
       },
@@ -2334,7 +2332,6 @@
       "selection": {
         "family": "B509",
         "variant": "alpha",
-        "operation": null,
         "direction": "response"
       },
       "slices": {
@@ -2590,8 +2587,7 @@
       "selection": {
         "family": "B509",
         "variant": "alpha",
-        "operation": "59",
-        "direction": null
+        "operation": "59"
       },
       "slices": {
         "temperature": "F0 FF",
