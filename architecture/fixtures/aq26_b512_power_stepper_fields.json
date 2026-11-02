@@ -80,6 +80,38 @@
    }
   },
   {
+   "id": "op07-positive-minimum-251",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 7,
+     "direction": "positive",
+     "view": "power-stepper"
+    },
+    "fields": {
+     "maximum_power": [
+      0
+     ],
+     "minimum_power": [
+      251
+     ]
+    }
+   },
+   "state": "complete",
+   "results": {
+    "maximum_power": {
+     "state": "complete",
+     "number": 0
+    },
+    "minimum_power": {
+     "state": "complete",
+     "number": 125.5,
+     "candidate_domain": false
+    }
+   }
+  },
+  {
    "id": "op07-positive-minimum-zero",
    "input": {
     "context": {
@@ -290,6 +322,90 @@
      "state": "complete",
      "flags": {
       "release": true
+     },
+     "reserved": 0
+    }
+   }
+  },
+  {
+   "id": "op08-request-inlet-high-byte",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 8,
+     "direction": "request",
+     "view": "power-stepper"
+    },
+    "fields": {
+     "inlet": [
+      0,
+      1
+     ],
+     "status": [
+      0
+     ],
+     "stepper": [
+      0
+     ]
+    }
+   },
+   "state": "complete",
+   "results": {
+    "inlet": {
+     "state": "complete",
+     "number": 16
+    },
+    "status": {
+     "state": "complete",
+     "label": "valid"
+    },
+    "stepper": {
+     "state": "complete",
+     "flags": {
+      "release": false
+     },
+     "reserved": 0
+    }
+   }
+  },
+  {
+   "id": "op08-request-inlet-sign-boundary",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 8,
+     "direction": "request",
+     "view": "power-stepper"
+    },
+    "fields": {
+     "inlet": [
+      0,
+      128
+     ],
+     "status": [
+      0
+     ],
+     "stepper": [
+      0
+     ]
+    }
+   },
+   "state": "complete",
+   "results": {
+    "inlet": {
+     "state": "complete",
+     "number": -2048
+    },
+    "status": {
+     "state": "complete",
+     "label": "valid"
+    },
+    "stepper": {
+     "state": "complete",
+     "flags": {
+      "release": false
      },
      "reserved": 0
     }
@@ -507,6 +623,60 @@
    }
   },
   {
+   "id": "op09-request-reserved-middle-bits",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 9,
+     "direction": "request",
+     "view": "power-stepper"
+    },
+    "fields": {
+     "release": [
+      126
+     ]
+    }
+   },
+   "state": "complete",
+   "results": {
+    "release": {
+     "state": "complete",
+     "flags": {
+      "release": false
+     },
+     "reserved": 126
+    }
+   }
+  },
+  {
+   "id": "op09-positive-reserved-low-bit-set",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 9,
+     "direction": "positive",
+     "view": "power-stepper"
+    },
+    "fields": {
+     "release": [
+      3
+     ]
+    }
+   },
+   "state": "complete",
+   "results": {
+    "release": {
+     "state": "complete",
+     "flags": {
+      "release": true
+     },
+     "reserved": 2
+    }
+   }
+  },
+  {
    "id": "unsupported-op0a",
    "input": {
     "context": {
@@ -571,6 +741,63 @@
      "operation": 7,
      "direction": "other",
      "view": "power-stepper"
+    },
+    "fields": {
+     "minimum_power": [
+      255
+     ]
+    }
+   },
+   "state": "Unknown",
+   "results": {}
+  },
+  {
+   "id": "unsupported-primary",
+   "input": {
+    "context": {
+     "primary": 180,
+     "secondary": 18,
+     "operation": 7,
+     "direction": "positive",
+     "view": "power-stepper"
+    },
+    "fields": {
+     "minimum_power": [
+      255
+     ]
+    }
+   },
+   "state": "Unknown",
+   "results": {}
+  },
+  {
+   "id": "unsupported-secondary",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 19,
+     "operation": 7,
+     "direction": "positive",
+     "view": "power-stepper"
+    },
+    "fields": {
+     "minimum_power": [
+      255
+     ]
+    }
+   },
+   "state": "Unknown",
+   "results": {}
+  },
+  {
+   "id": "unsupported-view",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 7,
+     "direction": "positive",
+     "view": "other"
     },
     "fields": {
      "minimum_power": [

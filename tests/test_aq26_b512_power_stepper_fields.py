@@ -255,7 +255,11 @@ class Ab25Aq25PowerStepperTests(ab25aq25_unittest.TestCase):
                 'op08-request-complete', 'op08-positive-complete',
                 'op08-positive-status-extra-not-interpreted', 'op09-request-release',
                 'op09-positive-reserved', 'unsupported-op0a',
-                'unsupported-absent-operation', 'unsupported-explicit-zero'):
+                'unsupported-absent-operation', 'unsupported-explicit-zero', 'unsupported-primary',
+                'unsupported-secondary', 'unsupported-view',
+                'op07-positive-minimum-251', 'op08-request-inlet-high-byte',
+                'op08-request-inlet-sign-boundary', 'op09-request-reserved-middle-bits',
+                'op09-positive-reserved-low-bit-set'):
             self.assertIn(ab25aq25_id, ab25aq25_ids)
         ab25aq25_branches = {
             (ab25aq25_case['input']['context'].get('operation'),
