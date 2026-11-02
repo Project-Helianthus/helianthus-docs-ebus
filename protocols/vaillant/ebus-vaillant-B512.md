@@ -173,7 +173,7 @@ profile availability of the header-only entry (B512 `14`) is not established.
 
 ## References
 
-- Public TypeSpec: [hcmode_inc.tsp](https://github.com/john30/ebusd-configuration/blob/master/src/vaillant/hcmode_inc.tsp)
-- Public TypeSpec: [64.v65.tsp](https://github.com/john30/ebusd-configuration/blob/master/src/vaillant/64.v65.tsp)
+- Public TypeSpec: [hcmode_inc.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/hcmode_inc.tsp)
+- Public TypeSpec: [64.v65.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/64.v65.tsp)
 - Public capture/reference: [Pittnerovi eBUS page](https://www.pittnerovi.com/jiri/hobby/electronics/ebus/)
 - Historical PDF: [Vaillant_ebus.pdf](https://www.pittnerovi.com/jiri/hobby/electronics/ebus/Vaillant_ebus.pdf)
