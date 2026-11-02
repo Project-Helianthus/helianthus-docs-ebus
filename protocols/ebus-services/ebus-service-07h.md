@@ -140,7 +140,7 @@ Request payload: Empty (`NN=0x00`).
 
 **Hypothesis:** identification `0704` and existence inquiry `07FE` are separate
 identities. The following finite scope has seven declarations, not a complete
-seven-service schema. A logical position is not a wire offset; unknown extent
+schema for all seven services. A logical position is not a wire offset; unknown extent
 must not be converted into additional physical bytes. Operation is absent for
 all seven declarations. These candidates do not establish native qualification.
 
@@ -157,7 +157,7 @@ all seven declarations. These candidates do not establish native qualification.
 Control value 99 has no established okay meaning. The controls overlap logical
 positions 8/9; this does not declare extra physical bytes. Native variable
 lengths, physical extra bytes, all family override predicates, complete
-seven-service schemas and installed support remain **Unknown**.
+schemas for all seven services and installed support remain **Unknown**.
 The partial local-parser behaviour is described in the application architecture documentation.
 See the [synthetic candidate examples](fixtures/ae26_07_candidates.json), which
 preserve raw values and independent interpretations without physical qualification.

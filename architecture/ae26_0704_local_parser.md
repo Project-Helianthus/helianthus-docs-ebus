@@ -58,4 +58,4 @@ never selects a family by itself. Family-specific overrides, local responders,
 sweeps and follow-up writes are excluded. No eBUS MCP or GraphQL behavior is
 changed; parity and compatibility receive no new runtime qualification here.
 Native variable lengths, physical extra bytes, all family override predicates,
-complete seven-service schemas and installed support remain **Unknown**.
+complete schemas for all seven services and installed support remain **Unknown**.

@@ -87,7 +87,7 @@ class CandidateAcceptance(unittest.TestCase):
         self.assertEqual([150 + 9, 90 + 9, 400 + 17], [159, 99, 417])
         self.assertEqual(bytes([65,66,67,68,69]).decode('ascii'), 'ABCDE')
         self.assertEqual(self.fixture['native_grade'], 'Hypothesis')
-        self.assertEqual(self.fixture['unknown'], ['native variable lengths', 'physical extra bytes', 'family override predicates', 'complete seven-service schemas', 'installed support'])
+        self.assertEqual(self.fixture['unknown'], ['native variable lengths', 'physical extra bytes', 'family override predicates', 'complete schemas for all seven services', 'installed support'])
         self.assertIn('not a wire offset', self.native)
         self.assertIn('partial last-known-good state', self.arch)
 
