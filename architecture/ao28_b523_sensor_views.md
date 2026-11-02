@@ -105,7 +105,8 @@ minimums, not wire lengths. Every sensor occurrence receives all six `words`;
 every status pair receives all four values under both views; every reserved bit
 is toggled separately. Partial cases cover every shorter length. Fixture rows
 contain complete synthetic inputs and explicit expected assertions, not complete
-serialized outputs. `field`/`result` is one selected output-field assertion;
+serialized outputs. `decoded_fields` asserts every available sensor, PWM and status value; `arguments_absent` requires omission, and missing required input/context members are error/no-result cases.
+`field`/`result` is one selected output-field assertion;
 in partial rows ending inside a sensor, it requires that sensor to remain
 present with exactly `{"raw":[0],"state":"Unknown"}` and no `number`.
 `complete_sensors` and `numeric_zero_sensors` assert retained sibling sets,

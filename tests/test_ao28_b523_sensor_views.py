@@ -209,7 +209,7 @@ class TestAb27Ao27SensorViews(unittest.TestCase):
         self.ab27ao27Fixture = ab27ao27Strict(ab27ao27Fixture.read_text())
         self.ab27ao27Rows = {ab27ao27Row["id"]: ab27ao27Row for ab27ao27Row in self.ab27ao27Fixture["cases"]}
         self.assertEqual(len(self.ab27ao27Rows), len(self.ab27ao27Fixture["cases"]))
-        self.assertEqual(len(self.ab27ao27Rows), 407)
+        self.assertEqual(len(self.ab27ao27Rows), 414)
         self.assertEqual(self.ab27ao27Fixture["id"], "ab27ao27SensorViews")
         ab27ao27Match = re.search(r"<!-- ab27ao27-contract:start -->\s*```json\s*(.*?)\s*```\s*<!-- ab27ao27-contract:end -->", ab27ao27Page.read_text(), re.S)
         self.assertIsNotNone(ab27ao27Match)
@@ -228,6 +228,42 @@ class TestAb27Ao27SensorViews(unittest.TestCase):
         ab27ao27Input = {"context": ab27ao27Ctx, "fields": ab27ao27Fields if ab27ao27Fields is not None else {"logical_object": ab27ao27Data}}
         if ab27ao27Args is not None:
             ab27ao27Input["arguments"] = ab27ao27Args
+        # These constructed cases use zero siblings plus one literal result override.
+        # Assert every available value, including partial PWM/status siblings.
+        ab27ao27Expect = copy.deepcopy(ab27ao27Expect)
+        ab27ao27Expect.update(preserve_context=True, preserve_raw=True,
+                             physical="Unknown", qualified=False)
+        if ab27ao27Args is not None:
+            ab27ao27Expect["preserve_arguments"] = copy.deepcopy(ab27ao27Args)
+        else:
+            ab27ao27Expect["arguments_absent"] = True
+        if ab27ao27Expect["state"] != "Unknown":
+            ab27ao27Length = len(ab27ao27Input["fields"].get("logical_object", []))
+            ab27ao27Count = (len(ab27ao27Sensors[ab27ao27Op])
+                            if ab27ao27Length >= ab27ao27Extents[ab27ao27Op]
+                            else ab27ao27PartialCounts[ab27ao27Op][ab27ao27Length])
+            ab27ao27Decoded = {
+                ab27ao27Name: copy.deepcopy(ab27ao27WordCases[5][1])
+                for ab27ao27Name, _ in ab27ao27Sensors[ab27ao27Op][:ab27ao27Count]
+            }
+            if ab27ao27Op == 3 and ab27ao27Length > 15:
+                ab27ao27Decoded["PWM"] = copy.deepcopy(ab27ao27WordCases[5][1])
+            for ab27ao27Offset, ab27ao27Names in ab27ao27Statuses[ab27ao27Op]:
+                if ab27ao27Length > ab27ao27Offset:
+                    for ab27ao27Name in ab27ao27Names:
+                        ab27ao27Decoded[ab27ao27Name + "_status"] = {
+                            "raw": 0, "state": "Hypothesis",
+                            "label": ab27ao27Labels[ab27ao27View][0],
+                        }
+            if "field" in ab27ao27Expect:
+                ab27ao27Decoded[ab27ao27Expect["field"]] = copy.deepcopy(ab27ao27Expect["result"])
+            ab27ao27Expect["decoded_fields"] = ab27ao27Decoded
+            # Opaque and reserved bytes are zero except in their explicit rows.
+            ab27ao27ReservedOffset = ab27ao27Reserved[ab27ao27Op][0]
+            if ab27ao27Length > ab27ao27ReservedOffset:
+                ab27ao27Expect.setdefault("reserved", {"offset": ab27ao27ReservedOffset, "value": 0})
+            if ab27ao27Op == 7 and ab27ao27Length > 11:
+                ab27ao27Expect.setdefault("opaque", {"offset": 11, "raw": 0})
         ab27ao27Expected = {"id": "ab27ao27" + ab27ao27Id, "input": ab27ao27Input, "expect": ab27ao27Expect}
         with self.subTest(ab27ao27Id=ab27ao27Id):
             self.assertEqual(json.dumps(self.ab27ao27Rows[ab27ao27Expected["id"]], sort_keys=True), json.dumps(ab27ao27Expected, sort_keys=True))
@@ -335,6 +371,22 @@ class TestAb27Ao27SensorViews(unittest.TestCase):
             "root-array": "[]",
         }
         ab27ao27Valid = {"context": {"primary": 181, "secondary": 35, "operation": 3, "direction": "positive", "view": "status-zero-valid"}, "fields": {"logical_object": []}}
+        ab27ao27Omissions = []
+        # Input requirements only: output/field requirements describe results,
+        # not keys a caller must supply; logical_object itself may be absent.
+        for ab27ao27Container, ab27ao27Keys in (
+                ("input", ("context", "fields")),
+                ("context", ("primary", "secondary", "operation", "direction", "view"))):
+            self.assertEqual(list(ab27ao27Keys),
+                             ab27ao27Contract["json_shapes"][ab27ao27Container + "_required"])
+            for ab27ao27Key in ab27ao27Keys:
+                ab27ao27Input = copy.deepcopy(ab27ao27Valid)
+                ab27ao27Input["fields"]["logical_object"] = self.ab27ao27Base(3)
+                ab27ao27Target = ab27ao27Input if ab27ao27Container == "input" else ab27ao27Input["context"]
+                del ab27ao27Target[ab27ao27Key]
+                ab27ao27Name = "missing-" + ab27ao27Container + "-" + ab27ao27Key
+                ab27ao27Omissions.append(ab27ao27Name)
+                ab27ao27Errors[ab27ao27Name] = json.dumps(ab27ao27Input, separators=(",", ":"))
         for ab27ao27Key in ("root", "context", "fields", "arguments"):
             for ab27ao27Kind, ab27ao27Value in (("array", []), ("null", None), ("string", ""), ("number", 0), ("bool", False)):
                 ab27ao27Input = copy.deepcopy(ab27ao27Valid)
@@ -359,7 +411,7 @@ class TestAb27Ao27SensorViews(unittest.TestCase):
         ab27ao27Input = copy.deepcopy(ab27ao27Valid)
         ab27ao27Input["context"]["operation"] = "3"
         ab27ao27Errors["operation-string"] = json.dumps(ab27ao27Input, separators=(",", ":"))
-        self.assertEqual(set(ab27ao27Errors), set(ab27ao27Contract["errors"]))
+        self.assertEqual(set(ab27ao27Errors), set(ab27ao27Contract["errors"]) | set(ab27ao27Omissions))
         for ab27ao27Name, ab27ao27Text in ab27ao27Errors.items():
             with self.subTest(ab27ao27Error=ab27ao27Name):
                 self.assertEqual(self.ab27ao27Rows["ab27ao27error-" + ab27ao27Name], {"id": "ab27ao27error-" + ab27ao27Name, "input_json": ab27ao27Text, "expect": {"error": True, "successful_result": False}})
@@ -369,7 +421,7 @@ class TestAb27Ao27SensorViews(unittest.TestCase):
         ab27ao27Counts = {"word": 114, "status": 152, "reserved": 10,
                          "partial": 55, "tail": 3, "pwm": 1, "opaque": 1,
                          "selection": 6, "context": 5, "raw": 6,
-                         "arguments": 1, "error": 53}
+                         "arguments": 1, "error": 60}
         for ab27ao27Family, ab27ao27Count in ab27ao27Counts.items():
             self.assertEqual(sum(ab27ao27Id.startswith("ab27ao27" + ab27ao27Family + "-") or ab27ao27Id == "ab27ao27" + ab27ao27Family for ab27ao27Id in self.ab27ao27Rows), ab27ao27Count)
         for ab27ao27Row in self.ab27ao27Rows.values():
