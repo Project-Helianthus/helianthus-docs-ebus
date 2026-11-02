@@ -111,6 +111,20 @@ physical units and effects all remain `Unknown`.
 
 ## Result boundary and synthetic examples
 
+The `results` map is keyed as follows, and no other keys appear. Every field in
+`fields` that the view does not interpret gets a result keyed by its own name,
+with `raw` set to the array as given and `state="complete"`. A field name equal
+to a result key of the selected view below is rejected with an error.
+
+| Context | Result key | `raw` contents and extra properties |
+| --- | --- | --- |
+| `unchanged` | `unchanged` | `{"replacement", "previous", "requested"}` as given; `label`, and `number` when the selected token is a number. |
+| `dhw-enable` | `enabled` | The `enabled` array as given, or absent when the field is missing; `label` only when exactly one byte. |
+| `parallel-charge` | `disable` | The `disable` array as given, or absent when missing; `label` only when exactly one byte, using `role` and `parallel`. |
+| `flow-excess` | `flow-excess` | `{"demand", "excess"}`; `number` is the sum, with `candidate_domain` and `calculation`. |
+| `programmed-start` | `programmed-start` | `{"program_mode"}` plus `start` when present; `label` from the mode alone. |
+| Unsupported context | One key per name in `fields` | Each `raw` is the array as given, `state="Unknown"`, with no label or number. |
+
 Return one JSON object retaining `context`, raw `fields`, `arguments` when
 present, and extra keys independently, together with `state`, `results`,
 `physical="Unknown"` and `qualified=false`. Each result has `raw`, `state` and
