@@ -35,7 +35,10 @@ opaque array is valid data, distinct from a missing field. `arguments` supplies
 exactly the explicitly stated typed values for the selected view; no typed
 argument or required argument is specified for the finite views on this page.
 Unknown extra input keys are retained unchanged, independently of context,
-raw fields and arguments; they do not enable additional formulas.
+raw fields and arguments; they do not enable additional formulas. The top-level
+keys `state`, `results`, `physical` and `qualified` are reserved for generated
+output: an input carrying any of them is rejected with an error, like a
+duplicate key, so no retained extra can collide with a generated key.
 
 Reject malformed JSON, trailing JSON, duplicate keys at any depth, wrong kinds,
 nonfinite numbers, fractional or out-of-range byte/integer arguments, and missing
@@ -81,7 +84,7 @@ formula applied. No other operation inherits sequence-pair correlation.
 | `flags`, handshake positive | 1 byte | Bits 0 `valid`, 1 `invalid`, 2 `blocked`, 3 `change`, 4 `denied`, 5 `invalid-range`, 6 `not-user-adjustable`; bit 7 `reserved`. |
 | `family_code`, handshake positive | 1 byte | Raw unsigned byte number; semantic family label is Unknown. It does not qualify a family. |
 | `dsn`, `start`, `offset`, handshake positive | Opaque arrays | Bit 3 false: semantic state `absent-unless-change`, retaining each supplied raw array. Bit 3 true: retain each span independently, imposing no width. |
-| `request_sequence`, `response_sequence`, sequence-pair | Exactly 1 byte each | Equality is a candidate correlation predicate only; mismatch yields `correlated=false`. |
+| `request_sequence`, `response_sequence`, sequence-pair | Exactly 1 byte each | Equality is a candidate correlation predicate only; mismatch yields `results.correlation.correlated=false`. |
 
 Flags need not be exclusive. Request-change bit 1 and positive-change bit 3
 are distinct: positive flags `02` means `invalid`, not `change`; positive `08`
@@ -98,7 +101,12 @@ Return one JSON object retaining `context`, original raw `fields`, supplied
 `arguments` and extra keys independently, with `state`, `results`,
 `physical="Unknown"` and `qualified=false`. Every result retains `raw` when
 supplied, a `state`, and applicable `number`, `label`, `flags`, `reserved`,
-`unmodeled`, `candidate_domain` or `alternatives`. A missing fixed-width field's result is
+`unmodeled`, `candidate_domain` or `alternatives`. For `sequence-pair`, `results` holds the entries `request_sequence` and
+`response_sequence` (each shaped like `sequence`) plus one entry `correlation`,
+an object with `state`, Boolean `correlated`, `grade` and `calculation`; no
+`correlated` key appears at the top level or inside the sequence entries. If
+either sequence is incomplete, `correlation` has state `incomplete` and no
+`correlated` key. A missing fixed-width field's result is
 incomplete without a fabricated `raw`; a missing opaque span's result has state
 `absent`, also without a fabricated `raw`. These examples use `grade` to keep
 candidate meaning **Hypothesis**, with `calculation="Proven"` for exact local
@@ -159,8 +167,8 @@ above; each retains its own complete context and raw fields in the output.
 | Handshake request: `sequence=[7]`, `flags=[2]`, `dsn=[17]`, `start=[34,35]`, `offset=[]`, `crc=[52,18]` | Request `change=true`; `CRC-support=false`. Raw CRC bytes `34 12` produce `number=4660`, calculation Proven, candidate meaning Hypothesis. No CRC-valid assertion is available. The three opaque arrays remain distinct, including the empty offset. |
 | Handshake positive: `sequence=[7]`, `flags=[2]`, `family_code=[9]`, `dsn=[17]`, `start=[34,35]`, `offset=[]` | `invalid=true`, `change=false`; each span has semantic state `absent-unless-change` and keeps its own raw array. Family code has complete raw `number=9` and Unknown label meaning. |
 | Handshake positive: same fields but `flags=[8]` | `change=true`, `invalid=false`; retain `dsn=[17]`, `start=[34,35]`, `offset=[]` independently without a width or ordering claim. |
-| Sequence-pair, absent operation: `request_sequence=[0]`, `response_sequence=[255]` | Complete local comparison, `correlated=false`, grade Hypothesis, calculation Proven; no success. |
-| Sequence-pair, operation 1: `request_sequence=[255]`, `response_sequence=[255]` | Complete local comparison, `correlated=true`, grade Hypothesis, calculation Proven; no success. |
+| Sequence-pair, absent operation: `request_sequence=[0]`, `response_sequence=[255]` | Complete local comparison, `results.correlation.correlated=false`, grade Hypothesis, calculation Proven; no success. |
+| Sequence-pair, operation 1: `request_sequence=[255]`, `response_sequence=[255]` | Complete local comparison, `results.correlation.correlated=true`, grade Hypothesis, calculation Proven; no success. |
 
 A positive result must not borrow the request's change bit. Neither branch may
 impose fixed DSN/start/offset widths or discard supplied conditional raw arrays.
@@ -177,7 +185,7 @@ success. The CRC numeric value proves only LEu16 arithmetic, never validation.
 | Reset context with explicit `operation=0` and valid byte arrays | Raw-only `Unknown`; no ack formula or sequence correlation. |
 | Primary 180 with otherwise valid handshake request input | Raw-only `Unknown`; raw fields and extras survive without a CRC conversion. |
 | Handshake request: `sequence=[7]`, `flags=[2]`, `crc=[52,18]`, no `dsn`, `start` or `offset` | Top-level `complete`; each absent span is result state `absent` with raw absent. |
-| Operation null, `crc=[52.5,18]`, byte 256, Boolean byte, duplicate nested key, trailing object, or malformed JSON | Error, no successful result; none becomes a partial numeric conversion. |
+| Input carrying a top-level `state`, `results`, `physical` or `qualified` key, operation null, `crc=[52.5,18]`, byte 256, Boolean byte, duplicate nested key, trailing object, or malformed JSON | Error, no successful result; none becomes a partial numeric conversion. |
 
 ## Remaining boundaries
 
