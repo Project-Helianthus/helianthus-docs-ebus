@@ -140,10 +140,21 @@ the complete envelope always retains all input members):
 For `intervals` in the supported request context, use `fields:{}` and
 `arguments:{"pairs":[[10,10],[20,30],[40,50]]}`. This is a complete valid
 synthetic interval input when combined with the supported context. Retain the
-exact three pairs as raw arguments. Per-pair result excerpts are:
+exact three pairs as raw arguments. The successful output envelope is the
+common result envelope with `state: "complete"` and these `results` members:
+`pairs`, an array of exactly three per-pair objects in input order, and
+`order`, the ordering predicate object. Each pair object has `raw` (the
+two-byte array), `state`, `label` (`disabled` or `enabled-candidate`), `grade`,
+and `start` and `end` conversion objects. A conversion object has `raw` (the
+byte) and `state`; a mapped byte (`0..144`) also has `minutes`, `hour`,
+`minute` and `label` as in the period calculation, while an unmapped byte
+(`145..255`) is `Unknown` with no number or label. The `order` object has `raw`
+(the three start bytes), `state` and `grade`; when computed it also has `value`
+(Boolean) and `calculation: "Proven"`, otherwise `state` is `Unknown` and it has
+no `value`. Excerpt of `results` for the example:
 
 ```json
-[{"raw":[10,10],"state":"complete","label":"disabled","grade":"Hypothesis"},{"raw":[20,30],"state":"complete","label":"enabled-candidate","grade":"Hypothesis"},{"raw":[40,50],"state":"complete","label":"enabled-candidate","grade":"Hypothesis"}]
+{"pairs":[{"raw":[10,10],"state":"complete","label":"disabled","grade":"Hypothesis","start":{"raw":10,"state":"complete","minutes":100,"hour":1,"minute":40,"label":"01:40"},"end":{"raw":10,"state":"complete","minutes":100,"hour":1,"minute":40,"label":"01:40"}},{"raw":[20,30],"state":"complete","label":"enabled-candidate","grade":"Hypothesis","start":{"raw":20,"state":"complete","minutes":200,"hour":3,"minute":20,"label":"03:20"},"end":{"raw":30,"state":"complete","minutes":300,"hour":5,"minute":0,"label":"05:00"}},{"raw":[40,50],"state":"complete","label":"enabled-candidate","grade":"Hypothesis","start":{"raw":40,"state":"complete","minutes":400,"hour":6,"minute":40,"label":"06:40"},"end":{"raw":50,"state":"complete","minutes":500,"hour":8,"minute":20,"label":"08:20"}}],"order":{"raw":[10,20,40],"state":"complete","value":true,"grade":"Hypothesis","calculation":"Proven"}}
 ```
 
 Equality declares disabled independently of interpretability: `[255,255]`
@@ -151,15 +162,18 @@ remains disabled although both time conversions are Unknown. Unequal endpoints
 retain enabled-candidate state and explicit endpoints even when unmapped.
 Never infer deletion from an equal pair or discard its disabled state.
 
-Report a separate local predicate `first.start < second.start < third.start`.
-The example starts `10,20,40` yield true (`calculation: Proven`, candidate
-meaning `Hypothesis`). Swapping the second and third starts gives
-`[[10,10],[40,30],[20,50]]` and false; raw starts change as supplied, but pair
-disabled/enabled-candidate classifications stay unchanged. This predicate
-compares **only the three starts**. If any endpoint, including an end, is
-unmapped, ordering is `Unknown`, with no Boolean substituted. For example
-`[[10,10],[20,255],[40,50]]` retains the pair classifications but has Unknown
-ordering. Native interval-order semantics remain Unknown.
+Report a separate local predicate `first.start < second.start < third.start`
+as `results.order`. The example starts `10,20,40` yield true. Swapping the
+second and third starts gives `[[10,10],[40,30],[20,50]]` and false; raw starts
+change as supplied, but pair disabled/enabled-candidate classifications stay
+unchanged. This predicate depends **only on the three starts**: ends are not
+operands and never affect it. If any start is unmapped (`145..255`), ordering
+is `Unknown`, with no Boolean substituted; comparing raw bytes would be
+incorrect. For example `[[10,10],[20,255],[40,50]]` has an unmapped end only,
+so its ordering is true while the second pair's end conversion is Unknown;
+`[[10,10],[200,30],[40,50]]` has an unmapped start, so ordering is Unknown and
+the pair classifications are unchanged. Native interval-order semantics remain
+Unknown.
 
 Do not reject equal, reversed, overlapping or midnight-crossing pairs, and do
 not claim device enforcement. In particular, `[40,30]` is admitted; calling it
