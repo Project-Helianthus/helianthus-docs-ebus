@@ -174,7 +174,7 @@ whether the service is available under the PeBUS profile is not established (see
 
 ## References
 
-- Public TypeSpec: [26.vr_71.tsp](https://github.com/john30/ebusd-configuration/blob/master/src/vaillant/26.vr_71.tsp)
-- Public TypeSpec: [52.vr_70.tsp](https://github.com/john30/ebusd-configuration/blob/master/src/vaillant/52.vr_70.tsp)
-- Public TypeSpec: [53.vr_70.5.tsp](https://github.com/john30/ebusd-configuration/blob/master/src/vaillant/53.vr_70.5.tsp)
+- Public TypeSpec: [26.vr_71.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/26.vr_71.tsp)
+- Public TypeSpec: [52.vr_70.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/52.vr_70.tsp)
+- Public TypeSpec: [53.vr_70.5.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/53.vr_70.5.tsp)
 - B524 functional-module register map: [`ebus-vaillant-B524-register-map.md`](ebus-vaillant-B524-register-map.md)
