@@ -46,7 +46,7 @@ SINGLE = "single_205"
 SIGNATURES = {
     "plan": (
         "PlanLocalBudget(procedure, input) -> "
-        "(procedure, chunks, consumed, unplanned)"
+        "(procedure, outcome, reason, chunks, consumed, unplanned, raw)"
     ),
     "progress": (
         "AdvanceLocalProgress(prior, accepted, actual) -> "
@@ -216,6 +216,7 @@ def checksum_result(value, keep_raw=True):
 def build_examples():
     proven = ("Proven", "Proven")
     hypo = ("Hypothesis", "Hypothesis")
+    proven_crc = ("Proven", "Hypothesis")
     rows = [
         example(
             "grouped_1024_exact",
@@ -479,7 +480,7 @@ def build_examples():
             "checksum",
             None,
             checksum_result(CRC_DIGITS),
-            *hypo,
+            *proven_crc,
         ),
         example(
             "crc_empty_default",
@@ -490,7 +491,7 @@ def build_examples():
             "checksum",
             None,
             checksum_result(CRC_EMPTY),
-            *hypo,
+            *proven_crc,
         ),
         example(
             "crc_digits_initial_0",
@@ -501,7 +502,7 @@ def build_examples():
             "checksum",
             None,
             checksum_result(CRC_INITIAL_ZERO),
-            *hypo,
+            *proven_crc,
         ),
         example(
             "crc_explicit_default_initial",
@@ -512,7 +513,7 @@ def build_examples():
             "checksum",
             None,
             checksum_result(CRC_DIGITS),
-            *hypo,
+            *proven_crc,
         ),
         example(
             "crc_empty_initial_0",
@@ -600,7 +601,7 @@ def build_examples():
             "checksum",
             None,
             checksum_result(CRC_EMPTY),
-            *hypo,
+            *proven_crc,
         ),
     ]
     for index, value in enumerate(FLIP_CRC):
@@ -1203,7 +1204,7 @@ These signatures are hypothetical and are the names used for the whole contract.
 
 {render_signature_table()}
 
-`PlanLocalBudget` copies input bytes into owned mutable chunk buffers and returns those chunks, the consumed count, and the unplanned count. The procedure identity is returned with them. Empty input returns no chunks. That result is not a peer-empty-packet claim.
+`PlanLocalBudget` copies input bytes into owned mutable chunk buffers and returns those chunks, the consumed count, and the unplanned count. The procedure identity, outcome, and reason are returned with them. An unknown procedure returns `outcome=rejected`, `reason=unknown_procedure`, and an owned copy of the input in `raw`; `raw` is absent on a planned result. Empty input returns no chunks. That result is not a peer-empty-packet claim.
 
 `AdvanceLocalProgress` is a pure transition. `accepted` false leaves a valid prior count unchanged. Adding a valid actual count that would exceed the unsigned width is rejected, and the prior count stays the last known good value. A negative prior or actual is rejected. An `accepted` value that is not a Boolean is rejected. The next count is absent when the transition is rejected.
 
@@ -1606,6 +1607,7 @@ class BudgetAndChecksumHelpers(unittest.TestCase):
         self.assertEqual(grouped["procedure"], GROUPED)
         self.assertEqual(single["procedure"], SINGLE)
         unknown = plan_reference("other", data)
+        self.assertEqual(unknown["outcome"], "rejected")
         self.assertEqual(unknown["reason"], "unknown_procedure")
         self.assertEqual(unknown["chunks"], [])
         self.assertEqual(unknown["procedure"], "other")

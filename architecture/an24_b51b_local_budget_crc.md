@@ -31,11 +31,11 @@ These signatures are hypothetical and are the names used for the whole contract.
 
 | Role | Signature |
 | --- | --- |
-| plan | PlanLocalBudget(procedure, input) -> (procedure, chunks, consumed, unplanned) |
+| plan | PlanLocalBudget(procedure, input) -> (procedure, outcome, reason, chunks, consumed, unplanned, raw) |
 | progress | AdvanceLocalProgress(prior, accepted, actual) -> (outcome, last_known_good, next) |
 | checksum | LocalChecksum(payload, start, length, initial) -> (outcome, value, raw, start, length) |
 
-`PlanLocalBudget` copies input bytes into owned mutable chunk buffers and returns those chunks, the consumed count, and the unplanned count. The procedure identity is returned with them. Empty input returns no chunks. That result is not a peer-empty-packet claim.
+`PlanLocalBudget` copies input bytes into owned mutable chunk buffers and returns those chunks, the consumed count, and the unplanned count. The procedure identity, outcome, and reason are returned with them. An unknown procedure returns `outcome=rejected`, `reason=unknown_procedure`, and an owned copy of the input in `raw`; `raw` is absent on a planned result. Empty input returns no chunks. That result is not a peer-empty-packet claim.
 
 `AdvanceLocalProgress` is a pure transition. `accepted` false leaves a valid prior count unchanged. Adding a valid actual count that would exceed the unsigned width is rejected, and the prior count stays the last known good value. A negative prior or actual is rejected. An `accepted` value that is not a Boolean is rejected. The next count is absent when the transition is rejected.
 
@@ -137,10 +137,10 @@ The table is the finite synthetic set. Raw forms, selection, context, and partia
 | progress_negative_actual | - | - | progress:prior=10;accepted=true;actual=-1 | negative_actual | rejected | negative_count | last_known_good=10;next=absent | Hypothesis | Hypothesis | Unknown | Unknown | not_claimed | not_applicable | not_run |
 | progress_negative_prior | - | - | progress:prior=-1;accepted=true;actual=17 | negative_prior | rejected | negative_count | last_known_good=absent;next=absent | Hypothesis | Hypothesis | Unknown | Unknown | not_claimed | not_applicable | not_run |
 | progress_negative_actual_while_rejected | - | - | progress:prior=10;accepted=false;actual=-1 | negative_actual_while_rejected | rejected | negative_count | last_known_good=10;next=absent | Hypothesis | Hypothesis | Unknown | Unknown | not_claimed | not_applicable | not_run |
-| crc_digits_default | - | ascii:123456789 | span:0+9;initial=default | caller_selected_span | checksum | - | value=29B1;raw=kept | Hypothesis | Hypothesis | Unknown | Unknown | not_claimed | not_applicable | not_run |
-| crc_empty_default | - | ascii: | span:0+0;initial=default | empty_selection | checksum | - | value=FFFF;raw=kept | Hypothesis | Hypothesis | Unknown | Unknown | not_claimed | not_applicable | not_run |
-| crc_digits_initial_0 | - | ascii:123456789 | span:0+9;initial=0 | explicit_initial | checksum | - | value=31C3;raw=kept | Hypothesis | Hypothesis | Unknown | Unknown | not_claimed | not_applicable | not_run |
-| crc_explicit_default_initial | - | ascii:123456789 | span:0+9;initial=65535 | explicit_initial | checksum | - | value=29B1;raw=kept | Hypothesis | Hypothesis | Unknown | Unknown | not_claimed | not_applicable | not_run |
+| crc_digits_default | - | ascii:123456789 | span:0+9;initial=default | caller_selected_span | checksum | - | value=29B1;raw=kept | Proven | Hypothesis | Unknown | Unknown | not_claimed | not_applicable | not_run |
+| crc_empty_default | - | ascii: | span:0+0;initial=default | empty_selection | checksum | - | value=FFFF;raw=kept | Proven | Hypothesis | Unknown | Unknown | not_claimed | not_applicable | not_run |
+| crc_digits_initial_0 | - | ascii:123456789 | span:0+9;initial=0 | explicit_initial | checksum | - | value=31C3;raw=kept | Proven | Hypothesis | Unknown | Unknown | not_claimed | not_applicable | not_run |
+| crc_explicit_default_initial | - | ascii:123456789 | span:0+9;initial=65535 | explicit_initial | checksum | - | value=29B1;raw=kept | Proven | Hypothesis | Unknown | Unknown | not_claimed | not_applicable | not_run |
 | crc_empty_initial_0 | - | ascii: | span:0+0;initial=0 | explicit_initial | checksum | - | value=0000;raw=kept | Hypothesis | Hypothesis | Unknown | Unknown | not_claimed | not_applicable | not_run |
 | crc_span_length_8 | - | ascii:123456789 | span:0+8;initial=default | caller_selected_span | checksum | - | value=A12B;raw=kept | Hypothesis | Hypothesis | Unknown | Unknown | not_claimed | not_applicable | not_run |
 | crc_span_start_1 | - | ascii:123456789 | span:1+8;initial=default | caller_selected_span | checksum | - | value=1FDC;raw=kept | Hypothesis | Hypothesis | Unknown | Unknown | not_claimed | not_applicable | not_run |
@@ -148,7 +148,7 @@ The table is the finite synthetic set. Raw forms, selection, context, and partia
 | crc_negative_length | - | ascii:123456789 | span:0+-1;initial=default | malformed_span | rejected | negative_span | value=absent;raw=kept | Hypothesis | Hypothesis | Unknown | Unknown | not_claimed | not_applicable | not_run |
 | crc_negative_start | - | ascii:123456789 | span:-1+9;initial=default | malformed_span | rejected | negative_span | value=absent;raw=kept | Hypothesis | Hypothesis | Unknown | Unknown | not_claimed | not_applicable | not_run |
 | crc_span_past_end | - | ascii:123456789 | span:0+10;initial=default | span_out_of_range | rejected | span_out_of_range | value=absent;raw=kept | Hypothesis | Hypothesis | Unknown | Unknown | not_claimed | not_applicable | not_run |
-| crc_empty_span_at_end | - | ascii:123456789 | span:9+0;initial=default | empty_selection | checksum | - | value=FFFF;raw=kept | Hypothesis | Hypothesis | Unknown | Unknown | not_claimed | not_applicable | not_run |
+| crc_empty_span_at_end | - | ascii:123456789 | span:9+0;initial=default | empty_selection | checksum | - | value=FFFF;raw=kept | Proven | Hypothesis | Unknown | Unknown | not_claimed | not_applicable | not_run |
 | crc_flip_byte_0 | - | hex:303233343536373839 | span:0+9;initial=default | mutated_input_byte | checksum | - | value=C292;raw=kept | Hypothesis | Hypothesis | Unknown | Unknown | not_claimed | not_applicable | not_run |
 | crc_flip_byte_1 | - | hex:313333343536373839 | span:0+9;initial=default | mutated_input_byte | checksum | - | value=6E62;raw=kept | Hypothesis | Hypothesis | Unknown | Unknown | not_claimed | not_applicable | not_run |
 | crc_flip_byte_2 | - | hex:313232343536373839 | span:0+9;initial=default | mutated_input_byte | checksum | - | value=91D0;raw=kept | Hypothesis | Hypothesis | Unknown | Unknown | not_claimed | not_applicable | not_run |

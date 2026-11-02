@@ -8,7 +8,7 @@
   "executor_added": false,
   "authorization_gate_added": false,
   "signatures": {
-    "plan": "PlanLocalBudget(procedure, input) -> (procedure, chunks, consumed, unplanned)",
+    "plan": "PlanLocalBudget(procedure, input) -> (procedure, outcome, reason, chunks, consumed, unplanned, raw)",
     "progress": "AdvanceLocalProgress(prior, accepted, actual) -> (outcome, last_known_good, next)",
     "checksum": "LocalChecksum(payload, start, length, initial) -> (outcome, value, raw, start, length)"
   },
@@ -833,7 +833,7 @@
         "raw": "kept",
         "value": "29B1"
       },
-      "numeric_grade": "Hypothesis",
+      "numeric_grade": "Proven",
       "semantic_grade": "Hypothesis",
       "native_grade": "Unknown",
       "physical_qualification": "Unknown",
@@ -861,7 +861,7 @@
         "raw": "kept",
         "value": "FFFF"
       },
-      "numeric_grade": "Hypothesis",
+      "numeric_grade": "Proven",
       "semantic_grade": "Hypothesis",
       "native_grade": "Unknown",
       "physical_qualification": "Unknown",
@@ -889,7 +889,7 @@
         "raw": "kept",
         "value": "31C3"
       },
-      "numeric_grade": "Hypothesis",
+      "numeric_grade": "Proven",
       "semantic_grade": "Hypothesis",
       "native_grade": "Unknown",
       "physical_qualification": "Unknown",
@@ -917,7 +917,7 @@
         "raw": "kept",
         "value": "29B1"
       },
-      "numeric_grade": "Hypothesis",
+      "numeric_grade": "Proven",
       "semantic_grade": "Hypothesis",
       "native_grade": "Unknown",
       "physical_qualification": "Unknown",
@@ -1141,7 +1141,7 @@
         "raw": "kept",
         "value": "FFFF"
       },
-      "numeric_grade": "Hypothesis",
+      "numeric_grade": "Proven",
       "semantic_grade": "Hypothesis",
       "native_grade": "Unknown",
       "physical_qualification": "Unknown",
