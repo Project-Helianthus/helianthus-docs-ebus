@@ -2079,8 +2079,8 @@ independent constants; it does not implement a second production interpreter.
 
 ## Validation boundary
 
-The focused suite is registered in the explicit Gate D list in
-`scripts/ci_local.sh`.
+The repository's full local gate (`scripts/ci_local.sh`) runs the focused suite
+through its automatic test discovery.
 Production invocation, error/no-result behavior, defensive memory ownership,
 and mutation isolation require companion implementation evidence; static tuples
 cannot prove them. Full repository Gate D with the provisioned references,
