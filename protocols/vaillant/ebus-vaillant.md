@@ -15,8 +15,10 @@ For detailed coverage of selector-heavy identifiers, see:
 - `0xB5 0x12` (B512, circulation pump / VR65-style state): [`ebus-vaillant-B512.md`](ebus-vaillant-B512.md)
 - `0xB5 0x13` (B513, value-range query): [`ebus-vaillant-B513.md`](ebus-vaillant-B513.md)
 - `0xB5 0x14` (B514, service test-menu values): [`ebus-vaillant-B514.md`](ebus-vaillant-B514.md)
+  — [diagnostic-menu feedback and pressure candidates supplement](ebus-b514-menu-feedback.md) (**Hypothesis**)
 - `0xB5 0x15` (B515, legacy timer template): [`ebus-vaillant-B515.md`](ebus-vaillant-B515.md)
 - `0xB5 0x16` (B516, Energy statistics): [`ebus-vaillant-B516-energy.md`](ebus-vaillant-B516-energy.md)
+- `0xB5 0x19` (B519, test and echo services, opaque data and CRC bytes): [`ebus-vaillant-B519.md`](ebus-vaillant-B519.md)
 - `0xB5 0x1A` (B51A, heat-pump statistics and live-monitor): [`ebus-vaillant-B51A.md`](ebus-vaillant-B51A.md)
 - `0xB5 0x20` (B520, simulator actuator ranges and ADC quantities): [`ebus-vaillant-B520.md`](ebus-vaillant-B520.md)
 - `0xB5 0x21` (B521, OMU service registers): [`ebus-vaillant-B521.md`](ebus-vaillant-B521.md)
@@ -25,7 +27,7 @@ For detailed coverage of selector-heavy identifiers, see:
 - `0xB5 0x24` (B524, GetExtendedRegisters): [`ebus-vaillant-B524.md`](ebus-vaillant-B524.md)
 - `0xB5 0x55` (B555, timer/schedule protocol): [`ebus-vaillant-b555-timer-protocol.md`](ebus-vaillant-b555-timer-protocol.md)
 - VR90 room controller protocol: [`ebus-vaillant-vr90-emulation.md`](ebus-vaillant-vr90-emulation.md)
-- B5 services without a dedicated page (B501, B502, B50A to B50D, B50F, B517 to B519, B525, header-only identities): [Other B5 services](#other-b5-services-candidate-layouts)
+- B5 services without a dedicated page (B501, B502, B50A to B50D, B50F, B517, B518, B525, header-only identities): [Other B5 services](#other-b5-services-candidate-layouts)
 
 ## Scope
 
@@ -116,8 +118,8 @@ Notes:
 0xB5 0x09 0x34 / 0x35  Absolute-address read / write (candidate memory access services; layouts not established; `B5 09 34` may be available only under PeBUS on some installations: candidate, unresolved)
 0xB5 0x0A  Room temperature status of a remote control (B50A; candidate layout)
 0xB5 0x0B  Remote-control room action, holiday period and setpoint, keycode and circuit-name writes (B50B; candidate layout)
-0xB5 0x0C  Remote-control keycode, outside-temperature offset and heating-circuit-name reads (B50C; candidate layout)
-0xB5 0x0D  Remote-control room action and holiday status (B50D; candidate layout)
+0xB5 0x0C  Remote-control keycode-digits (OP00), signed-value (OP01; unit Unknown) and heating-circuit-name (OP02) reads (B50C; Hypothesis)
+0xB5 0x0D  UI-direction room-action (OP00) and holiday-status (OP01) writes (B50D; Hypothesis)
 0xB5 0x0F  Safety-relevant and non-safety temperature, status and demand exchange (B50F; candidate layout)
 0xB5 0x10  SetMode (B510; regulator->boiler mode and setpoint commands)
 0xB5 0x11  Remote Control (B511; triangular control loop between regulator, boiler, and NETX3)
@@ -420,8 +422,20 @@ extend to them.
 
 **Notes:**
 
-- `0x0704` is the only standard eBUS command with a real implementation (10-byte identification response). All other standard profiles (Service Data, Burner Control, Date/Time, etc.) are transport-level stubs — devices ACK them but return no data.
-- `0x0900`/`0x0902` (Memory Server) works only on the VRC720-family controller. The solar module (target address `0xEC`) is the same physical MCU as that controller, exposing a secondary target address.
+The following are **Proven** distinctions within the observations above, not
+family-wide peer support. Each target-response qualification stands separately.
+
+| Service | Qualified path | Grade | Boundary |
+|---|---|---|---|
+| 07/04 | working identification response, 10 bytes | Proven | observed targets only |
+| 09/00 | RAM target response | Proven | observed controller only |
+| 09/02 | EEPROM target response | Proven | observed controller only |
+
+Other standard-service rows marked stub describe acknowledgements without data
+in this observation scope. They do not establish support or absence of support
+for every other standard service or every peer. The solar-module secondary
+target belongs to the same controller MCU; this does not extend qualification
+to a device family.
 
 ### Vaillant Proprietary Protocols (0xB5xx)
 
@@ -496,15 +510,29 @@ response on the bus carries no such prefix (eBUS framing: `NN`, data, CRC); how
 the candidate response offsets map onto the bytes of a bus response is
 unconfirmed on the wire. **Hypothesis**: response offset 3 is the first data byte
 of a bus response, which agrees with the observed 10-byte B504 `00` date/time
-layout, where the first response byte is the DCF state at offset 3. The B502
-positive replies below place `Status` at offset 2, which this hypothesis does
-not cover; whether a B502 positive carries its own service prefix is unresolved
-(see [Open questions](#open-questions)). A response
+layout, where the first response byte is the DCF state at offset 3. The B501
+positive-status forms below place `Status` at offset 2, which this hypothesis does
+not cover; whether a B501 positive-status form carries its own service prefix is
+unresolved (see [Open questions](#open-questions)). A response
 described as "no response data (candidate)" carries no data bytes. Field-level
 detail for B504 to B508 is in the fixtures linked from those pages; "u8",
 "i16 LE" and similar names state width, signedness and byte order.
 
 ### B501 and B502: symbolic access and service PC interface
+
+**Hypothesis:** B502 is an independent return-data service, distinct
+from a B501 positive-status form even when candidate prefixes look similar.
+The synthetic examples keep these candidate identities separate; native service
+identity remains **Unknown** without wire evidence.
+The candidate `B5 02 Status` notation below does not identify a B502 service
+exchange. B502 variable data remains opaque; the alternative candidate reading
+of a leading zero as no error and a nonzero value as an error number remains
+unresolved.
+
+| Tagged case | Service identity | Interpretation | Grade |
+|---|---|---|---|
+| B501-status | B501 | positive-status form; candidate prefix B5 02 | Hypothesis |
+| B502-data | B502 | independent return-data service; variable data opaque | Hypothesis |
 
 - Candidate layout: request `B5 01 Flags 00 AddressLE16` (read), or the same
   followed by data (write). `Flags` is offset 2: bits 0..1 address mode (0
@@ -540,21 +568,65 @@ detail for B504 to B508 is in the fixtures linked from those pages; "u8",
   followed by opaque data from offset 2 in both directions; a second candidate
   reading describes 0 as no error and greater than 0 as an error number.
 
-### B50A to B50D: remote-control services
+### B50A to B50D: room and remote-control families
 
-Offsets count from the PB byte as above.
+The declarations below are **Hypothesis**. Synthetic representation checks are
+**Proven** software behavior only; physical qualification, native adaptation and
+peer effects remain **Unknown**. Relative field order is not an absolute byte
+offset. No absolute offset is assigned to the B50A, B50C or B50D fields here.
+Unresolved response alternatives retain raw bytes; an Unknown extent is not zero.
+
+| Family | Variant | Direction | Service | Operation | Request extent | Positive extent | Negative extent | Grade |
+|---|---|---|---|---|---|---|---|---|
+| B50A | room-action-temperature | read | B50A | OP00 | 0 | 3 | Unknown | Hypothesis |
+| B50C | keycode-digits | read | B50C | OP00 | 0 | 4 | Unknown | Hypothesis |
+| B50C | signed-value | read | B50C | OP01 | 0 | 2 | Unknown | Hypothesis |
+| B50C | circuit-names | read | B50C | OP02 | Unknown | Unknown | Unknown | Hypothesis |
+| B50D | ui-room-action | UI-write | B50D | OP00 | 1 | Unknown | Unknown | Hypothesis |
+| B50D | ui-holiday-status | UI-write | B50D | OP01 | 1 | Unknown | Unknown | Hypothesis |
+
+Extents are candidate argument/result byte counts, excluding any service prefix.
+B50A OP00 and B50C OP00/OP01 have no arguments. Positive and negative alternatives
+whose extents are Unknown remain unresolved, rather than empty results.
+
+| Family / operation | Candidate fields in relative order | Carrier / conversion | Labels / defaults | Grade |
+|---|---|---|---|---|
+| B50A / OP00 positive | room-action byte, then temperature | unsigned 0..255; signed LE16 / 16 degrees C | 0 no-action, 1 switch-on, 2 thermostat; 3..255 unlabeled | Hypothesis |
+| B50C / OP00 positive | four independent numeric digit bytes | each 0..9; not ASCII/BCD/u32 | each default zero | Hypothesis |
+| B50C / OP01 positive | signed value | signed LE16; factor 1, offset 0 | unit and sentinel Unknown | Hypothesis |
+| B50C / OP02 positive | circuit name | extent Unknown | independent per-circuit values/failures | Hypothesis |
+| B50D / OP00 request | raw room-action byte | unsigned 0..255 | 0 no-action, 1 switch-on, 2 thermostat; default zero; 3..255 unlabeled | Hypothesis |
+| B50D / OP01 request | raw holiday-status byte | unsigned 0..255 | labels 0/1; default zero; 2..255 unlabeled | Hypothesis |
+
+B50A's signed carrier range is -32768..32767, giving -2048..2047.9375 degrees C.
+Unavailable sentinel is **Unknown**: neither `8000` nor `FFFF` is a qualified
+unavailable marker. Synthetic `02 80 FF` is candidate thermostat and -8 degrees C;
+`03 00 00` retains unlabeled action 3. Temperature bytes `00 80` remain the signed
+candidate -2048; `FF FF` remains -0.0625, with no unavailable promotion.
+
+B50C digits `01 02 03 04` remain four values [1, 2, 3, 4]. OP01 `FE FF` is
+candidate signed -2 with **Unknown** unit and sentinel; no temperature unit is
+inferred. For OP02, echoed circuit, string trimming, B524 namespace equivalence
+and wildcard semantics of zero are **Unknown**. Raw name bytes remain
+uninterpreted; a failed read or unresolved response alternative supplies no
+qualified name value.
+
+B50D is the UI family: UI-direction writes are distinct from remote-control
+writes and completed UI effects. Unknown raw 255 remains unlabeled for both
+operations. These declarations grant no runtime capability or write admission.
+
+The separate B50B remote-control variants below remain candidate layouts;
+their located offsets use the PB-based convention above. They do not locate
+B50D fields or establish physical behavior for another family.
 
 | Service | Candidate layout |
 |---|---|
-| `B5 0A 00` reply | room temperature `i16` LE ÷16 °C @3..4, room action `u8` @5 |
-| `B5 0B 00`, `B5 0D 00` request | room action `u8` @3: 0 no action, 1 switch on, 2 thermostat |
+| `B5 0B 00` request | room action `u8` @3: 0 no action, 1 switch on, 2 thermostat |
 | `B5 0B 01` | holiday period: number `u8` @3, start day/month/year @4/5/6, end day/month/year @7/8/9; plain `u8` values (day 1..31, month 1..12, year 0..99), not BCD |
 | `B5 0B 02` | holiday setpoint `u8` °C, 5..30 |
-| `B5 0B 05`, `B5 0D 01` | holiday status `u8`: 0 stop, 1 start |
-| `B5 0B 03` (write), `B5 0C 00` (read) | 4-digit keycode as four `u8` digits (0..9) @3..6 |
+| `B5 0B 05` | holiday status `u8`: 0 stop, 1 start |
+| `B5 0B 03` (write) | 4-digit keycode as four `u8` digits (0..9) @3..6 |
 | `B5 0B 04` | circuit name written as 10 ASCII bytes @3..12 (default: the ten characters `0000000000`); no explicit circuit index |
-| `B5 0C 01` | outside-temperature offset, raw `i16` LE @3..4, range -5000..5000, scaling unknown |
-| `B5 0C 02` | heating-circuit name read: request `B5 0C 02 <n>` with `n` `u8` @3 (range 1..15; the default 0 lies outside the range); the positive carries exactly 10 ASCII bytes @3..12 with no index echo; NUL termination, trimming and encoding are unknown. The circuit number is not shown to equal a B524 zone index. |
 
 ### B50F: safety-relevant temperature, status and demand
 
@@ -696,9 +768,9 @@ B512 `14` and B514 `09`.
   [B507 page](ebus-vaillant-B507.md)).
 - How the candidate response offsets (counted from the first byte of the service
   prefix) map onto the data bytes of a bus response is unconfirmed on the wire.
-  The B502 positive replies place `Status` at offset 2, which the offset-3
-  **Hypothesis** does not cover; whether a B502 positive carries its own service
-  prefix is unresolved.
+  The B501 positive-status forms place `Status` at offset 2, which the offset-3
+  **Hypothesis** does not cover; whether a B501 positive-status form carries its
+  own service prefix is unresolved.
 - Whether the B5 services without a profile statement on their own page (see
   [EBUS and PeBUS protocol profiles](#ebus-and-pebus-protocol-profiles)) are
   available under the PeBUS profile is not established.

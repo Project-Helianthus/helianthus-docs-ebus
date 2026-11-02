@@ -3,7 +3,7 @@
 The BASV0 metadata fixture (the CC0 record is
 [ebus-vaillant-b524-basv0-profile-v1.md][source-1]) is a candidate input to
 application profile reuse. It may be selected only after the local EID, software
-raw value, hardware raw value, API version, and revision match the fixture
+raw value, hardware raw value, API version, and API revision match the fixture
 identity. A selector match without that profile match must not reuse a bound or
 codec. The bundled-baseline states (`not_verified`, `matches`, `differs`,
 `unavailable`, `profile_mismatch`), the slot-identity rule and the recheck
@@ -62,6 +62,46 @@ docs-ebus schema updated first. Digests are refreshed in the same coordinated
 change. Explorer `/v1` exports must pass
 `scripts/validate_b524_basv0_description_profile.py`.
 
+## Description metadata states and caller-supplied index
+
+**Proven:** the [public description fixture][source-7] contains 2,093
+description records, partitioned by metadata state below. These states describe
+metadata, not current usable values or physical qualification.
+
+| Metadata state | Records | Meaning at the reuse boundary |
+| --- | ---: | --- |
+| `selector_qualified` | 139 | Selector-qualified codec provenance; codec qualification and evidence grade remain separate. |
+| `length_inferred` | 1885 | A codec inferred from span width; it remains unqualified. |
+| `undecoded` | 69 | No decoded codec; preserve the available raw evidence. |
+
+The counts sum to 139 + 1,885 + 69 = 2,093 records. Here `undecoded` names the
+absence of decoded metadata, not a third codec-provenance value. A complete selector
+alone qualifies neither a usable codec nor value presence nor write permission.
+Codec, observed byte width, qualification, and evidence grade are independent
+fields; an unresolved codec must not discard an independently useful width or
+raw span. **Hypothesis** remains the grade of a candidate interpretation even
+when its metadata is selector-qualified; unestablished physical properties
+remain **Unknown**.
+
+The index contract is a pure lookup over caller-supplied metadata. Its key
+must retain the exact local EID, software raw value, hardware raw value, API
+version, API revision, and `(OP, GG, II, RR)` context. API version and API
+revision are separate identity fields, and neither may stand in for the other.
+A lookup must preserve each axis without wildcard fallback; OP06 never borrows
+OP02 metadata. A missing or conflicting match supplies no admission authority.
+Conflicting candidates remain visible in the result rather than being reduced
+to a selected codec, width, or grade; independent useful fields and unresolved
+alternatives remain available beside the raw evidence.
+
+The caller retains ownership of its input bytes. The index must not mutate
+those bytes, and returned raw-byte data must be independently owned so caller
+or result mutation cannot change retained evidence or another result. Lookup
+performs no acquisition, current-value promotion, or transmit operation and
+creates no profile seed. This is the companion index contract, not evidence
+that the index is routed through a runtime consumer. Its metadata states do not
+change the range-and-step admission rules below or establish native
+qualification, presence, or write admission.
+
 ## `validation_scope` and presence
 
 **Proven** (against the retained fixture, and enforced by the validator in both
@@ -111,3 +151,6 @@ this fixture.
 
 [source-6]:
   https://github.com/Project-Helianthus/helianthus-vrc-explorer/blob/main/docs/shared-evidence-contract.md
+
+[source-7]:
+  ../protocols/vaillant/fixtures/b524-basv0-description-profile-v1.json
