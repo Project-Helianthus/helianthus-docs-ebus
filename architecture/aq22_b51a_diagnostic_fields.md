@@ -90,8 +90,12 @@ enum values or semantic reserved-field decoding are produced for those fields.
 
 For enabled range, decode `display_type` and `step` independently as u8 and
 `value`, `minimum`, `maximum` independently as LEu16. Do not enforce a range or
-invent display conversion. For enabled enum, retain six ordered byte positions,
-including duplicates; there is no current-value field. For enabled four-byte,
+invent display conversion. For enabled enum, the result member is `results.alternatives`, a
+field result like the others (`raw`, `state`, `grade`, `calculation`) plus
+`values`: a JSON array of exactly six u8 numbers in input order, including
+duplicates, with `values[k]` decoded from `raw[k]`; there is no current-value
+field. The flags field's own `alternatives` object (bit 3 and text bits) lives
+inside `results.flags` and is unrelated to this member. For enabled four-byte,
 decode `value` as LEu32 and retain `reserved` as exactly three uninterpreted raw
 bytes, with `unmodeled=true`. Do not turn reserved bytes into a number.
 
@@ -186,7 +190,7 @@ Further finite assertions:
 | any view / input with a top-level `state`, `raw`, `results`, `physical` or `qualified` key | error, no successful output |
 | range / flags `01`, other bytes unchanged | disabled true, all subsequent raw retained without interpretation |
 | range / value `3412`, minimum `0100`, maximum `FFFF`, step `00` | 4660, 1, 65535, 0 independently |
-| enum / flags `[0]`, alternatives `[1,2,2,3,4,4]` | six ordered values, duplicates intact, no current value |
+| enum / flags `[0]`, alternatives `[1,2,2,3,4,4]` | `results.alternatives.values` is `[1,2,2,3,4,4]` (six ordered u8 numbers, duplicates intact), `raw` equal to the input bytes; no current value |
 | four-byte / flags `[0]`, value `78563412`, reserved `[0,0,0]` | value 305419896; reserved raw unmodeled |
 | save / status `[0]`, `[1]`, `[5]` in separate inputs | value-not-saved, point-not-found, unmapped; no success |
 | save / width 1, value `[52]` | u8 number 52 |
