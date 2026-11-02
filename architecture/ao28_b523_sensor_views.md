@@ -488,7 +488,7 @@ and mutation behavior requires the companion library's tests.
 
 The [synthetic tuples](fixtures/ao28_b523_sensor_views.json) and
 [finite contract checks](../tests/test_ao28_b523_sensor_views.py) are mandatory
-focused ship evidence. The repository full gate uses an explicit suite list and
-does not automatically run this new suite. Full Gate D, independent committed
+focused ship evidence. The repository full gate runs this suite through its
+automatic test discovery. Full Gate D, independent committed
 review, publication checks and transport classification remain separate ship
 requirements. No shared registration is changed by this companion.
