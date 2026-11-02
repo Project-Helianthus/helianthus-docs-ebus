@@ -112,7 +112,9 @@ For initiator-device functions (`0x01`–`0x14`), the test device sends End of T
 The standard layouts above remain separate from this bounded partial testing-family
 declaration. **Hypothesis:** the request declares primary `0F`, no encoded
 secondary byte and no typed body. Its positive declaration consists only of a
-PeBUS-relevant prefix without typed data. This logical declaration does not
+PeBUS-relevant prefix without typed data. The PeBUS association is a
+candidate label at Hypothesis grade only; no evidence artifact for it is
+published here, and it is not a Proven claim. This logical declaration does not
 establish an empty physical eBUS reply. Logical positions are not wire offsets;
 unprovided positions and extents remain Unknown.
 
