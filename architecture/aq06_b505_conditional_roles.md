@@ -114,7 +114,9 @@ physical units and effects all remain `Unknown`.
 The `results` map is keyed as follows, and no other keys appear. Every field in
 `fields` that the view does not interpret gets a result keyed by its own name,
 with `raw` set to the array as given and `state="complete"`. A field name equal
-to a result key of the selected view below is rejected with an error.
+to a result key of the selected view below is rejected with an error, except
+that `enabled` under `dhw-enable` and `disable` under `parallel-charge` are the
+interpreted inputs of those views and are accepted.
 
 | Context | Result key | `raw` contents and extra properties |
 | --- | --- | --- |
@@ -167,7 +169,8 @@ calculation grade.
   "results": {
     "flow-excess": {"raw": {"demand": 40, "excess": 5},
                     "state": "complete", "number": 45,
-                    "candidate_domain": "Hypothesis", "calculation": "Proven"}
+                    "candidate_domain": "Hypothesis", "calculation": "Proven"},
+    "opaque": {"raw": [], "state": "complete"}
   },
   "physical": "Unknown",
   "qualified": false

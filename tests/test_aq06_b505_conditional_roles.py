@@ -151,6 +151,10 @@ class TestAb05Aq05Contract(unittest.TestCase):
         self.assertEqual({k: v for k, v in ab05aq05result.items()
                           if k not in Ab05Aq05Reserved}, ab05aq05request)
         ab05aq05args = ab05aq05request['arguments']
+        self.assertEqual(set(ab05aq05result['results']),
+                         {'flow-excess'} | set(ab05aq05request['fields']))
+        self.assertEqual(ab05aq05result['results']['opaque'],
+                         {'raw': ab05aq05request['fields']['opaque'], 'state': 'complete'})
         ab05aq05entry = ab05aq05result['results']['flow-excess']
         self.assertEqual(ab05aq05entry['raw'], ab05aq05args)
         self.assertEqual(ab05aq05entry['number'], ab05aq05args['demand'] + ab05aq05args['excess'])
@@ -174,7 +178,8 @@ class TestAb05Aq05Contract(unittest.TestCase):
         self.assertIn('`physical="Unknown"` and `qualified=false`', ab05aq05page)
         for ab05aq05name in Ab05Aq05Reserved:
             self.assertIn('`%s`' % ab05aq05name, ab05aq05between('## Input, preservation', '## Finite candidate'))
-        self.assertIn('is rejected with an error', ab05aq05page)
+        self.assertIn('is rejected with an error, except\nthat `enabled` under `dhw-enable` and `disable` under '
+                      '`parallel-charge` are the\ninterpreted inputs', ab05aq05page)
 
     def test_missing_start_result_state(self):
         ab05aq05page = ab05aq05text()
