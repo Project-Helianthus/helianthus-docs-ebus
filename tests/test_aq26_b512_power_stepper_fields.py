@@ -33,9 +33,17 @@ def ab25aq25_constant(ab25aq25_value):
     raise ValueError('non-JSON constant')
 
 
+def ab25aq25_float(ab25aq25_text):
+    ab25aq25_value = float(ab25aq25_text)
+    if ab25aq25_value != ab25aq25_value or ab25aq25_value in (float('inf'), float('-inf')):
+        raise ValueError('nonfinite number')
+    return ab25aq25_value
+
+
 def ab25aq25_load(ab25aq25_wire):
     return ab25aq25_json.loads(ab25aq25_wire, object_pairs_hook=ab25aq25_pairs,
-                               parse_constant=ab25aq25_constant)
+                               parse_constant=ab25aq25_constant,
+                               parse_float=ab25aq25_float)
 
 
 def ab25aq25_is_byte(ab25aq25_value):
@@ -118,6 +126,15 @@ class Ab25Aq25PowerStepperTests(ab25aq25_unittest.TestCase):
             with self.subTest(ab25aq25_case['id']):
                 with self.assertRaises(ValueError):
                     ab25aq25_admit(ab25aq25_case['wire'])
+
+    def test_exponent_overflow_fails_admission(self):
+        for ab25aq25_wire in (
+                '{"context":{"x":1e999},"fields":{}}',
+                '{"context":{},"fields":{},"arguments":{"a":[-1e999]}}',
+                '{"context":{},"fields":{},"extra":{"a":1E400}}'):
+            with self.subTest(ab25aq25_wire):
+                with self.assertRaises(ValueError):
+                    ab25aq25_admit(ab25aq25_wire)
 
     def test_fixture_covers_every_branch_and_boundary(self):
         ab25aq25_ids = {ab25aq25_case['id'] for ab25aq25_case in self.ab25aq25_data['cases']}
