@@ -104,6 +104,10 @@ contention. FIFO ordering applies after that protocol ordering.
 emulates bus access among northbound clients MUST NOT use lower initiator
 addresses as client-session priority. It grants proxy turns by FIFO/fair queue;
 the selected client's frame then participates in physical bus arbitration.
+This note applies to the deprecated standalone proxy. The embedded adapter
+multiplexer selects by initiator address priority at an idle SYN, for the
+gateway and external sessions alike, as described in
+[AD06](adapter-direct-multiplexer.md#ad06-owner-arbitration-model).
 
 ## ADR-009: Sentinel errors with classification helpers
 
