@@ -14,6 +14,7 @@ Ab05Aq05Views = {
     'flow-excess': {23},
     'programmed-start': {9},
 }
+Ab05Aq05Selectors = {'primary': '181', 'secondary': '5', 'direction': '"request"'}
 Ab05Aq05Parallel = {
     ('0', 'any', 'either'): 'suppression-not-requested',
     ('1', 'heating', 'false'): 'heating-suppressed',
@@ -72,6 +73,17 @@ class TestAb05Aq05Contract(unittest.TestCase):
     def test_signature(self):
         self.assertIn('func Ab05Aq05Evaluate(ab05Aq05Input json.RawMessage) (json.RawMessage, error)',
                       ab05aq05text())
+
+    def test_fixed_context_selectors(self):
+        ab05aq05page = ab05aq05text()
+        ab05aq05sentence = ab05aq05between('Every supported row has', 'Operations below')
+        ab05aq05found = dict(re.findall(r'`(primary|secondary|direction)=("?\w+"?)`', ab05aq05sentence))
+        self.assertEqual(ab05aq05found, Ab05Aq05Selectors)
+        ab05aq05blocks = [json.loads(b) for b in re.findall(r'```json\n(.*?)```', ab05aq05page, re.S)]
+        for ab05aq05block in ab05aq05blocks:
+            ab05aq05context = ab05aq05block['context']
+            self.assertEqual((ab05aq05context['primary'], ab05aq05context['secondary'],
+                              ab05aq05context['direction']), (181, 5, 'request'))
 
     def test_view_matrix(self):
         ab05aq05found = {}
