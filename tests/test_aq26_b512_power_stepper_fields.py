@@ -107,6 +107,25 @@ def ab25aq25_oracle(ab25aq25_input):
     return ab25aq25_state, ab25aq25_results
 
 
+def ab25aq25_full(ab25aq25_input):
+    """Complete successful output envelope the contract requires."""
+    ab25aq25_state, ab25aq25_results = ab25aq25_oracle(ab25aq25_input)
+    ab25aq25_out = ab25aq25_json.loads(ab25aq25_json.dumps(ab25aq25_input))
+    ab25aq25_full_results = {}
+    for ab25aq25_name, ab25aq25_item in ab25aq25_results.items():
+        ab25aq25_entry = {}
+        if ab25aq25_name in ab25aq25_input['fields']:
+            ab25aq25_entry['raw'] = ab25aq25_input['fields'][ab25aq25_name]
+        ab25aq25_entry.update(ab25aq25_item)
+        ab25aq25_entry['grade'] = 'Hypothesis'
+        if ab25aq25_item['state'] == 'complete' and ab25aq25_name != 'status':
+            ab25aq25_entry['calculation'] = 'Proven'
+        ab25aq25_full_results[ab25aq25_name] = ab25aq25_entry
+    ab25aq25_out.update(state=ab25aq25_state, results=ab25aq25_full_results,
+                        physical='Unknown', qualified=False)
+    return ab25aq25_out
+
+
 class Ab25Aq25PowerStepperTests(ab25aq25_unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -120,6 +139,37 @@ class Ab25Aq25PowerStepperTests(ab25aq25_unittest.TestCase):
                 self.assertEqual(
                     (ab25aq25_case['state'], ab25aq25_case['results']),
                     ab25aq25_oracle(ab25aq25_input))
+
+    def test_full_success_envelope(self):
+        for ab25aq25_case in self.ab25aq25_data['cases']:
+            with self.subTest(ab25aq25_case['id']):
+                ab25aq25_input = ab25aq25_admit(ab25aq25_json.dumps(ab25aq25_case['input']))
+                ab25aq25_out = ab25aq25_full(ab25aq25_input)
+                for ab25aq25_key, ab25aq25_value in ab25aq25_input.items():
+                    self.assertEqual(ab25aq25_value, ab25aq25_out[ab25aq25_key])
+                self.assertEqual(ab25aq25_case['state'], ab25aq25_out['state'])
+                self.assertEqual('Unknown', ab25aq25_out['physical'])
+                self.assertIs(False, ab25aq25_out['qualified'])
+                self.assertEqual(set(ab25aq25_case['results']), set(ab25aq25_out['results']))
+                for ab25aq25_name, ab25aq25_item in ab25aq25_out['results'].items():
+                    ab25aq25_expected = ab25aq25_case['results'][ab25aq25_name]
+                    ab25aq25_shared = {
+                        ab25aq25_k: ab25aq25_v for ab25aq25_k, ab25aq25_v in ab25aq25_item.items()
+                        if ab25aq25_k not in ('raw', 'grade', 'calculation')}
+                    self.assertEqual(ab25aq25_expected, ab25aq25_shared)
+                    self.assertEqual('Hypothesis', ab25aq25_item['grade'])
+                    ab25aq25_fields = ab25aq25_input['fields']
+                    if ab25aq25_name in ab25aq25_fields:
+                        self.assertEqual(ab25aq25_fields[ab25aq25_name], ab25aq25_item['raw'])
+                    else:
+                        self.assertNotIn('raw', ab25aq25_item)
+                    if ab25aq25_item['state'] == 'complete' and ab25aq25_name != 'status':
+                        self.assertEqual('Proven', ab25aq25_item['calculation'])
+                    else:
+                        self.assertNotIn('calculation', ab25aq25_item)
+                    if ab25aq25_item['state'] == 'incomplete':
+                        for ab25aq25_k in ('number', 'label', 'flags', 'reserved'):
+                            self.assertNotIn(ab25aq25_k, ab25aq25_item)
 
     def test_rejections_fail_admission(self):
         for ab25aq25_case in self.ab25aq25_data['rejections']:
