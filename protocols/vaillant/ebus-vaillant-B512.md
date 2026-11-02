@@ -67,8 +67,10 @@ The following B512 shapes are observed on heat pump installations only and are a
 
 ### Bounded pump, valve and power candidates
 
-The finite companion scope is AE17's OP00, OP02, OP04, OP05 and OP07
-catalog declarations only; broader catalog completion is Unknown. Other variants
+The finite companion scope, labelled AE17, is the OP00, OP02, OP04, OP05 and OP07
+catalog declarations only. Every declaration here is a candidate of evidence class
+**Hypothesis**; provenance is not published, and the fixture is synthetic, not wire
+evidence. Broader catalog completion is Unknown. Other variants
 remain separate in the preceding overview. All native declarations below are
 **Hypothesis**. **Proven** applies only to synthetic representation and arithmetic,
 not installed support, delivery, freshness or physical qualification, all **Unknown**.
