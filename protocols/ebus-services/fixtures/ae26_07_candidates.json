@@ -1,0 +1,262 @@
+{
+  "provenance": "Synthetic local data only; no physical observation or native qualification.",
+  "native_grade": "Hypothesis",
+  "unknown": [
+    "native variable lengths",
+    "physical extra bytes",
+    "family override predicates",
+    "complete seven-service schemas",
+    "installed support"
+  ],
+  "cases": [
+    {
+      "name": "baseline",
+      "raw": [
+        161,
+        65,
+        66,
+        67,
+        68,
+        69,
+        249,
+        153,
+        23,
+        4
+      ],
+      "declared_count": 10,
+      "result": "admitted",
+      "identifier_bytes": [
+        65,
+        66,
+        67,
+        68,
+        69
+      ],
+      "numeric_tuple": [
+        159,
+        99,
+        417
+      ],
+      "grade": "Hypothesis",
+      "qualification": "not established"
+    },
+    {
+      "name": "low_nibble_a",
+      "raw": [
+        161,
+        65,
+        66,
+        67,
+        68,
+        69,
+        250,
+        153,
+        23,
+        4
+      ],
+      "declared_count": 10,
+      "result": "invalid",
+      "identifier_bytes": null,
+      "numeric_tuple": null,
+      "grade": "Hypothesis",
+      "qualification": "not established"
+    },
+    {
+      "name": "first_zero",
+      "raw": [
+        161,
+        0,
+        66,
+        67,
+        68,
+        69,
+        249,
+        153,
+        23,
+        4
+      ],
+      "declared_count": 10,
+      "result": "invalid",
+      "identifier_bytes": null,
+      "numeric_tuple": null,
+      "grade": "Hypothesis",
+      "qualification": "not established"
+    },
+    {
+      "name": "internal_zero",
+      "raw": [
+        161,
+        65,
+        66,
+        0,
+        68,
+        69,
+        249,
+        153,
+        23,
+        4
+      ],
+      "declared_count": 10,
+      "result": "admitted",
+      "identifier_bytes": [
+        65,
+        66,
+        0,
+        68,
+        69
+      ],
+      "numeric_tuple": [
+        159,
+        99,
+        417
+      ],
+      "grade": "Hypothesis",
+      "qualification": "not established"
+    },
+    {
+      "name": "below_character_domain",
+      "raw": [
+        161,
+        65,
+        66,
+        31,
+        68,
+        69,
+        249,
+        153,
+        23,
+        4
+      ],
+      "declared_count": 10,
+      "result": "invalid",
+      "identifier_bytes": null,
+      "numeric_tuple": null,
+      "grade": "Hypothesis",
+      "qualification": "not established"
+    },
+    {
+      "name": "above_character_domain",
+      "raw": [
+        161,
+        65,
+        66,
+        127,
+        68,
+        69,
+        249,
+        153,
+        23,
+        4
+      ],
+      "declared_count": 10,
+      "result": "invalid",
+      "identifier_bytes": null,
+      "numeric_tuple": null,
+      "grade": "Hypothesis",
+      "qualification": "not established"
+    },
+    {
+      "name": "byte_zero_changed",
+      "raw": [
+        0,
+        65,
+        66,
+        67,
+        68,
+        69,
+        249,
+        153,
+        23,
+        4
+      ],
+      "declared_count": 10,
+      "result": "admitted",
+      "identifier_bytes": [
+        65,
+        66,
+        67,
+        68,
+        69
+      ],
+      "numeric_tuple": [
+        159,
+        99,
+        417
+      ],
+      "grade": "Hypothesis",
+      "qualification": "not established"
+    },
+    {
+      "name": "declared_nine",
+      "raw": [
+        161,
+        65,
+        66,
+        67,
+        68,
+        69,
+        249,
+        153,
+        23,
+        4
+      ],
+      "declared_count": 9,
+      "result": "incomplete",
+      "identifier_bytes": null,
+      "numeric_tuple": null,
+      "grade": "Hypothesis",
+      "qualification": "not established"
+    },
+    {
+      "name": "declared_eleven",
+      "raw": [
+        161,
+        65,
+        66,
+        67,
+        68,
+        69,
+        249,
+        153,
+        23,
+        4
+      ],
+      "declared_count": 11,
+      "result": "admitted",
+      "identifier_bytes": [
+        65,
+        66,
+        67,
+        68,
+        69
+      ],
+      "numeric_tuple": [
+        159,
+        99,
+        417
+      ],
+      "grade": "Hypothesis",
+      "qualification": "not established"
+    },
+    {
+      "name": "available_nine",
+      "raw": [
+        161,
+        65,
+        66,
+        67,
+        68,
+        69,
+        249,
+        153,
+        23
+      ],
+      "declared_count": 10,
+      "result": "incomplete",
+      "identifier_bytes": null,
+      "numeric_tuple": null,
+      "grade": "Hypothesis",
+      "qualification": "not established"
+    }
+  ]
+}

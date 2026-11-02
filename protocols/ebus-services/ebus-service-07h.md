@@ -136,7 +136,41 @@ Request payload: Empty (`NN=0x00`).
 | 8 | hw_version | BCD | 0–99 | Hardware version |
 | 9 | hw_revision | BCD | 0–99 | Hardware revision |
 
-> **Vaillant variant (candidate, unconfirmed on the wire; manufacturer `0xB5`):** for Vaillant regulators, bytes 8–9 carry one software product number (SPN), not a hardware version and revision; the regulator identity crosswalk linked below uses this reading (**Hypothesis**). For every other Vaillant device class (for example boilers and heat-pump units) the meaning of bytes 8–9 is **Unknown**; manufacturer `0xB5` alone does not establish the SPN reading. The SPN is a four-digit BCD number (0000–9999) sent least-significant byte first: `SPN = BCD(byte 8) + 100 × BCD(byte 9)`, where `BCD(x) = (x >> 4) × 10 + (x & 0x0F)`. Examples: the wire bytes `17 04` are SPN 417, `11 04` are SPN 411, and `04 04` are SPN 404. Bytes 6–7 keep the standard's meaning (software version and software revision), and the standard's byte layout and BCD encoding apply unchanged (`NN=0x0A`; candidate, unconfirmed on the wire); only the meaning of bytes 8–9 differs from the standard, and the standard's hardware version/revision reading above stays authoritative for other manufacturers. Candidate, unconfirmed on the wire: the same SPN occurs under different five-character identity strings, so a product lookup uses the pair (identity string, SPN); see the [Vaillant regulator identity crosswalk](../vaillant/ebus-vaillant-regulators.md#spn-field-07-04-bytes-8-9-representation). The standard fixes `NN=0x0A`; the variable-length payload recorded as observed in [`ebus-overview.md`](./ebus-overview.md#open-questions) is a discrepancy with it (unresolved).
+#### Bounded 0704 candidate declarations
+
+**Hypothesis:** identification `0704` and existence inquiry `07FE` are separate
+identities. The following finite scope has seven declarations, not a complete
+seven-service schema. A logical position is not a wire offset; unknown extent
+must not be converted into additional physical bytes. Operation is absent for
+all seven declarations. These candidates do not establish native qualification.
+
+| Grade | Identity (PB/SB; field) | Direction | Logical position / extent | Raw type / domain | Scale | Sentinel / default / conflict | Unresolved properties |
+|---|---|---|---|---|---|---|---|
+| Hypothesis | 0704; identifier | response | Unknown / Unknown | Unknown | Unknown | No sentinel established | Native extent and character domain Unknown |
+| Hypothesis | 0704; major | response | Unknown / Unknown | Unknown | Unknown | No sentinel established | Native representation Unknown |
+| Hypothesis | 0704; minor | response | Unknown / Unknown | Unknown | Unknown | No sentinel established | Native representation Unknown |
+| Hypothesis | 0704; product_number | response | Unknown / Unknown | Unknown | Unknown | Alternative to hardware version/revision interpretation | Family predicates and native representation Unknown |
+| Hypothesis | 0704; version_control | response | 8 / Unknown | candidate control domain 0..98 not-okay | Unknown | Default not-okay; no okay value established | Overlap at logical position 8; physical placement Unknown |
+| Hypothesis | 0704; revision_control | response | 9 / Unknown | candidate control domain 0..98 not-okay | Unknown | Default not-okay; no okay value established | Overlap at logical position 9; physical placement Unknown |
+| Hypothesis | 07FE; existence_inquiry | request | Unknown / Unknown | empty request | None | Direct reply not required; missing direct response is not identification failure | Installed support Unknown |
+
+Control value 99 has no established okay meaning. The controls overlap logical
+positions 8/9; this does not declare extra physical bytes. Native variable
+lengths, physical extra bytes, all family override predicates, complete
+seven-service schemas and installed support remain **Unknown**.
+The partial local-parser behaviour is described in the application architecture documentation.
+See the [synthetic candidate examples](fixtures/ae26_07_candidates.json), which
+preserve raw values and independent interpretations without physical qualification.
+
+> **Vaillant regulator-family alternative (Hypothesis, unconfirmed on the wire):**
+> the [regulator identity crosswalk](../vaillant/ebus-vaillant-regulators.md#spn-field-07-04-bytes-8-9-representation)
+> interprets bytes 8–9 as a software product number instead of hardware version
+> and revision. Its native BCD interpretation is distinct from the bounded
+> declarations above. Manufacturer alone does not establish this reading;
+> all family override predicates and other families' meanings remain Unknown.
+> The standard ten-byte layout above remains an independent alternative.
+> Native variable lengths remain Unknown; a local representation cannot resolve
+> the discrepancy with variable-length claims elsewhere.
 
 **Broadcast (self-identification):**
 
@@ -225,7 +259,7 @@ This section adds the Vaillant variants of the services above. Each statement ke
 - Whether the `07 00`-shaped clock-setting request is directed or broadcast is unresolved, and no Vaillant definition of `07 01` is known.
 - The controller clock write by B524 registers `0x0035` and `0x0034` has not been observed on the wire, and write access to these registers is not established.
 - No Vaillant broadcast (self-identification) form of `07 04` is known; whether a Vaillant device emits one is not established.
-- The SPN reading of `07 04` bytes 8–9 is a candidate, unconfirmed on the wire, for Vaillant regulators; whether Vaillant units of every other device class carry an SPN there is unresolved.
+- The bounded 0704 candidate table records the unresolved product-number alternative, control overlap and unknown native lengths. Family override predicates and physical extra bytes remain Unknown; control value 99 has no established okay meaning.
 - The cadence, bandwidth and conformance of any Vaillant `07 FF` sign-of-life behaviour, and the network-management conformance of Vaillant bus participants (see [`ebus-service-FFh.md`](./ebus-service-FFh.md)), are undetermined.
 - A `07 03`/`07 05` bit-selection rule and the `0` = permanent override duration of `07 02` are not encoded in the Vaillant layouts; their behaviour at a Vaillant target was not observed.
 
