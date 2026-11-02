@@ -26,7 +26,7 @@ The `26.vr_71.tsp` TypeSpec uses `@base(MF, 0x23)` for both reads and writes.
 
 | Request selector | TypeSpec name | Direction | Shape | Evidence | Falsification test |
 |---|---|---|---|---|---|
-| `05` | `SetActorState` | write | relay states `r1..r12` plus two raw bytes | | Change one relay through a safe test fixture and prove the corresponding byte does not track the actor state. |
+| `05` | `SetActorState` | write | relay states `r1..r12` plus two candidate PWM bytes | | Change one relay through a safe test fixture and prove the corresponding byte does not track the actor state. |
 | `02 00` | `Mc1Operation` | write | status, desired flow temp, pump, mixer | | Capture controller-to-VR71 traffic while circuit 1 pump/mixer changes and show these bytes do not correlate. |
 | `02 01` | `Mc2Operation` | write | status, desired flow temp, pump, mixer | | Same test for circuit 2. |
 | `02 02` | `Mc3Operation` | write | status, desired flow temp, pump, mixer | | Same test for circuit 3. |
@@ -44,7 +44,7 @@ as a profile/file variant unless a capture proves a distinct target address.
 
 | Request selector | TypeSpec name | Direction | Shape | Evidence | Falsification test |
 |---|---|---|---|---|---|
-| `01` | `SetActorState` | write | relay states `r1..r6`, `s7` | | On isolated hardware, change one actor and show the mapped byte does not track it. |
+| `01` | `SetActorState` | write | relay states `r1..r6`, candidate PWM byte | | On isolated hardware, change one actor and show the mapped byte does not track it. |
 | `02 00` | `Mc1Operation` | write | status, desired flow temp, pump, mixer | | Capture a VR70 target while circuit 1 changes and show the bytes do not correlate. |
 | `02 01` | `Mc2Operation` | write | status, desired flow temp, pump, mixer | | Same test for circuit 2. |
 | `03` | `SensorData` | read | sensors `s1..s6` plus three raw bytes | | Read from VR70 and show response cannot decode as six temperatures plus three bytes. |
@@ -60,13 +60,12 @@ with device identity, B524 functional-module inventory, and physical wiring.
 ## Candidate layouts
 
 The candidate layouts of B523 cover the ops `B5 23 00` to `B5 23 07`; none of it
-has been confirmed on the wire. Offsets count from the first byte of the service
-prefix (PB, SB and the op byte): offset 0 = `B5`, 1 = `23`, 2 = op byte. A target
-response on the bus carries no such prefix (eBUS framing: `NN`, data, CRC); how
-the candidate response offsets map onto the bytes of a bus response is
-unconfirmed on the wire. **Hypothesis**: response offset 3 is the first data byte
-of a bus response (see
-[`ebus-vaillant.md`](ebus-vaillant.md#other-b5-services-candidate-layouts)).
+has been confirmed on the wire. Logical positions count the three-position
+service prefix: position 0 = `B5`, 1 = `23`, 2 = operation. These are abstract
+coordinates, not wire offsets. In particular, a positive response has no such
+prefix in its physical framing; neither the logical response position nor an
+abstract extent establishes a physical reply length. The mapping to native
+response bytes remains **Unknown**.
 
 | Op | Candidate meaning |
 |---|---|
@@ -79,10 +78,6 @@ of a bus response (see
 | `06` | read sensor values, part 1 |
 | `07` | read sensor values, part 2 |
 
-- **Output control** (`01`, `05`): candidate, unconfirmed on the wire: relay
-  value `u8` where `0` is off, `1..253` is on for that many seconds, `254` is on
-  and `255` is not influenced; PWM `0..200` is 0 to 100 %, `201..255` is not
-  influenced. The reply is a feedback byte where `1` means accepted.
 - **Mixer circuit control** (`02`): candidate, unconfirmed on the wire: circuit
   number `u8` at offset 3, control mode from `0` stop to `5` pump on and open, and
   a setpoint at offset 5, `i8` × 0.5 °C in one candidate reading (its range and
@@ -95,14 +90,53 @@ of a bus response (see
   meaning is unresolved; otherwise the value is `i16` LE ÷16 °C. Each input also
   has a 2-bit status.
 - **Configuration** (`00`, `04`): candidate, unconfirmed on the wire: relay-group
-  and input configuration bytes; the reply is a feedback byte where `1` means
-  accepted.
+  and input configuration bytes. Feedback candidates are scoped below.
 
 **Hypothesis**, unconfirmed on the wire: candidate op `02` (mixer circuit
 control) corresponds to the `02 xx` selectors of both target shapes above; the
 candidate ops `01` and `03` correspond to the selectors `01` and `03` of the
 second shape, and the candidate ops `05`, `06` and `07` to the selectors `05`,
 `06` and `07` of the first shape.
+
+## Relay timing, PWM alternatives and feedback
+
+The following finite scope corresponds to the independently merged AE19 catalog
+entries for these declarations only; it makes no claim about a broader catalog.
+Other module layouts remain **Unknown**. All native declarations in this table
+are **Hypothesis**. Synthetic arithmetic can be **Proven** without qualifying
+native support or physical behavior, which remain **Unknown**.
+
+| Grade | Identity | Direction | Logical position / extent | Raw type / domain | Scale | Sentinel / default | Conflict / unresolved |
+|---|---|---|---|---|---|---|---|
+| Hypothesis | B523 OP01 relays | initiator-to-target | 3..8; request/positive extents 10/4 | u8; 0..255 | 1 second for 1..253 | 0 off; 1..253 on then off; 254 on; 255 unchanged; default 0 | Unknown: native support, runtime effects, terminal mapping |
+| Hypothesis | B523 OP05 relays | initiator-to-target | 3..14; request/positive extents 17/4 | u8; 0..255 | 1 second for 1..253 | 0 off; 1..253 on then off; 254 on; 255 unchanged; default 0 | Unknown: native support, runtime effects, terminal mapping |
+| Hypothesis | B523 OP01 PWM numeric candidate | initiator-to-target | 9; request/positive extents 10/4 | u8; numeric domain 0..250 | raw/2 percent; 0..125 percent | default 0; 251..255 outside numeric domain | Conflict: behavioral candidate; Unknown: native support, runtime effects |
+| Hypothesis | B523 OP01 PWM behavioral candidate | initiator-to-target | 9; request/positive extents 10/4 | u8; 0..255 | raw/2 percent for 0..200; 0..100 percent | 201..255 unchanged; default 0 | Conflict: numeric candidate at 201..250; Unknown: native support, runtime effects |
+| Hypothesis | B523 OP05 PWM numeric candidate | initiator-to-target | 15,16; request/positive extents 17/4 | u8; numeric domain 0..250 | raw/2 percent; 0..125 percent | default 0; 251..255 outside numeric domain | Conflict: behavioral candidate; Unknown: native support, runtime effects |
+| Hypothesis | B523 OP05 PWM behavioral candidate | initiator-to-target | 15,16; request/positive extents 17/4 | u8; 0..255 | raw/2 percent for 0..200; 0..100 percent | 201..255 unchanged; default 0 | Conflict: numeric candidate at 201..250; Unknown: native support, runtime effects |
+| Hypothesis | B523 OP00 feedback | target-to-initiator | 3; positive extent Unknown | u8; 0..255 | none | 1 accepted; all others rejected; default rejected | Unknown: physical ACK, persistence, readback, native support, runtime effects |
+| Hypothesis | B523 OP01 feedback | target-to-initiator | 3; positive extent 4 | u8; 0..255 | none | 1 accepted; all others rejected; default rejected | Unknown: physical ACK, persistence, readback, native support, runtime effects |
+| Hypothesis | B523 OP02 feedback | target-to-initiator | 3; positive extent Unknown | u8; 0..255 | none | 1 accepted; all others rejected; default rejected | Unknown: physical ACK, persistence, readback, native support, runtime effects |
+| Hypothesis | B523 OP04 feedback | target-to-initiator | 3; positive extent Unknown | u8; 0..255 | none | 1 accepted; all others rejected-or-unsupported; default rejected-or-unsupported | Unknown: physical ACK, persistence, readback, native support, runtime effects |
+| Hypothesis | B523 OP05 feedback | target-to-initiator | 3; positive extent 4 | u8; 0..255 | none | 1 accepted; all others rejected-or-unsupported; default rejected-or-unsupported | Unknown: physical ACK, persistence, readback, native support, runtime effects |
+
+OP01 has six independent relay positions; OP05 has twelve, including position 14.
+OP05's PWM positions 15 and 16 are independent. The abstract request/positive
+extents include the three-position logical prefix; they are not physical reply
+lengths. A default of zero does not establish an observed power-on state.
+
+Retain both PWM alternatives without choosing or clipping either: raw 200 gives
+100 percent in both numeric branches; 201 gives 100.5 percent versus unchanged;
+250 gives 125 percent versus unchanged; 255 is outside the numeric domain and
+unchanged in the behavioral branch. Relay 254 has no duration; 255 leaves the
+prior state unchanged and also has no duration. No timed relay controller is
+specified. Feedback acceptance is distinct from physical ACK, persistence and
+readback; no such outcome follows from value 1.
+
+The [synthetic examples](fixtures/ae20_b523_candidates.json) preserve raw logical
+values, absent duration/percentage metadata and both alternatives. They contain
+no observed traffic and provide no physical qualification. Sensor and mixer
+variants elsewhere on this page remain separate from these output declarations.
 
 No op on this page is documented as safe to send; a state-changing op needs a separately established safety procedure and target qualification, and an ACK does not show the resulting device state.
 
@@ -123,14 +157,14 @@ whether the service is available under the PeBUS profile is not established (see
   (range -64 to 63.5 °C); a second candidate range of 190 to 95 for the same
   setpoint conflicts with it, and the intended range and the signedness of this
   field are unresolved.
-- The coding of the feedback value of `00`, `04` and the speed and direction
-  field of the `02` reply beyond "1 = accepted" is unknown.
-- How the candidate response offsets map onto the data bytes of a bus response is
+- The native validity of the scoped feedback candidates above remains Unknown;
+  the speed and direction field of the `02` reply remains unresolved.
+- How the candidate logical response positions map onto native response bytes is
   unconfirmed on the wire.
 - The meaning of the reserved raw value `32768` (`8000`) of the sensor reads
   (`03`, `06`, `07`) is unresolved.
-- Exact physical terminal mapping for every relay/sensor byte across all VR70
-  and VR71 configurations.
+- Exact physical terminal mapping for relay/sensor bytes across module families,
+  and which PWM alternative applies, remain Unknown.
 - Whether `VR_70` at target `0x52` is the only FM3 address form; Vaillant
   product documentation describes FM3 as addressable/multi-instance, but that
   is profile evidence, not a B523 wire rule by itself.
@@ -139,7 +173,7 @@ whether the service is available under the PeBUS profile is not established (see
 
 ## References
 
-- Public TypeSpec: [26.vr_71.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/26.vr_71.tsp)
-- Public TypeSpec: [52.vr_70.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/52.vr_70.tsp)
-- Public TypeSpec: [53.vr_70.5.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/53.vr_70.5.tsp)
+- Public TypeSpec: [26.vr_71.tsp](https://github.com/john30/ebusd-configuration/blob/master/src/vaillant/26.vr_71.tsp)
+- Public TypeSpec: [52.vr_70.tsp](https://github.com/john30/ebusd-configuration/blob/master/src/vaillant/52.vr_70.tsp)
+- Public TypeSpec: [53.vr_70.5.tsp](https://github.com/john30/ebusd-configuration/blob/master/src/vaillant/53.vr_70.5.tsp)
 - B524 functional-module register map: [`ebus-vaillant-B524-register-map.md`](ebus-vaillant-B524-register-map.md)
