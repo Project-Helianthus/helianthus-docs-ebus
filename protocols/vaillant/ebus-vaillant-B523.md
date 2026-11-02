@@ -100,8 +100,9 @@ second shape, and the candidate ops `05`, `06` and `07` to the selectors `05`,
 
 ## Relay timing, PWM alternatives and feedback
 
-The following finite scope corresponds to the independently merged AE19 catalog
-entries for these declarations only; it makes no claim about a broader catalog.
+The following finite scope lists candidate declarations for these items only;
+provenance is not published, and the evidence class is stated per row. It makes
+no claim about a broader set of declarations.
 Other module layouts remain **Unknown**. All native declarations in this table
 are **Hypothesis**. Synthetic arithmetic can be **Proven** without qualifying
 native support or physical behavior, which remain **Unknown**.

@@ -111,7 +111,7 @@ class B523CandidatesTest(unittest.TestCase):
                 'The abstract request/positive\nextents include the three-position logical prefix; they are not physical reply\nlengths.',
                 'Feedback acceptance is distinct from physical ACK, persistence and\nreadback; no such outcome follows from value 1.',
                 '[synthetic examples](fixtures/ae20_b523_candidates.json)',
-                'entries for these declarations only; it makes no claim about a broader catalog.'):
+                'no claim about a broader set of declarations.'):
             self.assertIn(statement, self.page)
         self.assertNotIn('The coding of the feedback value of `00`, `04`', self.page)
 
