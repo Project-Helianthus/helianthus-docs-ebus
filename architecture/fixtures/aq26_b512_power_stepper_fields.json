@@ -1,0 +1,639 @@
+{
+ "cases": [
+  {
+   "id": "op07-request-empty",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 7,
+     "direction": "request",
+     "view": "power-stepper"
+    },
+    "fields": {}
+   },
+   "state": "complete",
+   "results": {}
+  },
+  {
+   "id": "op07-positive-max",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 7,
+     "direction": "positive",
+     "view": "power-stepper"
+    },
+    "fields": {
+     "maximum_power": [
+      255
+     ],
+     "minimum_power": [
+      250
+     ]
+    }
+   },
+   "state": "complete",
+   "results": {
+    "maximum_power": {
+     "state": "complete",
+     "number": 255
+    },
+    "minimum_power": {
+     "state": "complete",
+     "number": 125,
+     "candidate_domain": true
+    }
+   }
+  },
+  {
+   "id": "op07-positive-minimum-ff",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 7,
+     "direction": "positive",
+     "view": "power-stepper"
+    },
+    "fields": {
+     "maximum_power": [
+      255
+     ],
+     "minimum_power": [
+      255
+     ]
+    }
+   },
+   "state": "complete",
+   "results": {
+    "maximum_power": {
+     "state": "complete",
+     "number": 255
+    },
+    "minimum_power": {
+     "state": "complete",
+     "number": 127.5,
+     "candidate_domain": false
+    }
+   }
+  },
+  {
+   "id": "op07-positive-minimum-zero",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 7,
+     "direction": "positive",
+     "view": "power-stepper"
+    },
+    "fields": {
+     "maximum_power": [
+      0
+     ],
+     "minimum_power": [
+      0
+     ]
+    }
+   },
+   "state": "complete",
+   "results": {
+    "maximum_power": {
+     "state": "complete",
+     "number": 0
+    },
+    "minimum_power": {
+     "state": "complete",
+     "number": 0,
+     "candidate_domain": true
+    }
+   }
+  },
+  {
+   "id": "op07-positive-empty",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 7,
+     "direction": "positive",
+     "view": "power-stepper"
+    },
+    "fields": {}
+   },
+   "state": "partial",
+   "results": {
+    "maximum_power": {
+     "state": "incomplete"
+    },
+    "minimum_power": {
+     "state": "incomplete"
+    }
+   }
+  },
+  {
+   "id": "op08-request-partial",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 8,
+     "direction": "request",
+     "view": "power-stepper"
+    },
+    "fields": {
+     "inlet": [
+      240
+     ],
+     "status": [
+      84
+     ],
+     "stepper": [
+      128
+     ]
+    }
+   },
+   "state": "partial",
+   "results": {
+    "inlet": {
+     "state": "incomplete"
+    },
+    "status": {
+     "state": "complete",
+     "label": "unmapped"
+    },
+    "stepper": {
+     "state": "complete",
+     "flags": {
+      "release": false
+     },
+     "reserved": 128
+    }
+   }
+  },
+  {
+   "id": "op08-request-empty-inlet",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 8,
+     "direction": "request",
+     "view": "power-stepper"
+    },
+    "fields": {
+     "inlet": [],
+     "status": [
+      0
+     ],
+     "stepper": [
+      1
+     ]
+    }
+   },
+   "state": "partial",
+   "results": {
+    "inlet": {
+     "state": "incomplete"
+    },
+    "status": {
+     "state": "complete",
+     "label": "valid"
+    },
+    "stepper": {
+     "state": "complete",
+     "flags": {
+      "release": true
+     },
+     "reserved": 0
+    }
+   }
+  },
+  {
+   "id": "op08-request-overlong-inlet",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 8,
+     "direction": "request",
+     "view": "power-stepper"
+    },
+    "fields": {
+     "inlet": [
+      240,
+      255,
+      0
+     ],
+     "status": [
+      0
+     ],
+     "stepper": [
+      1
+     ]
+    }
+   },
+   "state": "partial",
+   "results": {
+    "inlet": {
+     "state": "incomplete"
+    },
+    "status": {
+     "state": "complete",
+     "label": "valid"
+    },
+    "stepper": {
+     "state": "complete",
+     "flags": {
+      "release": true
+     },
+     "reserved": 0
+    }
+   }
+  },
+  {
+   "id": "op08-request-complete",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 8,
+     "direction": "request",
+     "view": "power-stepper"
+    },
+    "fields": {
+     "inlet": [
+      240,
+      255
+     ],
+     "status": [
+      85
+     ],
+     "stepper": [
+      1
+     ]
+    }
+   },
+   "state": "complete",
+   "results": {
+    "inlet": {
+     "state": "complete",
+     "number": -1
+    },
+    "status": {
+     "state": "complete",
+     "label": "short"
+    },
+    "stepper": {
+     "state": "complete",
+     "flags": {
+      "release": true
+     },
+     "reserved": 0
+    }
+   }
+  },
+  {
+   "id": "op08-request-disconnected",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 8,
+     "direction": "request",
+     "view": "power-stepper"
+    },
+    "fields": {
+     "inlet": [
+      16,
+      0
+     ],
+     "status": [
+      170
+     ],
+     "stepper": [
+      0
+     ]
+    }
+   },
+   "state": "complete",
+   "results": {
+    "inlet": {
+     "state": "complete",
+     "number": 1
+    },
+    "status": {
+     "state": "complete",
+     "label": "interruption-or-disconnected"
+    },
+    "stepper": {
+     "state": "complete",
+     "flags": {
+      "release": false
+     },
+     "reserved": 0
+    }
+   }
+  },
+  {
+   "id": "op08-request-unmapped-complete-inlet",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 8,
+     "direction": "request",
+     "view": "power-stepper"
+    },
+    "fields": {
+     "inlet": [
+      16,
+      0
+     ],
+     "status": [
+      84
+     ],
+     "stepper": [
+      0
+     ]
+    }
+   },
+   "state": "complete",
+   "results": {
+    "inlet": {
+     "state": "complete",
+     "number": 1
+    },
+    "status": {
+     "state": "complete",
+     "label": "unmapped"
+    },
+    "stepper": {
+     "state": "complete",
+     "flags": {
+      "release": false
+     },
+     "reserved": 0
+    }
+   }
+  },
+  {
+   "id": "op08-positive-complete",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 8,
+     "direction": "positive",
+     "view": "power-stepper"
+    },
+    "fields": {
+     "setpoint": [
+      16,
+      0
+     ],
+     "stepper": [
+      128
+     ]
+    }
+   },
+   "state": "complete",
+   "results": {
+    "setpoint": {
+     "state": "complete",
+     "number": 1
+    },
+    "stepper": {
+     "state": "complete",
+     "flags": {
+      "release": false
+     },
+     "reserved": 128
+    }
+   }
+  },
+  {
+   "id": "op08-positive-status-extra-not-interpreted",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 8,
+     "direction": "positive",
+     "view": "power-stepper"
+    },
+    "fields": {
+     "setpoint": [
+      16,
+      0
+     ],
+     "stepper": [
+      1
+     ],
+     "status": [
+      85
+     ]
+    }
+   },
+   "state": "complete",
+   "results": {
+    "setpoint": {
+     "state": "complete",
+     "number": 1
+    },
+    "stepper": {
+     "state": "complete",
+     "flags": {
+      "release": true
+     },
+     "reserved": 0
+    }
+   }
+  },
+  {
+   "id": "op09-request-release",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 9,
+     "direction": "request",
+     "view": "power-stepper"
+    },
+    "fields": {
+     "release": [
+      1
+     ]
+    }
+   },
+   "state": "complete",
+   "results": {
+    "release": {
+     "state": "complete",
+     "flags": {
+      "release": true
+     },
+     "reserved": 0
+    }
+   }
+  },
+  {
+   "id": "op09-positive-reserved",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 9,
+     "direction": "positive",
+     "view": "power-stepper"
+    },
+    "fields": {
+     "release": [
+      128
+     ]
+    }
+   },
+   "state": "complete",
+   "results": {
+    "release": {
+     "state": "complete",
+     "flags": {
+      "release": false
+     },
+     "reserved": 128
+    }
+   }
+  },
+  {
+   "id": "unsupported-op0a",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 10,
+     "direction": "positive",
+     "view": "power-stepper"
+    },
+    "fields": {
+     "minimum_power": [
+      255
+     ]
+    }
+   },
+   "state": "Unknown",
+   "results": {}
+  },
+  {
+   "id": "unsupported-absent-operation",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "direction": "positive",
+     "view": "power-stepper"
+    },
+    "fields": {
+     "minimum_power": [
+      255
+     ]
+    }
+   },
+   "state": "Unknown",
+   "results": {}
+  },
+  {
+   "id": "unsupported-explicit-zero",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 0,
+     "direction": "positive",
+     "view": "power-stepper"
+    },
+    "fields": {
+     "minimum_power": [
+      255
+     ]
+    }
+   },
+   "state": "Unknown",
+   "results": {}
+  },
+  {
+   "id": "unsupported-direction",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 7,
+     "direction": "other",
+     "view": "power-stepper"
+    },
+    "fields": {
+     "minimum_power": [
+      255
+     ]
+    }
+   },
+   "state": "Unknown",
+   "results": {}
+  }
+ ],
+ "rejections": [
+  {
+   "id": "null-operation",
+   "wire": "{\"context\":{\"primary\":181,\"secondary\":18,\"operation\":null,\"direction\":\"positive\",\"view\":\"power-stepper\"},\"fields\":{}}"
+  },
+  {
+   "id": "trailing-json",
+   "wire": "{\"context\":{},\"fields\":{}} {}"
+  },
+  {
+   "id": "duplicate-nested-key",
+   "wire": "{\"context\":{},\"fields\":{\"release\":[1],\"release\":[2]}}"
+  },
+  {
+   "id": "fractional-byte",
+   "wire": "{\"context\":{},\"fields\":{\"release\":[1.5]}}"
+  },
+  {
+   "id": "out-of-range-byte",
+   "wire": "{\"context\":{},\"fields\":{\"release\":[256]}}"
+  },
+  {
+   "id": "negative-byte",
+   "wire": "{\"context\":{},\"fields\":{\"release\":[-1]}}"
+  },
+  {
+   "id": "string-byte",
+   "wire": "{\"context\":{},\"fields\":{\"release\":[\"1\"]}}"
+  },
+  {
+   "id": "boolean-byte",
+   "wire": "{\"context\":{},\"fields\":{\"release\":[true]}}"
+  },
+  {
+   "id": "nonfinite-number",
+   "wire": "{\"context\":{},\"fields\":{\"release\":[NaN]}}"
+  },
+  {
+   "id": "string-primary",
+   "wire": "{\"context\":{\"primary\":\"181\"},\"fields\":{}}"
+  },
+  {
+   "id": "fields-not-object",
+   "wire": "{\"context\":{},\"fields\":[]}"
+  },
+  {
+   "id": "missing-fields",
+   "wire": "{\"context\":{}}"
+  },
+  {
+   "id": "malformed",
+   "wire": "{\"context\":"
+  }
+ ]
+}
