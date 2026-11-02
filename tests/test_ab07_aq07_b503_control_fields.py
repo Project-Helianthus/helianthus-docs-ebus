@@ -37,13 +37,21 @@ def no_constant(_):
     raise Rejected('nonfinite')
 
 
+def finite_float(text):
+    value = float(text)
+    if value in (float('inf'), float('-inf')):
+        raise Rejected('nonfinite')
+    return value
+
+
 def is_byte(v):
     return type(v) is int and 0 <= v <= 255
 
 
 def evaluate(text):
     try:
-        data = json.loads(text, object_pairs_hook=no_duplicates, parse_constant=no_constant)
+        data = json.loads(text, object_pairs_hook=no_duplicates, parse_constant=no_constant,
+                          parse_float=finite_float)
     except (ValueError, RecursionError) as exc:
         raise Rejected(str(exc))
     if type(data) is not dict or any(k in data for k in RESERVED):
@@ -135,7 +143,9 @@ class Ab07Aq07Test(unittest.TestCase):
                '{"context":{},"fields":{"a":[NaN]}}',
                base(a=[1]).replace('"operation": 7', '"operation": null'),
                base(a=[1]).replace('181', '181.5'),
-               '{"context":{},"fields":{},"arguments":[]}']
+               '{"context":{},"fields":{},"arguments":[]}',
+               '{"context":{},"fields":{},"extra":1e400}',
+               '{"context":{},"fields":{},"extra":-1e400}']
         for text in bad:
             with self.assertRaises(Rejected, msg=text):
                 evaluate(text)
