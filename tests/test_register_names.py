@@ -611,6 +611,39 @@ def test_header_register_selectors_are_not_names(cell: str) -> None:
     assert names.header_column_names(table.splitlines()) == [(4, "ventilation_operating_mode")]
 
 
+@pytest.mark.parametrize("selector", ["0x0016", "`0x00AF`"])
+@pytest.mark.parametrize("valid", ["zone_enabled", "`zone_enabled`"])
+@pytest.mark.parametrize("invalid", ["InvalidName", "``zone_enabled``", "0x0016_invalid"])
+def test_selector_table_still_rejects_invalid_names_in_main(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str],
+    selector: str, valid: str, invalid: str,
+) -> None:
+    text = names.PROTOCOL.read_text(encoding="utf-8")
+    table = (
+        "\n\n| Operation | Register |\n| --- | --- |\n"
+        f"| Read | {selector} |\n"
+        f"| Read | {valid} |\n"
+        f"| Read | {invalid} |\n"
+    )
+    assert names.header_column_names(table.splitlines()) == [
+        (6, "zone_enabled"), (7, names._strip_code_span(invalid)),
+    ]
+    original_read_text = Path.read_text
+
+    def read_text(path: Path, *args, **kwargs) -> str:
+        if path == names.PROTOCOL:
+            return text + table
+        return original_read_text(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "read_text", read_text)
+    assert names.main() == 1
+    errors = capsys.readouterr().err.splitlines()
+    assert len(errors) == 1
+    assert errors[0].endswith(
+        f": {names._strip_code_span(invalid)}: not lowercase snake_case ASCII"
+    )
+
+
 @pytest.mark.parametrize("cell", ["0x0016", "`0x0016`", "0x00AF", "`0x00AF`"])
 def test_catalog_named_register_selector_passes_main(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str], cell: str

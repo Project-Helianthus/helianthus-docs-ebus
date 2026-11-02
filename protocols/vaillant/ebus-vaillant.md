@@ -29,7 +29,8 @@ For detailed coverage of selector-heavy identifiers, see:
 - `0xB5 0x55` (B555, timer/schedule protocol): [`ebus-vaillant-b555-timer-protocol.md`](ebus-vaillant-b555-timer-protocol.md)
 - VR90 room controller protocol: [`ebus-vaillant-vr90-emulation.md`](ebus-vaillant-vr90-emulation.md)
 - `0xB5 0x17` (B517, sub-eBUS tunnel declarations and partial B518 identity): [`ebus-vaillant-B517.md`](ebus-vaillant-B517.md)
-- B5 services without a dedicated page (B501, B502, B50A, B50C, B50D, B50F, B518, B525, header-only identities): [Other B5 services](#other-b5-services-candidate-layouts)
+- `0xB5 0x0F` (B50F, demand and integrity candidates): [`ebus-vaillant-B50F.md`](ebus-vaillant-B50F.md)
+- B5 services without a dedicated page (B501, B502, B50A, B50C, B50D, B518, B525, header-only identities): [Other B5 services](#other-b5-services-candidate-layouts)
 
 ## Scope
 
@@ -635,6 +636,11 @@ B50D fields or establish physical behavior for another family.
 | `B5 0B 04` | circuit name written as 10 ASCII bytes @3..12 (default: the ten characters `0000000000`); no explicit circuit index |
 
 ### B50F: safety-relevant temperature, status and demand
+
+The scoped declarations for this family are on the
+[B50F candidate page](ebus-vaillant-B50F.md). The layout below is a separate,
+older Hypothesis; where it differs from that page (direction, absolute
+positions), neither is Proven and both stay Unknown on the wire.
 
 Candidate layout: all four services put their values in the request and reply
 with a `u8` feedback @3 (1 accepted; 0 and 2..255 not accepted).
