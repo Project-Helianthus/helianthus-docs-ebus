@@ -108,8 +108,8 @@ class QuantityContract(unittest.TestCase):
             self.assertTrue(resolved.exists())
         api = (root / API).read_text()
         self.assertEqual(re.findall(r'```go\n(.*?)\n```', api, re.S), [
-            'Ab14Entries() ([]Ab14Entry, error)\n'
-            'Ab14Lookup(key Ab14Key) (Ab14Entry, bool, error)'])
+            'func Ab14Entries() ([]Ab14Entry, error)\n'
+            'func Ab14Lookup(key Ab14Key) (Ab14Entry, bool, error)'])
         self.assertEqual(tables(api), [AXES, BOUNDARIES, BEHAVIOR])
         return data
 

@@ -5,8 +5,8 @@ The native authority for this slice is the
 The companion finite library contract has exactly two functions:
 
 ```go
-Ab14Entries() ([]Ab14Entry, error)
-Ab14Lookup(key Ab14Key) (Ab14Entry, bool, error)
+func Ab14Entries() ([]Ab14Entry, error)
+func Ab14Lookup(key Ab14Key) (Ab14Entry, bool, error)
 ```
 
 No runtime decoder, generic schema or provider API is introduced here.
