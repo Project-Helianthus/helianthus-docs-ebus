@@ -41,8 +41,7 @@ into a fresh result.
 
 The [synthetic examples](fixtures/ac14_tunnel.json) validate the declared
 wire representation only. Local software rules for a tunnel client are kept
-outside this protocol tree, in the
-[local tunnel contract](../../architecture/aj25_b517_local_tunnel.md). **Proven** applies only to mechanically checked software
+outside this protocol tree. **Proven** applies only to mechanically checked software
 representation; all physical interpretations remain **Hypothesis**.
 Qualification is separate from either grade.
 
