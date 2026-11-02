@@ -45,9 +45,13 @@ unchanged, including nested values. The supported view requires
 | `fields.body` | Variable-length isolated raw body, with no fixed width; missing remains partial, never synthesized as `[]` |
 | `arguments.declared_length` | Required integer 0..255 for a supported view; never inferred from available bytes |
 
+The top-level names `state`, `results`, `physical` and `qualified` are reserved
+for generated output. Input carrying any of them as a top-level key is invalid;
+retained extras never share a name with a generated member.
+
 Reject malformed or trailing JSON, duplicate keys at any depth, wrong kinds,
 nonfinite numbers, fractional or out-of-range bytes or integer arguments, and
-missing required arguments. Return an error with no successful result. Never
+missing required arguments, and reserved top-level names. Return an error with no successful result. Never
 coerce strings, null or Booleans into numbers. Unknown extra keys remain opaque;
 their valid explicit null, zero, false and empty values retain their distinctions
 from absence. Reject invalid input even if its context would be unsupported.
