@@ -32,10 +32,10 @@ def expected_records():
          'grade': 'Hypothesis', 'constants': [constant(0, 181), constant(1, 24)], 'data': opaque(2)},
         {'family': 'B518', 'variant': None, 'direction': 'request', 'service': None,
          'operation': None, 'alternative': 'partial-identity-request', 'grade': 'Hypothesis',
-         'constants': [constant(0, 181)]},
+         'constants': []},
         {'family': 'B518', 'variant': None, 'direction': 'positive', 'service': None,
          'operation': None, 'alternative': 'partial-identity-positive', 'grade': 'Hypothesis',
-         'constants': [constant(0, 245)]},
+         'constants': []},
     ]
 
 
@@ -81,7 +81,7 @@ class TunnelDeclarations(unittest.TestCase):
 
     def test_partial_identity_not_alias_or_zero_extent(self):
         positive = self.data['records'][3]
-        self.assertEqual(positive['constants'], [{'logical': 0, 'value': 245, 'bits': 8}])
+        self.assertEqual(positive['constants'], [])
         for row in self.data['records'][2:]:
             self.assertNotIn('data', row)
             self.assertNotIn('extent', row)
@@ -112,8 +112,8 @@ class TunnelDeclarations(unittest.TestCase):
         self.assertEqual(table(self.page, '## Candidate fields'), [
             ('B517', 'request', 'B5/17', 'B5 at 0; 17 at 1; destination at 2; opaque data at 3 through end-of-PDU', 'Hypothesis'),
             ('B517', 'positive', 'B5/18', 'B5 at 0; 18 at 1; opaque data at 2 through end-of-PDU', 'Hypothesis'),
-            ('B518', 'request', 'Unknown', 'B5 only at 0; body extent absent', 'Hypothesis'),
-            ('B518', 'positive', 'Unknown', 'F5 only at 0; body extent absent', 'Hypothesis'),
+            ('B518', 'request', 'Unknown', 'no constants established; body extent absent', 'Hypothesis'),
+            ('B518', 'positive', 'Unknown', 'no constants established; body extent absent', 'Hypothesis'),
             ('Field', 'Domain or extent', 'Default', 'Interpretation', 'Grade'),
             ('---', '---', '---', '---', '---'),
             ('B517 destination', 'raw u8 0..255', '8', 'raw destination; installed address Unknown', 'Hypothesis'),
@@ -139,13 +139,10 @@ class TunnelDeclarations(unittest.TestCase):
             'Default 8 is not an installed address.',
             'The abstract maximum 65535 is neither a scalar codec nor a demonstrated transport capacity.',
             'Opaque bytes receive no scalar conversion.',
-            'Empty opaque data remains empty/partial;',
-            'incomplete evidence does not erase partial last-known-good state',
+            'Empty opaque data remains empty and proves no successful exchange.',
             'No client or transport is implemented',
             '**Proven** applies only to mechanically checked software representation;',
             'all physical interpretations remain **Hypothesis**.',
-            'No runtime capability, transmit route, automatic native qualification or write admission follows.',
-            'Unsupported or incomplete evidence keeps admission withheld.',
         ):
             with self.subTest(claim=claim):
                 self.assertIn(claim, normalized)

@@ -81,13 +81,7 @@
       "operation": null,
       "alternative": "partial-identity-request",
       "grade": "Hypothesis",
-      "constants": [
-        {
-          "logical": 0,
-          "value": 181,
-          "bits": 8
-        }
-      ]
+      "constants": []
     },
     {
       "family": "B518",
@@ -97,13 +91,7 @@
       "operation": null,
       "alternative": "partial-identity-positive",
       "grade": "Hypothesis",
-      "constants": [
-        {
-          "logical": 0,
-          "value": 245,
-          "bits": 8
-        }
-      ]
+      "constants": []
     }
   ],
   "unknowns": [

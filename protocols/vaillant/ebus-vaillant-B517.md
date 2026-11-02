@@ -16,12 +16,12 @@ constants, not demonstrated physical packet offsets. An absent body extent is
 |---|---|---|---|---|
 | B517 | request | B5/17 | B5 at 0; 17 at 1; destination at 2; opaque data at 3 through end-of-PDU | Hypothesis |
 | B517 | positive | B5/18 | B5 at 0; 18 at 1; opaque data at 2 through end-of-PDU | Hypothesis |
-| B518 | request | Unknown | B5 only at 0; body extent absent | Hypothesis |
-| B518 | positive | Unknown | F5 only at 0; body extent absent | Hypothesis |
+| B518 | request | Unknown | no constants established; body extent absent | Hypothesis |
+| B518 | positive | Unknown | no constants established; body extent absent | Hypothesis |
 
 Each stated constant is eight bits. B518's name adds no encoded subgroup 18,
 operation, body, CRC, success predicate or one-byte physical packet. Its two
-abstract sides contain only their stated constant. There is no operation byte
+abstract sides carry no established constant. There is no operation byte
 in the B517 declaration; the request's logical position 2 is the destination.
 
 | Field | Domain or extent | Default | Interpretation | Grade |
@@ -32,10 +32,7 @@ in the B517 declaration; the request's logical position 2 is the destination.
 
 Default 8 is not an installed address. The abstract maximum 65535 is neither a
 scalar codec nor a demonstrated transport capacity. Opaque bytes receive no
-scalar conversion. Empty opaque data remains empty/partial; it proves no
-successful exchange. Raw bytes and independent useful fields remain preserved;
-incomplete evidence does not erase partial last-known-good state or turn it
-into a fresh result.
+scalar conversion. Empty opaque data remains empty and proves no successful exchange.
 
 ## Evidence and limits
 
@@ -61,5 +58,4 @@ Qualification is separate from either grade.
 | peer effects | Unknown |
 | physical qualification | Unknown |
 
-No client or transport is implemented by these declarations. No runtime capability, transmit route, automatic native qualification or write
-admission follows. Unsupported or incomplete evidence keeps admission withheld.
+No client or transport is implemented by these declarations.
