@@ -34,7 +34,10 @@ and standard-library members keep their spelling.
 ## Input, preservation and rejection
 
 Input is one JSON object containing `context`, `fields` and optional `arguments`.
-Unknown extra keys are retained unchanged at their original location. The
+Unknown extra keys are retained unchanged at their original location, except
+that the top-level names `state`, `results`, `physical` and `qualified` are
+reserved for the evaluator output: an input carrying any of them at the top level
+is rejected with an error. Nested keys of that spelling are ordinary extras. The
 following are input shapes, not new wire encodings:
 
 | Member | Local contract |
@@ -100,7 +103,10 @@ The mixer exception cannot establish parallel support for a non-mixer. Neither
 DHW eligibility label proves a physical operating mode. Flow excess has no
 encoding, physical unit or actuator bound. Programmed start is an opaque token;
 explicit `[]` is present empty data, while an absent `start` supplies no token
-to interpret. Unstated offsets, parallel admission, enforcement, duration,
+to interpret. With a valid `program_mode` and no `start`, the result is still
+`complete`: `start` has no fixed width, so absence is not incompleteness. Its
+`raw` omits `start` and carries the `applicable` or `ignored` label from the
+mode alone. Unstated offsets, parallel admission, enforcement, duration,
 physical units and effects all remain `Unknown`.
 
 ## Result boundary and synthetic examples
