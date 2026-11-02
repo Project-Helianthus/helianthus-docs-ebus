@@ -114,8 +114,9 @@ def evaluate(text):
                              grade='Hypothesis', calculation='Proven')
             results['minutes'] = entry
         out['results'] = results
-        out['state'] = 'complete' if all(
-            r['state'] == 'complete' for r in results.values()) else 'partial'
+        structural = all(len(fields.get(n, [])) == 1
+                         for n in ('period0', 'period1', 'period2'))
+        out['state'] = 'complete' if structural else 'partial'
     elif view == 'intervals' and supported and direction == 'request':
         pairs = arguments['pairs']
         rows = [{'raw': p, 'state': 'complete',
@@ -187,6 +188,7 @@ class PeriodFieldContract(unittest.TestCase):
         self.assertNotIn('minutes', out['results']['period1'])
         self.assertEqual(out['results']['minutes'], {'raw': 545, 'state': UNKNOWN})
         self.assertEqual(out['results']['period2']['state'], 'complete')
+        self.assertEqual(out['state'], 'complete')
 
     def test_unsupported_context_is_unknown(self):
         for text in (periods(FULL, operation=0),
