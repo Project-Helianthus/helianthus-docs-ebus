@@ -32,7 +32,7 @@ not a guarantee that every configured row has only one selector byte.
 |---:|---|---|---|---|
 | `0x00` | Date/time | variant-dependent date/time payload plus outside temperature | existing docs | Query `B504 00` on multiple target classes and show no valid date/time layout is returned. |
 | `0x02..0x08` | Timer periods Monday..Sunday | `timer` composite | | Read each weekday from a timer-capable controller and show the selector does not map weekdays in order. |
-| `0x09` | Parameters in older/consolidated docs | target-dependent | existing docs, historical docs | Capture `B504 09` against a boiler, a VRC720-family controller and a functional module and prove all targets share one fixed layout. |
+| `0x09` | Parameters in older/consolidated docs | target-dependent | existing docs, historical docs | Capture `B504 09` against a boiler, a controller family and a functional module and prove all targets share one fixed layout. |
 | `0x0D` | Status in older/consolidated docs | often short status payload | existing docs | Capture state changes and show `0x0D` has no status correlation. |
 | `0x16` | Outside temperature in `hcmode_inc` | `temp` | | Query target implementing `hcmode_inc` and show response cannot decode as temperature. |
 | `0x19 0xNN` | Daily setpoint temperatures in `tempsetpoints_inc` | three `temp1` values | | Query each day selector and show response does not contain three setpoint temperatures. |
@@ -68,8 +68,9 @@ byte): offset 0 = `B5`, 1 = `04`, 2 = op byte. A target response on the bus
 carries no such prefix (eBUS framing: `NN`, data, CRC); how the candidate
 response offsets map onto the bytes of a bus response is unconfirmed on the
 wire. The columns give the request length NN (the op byte plus its data bytes)
-and the number of reply data bytes; "≥" marks an op with a variable-length
-field (only `16`, whose reply ends with a field to the end of the telegram).
+and the number of reply data bytes; "≥" marks the candidate
+minimum for `16`; its unused tail has no established extent or fixed trailing
+offset.
 The candidate `00` reply has a fixed length of 10 bytes; the observed DateTime
 layouts have 10 or 8 bytes (see [DateTime Caveat](#datetime-caveat)).
 **Hypothesis**: response offset 3 is the first data byte of a bus
@@ -166,10 +167,6 @@ Every item in this section is a candidate layout, unconfirmed on the wire.
   `B5 04 00` in the candidate offsets counted from the service prefix (the
   asymmetry is unresolved). Candidate interpretation,
   unconfirmed on the wire: it is read cyclically by an energy manager.
-- **Corrected outside temperature** (`B5 04 16`): candidate, unconfirmed on the
-  wire: a signed 16-bit little-endian value at offset 3 plus a field of unknown
-  meaning to the end of the telegram. Two candidate divisors are 16 and 256; the
-  divisor is unresolved (see Open questions).
 - **Flow temperature** (`B5 04 0E`): candidate, unconfirmed on the wire: the
   field at offset 12 depends on the circuit type, a duty cycle in % for mixer
   circuits (case 1), a flow temperature in °C for DHW circuits (case 2) and a raw
@@ -195,6 +192,37 @@ Every item in this section is a candidate layout, unconfirmed on the wire.
   station, `10` large advanced solar station, `11` small advanced solar station;
   circuit state `0` low temperature or off through `8` cooling mode active (full
   lists in the fixture).
+
+## Bounded read candidate declarations
+
+These declarations refine only the listed fields in the existing candidate
+catalogue and its [finite field correspondence](fixtures/b504-b505-candidate-fields.csv).
+They do not qualify a wider catalogue. A logical position is not a wire offset;
+logical 3 below follows the catalogue's service-prefix convention and does not
+establish bus-response placement. Omitted metadata is Unknown. The table is the
+scoped authority for these declarations where the correspondence differs.
+Solar scalar tables remain distinct from competing bit descriptions; their
+precise selector bindings are not supplied here. Preheating alternatives remain
+independent; their union is not a qualified range or an inferred encoding.
+
+Grade describes a claim, independently of native qualification: no row is
+physically qualified, and synthetic arithmetic is not Proven wire behavior.
+Unknown polling permission supplies no basis for polling. No physical reply is
+constructed by the [synthetic field cases](fixtures/ae02_b504_candidates.json).
+
+| ID | Grade | Identity | Direction | Logical position / extent | Raw type / domain | Scale | Sentinel / default / conflict | Unresolved properties |
+|---|---|---|---|---|---|---|---|---|
+| op16-div16 | Hypothesis | OP16 corrected outside temperature /16 | response | logical 3; 16 bits | i16 LE; -32768..32767 | raw / 16 °C | Default and sentinels Unknown; /256 is a separate unqualified alternative | Physical adaptation, installed support and polling permission Unknown; reply length cannot select variant |
+| op16-div256 | Hypothesis | OP16 corrected outside temperature /256 | response | logical 3; 16 bits | i16 LE; -32768..32767 | raw / 256 °C | Default and sentinels Unknown; separate unqualified alternative to /16 | Physical adaptation, installed support and polling permission Unknown; reply length cannot select variant |
+| op16-tail | Unknown | OP16 unused tail | response | position Unknown; extent Unknown | raw bytes; domain Unknown | Unknown | Default and sentinels Unknown; no fixed trailing offset | Meaning, physical adaptation, installed support and polling permission Unknown |
+| op20-setpoint | Hypothesis | OP20 setpoint | response | position Unknown; extent Unknown | zero or nonzero; raw type Unknown | Nonzero includes declared offsets; exact arithmetic Unknown | 0 = no-demand; default and other sentinels Unknown | Physical adaptation, installed support and polling permission Unknown |
+| op21-protection | Hypothesis | OP21 protection temperature | response | position Unknown; extent Unknown | zero or positive; raw type Unknown | Unknown | 0 = off; positive = protection-active; default and other sentinels Unknown | Physical adaptation, installed support and polling permission Unknown |
+| op26-adjustment | Hypothesis | OP26 adjustment flag | response | position Unknown; extent Unknown | flag; other raw values Unknown | Unknown | 1 = permits setpoint change; default and other sentinels Unknown | Physical adaptation, installed support and polling permission Unknown; no writable contract established |
+| op26-room | Hypothesis | OP26 room temperature | response | position Unknown; extent Unknown | FF; remaining raw domain Unknown | Unknown | FF = unavailable only in this context; default and other sentinels Unknown | Other selectors inherit no FF label; physical adaptation, installed support and polling permission Unknown |
+| solar-three | Hypothesis | solar-state scalar 0/1/2 | response | position Unknown; extent Unknown | scalar codes {0,1,2} | None declared | Competing bit descriptions remain separate; default and sentinels Unknown | Exact selector binding, physical adaptation, installed support and polling permission Unknown |
+| solar-two | Hypothesis | solar-state scalar 0/1 | response | position Unknown; extent Unknown | scalar codes {0,1} | None declared | Code 2 outside this table; competing bit descriptions separate; default and sentinels Unknown | Exact selector binding, physical adaptation, installed support and polling permission Unknown |
+| preheat-five | Hypothesis | preheating five-minute variant | response | position Unknown; extent Unknown | duration 0..60 minutes; step 5; raw type Unknown | Raw conversion Unknown | Separate from 0..300 alternative; default and sentinels Unknown | Exact selector binding, physical adaptation, installed support and polling permission Unknown |
+| preheat-300 | Hypothesis | preheating 300-minute variant | response | position Unknown; extent Unknown | duration 0..300 minutes; step Unknown; raw type Unknown | Raw conversion Unknown | Separate from five-minute alternative; default and sentinels Unknown | Exact selector binding, physical adaptation, installed support and polling permission Unknown |
 
 ## Profiles
 
@@ -233,8 +261,14 @@ No publishable capture is included in this reference.
   counted from the service prefix; that is the op-byte position, which is not
   part of a bus response under the offset hypothesis, so the fixture lists the
   block number only on the request side and the reply as seven bytes.
-- The divisor of the `B5 04 16` corrected outside temperature (two candidate
-  divisors are 16 and 256) is unresolved.
+- Native qualification of OP16 /16 and its separate /256 alternative remains
+  Unknown; reply length cannot choose either. The unused tail extent and fixed
+  trailing offset are not established. See the bounded table.
+- OP20 nonzero setpoint offset arithmetic, contextual OP26 FF applicability,
+  competing solar bit descriptions and preheating variant selection remain
+  unresolved as recorded in the bounded table; omitted positions, all other
+  sentinels, physical adaptation, installed support and polling permission
+  remain Unknown.
 - The meaning of the reserved raw value `8000` of the `B5 04 00` outside
   temperature is unresolved.
 - The asymmetry of `B5 04 0D` (a request with two data bytes, a positive that
@@ -243,7 +277,7 @@ No publishable capture is included in this reference.
 
 ## References
 
-- Public TypeSpec: [timer_inc.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/timer_inc.tsp)
-- Public TypeSpec: [hcmode_inc.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/hcmode_inc.tsp)
-- Public TypeSpec: [tempsetpoints_inc.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/tempsetpoints_inc.tsp)
+- Public TypeSpec: [timer_inc.tsp](https://github.com/john30/ebusd-configuration/blob/master/src/vaillant/timer_inc.tsp)
+- Public TypeSpec: [hcmode_inc.tsp](https://github.com/john30/ebusd-configuration/blob/master/src/vaillant/hcmode_inc.tsp)
+- Public TypeSpec: [tempsetpoints_inc.tsp](https://github.com/john30/ebusd-configuration/blob/master/src/vaillant/tempsetpoints_inc.tsp)
 - Consolidated local reference: [`ebus-vaillant.md`](ebus-vaillant.md)
