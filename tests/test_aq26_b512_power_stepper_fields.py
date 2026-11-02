@@ -69,6 +69,8 @@ def ab25aq25_admit(ab25aq25_wire):
     ab25aq25_value = ab25aq25_load(ab25aq25_wire)
     if type(ab25aq25_value) is not dict:
         raise ValueError('root object required')
+    if {'state', 'results', 'physical', 'qualified'} & ab25aq25_value.keys():
+        raise ValueError('reserved envelope key')
     if not {'context', 'fields'} <= ab25aq25_value.keys():
         raise ValueError('required object missing')
     for ab25aq25_key in ('context', 'fields', 'arguments'):
@@ -195,6 +197,13 @@ class Ab25Aq25PowerStepperTests(ab25aq25_unittest.TestCase):
             with self.subTest(ab25aq25_case['id']):
                 with self.assertRaises(ValueError):
                     ab25aq25_admit(ab25aq25_case['wire'])
+
+    def test_reserved_envelope_keys_fail_admission(self):
+        for ab25aq25_key in ('state', 'results', 'physical', 'qualified'):
+            ab25aq25_wire = '{"context":{},"fields":{},"%s":"client"}' % ab25aq25_key
+            with self.subTest(ab25aq25_key):
+                with self.assertRaises(ValueError):
+                    ab25aq25_admit(ab25aq25_wire)
 
     def test_selector_kinds_fail_admission(self):
         for ab25aq25_key in ('direction', 'view'):

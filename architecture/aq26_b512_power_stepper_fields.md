@@ -47,6 +47,8 @@ branches requires an argument. Unknown extra keys remain uninterpreted and
 retained; they do not create additional typed arguments or supported fields.
 
 Reject malformed or trailing JSON, duplicate keys at any depth, wrong kinds,
+root keys named `state`, `results`, `physical` or `qualified` (reserved for the
+output envelope, so retained extra keys are never overwritten),
 nonfinite numbers, fractional or out-of-range bytes or integer arguments, and
 missing required arguments with an error and no successful result. No string,
 `null` or Boolean is coerced to a number. Malformed byte arrays are admission
