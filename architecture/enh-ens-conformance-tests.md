@@ -102,6 +102,12 @@ XR rows below reference these symbols explicitly. Implementations MAY expose the
 
 ### XR_Arbitration_Fairness_NoStarvation
 
+> Scope: this invariant is defined for the deprecated standalone proxy. The
+> embedded adapter multiplexer does not use FIFO or fair queues: it selects one
+> bidder by initiator address priority at an idle SYN, so a lower-priority bidder
+> can wait indefinitely behind a higher-priority one
+> ([AD06](adapter-direct-multiplexer.md#ad06-owner-arbitration-model)).
+
 **Invariant:** Under proxy-mediated contention (multiple pending northbound bus
 requests), no single request is starved indefinitely. Proxy arbitration is fair
 across sessions and transports, including clients that use different initiator
@@ -147,7 +153,7 @@ a lower-address client bypassing an older higher-address contender.
 | XR_ENH_0xAA_DataNotSYN | [ebus-overview.md §SYN](../protocols/ebus-services/ebus-overview.md#acknack-symbols) | ✅ | ✅ | — | ✅ |
 | XR_START_RequestStart_WriteAll_NoDoubleSend | [enh.md §START](../protocols/enh.md#start--started--failed) | ✅ | ✅ | — | ✅ |
 | XR_START_Cancel_ReleasesOwnership | [enh.md §START](../protocols/enh.md#start--started--failed) | ✅ | — | ⚠️ alias (`XR_BLOCKING_ARB_DEADLINE`) | ✅ |
-| XR_Arbitration_Fairness_NoStarvation | [enh.md §START](../protocols/enh.md#start--started--failed) | ✅ | — | ⚠️ alias | — |
+| XR_Arbitration_Fairness_NoStarvation | [enh.md §START](../protocols/enh.md#start--started--failed) | ✅ | — | ❌ deviation (address priority permits starvation) | — |
 | XR_UDP_LeaseTTL_CapRefresh_Bounded | [udp-plain.md §Ownership](../protocols/udp-plain.md#ownership-lease-ttl) | — | — | — | ✅ |
 
 **Notes:**
