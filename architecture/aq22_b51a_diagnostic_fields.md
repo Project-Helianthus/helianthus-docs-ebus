@@ -35,7 +35,9 @@ Each supplied field is an array of integer bytes 0..255. Empty opaque data is
 distinct from missing data; none of the fixed-width fields below is opaque.
 Arguments supply only the explicitly declared typed inputs for interpretation;
 unknown extra keys, including nested extensions, remain unchanged and acquire
-no semantics. Unknown extra input keys are retained independently at every level.
+no semantics. Top-level keys `raw`, `state`, `results`, `physical` and
+`qualified` are reserved for generated output; input containing any of them is
+invalid and is rejected, so no output key is ever duplicated or overridden. Unknown extra input keys are retained independently at every level.
 No string, null or Boolean is coerced into a number.
 
 Reject malformed or trailing JSON, duplicate keys at any depth, wrong kinds,
@@ -62,7 +64,9 @@ and flags never select a layout. All row meanings are Hypothesis.
 
 OP04 returns **104 independent Boolean positions**, never 13 summary bits.
 Position `8*i+j` is bit `j` of byte `i`, for `i=0..12`, `j=0..7`, with bit 0
-least significant. Preserve all 13 raw bytes. Logical footprint 17 and tail
+least significant. The `enable` result carries `positions`: a JSON array of
+exactly 104 Booleans ordered by ascending position, so `positions[8*i+j]` is
+bit `j` of byte `i`. Preserve all 13 raw bytes in the result `raw`. Logical footprint 17 and tail
 tuple `(0,13,0)` do not describe physical length or wire offsets.
 
 OP05 decodes the shared flags byte as follows:
@@ -76,8 +80,10 @@ OP05 decodes the shared flags byte as follows:
 | 4..5 | reserved, preserved in original positions with mask `0x30` |
 | 6..7 | text alternatives, retained as alternatives without an invented text mapping |
 
-Retain bit 3's two alternatives together. When bit 1 and bit 3 are set, report
-the writable/read-only conflict without producing effective authorization.
+Retain bit 3's two alternatives together under `alternatives.bit3`. That object
+also carries the Boolean `writable-read-only-conflict`, true exactly when bit 1
+and bit 3 are both set (flags `0x0A`) and false otherwise; it never produces
+effective authorization, and both bit 3 alternatives stay distinct and true.
 Neither bit 2 nor bit 3 auto-selects a view. If disabled bit 0 is true, retain
 all subsequent raw fields but do not interpret them: no numbers, conversions,
 enum values or semantic reserved-field decoding are produced for those fields.
@@ -155,7 +161,7 @@ pairs in prose are in transmitted little-endian order):
 ```
 
 ```json
-{"context":{"primary":181,"secondary":26,"operation":5,"direction":"positive","view":"range"},"raw":{"flags":[0],"display_type":[0],"value":[52,18],"minimum":[1,0],"maximum":[255,255],"step":[0]},"extension":{"present":false,"empty":[],"nullable":null},"state":"complete","results":{"flags":{"raw":[0],"state":"complete","grade":"Hypothesis","calculation":"Proven","flags":{"disabled":false,"writable":false,"enum-versus-range":false},"reserved":0,"alternatives":{"bit3":{"additional-four-byte/no-range":false,"read-only-overriding-writable":false},"text-bits":[false,false]}},"display_type":{"raw":[0],"state":"complete","grade":"Hypothesis","calculation":"Proven","number":0},"value":{"raw":[52,18],"state":"complete","grade":"Hypothesis","calculation":"Proven","number":4660},"minimum":{"raw":[1,0],"state":"complete","grade":"Hypothesis","calculation":"Proven","number":1},"maximum":{"raw":[255,255],"state":"complete","grade":"Hypothesis","calculation":"Proven","number":65535},"step":{"raw":[0],"state":"complete","grade":"Hypothesis","calculation":"Proven","number":0}},"physical":"Unknown","qualified":false}
+{"context":{"primary":181,"secondary":26,"operation":5,"direction":"positive","view":"range"},"raw":{"flags":[0],"display_type":[0],"value":[52,18],"minimum":[1,0],"maximum":[255,255],"step":[0]},"extension":{"present":false,"empty":[],"nullable":null},"state":"complete","results":{"flags":{"raw":[0],"state":"complete","grade":"Hypothesis","calculation":"Proven","flags":{"disabled":false,"writable":false,"enum-versus-range":false},"reserved":0,"alternatives":{"bit3":{"additional-four-byte/no-range":false,"read-only-overriding-writable":false,"writable-read-only-conflict":false},"text-bits":[false,false]}},"display_type":{"raw":[0],"state":"complete","grade":"Hypothesis","calculation":"Proven","number":0},"value":{"raw":[52,18],"state":"complete","grade":"Hypothesis","calculation":"Proven","number":4660},"minimum":{"raw":[1,0],"state":"complete","grade":"Hypothesis","calculation":"Proven","number":1},"maximum":{"raw":[255,255],"state":"complete","grade":"Hypothesis","calculation":"Proven","number":65535},"step":{"raw":[0],"state":"complete","grade":"Hypothesis","calculation":"Proven","number":0}},"physical":"Unknown","qualified":false}
 ```
 
 Independent partial example: replace only `value` with `[52]` in that input.
@@ -174,9 +180,10 @@ Further finite assertions:
 
 | selected view / raw or argument | local result |
 | --- | --- |
-| enable-bits / thirteen zero bytes | exactly 104 false positions |
+| enable-bits / thirteen zero bytes | `positions` is an array of exactly 104 false values |
 | enable-bits / set bit `j` in each byte `i` independently | each change flips exactly position `8*i+j`; setting bit 0 in every byte yields positions 0,8,16,24,32,40,48,56,64,72,80,88,96 |
-| range / flags `0A` | writable true, bit 3 true with both alternatives and conflict; no authorization |
+| range / flags `0A` | writable true, `bit3` alternatives both true and `writable-read-only-conflict` true; no authorization |
+| any view / input with a top-level `state`, `raw`, `results`, `physical` or `qualified` key | error, no successful output |
 | range / flags `01`, other bytes unchanged | disabled true, all subsequent raw retained without interpretation |
 | range / value `3412`, minimum `0100`, maximum `FFFF`, step `00` | 4660, 1, 65535, 0 independently |
 | enum / flags `[0]`, alternatives `[1,2,2,3,4,4]` | six ordered values, duplicates intact, no current value |
