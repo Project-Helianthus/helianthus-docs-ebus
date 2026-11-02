@@ -28,7 +28,8 @@ This compound stem is distinct from earlier `abNN` names.
 The input is one JSON object with `context`, `fields` and optional `arguments`.
 `context` contains `primary`, `secondary`, `operation` when present, `direction`,
 `view` and opaque family/variant keys. Primary, secondary and present operation
-are integers in 0..255. Identifiers select a local candidate view; they never
+are integers in 0..255; `view` and `direction` are strings. A float such
+as `181.0` is not an integer. Identifiers select a local candidate view; they never
 qualify a family. Family/variant values remain opaque and do not grant support.
 The following are the entire supported context set:
 
@@ -45,7 +46,8 @@ combinations return raw-only `Unknown` without applying any formula.
 Names do not imply byte positions. Explicit empty opaque data `[]` differs from
 missing opaque data and is retained; it does not invent a conversion. Empty
 fixed-width arrays are incomplete. These two views require no typed arguments;
-`arguments` may be absent or `{}`. Extra top-level input keys are retained unchanged,
+`arguments` may be absent or `{}`; `null`, arrays, other kinds and nonempty
+objects are admission errors. Extra top-level input keys are retained unchanged,
 independently of interpreted fields; they are not new supported arguments,
 fields or context combinations. The top-level keys `state`, `results`,
 `physical` and `qualified` are reserved for generated output; an input that

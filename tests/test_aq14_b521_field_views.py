@@ -25,6 +25,21 @@ def _reject_duplicates(pairs):
     return dict(pairs)
 
 
+def _reject_constant(name):
+    raise ValueError('nonfinite constant')
+
+
+def _parse_float(text):
+    value = float(text)
+    if value != value or value in (float('inf'), float('-inf')):
+        raise ValueError('nonfinite number')
+    return value
+
+
+def _is_int(value, low=0, high=255):
+    return type(value) is int and low <= value <= high
+
+
 def _byte_array(value):
     if not isinstance(value, list):
         raise ValueError('kind')
@@ -41,12 +56,21 @@ def _bits(byte, names):
 
 
 def evaluate(text):
-    data = json.loads(text, object_pairs_hook=_reject_duplicates)
+    data = json.loads(text, object_pairs_hook=_reject_duplicates,
+                      parse_constant=_reject_constant, parse_float=_parse_float)
     if not isinstance(data, dict) or any(k in data for k in RESERVED):
         raise ValueError('shape')
-    context, fields = data['context'], data['fields']
-    if not isinstance(fields, dict):
+    context, fields = data.get('context'), data.get('fields')
+    if not isinstance(context, dict) or not isinstance(fields, dict):
         raise ValueError('fields')
+    if not _is_int(context.get('primary')) or not _is_int(context.get('secondary')):
+        raise ValueError('selector')
+    if 'operation' in context and not _is_int(context['operation']):
+        raise ValueError('operation')
+    if not isinstance(context.get('view'), str) or not isinstance(context.get('direction'), str):
+        raise ValueError('context kind')
+    if 'arguments' in data and data['arguments'] != {}:
+        raise ValueError('arguments')
     for raw in fields.values():
         _byte_array(raw)
     out = dict(data)
@@ -136,9 +160,33 @@ class Aq14B521FieldViews(unittest.TestCase):
         for bad in ('{"context":{},"fields":{"a":[255.5]},"fields":{}}',
                     json.dumps(dict(base, fields={'status0': [255.5]})),
                     json.dumps(dict(base, fields={'status0': ['1']})),
-                    json.dumps(base) + '{}'):
+                    json.dumps(base) + '{}',
+                    '{"context":{},"fields":{},"extra":NaN}',
+                    '{"context":{},"fields":{},"extra":[Infinity,-Infinity]}',
+                    '{"context":{},"fields":{},"extra":1e999}'):
             with self.assertRaises(ValueError):
                 evaluate(bad)
+
+    def test_context_and_arguments_admission(self):
+        base = self.blocks[0]
+
+        def with_context(**changes):
+            context = dict(base['context'], **changes)
+            return json.dumps(dict(base, context=context))
+
+        bad = [with_context(primary=181.0), with_context(secondary=33.0),
+               with_context(primary=256), with_context(secondary=-1),
+               with_context(primary=True), with_context(primary='181'),
+               with_context(operation=None), with_context(operation=256),
+               with_context(operation=0.0), with_context(view=1),
+               with_context(direction=None), with_context(direction=['request'])]
+        bad += [json.dumps(dict(base, arguments=a)) for a in (None, [], [1], {'x': 1}, 0, '')]
+        for text in bad:
+            with self.assertRaises(ValueError, msg=text):
+                evaluate(text)
+        absent = {k: v for k, v in base.items() if k != 'arguments'}
+        self.assertEqual(evaluate(json.dumps(absent))['state'], 'complete')
+        self.assertEqual(evaluate(with_context(operation=0))['state'], 'Unknown')
 
     def test_page_vocabulary(self):
         text = PAGE.read_text()
