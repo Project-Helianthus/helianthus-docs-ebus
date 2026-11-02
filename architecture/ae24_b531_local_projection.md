@@ -9,7 +9,9 @@ heat-pump family, with no model or endpoint qualification.
 This page describes representation and pure synthetic arithmetic only.
 Nothing here is stable before 1.0. It adds no namespace or authorization gate.
 The [synthetic numerical examples](../protocols/vaillant/fixtures/ae24_b531_candidates.json)
-preserve both raw words independently. They are examples, not an artifact
+preserve both raw words independently, and the
+[local projected values](fixtures/ae24_b531_local_projection.json) hold the
+multiplied results outside the protocol tree. They are examples, not an artifact
 schema or a decoder implementation.
 
 ## Local declarations

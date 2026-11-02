@@ -10,6 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 NATIVE = Path('protocols/vaillant/ebus-vaillant-B531-hem-power-limit.md')
 LOCAL = Path('architecture/ae24_b531_local_projection.md')
 FIXTURE = Path('protocols/vaillant/fixtures/ae24_b531_candidates.json')
+PROJECTION = Path('architecture/fixtures/ae24_b531_local_projection.json')
 UNRESOLVED = ('endpoint support; native units; correlation; reply adaptation; '
               'cache freshness; target eligibility; applied limits: Unknown')
 NATIVE_HEADER = ('Grade', 'Identity', 'Direction', 'Logical position / extent',
@@ -58,9 +59,19 @@ def check_contract(test, root):
     test.assertEqual(fixture['native_grade'], 'Hypothesis')
     test.assertEqual(fixture['native_unit'], 'Unknown')
     keys = ('id', 'minimum_raw', 'maximum_raw', 'minimum_unsigned',
-            'maximum_unsigned', 'minimum_times_ten', 'maximum_times_ten', 'native_unit')
+            'maximum_unsigned', 'native_unit')
     test.assertTrue(all(set(row) == set(keys) for row in fixture['cases']))
-    test.assertEqual(tuple(tuple(row[k] for k in keys) for row in fixture['cases']), EXPECTED)
+    test.assertEqual(tuple(tuple(row[k] for k in keys) for row in fixture['cases']),
+                     tuple(row[:5] + row[7:] for row in EXPECTED))
+    projection = json.loads((root / PROJECTION).read_text())
+    test.assertEqual(projection['provenance'], 'synthetic only; no physical qualification')
+    test.assertEqual(projection['arithmetic_grade'], 'Proven')
+    test.assertEqual(projection['native_grade'], 'Hypothesis')
+    test.assertEqual(projection['native_unit'], 'Unknown')
+    pkeys = ('id', 'minimum_unsigned', 'maximum_unsigned', 'minimum_times_ten', 'maximum_times_ten')
+    test.assertTrue(all(set(row) == set(pkeys) for row in projection['cases']))
+    test.assertEqual(tuple(tuple(row[k] for k in pkeys) for row in projection['cases']),
+                     tuple((r[0], r[3], r[4], r[5], r[6]) for r in EXPECTED))
     native_rows = []
     local_rows = []
     for quantity, position in (('minimum', 'first'), ('maximum', 'second')):
@@ -112,9 +123,9 @@ class CandidateAcceptance(unittest.TestCase):
 
     def reject_file_mutant(self, path, old, new):
         # Disposable copies of owned documents/data only. No runtime decoder.
-        with tempfile.TemporaryDirectory(prefix='ae24-', dir=os.environ['TMPDIR']) as tmp:
+        with tempfile.TemporaryDirectory(prefix='ae24-', dir=os.environ.get('TMPDIR')) as tmp:
             root = Path(tmp)
-            for rel in (NATIVE, LOCAL, FIXTURE):
+            for rel in (NATIVE, LOCAL, FIXTURE, PROJECTION):
                 target = root / rel
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_bytes((ROOT / rel).read_bytes())
@@ -134,17 +145,17 @@ class CandidateAcceptance(unittest.TestCase):
 
     def test_division_mutants(self):
         self.reject_file_mutant(LOCAL, 'multiply by 10 into u32 / 0..655350', 'divide by 10 into u32 / 0..6553')
-        self.reject_file_mutant(FIXTURE, '"maximum_times_ten": 655350', '"maximum_times_ten": 6553')
+        self.reject_file_mutant(PROJECTION, '"maximum_times_ten": 655350', '"maximum_times_ten": 6553')
 
     def test_ffff_unavailable_mutants(self):
         self.reject_file_mutant(NATIVE, 'FFFF sentinel Unknown', 'FFFF sentinel unavailable')
         self.reject_file_mutant(LOCAL, 'FFFF remains numeric', 'FFFF is unavailable')
-        self.reject_file_mutant(FIXTURE, '"maximum_times_ten": 655350', '"maximum_times_ten": null')
+        self.reject_file_mutant(PROJECTION, '"maximum_times_ten": 655350', '"maximum_times_ten": null')
 
     def test_order_enforcement_mutants(self):
         self.reject_file_mutant(NATIVE, 'minimum greater than maximum retained as an independent alternative', 'minimum must not exceed maximum')
         self.reject_file_mutant(LOCAL, 'no ordering rejection', 'require minimum<=maximum')
-        self.reject_file_mutant(FIXTURE, '"minimum_times_ten": 20', '"minimum_times_ten": null')
+        self.reject_file_mutant(PROJECTION, '"minimum_times_ten": 20', '"minimum_times_ten": null')
 
     def test_minimum_table_mutant(self):
         self.reject_file_mutant(LOCAL, '| maximum only | projected maximum u32 |', '| minimum only | projected minimum u32 |')

@@ -9,8 +9,6 @@
       "maximum_raw": "FF FF",
       "minimum_unsigned": 0,
       "maximum_unsigned": 65535,
-      "minimum_times_ten": 0,
-      "maximum_times_ten": 655350,
       "native_unit": "Unknown"
     },
     {
@@ -19,8 +17,6 @@
       "maximum_raw": "01 00",
       "minimum_unsigned": 2,
       "maximum_unsigned": 1,
-      "minimum_times_ten": 20,
-      "maximum_times_ten": 10,
       "native_unit": "Unknown"
     },
     {
@@ -29,8 +25,6 @@
       "maximum_raw": "FF FF",
       "minimum_unsigned": 2,
       "maximum_unsigned": 65535,
-      "minimum_times_ten": 20,
-      "maximum_times_ten": 655350,
       "native_unit": "Unknown"
     },
     {
@@ -39,8 +33,6 @@
       "maximum_raw": "01 00",
       "minimum_unsigned": 0,
       "maximum_unsigned": 1,
-      "minimum_times_ten": 0,
-      "maximum_times_ten": 10,
       "native_unit": "Unknown"
     }
   ]
