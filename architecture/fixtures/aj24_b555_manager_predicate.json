@@ -1,0 +1,276 @@
+{
+  "contract": {
+    "grade": "Hypothesis",
+    "unknown": {
+      "native_behavior": "Unknown",
+      "exact_family_prefix": "Unknown",
+      "response_adaptation": "Unknown",
+      "physical_qualification": "Unknown",
+      "other_caller_prerequisites": "Unknown",
+      "runtime_transition_policy": "Unknown"
+    },
+    "request": {
+      "initiator": "F1",
+      "target": "08",
+      "service": "B555",
+      "count": 1,
+      "data": "00",
+      "direction": "initiator_to_target"
+    },
+    "roles": {
+      "family_address": "15",
+      "route_address": "08"
+    },
+    "predicate": {
+      "controller_type": 2,
+      "spn": 385,
+      "family_match": true,
+      "required_bits": [
+        0,
+        1
+      ],
+      "operator": "all"
+    },
+    "outputs": {
+      "first": 0,
+      "second": 1
+    },
+    "authority": {
+      "trust": false,
+      "write_permission": false,
+      "runtime_implemented": false
+    }
+  },
+  "scenarios": [
+    {
+      "id": "zero",
+      "controller_type": 2,
+      "spn": 385,
+      "family_match": true,
+      "raw_r1": "00",
+      "last_known_good": {
+        "raw_r1": "03",
+        "grade": "Hypothesis"
+      },
+      "expected": {
+        "first": false,
+        "second": false,
+        "unknown_high_bits": 0,
+        "eligible": false,
+        "local_flag": false,
+        "first_bit_policy": false,
+        "last_known_good": {
+          "raw_r1": "03",
+          "grade": "Hypothesis"
+        }
+      }
+    },
+    {
+      "id": "first",
+      "controller_type": 2,
+      "spn": 385,
+      "family_match": true,
+      "raw_r1": "01",
+      "last_known_good": {
+        "raw_r1": "03",
+        "grade": "Hypothesis"
+      },
+      "expected": {
+        "first": true,
+        "second": false,
+        "unknown_high_bits": 0,
+        "eligible": false,
+        "local_flag": false,
+        "first_bit_policy": true,
+        "last_known_good": {
+          "raw_r1": "03",
+          "grade": "Hypothesis"
+        }
+      }
+    },
+    {
+      "id": "second",
+      "controller_type": 2,
+      "spn": 385,
+      "family_match": true,
+      "raw_r1": "02",
+      "last_known_good": {
+        "raw_r1": "03",
+        "grade": "Hypothesis"
+      },
+      "expected": {
+        "first": false,
+        "second": true,
+        "unknown_high_bits": 0,
+        "eligible": false,
+        "local_flag": false,
+        "first_bit_policy": false,
+        "last_known_good": {
+          "raw_r1": "03",
+          "grade": "Hypothesis"
+        }
+      }
+    },
+    {
+      "id": "both",
+      "controller_type": 2,
+      "spn": 385,
+      "family_match": true,
+      "raw_r1": "03",
+      "last_known_good": {
+        "raw_r1": "03",
+        "grade": "Hypothesis"
+      },
+      "expected": {
+        "first": true,
+        "second": true,
+        "unknown_high_bits": 0,
+        "eligible": true,
+        "local_flag": true,
+        "first_bit_policy": true,
+        "last_known_good": {
+          "raw_r1": "03",
+          "grade": "Hypothesis"
+        }
+      }
+    },
+    {
+      "id": "high",
+      "controller_type": 2,
+      "spn": 385,
+      "family_match": true,
+      "raw_r1": "80",
+      "last_known_good": {
+        "raw_r1": "03",
+        "grade": "Hypothesis"
+      },
+      "expected": {
+        "first": false,
+        "second": false,
+        "unknown_high_bits": 128,
+        "eligible": false,
+        "local_flag": false,
+        "first_bit_policy": false,
+        "last_known_good": {
+          "raw_r1": "03",
+          "grade": "Hypothesis"
+        }
+      }
+    },
+    {
+      "id": "wrong_type",
+      "controller_type": 1,
+      "spn": 385,
+      "family_match": true,
+      "raw_r1": "03",
+      "last_known_good": {
+        "raw_r1": "03",
+        "grade": "Hypothesis"
+      },
+      "expected": {
+        "first": true,
+        "second": true,
+        "unknown_high_bits": 0,
+        "eligible": false,
+        "local_flag": false,
+        "first_bit_policy": true,
+        "last_known_good": {
+          "raw_r1": "03",
+          "grade": "Hypothesis"
+        }
+      }
+    },
+    {
+      "id": "wrong_spn",
+      "controller_type": 2,
+      "spn": 384,
+      "family_match": true,
+      "raw_r1": "03",
+      "last_known_good": {
+        "raw_r1": "03",
+        "grade": "Hypothesis"
+      },
+      "expected": {
+        "first": true,
+        "second": true,
+        "unknown_high_bits": 0,
+        "eligible": false,
+        "local_flag": false,
+        "first_bit_policy": true,
+        "last_known_good": {
+          "raw_r1": "03",
+          "grade": "Hypothesis"
+        }
+      }
+    },
+    {
+      "id": "wrong_family",
+      "controller_type": 2,
+      "spn": 385,
+      "family_match": false,
+      "raw_r1": "03",
+      "last_known_good": {
+        "raw_r1": "03",
+        "grade": "Hypothesis"
+      },
+      "expected": {
+        "first": true,
+        "second": true,
+        "unknown_high_bits": 0,
+        "eligible": false,
+        "local_flag": false,
+        "first_bit_policy": true,
+        "last_known_good": {
+          "raw_r1": "03",
+          "grade": "Hypothesis"
+        }
+      }
+    },
+    {
+      "id": "unknown_family",
+      "controller_type": 2,
+      "spn": 385,
+      "family_match": "Unknown",
+      "raw_r1": "03",
+      "last_known_good": {
+        "raw_r1": "03",
+        "grade": "Hypothesis"
+      },
+      "expected": {
+        "first": true,
+        "second": true,
+        "unknown_high_bits": 0,
+        "eligible": false,
+        "local_flag": false,
+        "first_bit_policy": true,
+        "last_known_good": {
+          "raw_r1": "03",
+          "grade": "Hypothesis"
+        }
+      }
+    },
+    {
+      "id": "partial",
+      "controller_type": 2,
+      "spn": 385,
+      "family_match": true,
+      "raw_r1": null,
+      "last_known_good": {
+        "raw_r1": "03",
+        "grade": "Hypothesis"
+      },
+      "expected": {
+        "first": null,
+        "second": null,
+        "unknown_high_bits": null,
+        "eligible": false,
+        "local_flag": false,
+        "first_bit_policy": null,
+        "last_known_good": {
+          "raw_r1": "03",
+          "grade": "Hypothesis"
+        }
+      }
+    }
+  ]
+}

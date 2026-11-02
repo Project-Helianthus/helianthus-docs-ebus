@@ -184,6 +184,15 @@ flowchart TD
 
 **NM transition:** All receivers → NMReset (with target configuration erasure).
 
+**Proven meaning:** This service resets dynamic target configuration; it is not a periodic status announcement. Emission requires an explicit emission policy; this description does not define that policy or authorize emission.
+
+| Case | Payload | Meaning | Evidence grade |
+|---|---|---|---|
+| Reset dynamic target configuration | `NN=0x00` (empty) | Reset; erase and re-initialize dynamically generated target configuration | Proven |
+| Periodic status announcement (contradicting interpretation) | `NN=0x00` (empty) | Contradicts the Proven reset meaning above; an empty payload does not make this a status announcement | Proven |
+
+**Unknown:** Physical support and emission admission. These are separate from the service's documented meaning.
+
 ---
 
 ### Service 0xFF 0x02 — Failure Message
@@ -195,6 +204,19 @@ flowchart TD
 > **Note:** The failure message itself carries no identification of the failed node. Interrogation commands (`0xFF 0x04`, `0xFF 0x05`) must be used to determine which nodes have failed.
 
 ---
+
+### Query Direction and Response Service
+
+**Proven:** Each query below is directed to the queried initiator node's companion target address. Its response data is returned in that same service.
+
+| Query | Destination | Service carrying response data | Evidence grade |
+|---|---|---|---|
+| Net status | Companion target | `0xFF 0x03` | Proven |
+| Monitored participants | Companion target | `0xFF 0x04` | Proven |
+| Failed nodes | Companion target | `0xFF 0x05` | Proven |
+| Required services | Companion target | `0xFF 0x06` | Proven |
+
+**Unknown:** Physical support and emission admission. A documented direction or finite body layout does not qualify a device family or admit query emission.
 
 ### Service 0xFF 0x03 — Net Status Query
 
@@ -226,7 +248,17 @@ flowchart TD
 |---:|---|---|---|
 | 0 | follow_block | BIT | Bit0–4: total blocks needed. Bit5–6: reserved. Bit7: 1=more data, 0=complete |
 | 1 | nm_status | BIT | Bit0–7: status of addresses in bytes 2–9 (up to 8 bits used). 0=NOK, 1=OK. Bit0 = status of address in byte 2. **Source note:** the official spec says `Bit0..8` for an 8-bit field; this is treated as a spec typo for `Bit0..7` |
-| 2..NN-1 | addresses | CHAR×(NN-2) | eBUS addresses of monitored nodes. Count of monitored nodes: `NN - 2` (per official spec) |
+| 2..NN-1 | addresses | CHAR×(NN-2), for NN≥2 | eBUS addresses of monitored nodes. Count of monitored nodes in a complete body: `NN - 2` (per official spec) |
+
+**Proven structural distinction:** The stated interval remains `NN=0x01..0x0A`. A complete body requires both overhead bytes (`follow_block` and `nm_status`), so `NN≥2`. `NN=1` is truncated/raw; do not compute a negative address count.
+
+| NN (decimal) | Available body fields | Address count | Body classification | Evidence grade |
+|---:|---|---|---|---|
+| 1 | `follow_block` only; `nm_status` missing | Unknown; no count computed | Incomplete: truncated/raw | Proven |
+| 2 | `follow_block`, `nm_status` | 0 | Complete layout | Proven |
+| 10 | `follow_block`, `nm_status`, 8 addresses | 8 | Complete layout | Proven |
+
+Layout completeness is independent of the `follow_block` pagination flag: a complete body can still indicate more blocks. For `NN=1`, the raw body contains only `follow_block`; `nm_status` and the address list are absent and remain Unknown. Physical support and emission admission remain Unknown.
 
 ---
 
@@ -266,7 +298,19 @@ flowchart TD
 | 0 | follow_block | BIT | Bit0–4: total blocks needed. Bit5–6: reserved. Bit7: 1=more data, 0=complete |
 | 1 | pb_1 | CHAR | PB of first required service |
 | 2 | sb_1 | CHAR | SB of first required service |
-| ... | ... | ... | Additional PB/SB pairs. Count of services: `(NN - 1) / 2` (byte 0 is `follow_block`, remainder is PB/SB pairs). **Source note:** the official spec states `(NN - 2) / 2`, but this yields non-integer results for valid NN values and conflicts with the request's "max first 4" wording; treated as spec erratum |
+| ... | ... | ... | Additional PB/SB pairs. For a complete body, count of services: `(NN - 1) / 2` (byte 0 is `follow_block`, remainder is PB/SB pairs). **Source note:** the official spec states `(NN - 2) / 2`, but this conflicts with the one-byte overhead and PB/SB pair layout; treated as spec erratum |
+
+**Proven structural distinction:** The stated interval remains `NN=0x01..0x0A`; no revised normative maximum is inferred. A complete body requires `NN=1+2n`, where `n` is a nonnegative integer. Even lengths in the stated interval contain a trailing partial PB/SB pair and remain incomplete/raw.
+
+| NN (decimal) | Available body fields | Complete PB/SB pairs | Body classification | Evidence grade |
+|---:|---|---:|---|---|
+| 1 | `follow_block` only | 0 | Complete layout | Proven |
+| 2 | `follow_block`, trailing PB without SB | 0 | Incomplete: partial pair/raw | Proven |
+| 3 | `follow_block`, one PB/SB pair | 1 | Complete layout | Proven |
+| 9 | `follow_block`, four PB/SB pairs | 4 | Complete layout | Proven |
+| 10 | `follow_block`, four PB/SB pairs, trailing PB without SB | 4 | Incomplete: partial pair/raw | Proven |
+
+These are finite-layout checks, not evidence of physical support or emission admission; both remain Unknown. Layout completeness does not mean pagination is finished. For even lengths, the raw body contains complete PB/SB pairs followed by a trailing PB whose SB is absent and remains Unknown; that trailing PB is not a complete pair.
 
 ## Dynamic Target Configuration
 

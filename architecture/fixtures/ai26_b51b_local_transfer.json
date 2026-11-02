@@ -1,0 +1,317 @@
+{
+  "tables": {
+    "sequence": [
+      [
+        "08",
+        "block/segment selection",
+        "Hypothesis"
+      ],
+      [
+        "09",
+        "data",
+        "Hypothesis"
+      ],
+      [
+        "0A",
+        "write",
+        "Hypothesis"
+      ],
+      [
+        "0B",
+        "CRC",
+        "Hypothesis"
+      ],
+      [
+        "0C",
+        "status",
+        "Hypothesis"
+      ],
+      [
+        "0E",
+        "application",
+        "Hypothesis"
+      ]
+    ],
+    "budgets": [
+      [
+        "grouped",
+        "206,206,206,206,200",
+        "1024",
+        "accept",
+        "Hypothesis"
+      ],
+      [
+        "grouped",
+        "206,206,206,206,201",
+        "1024",
+        "reject",
+        "Hypothesis"
+      ],
+      [
+        "cap205",
+        "205",
+        "205",
+        "accept",
+        "Hypothesis"
+      ],
+      [
+        "cap205",
+        "206",
+        "205",
+        "reject",
+        "Hypothesis"
+      ]
+    ],
+    "progress": [
+      [
+        "200",
+        "rejected",
+        "0",
+        "Hypothesis"
+      ],
+      [
+        "17",
+        "accepted",
+        "17",
+        "Hypothesis"
+      ],
+      [
+        "17",
+        "pending",
+        "0",
+        "Hypothesis"
+      ],
+      [
+        "17",
+        "unprovided",
+        "Unknown",
+        "Unknown"
+      ]
+    ],
+    "offset": [
+      [
+        "absent",
+        "valid",
+        "none",
+        "00 00",
+        "Hypothesis"
+      ],
+      [
+        "absent",
+        "invalid",
+        "none",
+        "absent",
+        "Hypothesis"
+      ],
+      [
+        "absent",
+        "valid",
+        "34 12",
+        "34 12",
+        "Hypothesis"
+      ],
+      [
+        "78 56",
+        "valid",
+        "none",
+        "78 56",
+        "Hypothesis"
+      ]
+    ],
+    "crc": [
+      [
+        "31 32 33 34 35 36 37 38 39",
+        "FFFF",
+        "29B1",
+        "B1 29",
+        "Proven"
+      ],
+      [
+        "empty",
+        "FFFF",
+        "FFFF",
+        "FF FF",
+        "Proven"
+      ],
+      [
+        "31 32 33 34 35 36 37 38 39",
+        "0000",
+        "31C3",
+        "C3 31",
+        "Proven"
+      ],
+      [
+        "31 32 33 34",
+        "FFFF",
+        "5349",
+        "49 53",
+        "Proven"
+      ],
+      [
+        "35 36 37 38 39",
+        "FFFF",
+        "5EB6",
+        "B6 5E",
+        "Proven"
+      ]
+    ],
+    "crc_parameters": [
+      [
+        "polynomial",
+        "1021",
+        "Hypothesis"
+      ],
+      [
+        "initial",
+        "FFFF",
+        "Hypothesis"
+      ],
+      [
+        "bit_order",
+        "MSB-first",
+        "Hypothesis"
+      ],
+      [
+        "reflection",
+        "false",
+        "Hypothesis"
+      ],
+      [
+        "final_xor",
+        "0000",
+        "Hypothesis"
+      ],
+      [
+        "coverage",
+        "exact call input",
+        "Hypothesis"
+      ]
+    ],
+    "shapes": [
+      [
+        "06",
+        "1",
+        "Hypothesis"
+      ],
+      [
+        "07",
+        "1",
+        "Hypothesis"
+      ],
+      [
+        "08",
+        "9",
+        "Hypothesis"
+      ],
+      [
+        "0A",
+        "1",
+        "Hypothesis"
+      ],
+      [
+        "0B",
+        "1",
+        "Hypothesis"
+      ],
+      [
+        "0C",
+        "1",
+        "Hypothesis"
+      ],
+      [
+        "0D",
+        "2",
+        "Hypothesis"
+      ],
+      [
+        "0E",
+        "2",
+        "Hypothesis"
+      ]
+    ],
+    "route_data": [
+      [
+        "0",
+        "3",
+        "8",
+        "accept",
+        "Hypothesis"
+      ],
+      [
+        "13",
+        "16",
+        "21",
+        "accept",
+        "Hypothesis"
+      ],
+      [
+        "14",
+        "17",
+        "22",
+        "reject",
+        "Hypothesis"
+      ]
+    ],
+    "unknowns": [
+      [
+        "session initiator",
+        "Unknown"
+      ],
+      [
+        "virtual block size",
+        "Unknown"
+      ],
+      [
+        "peer append/offset behavior",
+        "Unknown"
+      ],
+      [
+        "version reported after application activation",
+        "Unknown"
+      ],
+      [
+        "eligibility of subsequent transfer groups",
+        "Unknown"
+      ],
+      [
+        "custom CRC table",
+        "Unknown"
+      ],
+      [
+        "programming executor",
+        "Unknown"
+      ],
+      [
+        "transport implementation",
+        "Unknown"
+      ],
+      [
+        "physical maximum",
+        "Unknown"
+      ],
+      [
+        "installed support",
+        "Unknown"
+      ],
+      [
+        "freshness",
+        "Unknown"
+      ],
+      [
+        "qualification",
+        "Unknown"
+      ]
+    ]
+  },
+  "gates": [
+    "framing",
+    "address_role",
+    "state",
+    "capacity",
+    "routing"
+  ],
+  "variants": [
+    "filtered",
+    "unfiltered"
+  ]
+}
