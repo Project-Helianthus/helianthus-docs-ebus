@@ -70,11 +70,11 @@ def ab05aq05unchanged(ab05aq05replacement, ab05aq05previous, ab05aq05requested):
 
 
 class TestAb05Aq05Contract(unittest.TestCase):
-    def test_signature(self):
+    def testAb05Aq05Signature(self):
         self.assertIn('func Ab05Aq05Evaluate(ab05Aq05Input json.RawMessage) (json.RawMessage, error)',
                       ab05aq05text())
 
-    def test_fixed_context_selectors(self):
+    def testAb05Aq05FixedContextSelectors(self):
         ab05aq05page = ab05aq05text()
         ab05aq05sentence = ab05aq05between('Every supported row has', 'Operations below')
         ab05aq05found = dict(re.findall(r'`(primary|secondary|direction)=("?\w+"?)`', ab05aq05sentence))
@@ -85,14 +85,14 @@ class TestAb05Aq05Contract(unittest.TestCase):
             self.assertEqual((ab05aq05context['primary'], ab05aq05context['secondary'],
                               ab05aq05context['direction']), (181, 5, 'request'))
 
-    def test_view_matrix(self):
+    def testAb05Aq05ViewMatrix(self):
         ab05aq05found = {}
         for ab05aq05row in ab05aq05rows(ab05aq05between('| `context.view` |', 'Arbitrary scalar')):
             ab05aq05view = ab05aq05row[0].strip('`')
             ab05aq05found[ab05aq05view] = {int(n) for n in re.findall(r'\((\d+)\)', ab05aq05row[1])}
         self.assertEqual(ab05aq05found, Ab05Aq05Views)
 
-    def test_parallel_branch_table(self):
+    def testAb05Aq05ParallelBranchTable(self):
         ab05aq05table = ab05aq05between('| `disable` | `role`', 'The mixer exception')
         ab05aq05found = {}
         for ab05aq05row in ab05aq05rows(ab05aq05table):
@@ -101,7 +101,7 @@ class TestAb05Aq05Contract(unittest.TestCase):
             ab05aq05found[(ab05aq05row[0], ab05aq05role, ab05aq05flag)] = ab05aq05row[3].strip('`')
         self.assertEqual(ab05aq05found, Ab05Aq05Parallel)
 
-    def test_branch_oracle_agrees_with_table(self):
+    def testAb05Aq05BranchOracleAgreesWithTable(self):
         for (ab05aq05disable, ab05aq05role, ab05aq05flag), ab05aq05label in Ab05Aq05Parallel.items():
             ab05aq05value = {'2..255': 200}.get(ab05aq05disable) or int(ab05aq05disable)
             ab05aq05roles = ['mixer', 'heating', 'dhw'] if ab05aq05role == 'any' else [ab05aq05role]
@@ -110,7 +110,7 @@ class TestAb05Aq05Contract(unittest.TestCase):
                 for ab05aq05f in ab05aq05flags:
                     self.assertEqual(ab05aq05evaluate(ab05aq05value, ab05aq05r, ab05aq05f), ab05aq05label)
 
-    def test_view_row_branches(self):
+    def testAb05Aq05ViewRowBranches(self):
         ab05aq05rows_by_view = {r[0].strip('`'): r[3] for r in ab05aq05rows(
             ab05aq05between('| `context.view` |', 'Arbitrary scalar'))}
         ab05aq05dhw = ab05aq05rows_by_view['dhw-enable']
@@ -123,7 +123,7 @@ class TestAb05Aq05Contract(unittest.TestCase):
         self.assertIn('True retains previous and labels `unchanged`', ab05aq05unch)
         self.assertIn('false returns requested as `numeric-candidate`', ab05aq05unch)
 
-    def test_synthetic_case_table(self):
+    def testAb05Aq05SyntheticCaseTable(self):
         ab05aq05table = ab05aq05between('| View and explicit inputs |', 'Always overwriting')
         ab05aq05cases = [(r[0], r[1]) for r in ab05aq05rows(ab05aq05table)]
         # DHW: byte order maps to label order.
@@ -156,7 +156,7 @@ class TestAb05Aq05Contract(unittest.TestCase):
             self.assertEqual(re.findall(r'`([^`]+)`', ab05aq05out),
                              [ab05aq05evaluate(1, *ab05aq05args)])
 
-    def test_flow_excess_examples(self):
+    def testAb05Aq05FlowExcessExamples(self):
         ab05aq05page = ab05aq05text()
         ab05aq05blocks = [json.loads(b) for b in re.findall(r'```json\n(.*?)```', ab05aq05page, re.S)]
         ab05aq05request, ab05aq05result = ab05aq05blocks
@@ -177,7 +177,7 @@ class TestAb05Aq05Contract(unittest.TestCase):
                          ('Unknown', False, 'complete'))
         self.assertIn('| `flow-excess`, demand 40, excess 5 | 45;', ab05aq05page)
 
-    def test_results_key_table(self):
+    def testAb05Aq05ResultsKeyTable(self):
         ab05aq05table = ab05aq05between('| Context | Result key |', 'Return one JSON object')
         ab05aq05keys = {r[0].strip('`'): r[1] for r in ab05aq05rows(ab05aq05table)}
         self.assertEqual({k: v.strip('`') for k, v in ab05aq05keys.items() if k in Ab05Aq05Views},
@@ -185,7 +185,7 @@ class TestAb05Aq05Contract(unittest.TestCase):
                           'flow-excess': 'flow-excess', 'programmed-start': 'programmed-start'})
         self.assertIn('Unsupported context', ab05aq05keys)
 
-    def test_result_shape_and_reserved_names(self):
+    def testAb05Aq05ResultShapeAndReservedNames(self):
         ab05aq05page = ab05aq05text()
         self.assertIn('`physical="Unknown"` and `qualified=false`', ab05aq05page)
         for ab05aq05name in Ab05Aq05Reserved:
@@ -193,11 +193,11 @@ class TestAb05Aq05Contract(unittest.TestCase):
         self.assertIn('is rejected with an error, except\nthat `enabled` under `dhw-enable` and `disable` under '
                       '`parallel-charge` are the\ninterpreted inputs', ab05aq05page)
 
-    def test_missing_start_result_state(self):
+    def testAb05Aq05MissingStartResultState(self):
         ab05aq05page = ab05aq05text()
         self.assertIn('no `start`, the result is still\n`complete`', ab05aq05page)
 
-    def test_no_commit_ids(self):
+    def testAb05Aq05NoCommitIds(self):
         self.assertIsNone(re.search(r'\b[0-9a-f]{7,40}\b', ab05aq05text()))
 
 
