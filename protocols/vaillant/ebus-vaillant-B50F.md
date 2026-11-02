@@ -19,6 +19,17 @@ each followed immediately by its own independent raw error byte. The OP01
 stack-voltage label is retained separately from its conflicting temperature
 conversion metadata; neither a voltage scale nor a converted value is selected.
 
+## Relation to the earlier layout hypothesis
+
+The [Vaillant overview](ebus-vaillant.md) keeps an older Hypothesis that puts
+values in the request, feedback at reply offset 3, and scalars at concrete
+offsets (temperatures at 3, 6 and 9 with errors at 5, 8 and 11). That
+hypothesis is retained there as a separate candidate and is not withdrawn.
+This page does not adopt or reject its absolute offsets: it keeps direction and
+absolute scalar positions Unknown, so the two are an unresolved disagreement in
+candidate layout, not a replacement. The integrity pair positions here are
+abstract coordinates that coincide with the older candidate's CRC positions.
+
 ## Scoped declarations
 
 | Grade | Identity | Direction | Logical position / extent | Raw type / domain | Scale / unit | Sentinel / default / conflict | Unresolved properties |
