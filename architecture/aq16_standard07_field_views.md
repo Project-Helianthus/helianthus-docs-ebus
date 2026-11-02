@@ -117,8 +117,9 @@ another call.
 
 Each named result retains `raw` and `state`, plus applicable `number`, `label`,
 `flags`, `reserved`, `unmodeled`, `candidate_domain` or `alternatives`. Only emit
-semantic members supported here; no flags, reserved-bit partition or alternative
-conversion is assigned to the bitmap. Candidate meanings keep
+semantic members defined by these field views. Preserve the bitmap as eight raw
+bytes with every bit intact; its interpretation remains `Unknown`. Candidate
+meanings keep
 `grade="Hypothesis"`; an exact calculation can additionally carry
 `calculation="Proven"`. Physical support remains `Unknown` regardless of grade.
 
