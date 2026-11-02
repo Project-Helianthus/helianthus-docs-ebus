@@ -128,25 +128,46 @@ When the target is an initiator address, the response is sent as a separate init
 
 ## Vaillant variants
 
-The standard layouts above stay authoritative. The statements below are candidate interpretations, unconfirmed on the wire; no Vaillant device or capture observation of any `0x03` service is known.
+The independent generic standard tables above retain their response directions.
+The following Vaillant counter-family forms are **Hypothesis**, not wire-qualified
+layouts. Physical placement, exchange direction and device support are **Unknown**.
+The [synthetic counter forms](fixtures/ac27_counter_forms.json) preserve candidate
+representation only; they are not captures or physical qualification evidence.
 
-| SB | Standard service | Vaillant layout | Result |
-|---:|---|---|---|
-| `0x04` | Start Counts | Three u8 decimal chunks, each 0–99, matching the standard. Two readings conflict: the Vaillant layout carries them on the request side with a positive target response that has no data (candidate), while the standard carries them in the target response | Request/reply placement unresolved |
-| `0x05` | Operating Time Level 1 | Three u8 components (minutes, 100s hours, 10000s hours), each with the candidate range 0–59, and no 1s-hour component | Differs (candidate); request/reply direction unresolved |
-| `0x06` | Operating Time Level 2 | Four u8 components matching the standard layout of `0x03 0x05`. Two readings conflict: the Vaillant layout carries them on the request side with a positive target response that has no data (candidate), while the standard carries them in the target response | Request/reply placement unresolved |
-| `0x07` | Operating Time Level 3 | No definition known | No Vaillant definition known; implementation **Unknown** |
-| `0x08` | Fuel Quantity Counter | No definition known | No Vaillant definition known; implementation **Unknown** |
-| `0x10` | Meter Reading | No definition known | No Vaillant definition known; implementation **Unknown** |
+| SB | Candidate components in order | Domains in order | Defaults | Logical positions | Result |
+|---:|---|---|---|---|---|
+| `0x04` | decimal_1s, decimal_100s, decimal_10000s | 0–99, 0–99, 0–99 | 0, 0, 0 | 2, 3, 4 | Hypothesis; request/positive alternatives unresolved |
+| `0x05` | minutes, hours_100s, hours_10000s | 0–59, 0–59, 0–59 | 0, 0, 0 | 2, 3, 4 | Hypothesis; request/positive alternatives unresolved |
+| `0x06` | minutes, hours_1s, hours_100s, hours_10000s | 0–59, 0–99, 0–99, 0–99 | 0, 0, 0, 0 | 2, 3, 4, 5 | Hypothesis; request/positive alternatives unresolved |
+| `0x07` | Unknown | Unknown | Unknown | Unknown | Missing body form; support Unknown |
+| `0x08` | Unknown | Unknown | Unknown | Unknown | Missing body form; support Unknown |
+| `0x10` | Unknown | Unknown | Unknown | Unknown | Missing body form; support Unknown |
 
-- The `0x03 0x05` difference concerns the field set and the candidate range of the hour chunks (the standard has a 1s-hour byte and 0–99 hour chunks). Which side of the exchange carries the counter bytes is unresolved for `0x03 0x04`, `0x03 0x05` and `0x03 0x06`.
-- A missing Vaillant definition is not proof that a device lacks the service.
+Each candidate component is an independent unsigned eight-bit field with identity
+conversion and raw units. Logical coordinates include the two service-prefix
+positions: components begin at logical2 and continue sequentially. They are not
+physical offsets. The three-component `0x03 0x05` candidate has no units-of-hours
+component; it must not replace either the generic standard four-component response
+or the separate four-component `0x03 0x06` candidate.
+
+Explicit encoding declarations and unspecified encoding remain distinct. A decimal
+label does not establish packed BCD. In an identity-converted decimal chunk, raw
+`0x63` is decimal 99, not a packed-BCD 63. **Proven (arithmetic only):** the
+`0x03 0x04` example gives `99 + 99 × 100 + 99 × 10000 = 999999`; this establishes
+neither exchange direction nor a new counter unit or wire decoder.
+
+For each candidate, request and positive placement remain unresolved alternatives.
+A prefix-only PeBUS-positive alternative does not establish an empty physical
+response. Malformed component widths and values outside the declared domain remain
+explicit invalid candidate representations, not evidence of unsupported services.
 
 ## Open questions
 
-- Request/reply placement of the counter bytes of `0x03 0x04`, `0x03 0x05` and `0x03 0x06` in the Vaillant layouts is unresolved.
-- The Vaillant `0x03 0x05` layout (three components, each with the candidate range 0–59, no 1s-hour component) is a candidate, unconfirmed on the wire; no device or capture observation is known.
-- No Vaillant definition of `0x03 0x07`, `0x03 0x08` or `0x03 0x10` is known; whether Vaillant devices send or answer any `0x03` service is not established.
+- Which side of the exchange carries each candidate counter body remains Unknown.
+- Physical offsets, physical response length and encoding where unspecified remain
+  Unknown; the synthetic fixture establishes no physical result.
+- Missing `0x03 0x07`, `0x03 0x08` and `0x03 0x10` body forms remain Unknown,
+  not unsupported. No device support follows from these candidate forms.
 
 ## Communication Flow
 
