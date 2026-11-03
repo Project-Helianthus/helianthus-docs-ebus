@@ -68,12 +68,12 @@ available only on PeBUS.
 
 | Argument | Meaning (candidate) | Encoding |
 |---:|---|---|
-| 0 | operating mode | `0` auto, `1` forced off, `2` forced CH, `3` forced DHW, `4` forced frost protection (heat pumps only) |
+| 0 | operating mode | automatic, forced-heating, forced-DHW and forced-off are named candidates; numeric mode codes Unknown |
 | 1 | actual CH setpoint | u8, raw/2 °C; `FF` selects internal control by the appliance |
 | 2 | actual DHW setpoint | u8, raw/2 °C; valid for every mode except forced DHW; `FF` = internal |
 | 3 | DHW flow setpoint | u8, raw/2 °C; valid only in forced DHW; `FF` = internal |
 | 4 | maximum degree of modulation | u8, percent; `FF` is replaced by 100 % |
-| 5 | disable bits | bit 0 CH blocked, 1 DHW tapping blocked, 2 tank loading blocked, 3 second CH-disable entry (meaning unresolved), 4 clear the burner DHW blocking time, 5 disable appliance temperature control (block modulation), 6 clear the burner CH blocking time, 7 start legionella protection |
+| 5 | disable bits | see the bounded operational candidate table below; logical argument 5 is not an established wire offset |
 | 6 | loading-pump setpoint | u8, raw/2 (candidate unit percent); `0` = off |
 | 7 | option bits | bit 0 remote control of the CH pump, 1 backup-heater release, 2 cooling release, 3 reserved, 4/5 left/right DHW stop position, 6/7 left/right CH stop position |
 
@@ -83,6 +83,52 @@ the three setpoints, so it cannot be read as a valid setpoint. The candidate
 value of the CH setpoint when no value is set is 90.0 (unconfirmed on the
 wire). The candidate layout of `OP=00` has eight argument bytes and one
 feedback byte; the meaning of mode value `0x17` is unresolved.
+
+### Bounded operational enums and disable-bit candidates
+
+All rows below are **Hypothesis**, unconfirmed on the wire. Identity is the
+Vaillant B510 family, PB=0xB5, SB=0x10, OP and field shown in each row;
+direction is a candidate controller-to-boiler request. A logical position is
+not a wire offset. Absent positions remain Unknown, including the disable
+carrier position in the finite companion declarations. The eight-argument
+variant above supplies only a logical argument index. This table does not
+extend to the ten-argument query or the broadcast variant.
+
+| Grade | OP | Field | Direction | Logical position / extent | Raw type / domain | Scale / unit | Values / bit candidates | Sentinel / default / conflict / unresolved |
+|---|---|---|---|---|---|---|---|---|
+| Hypothesis | 02 | remote_status | request | Unknown; 8 bits | u8 0..255 | Unknown | raw status only | sentinel/default Unknown; semantics Unknown |
+| Hypothesis | 02 | CH_setpoint_upper_limit | request | Unknown; 8 bits | u8 0..255 | raw/2 degrees Celsius | none declared | sentinel/default Unknown; physical acceptance Unknown |
+| Hypothesis | 02 | DHW_setpoint_upper_limit | request | Unknown; 8 bits | u8 0..255 | raw/2 degrees Celsius | none declared | sentinel/default Unknown; physical acceptance Unknown |
+| Hypothesis | 03 | climate | request | Unknown; 8 bits | u8 0..255 | none declared | 0 off; 1 heating; 2 cooling | sentinel/default Unknown; other values unmapped |
+| Hypothesis | 03 | capacity | request | Unknown; 8 bits | u8 0..250 | raw/10 kW | none declared | sentinel/default Unknown; 251..255 outside candidate domain |
+| Hypothesis | 03 | cost | request | Unknown; 8 bits | u8 0..250 | reciprocal-MWh; divisor Unknown | none declared | sentinel/default Unknown; monetary versus emissions Unknown |
+| Hypothesis | 03 | force | request | Unknown; 8 bits | u8 0..255 | none declared | 0 normal; 1 maximum; 2 minimum; 3 off; 4 cooling-leak-test; 5 cooling-charge-test; 6 capacity-test; 7 I/O-test | sentinel/default Unknown; 8..255 unmapped |
+| Hypothesis | 04 | energy | request | Unknown; 8 bits | u8 0..255 | none declared | 0 unknown; 1 gas; 2 electricity-one; 3 electricity-two; 4 fuel; 5 pellet | sentinel/default Unknown; monetary versus emissions Unknown; 6..255 unmapped |
+| Hypothesis | 05 | DHW_setpoint | request | Unknown; 8 bits | u8 0..255 | raw/2 degrees Celsius | none declared | sentinel/default Unknown; physical acceptance Unknown |
+| Hypothesis | 05 | adjustment | request | Unknown; 8 bits | u8 0..255 | none declared | bit 0 CH; bit 1 DHW; 0 released / 1 blocked; bits 2..7 reserved, retained | sentinel/default Unknown; reserved expected values Unknown |
+| Hypothesis | 06 | status | request | Unknown; 8 bits | u8 0..255 | none declared | bit 0: 0 off / 1 on; bits 1..7 reserved zero, retained | sentinel/default Unknown; nonzero reserved bits do not acquire meaning |
+| Hypothesis | 00 | disable | request | Unknown; 8 bits (logical argument 5 in eight-argument variant) | u8 0..255 | none declared | bits 0..2 active only in automatic; ignored in forced-heating, forced-DHW, forced-off; bit 6 relates to subsequent flame status; bit 7 starts legionella protection, persists until corresponding status, does not command termination | sentinel/default Unknown; bits 3/4 timer assignment unresolved (Unknown); bit 5 meaning Unknown; numeric mode codes Unknown; bit 7 mode applicability Unknown |
+
+The competing timer assignments for bits 3/4 remain independent unresolved
+alternatives; neither a CH nor a DHW timer assignment is settled. Bit 6 must
+not be relabeled as a timer clear. Bit 7 is independent of low disable bits;
+its persistence is not an instruction to terminate protection. No control
+path or active timer follows from these declarations.
+
+The [synthetic cases](fixtures/ae14_b510_candidates.json) preserve raw values,
+reserved bits and explicitly absent metadata. Capacity raw 0/250 corresponds
+to 0/25 kW; raw 251 is outside the candidate domain. Temperature raw 01 is
+0.5 degrees Celsius for both OP02 limits and OP05. Adjustment 00 releases
+both, 03 blocks both, and FC retains reserved bits. Disable 07 has active low
+candidates only in automatic mode, with the same low bits ignored in each
+named forced mode. These arithmetic examples provide no physical qualification:
+physical acceptance, freshness and actual execution remain **Unknown**.
+
+The finite companion is [AE13 catalog entries](https://github.com/Project-Helianthus/helianthus-ebusreg/blob/main/catalog/vaillant/data/ab65_b510_candidates.json)
+([merged change](https://github.com/Project-Helianthus/helianthus-ebusreg/pull/244)).
+Its twelve declarations corroborate this bounded candidate scope, not a broader
+completed catalog or proof of a native wire contract. No native observation
+is supplied here; all candidate claims retain their grades.
 
 ## B5 10 00 query with ten argument bytes (candidate)
 
@@ -141,7 +187,8 @@ The public references below provide corroborating capture examples; they do not 
 
 ## Unknowns
 
-- Full semantics of all disable/release bits across controller generations.
+- Physical acceptance of the bounded candidates across controller families;
+  disable bits 3/4 timer assignments and bit 5 meaning remain Unknown.
 - Whether the broadcast `B510 06 00` form is part of the same `SetMode` family
   or a separate broadcast selector.
 - Whether non-BAI targets reuse the same payload layout.
@@ -162,12 +209,14 @@ The public references below provide corroborating capture examples; they do not 
   supported" on a real target; only the requester's use of it is known.
 - The scale of the loading-pump setpoint: raw/2 with a candidate range of
   0..127.5 and unit percent, versus steps of 2 percent.
-- Sub-commands `01`..`06` have candidate layouts only; no exchange and no
-  sender or responder implementation is known either way.
+- Sub-commands `01`..`06` have candidate layouts only. The finite companion
+  declarations do not establish a sender, responder, exchange or physical
+  acceptance. Positions, sentinel/default meanings and the monetary versus
+  emissions interpretation remain Unknown as scoped in the table.
 
 ## References
 
-- Public TypeSpec: [hcmode_inc.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/hcmode_inc.tsp)
-- Public config corpus: [john30/ebusd-configuration](https://github.com/john30/ebusd-configuration/tree/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant)
+- Public TypeSpec: [hcmode_inc.tsp](https://github.com/john30/ebusd-configuration/blob/main/src/vaillant/hcmode_inc.tsp)
+- Vaillant configuration definitions: [john30/ebusd-configuration](https://github.com/john30/ebusd-configuration/tree/main/src/vaillant)
 - Public capture/reference: [Pittnerovi eBUS page](https://www.pittnerovi.com/jiri/hobby/electronics/ebus/)
 - Historical PDF: [Vaillant_ebus.pdf](https://www.pittnerovi.com/jiri/hobby/electronics/ebus/Vaillant_ebus.pdf)

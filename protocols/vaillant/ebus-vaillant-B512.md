@@ -18,7 +18,7 @@ Evidence labels:
 
 | Request payload | Name/context | Response shape | Evidence | Falsification test |
 |---|---|---|---|---|
-| `00 <value>` | `StatusCirPump` in `hcmode_inc` | ACK/status | | Change circulation pump state and show `<value>` does not correlate with off/on values. |
+| `00 <value>` | `StatusCirPump` in `hcmode_inc` | prefix-only candidate; physical acknowledgement Unknown | | Change circulation pump state and show `<value>` does not correlate with off/on values. |
 | `02 <value>` | target `0x64`/VR65-style state | ACK/status | `PUBLIC_CAPTURE` | Capture target `0x64` while pump/valve states change and prove `B512 02 xx` is unrelated. |
 
 In `hcmode_inc`, `StatusCirPump` enumerates `off=0` and `on=100`.
@@ -49,14 +49,9 @@ The following B512 shapes are observed on heat pump installations only and are a
 
 | `OP` | Candidate name | Request (candidate) | Reply (candidate) |
 |---:|---|---|---|
-| `00` | setpoint circulation pump | u8 percent | none |
 | `01` | eBUS general accessory | setpoints of 2nd heating pump, circulation pump, solar pump (u8 percent), external error-signal relay, loading pump (u8 percent), open fume flap | feedback of each of the six values |
-| `02` | connection to a communication module | 3-way-valve setpoint (u8 percent) | feedback, external tank contact status, tank temperature (s16 /16 °C), virtual error number (u16) |
 | `03` | read analogue value | analogue input selection | state of NTC or analogue input, value |
-| `04` | setpoint heating pump | external heat-pump setpoint | feedback |
-| `05` | control of internal relays | option relay, accessory relay 1, accessory relay 2 | feedback |
 | `06` | APC operation control | operation flags, modulation, DHW water, DHW and tank temperature, further flags | four data bytes: boiler-control flags, DHW setpoint, return temperature, anti-reset-windup state (s8: `-1` at minimum, `0` in range, `1` at maximum, `2` modulation regulator not active) |
-| `07` | parameter from boiler control for APC | none | boiler power (kW), minimum power (percent) |
 | `08` | status info for solar kit | inlet temperature sensor, status, additional infos | DHW setpoint, additional infos |
 | `09` | status info for two-zone kit | additional infos | additional infos |
 | `0A` | operational data to APC fan module and back | no candidate layout is known | no candidate layout is known |
@@ -69,6 +64,48 @@ The following B512 shapes are observed on heat pump installations only and are a
 | `11` | operational data exchange between HMU indoor unit and outdoor unit | flow temperature and two refrigerant-circuit temperatures (expansion-valve side and four-way-valve side; each s16 /16 °C), building-circuit water pressure (u8 /10 bar), building-pump flow rate (one byte, 10 l/h per count), building-pump status byte, flags (bit 0 compressor off) | two data bytes: flags (bit 0 compressor off, bit 1 building-pump relay), building-pump set point (u8 percent) |
 | `12` | operational data of a heat-pump and ventilation unit | ventilation emergency stop, ventilation switch, two CO2 sensors | ventilation switch LED |
 | `14` | control of an input/output module | header only | header only |
+
+### Bounded pump, valve and power candidates
+
+The finite companion scope, labelled AE17, is the OP00, OP02, OP04, OP05 and OP07
+catalog declarations only. Every declaration here is a candidate of evidence class
+**Hypothesis**; provenance is not published, and the fixture is synthetic, not wire
+evidence. Broader catalog completion is Unknown. Other variants
+remain separate in the preceding overview. All native declarations below are
+**Hypothesis**. **Proven** applies only to synthetic representation and arithmetic,
+not installed support, delivery, freshness or physical qualification, all **Unknown**.
+Logical positions are not wire offsets; extents count bytes only where declared.
+No actuator path or stability promise is established.
+
+| Grade | PB/SB | OP | Direction | Field | Logical position | Extent | Raw type/domain | Scale | Sentinel/default/conflict | Timeout seconds | External mode | Unresolved | Qualification |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Hypothesis | B5/12 | 00 | request | circulation-setpoint | 3 | 1 | u8; 0..255 | percent | default 0; 0=off; 1..100=on/speed | Unknown | Unknown | 101..255 unresolved; physical acknowledgement Unknown | Unknown |
+| Hypothesis | B5/12 | 00 | positive | prefix | Unknown | Unknown | prefix-only | none | no value declared | Unknown | Unknown | physical acknowledgement Unknown | Unknown |
+| Hypothesis | B5/12 | 02 | request | valve-setpoint | 3 | 1 | u8; 0..255 | percent | 00=CH; 32=midpoint; 64=DHW; FE=standby; FF=unchanged | Unknown | Unknown | other values unresolved | Unknown |
+| Hypothesis | B5/12 | 02 | positive | valve-feedback | 3 | 1 | u8; 0..255 | percent | actual or setpoint-fallback; default Unknown | Unknown | Unknown | actual-versus-fallback selection Unknown | Unknown |
+| Hypothesis | B5/12 | 02 | positive | tank-contact | 4 | 1 | u8; 0..255 | none | 0=open; 1=closed; default Unknown | Unknown | Unknown | other values unresolved; no FFFF sentinel | Unknown |
+| Hypothesis | B5/12 | 02 | positive | tank-temperature | 5 | 2 | signed LE16; -32768..32767 | raw/16 Celsius | default Unknown; no FFFF no-error sentinel | Unknown | Unknown | replacement values Unknown | Unknown |
+| Hypothesis | B5/12 | 02 | positive | virtual-error | 7 | 2 | unsigned LE16; 0..65535 | none | FFFF=no-error; default Unknown | Unknown | Unknown | supplements fault-service information; other meanings Unknown | Unknown |
+| Hypothesis | B5/12 | 04 | request | heating-pump | 3 | 1 | u8; 0..255 | percent | 0=off regardless of internal demand; 1..100=on/speed; FF=replacement/no-remote-control; default Unknown | 900; restarts on every received service | Unknown | 101..254 unresolved | Unknown |
+| Hypothesis | B5/12 | 04 | positive | acceptance | Unknown | 1 | u8; 0..255 | none | 1=accepted; all other bytes rejected; default Unknown | 900; restarts on every received service | Unknown | logical position Unknown; physical effect Unknown | Unknown |
+| Hypothesis | B5/12 | 05 | request | option-relay | 3 | 1 | u8; 0..255 | percent | 0=off; 1..100=on-or-speed; FF=unchanged; default Unknown | none meaningful | 8 for each diagnostic point | 101..254 unresolved | Unknown |
+| Hypothesis | B5/12 | 05 | request | accessory-relay-1 | 4 | 1 | u8; 0..255 | percent | 0=off; 1..100=on-or-speed; FF=unchanged; default Unknown | none meaningful | 8 for each diagnostic point | 101..254 unresolved | Unknown |
+| Hypothesis | B5/12 | 05 | request | accessory-relay-2 | 5 | 1 | u8; 0..255 | percent | 0=off; 1..100=on-or-speed; FF=unchanged; default Unknown | none meaningful | 8 for each diagnostic point | 101..254 unresolved | Unknown |
+| Hypothesis | B5/12 | 07 | request | arguments | none | 0 | none | none | no arguments | Unknown | Unknown | response adaptation Unknown | Unknown |
+| Hypothesis | B5/12 | 07 | positive | maximum-power | 3 | 1 | u8; 0..255 | kW | default 0 | Unknown | Unknown | response adaptation, installed support and actual-versus-fallback selection Unknown | Unknown |
+| Hypothesis | B5/12 | 07 | positive | minimum-power | 4 | 1 | u8; 0..250 | raw/2 percent; 0..125 percent | default 0; 251..255 outside declared domain | Unknown | Unknown | response adaptation, installed support and actual-versus-fallback selection Unknown | Unknown |
+
+OP02 feedback preserves independent actual and setpoint-fallback alternatives;
+equality to a setpoint cannot establish an actual value. The wire selection
+criterion remains Unknown. OP04's proposed fifteen-minute duration is 900 seconds;
+it does not apply to OP05. OP05 declares no meaningful timeout and requires
+external-mode 8 separately for each diagnostic point. Absent metadata remains
+Unknown, rather than zero or an inherited value. Raw values and partial
+last-known-good fields must remain distinguishable from unresolved meanings;
+unresolved declarations do not admit physical support.
+
+[Synthetic candidate examples](fixtures/ae18_b512_candidates.json) are isolated
+logical field examples, not complete telegrams or native observations.
 
 Codec notes (candidate): in `OP=01`, pump fields are percent while relay and
 fume-flap fields use `0F` for true and `F0` for false. In `OP=0F`, raw `8000`
@@ -121,8 +158,8 @@ profile availability of the header-only entry (B512 `14`) is not established.
 ## Open questions
 
 - No B512 exchange of the candidate `OP` services has been captured; the
-  acknowledgement, reply lengths and the targets that implement each `OP` are
-  unconfirmed on the wire.
+  physical acknowledgement, complete reply lengths and the targets that implement
+  each `OP` remain Unknown; the scoped table declares candidate extents only.
 - Which targets, if any, answer the `OP` services, and whether a Vaillant
   requester sends any of them; no sender or responder implementation is
   known either way.
