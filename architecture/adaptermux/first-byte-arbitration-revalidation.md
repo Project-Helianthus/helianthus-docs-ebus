@@ -81,11 +81,12 @@ alternate `bus.Send` architecture or a timer.
   cancels the old watchdog after releasing the mux state lock.
 - **Retry-ready** makes the corresponding re-bid eligible through established
   arbitration. It neither guarantees the next grant nor bypasses normal
-  fairness. After terminalization, SYN3 is a normal fairness boundary: a
-  pending external bidder may win while the gateway retry remains queued for a
-  later boundary.
-- **Abandon**, before or after SYN2, resumes external fairness at the next
-  normal arbitration boundary. No timer is required by this contract.
+  priority selection. After terminalization, SYN3 is a normal selection
+  boundary: a pending external bidder with a higher-priority initiator address
+  wins and the gateway retry receives FAILED naming it, then re-bids at a later
+  boundary (see [AD06](../adapter-direct-multiplexer.md#ad06-owner-arbitration-model)).
+- **Abandon**, before or after SYN2, resumes normal priority selection at the
+  next arbitration boundary. No timer is required by this contract.
 - Cancellation of an abandoned echo watchdog occurs after the mux state lock
   is released. It must not emit a late administrative timeout for the old
   grant, while a write on a later grant retains its normal watchdog behavior.

@@ -52,6 +52,7 @@ E2_CLEAN_ENTRY_IDS = (
 PINNED_CI_PYTHON = "3.12.10"
 PINNED_CI_PIP = "25.0.1"
 PINNED_CI_REQUIREMENTS = {
+    "execnet": "2.1.2",
     "graphql-core": "3.2.11",
     "iniconfig": "2.3.0",
     "markdown-it-py": "4.0.0",
@@ -61,6 +62,7 @@ PINNED_CI_REQUIREMENTS = {
     "pygments": "2.19.2",
     "pyyaml": "6.0.2",
     "pytest": "9.0.2",
+    "pytest-xdist": "3.8.0",
 }
 PYYAML_PORTABLE_HASHES = {
     # CPython 3.12: GitHub Linux x86_64, macOS x86_64, macOS arm64, sdist.

@@ -1,0 +1,477 @@
+{
+  "evidence": "synthetic; no observed telegrams",
+  "physical_qualification": "Unknown",
+  "columns": [
+    "grade",
+    "identity",
+    "direction",
+    "logical position/extent",
+    "raw type/domain",
+    "scale",
+    "meaning",
+    "sentinel/default/conflict",
+    "unresolved"
+  ],
+  "declarations": [
+    [
+      "Hypothesis",
+      "OP04 / Boolean",
+      "request",
+      "3; extent Unknown",
+      "Boolean 0/1",
+      "Unknown",
+      "0/1; labels Unknown",
+      "sentinel/default Unknown",
+      "width and physical prefix Unknown"
+    ],
+    [
+      "Hypothesis",
+      "OP07 / flags",
+      "request",
+      "3; extent Unknown",
+      "flags byte 0..255",
+      "none",
+      "bit 0 assistant; bit 1 factory-initialization; bits 2..7 reserved",
+      "sentinel/default Unknown",
+      "reserved values retained; physical prefix Unknown"
+    ],
+    [
+      "Hypothesis",
+      "OP09 / flags",
+      "request",
+      "3; extent Unknown",
+      "flags byte 0..255",
+      "none",
+      "bit 0 assistant; bit 1 factory-initialization; bits 2..7 reserved",
+      "sentinel/default Unknown",
+      "reserved values retained; physical prefix Unknown"
+    ],
+    [
+      "Hypothesis",
+      "OP0B / assistant",
+      "request",
+      "3; extent Unknown",
+      "bit 0; carrier width Unknown",
+      "none",
+      "bit 0 assistant; other bits Unknown",
+      "sentinel/default Unknown",
+      "factory-initialization not declared; physical prefix Unknown"
+    ],
+    [
+      "Hypothesis",
+      "OP0C / mode",
+      "request",
+      "3; extent Unknown",
+      "0..3; width Unknown",
+      "none",
+      "0 not-in-standby; 1 in-standby; 2 request-enter; 3 request-exit",
+      "sentinel/default Unknown",
+      "other values unmapped; physical prefix Unknown"
+    ],
+    [
+      "Hypothesis",
+      "OP0A / temperature",
+      "request",
+      "3; extent Unknown",
+      "Unknown",
+      "Unknown",
+      "temperature",
+      "sentinel/default Unknown",
+      "width, unit and physical prefix Unknown"
+    ],
+    [
+      "Hypothesis",
+      "OP0A / actuator",
+      "request",
+      "5; extent Unknown",
+      "Unknown",
+      "Unknown",
+      "actuator",
+      "sentinel/default Unknown",
+      "width, bits and physical prefix Unknown"
+    ],
+    [
+      "Hypothesis",
+      "OP0D / setpoint",
+      "request",
+      "3; extent Unknown",
+      "Unknown",
+      "Unknown",
+      "setpoint",
+      "sentinel/default Unknown",
+      "width, unit and physical prefix Unknown"
+    ],
+    [
+      "Hypothesis",
+      "OP0D / configuration",
+      "request",
+      "4; extent Unknown",
+      "Unknown",
+      "Unknown",
+      "configuration",
+      "sentinel/default Unknown",
+      "width, bits and physical prefix Unknown"
+    ],
+    [
+      "Hypothesis",
+      "OP0F / first special-function",
+      "positive",
+      "4; extent Unknown",
+      "{0,1,3,4,5,6,7,8,10}; width Unknown",
+      "none",
+      "membership only; labels Unknown",
+      "sentinel/default Unknown",
+      "variant selection Unknown; no union; other codes unmapped"
+    ],
+    [
+      "Hypothesis",
+      "OP0F / second special-function",
+      "positive",
+      "4; extent Unknown",
+      "{0,1,4,7,10,11}; width Unknown",
+      "none",
+      "membership only; labels Unknown",
+      "sentinel/default Unknown",
+      "variant selection Unknown; no union; other codes unmapped"
+    ],
+    [
+      "Hypothesis",
+      "OP0F / third special-function",
+      "positive",
+      "4; extent Unknown",
+      "{0,1,4,7,10}; width Unknown",
+      "none",
+      "membership only; labels Unknown",
+      "sentinel/default Unknown",
+      "variant selection Unknown; no union; other codes unmapped"
+    ],
+    [
+      "Hypothesis",
+      "OP0F / binding",
+      "positive",
+      "3; extent Unknown",
+      "Unknown",
+      "Unknown",
+      "binding",
+      "sentinel/default Unknown",
+      "width and physical prefix Unknown"
+    ],
+    [
+      "Hypothesis",
+      "OP0F / heating",
+      "positive",
+      "5; extent Unknown",
+      "Unknown",
+      "Unknown",
+      "heating",
+      "sentinel/default Unknown",
+      "width and physical prefix Unknown"
+    ],
+    [
+      "Hypothesis",
+      "OP0F / error/maintenance/cooling-allowed",
+      "positive",
+      "6; extent Unknown",
+      "Unknown",
+      "Unknown",
+      "error/maintenance/cooling-allowed",
+      "sentinel/default Unknown",
+      "width and physical prefix Unknown"
+    ],
+    [
+      "Hypothesis",
+      "OP0F / wish-temperature",
+      "positive",
+      "7; extent Unknown",
+      "u8 0..255",
+      "raw/2 degrees",
+      "wish-temperature",
+      "sentinel/default Unknown",
+      "physical prefix Unknown"
+    ],
+    [
+      "Hypothesis",
+      "OP0F / quick-veto hour",
+      "positive",
+      "8; extent Unknown",
+      "0..255; width Unknown",
+      "none",
+      "raw carrier retained",
+      "sentinel/default Unknown",
+      "clock validation and physical prefix Unknown"
+    ],
+    [
+      "Hypothesis",
+      "OP0F / quick-veto minute",
+      "positive",
+      "9; extent Unknown",
+      "0..255; width Unknown",
+      "none",
+      "raw carrier retained",
+      "sentinel/default Unknown",
+      "clock validation and physical prefix Unknown"
+    ],
+    [
+      "Hypothesis",
+      "OP0F / event-end hour",
+      "positive",
+      "10; extent Unknown",
+      "0..255; width Unknown",
+      "none",
+      "raw carrier retained",
+      "sentinel/default Unknown",
+      "clock validation and physical prefix Unknown"
+    ],
+    [
+      "Hypothesis",
+      "OP0F / event-end minute",
+      "positive",
+      "11; extent Unknown",
+      "0..255; width Unknown",
+      "none",
+      "raw carrier retained",
+      "sentinel/default Unknown",
+      "clock validation and physical prefix Unknown"
+    ],
+    [
+      "Hypothesis",
+      "OP00 / reserved status-byte-one",
+      "positive",
+      "8; extent 12 abstract positions",
+      "status byte 0..255",
+      "none",
+      "bit 7 reserved; raw retained",
+      "sentinel/default Unknown",
+      "two independent variants; selection and physical prefix Unknown"
+    ],
+    [
+      "Hypothesis",
+      "OP00 / fan status-byte-one",
+      "positive",
+      "8; extent 12 abstract positions",
+      "status byte 0..255",
+      "none",
+      "bit 7 fan-running 0/1",
+      "sentinel/default Unknown",
+      "two independent variants; selection and physical prefix Unknown"
+    ],
+    [
+      "Hypothesis",
+      "OP07 / base",
+      "positive",
+      "positions 0..7; extent 8 abstract positions",
+      "Unknown",
+      "Unknown",
+      "base form",
+      "sentinel/default Unknown",
+      "physical prefix and widths Unknown; separate from six-field State profile"
+    ],
+    [
+      "Hypothesis",
+      "OP07 / extended pressure",
+      "positive",
+      "8; maximum extent 9 abstract positions",
+      "0..100; width Unknown",
+      "percent",
+      "building-circuit-pressure",
+      "sentinel/default Unknown",
+      "not bar; physical prefix Unknown; separate from six-field State profile"
+    ],
+    [
+      "Hypothesis",
+      "OP07 / overlapping room-setpoint",
+      "positive",
+      "7; maximum extent 9 abstract positions",
+      "u8 0..255",
+      "raw/2 degrees",
+      "room-setpoint",
+      "sentinel/default Unknown",
+      "other structures overlap 7; do not concatenate; selection Unknown"
+    ],
+    [
+      "Hypothesis",
+      "name 10 / partial prefix",
+      "request",
+      "0; extent Unknown",
+      "B5; width Unknown",
+      "none",
+      "encoded selector absent; body absent",
+      "sentinel/default Unknown",
+      "suffix is not an operation byte; physical prefix and installed support Unknown"
+    ],
+    [
+      "Hypothesis",
+      "name 10 / partial prefix",
+      "positive",
+      "0; extent Unknown",
+      "F5; width Unknown",
+      "none",
+      "encoded selector absent; body absent",
+      "sentinel/default Unknown",
+      "suffix is not an operation byte; physical prefix and installed support Unknown"
+    ],
+    [
+      "Hypothesis",
+      "name 11 / partial prefix",
+      "request",
+      "0; extent Unknown",
+      "B5; width Unknown",
+      "none",
+      "encoded selector absent; body absent",
+      "sentinel/default Unknown",
+      "suffix is not an operation byte; physical prefix and installed support Unknown"
+    ],
+    [
+      "Hypothesis",
+      "name 11 / partial prefix",
+      "positive",
+      "0; extent Unknown",
+      "F5; width Unknown",
+      "none",
+      "encoded selector absent; body absent",
+      "sentinel/default Unknown",
+      "suffix is not an operation byte; physical prefix and installed support Unknown"
+    ]
+  ],
+  "universal_empty_poll": null,
+  "default_arguments": null,
+  "examples": {
+    "mode": [
+      [
+        null,
+        null
+      ],
+      [
+        2,
+        "request-enter"
+      ]
+    ],
+    "flags": [
+      [
+        "07",
+        0,
+        0,
+        0
+      ],
+      [
+        "07",
+        1,
+        1,
+        0
+      ],
+      [
+        "07",
+        2,
+        0,
+        1
+      ],
+      [
+        "07",
+        3,
+        1,
+        1
+      ],
+      [
+        "09",
+        3,
+        1,
+        1
+      ],
+      [
+        "0B",
+        3,
+        1,
+        null
+      ]
+    ],
+    "membership": [
+      [
+        11,
+        [
+          false,
+          true,
+          false
+        ]
+      ],
+      [
+        3,
+        [
+          true,
+          false,
+          false
+        ]
+      ],
+      [
+        2,
+        [
+          false,
+          false,
+          false
+        ]
+      ]
+    ],
+    "wish_temperature": [
+      [
+        1,
+        0.5
+      ]
+    ],
+    "hour": [
+      [
+        255,
+        null
+      ]
+    ],
+    "status_byte_one": [
+      [
+        "reserved",
+        128,
+        "reserved",
+        128
+      ],
+      [
+        "fan",
+        128,
+        "fan-running",
+        1
+      ]
+    ],
+    "overlap": {
+      "positions": [
+        7,
+        7
+      ],
+      "maximum_extent": 9
+    },
+    "partial": [
+      [
+        "10",
+        "request",
+        "B5",
+        null,
+        null
+      ],
+      [
+        "10",
+        "positive",
+        "F5",
+        null,
+        null
+      ],
+      [
+        "11",
+        "request",
+        "B5",
+        null,
+        null
+      ],
+      [
+        "11",
+        "positive",
+        "F5",
+        null,
+        null
+      ]
+    ]
+  }
+}

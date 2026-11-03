@@ -1,0 +1,437 @@
+{
+  "interpretation_grade": "Hypothesis",
+  "arithmetic_grade": "Proven",
+  "shape_grade": "Proven",
+  "physical_qualification": "Unknown",
+  "presence": "Unknown",
+  "freshness": "Unknown",
+  "execution": "Unknown",
+  "examples": [
+    {
+      "case": "op07-upper",
+      "key": {
+        "family": "vaillant",
+        "variant": "synthetic-class",
+        "primary": 181,
+        "secondary": 17,
+        "operation": 7,
+        "direction": "positive",
+        "field": "energy",
+        "group": null,
+        "requested_instance": null,
+        "register": null,
+        "command_role": null
+      },
+      "raw": [
+        15,
+        39
+      ],
+      "offset": null,
+      "width_bits": 16,
+      "default": null,
+      "expected": {
+        "raw": [
+          15,
+          39
+        ],
+        "value": 9999,
+        "in_domain": true,
+        "label": null,
+        "warm_start": null,
+        "status": "candidate"
+      }
+    },
+    {
+      "case": "op07-outside",
+      "key": {
+        "family": "vaillant",
+        "variant": "synthetic-class",
+        "primary": 181,
+        "secondary": 17,
+        "operation": 7,
+        "direction": "positive",
+        "field": "energy",
+        "group": null,
+        "requested_instance": null,
+        "register": null,
+        "command_role": null
+      },
+      "raw": [
+        16,
+        39
+      ],
+      "offset": null,
+      "width_bits": 16,
+      "default": null,
+      "expected": {
+        "raw": [
+          16,
+          39
+        ],
+        "value": 10000,
+        "in_domain": false,
+        "label": null,
+        "warm_start": null,
+        "status": "outside"
+      }
+    },
+    {
+      "case": "op09-maximum",
+      "key": {
+        "family": "vaillant",
+        "variant": "synthetic-class",
+        "primary": 181,
+        "secondary": 17,
+        "operation": 9,
+        "direction": "positive",
+        "field": "yield",
+        "group": null,
+        "requested_instance": null,
+        "register": null,
+        "command_role": null
+      },
+      "raw": [
+        255,
+        255
+      ],
+      "offset": null,
+      "width_bits": 16,
+      "default": null,
+      "expected": {
+        "raw": [
+          255,
+          255
+        ],
+        "value": 65535,
+        "in_domain": true,
+        "label": null,
+        "warm_start": null,
+        "status": "candidate"
+      }
+    },
+    {
+      "case": "op06-status-4",
+      "key": {
+        "family": "vaillant",
+        "variant": "synthetic-class",
+        "primary": 181,
+        "secondary": 17,
+        "operation": 6,
+        "direction": "positive",
+        "field": "status",
+        "group": null,
+        "requested_instance": null,
+        "register": null,
+        "command_role": null
+      },
+      "raw": 4,
+      "offset": null,
+      "width_bits": null,
+      "default": null,
+      "expected": {
+        "raw": 4,
+        "value": 4,
+        "in_domain": null,
+        "label": null,
+        "warm_start": null,
+        "status": "unlabelled"
+      }
+    },
+    {
+      "case": "op06-status-9",
+      "key": {
+        "family": "vaillant",
+        "variant": "synthetic-class",
+        "primary": 181,
+        "secondary": 17,
+        "operation": 6,
+        "direction": "positive",
+        "field": "status",
+        "group": null,
+        "requested_instance": null,
+        "register": null,
+        "command_role": null
+      },
+      "raw": 9,
+      "offset": null,
+      "width_bits": null,
+      "default": null,
+      "expected": {
+        "raw": 9,
+        "value": 9,
+        "in_domain": null,
+        "label": null,
+        "warm_start": null,
+        "status": "unlabelled"
+      }
+    },
+    {
+      "case": "op06-status-16",
+      "key": {
+        "family": "vaillant",
+        "variant": "synthetic-class",
+        "primary": 181,
+        "secondary": 17,
+        "operation": 6,
+        "direction": "positive",
+        "field": "status",
+        "group": null,
+        "requested_instance": null,
+        "register": null,
+        "command_role": null
+      },
+      "raw": 16,
+      "offset": null,
+      "width_bits": null,
+      "default": null,
+      "expected": {
+        "raw": 16,
+        "value": 16,
+        "in_domain": null,
+        "label": null,
+        "warm_start": null,
+        "status": "unlabelled"
+      }
+    },
+    {
+      "case": "op03-message-inside",
+      "key": {
+        "family": "vaillant",
+        "variant": "synthetic-class",
+        "primary": 181,
+        "secondary": 17,
+        "operation": 3,
+        "direction": "positive",
+        "field": "message",
+        "group": null,
+        "requested_instance": null,
+        "register": null,
+        "command_role": null
+      },
+      "raw": 3,
+      "offset": null,
+      "width_bits": null,
+      "default": null,
+      "expected": {
+        "raw": 3,
+        "value": 3,
+        "in_domain": true,
+        "label": null,
+        "warm_start": null,
+        "status": "candidate"
+      }
+    },
+    {
+      "case": "op03-message-outside",
+      "key": {
+        "family": "vaillant",
+        "variant": "synthetic-class",
+        "primary": 181,
+        "secondary": 17,
+        "operation": 3,
+        "direction": "positive",
+        "field": "message",
+        "group": null,
+        "requested_instance": null,
+        "register": null,
+        "command_role": null
+      },
+      "raw": 4,
+      "offset": null,
+      "width_bits": null,
+      "default": null,
+      "expected": {
+        "raw": 4,
+        "value": 4,
+        "in_domain": false,
+        "label": null,
+        "warm_start": null,
+        "status": "outside"
+      }
+    },
+    {
+      "case": "op03-basic-inside",
+      "key": {
+        "family": "vaillant",
+        "variant": "synthetic-class",
+        "primary": 181,
+        "secondary": 17,
+        "operation": 3,
+        "direction": "positive",
+        "field": "basic-state",
+        "group": null,
+        "requested_instance": null,
+        "register": null,
+        "command_role": null
+      },
+      "raw": 6,
+      "offset": null,
+      "width_bits": null,
+      "default": null,
+      "expected": {
+        "raw": 6,
+        "value": 6,
+        "in_domain": true,
+        "label": null,
+        "warm_start": null,
+        "status": "candidate"
+      }
+    },
+    {
+      "case": "op03-basic-outside",
+      "key": {
+        "family": "vaillant",
+        "variant": "synthetic-class",
+        "primary": 181,
+        "secondary": 17,
+        "operation": 3,
+        "direction": "positive",
+        "field": "basic-state",
+        "group": null,
+        "requested_instance": null,
+        "register": null,
+        "command_role": null
+      },
+      "raw": 7,
+      "offset": null,
+      "width_bits": null,
+      "default": null,
+      "expected": {
+        "raw": 7,
+        "value": 7,
+        "in_domain": false,
+        "label": null,
+        "warm_start": null,
+        "status": "outside"
+      }
+    },
+    {
+      "case": "op01-applicable",
+      "key": {
+        "family": "vaillant",
+        "variant": "synthetic-applicable",
+        "primary": 181,
+        "secondary": 17,
+        "operation": 1,
+        "direction": "positive",
+        "field": "warm-start",
+        "group": null,
+        "requested_instance": null,
+        "register": null,
+        "command_role": null
+      },
+      "raw": 32,
+      "offset": null,
+      "width_bits": null,
+      "default": null,
+      "expected": {
+        "raw": 32,
+        "value": null,
+        "in_domain": null,
+        "label": null,
+        "warm_start": true,
+        "status": "candidate"
+      }
+    },
+    {
+      "case": "op01-inapplicable",
+      "key": {
+        "family": "vaillant",
+        "variant": "synthetic-inapplicable",
+        "primary": 181,
+        "secondary": 17,
+        "operation": 1,
+        "direction": "positive",
+        "field": "warm-start",
+        "group": null,
+        "requested_instance": null,
+        "register": null,
+        "command_role": null
+      },
+      "raw": 32,
+      "offset": null,
+      "width_bits": null,
+      "default": null,
+      "expected": {
+        "raw": 32,
+        "value": null,
+        "in_domain": null,
+        "label": null,
+        "warm_start": null,
+        "status": "unknown"
+      }
+    },
+    {
+      "case": "op07-partial",
+      "key": {
+        "family": "vaillant",
+        "variant": "synthetic-class",
+        "primary": 181,
+        "secondary": 17,
+        "operation": 7,
+        "direction": "positive",
+        "field": "energy",
+        "group": null,
+        "requested_instance": null,
+        "register": null,
+        "command_role": null
+      },
+      "raw": [
+        15
+      ],
+      "offset": null,
+      "width_bits": 16,
+      "default": null,
+      "expected": {
+        "raw": [
+          15
+        ],
+        "value": null,
+        "in_domain": null,
+        "label": null,
+        "warm_start": null,
+        "status": "partial"
+      }
+    },
+    {
+      "case": "op07-extra",
+      "key": {
+        "family": "vaillant",
+        "variant": "synthetic-class",
+        "primary": 181,
+        "secondary": 17,
+        "operation": 7,
+        "direction": "positive",
+        "field": "energy",
+        "group": null,
+        "requested_instance": null,
+        "register": null,
+        "command_role": null
+      },
+      "raw": [
+        15,
+        39,
+        0
+      ],
+      "offset": null,
+      "width_bits": 16,
+      "default": null,
+      "expected": {
+        "raw": [
+          15,
+          39,
+          0
+        ],
+        "value": null,
+        "in_domain": null,
+        "label": null,
+        "warm_start": null,
+        "status": "extra"
+      }
+    }
+  ],
+  "partial_context": {
+    "last_known_good_energy": 9999,
+    "power_percent": 25
+  }
+}

@@ -36,11 +36,37 @@ Service `0xFE` carries general-purpose broadcast messages. Currently only one se
 
 ## Vaillant variants
 
-The standard layout above stays authoritative. Candidate interpretation, unconfirmed on the wire: the Vaillant layout for `0xFE 0x01` defines the PB/SB pair only, with no 10-character error text field.
+**Hypothesis (partial FE01 family form):** Only the eight-bit constants
+`0xFE` at logical position 0, bit 0, and `0x01` at logical position 1, bit 0,
+are declared. These are logical declaration coordinates, not physical offsets.
+Request and positive placements remain alternatives; positive-prefix relevance
+is specific to a PeBUS declaration. Explicit and unspecified encoding remain
+separate alternatives; unspecified encoding does not inherit the explicit one.
+Encoding details beyond the presence of a declaration remain Unknown.
+
+| Placement alternative | Encoding declaration | Constants (logical position, bit, width) | Native body | Status |
+|---|---|---|---|---|
+| request | explicit (details Unknown) | `FE` (0, 0, 8); `01` (1, 0, 8) | Unknown | Hypothesis |
+| request | unspecified | `FE` (0, 0, 8); `01` (1, 0, 8) | Unknown | Hypothesis |
+| positive (PeBUS declaration) | explicit (details Unknown) | `FE` (0, 0, 8); `01` (1, 0, 8) | Unknown | Hypothesis |
+| positive (PeBUS declaration) | unspecified | `FE` (0, 0, 8); `01` (1, 0, 8) | Unknown | Hypothesis |
+
+**Unknown body:** No native body, unit, enum, selector, sentinel, text,
+termination or physical length is declared in this partial form. Absence of a
+body declaration is not a declared empty body or a zero length. The FE/01
+constants alone cannot establish a two-byte physical reply.
+
+The general-broadcast ten-character body contract above remains separate and
+authoritative for that generic form. It is not the body of this partial family
+form. The [synthetic alternatives](./fixtures/ac26_fe01.json) preserve only the
+partial declarations; they are representation examples, not captures or
+physical qualification evidence.
 
 ## Open questions
 
-- Whether Vaillant devices broadcast `0xFE 0x01` error messages, and with which text, is not established; the Vaillant layout has no text field (candidate) and no capture of the service is known.
+- **Unknown:** Family availability, endpoint support, lifecycle and effects.
+- **Unknown:** Physical qualification, physical offsets and physical length of
+  the partial form; the declaration alternatives do not resolve them.
 
 ## See Also
 

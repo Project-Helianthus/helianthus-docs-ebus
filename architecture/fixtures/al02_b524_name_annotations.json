@@ -1,0 +1,126 @@
+{
+  "purpose": "synthetic annotation examples; not a native profile",
+  "grades": {
+    "software_contract": "Proven",
+    "candidate_meaning": "Hypothesis",
+    "unresolved_semantics": "Unknown",
+    "qualification": "Unknown",
+    "presence": "Unknown",
+    "freshness": "Unknown",
+    "execution": "Unknown"
+  },
+  "examples": [
+    {
+      "key": {
+        "opcode": 2,
+        "group": 0,
+        "register": 1,
+        "instance_scope": "unqualified",
+        "family": "unqualified",
+        "variant": "unqualified"
+      },
+      "canonical_name": "dhw_outdoor_bivalence_temperature_limit",
+      "legacy_name": "system_dhw_bivalence_point",
+      "display_alias": null,
+      "unresolved": false
+    },
+    {
+      "key": {
+        "opcode": 2,
+        "group": 0,
+        "register": 7,
+        "instance_scope": "unqualified",
+        "family": "unqualified",
+        "variant": "unqualified"
+      },
+      "canonical_name": "unknown_11",
+      "legacy_name": "system_off",
+      "display_alias": null,
+      "unresolved": true
+    },
+    {
+      "key": {
+        "opcode": 2,
+        "group": 0,
+        "register": 9,
+        "instance_scope": "unqualified",
+        "family": "unqualified",
+        "variant": "unqualified"
+      },
+      "canonical_name": "automatic_cooling_enabled",
+      "legacy_name": "automatic_cooling_enabled",
+      "display_alias": null,
+      "unresolved": false
+    },
+    {
+      "key": {
+        "opcode": 2,
+        "group": 0,
+        "register": 22,
+        "instance_scope": "unqualified",
+        "family": "unqualified",
+        "variant": "unqualified"
+      },
+      "canonical_name": "ventilation_operating_mode",
+      "legacy_name": "system_ventilation_operating_mode",
+      "display_alias": null,
+      "unresolved": false
+    },
+    {
+      "key": {
+        "opcode": 2,
+        "group": 9,
+        "register": 2,
+        "instance_scope": "unqualified",
+        "family": "unqualified",
+        "variant": "unqualified"
+      },
+      "canonical_name": "ventilation_operating_mode",
+      "legacy_name": "ventilation_operating_mode",
+      "display_alias": null,
+      "unresolved": false
+    },
+    {
+      "key": {
+        "opcode": 2,
+        "group": 3,
+        "register": 7,
+        "instance_scope": "unqualified",
+        "family": "unqualified",
+        "variant": "unqualified"
+      },
+      "canonical_name": "heating_zone_room_comfort_temperature_setpoint",
+      "legacy_name": "zone_comfort_room_temperature_setpoint_heating",
+      "display_alias": null,
+      "unresolved": true
+    },
+    {
+      "key": {
+        "opcode": 6,
+        "group": 10,
+        "register": 7,
+        "instance_scope": "unqualified",
+        "family": "unqualified",
+        "variant": "unqualified"
+      },
+      "canonical_name": null,
+      "legacy_name": null,
+      "display_alias": "RoomHumidity",
+      "unresolved": null
+    },
+    {
+      "key": {
+        "opcode": 6,
+        "group": 10,
+        "register": 15,
+        "instance_scope": "unqualified",
+        "family": "unqualified",
+        "variant": "unqualified"
+      },
+      "canonical_name": null,
+      "legacy_name": null,
+      "display_alias": "RoomTemp",
+      "unresolved": null
+    }
+  ]
+}

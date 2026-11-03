@@ -1,0 +1,480 @@
+{
+  "family": "vaillant",
+  "synthetic": true,
+  "entries": [
+    {
+      "group": "B51C",
+      "label": "00",
+      "request": {
+        "constant": 181,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "positive": {
+        "constant": 245,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "secondary": null,
+      "operation": null,
+      "body": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "group": "B51C",
+      "label": "01",
+      "request": {
+        "constant": 181,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "positive": {
+        "constant": 245,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "secondary": null,
+      "operation": null,
+      "body": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "group": "B51C",
+      "label": "02",
+      "request": {
+        "constant": 181,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "positive": {
+        "constant": 245,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "secondary": null,
+      "operation": null,
+      "body": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "group": "B51C",
+      "label": "03",
+      "request": {
+        "constant": 181,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "positive": {
+        "constant": 245,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "secondary": null,
+      "operation": null,
+      "body": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "group": "B51C",
+      "label": "10",
+      "request": {
+        "constant": 181,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "positive": {
+        "constant": 245,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "secondary": null,
+      "operation": null,
+      "body": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "group": "B51C",
+      "label": "13",
+      "request": {
+        "constant": 181,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "positive": {
+        "constant": 245,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "secondary": null,
+      "operation": null,
+      "body": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "group": "B51C",
+      "label": "14",
+      "request": {
+        "constant": 181,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "positive": {
+        "constant": 245,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "secondary": null,
+      "operation": null,
+      "body": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "group": "B51C",
+      "label": "19",
+      "request": {
+        "constant": 181,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "positive": {
+        "constant": 245,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "secondary": null,
+      "operation": null,
+      "body": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "group": "B51C",
+      "label": "1B",
+      "request": {
+        "constant": 181,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "positive": {
+        "constant": 245,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "secondary": null,
+      "operation": null,
+      "body": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "group": "B51C",
+      "label": "1C",
+      "request": {
+        "constant": 181,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "positive": {
+        "constant": 245,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "secondary": null,
+      "operation": null,
+      "body": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "group": "B51C",
+      "label": "1D",
+      "request": {
+        "constant": 181,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "positive": {
+        "constant": 245,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "secondary": null,
+      "operation": null,
+      "body": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "group": "B51D",
+      "label": "00",
+      "request": {
+        "constant": 181,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "positive": {
+        "constant": 245,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "secondary": null,
+      "operation": null,
+      "body": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "group": "B51D",
+      "label": "01",
+      "request": {
+        "constant": 181,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "positive": {
+        "constant": 245,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "secondary": null,
+      "operation": null,
+      "body": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "group": "B51D",
+      "label": "02",
+      "request": {
+        "constant": 181,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "positive": {
+        "constant": 245,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "secondary": null,
+      "operation": null,
+      "body": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "group": "B51D",
+      "label": "03",
+      "request": {
+        "constant": 181,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "positive": {
+        "constant": 245,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "secondary": null,
+      "operation": null,
+      "body": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "group": "B51D",
+      "label": "10",
+      "request": {
+        "constant": 181,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "positive": {
+        "constant": 245,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "secondary": null,
+      "operation": null,
+      "body": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "group": "B51D",
+      "label": "11",
+      "request": {
+        "constant": 181,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "positive": {
+        "constant": 245,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "secondary": null,
+      "operation": null,
+      "body": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "group": "B51D",
+      "label": "12",
+      "request": {
+        "constant": 181,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "positive": {
+        "constant": 245,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "secondary": null,
+      "operation": null,
+      "body": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "group": "B51D",
+      "label": "13",
+      "request": {
+        "constant": 181,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "positive": {
+        "constant": 245,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "secondary": null,
+      "operation": null,
+      "body": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "group": "B51D",
+      "label": "14",
+      "request": {
+        "constant": 181,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "positive": {
+        "constant": 245,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "secondary": null,
+      "operation": null,
+      "body": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "group": "B51D",
+      "label": "15",
+      "request": {
+        "constant": 181,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "positive": {
+        "constant": 245,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "secondary": null,
+      "operation": null,
+      "body": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "group": "B51D",
+      "label": "16",
+      "request": {
+        "constant": 181,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "positive": {
+        "constant": 245,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "secondary": null,
+      "operation": null,
+      "body": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "group": "B51D",
+      "label": "17",
+      "request": {
+        "constant": 181,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "positive": {
+        "constant": 245,
+        "logical_byte": 0,
+        "bit": 0,
+        "width_bits": 8
+      },
+      "secondary": null,
+      "operation": null,
+      "body": null,
+      "grade": "Hypothesis"
+    }
+  ],
+  "unknowns": {
+    "body-layout": "Unknown",
+    "codec": "Unknown",
+    "gating": "Unknown",
+    "confirmation": "Unknown",
+    "effect": "Unknown",
+    "physical-framing": "Unknown",
+    "physical-equivalence": "Unknown",
+    "installed-support": "Unknown",
+    "freshness": "Unknown",
+    "persistence": "Unknown",
+    "execution-permission": "Unknown",
+    "uninterpreted-controls": "Unknown"
+  }
+}

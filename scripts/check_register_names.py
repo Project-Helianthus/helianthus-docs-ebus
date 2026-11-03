@@ -514,6 +514,8 @@ def _section(text: str, start: str, end: str) -> list[tuple[int, str]]:
 # does not begin with a register: located by the header cell of the table.
 NAME_COLUMN_HEADERS = {"Register", "Write", "Name"}
 TRAILING_NOTE = re.compile(r" \([^()]*\)$")
+# Accepted standalone Register-column selector, after one outer code span.
+REGISTER_SELECTOR = re.compile(r"0x[0-9A-F]{4}")
 
 
 GROUP_REGISTER_SELECTOR = re.compile(r"GG=0x([0-9A-Fa-f]{2})\b.*?RR=0x([0-9A-Fa-f]{4})\b")
@@ -607,7 +609,7 @@ def header_column_names(lines: list[str]) -> list[tuple[int, str]]:
     return [
         (number, token)
         for number, token, _, title in _name_column_cells(lines)
-        if title != "Register" or not re.fullmatch(r"0x[0-9A-F]{4}", token)
+        if title != "Register" or not REGISTER_SELECTOR.fullmatch(token)
     ]
 
 
@@ -624,7 +626,7 @@ def selector_name_mismatches(
     return [
         (number, token, catalog[selector])
         for number, token, selector, title in _name_column_cells(lines)
-        if title != "Register" or not re.fullmatch(r"0x[0-9A-F]{4}", token)
+        if title != "Register" or not REGISTER_SELECTOR.fullmatch(token)
         if selector in catalog and token != catalog[selector]
     ]
 
