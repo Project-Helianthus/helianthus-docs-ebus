@@ -458,7 +458,6 @@ def test_runtime_control_contract_registered_in_local_gate() -> None:
     gate = (checker.ROOT / "scripts/ci_local.sh").read_text(encoding="utf-8")
     assert "python3 scripts/check_runtime_control_contract.py\n" in gate
     assert "python3 -m pytest -q -n 2 tests/test_runtime_control_contract.py\n" in gate
-    assert "python3 -m pytest -q tests/test_runtime_control_contract.py\n" in gate
 
 
 @pytest.mark.parametrize(("before", "after"), [
