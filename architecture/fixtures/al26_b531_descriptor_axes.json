@@ -1,0 +1,361 @@
+{
+  "evidence": "synthetic inputs only; Proven values do not prove native behavior",
+  "cases": [
+    {
+      "name": "baseline",
+      "descriptor": {
+        "source": "F1",
+        "destination": "slotA",
+        "operation": "01"
+      },
+      "operation": "01",
+      "descriptor_grade": "Hypothesis",
+      "axes": {
+        "logical_descriptor_count": {
+          "value": null,
+          "grade": "Unknown"
+        },
+        "local_response_count": {
+          "value": null,
+          "grade": "Unknown"
+        },
+        "available_buffer_length": {
+          "value": null,
+          "grade": "Unknown"
+        },
+        "physical_wire_length": {
+          "value": null,
+          "grade": "Unknown"
+        }
+      },
+      "physical_qualification": "Unknown",
+      "presence": "Unknown",
+      "freshness": "Unknown",
+      "execution": "Unknown",
+      "physical_ack": "Unknown",
+      "physical_crc": "Unknown",
+      "echo_correlation": "Unknown",
+      "remote_effect": "Unknown"
+    },
+    {
+      "name": "slot_only",
+      "descriptor": {
+        "source": "F1",
+        "destination": "slotB",
+        "operation": "01"
+      },
+      "operation": "01",
+      "descriptor_grade": "Hypothesis",
+      "axes": {
+        "logical_descriptor_count": {
+          "value": null,
+          "grade": "Unknown"
+        },
+        "local_response_count": {
+          "value": null,
+          "grade": "Unknown"
+        },
+        "available_buffer_length": {
+          "value": null,
+          "grade": "Unknown"
+        },
+        "physical_wire_length": {
+          "value": null,
+          "grade": "Unknown"
+        }
+      },
+      "physical_qualification": "Unknown",
+      "presence": "Unknown",
+      "freshness": "Unknown",
+      "execution": "Unknown",
+      "physical_ack": "Unknown",
+      "physical_crc": "Unknown",
+      "echo_correlation": "Unknown",
+      "remote_effect": "Unknown"
+    },
+    {
+      "name": "operation02_only",
+      "descriptor": {
+        "source": "F1",
+        "destination": "slotA",
+        "operation": "02"
+      },
+      "operation": "02",
+      "descriptor_grade": "Hypothesis",
+      "axes": {
+        "logical_descriptor_count": {
+          "value": null,
+          "grade": "Unknown"
+        },
+        "local_response_count": {
+          "value": null,
+          "grade": "Unknown"
+        },
+        "available_buffer_length": {
+          "value": null,
+          "grade": "Unknown"
+        },
+        "physical_wire_length": {
+          "value": null,
+          "grade": "Unknown"
+        }
+      },
+      "physical_qualification": "Unknown",
+      "presence": "Unknown",
+      "freshness": "Unknown",
+      "execution": "Unknown",
+      "physical_ack": "Unknown",
+      "physical_crc": "Unknown",
+      "echo_correlation": "Unknown",
+      "remote_effect": "Unknown"
+    },
+    {
+      "name": "operation03_only",
+      "descriptor": {
+        "source": "F1",
+        "destination": "slotA",
+        "operation": "03"
+      },
+      "operation": "03",
+      "descriptor_grade": "Hypothesis",
+      "axes": {
+        "logical_descriptor_count": {
+          "value": null,
+          "grade": "Unknown"
+        },
+        "local_response_count": {
+          "value": null,
+          "grade": "Unknown"
+        },
+        "available_buffer_length": {
+          "value": null,
+          "grade": "Unknown"
+        },
+        "physical_wire_length": {
+          "value": null,
+          "grade": "Unknown"
+        }
+      },
+      "physical_qualification": "Unknown",
+      "presence": "Unknown",
+      "freshness": "Unknown",
+      "execution": "Unknown",
+      "physical_ack": "Unknown",
+      "physical_crc": "Unknown",
+      "echo_correlation": "Unknown",
+      "remote_effect": "Unknown"
+    },
+    {
+      "name": "nn_only",
+      "descriptor": {
+        "source": "F1",
+        "destination": "slotA",
+        "operation": "01"
+      },
+      "operation": "01",
+      "descriptor_grade": "Hypothesis",
+      "axes": {
+        "logical_descriptor_count": {
+          "value": 3,
+          "grade": "Proven"
+        },
+        "local_response_count": {
+          "value": null,
+          "grade": "Unknown"
+        },
+        "available_buffer_length": {
+          "value": null,
+          "grade": "Unknown"
+        },
+        "physical_wire_length": {
+          "value": null,
+          "grade": "Unknown"
+        }
+      },
+      "physical_qualification": "Unknown",
+      "presence": "Unknown",
+      "freshness": "Unknown",
+      "execution": "Unknown",
+      "physical_ack": "Unknown",
+      "physical_crc": "Unknown",
+      "echo_correlation": "Unknown",
+      "remote_effect": "Unknown"
+    },
+    {
+      "name": "local_count_only",
+      "descriptor": {
+        "source": "F1",
+        "destination": "slotA",
+        "operation": "01"
+      },
+      "operation": "01",
+      "descriptor_grade": "Hypothesis",
+      "axes": {
+        "logical_descriptor_count": {
+          "value": null,
+          "grade": "Unknown"
+        },
+        "local_response_count": {
+          "value": 5,
+          "grade": "Proven"
+        },
+        "available_buffer_length": {
+          "value": null,
+          "grade": "Unknown"
+        },
+        "physical_wire_length": {
+          "value": null,
+          "grade": "Unknown"
+        }
+      },
+      "physical_qualification": "Unknown",
+      "presence": "Unknown",
+      "freshness": "Unknown",
+      "execution": "Unknown",
+      "physical_ack": "Unknown",
+      "physical_crc": "Unknown",
+      "echo_correlation": "Unknown",
+      "remote_effect": "Unknown"
+    },
+    {
+      "name": "available_only",
+      "descriptor": {
+        "source": "F1",
+        "destination": "slotA",
+        "operation": "01"
+      },
+      "operation": "01",
+      "descriptor_grade": "Hypothesis",
+      "axes": {
+        "logical_descriptor_count": {
+          "value": null,
+          "grade": "Unknown"
+        },
+        "local_response_count": {
+          "value": null,
+          "grade": "Unknown"
+        },
+        "available_buffer_length": {
+          "value": 5,
+          "grade": "Proven"
+        },
+        "physical_wire_length": {
+          "value": null,
+          "grade": "Unknown"
+        }
+      },
+      "physical_qualification": "Unknown",
+      "presence": "Unknown",
+      "freshness": "Unknown",
+      "execution": "Unknown",
+      "physical_ack": "Unknown",
+      "physical_crc": "Unknown",
+      "echo_correlation": "Unknown",
+      "remote_effect": "Unknown"
+    },
+    {
+      "name": "distinct_counts",
+      "descriptor": {
+        "source": "F1",
+        "destination": "slotA",
+        "operation": "01"
+      },
+      "operation": "01",
+      "descriptor_grade": "Hypothesis",
+      "axes": {
+        "logical_descriptor_count": {
+          "value": 3,
+          "grade": "Proven"
+        },
+        "local_response_count": {
+          "value": 5,
+          "grade": "Proven"
+        },
+        "available_buffer_length": {
+          "value": 5,
+          "grade": "Proven"
+        },
+        "physical_wire_length": {
+          "value": null,
+          "grade": "Unknown"
+        }
+      },
+      "physical_qualification": "Unknown",
+      "presence": "Unknown",
+      "freshness": "Unknown",
+      "execution": "Unknown",
+      "physical_ack": "Unknown",
+      "physical_crc": "Unknown",
+      "echo_correlation": "Unknown",
+      "remote_effect": "Unknown"
+    },
+    {
+      "name": "partial_available",
+      "descriptor": {
+        "source": "F1",
+        "destination": "slotA",
+        "operation": "01"
+      },
+      "operation": "01",
+      "descriptor_grade": "Hypothesis",
+      "axes": {
+        "logical_descriptor_count": {
+          "value": 3,
+          "grade": "Proven"
+        },
+        "local_response_count": {
+          "value": 5,
+          "grade": "Proven"
+        },
+        "available_buffer_length": {
+          "value": 2,
+          "grade": "Proven"
+        },
+        "physical_wire_length": {
+          "value": null,
+          "grade": "Unknown"
+        }
+      },
+      "physical_qualification": "Unknown",
+      "presence": "Unknown",
+      "freshness": "Unknown",
+      "execution": "Unknown",
+      "physical_ack": "Unknown",
+      "physical_crc": "Unknown",
+      "echo_correlation": "Unknown",
+      "remote_effect": "Unknown"
+    },
+    {
+      "name": "op00_unknown",
+      "descriptor": null,
+      "operation": "00",
+      "descriptor_grade": "Unknown",
+      "axes": {
+        "logical_descriptor_count": {
+          "value": null,
+          "grade": "Unknown"
+        },
+        "local_response_count": {
+          "value": null,
+          "grade": "Unknown"
+        },
+        "available_buffer_length": {
+          "value": null,
+          "grade": "Unknown"
+        },
+        "physical_wire_length": {
+          "value": null,
+          "grade": "Unknown"
+        }
+      },
+      "physical_qualification": "Unknown",
+      "presence": "Unknown",
+      "freshness": "Unknown",
+      "execution": "Unknown",
+      "physical_ack": "Unknown",
+      "physical_crc": "Unknown",
+      "echo_correlation": "Unknown",
+      "remote_effect": "Unknown"
+    }
+  ]
+}
