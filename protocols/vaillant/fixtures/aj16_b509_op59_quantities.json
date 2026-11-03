@@ -1,0 +1,112 @@
+{
+  "provenance": "synthetic",
+  "selector": {
+    "family": "vaillant",
+    "variant": "B509",
+    "primary": 181,
+    "secondary": 9,
+    "operation": 89,
+    "direction": null
+  },
+  "fields": [
+    {
+      "field": "temperature",
+      "representation": "signedLE16",
+      "divisor": 16,
+      "unit": "Celsius",
+      "grade": "Hypothesis"
+    },
+    {
+      "field": "flow",
+      "representation": "unsignedLE16",
+      "divisor": 100,
+      "unit": "litres per minute",
+      "grade": "Hypothesis"
+    },
+    {
+      "field": "volume",
+      "representation": "unsignedLE16",
+      "divisor": 10,
+      "unit": "litres",
+      "grade": "Hypothesis"
+    },
+    {
+      "field": "minimum_volume",
+      "representation": "raw",
+      "divisor": null,
+      "unit": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "field": "maximum_volume",
+      "representation": "raw",
+      "divisor": null,
+      "unit": null,
+      "grade": "Hypothesis"
+    }
+  ],
+  "fragments": [
+    {
+      "field": "temperature",
+      "fragment": "F0 FF",
+      "expected": -1,
+      "unit": "Celsius"
+    },
+    {
+      "field": "temperature",
+      "fragment": "00 80",
+      "expected": -2048,
+      "unit": "Celsius"
+    },
+    {
+      "field": "flow",
+      "fragment": "7B 00",
+      "expected": 1.23,
+      "unit": "litres per minute"
+    },
+    {
+      "field": "flow",
+      "fragment": "FF FF",
+      "expected": 655.35,
+      "unit": "litres per minute"
+    },
+    {
+      "field": "volume",
+      "fragment": "7B 00",
+      "expected": 12.3,
+      "unit": "litres"
+    },
+    {
+      "field": "volume",
+      "fragment": "FF FF",
+      "expected": 6553.5,
+      "unit": "litres"
+    },
+    {
+      "field": "minimum_volume",
+      "fragment": 123,
+      "expected": 123,
+      "unit": null
+    },
+    {
+      "field": "maximum_volume",
+      "fragment": 456,
+      "expected": 456,
+      "unit": null
+    }
+  ],
+  "unknown": {
+    "absolute_field_positions": "Unknown",
+    "native_support": "Unknown",
+    "sentinels": "Unknown",
+    "response_adaptation": "Unknown",
+    "direction": "Unknown",
+    "physical_qualification": "Unknown",
+    "limit_widths": "Unknown",
+    "limit_scales": "Unknown",
+    "limit_units": "Unknown",
+    "limit_coordinates": "Unknown",
+    "limit_enforcement": "Unknown"
+  },
+  "preserve_raw": true
+}
