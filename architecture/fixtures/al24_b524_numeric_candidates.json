@@ -1,0 +1,142 @@
+{
+  "scope": "synthetic_examples_only",
+  "context": {
+    "ab56_family": "synthetic-family-a",
+    "ab56_software": "synthetic-software-a",
+    "ab56_hardware": "synthetic-hardware-a",
+    "ab56_api_version": "synthetic-api-version-a",
+    "ab56_api_revision": "synthetic-api-revision-a",
+    "ab56_variant": "synthetic-variant-a",
+    "ab56_candidate_set": "synthetic-candidate-set-a"
+  },
+  "expected_state": {
+    "candidate_grade": "Hypothesis",
+    "physical_qualification": "Unknown",
+    "presence": "Unknown",
+    "freshness": "Unknown",
+    "writable": "Unknown",
+    "execution": "Unknown",
+    "admitted": false,
+    "runtime_bound": null
+  },
+  "examples": [
+    {
+      "id": "system-count",
+      "selector": {
+        "ab56_opcode": 2,
+        "ab56_group": 0,
+        "ab56_instance": 0,
+        "ab56_register": 3
+      },
+      "expected_candidate": {
+        "codec": "UIN",
+        "width": 2,
+        "minimum": "0",
+        "maximum": "12",
+        "step": "1"
+      }
+    },
+    {
+      "id": "signed-range",
+      "selector": {
+        "ab56_opcode": 2,
+        "ab56_group": 0,
+        "ab56_instance": 0,
+        "ab56_register": 128
+      },
+      "expected_candidate": {
+        "codec": "EXP",
+        "width": 4,
+        "minimum": "-10.0",
+        "maximum": "10.0",
+        "step": "1.0"
+      }
+    },
+    {
+      "id": "half-step",
+      "selector": {
+        "ab56_opcode": 2,
+        "ab56_group": 3,
+        "ab56_instance": 0,
+        "ab56_register": 2
+      },
+      "expected_candidate": {
+        "codec": "EXP",
+        "width": 4,
+        "minimum": "15.0",
+        "maximum": "30.0",
+        "step": "0.5"
+      }
+    },
+    {
+      "id": "separate-instance-1",
+      "selector": {
+        "ab56_opcode": 2,
+        "ab56_group": 2,
+        "ab56_instance": 1,
+        "ab56_register": 5
+      },
+      "expected_candidate": {
+        "codec": "UCH",
+        "width": 1,
+        "minimum": "0",
+        "maximum": "1",
+        "step": "1"
+      }
+    },
+    {
+      "id": "separate-instance-2",
+      "selector": {
+        "ab56_opcode": 2,
+        "ab56_group": 2,
+        "ab56_instance": 2,
+        "ab56_register": 5
+      },
+      "expected_candidate": {
+        "codec": "UCH",
+        "width": 1,
+        "minimum": "0",
+        "maximum": "1",
+        "step": "1"
+      }
+    },
+    {
+      "id": "separate-instance-9",
+      "selector": {
+        "ab56_opcode": 2,
+        "ab56_group": 2,
+        "ab56_instance": 9,
+        "ab56_register": 5
+      },
+      "expected_candidate": {
+        "codec": "UCH",
+        "width": 1,
+        "minimum": "0",
+        "maximum": "1",
+        "step": "1"
+      }
+    }
+  ],
+  "arithmetic": [
+    {
+      "value": "15",
+      "expected_member": true,
+      "expected_admitted": false
+    },
+    {
+      "value": "15.5",
+      "expected_member": true,
+      "expected_admitted": false
+    },
+    {
+      "value": "30",
+      "expected_member": true,
+      "expected_admitted": false
+    },
+    {
+      "value": "15.25",
+      "expected_member": false,
+      "expected_admitted": false
+    }
+  ]
+}
