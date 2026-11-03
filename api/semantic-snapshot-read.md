@@ -56,7 +56,8 @@ documentation; these API records neither decode nor strengthen it.
    byte-for-byte, without trimming, case folding or protocol interpretation.
 2. Detach the selected state once from the shared hub at one coherent read
    point. All GraphQL aliases in one operation share that capture and one
-   evaluation context; take the union of their selected IDs before capture.
+   wall TimePoint and clock-domain coordinates as defined below; take the union
+   of their selected IDs before capture.
    The operation-wide union also has the 32-asset bound. MCP captures once per
    tool call. Separate requests can legitimately observe later publications.
 3. A SemReg `Snapshot` is complete **per asset**, not a global revision. Each
@@ -65,10 +66,14 @@ documentation; these API records neither decode nor strengthen it.
    different assets' revision numbers to match. Capture publication pointers
    coherently; sequential independent reads that can straddle a publication
    boundary do not meet this contract.
-4. Evaluate each captured snapshot with the same explicit `EvaluationContext`.
-   Serialize this immutable result, not resolver-time clock reads. Capture the
-   pack-definition catalog used for projection with the view too. The detached
-   objects cannot observe later hub, registry or caller mutation.
+4. Evaluate each captured snapshot with an explicit `EvaluationContext`: one
+   shared wall `TimePoint`, and the sampled monotonic coordinate for that
+   snapshot's clock epoch. Snapshots in the same epoch use the same coordinate;
+   distinct epochs require coordinates in their own domains, not one identical
+   context across unrelated epochs. Serialize this immutable result, not
+   resolver-time clock reads. Capture the pack-definition catalog used for
+   projection with the view too. The detached objects cannot observe later hub,
+   registry or caller mutation.
 5. Return one entry for every selected asset, including an unknown or
    unavailable asset. An unavailable sibling does not erase a readable
    last-known-good asset. No on-demand native probe repairs a missing asset.
@@ -98,6 +103,78 @@ publication changes nothing. Reading must preserve that state, alternatives,
 conflicts, generation fences and source-retirement tombstones. Historical
 retained observations remain separate from current facts and never become
 selection input, capability admission, route authority or operation evidence.
+
+### Exact evaluation and the current approximation
+
+The exact route's oracle is
+[`EvaluateSnapshot(snapshot, supplied EvaluationContext)`](https://github.com/Project-Helianthus/helianthus-semreg/blob/main/semreg/v1/evaluation_selection.go).
+For each asset, preserve the complete result, including freshness thresholds,
+effective availability, retained observations, owner reasons and evaluation
+digest. Context validation and ordering remain SemReg's rules. In particular,
+the supplied coordinate must belong to the snapshot's evaluation epoch; this
+does not require every current or retained candidate to share that epoch.
+SemReg's existing cross-epoch candidate evaluation, including its wall-clock
+uncertainty policy and retained-candidate expiry filtering, remains the oracle.
+Do not replace that policy with a blanket rejection of older-epoch candidates.
+Original quality reasons remain unchanged; evaluation does not invent native
+reasons or upgrade qualification.
+
+**Proven implementation boundary:** the current gateway
+[`Capture` / `recordedEvaluationContext`](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/internal/semhub/coherent_capture.go)
+samples one wall time under the hub read lock, then advances each snapshot's
+recorded monotonic tick by the elapsed serialized wall time. It does not retain
+the original Go monotonic receipt. A forward wall step therefore ages data;
+a wall point before the snapshot's recorded wall point is refused, as is tick
+overflow. The
+[default provider](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/cmd/gateway/semantic_snapshot_provider.go)
+still calls `Capture`. This is a coherent but approximate default, not a
+measured same-epoch monotonic evaluation. A serialized wall delta must never
+be presented as a measured tick.
+
+**Proposed exact route (AD04):** the bounded internal `CaptureExact` entry point
+samples its supplied evaluation inputs once under the hub read lock: one wall
+`TimePoint` and explicit monotonic coordinates for the required clock domains.
+It evaluates the detached snapshots directly with their supplied contexts.
+Missing, malformed or wrong-epoch coordinates must fail closed rather than
+fall back to recorded ticks plus wall elapsed time. Refusal must not mutate
+publication or retained state, bypass source/read/public admission gates, or
+turn an unavailable sibling into a successful empty publication.
+
+That internal entry point is proposed work, not present in the source described
+above. It does not provide actual producer clock ownership or switch default
+HTTP/GraphQL, MCP or metrics reads. Clock-owner composition and default-reader
+cutover remain unimplemented here. Recovery continuity, metrics adoption and
+live qualification also remain under
+[gateway #1334](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1334).
+Publishing this page claims neither exact default reads nor physical freshness
+qualification. Physical behavior remains **Unknown** without operator-held
+evidence; an assumed producer clock composition is a **Hypothesis**, not an
+implementation result. The documentation umbrella
+[#736](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/736)
+remains open.
+
+The following synthetic cases define direct-evaluator equivalence for the
+proposed exact route. Ticks and thresholds are nanoseconds in synthetic domains
+`epoch:a` and `epoch:b`, not physical capture times. Unless stated otherwise,
+use a valid snapshot in `epoch:a`, receipt and snapshot evaluation tick `100`,
+`fresh_for_ns = 10`, `retain_for_ns = 20`, and stored availability `available`.
+Compare each complete result, context and computed digest with a direct call
+to `EvaluateSnapshot` using those same inputs; wall changes can change the
+context and digest even when same-epoch freshness stays fixed.
+
+| Synthetic input variation | Required exact-route result |
+| --- | --- |
+| Tick fixed at `105`; wall moves forward or backward, including before the snapshot wall point | Same-epoch freshness stays `fresh` and availability `available`; no tick is inferred from wall elapsed time. SemReg's same-epoch ordering uses ticks. Cross-epoch candidates still follow its own policy. |
+| Tick advances through `109`, `110`, `119`, `120` with wall fixed | Respectively `fresh`, `stale`, `stale`, `expired`; availability is respectively `available`, `degraded`, `degraded`, `unavailable`. A same-epoch retained observation is omitted from the evaluation at expiry, without deleting its stored evidence. |
+| Required coordinate absent; malformed tick; coordinate labeled `epoch:b` for an `epoch:a` snapshot | Refuse each case; no guessed tick or silent approximate fallback. A well-formed wrong epoch is an exact-route input failure, not a new restriction on SemReg's cross-epoch candidate policy. |
+| Same-epoch coordinate below snapshot or receipt tick | Refuse according to SemReg's monotonic ordering checks; preserve stored state. |
+| Two assets both in `epoch:a`, with different recorded ticks | Use the single sampled `epoch:a` coordinate and shared wall point for both; compare each to its own direct evaluation. Do not advance each recorded tick independently by wall delta. |
+| Two assets in `epoch:a` and `epoch:b` | Share the wall point, supply a coordinate in each epoch and compare each to its own direct evaluation. The coordinates need not have equal numeric ticks; missing either required domain is refused. |
+| Current and retained candidates span epochs within one snapshot | Compare to the same direct evaluator, preserving its cross-epoch freshness, uncertainty, reasons, effective availability and retained filtering; do not remap candidate epochs. |
+
+These evaluation requirements leave selection, errors, envelope compatibility,
+GraphQL parity, size bounds and revision binding unchanged. They neither
+publish new evidence nor change partial last-known-good retention or admission.
 
 ## Shared view records
 

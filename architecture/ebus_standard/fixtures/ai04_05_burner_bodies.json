@@ -1,0 +1,261 @@
+{
+  "synthetic": true,
+  "family": "Vaillant",
+  "fields": [
+    {
+      "logical": 2,
+      "name": "heat_state",
+      "carrier": "u8",
+      "minimum": 0,
+      "maximum": 255,
+      "default": 0,
+      "unit": null,
+      "scale": 1,
+      "offset": 0,
+      "grade": "Hypothesis"
+    },
+    {
+      "logical": 3,
+      "name": "boiler_target",
+      "carrier": "u8",
+      "minimum": 0,
+      "maximum": 90,
+      "default": 0,
+      "unit": "degC",
+      "scale": 1,
+      "offset": 0,
+      "grade": "Hypothesis"
+    },
+    {
+      "logical": 4,
+      "name": "dhw_target",
+      "carrier": "u8",
+      "minimum": 0,
+      "maximum": 90,
+      "default": 0,
+      "unit": "degC",
+      "scale": 1,
+      "offset": 0,
+      "grade": "Hypothesis"
+    },
+    {
+      "logical": 5,
+      "name": "outside_temp",
+      "carrier": "signed8",
+      "minimum": -128,
+      "maximum": 127,
+      "default": 0,
+      "unit": "degC",
+      "scale": 1,
+      "offset": 0,
+      "grade": "Hypothesis"
+    },
+    {
+      "logical": 6,
+      "name": "setting_degree",
+      "carrier": "u8",
+      "minimum": 0,
+      "maximum": 255,
+      "default": 0,
+      "unit": "%",
+      "scale": 1,
+      "offset": 0,
+      "grade": "Hypothesis"
+    }
+  ],
+  "forms": [
+    {
+      "form": "request",
+      "pb": 5,
+      "sb": 1,
+      "logical_fields": [
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "grade": "Hypothesis",
+      "interpretation": "five independent bytes"
+    },
+    {
+      "form": "positive",
+      "pb": 5,
+      "sb": 1,
+      "logical_fields": [],
+      "grade": "Hypothesis",
+      "interpretation": "two constants only"
+    },
+    {
+      "form": "standard_response",
+      "pb": 5,
+      "sb": 4,
+      "logical_fields": null,
+      "grade": "Proven",
+      "interpretation": "standard three-field response; no candidate alias"
+    }
+  ],
+  "heat_labels": {
+    "00": "shutdown",
+    "55": "DHW",
+    "AA": "heating",
+    "CC": "emission check",
+    "EE": "controller stop"
+  },
+  "separate_check": {
+    "raw": "DD",
+    "label": "unresolved separate check",
+    "grade": "Unknown",
+    "enabled": false
+  },
+  "positive": {
+    "constants": [
+      5,
+      1
+    ],
+    "feedback_fields": [],
+    "physical_body": "Unknown",
+    "acknowledgement": "Unknown",
+    "echo": "Unknown"
+  },
+  "cases": [
+    {
+      "case": "heating",
+      "pb": 5,
+      "sb": 1,
+      "raw": [
+        "AA",
+        "5A",
+        "00",
+        "FF",
+        "FF"
+      ],
+      "values": [
+        170,
+        90,
+        0,
+        -1,
+        255
+      ],
+      "local_valid": true,
+      "grade": "Hypothesis"
+    },
+    {
+      "case": "boiler_91",
+      "pb": 5,
+      "sb": 1,
+      "raw": [
+        "AA",
+        "5B",
+        "00",
+        "FF",
+        "FF"
+      ],
+      "values": [
+        170,
+        91,
+        0,
+        -1,
+        255
+      ],
+      "local_valid": false,
+      "grade": "Hypothesis"
+    },
+    {
+      "case": "dhw_91",
+      "pb": 5,
+      "sb": 1,
+      "raw": [
+        "AA",
+        "00",
+        "5B",
+        "FF",
+        "FF"
+      ],
+      "values": [
+        170,
+        0,
+        91,
+        -1,
+        255
+      ],
+      "local_valid": false,
+      "grade": "Hypothesis"
+    },
+    {
+      "case": "outside_3f",
+      "pb": 5,
+      "sb": 1,
+      "raw": [
+        "AA",
+        "00",
+        "00",
+        "3F",
+        "FF"
+      ],
+      "values": [
+        170,
+        0,
+        0,
+        63,
+        255
+      ],
+      "local_valid": true,
+      "grade": "Hypothesis"
+    },
+    {
+      "case": "outside_min",
+      "pb": 5,
+      "sb": 1,
+      "raw": [
+        "00",
+        "00",
+        "00",
+        "80",
+        "00"
+      ],
+      "values": [
+        0,
+        0,
+        0,
+        -128,
+        0
+      ],
+      "local_valid": true,
+      "grade": "Hypothesis"
+    },
+    {
+      "case": "outside_max",
+      "pb": 5,
+      "sb": 1,
+      "raw": [
+        "EE",
+        "5A",
+        "5A",
+        "7F",
+        "FF"
+      ],
+      "values": [
+        238,
+        90,
+        90,
+        127,
+        255
+      ],
+      "local_valid": true,
+      "grade": "Hypothesis"
+    }
+  ],
+  "unknown": [
+    "physical_positive_body",
+    "acknowledgement",
+    "outside_3F_replacement",
+    "control_permission",
+    "scheduling",
+    "other_05_candidate_bodies",
+    "physical_qualification",
+    "freshness",
+    "persistence",
+    "execution_permission"
+  ]
+}

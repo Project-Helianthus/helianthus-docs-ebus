@@ -1,0 +1,1217 @@
+{
+  "kind": "synthetic_metadata_contract",
+  "contract_grade": "Proven",
+  "rows": [
+    {
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "read",
+        "selector": "1800"
+      },
+      "quantity": "flow_temperature",
+      "codec": {
+        "label": "DATA2c"
+      },
+      "grade": "Hypothesis",
+      "conflicts": [],
+      "native": {
+        "support": "Unknown",
+        "presence": "Unknown",
+        "freshness": "Unknown",
+        "execution": "Unknown",
+        "effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      }
+    },
+    {
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "read",
+        "selector": "4400"
+      },
+      "quantity": "central_heating_pump_active",
+      "codec": {
+        "label": "on/off"
+      },
+      "grade": "Hypothesis",
+      "conflicts": [],
+      "native": {
+        "support": "Unknown",
+        "presence": "Unknown",
+        "freshness": "Unknown",
+        "execution": "Unknown",
+        "effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      }
+    },
+    {
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "read",
+        "selector": "0200"
+      },
+      "quantity": "water_pressure",
+      "codec": {
+        "label": "DATA2b"
+      },
+      "grade": "Hypothesis",
+      "conflicts": [],
+      "native": {
+        "support": "Unknown",
+        "presence": "Unknown",
+        "freshness": "Unknown",
+        "execution": "Unknown",
+        "effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      }
+    },
+    {
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "read",
+        "selector": "0500"
+      },
+      "quantity": "flame_active",
+      "codec": {
+        "label": "UCH (0x0F=on, 0xF0=off)"
+      },
+      "grade": "Hypothesis",
+      "conflicts": [],
+      "native": {
+        "support": "Unknown",
+        "presence": "Unknown",
+        "freshness": "Unknown",
+        "execution": "Unknown",
+        "effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      }
+    },
+    {
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "read",
+        "selector": "BB00"
+      },
+      "quantity": "gas_valve_active",
+      "codec": {
+        "label": "UCH (0x0F=on, 0xF0=off)"
+      },
+      "grade": "Hypothesis",
+      "conflicts": [],
+      "native": {
+        "support": "Unknown",
+        "presence": "Unknown",
+        "freshness": "Unknown",
+        "execution": "Unknown",
+        "effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      }
+    },
+    {
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "read",
+        "selector": "8300"
+      },
+      "quantity": "fan_speed",
+      "codec": {
+        "label": "UIN"
+      },
+      "grade": "Hypothesis",
+      "conflicts": [],
+      "native": {
+        "support": "Unknown",
+        "presence": "Unknown",
+        "freshness": "Unknown",
+        "execution": "Unknown",
+        "effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      }
+    },
+    {
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "read",
+        "selector": "2E00"
+      },
+      "quantity": "modulation_setpoint",
+      "codec": {
+        "label": "SIN / 10"
+      },
+      "grade": "Hypothesis",
+      "conflicts": [
+        "setpoint versus achieved modulation unresolved"
+      ],
+      "native": {
+        "support": "Unknown",
+        "presence": "Unknown",
+        "freshness": "Unknown",
+        "execution": "Unknown",
+        "effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      }
+    },
+    {
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "read",
+        "selector": "AB00"
+      },
+      "quantity": "boiler_state_code",
+      "codec": {
+        "label": "UCH"
+      },
+      "grade": "Hypothesis",
+      "conflicts": [],
+      "native": {
+        "support": "Unknown",
+        "presence": "Unknown",
+        "freshness": "Unknown",
+        "execution": "Unknown",
+        "effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      }
+    },
+    {
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "read",
+        "selector": "5400"
+      },
+      "quantity": "diverter_valve_position",
+      "codec": {
+        "label": "UCH"
+      },
+      "grade": "Hypothesis",
+      "conflicts": [
+        "position enum versus percent unresolved"
+      ],
+      "native": {
+        "support": "Unknown",
+        "presence": "Unknown",
+        "freshness": "Unknown",
+        "execution": "Unknown",
+        "effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      }
+    },
+    {
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "read",
+        "selector": "5800"
+      },
+      "quantity": "dhw_demand_active",
+      "codec": {
+        "label": "on/off"
+      },
+      "grade": "Hypothesis",
+      "conflicts": [],
+      "native": {
+        "support": "Unknown",
+        "presence": "Unknown",
+        "freshness": "Unknown",
+        "execution": "Unknown",
+        "effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      }
+    },
+    {
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "read",
+        "selector": "5500"
+      },
+      "quantity": "dhw_water_flow_rate",
+      "codec": {
+        "label": "UIN / 100"
+      },
+      "grade": "Hypothesis",
+      "conflicts": [],
+      "native": {
+        "support": "Unknown",
+        "presence": "Unknown",
+        "freshness": "Unknown",
+        "execution": "Unknown",
+        "effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      }
+    },
+    {
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "read",
+        "selector": "0E04"
+      },
+      "quantity": "maximum_heating_flow_temperature_setpoint",
+      "codec": {
+        "label": "DATA2c"
+      },
+      "grade": "Hypothesis",
+      "conflicts": [
+        "separate selector; family applicability Unknown"
+      ],
+      "native": {
+        "support": "Unknown",
+        "presence": "Unknown",
+        "freshness": "Unknown",
+        "execution": "Unknown",
+        "effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      }
+    },
+    {
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "read",
+        "selector": "A500"
+      },
+      "quantity": "maximum_heating_flow_temperature_setpoint",
+      "codec": {
+        "label": "DATA2c"
+      },
+      "grade": "Hypothesis",
+      "conflicts": [
+        "separate selector; family applicability Unknown"
+      ],
+      "native": {
+        "support": "Unknown",
+        "presence": "Unknown",
+        "freshness": "Unknown",
+        "execution": "Unknown",
+        "effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      }
+    },
+    {
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "read",
+        "selector": "0F04"
+      },
+      "quantity": "maximum_dhw_flow_temperature_setpoint",
+      "codec": {
+        "label": "DATA2c"
+      },
+      "grade": "Hypothesis",
+      "conflicts": [],
+      "native": {
+        "support": "Unknown",
+        "presence": "Unknown",
+        "freshness": "Unknown",
+        "execution": "Unknown",
+        "effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      }
+    },
+    {
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "read",
+        "selector": "0704"
+      },
+      "quantity": "heating_partial_load_power",
+      "codec": {
+        "label": "UCH"
+      },
+      "grade": "Hypothesis",
+      "conflicts": [
+        "unit Unknown"
+      ],
+      "native": {
+        "support": "Unknown",
+        "presence": "Unknown",
+        "freshness": "Unknown",
+        "execution": "Unknown",
+        "effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      }
+    },
+    {
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "read",
+        "selector": "0804"
+      },
+      "quantity": "dhw_partial_load_power",
+      "codec": {
+        "label": "UCH"
+      },
+      "grade": "Hypothesis",
+      "conflicts": [
+        "unit Unknown"
+      ],
+      "native": {
+        "support": "Unknown",
+        "presence": "Unknown",
+        "freshness": "Unknown",
+        "execution": "Unknown",
+        "effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      }
+    },
+    {
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "read",
+        "selector": "9E00"
+      },
+      "quantity": "storage_loading_pump_level",
+      "codec": {
+        "label": "percent0"
+      },
+      "grade": "Hypothesis",
+      "conflicts": [],
+      "native": {
+        "support": "Unknown",
+        "presence": "Unknown",
+        "freshness": "Unknown",
+        "execution": "Unknown",
+        "effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      }
+    },
+    {
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "read",
+        "selector": "3900"
+      },
+      "quantity": "flow_temperature_setpoint",
+      "codec": {
+        "label": "DATA2c"
+      },
+      "grade": "Hypothesis",
+      "conflicts": [],
+      "native": {
+        "support": "Unknown",
+        "presence": "Unknown",
+        "freshness": "Unknown",
+        "execution": "Unknown",
+        "effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      }
+    },
+    {
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "read",
+        "selector": "EA03"
+      },
+      "quantity": "dhw_temperature_setpoint",
+      "codec": {
+        "label": "DATA2c"
+      },
+      "grade": "Hypothesis",
+      "conflicts": [],
+      "native": {
+        "support": "Unknown",
+        "presence": "Unknown",
+        "freshness": "Unknown",
+        "execution": "Unknown",
+        "effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      }
+    },
+    {
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "read",
+        "selector": "7B00"
+      },
+      "quantity": "circulation_pump_active",
+      "codec": {
+        "label": "on/off"
+      },
+      "grade": "Hypothesis",
+      "conflicts": [],
+      "native": {
+        "support": "Unknown",
+        "presence": "Unknown",
+        "freshness": "Unknown",
+        "execution": "Unknown",
+        "effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      }
+    },
+    {
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "read",
+        "selector": "3F00"
+      },
+      "quantity": "external_pump_active",
+      "codec": {
+        "label": "on/off"
+      },
+      "grade": "Hypothesis",
+      "conflicts": [],
+      "native": {
+        "support": "Unknown",
+        "presence": "Unknown",
+        "freshness": "Unknown",
+        "execution": "Unknown",
+        "effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      }
+    },
+    {
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "read",
+        "selector": "F203"
+      },
+      "quantity": "heating_switch_active",
+      "codec": {
+        "label": "on/off"
+      },
+      "grade": "Hypothesis",
+      "conflicts": [],
+      "native": {
+        "support": "Unknown",
+        "presence": "Unknown",
+        "freshness": "Unknown",
+        "execution": "Unknown",
+        "effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      }
+    },
+    {
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "read",
+        "selector": "2400"
+      },
+      "quantity": "fan_speed_setpoint",
+      "codec": {
+        "label": "UIN"
+      },
+      "grade": "Hypothesis",
+      "conflicts": [],
+      "native": {
+        "support": "Unknown",
+        "presence": "Unknown",
+        "freshness": "Unknown",
+        "execution": "Unknown",
+        "effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      }
+    },
+    {
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "read",
+        "selector": "A400"
+      },
+      "quantity": "flame_ionization_current",
+      "codec": {
+        "label": "SIN / 10"
+      },
+      "grade": "Hypothesis",
+      "conflicts": [
+        "current versus voltage unresolved"
+      ],
+      "native": {
+        "support": "Unknown",
+        "presence": "Unknown",
+        "freshness": "Unknown",
+        "execution": "Unknown",
+        "effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      }
+    },
+    {
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "read",
+        "selector": "FB00"
+      },
+      "quantity": "primary_circuit_flow_rate",
+      "codec": {
+        "label": "UIN / 100"
+      },
+      "grade": "Hypothesis",
+      "conflicts": [
+        "litres/minute versus litres/hour unresolved"
+      ],
+      "native": {
+        "support": "Unknown",
+        "presence": "Unknown",
+        "freshness": "Unknown",
+        "execution": "Unknown",
+        "effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      }
+    }
+  ],
+  "cases": [
+    {
+      "name": "valid",
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "read",
+        "selector": "1800"
+      },
+      "raw": {
+        "value": [
+          0,
+          16
+        ]
+      },
+      "expected_selector": "1800"
+    },
+    {
+      "name": "equal-name-first",
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "read",
+        "selector": "0E04"
+      },
+      "raw": {},
+      "expected_selector": "0E04"
+    },
+    {
+      "name": "equal-name-second",
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "read",
+        "selector": "A500"
+      },
+      "raw": {},
+      "expected_selector": "A500"
+    },
+    {
+      "name": "family-heat_pump",
+      "key": {
+        "family": "heat_pump",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "read",
+        "selector": "1800"
+      },
+      "raw": {
+        "value": [
+          0
+        ],
+        "extra": [
+          255
+        ]
+      },
+      "expected_selector": null
+    },
+    {
+      "name": "family-heat_pump_interface_unit",
+      "key": {
+        "family": "heat_pump_interface_unit",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "read",
+        "selector": "1800"
+      },
+      "raw": {
+        "value": [
+          0
+        ],
+        "extra": [
+          255
+        ]
+      },
+      "expected_selector": null
+    },
+    {
+      "name": "variant-other_candidate",
+      "key": {
+        "family": "boiler",
+        "variant": "other_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "read",
+        "selector": "1800"
+      },
+      "raw": {
+        "value": [
+          0
+        ],
+        "extra": [
+          255
+        ]
+      },
+      "expected_selector": null
+    },
+    {
+      "name": "primary-180",
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 180,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "read",
+        "selector": "1800"
+      },
+      "raw": {
+        "value": [
+          0
+        ],
+        "extra": [
+          255
+        ]
+      },
+      "expected_selector": null
+    },
+    {
+      "name": "secondary-8",
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 8,
+        "operation": 13,
+        "direction": "read",
+        "selector": "1800"
+      },
+      "raw": {
+        "value": [
+          0
+        ],
+        "extra": [
+          255
+        ]
+      },
+      "expected_selector": null
+    },
+    {
+      "name": "operation-14",
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 14,
+        "direction": "read",
+        "selector": "1800"
+      },
+      "raw": {
+        "value": [
+          0
+        ],
+        "extra": [
+          255
+        ]
+      },
+      "expected_selector": null
+    },
+    {
+      "name": "operation-41",
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 41,
+        "direction": "read",
+        "selector": "1800"
+      },
+      "raw": {
+        "value": [
+          0
+        ],
+        "extra": [
+          255
+        ]
+      },
+      "expected_selector": null
+    },
+    {
+      "name": "direction-request",
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "1800"
+      },
+      "raw": {
+        "value": [
+          0
+        ],
+        "extra": [
+          255
+        ]
+      },
+      "expected_selector": null
+    },
+    {
+      "name": "direction-positive",
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "positive",
+        "selector": "1800"
+      },
+      "raw": {
+        "value": [
+          0
+        ],
+        "extra": [
+          255
+        ]
+      },
+      "expected_selector": null
+    },
+    {
+      "name": "selector-0018",
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "read",
+        "selector": "0018"
+      },
+      "raw": {
+        "value": [
+          0
+        ],
+        "extra": [
+          255
+        ]
+      },
+      "expected_selector": null
+    },
+    {
+      "name": "selector-FFFF",
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "read",
+        "selector": "FFFF"
+      },
+      "raw": {
+        "value": [
+          0
+        ],
+        "extra": [
+          255
+        ]
+      },
+      "expected_selector": null
+    },
+    {
+      "name": "absent-family",
+      "key": {
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "read",
+        "selector": "1800"
+      },
+      "raw": {
+        "value": [],
+        "status": [
+          0
+        ]
+      },
+      "expected_selector": null
+    },
+    {
+      "name": "absent-variant",
+      "key": {
+        "family": "boiler",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "read",
+        "selector": "1800"
+      },
+      "raw": {
+        "value": [],
+        "status": [
+          0
+        ]
+      },
+      "expected_selector": null
+    },
+    {
+      "name": "absent-primary",
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "secondary": 9,
+        "operation": 13,
+        "direction": "read",
+        "selector": "1800"
+      },
+      "raw": {
+        "value": [],
+        "status": [
+          0
+        ]
+      },
+      "expected_selector": null
+    },
+    {
+      "name": "absent-secondary",
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "operation": 13,
+        "direction": "read",
+        "selector": "1800"
+      },
+      "raw": {
+        "value": [],
+        "status": [
+          0
+        ]
+      },
+      "expected_selector": null
+    },
+    {
+      "name": "absent-operation",
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "direction": "read",
+        "selector": "1800"
+      },
+      "raw": {
+        "value": [],
+        "status": [
+          0
+        ]
+      },
+      "expected_selector": null
+    },
+    {
+      "name": "absent-direction",
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "selector": "1800"
+      },
+      "raw": {
+        "value": [],
+        "status": [
+          0
+        ]
+      },
+      "expected_selector": null
+    },
+    {
+      "name": "absent-selector",
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "read"
+      },
+      "raw": {
+        "value": [],
+        "status": [
+          0
+        ]
+      },
+      "expected_selector": null
+    },
+    {
+      "name": "zero-primary",
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 0,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "read",
+        "selector": "1800"
+      },
+      "raw": {
+        "value": [
+          0
+        ]
+      },
+      "expected_selector": null
+    },
+    {
+      "name": "zero-secondary",
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 0,
+        "operation": 13,
+        "direction": "read",
+        "selector": "1800"
+      },
+      "raw": {
+        "value": [
+          0
+        ]
+      },
+      "expected_selector": null
+    },
+    {
+      "name": "zero-operation",
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 0,
+        "direction": "read",
+        "selector": "1800"
+      },
+      "raw": {
+        "value": [
+          0
+        ]
+      },
+      "expected_selector": null
+    },
+    {
+      "name": "absent-raw-field",
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "read",
+        "selector": "1800"
+      },
+      "raw": {},
+      "expected_selector": "1800"
+    },
+    {
+      "name": "zero-raw-field",
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "read",
+        "selector": "1800"
+      },
+      "raw": {
+        "value": [
+          0
+        ]
+      },
+      "expected_selector": "1800"
+    },
+    {
+      "name": "partial-raw",
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "read",
+        "selector": "2E00"
+      },
+      "raw": {
+        "value": [],
+        "status": [
+          0
+        ],
+        "unknown": [
+          18,
+          52
+        ]
+      },
+      "expected_selector": "2E00",
+      "last_known_good": {
+        "other": [
+          15
+        ]
+      }
+    },
+    {
+      "name": "extra-raw",
+      "key": {
+        "family": "boiler",
+        "variant": "direct_symbolic_candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "read",
+        "selector": "5400"
+      },
+      "raw": {
+        "value": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "extra": [
+          0
+        ]
+      },
+      "expected_selector": "5400"
+    }
+  ]
+}

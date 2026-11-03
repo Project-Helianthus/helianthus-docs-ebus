@@ -1,0 +1,44 @@
+{
+  "schema": "am08-b524-zone-scalars-v1",
+  "provenance": "synthetic; finite candidate bindings and software-contract controls only; no device observation",
+  "grade": "Hypothesis",
+  "qualification": "Unknown",
+  "unresolved": {
+    "physical_support": "Unknown",
+    "presence": "Unknown",
+    "freshness": "Unknown",
+    "writability": "Unknown",
+    "persistence": "Unknown",
+    "execution": "Unknown"
+  },
+  "selector": {"opcode": "02", "group": "03", "instance_rule": "dynamic"},
+  "bindings": [
+    {"family": "controller-720", "codec": "float32-le", "unit": "°C",
+     "registers": ["0002", "0005", "0009", "000F", "0014", "0015", "0023"]},
+    {"family": "controller-720", "codec": "float32-le", "unit": "%",
+     "registers": ["0028"]},
+    {"family": "controller-700", "codec": "float32-le", "unit": "°C",
+     "registers": ["0002", "0005", "0009", "000F", "0014", "0015"]},
+    {"family": "controller-700", "codec": "float32-le", "unit": "%",
+     "registers": ["0028"]}
+  ],
+  "context_control": {
+    "software": "sw-synthetic-a",
+    "hardware": "hw-synthetic-a",
+    "api_version": 1,
+    "api_revision": 0,
+    "opcode": "02",
+    "group": "03",
+    "instance": "01"
+  },
+  "float_controls": [
+    {"value_hex": "0000C03F", "expected": 1.5},
+    {"value_hex": "000080BF", "expected": -1}
+  ],
+  "uint16_controls": [
+    {"value_hex": "3412", "expected": 4660},
+    {"value_hex": "FFFF", "expected": 65535}
+  ],
+  "non_finite_float_hex_be": ["7F800000", "FF800000", "7FC00000"],
+  "non_echo_reply_kinds": ["status_only", "short", "failed", "mismatched", "unknown_kind"]
+}
