@@ -1,0 +1,461 @@
+{
+  "synthetic_only": true,
+  "coordinates": [
+    "B5",
+    "1B",
+    "operation"
+  ],
+  "grades": {
+    "representation": "Proven",
+    "candidate": "Hypothesis",
+    "physical": "Unknown"
+  },
+  "rows": [
+    [
+      "Vaillant",
+      "Unknown",
+      "request",
+      "B51B",
+      "06",
+      "request",
+      "none",
+      "3",
+      "Hypothesis"
+    ],
+    [
+      "Vaillant",
+      "Unknown",
+      "response",
+      "B51B",
+      "06",
+      "positive",
+      "raw-a@3, raw-b@4, raw-c@5",
+      "6",
+      "Hypothesis"
+    ],
+    [
+      "Vaillant",
+      "Unknown",
+      "response",
+      "B51B",
+      "06",
+      "negative",
+      "Unknown",
+      "Unknown",
+      "Hypothesis"
+    ],
+    [
+      "Vaillant",
+      "Unknown",
+      "request",
+      "B51B",
+      "07",
+      "request",
+      "none",
+      "3",
+      "Hypothesis"
+    ],
+    [
+      "Vaillant",
+      "Unknown",
+      "response",
+      "B51B",
+      "07",
+      "positive",
+      "generic-feedback@3",
+      "4",
+      "Hypothesis"
+    ],
+    [
+      "Vaillant",
+      "Unknown",
+      "response",
+      "B51B",
+      "07",
+      "negative",
+      "Unknown",
+      "Unknown",
+      "Hypothesis"
+    ],
+    [
+      "Vaillant",
+      "Unknown",
+      "request",
+      "B51B",
+      "08",
+      "request",
+      "block@3, segment@7",
+      "11",
+      "Hypothesis"
+    ],
+    [
+      "Vaillant",
+      "Unknown",
+      "response",
+      "B51B",
+      "08",
+      "positive",
+      "block-feedback@3",
+      "4",
+      "Hypothesis"
+    ],
+    [
+      "Vaillant",
+      "Unknown",
+      "response",
+      "B51B",
+      "08",
+      "negative",
+      "Unknown",
+      "Unknown",
+      "Hypothesis"
+    ],
+    [
+      "Vaillant",
+      "Unknown",
+      "request",
+      "B51B",
+      "09",
+      "request",
+      "offset@3, data@5",
+      "5+k",
+      "Hypothesis"
+    ],
+    [
+      "Vaillant",
+      "Unknown",
+      "response",
+      "B51B",
+      "09",
+      "positive",
+      "generic-feedback@3",
+      "4",
+      "Hypothesis"
+    ],
+    [
+      "Vaillant",
+      "Unknown",
+      "response",
+      "B51B",
+      "09",
+      "negative",
+      "Unknown",
+      "Unknown",
+      "Hypothesis"
+    ],
+    [
+      "Vaillant",
+      "Unknown",
+      "request",
+      "B51B",
+      "0A",
+      "request",
+      "none",
+      "3",
+      "Hypothesis"
+    ],
+    [
+      "Vaillant",
+      "Unknown",
+      "response",
+      "B51B",
+      "0A",
+      "positive",
+      "generic-feedback@3",
+      "4",
+      "Hypothesis"
+    ],
+    [
+      "Vaillant",
+      "Unknown",
+      "response",
+      "B51B",
+      "0A",
+      "negative",
+      "Unknown",
+      "Unknown",
+      "Hypothesis"
+    ],
+    [
+      "Vaillant",
+      "Unknown",
+      "request",
+      "B51B",
+      "0B",
+      "request",
+      "none",
+      "3",
+      "Hypothesis"
+    ],
+    [
+      "Vaillant",
+      "Unknown",
+      "response",
+      "B51B",
+      "0B",
+      "positive",
+      "CRC@3",
+      "5",
+      "Hypothesis"
+    ],
+    [
+      "Vaillant",
+      "Unknown",
+      "response",
+      "B51B",
+      "0B",
+      "negative",
+      "Unknown",
+      "Unknown",
+      "Hypothesis"
+    ],
+    [
+      "Vaillant",
+      "Unknown",
+      "request",
+      "B51B",
+      "0C",
+      "request",
+      "none",
+      "3",
+      "Hypothesis"
+    ],
+    [
+      "Vaillant",
+      "Unknown",
+      "response",
+      "B51B",
+      "0C",
+      "positive",
+      "state@3",
+      "4",
+      "Hypothesis"
+    ],
+    [
+      "Vaillant",
+      "Unknown",
+      "response",
+      "B51B",
+      "0C",
+      "negative",
+      "Unknown",
+      "Unknown",
+      "Hypothesis"
+    ],
+    [
+      "Vaillant",
+      "Unknown",
+      "request",
+      "B51B",
+      "0D",
+      "request",
+      "timeout@3",
+      "4",
+      "Hypothesis"
+    ],
+    [
+      "Vaillant",
+      "Unknown",
+      "response",
+      "B51B",
+      "0D",
+      "positive",
+      "generic-feedback@3",
+      "4",
+      "Hypothesis"
+    ],
+    [
+      "Vaillant",
+      "Unknown",
+      "response",
+      "B51B",
+      "0D",
+      "negative",
+      "Unknown",
+      "Unknown",
+      "Hypothesis"
+    ],
+    [
+      "Vaillant",
+      "Unknown",
+      "request",
+      "B51B",
+      "0E",
+      "request",
+      "direction@3",
+      "4",
+      "Hypothesis"
+    ],
+    [
+      "Vaillant",
+      "Unknown",
+      "response",
+      "B51B",
+      "0E",
+      "positive",
+      "generic-feedback@3",
+      "4",
+      "Hypothesis"
+    ],
+    [
+      "Vaillant",
+      "Unknown",
+      "response",
+      "B51B",
+      "0E",
+      "negative",
+      "Unknown",
+      "Unknown",
+      "Hypothesis"
+    ]
+  ],
+  "fields": [
+    [
+      "raw-a, raw-b, raw-c",
+      "raw u8 independent",
+      "0..255",
+      "0 each",
+      "unchanged",
+      "1 each",
+      "none"
+    ],
+    [
+      "block, segment",
+      "LE u32 independent",
+      "0..4294967295",
+      "0 each",
+      "unchanged",
+      "4 each",
+      "none"
+    ],
+    [
+      "offset",
+      "LE u16",
+      "0..65535",
+      "Unknown",
+      "unchanged",
+      "2",
+      "none"
+    ],
+    [
+      "data",
+      "opaque bytes",
+      "minimum 0; maximum absent",
+      "Unknown",
+      "unchanged",
+      "k; maximum absent",
+      "none"
+    ],
+    [
+      "CRC",
+      "LE u16",
+      "0..65535",
+      "Unknown",
+      "unchanged",
+      "2",
+      "none"
+    ],
+    [
+      "state",
+      "raw u8",
+      "0..255",
+      "Unknown",
+      "unchanged",
+      "1",
+      "0 hardware-init; 1 wait-programming-request; 2 check-application-CRC; 3 preparation; 4 active; 5 application-running; 6..FF unlabeled"
+    ],
+    [
+      "timeout",
+      "raw u8 minutes",
+      "0..255",
+      "15",
+      "unchanged",
+      "1",
+      "zero has no special meaning"
+    ],
+    [
+      "direction",
+      "raw u8",
+      "0..255",
+      "F0 application",
+      "unchanged",
+      "1",
+      "0F boot-loader; F0 application; others unlabeled"
+    ]
+  ],
+  "feedback": [
+    [
+      "generic-feedback",
+      "01 accepted; 00 and 02..FF rejected"
+    ],
+    [
+      "block-feedback",
+      "00 rejected; 33 block-unavailable; 55 accepted; AA protected; others unlabeled"
+    ]
+  ],
+  "unknowns": {
+    "full forwarding variants": "Unknown",
+    "segmentation variants": "Unknown",
+    "local CRC variants": "Unknown",
+    "physical addresses": "Unknown",
+    "response adaptation": "Unknown",
+    "geometry": "Unknown",
+    "peer algorithm": "Unknown",
+    "CRC coverage": "Unknown",
+    "persistence": "Unknown",
+    "native adaptation": "Unknown",
+    "peer effects": "Unknown",
+    "physical qualification": "Unknown",
+    "negative response layouts": "Unknown",
+    "variant": "Unknown"
+  },
+  "examples": {
+    "block": 16909060,
+    "segment": 84281096,
+    "op08": [
+      181,
+      27,
+      8,
+      4,
+      3,
+      2,
+      1,
+      8,
+      7,
+      6,
+      5
+    ],
+    "offset": 4660,
+    "data": [
+      0,
+      255
+    ],
+    "op09": [
+      181,
+      27,
+      9,
+      52,
+      18,
+      0,
+      255
+    ],
+    "timeout": {
+      "raw": 15,
+      "minutes": 15
+    },
+    "crc": {
+      "raw": [
+        52,
+        18
+      ],
+      "number": 4660,
+      "algorithm": "Unknown"
+    },
+    "state6": "unlabeled",
+    "op08_55": "accepted",
+    "generic_55": "rejected",
+    "op08_AA": "protected",
+    "generic_AA": "rejected",
+    "empty_data": []
+  }
+}

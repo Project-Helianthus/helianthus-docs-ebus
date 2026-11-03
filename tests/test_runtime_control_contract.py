@@ -1,12 +1,15 @@
 import copy
 from collections import OrderedDict
+import dataclasses
 import functools
 import json
 from pathlib import Path
+import pickle
 import re
 import subprocess
 import sys
 
+from markdown_it.token import Token
 import pytest
 
 from scripts import check_runtime_control_contract as checker
@@ -29,9 +32,21 @@ O02_MARKDOWN_IT = checker.MarkdownIt
 
 
 def O02_cached_parser(O02_parse=None):
-    """Cache stock MarkdownIt configurations used by this module only."""
+    """Cache stock MarkdownIt configurations used by this module only.
+
+    Every hit hands out the cached token stream itself, not a copy. Each entry
+    keeps a pickle of the stream taken when it was parsed; O02_verify() compares
+    the stream with it when the entry is evicted and when the cache is retired,
+    so a consumer that changes any shared token, child, map, attribute or the
+    list itself fails the module instead of leaking into a later validation.
+    """
     O02_tokens = OrderedDict()
     O02_parse = O02_parse or O02_MARKDOWN_IT.parse
+
+    def O02_check(O02_key, O02_entry):
+        O02_stream, O02_pristine = O02_entry
+        if pickle.dumps(O02_stream, pickle.HIGHEST_PROTOCOL) != O02_pristine:
+            raise AssertionError(f"O02 cached tokens were mutated: {O02_key[0][:60]!r}")
 
     class O02MarkdownIt(O02_MARKDOWN_IT):
         def parse(self, src, env=None):
@@ -42,20 +57,29 @@ def O02_cached_parser(O02_parse=None):
                        tuple((O02_stage, tuple(O02_rules)) for O02_stage, O02_rules
                              in self.get_active_rules().items()))
             if O02_key not in O02_tokens:
-                O02_tokens[O02_key] = O02_parse(self, src)
+                O02_stream = O02_parse(self, src)
+                O02_tokens[O02_key] = (
+                    O02_stream, pickle.dumps(O02_stream, pickle.HIGHEST_PROTOCOL))
                 if len(O02_tokens) > 64:
-                    O02_tokens.popitem(last=False)
+                    O02_check(*O02_tokens.popitem(last=False))
             O02_tokens.move_to_end(O02_key)
-            return copy.deepcopy(O02_tokens[O02_key])
+            return O02_tokens[O02_key][0]
+
+        @staticmethod
+        def O02_verify():
+            for O02_entry in O02_tokens.items():
+                O02_check(*O02_entry)
 
     return O02MarkdownIt
 
 
 @pytest.fixture(scope="module", autouse=True)
 def O02_cache_rendered_sections():
+    O02_parser = O02_cached_parser()
     with pytest.MonkeyPatch.context() as O02_patch:
-        O02_patch.setattr(checker, "MarkdownIt", O02_cached_parser())
+        O02_patch.setattr(checker, "MarkdownIt", O02_parser)
         yield
+    O02_parser.O02_verify()
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -1380,18 +1404,54 @@ def test_O02_parser_key_fields(O02_field):
     assert O02_cached_original.parse(O02_text) == O02_original.parse(O02_text)
 
 
-def test_O02_parser_detaches_nested_tokens():
+# One in-place change per Token field (on a block token and on an inline
+# child), plus list-level changes of the stream and of a children list.
+O02_MUTATIONS = {
+    "type": lambda O02_t: setattr(O02_t[0], "type", "changed"),
+    "tag": lambda O02_t: setattr(O02_t[0], "tag", "div"),
+    "nesting": lambda O02_t: setattr(O02_t[0], "nesting", 0),
+    "attrs": lambda O02_t: O02_t[1].attrs.__setitem__("O02", "changed"),
+    "map": lambda O02_t: O02_t[0].map.__setitem__(0, 99),
+    "level": lambda O02_t: setattr(O02_t[0], "level", 7),
+    "children": lambda O02_t: O02_t[1].children.clear(),
+    "content": lambda O02_t: setattr(O02_t[1], "content", "changed"),
+    "markup": lambda O02_t: setattr(O02_t[1].children[1], "markup", "__"),
+    "info": lambda O02_t: setattr(O02_t[0], "info", "changed"),
+    "meta": lambda O02_t: O02_t[0].meta.__setitem__("O02", "changed"),
+    "block": lambda O02_t: setattr(O02_t[0], "block", False),
+    "hidden": lambda O02_t: setattr(O02_t[0], "hidden", True),
+    "child_content": lambda O02_t: setattr(O02_t[1].children[2], "content", "changed"),
+    "stream_pop": lambda O02_t: O02_t.pop(),
+    "stream_append": lambda O02_t: O02_t.append(O02_t[0]),
+}
+
+
+def test_O02_parser_mutations_cover_every_token_field():
+    assert ({O02_field.name for O02_field in dataclasses.fields(Token)}
+            <= O02_MUTATIONS.keys())
+
+
+def test_O02_parser_hands_out_one_unchanged_stream():
     O02_parser = O02_cached_parser()()
     O02_text = '**public** example\n'
-    O02_expected = O02_MARKDOWN_IT().parse(O02_text)
     O02_result = O02_parser.parse(O02_text)
-    O02_result[0].map[0] = 99
-    O02_result[1].children[1].content = "changed"
-    O02_result[1].attrs["O02"] = "changed"
-    O02_result.pop()
-    assert O02_parser.parse(O02_text) == O02_expected
-    O02_parser.parse(O02_text)[1].children.clear()
-    assert O02_parser.parse(O02_text) == O02_expected
+    assert O02_result == O02_MARKDOWN_IT().parse(O02_text)
+    assert O02_parser.parse(O02_text) is O02_result
+    O02_parser.O02_verify()
+
+
+@pytest.mark.parametrize("O02_mutation", O02_MUTATIONS)
+@pytest.mark.parametrize("O02_detected_by", ["verify", "eviction"])
+def test_O02_parser_rejects_mutated_shared_tokens(O02_mutation, O02_detected_by):
+    O02_parser = O02_cached_parser()()
+    O02_text = '**public** example\n'
+    O02_MUTATIONS[O02_mutation](O02_parser.parse(O02_text))
+    with pytest.raises(AssertionError, match="O02 cached tokens were mutated"):
+        if O02_detected_by == "verify":
+            O02_parser.O02_verify()
+        else:
+            for O02_index in range(64):
+                O02_parser.parse(f'O02 example {O02_index}')
 
 
 def test_O02_parser_cache_is_bounded_and_uses_recent_entries():
@@ -1461,13 +1521,15 @@ def test_O02_validation_parity_and_parser_counts():
         class O02CountingMarkdownIt(O02_MARKDOWN_IT):
             parse = O02_count
 
+        O02_parser = (O02_cached_parser(O02_count) if O02_cached
+                      else O02CountingMarkdownIt)
         with pytest.MonkeyPatch.context() as O02_patch:
-            O02_patch.setattr(checker, 'MarkdownIt',
-                             O02_cached_parser(O02_count) if O02_cached
-                             else O02CountingMarkdownIt)
+            O02_patch.setattr(checker, 'MarkdownIt', O02_parser)
             O02_results.append([checker.validate(O02_documents)
                                 for O02_documents in O02_inputs])
         O02_counts.append(len(O02_calls))
+    # The checker read every shared stream without changing it.
+    O02_parser.O02_verify()
     assert O02_results[0] == O02_results[1]
     assert O02_results[0][:2] == [[], []]
     assert any(RESET_PATH in O02_error for O02_error in O02_results[0][2])
@@ -1475,5 +1537,120 @@ def test_O02_validation_parity_and_parser_counts():
             in O02_results[0][3])
     assert (f'{checker.MCP}: invalid unavailable-read failure envelopes'
             in O02_results[0][4])
-    assert O02_counts == [25, 7]
+    # Five rendered documents replace two separately parsed MCP sections.
+    # Across five validations this adds fifteen uncached and five cached parses.
+    assert O02_counts == [40, 12]
     print(f'O02 parser invocations: uncached={O02_counts[0]}, cached={O02_counts[1]}')
+
+
+EXACT_G5_FENCE_RULES = [r for r in checker.RULES if r.get("exact")]
+
+
+def exact_g5_fence_insert(rule, addition, location):
+    documents = dict(DOCUMENTS)
+    path, start, end = rule["path"], rule["start"], rule["end"]
+    before, section = documents[path].split(start, 1)
+    body, after = section.split(end, 1) if end else (section, "")
+    body = ("\n\n" + addition + "\n\n" + body if location == "beginning"
+            else body + "\n\n" + addition + "\n\n")
+    documents[path] = before + start + body + (end or "") + after
+    return documents
+
+
+@pytest.mark.parametrize("rule", EXACT_G5_FENCE_RULES, ids=lambda r: r["start"])
+@pytest.mark.parametrize("location", ["beginning", "end"])
+@pytest.mark.parametrize("info", ["json", "text", ""])
+@pytest.mark.parametrize("fence", ["```", "~~~"])
+def test_exact_g5_fence_extra_example(rule, location, info, fence):
+    # Independently covers owner (path + heading), location, info and delimiter.
+    # Kills omission of this owner, JSON-only counting, or an extra allowance.
+    assert checker.validate(DOCUMENTS) == []
+    documents = exact_g5_fence_insert(rule, f"{fence}{info}\n{{}}\n{fence}", location)
+    assert (f"{rule['path']}: invalid exact example inventory in {rule['start']}"
+            in checker.validate(documents))
+
+
+@pytest.mark.parametrize("rule", EXACT_G5_FENCE_RULES, ids=lambda r: r["start"])
+@pytest.mark.parametrize("location", ["beginning", "end"])
+@pytest.mark.parametrize("indent", ["    ", "\t"])
+def test_exact_g5_fence_indented_code(rule, location, indent):
+    # Kills accepting indented code while counting fences correctly.
+    assert checker.validate(DOCUMENTS) == []
+    documents = exact_g5_fence_insert(rule, indent + '{"extra":true}', location)
+    assert (f"{rule['path']}: invalid exact example inventory in {rule['start']}"
+            in checker.validate(documents))
+
+
+@pytest.mark.parametrize("rule", EXACT_G5_FENCE_RULES, ids=lambda r: r["start"])
+@pytest.mark.parametrize("location", ["beginning", "end"])
+@pytest.mark.parametrize("wrapper", [
+    "<pre><code>{}</code></pre>",
+    "<pre>\n{}\n</pre>",
+    '<PRE class="example"><CODE>{}</CODE></PRE>',
+    "<div>\n<pre><code>{}</code></pre>\n</div>",
+    "<code>{}</code>",
+])
+def test_exact_g5_rejects_html_code(rule, location, wrapper):
+    documents = exact_g5_fence_insert(
+        rule, wrapper.format('{"receipt":"unexpected"}'), location)
+    assert (f"{rule['path']}: invalid exact example inventory in {rule['start']}"
+            in checker.validate(documents))
+
+
+@pytest.mark.parametrize("rule", EXACT_G5_FENCE_RULES, ids=lambda r: r["start"])
+def test_exact_g5_accepts_commented_html_code(rule):
+    documents = exact_g5_fence_insert(
+        rule, '<!-- <pre><code>{"receipt":"unexpected"}</code></pre> -->', "beginning")
+    assert checker.validate(documents) == []
+
+
+@pytest.mark.parametrize("rule", EXACT_G5_FENCE_RULES, ids=lambda r: r["start"])
+def test_exact_g5_fence_inventory_cannot_omit_rule(rule, monkeypatch):
+    # A future exact rule must never inherit an implicit example allowance.
+    assert checker.validate(DOCUMENTS) == []
+    inventory = dict(checker.EXACT_EXAMPLE_COUNTS)
+    del inventory[rule["path"], rule["start"]]
+    monkeypatch.setattr(checker, "EXACT_EXAMPLE_COUNTS", inventory)
+    assert "exact example inventory does not match exact rules" in checker.validate(DOCUMENTS)
+
+
+@pytest.mark.parametrize("start,count,error", [
+    ("### Read and mutation data", 3, "invalid G5 closed data examples"),
+    (checker.UNAVAILABLE_SECTION, 2, "invalid unavailable-read failure envelopes"),
+])
+@pytest.mark.parametrize("info", ["json", "json example", "text", ""])
+@pytest.mark.parametrize("fence", ["```", "~~~"])
+def test_exact_g5_fence_approved_examples(start, count, error, info, fence):
+    rule = next(r for r in EXACT_G5_FENCE_RULES if r["start"] == start)
+    documents = dict(DOCUMENTS)
+    before, body = documents[checker.MCP].split(start, 1)
+    body, after = body.split(rule["end"], 1)
+    assert body.count("```json") == count
+    body = body.replace("```json", fence + info).replace("\n```", "\n" + fence)
+    documents[checker.MCP] = before + start + body + rule["end"] + after
+    assert checker.validate(documents) == []
+    # Same counts but duplicate member: kills ordinary json.loads substitution.
+    tokens = [t for t in checker.MarkdownIt().parse(body) if t.type == "fence"]
+    example = tokens[0].content
+    key, value = next(iter(json.loads(example).items()))
+    duplicate = example.replace("{", "{" + json.dumps(key) + ":" + json.dumps(value) + ",", 1)
+    documents[checker.MCP] = documents[checker.MCP].replace(example, duplicate, 1)
+    assert f"{checker.MCP}: {error}" in checker.validate(documents)
+
+
+@pytest.mark.parametrize("wrapper", ["```text\n{}\n```", "~~~\n{}\n~~~", "<!--\n{}\n-->"])
+@pytest.mark.parametrize("start", ["### Read and mutation data", checker.UNAVAILABLE_SECTION])
+def test_exact_g5_fence_fake_headings_do_not_select_owner(wrapper, start):
+    rule = next(r for r in EXACT_G5_FENCE_RULES if r["start"] == start)
+    documents = dict(DOCUMENTS)
+    decoy = wrapper.format(start + "\n\n{}\n\n" + rule["end"])
+    # A decoy before the real parent is harmless; raw split selects it instead.
+    parent = rule["parent"]
+    documents[checker.MCP] = documents[checker.MCP].replace(parent, decoy + "\n\n" + parent, 1)
+    assert checker.validate(documents) == []
+    # A real invalid example after the decoy still belongs to the real owner.
+    before, real_body = documents[checker.MCP].rsplit(start + "\n", 1)
+    documents[checker.MCP] = (before + start + '\n\n```text\n{"extra":true}\n```\n'
+                              + real_body)
+    assert (f"{checker.MCP}: invalid exact example inventory in {start}"
+            in checker.validate(documents))
