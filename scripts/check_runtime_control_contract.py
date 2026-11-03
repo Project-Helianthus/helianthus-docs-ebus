@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 from datetime import datetime
 import hashlib
+from html.parser import HTMLParser
 import json
 from pathlib import Path
 import re
@@ -229,8 +230,77 @@ def closed_object(pairs: list[tuple[str, object]]) -> dict:
     return result
 
 
+# Every exact section has an explicit reviewed allowance. Missing entries fail
+# closed rather than granting a default permission to future exact rules.
+EXACT_EXAMPLE_COUNTS = {
+    ("architecture/runtime-control-reset-durability.md", "## Required ordering and failure outcomes"): 0,
+    (MCP, "### Ordinary discovery and dispatch"): 0,
+    (MCP, "### Closed inputs and exact service delegation"): 0,
+    (MCP, "### Read and mutation data"): 3,
+    (MCP, UNAVAILABLE_SECTION): 2,
+    (API, "## Status And Authority"): 0,
+    (MANAGER, "## Status And Scope"): 0,
+    (MANAGER, "## Delivery Order"): 0,
+    (LIFECYCLE, UNAVAILABLE_CASE_SECTION): 0,
+    (MANAGER, "## One-release Acceptance"): 0,
+}
+
+
+class HTMLCodeDetector(HTMLParser):
+    """Recognize code markup without treating HTML comments as examples."""
+
+    def __init__(self):
+        super().__init__()
+        self.found = False
+
+    def handle_starttag(self, tag, attrs):
+        if tag in {"pre", "code"}:
+            self.found = True
+
+
+def exact_example_sections(documents: dict[str, str], errors: list[str]) -> dict:
+    parsed = {}
+    sections = {}
+    exact_keys = {(r["path"], r["start"]) for r in RULES if r.get("exact")}
+    if exact_keys != EXACT_EXAMPLE_COUNTS.keys():
+        errors.append("exact example inventory does not match exact rules")
+    for rule in RULES:
+        if not rule.get("exact"):
+            continue
+        path, start, end = rule["path"], rule["start"], rule["end"]
+        if path not in parsed:
+            parsed[path] = MarkdownIt().parse(documents[path])
+        tokens = parsed[path]
+        # Only rendered headings select bounds: fence contents and HTML comments
+        # cannot impersonate the owner or truncate its example inventory.
+        headings = [(i, "#" * int(t.tag[1:]) + " " + tokens[i + 1].content)
+                    for i, t in enumerate(tokens) if t.type == "heading_open"]
+        starts = [i for i, heading in headings if heading == start]
+        ends = [i for i, heading in headings if end and heading == end]
+        if len(starts) != 1 or (end is not None and len(ends) != 1):
+            errors.append(f"{path}: invalid rendered section {start}")
+            continue
+        first, last = starts[0], ends[0] if end else len(tokens)
+        if first >= last:
+            errors.append(f"{path}: invalid rendered section {start}")
+            continue
+        examples = [t for t in tokens[first:last] if t.type in {"fence", "code_block"}]
+        html = HTMLCodeDetector()
+        for token in tokens[first:last]:
+            for part in [token, *(token.children or [])]:
+                if part.type in {"html_block", "html_inline"}:
+                    html.feed(part.content)
+        html.close()
+        sections[path, start] = [t.content for t in examples if t.type == "fence"]
+        if (html.found or any(t.type == "code_block" for t in examples)
+                or len(examples) != EXACT_EXAMPLE_COUNTS.get((path, start))):
+            errors.append(f"{path}: invalid exact example inventory in {start}")
+    return sections
+
+
 def validate(documents: dict[str, str]) -> list[str]:
     errors = []
+    example_sections = exact_example_sections(documents, errors)
     for rule in RULES:
         text = prose(documents[rule["path"]])
         start, end = rule["start"], rule["end"]
@@ -275,10 +345,7 @@ def validate(documents: dict[str, str]) -> list[str]:
     # G5 examples are separate from normative prose and use the closed wire
     # projection, not the older DriverSnapshotV1 proposal. Count every fence,
     # regardless of info string, so unexpected rendered examples cannot hide.
-    mcp_section = documents[MCP].split("### Read and mutation data", 1)[-1].split(
-        "### Envelope, lifecycle errors and acceptance vectors", 1)[0]
-    examples = [t.content for t in MarkdownIt().parse(mcp_section)
-                if t.type == "fence"]
+    examples = example_sections.get((MCP, "### Read and mutation data"), [])
     try:
         listing, single, decision = [
             json.loads(s, object_pairs_hook=closed_object) for s in examples]
@@ -319,9 +386,7 @@ def validate(documents: dict[str, str]) -> list[str]:
 
     # Both categorical failures are complete, closed envelopes. Parse every
     # fence in the owning section, rejecting duplicate JSON members as well.
-    failure_section = documents[MCP].split(UNAVAILABLE_SECTION, 1)[-1].split("\n## ", 1)[0]
-    examples = [t.content for t in MarkdownIt().parse(failure_section)
-                if t.type == "fence"]
+    examples = example_sections.get((MCP, UNAVAILABLE_SECTION), [])
     try:
         assert len(examples) == 2
         for example in examples:
