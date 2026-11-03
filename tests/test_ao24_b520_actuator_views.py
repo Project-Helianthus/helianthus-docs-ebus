@@ -59,13 +59,292 @@ ENDS = {
 }
 TABLES = {'0': ('standard_3k3', -13.5, 116), '1': ('extended_1k', -20, 155),
           '2': ('low_temperature_15k', -39, 80), '3': ('standard_1k', -13.9, 130)}
+REQUIRED_KEYS = ['primary', 'secondary', 'operation', 'direction', 'view']
+INPUT_KEYS = ['context', 'fields', 'arguments']
+RESULT_STATES = ['complete', 'partial', 'unknown']
+FIELD_STATES = ['ok', 'unmapped', 'incomplete', 'missing', 'opaque']
+CALCULATION_FIELDS = {'request': ['pwm1', 'pwm2', 'ed'],
+                      'positive': ['temperature_1', 'temperature_2',
+                                   'temperature_3', 'temperature_4']}
+# word kind -> (number, candidate_domain); the same for each of the four sensors.
+TEMPERATURE_WORDS = {'000c': (192, True), 'ffff': (-0.0625, False),
+                     'zero': (0, True), 'max': (200, True), 'over': (200.0625, False)}
+# Bytes beyond the logical extent are retained and never change the state.
+TAIL_CASES = {
+    'req_relay_tail': ('relay', {'state': 'ok', 'number': 7}),
+    'pos_tail': ('vortex_hz', {'state': 'ok', 'number': 0, 'candidate_domain': True,
+                               'flags': {'formal_domain': True,
+                                         'operational_window': False}}),
+}
 ERROR_IDS = ['malformed', 'duplicate_top_key', 'duplicate_field_key',
              'byte_256', 'byte_negative', 'byte_fraction', 'byte_string',
              'field_not_array', 'fields_not_object', 'context_missing',
-             'operation_string', 'arguments_nested']
+             'operation_string', 'arguments_nested',
+             'primary_string', 'secondary_string', 'direction_number',
+             'view_number', 'primary_missing', 'secondary_missing',
+             'operation_missing', 'direction_missing', 'view_missing',
+             'fields_missing']
 UNKNOWN_IDS = ['operation', 'direction', 'view', 'primary', 'secondary']
 CONTROL_CONTEXT = {'primary': 181, 'secondary': 32, 'operation': 0,
                    'direction': 'request', 'view': 'logical_object'}
+# Truncation cases n = 0..extent carry the first n bytes of these reference objects.
+TRUNCATION_REFERENCE = {
+    'request': [161, 178, 195, 1, 2, 3, 4, 1, 6, 2],
+    'positive': [161, 178, 195, 2, 1, 0, 12, 0, 8, 0, 4, 0, 1, 126, 3, 2, 100, 0],
+}
+# Unknown cases vary exactly one context axis of the control context.
+UNKNOWN_VARIED = {'operation': 1, 'direction': 'response', 'view': 'payload_length_10',
+                  'primary': 180, 'secondary': 33}
+# Error inputs; CONTROL_TEXT is the control context as compact JSON text.
+CONTROL_TEXT = json.dumps(CONTROL_CONTEXT, separators=(',', ':'))
+ERROR_TEXTS = {
+    'malformed': '{"context":',
+    'duplicate_top_key': '{"context":{},"context":{},"fields":{}}',
+    'duplicate_field_key': '{"context":%s,"fields":{"logical_object":[],"logical_object":[]}}' % CONTROL_TEXT,
+    'byte_256': '{"context":%s,"fields":{"logical_object":[256]}}' % CONTROL_TEXT,
+    'byte_negative': '{"context":%s,"fields":{"logical_object":[-1]}}' % CONTROL_TEXT,
+    'byte_fraction': '{"context":%s,"fields":{"logical_object":[1.5]}}' % CONTROL_TEXT,
+    'byte_string': '{"context":%s,"fields":{"logical_object":["1"]}}' % CONTROL_TEXT,
+    'field_not_array': '{"context":%s,"fields":{"logical_object":5}}' % CONTROL_TEXT,
+    'fields_not_object': '{"context":%s,"fields":[]}' % CONTROL_TEXT,
+    'context_missing': '{"fields":{}}',
+    'operation_string': '{"context":{"primary":181,"secondary":32,"operation":"0","direction":"request","view":"logical_object"},"fields":{}}',
+    'arguments_nested': '{"context":%s,"fields":{},"arguments":{"flag":[true]}}' % CONTROL_TEXT,
+    'primary_string': '{"context":{"primary":"181","secondary":32,"operation":0,"direction":"request","view":"logical_object"},"fields":{}}',
+    'secondary_string': '{"context":{"primary":181,"secondary":"32","operation":0,"direction":"request","view":"logical_object"},"fields":{}}',
+    'direction_number': '{"context":{"primary":181,"secondary":32,"operation":0,"direction":5,"view":"logical_object"},"fields":{}}',
+    'view_number': '{"context":{"primary":181,"secondary":32,"operation":0,"direction":"request","view":5},"fields":{}}',
+    'primary_missing': '{"context":{"secondary":32,"operation":0,"direction":"request","view":"logical_object"},"fields":{}}',
+    'secondary_missing': '{"context":{"primary":181,"operation":0,"direction":"request","view":"logical_object"},"fields":{}}',
+    'operation_missing': '{"context":{"primary":181,"secondary":32,"direction":"request","view":"logical_object"},"fields":{}}',
+    'direction_missing': '{"context":{"primary":181,"secondary":32,"operation":0,"view":"logical_object"},"fields":{}}',
+    'view_missing': '{"context":{"primary":181,"secondary":32,"operation":0,"direction":"request"},"fields":{}}',
+    'fields_missing': '{"context":%s}' % CONTROL_TEXT,
+}
+# Every case of the page table: (id suffix, direction, logical object, result state, fields).
+CASES = [
+    ('req_zero', 'request', [161, 178, 195, 0, 0, 0, 0, 0, 0, 0], 'complete', {
+        'relay': {'state': 'ok', 'number': 0},
+        'pwm1': {'state': 'ok', 'number': 0, 'candidate_domain': True, 'calculation': 'Proven'},
+        'pwm2': {'state': 'ok', 'number': 0, 'candidate_domain': True, 'calculation': 'Proven'},
+        'stepper': {'state': 'ok', 'number': 0, 'label': 'steps'},
+        'led': {'state': 'ok', 'label': 'disabled'},
+        'ed': {'state': 'ok', 'number': 0, 'candidate_domain': True, 'calculation': 'Proven'},
+        'temperature_table': {'state': 'ok', 'label': 'standard_3k3'},
+    }),
+    ('req_pwm_ed_ff', 'request', [161, 178, 195, 1, 255, 255, 0, 0, 255, 0], 'complete', {
+        'relay': {'state': 'ok', 'number': 1},
+        'pwm1': {'state': 'ok', 'number': 127.5, 'candidate_domain': True, 'calculation': 'Proven'},
+        'pwm2': {'state': 'ok', 'number': 127.5, 'candidate_domain': True, 'calculation': 'Proven'},
+        'ed': {'state': 'ok', 'number': 127.5, 'candidate_domain': True, 'calculation': 'Proven'},
+    }),
+    ('req_pwm_distinct', 'request', [161, 178, 195, 0, 100, 60, 0, 0, 20, 0], 'complete', {
+        'pwm1': {'state': 'ok', 'number': 50, 'candidate_domain': True, 'calculation': 'Proven'},
+        'pwm2': {'state': 'ok', 'number': 30, 'candidate_domain': True, 'calculation': 'Proven'},
+        'ed': {'state': 'ok', 'number': 10, 'candidate_domain': True, 'calculation': 'Proven'},
+    }),
+    ('req_stepper_240', 'request', [161, 178, 195, 0, 0, 0, 240, 0, 0, 0], 'complete', {
+        'stepper': {'state': 'ok', 'number': 240, 'label': 'steps'},
+    }),
+    ('req_stepper_241', 'request', [161, 178, 195, 0, 0, 0, 241, 0, 0, 0], 'complete', {
+        'stepper': {'state': 'unmapped'},
+    }),
+    ('req_stepper_254', 'request', [161, 178, 195, 0, 0, 0, 254, 0, 0, 0], 'complete', {
+        'stepper': {'state': 'unmapped'},
+    }),
+    ('req_stepper_255', 'request', [161, 178, 195, 0, 0, 0, 255, 0, 0, 0], 'complete', {
+        'stepper': {'state': 'ok', 'label': 'calibrate_go_to_zero'},
+    }),
+    ('req_led_0', 'request', [161, 178, 195, 0, 0, 0, 0, 0, 0, 0], 'complete', {
+        'led': {'state': 'ok', 'label': 'disabled'},
+    }),
+    ('req_led_1', 'request', [161, 178, 195, 0, 0, 0, 0, 1, 0, 0], 'complete', {
+        'led': {'state': 'ok', 'label': 'enabled'},
+    }),
+    ('req_led_2', 'request', [161, 178, 195, 0, 0, 0, 0, 2, 0, 0], 'complete', {
+        'led': {'state': 'unmapped'},
+    }),
+    ('req_table_0', 'request', [161, 178, 195, 0, 0, 0, 0, 0, 0, 0], 'complete', {
+        'temperature_table': {'state': 'ok', 'label': 'standard_3k3'},
+    }),
+    ('req_table_1', 'request', [161, 178, 195, 0, 0, 0, 0, 0, 0, 1], 'complete', {
+        'temperature_table': {'state': 'ok', 'label': 'extended_1k'},
+    }),
+    ('req_table_2', 'request', [161, 178, 195, 0, 0, 0, 0, 0, 0, 2], 'complete', {
+        'temperature_table': {'state': 'ok', 'label': 'low_temperature_15k'},
+    }),
+    ('req_table_3', 'request', [161, 178, 195, 0, 0, 0, 0, 0, 0, 3], 'complete', {
+        'temperature_table': {'state': 'ok', 'label': 'standard_1k'},
+    }),
+    ('req_table_4', 'request', [161, 178, 195, 0, 0, 0, 0, 0, 0, 4], 'complete', {
+        'temperature_table': {'state': 'unmapped'},
+    }),
+    ('req_relay_tail', 'request', [161, 178, 195, 7, 0, 0, 0, 0, 0, 0, 238, 1], 'complete', {
+        'relay': {'state': 'ok', 'number': 7},
+    }),
+    ('pos_adc_1023', 'positive', [161, 178, 195, 255, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'complete', {
+        'adc': {'state': 'ok', 'number': 1023, 'candidate_domain': True},
+    }),
+    ('pos_adc_1024', 'positive', [161, 178, 195, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'complete', {
+        'adc': {'state': 'ok', 'number': 1024, 'candidate_domain': False},
+    }),
+    ('pos_temperature_1_000c', 'positive', [161, 178, 195, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'complete', {
+        'temperature_1': {'state': 'ok', 'number': 192, 'candidate_domain': True, 'calculation': 'Proven'},
+    }),
+    ('pos_temperature_2_000c', 'positive', [161, 178, 195, 0, 0, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'complete', {
+        'temperature_2': {'state': 'ok', 'number': 192, 'candidate_domain': True, 'calculation': 'Proven'},
+    }),
+    ('pos_temperature_3_000c', 'positive', [161, 178, 195, 0, 0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0], 'complete', {
+        'temperature_3': {'state': 'ok', 'number': 192, 'candidate_domain': True, 'calculation': 'Proven'},
+    }),
+    ('pos_temperature_4_000c', 'positive', [161, 178, 195, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 0, 0], 'complete', {
+        'temperature_4': {'state': 'ok', 'number': 192, 'candidate_domain': True, 'calculation': 'Proven'},
+    }),
+    ('pos_temperature_1_ffff', 'positive', [161, 178, 195, 0, 0, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'complete', {
+        'temperature_1': {'state': 'ok', 'number': -0.0625, 'candidate_domain': False, 'calculation': 'Proven'},
+    }),
+    ('pos_temperature_2_ffff', 'positive', [161, 178, 195, 0, 0, 0, 0, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'complete', {
+        'temperature_2': {'state': 'ok', 'number': -0.0625, 'candidate_domain': False, 'calculation': 'Proven'},
+    }),
+    ('pos_temperature_3_ffff', 'positive', [161, 178, 195, 0, 0, 0, 0, 0, 0, 255, 255, 0, 0, 0, 0, 0, 0, 0], 'complete', {
+        'temperature_3': {'state': 'ok', 'number': -0.0625, 'candidate_domain': False, 'calculation': 'Proven'},
+    }),
+    ('pos_temperature_4_ffff', 'positive', [161, 178, 195, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 0, 0, 0, 0, 0], 'complete', {
+        'temperature_4': {'state': 'ok', 'number': -0.0625, 'candidate_domain': False, 'calculation': 'Proven'},
+    }),
+    ('pos_temperature_1_zero', 'positive', [161, 178, 195, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'complete', {
+        'temperature_1': {'state': 'ok', 'number': 0, 'candidate_domain': True, 'calculation': 'Proven'},
+    }),
+    ('pos_temperature_2_zero', 'positive', [161, 178, 195, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'complete', {
+        'temperature_2': {'state': 'ok', 'number': 0, 'candidate_domain': True, 'calculation': 'Proven'},
+    }),
+    ('pos_temperature_3_zero', 'positive', [161, 178, 195, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'complete', {
+        'temperature_3': {'state': 'ok', 'number': 0, 'candidate_domain': True, 'calculation': 'Proven'},
+    }),
+    ('pos_temperature_4_zero', 'positive', [161, 178, 195, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'complete', {
+        'temperature_4': {'state': 'ok', 'number': 0, 'candidate_domain': True, 'calculation': 'Proven'},
+    }),
+    ('pos_temperature_1_max', 'positive', [161, 178, 195, 0, 0, 128, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'complete', {
+        'temperature_1': {'state': 'ok', 'number': 200, 'candidate_domain': True, 'calculation': 'Proven'},
+    }),
+    ('pos_temperature_2_max', 'positive', [161, 178, 195, 0, 0, 0, 0, 128, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'complete', {
+        'temperature_2': {'state': 'ok', 'number': 200, 'candidate_domain': True, 'calculation': 'Proven'},
+    }),
+    ('pos_temperature_3_max', 'positive', [161, 178, 195, 0, 0, 0, 0, 0, 0, 128, 12, 0, 0, 0, 0, 0, 0, 0], 'complete', {
+        'temperature_3': {'state': 'ok', 'number': 200, 'candidate_domain': True, 'calculation': 'Proven'},
+    }),
+    ('pos_temperature_4_max', 'positive', [161, 178, 195, 0, 0, 0, 0, 0, 0, 0, 0, 128, 12, 0, 0, 0, 0, 0], 'complete', {
+        'temperature_4': {'state': 'ok', 'number': 200, 'candidate_domain': True, 'calculation': 'Proven'},
+    }),
+    ('pos_temperature_1_over', 'positive', [161, 178, 195, 0, 0, 129, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'complete', {
+        'temperature_1': {'state': 'ok', 'number': 200.0625, 'candidate_domain': False, 'calculation': 'Proven'},
+    }),
+    ('pos_temperature_2_over', 'positive', [161, 178, 195, 0, 0, 0, 0, 129, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'complete', {
+        'temperature_2': {'state': 'ok', 'number': 200.0625, 'candidate_domain': False, 'calculation': 'Proven'},
+    }),
+    ('pos_temperature_3_over', 'positive', [161, 178, 195, 0, 0, 0, 0, 0, 0, 129, 12, 0, 0, 0, 0, 0, 0, 0], 'complete', {
+        'temperature_3': {'state': 'ok', 'number': 200.0625, 'candidate_domain': False, 'calculation': 'Proven'},
+    }),
+    ('pos_temperature_4_over', 'positive', [161, 178, 195, 0, 0, 0, 0, 0, 0, 0, 0, 129, 12, 0, 0, 0, 0, 0], 'complete', {
+        'temperature_4': {'state': 'ok', 'number': 200.0625, 'candidate_domain': False, 'calculation': 'Proven'},
+    }),
+    ('pos_temperature_distinct', 'positive', [161, 178, 195, 0, 0, 0, 12, 0, 8, 0, 4, 0, 1, 0, 0, 0, 0, 0], 'complete', {
+        'temperature_1': {'state': 'ok', 'number': 192, 'candidate_domain': True, 'calculation': 'Proven'},
+        'temperature_2': {'state': 'ok', 'number': 128, 'candidate_domain': True, 'calculation': 'Proven'},
+        'temperature_3': {'state': 'ok', 'number': 64, 'candidate_domain': True, 'calculation': 'Proven'},
+        'temperature_4': {'state': 'ok', 'number': 16, 'candidate_domain': True, 'calculation': 'Proven'},
+    }),
+    ('pos_vortex_0', 'positive', [161, 178, 195, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'complete', {
+        'vortex_hz': {'state': 'ok', 'number': 0, 'candidate_domain': True, 'flags': {'formal_domain': True, 'operational_window': False}},
+    }),
+    ('pos_vortex_4', 'positive', [161, 178, 195, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0], 'complete', {
+        'vortex_hz': {'state': 'ok', 'number': 4, 'candidate_domain': True, 'flags': {'formal_domain': True, 'operational_window': False}},
+    }),
+    ('pos_vortex_5', 'positive', [161, 178, 195, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0], 'complete', {
+        'vortex_hz': {'state': 'ok', 'number': 5, 'candidate_domain': True, 'flags': {'formal_domain': True, 'operational_window': True}},
+    }),
+    ('pos_vortex_350', 'positive', [161, 178, 195, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 94, 1], 'complete', {
+        'vortex_hz': {'state': 'ok', 'number': 350, 'candidate_domain': True, 'flags': {'formal_domain': True, 'operational_window': True}},
+    }),
+    ('pos_vortex_351', 'positive', [161, 178, 195, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 95, 1], 'complete', {
+        'vortex_hz': {'state': 'ok', 'number': 351, 'candidate_domain': False, 'flags': {'formal_domain': False, 'operational_window': False}},
+    }),
+    ('pos_impeller_0', 'positive', [161, 178, 195, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'complete', {
+        'impeller_hz': {'state': 'ok', 'number': 0, 'candidate_domain': True},
+    }),
+    ('pos_impeller_1000', 'positive', [161, 178, 195, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 232, 3, 0, 0], 'complete', {
+        'impeller_hz': {'state': 'ok', 'number': 1000, 'candidate_domain': True},
+    }),
+    ('pos_impeller_1001', 'positive', [161, 178, 195, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 233, 3, 0, 0], 'complete', {
+        'impeller_hz': {'state': 'ok', 'number': 1001, 'candidate_domain': False},
+    }),
+    ('pos_reserved_0', 'positive', [161, 178, 195, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'complete', {
+        'reserved': {'state': 'ok', 'reserved': 0},
+    }),
+    ('pos_reserved_1', 'positive', [161, 178, 195, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0], 'complete', {
+        'reserved': {'state': 'ok', 'reserved': 1},
+    }),
+    ('pos_reserved_255', 'positive', [161, 178, 195, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 0, 0, 0, 0], 'complete', {
+        'reserved': {'state': 'ok', 'reserved': 255},
+    }),
+    ('pos_distinct_all', 'positive', [161, 178, 195, 2, 1, 0, 12, 0, 8, 0, 4, 0, 1, 126, 3, 2, 100, 0], 'complete', {
+        'prefix': {'state': 'opaque'},
+        'adc': {'state': 'ok', 'number': 258, 'candidate_domain': True},
+        'temperature_1': {'state': 'ok', 'number': 192, 'candidate_domain': True, 'calculation': 'Proven'},
+        'temperature_2': {'state': 'ok', 'number': 128, 'candidate_domain': True, 'calculation': 'Proven'},
+        'temperature_3': {'state': 'ok', 'number': 64, 'candidate_domain': True, 'calculation': 'Proven'},
+        'temperature_4': {'state': 'ok', 'number': 16, 'candidate_domain': True, 'calculation': 'Proven'},
+        'reserved': {'state': 'ok', 'reserved': 126},
+        'impeller_hz': {'state': 'ok', 'number': 515, 'candidate_domain': True},
+        'vortex_hz': {'state': 'ok', 'number': 100, 'candidate_domain': True, 'flags': {'formal_domain': True, 'operational_window': True}},
+    }),
+    ('pos_tail', 'positive', [161, 178, 195, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 85], 'complete', {
+        'vortex_hz': {'state': 'ok', 'number': 0, 'candidate_domain': True, 'flags': {'formal_domain': True, 'operational_window': False}},
+    }),
+]
+FIXTURE_META = {
+    'schema': 'ab23ao23_synthetic_tuples',
+    'provenance': 'synthetic; finite software API tuples only; no device observation',
+    'qualification': 'Unknown',
+    'context': {'primary': 181, 'secondary': 32, 'operation': 0, 'view': 'logical_object'},
+}
+# (case id suffix, field) of every fixture tuple, in fixture order.
+FIXTURE_ROWS = [
+    ('req_zero', 'relay'), ('req_zero', 'pwm1'), ('req_zero', 'pwm2'), ('req_zero', 'stepper'),
+    ('req_zero', 'led'), ('req_zero', 'ed'), ('req_zero', 'temperature_table'),
+    ('req_pwm_ed_ff', 'relay'), ('req_pwm_ed_ff', 'pwm1'), ('req_pwm_ed_ff', 'pwm2'),
+    ('req_pwm_ed_ff', 'ed'), ('req_pwm_distinct', 'pwm1'), ('req_pwm_distinct', 'pwm2'),
+    ('req_pwm_distinct', 'ed'), ('req_stepper_240', 'stepper'), ('req_stepper_241', 'stepper'),
+    ('req_stepper_254', 'stepper'), ('req_stepper_255', 'stepper'), ('req_led_0', 'led'),
+    ('req_led_1', 'led'), ('req_led_2', 'led'), ('req_table_0', 'temperature_table'),
+    ('req_table_1', 'temperature_table'), ('req_table_2', 'temperature_table'),
+    ('req_table_3', 'temperature_table'), ('req_table_4', 'temperature_table'),
+    ('req_relay_tail', 'relay'), ('pos_adc_1023', 'adc'), ('pos_adc_1024', 'adc'),
+    ('pos_temperature_1_000c', 'temperature_1'), ('pos_temperature_2_000c', 'temperature_2'),
+    ('pos_temperature_3_000c', 'temperature_3'), ('pos_temperature_4_000c', 'temperature_4'),
+    ('pos_temperature_1_ffff', 'temperature_1'), ('pos_temperature_2_ffff', 'temperature_2'),
+    ('pos_temperature_3_ffff', 'temperature_3'), ('pos_temperature_4_ffff', 'temperature_4'),
+    ('pos_temperature_1_zero', 'temperature_1'), ('pos_temperature_2_zero', 'temperature_2'),
+    ('pos_temperature_3_zero', 'temperature_3'), ('pos_temperature_4_zero', 'temperature_4'),
+    ('pos_temperature_1_max', 'temperature_1'), ('pos_temperature_2_max', 'temperature_2'),
+    ('pos_temperature_3_max', 'temperature_3'), ('pos_temperature_4_max', 'temperature_4'),
+    ('pos_temperature_1_over', 'temperature_1'), ('pos_temperature_2_over', 'temperature_2'),
+    ('pos_temperature_3_over', 'temperature_3'), ('pos_temperature_4_over', 'temperature_4'),
+    ('pos_temperature_distinct', 'temperature_1'),
+    ('pos_temperature_distinct', 'temperature_2'),
+    ('pos_temperature_distinct', 'temperature_3'),
+    ('pos_temperature_distinct', 'temperature_4'), ('pos_vortex_0', 'vortex_hz'),
+    ('pos_vortex_4', 'vortex_hz'), ('pos_vortex_5', 'vortex_hz'),
+    ('pos_vortex_350', 'vortex_hz'), ('pos_vortex_351', 'vortex_hz'),
+    ('pos_impeller_0', 'impeller_hz'), ('pos_impeller_1000', 'impeller_hz'),
+    ('pos_impeller_1001', 'impeller_hz'), ('pos_reserved_0', 'reserved'),
+    ('pos_reserved_1', 'reserved'), ('pos_reserved_255', 'reserved'),
+    ('pos_distinct_all', 'prefix'), ('pos_distinct_all', 'adc'),
+    ('pos_distinct_all', 'temperature_1'), ('pos_distinct_all', 'temperature_2'),
+    ('pos_distinct_all', 'temperature_3'), ('pos_distinct_all', 'temperature_4'),
+    ('pos_distinct_all', 'reserved'), ('pos_distinct_all', 'impeller_hz'),
+    ('pos_distinct_all', 'vortex_hz'), ('pos_tail', 'vortex_hz'),
+]
 
 
 def load_page_contract():
@@ -91,7 +370,11 @@ def input_is_invalid(text):
     if not isinstance(doc, dict) or not isinstance(doc.get('context'), dict):
         return True
     ctx = doc['context']
-    if type(ctx.get('operation')) is not int and 'operation' in ctx:
+    if any(k not in ctx for k in REQUIRED_KEYS):
+        return True
+    if any(type(ctx[k]) is not int for k in ('primary', 'secondary', 'operation')):
+        return True
+    if any(not isinstance(ctx[k], str) for k in ('direction', 'view')):
         return True
     if not isinstance(doc.get('fields'), dict):
         return True
@@ -105,6 +388,87 @@ def input_is_invalid(text):
         if type(v) not in (bool, int):
             return True
     return False
+
+
+def canonical(obj):
+    """Exact, type-faithful text of a structure (true is not 1, 0 is not 0.0)."""
+    return json.dumps(obj, sort_keys=True, separators=(',', ':'))
+
+
+def expected_contract():
+    """The complete page contract, built only from the constants above."""
+    starts = {d: [0] + [end for _, end in ends[:-1]] for d, ends in ENDS.items()}
+    truncation = []
+    for d, ends in ENDS.items():
+        extent = ends[-1][1]
+        for n in range(extent + 1):
+            truncation.append({
+                'id': '%strunc_%s_%d' % (P, d, n), 'direction': d,
+                'logical_object': TRUNCATION_REFERENCE[d][:n],
+                'expect': {'state': 'complete' if n >= extent else 'partial',
+                           'fields': {name: ('opaque' if name == 'prefix' and n >= 3 else
+                                             'ok' if end <= n else 'incomplete')
+                                      for name, end in ends}}})
+    return {
+        'function': 'Ab23Ao23Interpret',
+        'signature': SIGNATURE,
+        'package': 'vaillant',
+        'context': {'primary': 181, 'secondary': 32, 'operations': [0],
+                    'directions': ['request', 'positive'], 'views': ['logical_object'],
+                    'required_keys': REQUIRED_KEYS},
+        'input_keys': INPUT_KEYS,
+        'output_keys': ['context', 'raw', 'arguments', 'state', 'fields', 'physical',
+                        'qualified'],
+        'output_constants': {'physical': 'Unknown', 'qualified': False,
+                             'field_grade': 'Hypothesis', 'calculation_grade': 'Proven'},
+        'result_states': RESULT_STATES,
+        'field_states': FIELD_STATES,
+        'extents': {d: ends[-1][1] for d, ends in ENDS.items()},
+        'field_tables': {d: [{'name': name, 'offset': start, 'width': end - start}
+                             for (name, end), start in zip(ends, starts[d])]
+                         for d, ends in ENDS.items()},
+        'temperature_tables': {k: {'label': label, 'min_c': low, 'max_c': high}
+                               for k, (label, low, high) in TABLES.items()},
+        'vortex_hysteresis_hz': {'enter': 5, 'exit': 4, 'role': 'metadata'},
+        'cases': [{'id': P + suffix, 'direction': d, 'logical_object': obj,
+                   'expect': {'state': state, 'fields': fields}}
+                  for suffix, d, obj, state, fields in CASES],
+        'truncation': truncation,
+        'unknown_cases': [{'id': P + 'unknown_' + axis,
+                           'context': dict(CONTROL_CONTEXT, family='opaque-family-a',
+                                           variant='opaque-variant-1',
+                                           **{axis: UNKNOWN_VARIED[axis]}),
+                           'expect': {'state': 'unknown', 'fields': {},
+                                      'raw_preserved': True, 'qualified': False}}
+                          for axis in UNKNOWN_IDS],
+        'error_cases': [{'id': P + 'err_' + s, 'input_text': ERROR_TEXTS[s]}
+                        for s in ERROR_IDS],
+        'presence_cases': [
+            {'id': P + 'presence_missing', 'direction': 'request', 'fields': {},
+             'expect': {'state': 'partial', 'field_state': 'missing'}},
+            {'id': P + 'presence_empty', 'direction': 'request',
+             'fields': {'logical_object': []},
+             'expect': {'state': 'partial', 'field_state': 'incomplete'}},
+            {'id': P + 'presence_zero_bytes', 'direction': 'request',
+             'fields': {'logical_object': [0] * 10},
+             'expect': {'state': 'complete', 'field_state': 'ok'}}],
+        'calculation_fields': CALCULATION_FIELDS,
+    }
+
+
+def expected_fixture():
+    """The complete fixture: FIXTURE_META plus one tuple per FIXTURE_ROWS entry."""
+    cases = {suffix: (d, obj, fields) for suffix, d, obj, _, fields in CASES}
+    tuples = []
+    for suffix, name in FIXTURE_ROWS:
+        d, obj, fields = cases[suffix]
+        f = fields[name]
+        tuples.append([P + suffix, d, ''.join('%02X' % b for b in obj), name, f['state'],
+                       f.get('number'), f.get('label'), f.get('candidate_domain')])
+    return dict(FIXTURE_META,
+                tuple_columns=['id', 'direction', 'logical_object_hex', 'field',
+                               'field_state', 'number', 'label', 'candidate_domain'],
+                tuples=tuples)
 
 
 def problems(contract, fixture):
@@ -129,6 +493,11 @@ def problems(contract, fixture):
     check('constants', contract.get('output_constants'),
           {'physical': 'Unknown', 'qualified': False,
            'field_grade': 'Hypothesis', 'calculation_grade': 'Proven'})
+    check('ctx.required_keys', ctx.get('required_keys'), REQUIRED_KEYS)
+    check('input_keys', contract.get('input_keys'), INPUT_KEYS)
+    check('result_states', contract.get('result_states'), RESULT_STATES)
+    check('field_states', contract.get('field_states'), FIELD_STATES)
+    check('calculation_fields', contract.get('calculation_fields'), CALCULATION_FIELDS)
     check('extents', contract.get('extents'), {'request': 10, 'positive': 18})
     check('hysteresis', contract.get('vortex_hysteresis_hz'),
           {'enter': 5, 'exit': 4, 'role': 'metadata'})
@@ -188,6 +557,30 @@ def problems(contract, fixture):
         f = cases.get(P + suffix, {}).get('expect', {}).get('fields', {}).get('reserved', {})
         check(suffix, (f.get('reserved'), 'number' in f), (ref, False))
 
+    for n in range(1, 5):
+        for kind, (number, domain) in TEMPERATURE_WORDS.items():
+            f = cases.get('%spos_temperature_%d_%s' % (P, n, kind), {}).get(
+                'expect', {}).get('fields', {}).get('temperature_%d' % n, {})
+            check('temperature %d %s' % (n, kind),
+                  (f.get('state'), f.get('number'), f.get('candidate_domain'),
+                   f.get('calculation')), ('ok', number, domain, 'Proven'))
+    for suffix, (field, want) in TAIL_CASES.items():
+        c = cases.get(P + suffix, {})
+        got = c.get('expect', {}).get('fields', {}).get(field)
+        want = dict(want)
+        if 'calculation' in want:
+            want.pop('calculation')
+        check('tail ' + suffix, got, want)
+        check('tail state ' + suffix, c.get('expect', {}).get('state'), 'complete')
+        check('tail len ' + suffix, len(c.get('logical_object', [])),
+              ENDS[c.get('direction', 'request')][-1][1] + (2 if suffix[:3] == 'req' else 1))
+    for c in cases.values():
+        want_calc = CALCULATION_FIELDS[c['direction']]
+        for name, f in c['expect']['fields'].items():
+            check('calculation ' + c['id'] + name,
+                  f.get('calculation') == 'Proven',
+                  name in want_calc and f.get('state') == 'ok')
+
     trunc = {c['id']: c for c in contract.get('truncation', [])}
     check('truncation ids', sorted(trunc), sorted(
         '%strunc_%s_%d' % (P, d, n) for d, k in (('request', 10), ('positive', 18))
@@ -213,11 +606,17 @@ def problems(contract, fixture):
                'qualified': False})
     check('error ids', [c['id'] for c in contract.get('error_cases', [])],
           [P + 'err_' + s for s in ERROR_IDS])
+    check('presence fields', {c['id']: c.get('fields') for c in contract.get('presence_cases', [])},
+          {P + 'presence_missing': {}, P + 'presence_empty': {'logical_object': []},
+           P + 'presence_zero_bytes': {'logical_object': [0] * 10}})
     check('presence', {c['id']: c['expect'] for c in contract.get('presence_cases', [])},
           {P + 'presence_missing': {'state': 'partial', 'field_state': 'missing'},
            P + 'presence_empty': {'state': 'partial', 'field_state': 'incomplete'},
            P + 'presence_zero_bytes': {'state': 'complete', 'field_state': 'ok'}})
 
+    # The full expected structures pin every other stated result: any one-leaf change fails.
+    check('contract', canonical(contract), canonical(expected_contract()))
+    check('fixture', canonical(fixture), canonical(expected_fixture()))
     check('fixture.qualification', fixture.get('qualification'), 'Unknown')
     check('fixture.columns', fixture.get('tuple_columns'),
           ['id', 'direction', 'logical_object_hex', 'field', 'field_state',
@@ -260,13 +659,13 @@ class B520ActuatorViews(unittest.TestCase):
         self.assertEqual(len(EXPECTED), 28)
 
     def test_page_prose_states_boundaries(self):
-        text = PAGE.read_text()
-        self.assertIn(SIGNATURE, text)
+        raw_text = PAGE.read_text()
+        text = ' '.join(raw_text.split())
+        self.assertIn(SIGNATURE, raw_text)
         for needle in ('physical', 'Unknown', 'Hypothesis', 'calculation=Proven',
                        'not clipped at 100', 'never chosen from a name',
                        'candidate_domain=false', 'calibrate_go_to_zero'):
-            self.assertIn(needle.replace('never chosen from a name', 'never chosen from a'),
-                          text)
+            self.assertIn(needle, text)
         self.assertNotIn('qualified=true', text)
 
     def test_error_inputs_are_invalid_and_control_is_valid(self):
@@ -279,8 +678,7 @@ class B520ActuatorViews(unittest.TestCase):
         self.assertFalse(input_is_invalid(control))
 
     def test_unknown_cases_vary_one_axis_each(self):
-        varied = {'operation': 1, 'direction': 'response',
-                  'view': 'payload_length_10', 'primary': 180, 'secondary': 33}
+        varied = UNKNOWN_VARIED
         for c in self.contract['unknown_cases']:
             axis = c['id'][len(P + 'unknown_'):]
             ctx = c['context']
@@ -361,6 +759,43 @@ class B520ActuatorViews(unittest.TestCase):
                 fixture = copy.deepcopy(self.fixture)
                 mutate(contract, fixture)
                 self.assertNotEqual(problems(contract, fixture), [])
+
+    def test_every_single_leaf_change_is_detected(self):
+        def leaves(obj, path=()):
+            if isinstance(obj, dict):
+                for k, v in obj.items():
+                    yield from leaves(v, path + (k,))
+            elif isinstance(obj, list):
+                for i, v in enumerate(obj):
+                    yield from leaves(v, path + (i,))
+            else:
+                yield path, obj
+
+        def mutated(leaf):
+            if isinstance(leaf, bool):
+                return not leaf
+            if isinstance(leaf, (int, float)):
+                return leaf + 1
+            return leaf + 'x' if isinstance(leaf, str) else 'x'
+
+        def put(root, path, value):
+            for step in path[:-1]:
+                root = root[step]
+            root[path[-1]] = value
+
+        count = 0
+        for which, doc in (('contract', self.contract), ('fixture', self.fixture)):
+            for path, leaf in leaves(doc):
+                contract = copy.deepcopy(self.contract)
+                fixture = copy.deepcopy(self.fixture)
+                put(contract if which == 'contract' else fixture, path, mutated(leaf))
+                count += 1
+                try:
+                    found = problems(contract, fixture)
+                except (KeyError, TypeError, AttributeError, IndexError):
+                    found = ['malformed']  # a structure that cannot be read fails too
+                self.assertNotEqual(found, [], (which, path))
+        self.assertGreater(count, 2000)
 
     def test_page_case_table_round_trips(self):
         again = json.loads(json.dumps(self.contract))

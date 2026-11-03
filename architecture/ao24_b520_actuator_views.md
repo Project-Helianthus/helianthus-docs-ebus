@@ -32,8 +32,13 @@ A JSON object with `context`, `fields` and optional `arguments`.
 
 Duplicate object keys at any depth, malformed JSON, a byte outside 0..255 or
 of a non-integer kind, a wrong JSON kind for `context`, `fields`, a field or
-`arguments`, a missing required context key, or a non-integer `operation`
-return an error and no result.
+`arguments`, a missing required context key, a missing top-level `fields`
+key, a non-integer `primary`, `secondary` or `operation`, or a non-string
+`direction` or `view` return an error and no result. Wrong member kinds are
+errors, never a structured Unknown; Unknown is reserved for well-typed values
+that select nothing. An absent `logical_object` inside a present `fields`
+object (`{}`) is not an error: it gives state `partial` with field state
+`missing`.
 
 ## Selection tokens
 
@@ -60,7 +65,11 @@ when it is shorter or absent, `unknown` for an unselected combination. Bytes
 beyond the extent stay in `raw` and produce no field. Each result field has
 `raw` (the bytes available to it), `state` and `grade` (`Hypothesis`), and
 optionally `number`, `label`, `flags`, `reserved`, `candidate_domain` and
-`calculation` (`Proven`). Field states: `ok`; `unmapped` (no number, no label);
+`calculation` (`Proven`). `calculation=Proven` is carried exactly by the
+fields with state `ok` whose number is a scaled exact calculation: `pwm1`,
+`pwm2` and `ed` (raw/2) and `temperature_1..4` (raw/16), including when
+`candidate_domain=false`; no other field carries it. Field states:
+`ok`; `unmapped` (no number, no label);
 `incomplete` (object shorter than the field end; no number); `missing`
 (`logical_object` absent, as distinct from an empty array, which gives
 `incomplete`); `opaque`. A partial result keeps every complete independent
@@ -313,12 +322,14 @@ bytes; `expect` lists asserted field results only.
      "pwm1": {
       "state": "ok",
       "number": 0,
-      "candidate_domain": true
+      "candidate_domain": true,
+      "calculation": "Proven"
      },
      "pwm2": {
       "state": "ok",
       "number": 0,
-      "candidate_domain": true
+      "candidate_domain": true,
+      "calculation": "Proven"
      },
      "stepper": {
       "state": "ok",
@@ -332,7 +343,8 @@ bytes; `expect` lists asserted field results only.
      "ed": {
       "state": "ok",
       "number": 0,
-      "candidate_domain": true
+      "candidate_domain": true,
+      "calculation": "Proven"
      },
      "temperature_table": {
       "state": "ok",
@@ -366,17 +378,20 @@ bytes; `expect` lists asserted field results only.
      "pwm1": {
       "state": "ok",
       "number": 127.5,
-      "candidate_domain": true
+      "candidate_domain": true,
+      "calculation": "Proven"
      },
      "pwm2": {
       "state": "ok",
       "number": 127.5,
-      "candidate_domain": true
+      "candidate_domain": true,
+      "calculation": "Proven"
      },
      "ed": {
       "state": "ok",
       "number": 127.5,
-      "candidate_domain": true
+      "candidate_domain": true,
+      "calculation": "Proven"
      }
     }
    }
@@ -402,17 +417,20 @@ bytes; `expect` lists asserted field results only.
      "pwm1": {
       "state": "ok",
       "number": 50,
-      "candidate_domain": true
+      "candidate_domain": true,
+      "calculation": "Proven"
      },
      "pwm2": {
       "state": "ok",
       "number": 30,
-      "candidate_domain": true
+      "candidate_domain": true,
+      "calculation": "Proven"
      },
      "ed": {
       "state": "ok",
       "number": 10,
-      "candidate_domain": true
+      "candidate_domain": true,
+      "calculation": "Proven"
      }
     }
    }
@@ -838,7 +856,8 @@ bytes; `expect` lists asserted field results only.
      "temperature_1": {
       "state": "ok",
       "number": 192,
-      "candidate_domain": true
+      "candidate_domain": true,
+      "calculation": "Proven"
      }
     }
    }
@@ -872,7 +891,8 @@ bytes; `expect` lists asserted field results only.
      "temperature_2": {
       "state": "ok",
       "number": 192,
-      "candidate_domain": true
+      "candidate_domain": true,
+      "calculation": "Proven"
      }
     }
    }
@@ -906,7 +926,8 @@ bytes; `expect` lists asserted field results only.
      "temperature_3": {
       "state": "ok",
       "number": 192,
-      "candidate_domain": true
+      "candidate_domain": true,
+      "calculation": "Proven"
      }
     }
    }
@@ -940,7 +961,8 @@ bytes; `expect` lists asserted field results only.
      "temperature_4": {
       "state": "ok",
       "number": 192,
-      "candidate_domain": true
+      "candidate_domain": true,
+      "calculation": "Proven"
      }
     }
    }
@@ -974,7 +996,8 @@ bytes; `expect` lists asserted field results only.
      "temperature_1": {
       "state": "ok",
       "number": -0.0625,
-      "candidate_domain": false
+      "candidate_domain": false,
+      "calculation": "Proven"
      }
     }
    }
@@ -1008,7 +1031,8 @@ bytes; `expect` lists asserted field results only.
      "temperature_2": {
       "state": "ok",
       "number": -0.0625,
-      "candidate_domain": false
+      "candidate_domain": false,
+      "calculation": "Proven"
      }
     }
    }
@@ -1042,7 +1066,8 @@ bytes; `expect` lists asserted field results only.
      "temperature_3": {
       "state": "ok",
       "number": -0.0625,
-      "candidate_domain": false
+      "candidate_domain": false,
+      "calculation": "Proven"
      }
     }
    }
@@ -1076,7 +1101,8 @@ bytes; `expect` lists asserted field results only.
      "temperature_4": {
       "state": "ok",
       "number": -0.0625,
-      "candidate_domain": false
+      "candidate_domain": false,
+      "calculation": "Proven"
      }
     }
    }
@@ -1110,7 +1136,8 @@ bytes; `expect` lists asserted field results only.
      "temperature_1": {
       "state": "ok",
       "number": 0,
-      "candidate_domain": true
+      "candidate_domain": true,
+      "calculation": "Proven"
      }
     }
    }
@@ -1144,7 +1171,8 @@ bytes; `expect` lists asserted field results only.
      "temperature_2": {
       "state": "ok",
       "number": 0,
-      "candidate_domain": true
+      "candidate_domain": true,
+      "calculation": "Proven"
      }
     }
    }
@@ -1178,7 +1206,8 @@ bytes; `expect` lists asserted field results only.
      "temperature_3": {
       "state": "ok",
       "number": 0,
-      "candidate_domain": true
+      "candidate_domain": true,
+      "calculation": "Proven"
      }
     }
    }
@@ -1212,7 +1241,8 @@ bytes; `expect` lists asserted field results only.
      "temperature_4": {
       "state": "ok",
       "number": 0,
-      "candidate_domain": true
+      "candidate_domain": true,
+      "calculation": "Proven"
      }
     }
    }
@@ -1246,7 +1276,8 @@ bytes; `expect` lists asserted field results only.
      "temperature_1": {
       "state": "ok",
       "number": 200,
-      "candidate_domain": true
+      "candidate_domain": true,
+      "calculation": "Proven"
      }
     }
    }
@@ -1280,7 +1311,8 @@ bytes; `expect` lists asserted field results only.
      "temperature_2": {
       "state": "ok",
       "number": 200,
-      "candidate_domain": true
+      "candidate_domain": true,
+      "calculation": "Proven"
      }
     }
    }
@@ -1314,7 +1346,8 @@ bytes; `expect` lists asserted field results only.
      "temperature_3": {
       "state": "ok",
       "number": 200,
-      "candidate_domain": true
+      "candidate_domain": true,
+      "calculation": "Proven"
      }
     }
    }
@@ -1348,7 +1381,8 @@ bytes; `expect` lists asserted field results only.
      "temperature_4": {
       "state": "ok",
       "number": 200,
-      "candidate_domain": true
+      "candidate_domain": true,
+      "calculation": "Proven"
      }
     }
    }
@@ -1382,7 +1416,8 @@ bytes; `expect` lists asserted field results only.
      "temperature_1": {
       "state": "ok",
       "number": 200.0625,
-      "candidate_domain": false
+      "candidate_domain": false,
+      "calculation": "Proven"
      }
     }
    }
@@ -1416,7 +1451,8 @@ bytes; `expect` lists asserted field results only.
      "temperature_2": {
       "state": "ok",
       "number": 200.0625,
-      "candidate_domain": false
+      "candidate_domain": false,
+      "calculation": "Proven"
      }
     }
    }
@@ -1450,7 +1486,8 @@ bytes; `expect` lists asserted field results only.
      "temperature_3": {
       "state": "ok",
       "number": 200.0625,
-      "candidate_domain": false
+      "candidate_domain": false,
+      "calculation": "Proven"
      }
     }
    }
@@ -1484,7 +1521,8 @@ bytes; `expect` lists asserted field results only.
      "temperature_4": {
       "state": "ok",
       "number": 200.0625,
-      "candidate_domain": false
+      "candidate_domain": false,
+      "calculation": "Proven"
      }
     }
    }
@@ -1518,22 +1556,26 @@ bytes; `expect` lists asserted field results only.
      "temperature_1": {
       "state": "ok",
       "number": 192,
-      "candidate_domain": true
+      "candidate_domain": true,
+      "calculation": "Proven"
      },
      "temperature_2": {
       "state": "ok",
       "number": 128,
-      "candidate_domain": true
+      "candidate_domain": true,
+      "calculation": "Proven"
      },
      "temperature_3": {
       "state": "ok",
       "number": 64,
-      "candidate_domain": true
+      "candidate_domain": true,
+      "calculation": "Proven"
      },
      "temperature_4": {
       "state": "ok",
       "number": 16,
-      "candidate_domain": true
+      "candidate_domain": true,
+      "calculation": "Proven"
      }
     }
    }
@@ -1966,22 +2008,26 @@ bytes; `expect` lists asserted field results only.
      "temperature_1": {
       "state": "ok",
       "number": 192,
-      "candidate_domain": true
+      "candidate_domain": true,
+      "calculation": "Proven"
      },
      "temperature_2": {
       "state": "ok",
       "number": 128,
-      "candidate_domain": true
+      "candidate_domain": true,
+      "calculation": "Proven"
      },
      "temperature_3": {
       "state": "ok",
       "number": 64,
-      "candidate_domain": true
+      "candidate_domain": true,
+      "calculation": "Proven"
      },
      "temperature_4": {
       "state": "ok",
       "number": 16,
-      "candidate_domain": true
+      "candidate_domain": true,
+      "calculation": "Proven"
      },
      "reserved": {
       "state": "ok",
@@ -2999,13 +3045,53 @@ bytes; `expect` lists asserted field results only.
   {
    "id": "ab23ao23_err_arguments_nested",
    "input_text": "{\"context\":{\"primary\":181,\"secondary\":32,\"operation\":0,\"direction\":\"request\",\"view\":\"logical_object\"},\"fields\":{},\"arguments\":{\"flag\":[true]}}"
+  },
+  {
+   "id": "ab23ao23_err_primary_string",
+   "input_text": "{\"context\":{\"primary\":\"181\",\"secondary\":32,\"operation\":0,\"direction\":\"request\",\"view\":\"logical_object\"},\"fields\":{}}"
+  },
+  {
+   "id": "ab23ao23_err_secondary_string",
+   "input_text": "{\"context\":{\"primary\":181,\"secondary\":\"32\",\"operation\":0,\"direction\":\"request\",\"view\":\"logical_object\"},\"fields\":{}}"
+  },
+  {
+   "id": "ab23ao23_err_direction_number",
+   "input_text": "{\"context\":{\"primary\":181,\"secondary\":32,\"operation\":0,\"direction\":5,\"view\":\"logical_object\"},\"fields\":{}}"
+  },
+  {
+   "id": "ab23ao23_err_view_number",
+   "input_text": "{\"context\":{\"primary\":181,\"secondary\":32,\"operation\":0,\"direction\":\"request\",\"view\":5},\"fields\":{}}"
+  },
+  {
+   "id": "ab23ao23_err_primary_missing",
+   "input_text": "{\"context\":{\"secondary\":32,\"operation\":0,\"direction\":\"request\",\"view\":\"logical_object\"},\"fields\":{}}"
+  },
+  {
+   "id": "ab23ao23_err_secondary_missing",
+   "input_text": "{\"context\":{\"primary\":181,\"operation\":0,\"direction\":\"request\",\"view\":\"logical_object\"},\"fields\":{}}"
+  },
+  {
+   "id": "ab23ao23_err_operation_missing",
+   "input_text": "{\"context\":{\"primary\":181,\"secondary\":32,\"direction\":\"request\",\"view\":\"logical_object\"},\"fields\":{}}"
+  },
+  {
+   "id": "ab23ao23_err_direction_missing",
+   "input_text": "{\"context\":{\"primary\":181,\"secondary\":32,\"operation\":0,\"view\":\"logical_object\"},\"fields\":{}}"
+  },
+  {
+   "id": "ab23ao23_err_view_missing",
+   "input_text": "{\"context\":{\"primary\":181,\"secondary\":32,\"operation\":0,\"direction\":\"request\"},\"fields\":{}}"
+  },
+  {
+   "id": "ab23ao23_err_fields_missing",
+   "input_text": "{\"context\":{\"primary\":181,\"secondary\":32,\"operation\":0,\"direction\":\"request\",\"view\":\"logical_object\"}}"
   }
  ],
  "presence_cases": [
   {
    "id": "ab23ao23_presence_missing",
    "direction": "request",
-   "fields": "absent",
+   "fields": {},
    "expect": {
     "state": "partial",
     "field_state": "missing"
@@ -3044,6 +3130,19 @@ bytes; `expect` lists asserted field results only.
     "field_state": "ok"
    }
   }
- ]
+ ],
+ "calculation_fields": {
+  "request": [
+   "pwm1",
+   "pwm2",
+   "ed"
+  ],
+  "positive": [
+   "temperature_1",
+   "temperature_2",
+   "temperature_3",
+   "temperature_4"
+  ]
+ }
 }
 ```
