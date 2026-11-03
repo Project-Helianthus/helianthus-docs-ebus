@@ -1,0 +1,7094 @@
+{
+  "api": "ab05an05.history_branch_view",
+  "synthetic": true,
+  "cases": [
+    {
+      "id": "upper",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "candidate-components",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "candidate",
+          "candidate",
+          "candidate",
+          "candidate",
+          "candidate"
+        ],
+        "component_values": [
+          59,
+          23,
+          31,
+          12,
+          99
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            12
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": true,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Hypothesis",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "lower",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              0
+            ],
+            "value": 0
+          },
+          {
+            "state": "value",
+            "raw": [
+              0
+            ],
+            "value": 0
+          },
+          {
+            "state": "value",
+            "raw": [
+              1
+            ],
+            "value": 1
+          },
+          {
+            "state": "value",
+            "raw": [
+              1
+            ],
+            "value": 1
+          },
+          {
+            "state": "value",
+            "raw": [
+              0
+            ],
+            "value": 0
+          }
+        ]
+      },
+      "expected": {
+        "state": "candidate-components",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "candidate",
+          "candidate",
+          "candidate",
+          "candidate",
+          "candidate"
+        ],
+        "component_values": [
+          0,
+          0,
+          1,
+          1,
+          0
+        ],
+        "component_raw": [
+          [
+            0
+          ],
+          [
+            0
+          ],
+          [
+            1
+          ],
+          [
+            1
+          ],
+          [
+            0
+          ]
+        ],
+        "complete": true,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Hypothesis",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "no-item",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 0,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "no-item",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "unselected",
+          "unselected",
+          "unselected",
+          "unselected",
+          "unselected"
+        ],
+        "component_values": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            12
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Unknown",
+          "semantic": "Hypothesis",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "remainder-0",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 0,
+        "remainder": [
+          254,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "unselected",
+          "unselected",
+          "unselected",
+          "unselected",
+          "unselected"
+        ],
+        "component_values": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            12
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Unknown",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "remainder-1",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 0,
+        "remainder": [
+          255,
+          254,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "unselected",
+          "unselected",
+          "unselected",
+          "unselected",
+          "unselected"
+        ],
+        "component_values": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            12
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Unknown",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "remainder-2",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 0,
+        "remainder": [
+          255,
+          255,
+          254,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "unselected",
+          "unselected",
+          "unselected",
+          "unselected",
+          "unselected"
+        ],
+        "component_values": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            12
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Unknown",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "remainder-3",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 0,
+        "remainder": [
+          255,
+          255,
+          255,
+          254,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "unselected",
+          "unselected",
+          "unselected",
+          "unselected",
+          "unselected"
+        ],
+        "component_values": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            12
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Unknown",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "remainder-4",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 0,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          254,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "unselected",
+          "unselected",
+          "unselected",
+          "unselected",
+          "unselected"
+        ],
+        "component_values": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            12
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Unknown",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "remainder-5",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 0,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          254,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "unselected",
+          "unselected",
+          "unselected",
+          "unselected",
+          "unselected"
+        ],
+        "component_values": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            12
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Unknown",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "remainder-6",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 0,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          254
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "unselected",
+          "unselected",
+          "unselected",
+          "unselected",
+          "unselected"
+        ],
+        "component_values": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            12
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Unknown",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "remainder-short",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 0,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "unselected",
+          "unselected",
+          "unselected",
+          "unselected",
+          "unselected"
+        ],
+        "component_values": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            12
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Unknown",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "remainder-long",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 0,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "unselected",
+          "unselected",
+          "unselected",
+          "unselected",
+          "unselected"
+        ],
+        "component_values": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            12
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Unknown",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "remainder-malformed",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 0,
+        "remainder": [
+          true,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "unselected",
+          "unselected",
+          "unselected",
+          "unselected",
+          "unselected"
+        ],
+        "component_values": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            12
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Unknown",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "remainder-missing",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 0,
+        "remainder": null,
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "unselected",
+          "unselected",
+          "unselected",
+          "unselected",
+          "unselected"
+        ],
+        "component_values": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            12
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Unknown",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "error-only",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 1,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": 4660,
+        "cells": [
+          {
+            "state": "replacement",
+            "raw": [
+              255
+            ],
+            "value": null
+          },
+          {
+            "state": "replacement",
+            "raw": [
+              255
+            ],
+            "value": null
+          },
+          {
+            "state": "replacement",
+            "raw": [
+              255
+            ],
+            "value": null
+          },
+          {
+            "state": "replacement",
+            "raw": [
+              255
+            ],
+            "value": null
+          },
+          {
+            "state": "replacement",
+            "raw": [
+              255
+            ],
+            "value": null
+          }
+        ]
+      },
+      "expected": {
+        "state": "error-without-complete-time",
+        "error": {
+          "state": "present",
+          "value": 4660
+        },
+        "component_states": [
+          "replacement",
+          "replacement",
+          "replacement",
+          "replacement",
+          "replacement"
+        ],
+        "component_values": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "component_raw": [
+          [
+            255
+          ],
+          [
+            255
+          ],
+          [
+            255
+          ],
+          [
+            255
+          ],
+          [
+            255
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Hypothesis",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "error-missing",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 1,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "replacement",
+            "raw": [
+              255
+            ],
+            "value": null
+          },
+          {
+            "state": "replacement",
+            "raw": [
+              255
+            ],
+            "value": null
+          },
+          {
+            "state": "replacement",
+            "raw": [
+              255
+            ],
+            "value": null
+          },
+          {
+            "state": "replacement",
+            "raw": [
+              255
+            ],
+            "value": null
+          },
+          {
+            "state": "replacement",
+            "raw": [
+              255
+            ],
+            "value": null
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "replacement",
+          "replacement",
+          "replacement",
+          "replacement",
+          "replacement"
+        ],
+        "component_values": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "component_raw": [
+          [
+            255
+          ],
+          [
+            255
+          ],
+          [
+            255
+          ],
+          [
+            255
+          ],
+          [
+            255
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "error-zero",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 1,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": 0,
+        "cells": [
+          {
+            "state": "replacement",
+            "raw": [
+              255
+            ],
+            "value": null
+          },
+          {
+            "state": "replacement",
+            "raw": [
+              255
+            ],
+            "value": null
+          },
+          {
+            "state": "replacement",
+            "raw": [
+              255
+            ],
+            "value": null
+          },
+          {
+            "state": "replacement",
+            "raw": [
+              255
+            ],
+            "value": null
+          },
+          {
+            "state": "replacement",
+            "raw": [
+              255
+            ],
+            "value": null
+          }
+        ]
+      },
+      "expected": {
+        "state": "error-without-complete-time",
+        "error": {
+          "state": "present",
+          "value": 0
+        },
+        "component_states": [
+          "replacement",
+          "replacement",
+          "replacement",
+          "replacement",
+          "replacement"
+        ],
+        "component_values": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "component_raw": [
+          [
+            255
+          ],
+          [
+            255
+          ],
+          [
+            255
+          ],
+          [
+            255
+          ],
+          [
+            255
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Hypothesis",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "error-other",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 1,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": 7,
+        "cells": [
+          {
+            "state": "replacement",
+            "raw": [
+              255
+            ],
+            "value": null
+          },
+          {
+            "state": "replacement",
+            "raw": [
+              255
+            ],
+            "value": null
+          },
+          {
+            "state": "replacement",
+            "raw": [
+              255
+            ],
+            "value": null
+          },
+          {
+            "state": "replacement",
+            "raw": [
+              255
+            ],
+            "value": null
+          },
+          {
+            "state": "replacement",
+            "raw": [
+              255
+            ],
+            "value": null
+          }
+        ]
+      },
+      "expected": {
+        "state": "error-without-complete-time",
+        "error": {
+          "state": "present",
+          "value": 7
+        },
+        "component_states": [
+          "replacement",
+          "replacement",
+          "replacement",
+          "replacement",
+          "replacement"
+        ],
+        "component_values": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "component_raw": [
+          [
+            255
+          ],
+          [
+            255
+          ],
+          [
+            255
+          ],
+          [
+            255
+          ],
+          [
+            255
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Hypothesis",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "error-malformed",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 1,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": -1,
+        "cells": [
+          {
+            "state": "replacement",
+            "raw": [
+              255
+            ],
+            "value": null
+          },
+          {
+            "state": "replacement",
+            "raw": [
+              255
+            ],
+            "value": null
+          },
+          {
+            "state": "replacement",
+            "raw": [
+              255
+            ],
+            "value": null
+          },
+          {
+            "state": "replacement",
+            "raw": [
+              255
+            ],
+            "value": null
+          },
+          {
+            "state": "replacement",
+            "raw": [
+              255
+            ],
+            "value": null
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "malformed",
+          "value": null
+        },
+        "component_states": [
+          "replacement",
+          "replacement",
+          "replacement",
+          "replacement",
+          "replacement"
+        ],
+        "component_values": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "component_raw": [
+          [
+            255
+          ],
+          [
+            255
+          ],
+          [
+            255
+          ],
+          [
+            255
+          ],
+          [
+            255
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "error-bool",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 1,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": true,
+        "cells": [
+          {
+            "state": "replacement",
+            "raw": [
+              255
+            ],
+            "value": null
+          },
+          {
+            "state": "replacement",
+            "raw": [
+              255
+            ],
+            "value": null
+          },
+          {
+            "state": "replacement",
+            "raw": [
+              255
+            ],
+            "value": null
+          },
+          {
+            "state": "replacement",
+            "raw": [
+              255
+            ],
+            "value": null
+          },
+          {
+            "state": "replacement",
+            "raw": [
+              255
+            ],
+            "value": null
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "malformed",
+          "value": null
+        },
+        "component_states": [
+          "replacement",
+          "replacement",
+          "replacement",
+          "replacement",
+          "replacement"
+        ],
+        "component_values": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "component_raw": [
+          [
+            255
+          ],
+          [
+            255
+          ],
+          [
+            255
+          ],
+          [
+            255
+          ],
+          [
+            255
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "marker-one-complete",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 1,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": 4660,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "present",
+          "value": 4660
+        },
+        "component_states": [
+          "candidate",
+          "candidate",
+          "candidate",
+          "candidate",
+          "candidate"
+        ],
+        "component_values": [
+          59,
+          23,
+          31,
+          12,
+          99
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            12
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": true,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "marker-unknown",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 3,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "unselected",
+          "unselected",
+          "unselected",
+          "unselected",
+          "unselected"
+        ],
+        "component_values": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            12
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Unknown",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "marker-missing",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": null,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "unselected",
+          "unselected",
+          "unselected",
+          "unselected",
+          "unselected"
+        ],
+        "component_values": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            12
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Unknown",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "marker-malformed",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": true,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "unselected",
+          "unselected",
+          "unselected",
+          "unselected",
+          "unselected"
+        ],
+        "component_values": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            12
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Unknown",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "family",
+      "input": {
+        "context": {
+          "family": "family-b",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "candidate-components",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "candidate",
+          "candidate",
+          "candidate",
+          "candidate",
+          "candidate"
+        ],
+        "component_values": [
+          59,
+          23,
+          31,
+          12,
+          99
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            12
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": true,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Hypothesis",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "variant",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-b",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "candidate-components",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "candidate",
+          "candidate",
+          "candidate",
+          "candidate",
+          "candidate"
+        ],
+        "component_values": [
+          59,
+          23,
+          31,
+          12,
+          99
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            12
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": true,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Hypothesis",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "direction",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "direction-b"
+        },
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "candidate-components",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "candidate",
+          "candidate",
+          "candidate",
+          "candidate",
+          "candidate"
+        ],
+        "component_values": [
+          59,
+          23,
+          31,
+          12,
+          99
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            12
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": true,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Hypothesis",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "operation",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 0,
+          "direction": "reply"
+        },
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "unselected",
+          "unselected",
+          "unselected",
+          "unselected",
+          "unselected"
+        ],
+        "component_values": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            12
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Unknown",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "unavailable-context",
+      "input": {
+        "context": null,
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "unselected",
+          "unselected",
+          "unselected",
+          "unselected",
+          "unselected"
+        ],
+        "component_values": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            12
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Unknown",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "minute-low",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              0
+            ],
+            "value": -1
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "malformed",
+          "candidate",
+          "candidate",
+          "candidate",
+          "candidate"
+        ],
+        "component_values": [
+          null,
+          23,
+          31,
+          12,
+          99
+        ],
+        "component_raw": [
+          [
+            0
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            12
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "minute-high",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              254
+            ],
+            "value": 60
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "out-of-domain",
+          "candidate",
+          "candidate",
+          "candidate",
+          "candidate"
+        ],
+        "component_values": [
+          60,
+          23,
+          31,
+          12,
+          99
+        ],
+        "component_raw": [
+          [
+            254
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            12
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "minute-missing",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "missing",
+            "raw": [
+              17
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "missing",
+          "candidate",
+          "candidate",
+          "candidate",
+          "candidate"
+        ],
+        "component_values": [
+          null,
+          23,
+          31,
+          12,
+          99
+        ],
+        "component_raw": [
+          [
+            17
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            12
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "minute-replacement",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "replacement",
+            "raw": [
+              255
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "replacement",
+          "candidate",
+          "candidate",
+          "candidate",
+          "candidate"
+        ],
+        "component_values": [
+          null,
+          23,
+          31,
+          12,
+          99
+        ],
+        "component_raw": [
+          [
+            255
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            12
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "minute-malformed",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "malformed",
+            "raw": [
+              19
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "malformed",
+          "candidate",
+          "candidate",
+          "candidate",
+          "candidate"
+        ],
+        "component_values": [
+          null,
+          23,
+          31,
+          12,
+          99
+        ],
+        "component_raw": [
+          [
+            19
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            12
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "minute-value",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              0
+            ],
+            "value": 0
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "candidate-components",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "candidate",
+          "candidate",
+          "candidate",
+          "candidate",
+          "candidate"
+        ],
+        "component_values": [
+          0,
+          23,
+          31,
+          12,
+          99
+        ],
+        "component_raw": [
+          [
+            0
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            12
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": true,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Hypothesis",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "minute-bool",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              1
+            ],
+            "value": true
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "malformed",
+          "candidate",
+          "candidate",
+          "candidate",
+          "candidate"
+        ],
+        "component_values": [
+          null,
+          23,
+          31,
+          12,
+          99
+        ],
+        "component_raw": [
+          [
+            1
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            12
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "hour-low",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              0
+            ],
+            "value": -1
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "candidate",
+          "malformed",
+          "candidate",
+          "candidate",
+          "candidate"
+        ],
+        "component_values": [
+          59,
+          null,
+          31,
+          12,
+          99
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            0
+          ],
+          [
+            31
+          ],
+          [
+            12
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "hour-high",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              254
+            ],
+            "value": 24
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "candidate",
+          "out-of-domain",
+          "candidate",
+          "candidate",
+          "candidate"
+        ],
+        "component_values": [
+          59,
+          24,
+          31,
+          12,
+          99
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            254
+          ],
+          [
+            31
+          ],
+          [
+            12
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "hour-missing",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "missing",
+            "raw": [
+              17
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "candidate",
+          "missing",
+          "candidate",
+          "candidate",
+          "candidate"
+        ],
+        "component_values": [
+          59,
+          null,
+          31,
+          12,
+          99
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            17
+          ],
+          [
+            31
+          ],
+          [
+            12
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "hour-replacement",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "replacement",
+            "raw": [
+              255
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "candidate",
+          "replacement",
+          "candidate",
+          "candidate",
+          "candidate"
+        ],
+        "component_values": [
+          59,
+          null,
+          31,
+          12,
+          99
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            255
+          ],
+          [
+            31
+          ],
+          [
+            12
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "hour-malformed",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "malformed",
+            "raw": [
+              19
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "candidate",
+          "malformed",
+          "candidate",
+          "candidate",
+          "candidate"
+        ],
+        "component_values": [
+          59,
+          null,
+          31,
+          12,
+          99
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            19
+          ],
+          [
+            31
+          ],
+          [
+            12
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "hour-value",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              0
+            ],
+            "value": 0
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "candidate-components",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "candidate",
+          "candidate",
+          "candidate",
+          "candidate",
+          "candidate"
+        ],
+        "component_values": [
+          59,
+          0,
+          31,
+          12,
+          99
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            0
+          ],
+          [
+            31
+          ],
+          [
+            12
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": true,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Hypothesis",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "hour-bool",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              1
+            ],
+            "value": true
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "candidate",
+          "malformed",
+          "candidate",
+          "candidate",
+          "candidate"
+        ],
+        "component_values": [
+          59,
+          null,
+          31,
+          12,
+          99
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            1
+          ],
+          [
+            31
+          ],
+          [
+            12
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "day-low",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              0
+            ],
+            "value": 0
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "candidate",
+          "candidate",
+          "out-of-domain",
+          "candidate",
+          "candidate"
+        ],
+        "component_values": [
+          59,
+          23,
+          0,
+          12,
+          99
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            23
+          ],
+          [
+            0
+          ],
+          [
+            12
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "day-high",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              254
+            ],
+            "value": 32
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "candidate",
+          "candidate",
+          "out-of-domain",
+          "candidate",
+          "candidate"
+        ],
+        "component_values": [
+          59,
+          23,
+          32,
+          12,
+          99
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            23
+          ],
+          [
+            254
+          ],
+          [
+            12
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "day-missing",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "missing",
+            "raw": [
+              17
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "candidate",
+          "candidate",
+          "missing",
+          "candidate",
+          "candidate"
+        ],
+        "component_values": [
+          59,
+          23,
+          null,
+          12,
+          99
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            23
+          ],
+          [
+            17
+          ],
+          [
+            12
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "day-replacement",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "replacement",
+            "raw": [
+              255
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "candidate",
+          "candidate",
+          "replacement",
+          "candidate",
+          "candidate"
+        ],
+        "component_values": [
+          59,
+          23,
+          null,
+          12,
+          99
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            23
+          ],
+          [
+            255
+          ],
+          [
+            12
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "day-malformed",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "malformed",
+            "raw": [
+              19
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "candidate",
+          "candidate",
+          "malformed",
+          "candidate",
+          "candidate"
+        ],
+        "component_values": [
+          59,
+          23,
+          null,
+          12,
+          99
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            23
+          ],
+          [
+            19
+          ],
+          [
+            12
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "day-value",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              1
+            ],
+            "value": 1
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "candidate-components",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "candidate",
+          "candidate",
+          "candidate",
+          "candidate",
+          "candidate"
+        ],
+        "component_values": [
+          59,
+          23,
+          1,
+          12,
+          99
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            23
+          ],
+          [
+            1
+          ],
+          [
+            12
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": true,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Hypothesis",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "day-bool",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              1
+            ],
+            "value": true
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "candidate",
+          "candidate",
+          "malformed",
+          "candidate",
+          "candidate"
+        ],
+        "component_values": [
+          59,
+          23,
+          null,
+          12,
+          99
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            23
+          ],
+          [
+            1
+          ],
+          [
+            12
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "month-low",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              0
+            ],
+            "value": 0
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "candidate",
+          "candidate",
+          "candidate",
+          "out-of-domain",
+          "candidate"
+        ],
+        "component_values": [
+          59,
+          23,
+          31,
+          0,
+          99
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            0
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "month-high",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              254
+            ],
+            "value": 13
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "candidate",
+          "candidate",
+          "candidate",
+          "out-of-domain",
+          "candidate"
+        ],
+        "component_values": [
+          59,
+          23,
+          31,
+          13,
+          99
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            254
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "month-missing",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "missing",
+            "raw": [
+              17
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "candidate",
+          "candidate",
+          "candidate",
+          "missing",
+          "candidate"
+        ],
+        "component_values": [
+          59,
+          23,
+          31,
+          null,
+          99
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            17
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "month-replacement",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "replacement",
+            "raw": [
+              255
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "candidate",
+          "candidate",
+          "candidate",
+          "replacement",
+          "candidate"
+        ],
+        "component_values": [
+          59,
+          23,
+          31,
+          null,
+          99
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            255
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "month-malformed",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "malformed",
+            "raw": [
+              19
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "candidate",
+          "candidate",
+          "candidate",
+          "malformed",
+          "candidate"
+        ],
+        "component_values": [
+          59,
+          23,
+          31,
+          null,
+          99
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            19
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "month-value",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              1
+            ],
+            "value": 1
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "candidate-components",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "candidate",
+          "candidate",
+          "candidate",
+          "candidate",
+          "candidate"
+        ],
+        "component_values": [
+          59,
+          23,
+          31,
+          1,
+          99
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            1
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": true,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Hypothesis",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "month-bool",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              1
+            ],
+            "value": true
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "candidate",
+          "candidate",
+          "candidate",
+          "malformed",
+          "candidate"
+        ],
+        "component_values": [
+          59,
+          23,
+          31,
+          null,
+          99
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            1
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "year-low",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              0
+            ],
+            "value": -1
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "candidate",
+          "candidate",
+          "candidate",
+          "candidate",
+          "malformed"
+        ],
+        "component_values": [
+          59,
+          23,
+          31,
+          12,
+          null
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            12
+          ],
+          [
+            0
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "year-high",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              254
+            ],
+            "value": 100
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "candidate",
+          "candidate",
+          "candidate",
+          "candidate",
+          "out-of-domain"
+        ],
+        "component_values": [
+          59,
+          23,
+          31,
+          12,
+          100
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            12
+          ],
+          [
+            254
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "year-missing",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "missing",
+            "raw": [
+              17
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "candidate",
+          "candidate",
+          "candidate",
+          "candidate",
+          "missing"
+        ],
+        "component_values": [
+          59,
+          23,
+          31,
+          12,
+          null
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            12
+          ],
+          [
+            17
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "year-replacement",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "replacement",
+            "raw": [
+              255
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "candidate",
+          "candidate",
+          "candidate",
+          "candidate",
+          "replacement"
+        ],
+        "component_values": [
+          59,
+          23,
+          31,
+          12,
+          null
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            12
+          ],
+          [
+            255
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "year-malformed",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "malformed",
+            "raw": [
+              19
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "candidate",
+          "candidate",
+          "candidate",
+          "candidate",
+          "malformed"
+        ],
+        "component_values": [
+          59,
+          23,
+          31,
+          12,
+          null
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            12
+          ],
+          [
+            19
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "year-value",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              0
+            ],
+            "value": 0
+          }
+        ]
+      },
+      "expected": {
+        "state": "candidate-components",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "candidate",
+          "candidate",
+          "candidate",
+          "candidate",
+          "candidate"
+        ],
+        "component_values": [
+          59,
+          23,
+          31,
+          12,
+          0
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            12
+          ],
+          [
+            0
+          ]
+        ],
+        "complete": true,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Hypothesis",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "year-bool",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              1
+            ],
+            "value": true
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "candidate",
+          "candidate",
+          "candidate",
+          "candidate",
+          "malformed"
+        ],
+        "component_values": [
+          59,
+          23,
+          31,
+          12,
+          null
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            12
+          ],
+          [
+            1
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "cells-missing",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": null
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "missing",
+          "missing",
+          "missing",
+          "missing",
+          "missing"
+        ],
+        "component_values": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "component_raw": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "cells-short",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "candidate",
+          "candidate",
+          "candidate",
+          "candidate",
+          "missing"
+        ],
+        "component_values": [
+          59,
+          23,
+          31,
+          12,
+          null
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            12
+          ],
+          null
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "impossible-joint-date",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": null,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              59
+            ],
+            "value": 59
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              2
+            ],
+            "value": 2
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "candidate-components",
+        "error": {
+          "state": "missing",
+          "value": null
+        },
+        "component_states": [
+          "candidate",
+          "candidate",
+          "candidate",
+          "candidate",
+          "candidate"
+        ],
+        "component_values": [
+          59,
+          23,
+          31,
+          2,
+          99
+        ],
+        "component_raw": [
+          [
+            59
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            2
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": true,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Hypothesis",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "error-all-missing",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 1,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": 4660,
+        "cells": [
+          {
+            "state": "missing",
+            "raw": null,
+            "value": null
+          },
+          {
+            "state": "missing",
+            "raw": null,
+            "value": null
+          },
+          {
+            "state": "missing",
+            "raw": null,
+            "value": null
+          },
+          {
+            "state": "missing",
+            "raw": null,
+            "value": null
+          },
+          {
+            "state": "missing",
+            "raw": null,
+            "value": null
+          }
+        ]
+      },
+      "expected": {
+        "state": "error-without-complete-time",
+        "error": {
+          "state": "present",
+          "value": 4660
+        },
+        "component_states": [
+          "missing",
+          "missing",
+          "missing",
+          "missing",
+          "missing"
+        ],
+        "component_values": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "component_raw": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Hypothesis",
+          "native": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "error-partial",
+      "input": {
+        "context": {
+          "family": "family-a",
+          "variant": "variant-a",
+          "operation": 1,
+          "direction": "reply"
+        },
+        "marker": 2,
+        "remainder": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ],
+        "error": 4660,
+        "cells": [
+          {
+            "state": "value",
+            "raw": [
+              254
+            ],
+            "value": 60
+          },
+          {
+            "state": "value",
+            "raw": [
+              23
+            ],
+            "value": 23
+          },
+          {
+            "state": "value",
+            "raw": [
+              31
+            ],
+            "value": 31
+          },
+          {
+            "state": "value",
+            "raw": [
+              12
+            ],
+            "value": 12
+          },
+          {
+            "state": "value",
+            "raw": [
+              99
+            ],
+            "value": 99
+          }
+        ]
+      },
+      "expected": {
+        "state": "unknown-branch",
+        "error": {
+          "state": "present",
+          "value": 4660
+        },
+        "component_states": [
+          "out-of-domain",
+          "candidate",
+          "candidate",
+          "candidate",
+          "candidate"
+        ],
+        "component_values": [
+          60,
+          23,
+          31,
+          12,
+          99
+        ],
+        "component_raw": [
+          [
+            254
+          ],
+          [
+            23
+          ],
+          [
+            31
+          ],
+          [
+            12
+          ],
+          [
+            99
+          ]
+        ],
+        "complete": false,
+        "grades": {
+          "software": "Proven",
+          "numeric": "Proven",
+          "semantic": "Unknown",
+          "native": "Unknown"
+        }
+      }
+    }
+  ]
+}
