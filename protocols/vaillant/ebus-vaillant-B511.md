@@ -7,7 +7,7 @@
 `B511` is modeled by john30 TypeSpec as a read/status family. Historical
 Vaillant notes describe it as boiler/burner operational data back to the
 room/controller. Observed source/target roles are topology-dependent and
-involve a boiler, a VRC720-family controller and an internet gateway (see the
+involve a boiler, a room-controller family and an internet gateway (see the
 Direction Caveat).
 
 Evidence labels:
@@ -50,16 +50,17 @@ Selector `0x07` returns a 6-field response payload when targeting HMU at address
 ## Operating-data classes (candidate)
 
 > **Hypothesis**, unconfirmed on the wire: the table lists the B511 sub-commands
-> (the first payload byte) with a candidate layout. Quoted names are Vaillant
-> names, kept as correspondence names only.
+> (the first payload byte where an OP is explicitly declared) with a candidate
+> layout. Partial names `10` and `11` do not supply operation bytes. Quoted
+> names are Vaillant names, kept as correspondence names only.
 
 | `OP` | Candidate name | Reply content (candidate) |
 |---:|---|---|
-| `00` | detailed operational data | nine data bytes: flow temperature s16 /16 °C (bytes 0..1), pressure u8 /10 bar (2), modulation value 1 u8 raw/2 (3), burner status ASCII (4), three status bytes (5..7), modulation value 2 u8 raw/2 percent (8) |
+| `00` | detailed operational data | separate historical nine-byte interpretation: flow temperature s16 /16 °C (bytes 0..1), pressure u8 /10 bar (2), modulation value 1 u8 raw/2 (3), burner status ASCII (4), three status bytes (5..7), modulation value 2 u8 raw/2 percent (8) |
 | `01` | compressor operating data | see the next section |
 | `02` | upper/lower limits of CH and DHW setpoint, operating-mode info | six data bytes: status info (0), lower and upper CH setpoint limit (1, 2; u8 raw/2 °C), lower and upper DHW setpoint limit (3, 4; u8 raw/2 °C), current DHW setpoint (5; u8 raw/2 °C) — this differs from the community `Status02` reading (DHW mode, maximum/current temperature pairs); the discrepancy is unresolved. |
 | `03` | operational data from a heat pump | flow temperature s16 /16 °C, pressures of the CH and brine circuits (u16, mbar), heat-up basic status number, status info, message number |
-| `04` | zeolite data | control byte in the request; status info, flow and return temperature |
+| `04` | zeolite data | status info, flow and return temperature; request declaration below |
 | `05` | data for `p2` (a Vaillant name; expansion unknown) | CH and DHW setpoints, status infos |
 | `06` | operational data AI-BMU | minimum/maximum CH, DHW, water pressure and cooling setpoints, status infos |
 | `07` | operational data AI-HMU | current power, energy per day (u16 kWh), actual states, status info |
@@ -71,18 +72,61 @@ Selector `0x07` returns a 6-field response payload when targeting HMU at address
 | `0D` | shift-load storage | DHW state byte (system error, circulation function, DHW function, legionella-protection function) |
 | `0E` | communication-module status | one status byte |
 | `0F` | operational data of an appliance controller | binding of a zone to the remote controller, special-function status, heating mode, display wish temperature, quick-veto end time |
-| `10` | operational data of the burner control and interface electronics | header-only candidate; no field layout is known |
-| `11` | retrieve setpoints | header-only candidate; no field layout is known |
+| name `10` (selector Unknown) | operational data of the burner control and interface electronics | partial prefix only; declaration below |
+| name `11` (selector Unknown) | retrieve setpoints | partial prefix only; declaration below |
 
-In the candidate layouts (unconfirmed on the wire), several requests carry
-assistant, control or configuration bytes, so the family has no single
-empty-request form. Request-side fields of two classes (candidate, unconfirmed
-on the wire): class `0A` carries the tank temperature (s16 /16 °C) and an
-actuator byte (bit 0 activate legionella pump, bit 1 deactivate solar
-function) in the request; class `0D` carries the DHW storage setpoint (u8,
-raw/2 °C) and a DHW configuration byte (primary pump available, circulation
-release, DHW release, legionella-protection release and abort) in the request.
-These fields are not part of the replies in the table.
+### Bounded request and response-variant declarations
+
+All declarations below are **Hypothesis**, unconfirmed on the wire. Their
+finite scope consists only of the declarations below; no
+broader catalog completion or installed support follows.
+A logical position is not a wire offset. Extents count abstract positions,
+not bytes. Physical prefixes, all unprovided widths, defaults and variant
+selection remain **Unknown**. Request/positive denotes logical direction;
+source and destination are Unknown. No universal empty poll or default control
+arguments follow; absent arguments remain absent.
+
+The twelve-position OP00 alternatives below do not replace or validate the
+separate historical nine-byte interpretation above. The OP07 alternatives do
+not establish equivalence with the six-field State profile. Overlapping fields
+at position 7 are alternatives; their extents must not be summed. Special-function
+sets remain independent, without inventing labels for their members.
+
+Synthetic examples: [bounded B511 candidates](fixtures/ae16_b511_candidates.json).
+These examples do not qualify physical behavior. Claim grade is separate from
+physical qualification, which remains **Unknown**; no Proven wire claim follows.
+
+| Grade | Identity | Direction | Logical position/extent | Raw type/domain | Scale | Meaning | Sentinel/default/conflict | Unresolved |
+|---|---|---|---|---|---|---|---|---|
+| Hypothesis | OP04 / Boolean | request | 3; extent Unknown | Boolean 0/1 | Unknown | 0/1; labels Unknown | sentinel/default Unknown | width and physical prefix Unknown |
+| Hypothesis | OP07 / flags | request | 3; extent Unknown | flags byte 0..255 | none | bit 0 assistant; bit 1 factory-initialization; bits 2..7 reserved | sentinel/default Unknown | reserved values retained; physical prefix Unknown |
+| Hypothesis | OP09 / flags | request | 3; extent Unknown | flags byte 0..255 | none | bit 0 assistant; bit 1 factory-initialization; bits 2..7 reserved | sentinel/default Unknown | reserved values retained; physical prefix Unknown |
+| Hypothesis | OP0B / assistant | request | 3; extent Unknown | bit 0; carrier width Unknown | none | bit 0 assistant; other bits Unknown | sentinel/default Unknown | factory-initialization not declared; physical prefix Unknown |
+| Hypothesis | OP0C / mode | request | 3; extent Unknown | 0..3; width Unknown | none | 0 not-in-standby; 1 in-standby; 2 request-enter; 3 request-exit | sentinel/default Unknown | other values unmapped; physical prefix Unknown |
+| Hypothesis | OP0A / temperature | request | 3; extent Unknown | Unknown | Unknown | temperature | sentinel/default Unknown | width, unit and physical prefix Unknown |
+| Hypothesis | OP0A / actuator | request | 5; extent Unknown | Unknown | Unknown | actuator | sentinel/default Unknown | width, bits and physical prefix Unknown |
+| Hypothesis | OP0D / setpoint | request | 3; extent Unknown | Unknown | Unknown | setpoint | sentinel/default Unknown | width, unit and physical prefix Unknown |
+| Hypothesis | OP0D / configuration | request | 4; extent Unknown | Unknown | Unknown | configuration | sentinel/default Unknown | width, bits and physical prefix Unknown |
+| Hypothesis | OP0F / first special-function | positive | 4; extent Unknown | {0,1,3,4,5,6,7,8,10}; width Unknown | none | membership only; labels Unknown | sentinel/default Unknown | variant selection Unknown; no union; other codes unmapped |
+| Hypothesis | OP0F / second special-function | positive | 4; extent Unknown | {0,1,4,7,10,11}; width Unknown | none | membership only; labels Unknown | sentinel/default Unknown | variant selection Unknown; no union; other codes unmapped |
+| Hypothesis | OP0F / third special-function | positive | 4; extent Unknown | {0,1,4,7,10}; width Unknown | none | membership only; labels Unknown | sentinel/default Unknown | variant selection Unknown; no union; other codes unmapped |
+| Hypothesis | OP0F / binding | positive | 3; extent Unknown | Unknown | Unknown | binding | sentinel/default Unknown | width and physical prefix Unknown |
+| Hypothesis | OP0F / heating | positive | 5; extent Unknown | Unknown | Unknown | heating | sentinel/default Unknown | width and physical prefix Unknown |
+| Hypothesis | OP0F / error/maintenance/cooling-allowed | positive | 6; extent Unknown | Unknown | Unknown | error/maintenance/cooling-allowed | sentinel/default Unknown | width and physical prefix Unknown |
+| Hypothesis | OP0F / wish-temperature | positive | 7; extent Unknown | u8 0..255 | raw/2 degrees | wish-temperature | sentinel/default Unknown | physical prefix Unknown |
+| Hypothesis | OP0F / quick-veto hour | positive | 8; extent Unknown | 0..255; width Unknown | none | raw carrier retained | sentinel/default Unknown | clock validation and physical prefix Unknown |
+| Hypothesis | OP0F / quick-veto minute | positive | 9; extent Unknown | 0..255; width Unknown | none | raw carrier retained | sentinel/default Unknown | clock validation and physical prefix Unknown |
+| Hypothesis | OP0F / event-end hour | positive | 10; extent Unknown | 0..255; width Unknown | none | raw carrier retained | sentinel/default Unknown | clock validation and physical prefix Unknown |
+| Hypothesis | OP0F / event-end minute | positive | 11; extent Unknown | 0..255; width Unknown | none | raw carrier retained | sentinel/default Unknown | clock validation and physical prefix Unknown |
+| Hypothesis | OP00 / reserved status-byte-one | positive | 8; extent 12 abstract positions | status byte 0..255 | none | bit 7 reserved; raw retained | sentinel/default Unknown | two independent variants; selection and physical prefix Unknown |
+| Hypothesis | OP00 / fan status-byte-one | positive | 8; extent 12 abstract positions | status byte 0..255 | none | bit 7 fan-running 0/1 | sentinel/default Unknown | two independent variants; selection and physical prefix Unknown |
+| Hypothesis | OP07 / base | positive | positions 0..7; extent 8 abstract positions | Unknown | Unknown | base form | sentinel/default Unknown | physical prefix and widths Unknown; separate from six-field State profile |
+| Hypothesis | OP07 / extended pressure | positive | 8; maximum extent 9 abstract positions | 0..100; width Unknown | percent | building-circuit-pressure | sentinel/default Unknown | not bar; physical prefix Unknown; separate from six-field State profile |
+| Hypothesis | OP07 / overlapping room-setpoint | positive | 7; maximum extent 9 abstract positions | u8 0..255 | raw/2 degrees | room-setpoint | sentinel/default Unknown | other structures overlap 7; do not concatenate; selection Unknown |
+| Hypothesis | name 10 / partial prefix | request | 0; extent Unknown | B5; width Unknown | none | encoded selector absent; body absent | sentinel/default Unknown | suffix is not an operation byte; physical prefix and installed support Unknown |
+| Hypothesis | name 10 / partial prefix | positive | 0; extent Unknown | F5; width Unknown | none | encoded selector absent; body absent | sentinel/default Unknown | suffix is not an operation byte; physical prefix and installed support Unknown |
+| Hypothesis | name 11 / partial prefix | request | 0; extent Unknown | B5; width Unknown | none | encoded selector absent; body absent | sentinel/default Unknown | suffix is not an operation byte; physical prefix and installed support Unknown |
+| Hypothesis | name 11 / partial prefix | positive | 0; extent Unknown | F5; width Unknown | none | encoded selector absent; body absent | sentinel/default Unknown | suffix is not an operation byte; physical prefix and installed support Unknown |
 
 Candidate codec notes (unconfirmed on the wire):
 
@@ -92,12 +136,6 @@ Candidate codec notes (unconfirmed on the wire):
   little-endian s16 /16 °C value. Class `0B` airflow uses raw `8000` before
   u16 m³/h and bargraph raw `FF` before u8 % (candidate). Whether raw `8000`
   means "invalid" or "unavailable" is not established.
-- Class `0F` special function (candidate): the base values are `0` none, `1`
-  ventilation boost, `4` quick veto, `7` holiday and `10` system off. No
-  universal enumeration is established; candidate additional values include
-  `3` Party, `5` OneDayHoliday, `6` OneDayBankHoliday and `8` BankHoliday, and
-  `11` = ManualCooling on some targets. Heating mode (candidate) is `0` off,
-  `1` auto, `2` day, `3` setback.
 - Class `0E` status byte (candidate, unconfirmed on the wire): bit 0 LAN, 1
   WLAN, 2 eBUS, 3 PeBUS, 4 backend, 5 scan available, 6 firmware update, 7
   reserved.
@@ -106,10 +144,8 @@ Candidate codec notes (unconfirmed on the wire):
   energy per day, actual states, status info) may or may not describe the
   same reply; the relationship is unresolved.
 
-Candidate, unconfirmed on the wire: every class with a candidate layout (`00`
-to `0F`) is available under both the eBUS and the PeBUS profiles; none is known
-to be available only on PeBUS. The profile availability of the header-only
-entries (B511 `10`, `11`) is not established.
+Profile availability and installed support of the bounded declarations are
+**Unknown**; neither eBUS nor PeBUS support follows from a declaration.
 
 ## B5 11 01 failure-mode read (candidate)
 
@@ -159,7 +195,8 @@ REQ:  10 08 b5 11 01 02
 RESP: 06 03 3c 96 46 82 78
 ```
 
-The first response has the nine data bytes of the candidate class `00` reply,
+The first response has nine data bytes in the separate historical class `00` interpretation,
+not evidence for the twelve abstract positions of either bounded OP00 variant,
 and the third response has the six data bytes of the candidate class `02`
 reply (candidate, unconfirmed on the wire). The second response is consistent
 with `Status01` length. The third response does not match the simple `Status02`
@@ -171,7 +208,7 @@ product ID and firmware.
 The top-level Vaillant overview records these observed roles:
 
 - A boiler can initiate `B511` toward an internet gateway.
-- A VRC720-family controller can initiate related control/status traffic
+- A room-controller family can initiate related control/status traffic
   toward the boiler.
 - The boiler can also respond as a target.
 
@@ -196,8 +233,11 @@ selector, and response length in every specimen.
   and the candidate class `07`.
 - The classes beyond `00`..`03` have candidate layouts only; no exchange and
   no sender or responder implementation is known either way.
-- The profile availability (eBUS or PeBUS) of the header-only classes `10` and
-  `11`.
+- Physical prefixes, encoded selectors, bodies and installed support of the
+  partial names `10` and `11` remain Unknown; the suffixes do not encode operations.
+- Selection between the two OP00 status-byte-one alternatives, the independent
+  OP0F membership sets, and the overlapping OP07 structures remains Unknown.
+  Clock validation for OP0F hour/minute carriers is Unknown; raw 255 stays raw.
 - The initiator and responder roles of the Direction Caveat were observed on
   one topology; other installations were not observed.
 

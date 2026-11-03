@@ -1,0 +1,419 @@
+{
+  "evidence": "synthetic only",
+  "representation_grade": "Proven",
+  "physical_grade": "Hypothesis",
+  "qualification": "Unknown",
+  "fields": [
+    {
+      "field": "holiday_number",
+      "family": "Vaillant",
+      "variant": null,
+      "direction": null,
+      "service": null,
+      "operation": null,
+      "alternative": "field-declaration",
+      "extent_bytes": 1,
+      "offset": null,
+      "conversion": "unsigned byte",
+      "default": 0,
+      "grade": "Hypothesis",
+      "identity_relation": "separate from circuit/room identity"
+    },
+    {
+      "field": "start_day",
+      "family": "Vaillant",
+      "variant": null,
+      "direction": null,
+      "service": null,
+      "operation": null,
+      "alternative": "field-declaration",
+      "extent_bytes": null,
+      "offset": null,
+      "conversion": "Unknown",
+      "default": 0,
+      "grade": "Hypothesis",
+      "zero_calendar_conflict": true
+    },
+    {
+      "field": "start_month",
+      "family": "Vaillant",
+      "variant": null,
+      "direction": null,
+      "service": null,
+      "operation": null,
+      "alternative": "field-declaration",
+      "extent_bytes": null,
+      "offset": null,
+      "conversion": "Unknown",
+      "default": 0,
+      "grade": "Hypothesis",
+      "zero_calendar_conflict": true
+    },
+    {
+      "field": "start_year",
+      "family": "Vaillant",
+      "variant": null,
+      "direction": null,
+      "service": null,
+      "operation": null,
+      "alternative": "field-declaration",
+      "extent_bytes": null,
+      "offset": null,
+      "conversion": "Unknown",
+      "default": 0,
+      "grade": "Hypothesis",
+      "zero_calendar_conflict": false
+    },
+    {
+      "field": "end_day",
+      "family": "Vaillant",
+      "variant": null,
+      "direction": null,
+      "service": null,
+      "operation": null,
+      "alternative": "field-declaration",
+      "extent_bytes": null,
+      "offset": null,
+      "conversion": "Unknown",
+      "default": 0,
+      "grade": "Hypothesis",
+      "zero_calendar_conflict": true
+    },
+    {
+      "field": "end_month",
+      "family": "Vaillant",
+      "variant": null,
+      "direction": null,
+      "service": null,
+      "operation": null,
+      "alternative": "field-declaration",
+      "extent_bytes": null,
+      "offset": null,
+      "conversion": "Unknown",
+      "default": 0,
+      "grade": "Hypothesis",
+      "zero_calendar_conflict": true
+    },
+    {
+      "field": "end_year",
+      "family": "Vaillant",
+      "variant": null,
+      "direction": null,
+      "service": null,
+      "operation": null,
+      "alternative": "field-declaration",
+      "extent_bytes": null,
+      "offset": null,
+      "conversion": "Unknown",
+      "default": 0,
+      "grade": "Hypothesis",
+      "zero_calendar_conflict": false
+    },
+    {
+      "field": "op02_setpoint",
+      "family": "Vaillant",
+      "variant": null,
+      "direction": null,
+      "service": null,
+      "operation": "OP02",
+      "alternative": "field-declaration",
+      "extent_bytes": 1,
+      "offset": null,
+      "conversion": "unsigned byte in degrees C",
+      "default": 0,
+      "grade": "Hypothesis",
+      "candidate_bounds": [
+        5,
+        30
+      ],
+      "default_conflict": true,
+      "off_frost_deletion": "Unknown"
+    },
+    {
+      "field": "room_action",
+      "family": "Vaillant",
+      "variant": null,
+      "direction": null,
+      "service": null,
+      "operation": null,
+      "alternative": "field-declaration",
+      "extent_bytes": null,
+      "offset": null,
+      "conversion": "Unknown",
+      "default": 0,
+      "grade": "Hypothesis",
+      "mappings": {
+        "0": "no-action",
+        "1": "switch-on",
+        "2": "thermostat"
+      }
+    },
+    {
+      "field": "holiday_status",
+      "family": "Vaillant",
+      "variant": null,
+      "direction": null,
+      "service": null,
+      "operation": null,
+      "alternative": "field-declaration",
+      "extent_bytes": null,
+      "offset": null,
+      "conversion": "Unknown",
+      "default": 0,
+      "grade": "Hypothesis",
+      "mappings": {
+        "0": "0",
+        "1": "1"
+      }
+    },
+    {
+      "field": "keycode_1",
+      "family": "Vaillant",
+      "variant": null,
+      "direction": null,
+      "service": null,
+      "operation": null,
+      "alternative": "field-declaration",
+      "extent_bytes": 1,
+      "offset": null,
+      "conversion": "independent numeric byte",
+      "default": null,
+      "grade": "Hypothesis",
+      "excluded": [
+        "ASCII",
+        "packed decimal",
+        "u32"
+      ]
+    },
+    {
+      "field": "keycode_2",
+      "family": "Vaillant",
+      "variant": null,
+      "direction": null,
+      "service": null,
+      "operation": null,
+      "alternative": "field-declaration",
+      "extent_bytes": 1,
+      "offset": null,
+      "conversion": "independent numeric byte",
+      "default": null,
+      "grade": "Hypothesis",
+      "excluded": [
+        "ASCII",
+        "packed decimal",
+        "u32"
+      ]
+    },
+    {
+      "field": "keycode_3",
+      "family": "Vaillant",
+      "variant": null,
+      "direction": null,
+      "service": null,
+      "operation": null,
+      "alternative": "field-declaration",
+      "extent_bytes": 1,
+      "offset": null,
+      "conversion": "independent numeric byte",
+      "default": null,
+      "grade": "Hypothesis",
+      "excluded": [
+        "ASCII",
+        "packed decimal",
+        "u32"
+      ]
+    },
+    {
+      "field": "keycode_4",
+      "family": "Vaillant",
+      "variant": null,
+      "direction": null,
+      "service": null,
+      "operation": null,
+      "alternative": "field-declaration",
+      "extent_bytes": 1,
+      "offset": null,
+      "conversion": "independent numeric byte",
+      "default": null,
+      "grade": "Hypothesis",
+      "excluded": [
+        "ASCII",
+        "packed decimal",
+        "u32"
+      ]
+    },
+    {
+      "field": "circuit_name",
+      "family": "Vaillant",
+      "variant": null,
+      "direction": null,
+      "service": null,
+      "operation": null,
+      "alternative": "field-declaration",
+      "extent_bytes": 10,
+      "offset": null,
+      "conversion": "ASCII characters",
+      "default": null,
+      "grade": "Hypothesis",
+      "unknown": [
+        "padding",
+        "trimming",
+        "NUL termination",
+        "UTF-8",
+        "truncation"
+      ]
+    },
+    {
+      "field": "remote_control_write",
+      "family": "Vaillant",
+      "variant": "remote-control",
+      "direction": null,
+      "service": null,
+      "operation": null,
+      "alternative": "remote-control-write",
+      "extent_bytes": null,
+      "offset": null,
+      "conversion": "Unknown",
+      "default": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "field": "b50d_ui_direction_write",
+      "family": "Vaillant",
+      "variant": "UI-direction",
+      "direction": null,
+      "service": "B50D",
+      "operation": null,
+      "alternative": "UI-direction-write",
+      "extent_bytes": null,
+      "offset": null,
+      "conversion": "Unknown",
+      "default": null,
+      "grade": "Hypothesis"
+    }
+  ],
+  "unknown": [
+    "calendar century",
+    "timezone",
+    "valid-date rules",
+    "start-before-end rules",
+    "atomicity",
+    "persistent assignment",
+    "physical response",
+    "readback",
+    "pairing of B50B writes with B50C reads",
+    "native adaptation",
+    "peer effects",
+    "qualification"
+  ],
+  "examples": {
+    "calendar_defaults": [
+      {
+        "field": "start_day",
+        "raw": 0,
+        "calendar_valid": false,
+        "conflict": true,
+        "meaning": "Unknown"
+      },
+      {
+        "field": "start_month",
+        "raw": 0,
+        "calendar_valid": false,
+        "conflict": true,
+        "meaning": "Unknown"
+      },
+      {
+        "field": "end_day",
+        "raw": 0,
+        "calendar_valid": false,
+        "conflict": true,
+        "meaning": "Unknown"
+      },
+      {
+        "field": "end_month",
+        "raw": 0,
+        "calendar_valid": false,
+        "conflict": true,
+        "meaning": "Unknown"
+      }
+    ],
+    "setpoints": [
+      {
+        "raw": 0,
+        "degrees_c": 0,
+        "inside_candidate_bounds": false,
+        "meaning": "Unknown"
+      },
+      {
+        "raw": 5,
+        "degrees_c": 5,
+        "inside_candidate_bounds": true,
+        "meaning": "Unknown"
+      },
+      {
+        "raw": 30,
+        "degrees_c": 30,
+        "inside_candidate_bounds": true,
+        "meaning": "Unknown"
+      },
+      {
+        "raw": 31,
+        "degrees_c": 31,
+        "inside_candidate_bounds": false,
+        "meaning": "Unknown"
+      }
+    ],
+    "room_actions": [
+      {
+        "raw": 0,
+        "label": "no-action"
+      },
+      {
+        "raw": 1,
+        "label": "switch-on"
+      },
+      {
+        "raw": 2,
+        "label": "thermostat"
+      },
+      {
+        "raw": 3,
+        "label": null
+      }
+    ],
+    "holiday_states": [
+      {
+        "raw": 0,
+        "label": "0"
+      },
+      {
+        "raw": 1,
+        "label": "1"
+      },
+      {
+        "raw": 2,
+        "label": null
+      }
+    ],
+    "keycode": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "circuit_names": [
+      {
+        "raw_ascii": "ABCDEFGHI",
+        "matches_declared_extent": false
+      },
+      {
+        "raw_ascii": "ABCDEFGHIJ",
+        "matches_declared_extent": true
+      },
+      {
+        "raw_ascii": "ABCDEFGHIJK",
+        "matches_declared_extent": false
+      }
+    ]
+  }
+}
