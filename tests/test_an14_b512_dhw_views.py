@@ -1030,7 +1030,7 @@ class B512Op06Views(unittest.TestCase):
         self.assertEqual(contract_problems(page, fixture), [])
 
         def rejected(name, new_page, new_fixture, code):
-            directory = tempfile.TemporaryDirectory(prefix='an14-mutant-', dir=Path.cwd() / '.tmp')
+            directory = tempfile.TemporaryDirectory(prefix='an14-mutant-')
             try:
                 path = Path(directory.name)
                 (path / 'page.md').write_text(new_page)
