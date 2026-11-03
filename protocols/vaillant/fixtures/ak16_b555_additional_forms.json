@@ -1,0 +1,590 @@
+{
+  "grade": "Hypothesis",
+  "coordinate_basis": "immediately after command; not physical payload base",
+  "family": "B555",
+  "qualification": "Unknown",
+  "unknown": [
+    "physical_adaptation",
+    "physical_offsets",
+    "prefix_presence",
+    "other_timer_variants",
+    "native_support",
+    "physical_effects",
+    "persistence",
+    "delivery"
+  ],
+  "forms": [
+    {
+      "command": "A0",
+      "meaning": "availability",
+      "request_parameters": [],
+      "reply_bytes": 8,
+      "global_fields": [
+        {
+          "field": "dhw",
+          "byte": 0,
+          "bit": 0,
+          "width_bits": 1
+        },
+        {
+          "field": "circulation",
+          "byte": 0,
+          "bit": 1,
+          "width_bits": 1
+        },
+        {
+          "field": "noise_reduction",
+          "byte": 0,
+          "bit": 2,
+          "width_bits": 1
+        },
+        {
+          "field": "ventilation",
+          "byte": 0,
+          "bit": 3,
+          "width_bits": 1
+        },
+        {
+          "field": "high_tariff",
+          "byte": 0,
+          "bit": 4,
+          "width_bits": 1
+        }
+      ],
+      "reserved": [
+        {
+          "byte": 0,
+          "bit": 5,
+          "width_bits": 3
+        },
+        {
+          "byte": 1,
+          "bit": 0,
+          "width_bits": 8
+        }
+      ],
+      "channel_fields": [
+        "zone_heating",
+        "zone_cooling",
+        "external_dhw",
+        "external_fixed_flow"
+      ],
+      "channels": [
+        {
+          "channel": 1,
+          "byte": 2,
+          "bit": 0,
+          "width_bits": 4
+        },
+        {
+          "channel": 2,
+          "byte": 2,
+          "bit": 4,
+          "width_bits": 4
+        },
+        {
+          "channel": 3,
+          "byte": 3,
+          "bit": 0,
+          "width_bits": 4
+        },
+        {
+          "channel": 4,
+          "byte": 3,
+          "bit": 4,
+          "width_bits": 4
+        },
+        {
+          "channel": 5,
+          "byte": 4,
+          "bit": 0,
+          "width_bits": 4
+        },
+        {
+          "channel": 6,
+          "byte": 4,
+          "bit": 4,
+          "width_bits": 4
+        },
+        {
+          "channel": 7,
+          "byte": 5,
+          "bit": 0,
+          "width_bits": 4
+        },
+        {
+          "channel": 8,
+          "byte": 5,
+          "bit": 4,
+          "width_bits": 4
+        },
+        {
+          "channel": 9,
+          "byte": 6,
+          "bit": 0,
+          "width_bits": 4
+        },
+        {
+          "channel": 10,
+          "byte": 6,
+          "bit": 4,
+          "width_bits": 4
+        },
+        {
+          "channel": 11,
+          "byte": 7,
+          "bit": 0,
+          "width_bits": 4
+        },
+        {
+          "channel": 12,
+          "byte": 7,
+          "bit": 4,
+          "width_bits": 4
+        }
+      ]
+    },
+    {
+      "command": "A7",
+      "meaning": "visibility",
+      "request_parameters": [],
+      "reply_bytes": 8,
+      "global_fields": [
+        {
+          "field": "dhw",
+          "byte": 0,
+          "bit": 0,
+          "width_bits": 1
+        },
+        {
+          "field": "circulation",
+          "byte": 0,
+          "bit": 1,
+          "width_bits": 1
+        },
+        {
+          "field": "noise_reduction",
+          "byte": 0,
+          "bit": 2,
+          "width_bits": 1
+        },
+        {
+          "field": "ventilation",
+          "byte": 0,
+          "bit": 3,
+          "width_bits": 1
+        },
+        {
+          "field": "high_tariff",
+          "byte": 0,
+          "bit": 4,
+          "width_bits": 1
+        }
+      ],
+      "reserved": [
+        {
+          "byte": 0,
+          "bit": 5,
+          "width_bits": 3
+        },
+        {
+          "byte": 1,
+          "bit": 0,
+          "width_bits": 8
+        }
+      ],
+      "channel_fields": [
+        "zone_heating",
+        "zone_cooling",
+        "external_dhw",
+        "external_fixed_flow"
+      ],
+      "channels": [
+        {
+          "channel": 1,
+          "byte": 2,
+          "bit": 0,
+          "width_bits": 4
+        },
+        {
+          "channel": 2,
+          "byte": 2,
+          "bit": 4,
+          "width_bits": 4
+        },
+        {
+          "channel": 3,
+          "byte": 3,
+          "bit": 0,
+          "width_bits": 4
+        },
+        {
+          "channel": 4,
+          "byte": 3,
+          "bit": 4,
+          "width_bits": 4
+        },
+        {
+          "channel": 5,
+          "byte": 4,
+          "bit": 0,
+          "width_bits": 4
+        },
+        {
+          "channel": 6,
+          "byte": 4,
+          "bit": 4,
+          "width_bits": 4
+        },
+        {
+          "channel": 7,
+          "byte": 5,
+          "bit": 0,
+          "width_bits": 4
+        },
+        {
+          "channel": 8,
+          "byte": 5,
+          "bit": 4,
+          "width_bits": 4
+        },
+        {
+          "channel": 9,
+          "byte": 6,
+          "bit": 0,
+          "width_bits": 4
+        },
+        {
+          "channel": 10,
+          "byte": 6,
+          "bit": 4,
+          "width_bits": 4
+        },
+        {
+          "channel": 11,
+          "byte": 7,
+          "bit": 0,
+          "width_bits": 4
+        },
+        {
+          "channel": 12,
+          "byte": 7,
+          "bit": 4,
+          "width_bits": 4
+        }
+      ]
+    },
+    {
+      "command": "A1",
+      "meaning": "reserved",
+      "request_parameters": [],
+      "reply_bytes": 6,
+      "reserved": [
+        {
+          "byte": 0,
+          "bit": 0,
+          "width_bits": 48
+        }
+      ]
+    },
+    {
+      "command": "A2",
+      "meaning": "reserved",
+      "request_parameters": [],
+      "reply_bytes": 6,
+      "reserved": [
+        {
+          "byte": 0,
+          "bit": 0,
+          "width_bits": 48
+        }
+      ]
+    },
+    {
+      "command": "A8",
+      "meaning": "reserved",
+      "request_parameters": [],
+      "reply_bytes": 6,
+      "reserved": [
+        {
+          "byte": 0,
+          "bit": 0,
+          "width_bits": 48
+        }
+      ]
+    },
+    {
+      "command": "A9",
+      "meaning": "reserved",
+      "request_parameters": [],
+      "reply_bytes": 6,
+      "reserved": [
+        {
+          "byte": 0,
+          "bit": 0,
+          "width_bits": 48
+        }
+      ]
+    },
+    {
+      "command": "A4",
+      "meaning": "positive_counts",
+      "reply_bytes": 9,
+      "fields": [
+        {
+          "field": "status",
+          "byte": 0,
+          "width_bytes": 1,
+          "encoding": "u8"
+        },
+        {
+          "field": "monday",
+          "byte": 1,
+          "width_bytes": 1,
+          "encoding": "u8"
+        },
+        {
+          "field": "tuesday",
+          "byte": 2,
+          "width_bytes": 1,
+          "encoding": "u8"
+        },
+        {
+          "field": "wednesday",
+          "byte": 3,
+          "width_bytes": 1,
+          "encoding": "u8"
+        },
+        {
+          "field": "thursday",
+          "byte": 4,
+          "width_bytes": 1,
+          "encoding": "u8"
+        },
+        {
+          "field": "friday",
+          "byte": 5,
+          "width_bytes": 1,
+          "encoding": "u8"
+        },
+        {
+          "field": "saturday",
+          "byte": 6,
+          "width_bytes": 1,
+          "encoding": "u8"
+        },
+        {
+          "field": "sunday",
+          "byte": 7,
+          "width_bytes": 1,
+          "encoding": "u8"
+        },
+        {
+          "field": "count_24_hour",
+          "byte": 8,
+          "width_bytes": 1,
+          "encoding": "u8"
+        }
+      ]
+    },
+    {
+      "command": "A5",
+      "meaning": "positive_slot",
+      "reply_bytes": 7,
+      "fields": [
+        {
+          "field": "status",
+          "byte": 0,
+          "width_bytes": 1,
+          "encoding": "u8"
+        },
+        {
+          "field": "start_hour",
+          "byte": 1,
+          "width_bytes": 1,
+          "encoding": "u8",
+          "domain": [
+            0,
+            24
+          ]
+        },
+        {
+          "field": "start_minute",
+          "byte": 2,
+          "width_bytes": 1,
+          "encoding": "u8",
+          "domain": [
+            0,
+            59
+          ]
+        },
+        {
+          "field": "end_hour",
+          "byte": 3,
+          "width_bytes": 1,
+          "encoding": "u8",
+          "domain": [
+            0,
+            24
+          ]
+        },
+        {
+          "field": "end_minute",
+          "byte": 4,
+          "width_bytes": 1,
+          "encoding": "u8",
+          "domain": [
+            0,
+            59
+          ]
+        },
+        {
+          "field": "setpoint_raw",
+          "byte": 5,
+          "width_bytes": 2,
+          "encoding": "u16_le",
+          "unit": "Unknown",
+          "sentinel": "Unknown"
+        }
+      ]
+    }
+  ],
+  "synthetic_cases": [
+    {"command": "A0", "raw": [1, 0, 0, 0, 0, 0, 0, 0], "global_true": ["dhw"], "channel_true": [], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [2, 0, 0, 0, 0, 0, 0, 0], "global_true": ["circulation"], "channel_true": [], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [4, 0, 0, 0, 0, 0, 0, 0], "global_true": ["noise_reduction"], "channel_true": [], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [8, 0, 0, 0, 0, 0, 0, 0], "global_true": ["ventilation"], "channel_true": [], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [16, 0, 0, 0, 0, 0, 0, 0], "global_true": ["high_tariff"], "channel_true": [], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 1, 0, 0, 0, 0, 0], "global_true": [], "channel_true": [[1, "zone_heating"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 2, 0, 0, 0, 0, 0], "global_true": [], "channel_true": [[1, "zone_cooling"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 4, 0, 0, 0, 0, 0], "global_true": [], "channel_true": [[1, "external_dhw"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 8, 0, 0, 0, 0, 0], "global_true": [], "channel_true": [[1, "external_fixed_flow"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 16, 0, 0, 0, 0, 0], "global_true": [], "channel_true": [[2, "zone_heating"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 32, 0, 0, 0, 0, 0], "global_true": [], "channel_true": [[2, "zone_cooling"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 64, 0, 0, 0, 0, 0], "global_true": [], "channel_true": [[2, "external_dhw"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 128, 0, 0, 0, 0, 0], "global_true": [], "channel_true": [[2, "external_fixed_flow"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 0, 1, 0, 0, 0, 0], "global_true": [], "channel_true": [[3, "zone_heating"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 0, 2, 0, 0, 0, 0], "global_true": [], "channel_true": [[3, "zone_cooling"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 0, 4, 0, 0, 0, 0], "global_true": [], "channel_true": [[3, "external_dhw"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 0, 8, 0, 0, 0, 0], "global_true": [], "channel_true": [[3, "external_fixed_flow"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 0, 16, 0, 0, 0, 0], "global_true": [], "channel_true": [[4, "zone_heating"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 0, 32, 0, 0, 0, 0], "global_true": [], "channel_true": [[4, "zone_cooling"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 0, 64, 0, 0, 0, 0], "global_true": [], "channel_true": [[4, "external_dhw"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 0, 128, 0, 0, 0, 0], "global_true": [], "channel_true": [[4, "external_fixed_flow"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 0, 0, 1, 0, 0, 0], "global_true": [], "channel_true": [[5, "zone_heating"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 0, 0, 2, 0, 0, 0], "global_true": [], "channel_true": [[5, "zone_cooling"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 0, 0, 4, 0, 0, 0], "global_true": [], "channel_true": [[5, "external_dhw"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 0, 0, 8, 0, 0, 0], "global_true": [], "channel_true": [[5, "external_fixed_flow"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 0, 0, 16, 0, 0, 0], "global_true": [], "channel_true": [[6, "zone_heating"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 0, 0, 32, 0, 0, 0], "global_true": [], "channel_true": [[6, "zone_cooling"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 0, 0, 64, 0, 0, 0], "global_true": [], "channel_true": [[6, "external_dhw"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 0, 0, 128, 0, 0, 0], "global_true": [], "channel_true": [[6, "external_fixed_flow"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 0, 0, 0, 1, 0, 0], "global_true": [], "channel_true": [[7, "zone_heating"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 0, 0, 0, 2, 0, 0], "global_true": [], "channel_true": [[7, "zone_cooling"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 0, 0, 0, 4, 0, 0], "global_true": [], "channel_true": [[7, "external_dhw"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 0, 0, 0, 8, 0, 0], "global_true": [], "channel_true": [[7, "external_fixed_flow"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 0, 0, 0, 16, 0, 0], "global_true": [], "channel_true": [[8, "zone_heating"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 0, 0, 0, 32, 0, 0], "global_true": [], "channel_true": [[8, "zone_cooling"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 0, 0, 0, 64, 0, 0], "global_true": [], "channel_true": [[8, "external_dhw"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 0, 0, 0, 128, 0, 0], "global_true": [], "channel_true": [[8, "external_fixed_flow"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 0, 0, 0, 0, 1, 0], "global_true": [], "channel_true": [[9, "zone_heating"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 0, 0, 0, 0, 2, 0], "global_true": [], "channel_true": [[9, "zone_cooling"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 0, 0, 0, 0, 4, 0], "global_true": [], "channel_true": [[9, "external_dhw"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 0, 0, 0, 0, 8, 0], "global_true": [], "channel_true": [[9, "external_fixed_flow"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 0, 0, 0, 0, 16, 0], "global_true": [], "channel_true": [[10, "zone_heating"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 0, 0, 0, 0, 32, 0], "global_true": [], "channel_true": [[10, "zone_cooling"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 0, 0, 0, 0, 64, 0], "global_true": [], "channel_true": [[10, "external_dhw"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 0, 0, 0, 0, 128, 0], "global_true": [], "channel_true": [[10, "external_fixed_flow"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 0, 0, 0, 0, 0, 1], "global_true": [], "channel_true": [[11, "zone_heating"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 0, 0, 0, 0, 0, 2], "global_true": [], "channel_true": [[11, "zone_cooling"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 0, 0, 0, 0, 0, 4], "global_true": [], "channel_true": [[11, "external_dhw"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 0, 0, 0, 0, 0, 8], "global_true": [], "channel_true": [[11, "external_fixed_flow"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 0, 0, 0, 0, 0, 16], "global_true": [], "channel_true": [[12, "zone_heating"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 0, 0, 0, 0, 0, 32], "global_true": [], "channel_true": [[12, "zone_cooling"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 0, 0, 0, 0, 0, 64], "global_true": [], "channel_true": [[12, "external_dhw"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 0, 0, 0, 0, 0, 0, 128], "global_true": [], "channel_true": [[12, "external_fixed_flow"]], "reserved_raw": [0, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [32, 0, 0, 0, 0, 0, 0, 0], "global_true": [], "channel_true": [], "reserved_raw": [32, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [64, 0, 0, 0, 0, 0, 0, 0], "global_true": [], "channel_true": [], "reserved_raw": [64, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [128, 0, 0, 0, 0, 0, 0, 0], "global_true": [], "channel_true": [], "reserved_raw": [128, 0], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 1, 0, 0, 0, 0, 0, 0], "global_true": [], "channel_true": [], "reserved_raw": [0, 1], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 2, 0, 0, 0, 0, 0, 0], "global_true": [], "channel_true": [], "reserved_raw": [0, 2], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 4, 0, 0, 0, 0, 0, 0], "global_true": [], "channel_true": [], "reserved_raw": [0, 4], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 8, 0, 0, 0, 0, 0, 0], "global_true": [], "channel_true": [], "reserved_raw": [0, 8], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 16, 0, 0, 0, 0, 0, 0], "global_true": [], "channel_true": [], "reserved_raw": [0, 16], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 32, 0, 0, 0, 0, 0, 0], "global_true": [], "channel_true": [], "reserved_raw": [0, 32], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 64, 0, 0, 0, 0, 0, 0], "global_true": [], "channel_true": [], "reserved_raw": [0, 64], "meaning": "availability"},
+    {"command": "A0", "raw": [0, 128, 0, 0, 0, 0, 0, 0], "global_true": [], "channel_true": [], "reserved_raw": [0, 128], "meaning": "availability"},
+    {"command": "A0", "raw": [255, 255, 255, 255, 255, 255, 255, 255], "global_true": ["dhw", "circulation", "noise_reduction", "ventilation", "high_tariff"], "channel_true": [[1, "zone_heating"], [1, "zone_cooling"], [1, "external_dhw"], [1, "external_fixed_flow"], [2, "zone_heating"], [2, "zone_cooling"], [2, "external_dhw"], [2, "external_fixed_flow"], [3, "zone_heating"], [3, "zone_cooling"], [3, "external_dhw"], [3, "external_fixed_flow"], [4, "zone_heating"], [4, "zone_cooling"], [4, "external_dhw"], [4, "external_fixed_flow"], [5, "zone_heating"], [5, "zone_cooling"], [5, "external_dhw"], [5, "external_fixed_flow"], [6, "zone_heating"], [6, "zone_cooling"], [6, "external_dhw"], [6, "external_fixed_flow"], [7, "zone_heating"], [7, "zone_cooling"], [7, "external_dhw"], [7, "external_fixed_flow"], [8, "zone_heating"], [8, "zone_cooling"], [8, "external_dhw"], [8, "external_fixed_flow"], [9, "zone_heating"], [9, "zone_cooling"], [9, "external_dhw"], [9, "external_fixed_flow"], [10, "zone_heating"], [10, "zone_cooling"], [10, "external_dhw"], [10, "external_fixed_flow"], [11, "zone_heating"], [11, "zone_cooling"], [11, "external_dhw"], [11, "external_fixed_flow"], [12, "zone_heating"], [12, "zone_cooling"], [12, "external_dhw"], [12, "external_fixed_flow"]], "reserved_raw": [224, 255], "meaning": "availability"},
+    {"command": "A7", "raw": [1, 0, 0, 0, 0, 0, 0, 0], "global_true": ["dhw"], "channel_true": [], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [2, 0, 0, 0, 0, 0, 0, 0], "global_true": ["circulation"], "channel_true": [], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [4, 0, 0, 0, 0, 0, 0, 0], "global_true": ["noise_reduction"], "channel_true": [], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [8, 0, 0, 0, 0, 0, 0, 0], "global_true": ["ventilation"], "channel_true": [], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [16, 0, 0, 0, 0, 0, 0, 0], "global_true": ["high_tariff"], "channel_true": [], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 1, 0, 0, 0, 0, 0], "global_true": [], "channel_true": [[1, "zone_heating"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 2, 0, 0, 0, 0, 0], "global_true": [], "channel_true": [[1, "zone_cooling"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 4, 0, 0, 0, 0, 0], "global_true": [], "channel_true": [[1, "external_dhw"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 8, 0, 0, 0, 0, 0], "global_true": [], "channel_true": [[1, "external_fixed_flow"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 16, 0, 0, 0, 0, 0], "global_true": [], "channel_true": [[2, "zone_heating"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 32, 0, 0, 0, 0, 0], "global_true": [], "channel_true": [[2, "zone_cooling"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 64, 0, 0, 0, 0, 0], "global_true": [], "channel_true": [[2, "external_dhw"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 128, 0, 0, 0, 0, 0], "global_true": [], "channel_true": [[2, "external_fixed_flow"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 0, 1, 0, 0, 0, 0], "global_true": [], "channel_true": [[3, "zone_heating"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 0, 2, 0, 0, 0, 0], "global_true": [], "channel_true": [[3, "zone_cooling"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 0, 4, 0, 0, 0, 0], "global_true": [], "channel_true": [[3, "external_dhw"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 0, 8, 0, 0, 0, 0], "global_true": [], "channel_true": [[3, "external_fixed_flow"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 0, 16, 0, 0, 0, 0], "global_true": [], "channel_true": [[4, "zone_heating"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 0, 32, 0, 0, 0, 0], "global_true": [], "channel_true": [[4, "zone_cooling"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 0, 64, 0, 0, 0, 0], "global_true": [], "channel_true": [[4, "external_dhw"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 0, 128, 0, 0, 0, 0], "global_true": [], "channel_true": [[4, "external_fixed_flow"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 0, 0, 1, 0, 0, 0], "global_true": [], "channel_true": [[5, "zone_heating"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 0, 0, 2, 0, 0, 0], "global_true": [], "channel_true": [[5, "zone_cooling"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 0, 0, 4, 0, 0, 0], "global_true": [], "channel_true": [[5, "external_dhw"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 0, 0, 8, 0, 0, 0], "global_true": [], "channel_true": [[5, "external_fixed_flow"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 0, 0, 16, 0, 0, 0], "global_true": [], "channel_true": [[6, "zone_heating"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 0, 0, 32, 0, 0, 0], "global_true": [], "channel_true": [[6, "zone_cooling"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 0, 0, 64, 0, 0, 0], "global_true": [], "channel_true": [[6, "external_dhw"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 0, 0, 128, 0, 0, 0], "global_true": [], "channel_true": [[6, "external_fixed_flow"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 0, 0, 0, 1, 0, 0], "global_true": [], "channel_true": [[7, "zone_heating"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 0, 0, 0, 2, 0, 0], "global_true": [], "channel_true": [[7, "zone_cooling"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 0, 0, 0, 4, 0, 0], "global_true": [], "channel_true": [[7, "external_dhw"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 0, 0, 0, 8, 0, 0], "global_true": [], "channel_true": [[7, "external_fixed_flow"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 0, 0, 0, 16, 0, 0], "global_true": [], "channel_true": [[8, "zone_heating"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 0, 0, 0, 32, 0, 0], "global_true": [], "channel_true": [[8, "zone_cooling"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 0, 0, 0, 64, 0, 0], "global_true": [], "channel_true": [[8, "external_dhw"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 0, 0, 0, 128, 0, 0], "global_true": [], "channel_true": [[8, "external_fixed_flow"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 0, 0, 0, 0, 1, 0], "global_true": [], "channel_true": [[9, "zone_heating"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 0, 0, 0, 0, 2, 0], "global_true": [], "channel_true": [[9, "zone_cooling"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 0, 0, 0, 0, 4, 0], "global_true": [], "channel_true": [[9, "external_dhw"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 0, 0, 0, 0, 8, 0], "global_true": [], "channel_true": [[9, "external_fixed_flow"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 0, 0, 0, 0, 16, 0], "global_true": [], "channel_true": [[10, "zone_heating"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 0, 0, 0, 0, 32, 0], "global_true": [], "channel_true": [[10, "zone_cooling"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 0, 0, 0, 0, 64, 0], "global_true": [], "channel_true": [[10, "external_dhw"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 0, 0, 0, 0, 128, 0], "global_true": [], "channel_true": [[10, "external_fixed_flow"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 0, 0, 0, 0, 0, 1], "global_true": [], "channel_true": [[11, "zone_heating"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 0, 0, 0, 0, 0, 2], "global_true": [], "channel_true": [[11, "zone_cooling"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 0, 0, 0, 0, 0, 4], "global_true": [], "channel_true": [[11, "external_dhw"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 0, 0, 0, 0, 0, 8], "global_true": [], "channel_true": [[11, "external_fixed_flow"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 0, 0, 0, 0, 0, 16], "global_true": [], "channel_true": [[12, "zone_heating"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 0, 0, 0, 0, 0, 32], "global_true": [], "channel_true": [[12, "zone_cooling"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 0, 0, 0, 0, 0, 64], "global_true": [], "channel_true": [[12, "external_dhw"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 0, 0, 0, 0, 0, 0, 128], "global_true": [], "channel_true": [[12, "external_fixed_flow"]], "reserved_raw": [0, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [32, 0, 0, 0, 0, 0, 0, 0], "global_true": [], "channel_true": [], "reserved_raw": [32, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [64, 0, 0, 0, 0, 0, 0, 0], "global_true": [], "channel_true": [], "reserved_raw": [64, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [128, 0, 0, 0, 0, 0, 0, 0], "global_true": [], "channel_true": [], "reserved_raw": [128, 0], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 1, 0, 0, 0, 0, 0, 0], "global_true": [], "channel_true": [], "reserved_raw": [0, 1], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 2, 0, 0, 0, 0, 0, 0], "global_true": [], "channel_true": [], "reserved_raw": [0, 2], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 4, 0, 0, 0, 0, 0, 0], "global_true": [], "channel_true": [], "reserved_raw": [0, 4], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 8, 0, 0, 0, 0, 0, 0], "global_true": [], "channel_true": [], "reserved_raw": [0, 8], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 16, 0, 0, 0, 0, 0, 0], "global_true": [], "channel_true": [], "reserved_raw": [0, 16], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 32, 0, 0, 0, 0, 0, 0], "global_true": [], "channel_true": [], "reserved_raw": [0, 32], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 64, 0, 0, 0, 0, 0, 0], "global_true": [], "channel_true": [], "reserved_raw": [0, 64], "meaning": "visibility"},
+    {"command": "A7", "raw": [0, 128, 0, 0, 0, 0, 0, 0], "global_true": [], "channel_true": [], "reserved_raw": [0, 128], "meaning": "visibility"},
+    {"command": "A7", "raw": [255, 255, 255, 255, 255, 255, 255, 255], "global_true": ["dhw", "circulation", "noise_reduction", "ventilation", "high_tariff"], "channel_true": [[1, "zone_heating"], [1, "zone_cooling"], [1, "external_dhw"], [1, "external_fixed_flow"], [2, "zone_heating"], [2, "zone_cooling"], [2, "external_dhw"], [2, "external_fixed_flow"], [3, "zone_heating"], [3, "zone_cooling"], [3, "external_dhw"], [3, "external_fixed_flow"], [4, "zone_heating"], [4, "zone_cooling"], [4, "external_dhw"], [4, "external_fixed_flow"], [5, "zone_heating"], [5, "zone_cooling"], [5, "external_dhw"], [5, "external_fixed_flow"], [6, "zone_heating"], [6, "zone_cooling"], [6, "external_dhw"], [6, "external_fixed_flow"], [7, "zone_heating"], [7, "zone_cooling"], [7, "external_dhw"], [7, "external_fixed_flow"], [8, "zone_heating"], [8, "zone_cooling"], [8, "external_dhw"], [8, "external_fixed_flow"], [9, "zone_heating"], [9, "zone_cooling"], [9, "external_dhw"], [9, "external_fixed_flow"], [10, "zone_heating"], [10, "zone_cooling"], [10, "external_dhw"], [10, "external_fixed_flow"], [11, "zone_heating"], [11, "zone_cooling"], [11, "external_dhw"], [11, "external_fixed_flow"], [12, "zone_heating"], [12, "zone_cooling"], [12, "external_dhw"], [12, "external_fixed_flow"]], "reserved_raw": [224, 255], "meaning": "visibility"},
+    {"command": "A1", "raw": [0, 32, 85, 170, 128, 255], "reserved_raw": [0, 32, 85, 170, 128, 255], "meaning": "reserved"},
+    {"command": "A2", "raw": [0, 32, 85, 170, 128, 255], "reserved_raw": [0, 32, 85, 170, 128, 255], "meaning": "reserved"},
+    {"command": "A8", "raw": [0, 32, 85, 170, 128, 255], "reserved_raw": [0, 32, 85, 170, 128, 255], "meaning": "reserved"},
+    {"command": "A9", "raw": [0, 32, 85, 170, 128, 255], "reserved_raw": [0, 32, 85, 170, 128, 255], "meaning": "reserved"},
+    {"command": "A4", "raw": [0, 1, 2, 3, 4, 5, 6, 7, 8, 238], "fields": {"status": 0, "monday": 1, "tuesday": 2, "wednesday": 3, "thursday": 4, "friday": 5, "saturday": 6, "sunday": 7, "count_24_hour": 8}, "extra_raw": [238]},
+    {"command": "A5", "raw": [3, 24, 59, 0, 0, 255, 255, 238], "fields": {"status": 3, "start_hour": 24, "start_minute": 59, "end_hour": 0, "end_minute": 0, "setpoint_raw": 65535}, "extra_raw": [238]}
+  ]
+}

@@ -141,6 +141,9 @@ both P1 and P5 live-install sources.
 
 ## Candidate sub-commands
 
+See the [diagnostic-menu feedback and pressure candidates supplement](ebus-b514-menu-feedback.md)
+for refined **Hypothesis** declarations and **Unknown** qualification limits.
+
 > **Hypothesis**, unconfirmed on the wire. The table lists the B514 sub-commands
 > (the first payload byte, `OP`) with a candidate layout. Quoted names are
 > Vaillant names, kept as correspondence names only. Only `OP=05` has a

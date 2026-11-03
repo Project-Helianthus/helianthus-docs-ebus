@@ -1,0 +1,141 @@
+{
+  "ab44_examples": [
+    {
+      "ab44_name": "ab44_uin",
+      "ab44_context": {
+        "ab44_family": "synthetic-controller-family",
+        "ab44_software": "synthetic-software-a",
+        "ab44_hardware": "synthetic-hardware-a",
+        "ab44_api_version": 1,
+        "ab44_api_revision": 1,
+        "ab44_op": 1,
+        "ab44_gg": 2,
+        "ab44_ii": 1,
+        "ab44_rr": 2
+      },
+      "ab44_codec": "UIN",
+      "ab44_width": 2,
+      "ab44_grade": "Hypothesis",
+      "ab44_raw": [
+        2,
+        2,
+        0,
+        0,
+        0,
+        4,
+        0,
+        1,
+        0
+      ],
+      "ab44_expected_limits": [
+        0,
+        4,
+        1
+      ],
+      "ab44_expected_reason": null
+    },
+    {
+      "ab44_name": "ab44_wrong_pair",
+      "ab44_context": {
+        "ab44_family": "synthetic-controller-family",
+        "ab44_software": "synthetic-software-a",
+        "ab44_hardware": "synthetic-hardware-a",
+        "ab44_api_version": 1,
+        "ab44_api_revision": 1,
+        "ab44_op": 1,
+        "ab44_gg": 2,
+        "ab44_ii": 1,
+        "ab44_rr": 2
+      },
+      "ab44_codec": "EXP",
+      "ab44_width": 4,
+      "ab44_grade": "Hypothesis",
+      "ab44_raw": [
+        2,
+        2,
+        0,
+        0,
+        0,
+        4,
+        0,
+        1,
+        0
+      ],
+      "ab44_expected_limits": null,
+      "ab44_expected_reason": "ab44_length"
+    },
+    {
+      "ab44_name": "ab44_exp",
+      "ab44_context": {
+        "ab44_family": "synthetic-controller-family",
+        "ab44_software": "synthetic-software-a",
+        "ab44_hardware": "synthetic-hardware-a",
+        "ab44_api_version": 1,
+        "ab44_api_revision": 1,
+        "ab44_op": 1,
+        "ab44_gg": 2,
+        "ab44_ii": 1,
+        "ab44_rr": 2
+      },
+      "ab44_codec": "EXP",
+      "ab44_width": 4,
+      "ab44_grade": "Hypothesis",
+      "ab44_raw": [
+        2,
+        2,
+        0,
+        0,
+        0,
+        160,
+        193,
+        0,
+        0,
+        160,
+        65,
+        0,
+        0,
+        128,
+        63
+      ],
+      "ab44_expected_limits": [
+        -20,
+        20,
+        1
+      ],
+      "ab44_expected_reason": null
+    },
+    {
+      "ab44_name": "ab44_date",
+      "ab44_context": {
+        "ab44_family": "synthetic-controller-family",
+        "ab44_software": "synthetic-software-a",
+        "ab44_hardware": "synthetic-hardware-a",
+        "ab44_api_version": 1,
+        "ab44_api_revision": 1,
+        "ab44_op": 1,
+        "ab44_gg": 2,
+        "ab44_ii": 1,
+        "ab44_rr": 2
+      },
+      "ab44_codec": "date/time",
+      "ab44_width": 3,
+      "ab44_grade": "Hypothesis",
+      "ab44_raw": [
+        2,
+        2,
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "ab44_expected_limits": null,
+      "ab44_expected_reason": "ab44_date_step_unknown"
+    }
+  ]
+}

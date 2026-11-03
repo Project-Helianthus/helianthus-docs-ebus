@@ -109,11 +109,42 @@ For initiator-device functions (`0x01`–`0x14`), the test device sends End of T
 
 ## Vaillant variants
 
-The standard layouts above stay authoritative. Candidate interpretation, unconfirmed on the wire: the Vaillant layout for `0x0F` gives the primary byte `0x0F` with no known secondary byte and no body; an eBUS request always carries a secondary byte, so its value on the wire is unknown, and the positive target response carries no data. It does not encode the Start of Test, Ready, Test Message or End of Test services above (`0x0F 0x01`–`0x0F 0x03`).
+The standard layouts above remain separate from this bounded partial testing-family
+declaration. **Hypothesis:** the request declares primary `0F`, no encoded
+secondary byte and no typed body. Its positive declaration consists only of a
+PeBUS-relevant prefix without typed data. The PeBUS association is a
+candidate label at Hypothesis grade only; no evidence artifact for it is
+published here, and it is not a Proven claim. This logical declaration does not
+establish an empty physical eBUS reply. Logical positions are not wire offsets;
+unprovided positions and extents remain Unknown.
+
+### Bounded partial testing declarations
+
+| Grade | Identity | Direction | Property | Logical position / extent | Raw type / domain | Scale | Sentinel / default / conflict | Unresolved |
+|---|---|---|---|---|---|---|---|---|
+| Hypothesis | 0F / absent | request | primary | Unknown / 1 byte declared | byte / 0F | Unknown | sentinel Unknown; default Unknown; conflict none declared | physical position Unknown |
+| Hypothesis | 0F / absent | request | secondary | absent / absent encoded byte | absent; distinct from 00, 01, 02, 03 and wildcard | Unknown | sentinel Unknown; default Unknown; absent is not zero | exact partial identity Unknown; no alias to 0F01/0F02/0F03 |
+| Unknown | 0F / absent | request | body | Unknown / Unknown | Unknown; no typed body declared | Unknown | sentinel Unknown; default Unknown; conflict none declared | request body and physical NN Unknown |
+| Hypothesis | 0F / absent | positive | prefix | Unknown / Unknown | PeBUS-relevant prefix; typed data absent | Unknown | sentinel Unknown; default Unknown; no typed data does not mean no physical data | response body, physical NN and ACK Unknown |
+| Unknown | 0F / absent | response | opaque bytes | Unknown / Unknown | AA retained raw / meaning Unknown | Unknown | sentinel Unknown; default Unknown; nonempty reply is not rejected | AA is synthetic; response body and physical extent Unknown |
+| Unknown | 0F / absent | exchange | physical framing | Unknown / Unknown | NN Unknown; ACK Unknown | Unknown | sentinel Unknown; default Unknown; PeBUS relevance supplies neither length nor ACK | raw one-byte 0F declaration is not a sendable packet |
+| Unknown | 0F / absent | exchange | support and effects | Unknown / Unknown | support Unknown; effects Unknown | Unknown | sentinel Unknown; default Unknown; conflict none declared | no start/ready/test/end executor or active-testing permission established |
+
+The [synthetic partial-identity cases](./fixtures/ae30_0f_candidates.json)
+illustrate these declarations only; synthetic correctness does not qualify
+physical behavior. The absent secondary remains explicit metadata rather than a
+zero, wildcard or standard service identifier. Opaque reply bytes remain raw
+with Unknown meaning; lack of typed positive data cannot exclude them. No
+standard-service lifecycle or executable support follows from this partial form.
 
 ## Open questions
 
-- Whether Vaillant devices implement the `0x0F 0x01`–`0x0F 0x03` test lifecycle is not established; the Vaillant layout gives no secondary byte (candidate), and no capture of a `0x0F` exchange is known.
+- **Unknown:** the exact partial identity, request/response body, physical NN,
+  ACK, installed support and effects for the partial testing family remain
+  unresolved. PeBUS relevance answers none of these physical questions.
+- **Unknown:** whether the family implements the separate standard
+  `0x0F 0x01`–`0x0F 0x03` lifecycle is not established by this declaration.
+  No physical exchange is qualified here.
 
 ## Communication Flow
 

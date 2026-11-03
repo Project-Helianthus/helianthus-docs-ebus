@@ -1,0 +1,5239 @@
+{
+ "fixture_id": "ab15ao15-b512-op01-directional-fields",
+ "provenance": "synthetic; software API result tuples only; no device observation",
+ "family_grade": "Hypothesis",
+ "qualification": "Unknown",
+ "qualified": false,
+ "physical": "Unknown",
+ "cases": [
+  {
+   "id": "ab15ao15-control-request",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "fields": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    }
+   },
+   "expect": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "raw": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    },
+    "unknowns": {
+     "physical_values": "Unknown",
+     "actual_signal_wire_discriminator": "Unknown",
+     "materialized_defaults": "Unknown",
+     "peer_support": "Unknown",
+     "relay_polarity": "Unknown",
+     "default_true_encoding": "Unknown"
+    },
+    "physical": "Unknown",
+    "qualified": false,
+    "fields": {
+     "secondary_heating_pump": {
+      "raw": [
+       32
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "circulation_pump": {
+      "raw": [
+       64
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "solar_pump": {
+      "raw": [
+       80
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "error_relay": {
+      "raw": [
+       15
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-0F"
+     },
+     "loading_pump": {
+      "raw": [
+       96
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "fume_flap": {
+      "raw": [
+       240
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-F0"
+     }
+    },
+    "state": "complete",
+    "feedback": {
+     "origin": "origin-Unknown",
+     "grade": "Hypothesis"
+    }
+   }
+  },
+  {
+   "id": "ab15ao15-control-positive",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "positive",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "fields": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    }
+   },
+   "expect": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "positive",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "raw": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    },
+    "unknowns": {
+     "physical_values": "Unknown",
+     "actual_signal_wire_discriminator": "Unknown",
+     "materialized_defaults": "Unknown",
+     "peer_support": "Unknown",
+     "relay_polarity": "Unknown",
+     "default_true_encoding": "Unknown"
+    },
+    "physical": "Unknown",
+    "qualified": false,
+    "fields": {
+     "secondary_heating_pump": {
+      "raw": [
+       32
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "circulation_pump": {
+      "raw": [
+       64
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "solar_pump": {
+      "raw": [
+       80
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "error_relay": {
+      "raw": [
+       15
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-0F"
+     },
+     "loading_pump": {
+      "raw": [
+       96
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "fume_flap": {
+      "raw": [
+       240
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-F0"
+     }
+    },
+    "state": "complete",
+    "feedback": {
+     "origin": "origin-Unknown",
+     "grade": "Hypothesis"
+    }
+   }
+  },
+  {
+   "id": "ab15ao15-ff-request-secondary_heating_pump",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "fields": {
+     "secondary_heating_pump": [
+      255
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    }
+   },
+   "expect": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "raw": {
+     "secondary_heating_pump": [
+      255
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    },
+    "unknowns": {
+     "physical_values": "Unknown",
+     "actual_signal_wire_discriminator": "Unknown",
+     "materialized_defaults": "Unknown",
+     "peer_support": "Unknown",
+     "relay_polarity": "Unknown",
+     "default_true_encoding": "Unknown"
+    },
+    "physical": "Unknown",
+    "qualified": false,
+    "fields": {
+     "secondary_heating_pump": {
+      "raw": [
+       255
+      ],
+      "grade": "Hypothesis",
+      "state": "mapped",
+      "label": "leave-unchanged"
+     },
+     "circulation_pump": {
+      "raw": [
+       64
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "solar_pump": {
+      "raw": [
+       80
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "error_relay": {
+      "raw": [
+       15
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-0F"
+     },
+     "loading_pump": {
+      "raw": [
+       96
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "fume_flap": {
+      "raw": [
+       240
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-F0"
+     }
+    },
+    "state": "complete",
+    "feedback": {
+     "origin": "origin-Unknown",
+     "grade": "Hypothesis"
+    }
+   }
+  },
+  {
+   "id": "ab15ao15-ff-positive-secondary_heating_pump",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "positive",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "fields": {
+     "secondary_heating_pump": [
+      255
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    }
+   },
+   "expect": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "positive",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "raw": {
+     "secondary_heating_pump": [
+      255
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    },
+    "unknowns": {
+     "physical_values": "Unknown",
+     "actual_signal_wire_discriminator": "Unknown",
+     "materialized_defaults": "Unknown",
+     "peer_support": "Unknown",
+     "relay_polarity": "Unknown",
+     "default_true_encoding": "Unknown"
+    },
+    "physical": "Unknown",
+    "qualified": false,
+    "fields": {
+     "secondary_heating_pump": {
+      "raw": [
+       255
+      ],
+      "grade": "Hypothesis",
+      "state": "mapped",
+      "label": "function-unavailable"
+     },
+     "circulation_pump": {
+      "raw": [
+       64
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "solar_pump": {
+      "raw": [
+       80
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "error_relay": {
+      "raw": [
+       15
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-0F"
+     },
+     "loading_pump": {
+      "raw": [
+       96
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "fume_flap": {
+      "raw": [
+       240
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-F0"
+     }
+    },
+    "state": "complete",
+    "feedback": {
+     "origin": "origin-Unknown",
+     "grade": "Hypothesis"
+    }
+   }
+  },
+  {
+   "id": "ab15ao15-ff-request-circulation_pump",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "fields": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      255
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    }
+   },
+   "expect": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "raw": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      255
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    },
+    "unknowns": {
+     "physical_values": "Unknown",
+     "actual_signal_wire_discriminator": "Unknown",
+     "materialized_defaults": "Unknown",
+     "peer_support": "Unknown",
+     "relay_polarity": "Unknown",
+     "default_true_encoding": "Unknown"
+    },
+    "physical": "Unknown",
+    "qualified": false,
+    "fields": {
+     "secondary_heating_pump": {
+      "raw": [
+       32
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "circulation_pump": {
+      "raw": [
+       255
+      ],
+      "grade": "Hypothesis",
+      "state": "mapped",
+      "label": "leave-unchanged"
+     },
+     "solar_pump": {
+      "raw": [
+       80
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "error_relay": {
+      "raw": [
+       15
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-0F"
+     },
+     "loading_pump": {
+      "raw": [
+       96
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "fume_flap": {
+      "raw": [
+       240
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-F0"
+     }
+    },
+    "state": "complete",
+    "feedback": {
+     "origin": "origin-Unknown",
+     "grade": "Hypothesis"
+    }
+   }
+  },
+  {
+   "id": "ab15ao15-ff-positive-circulation_pump",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "positive",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "fields": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      255
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    }
+   },
+   "expect": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "positive",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "raw": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      255
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    },
+    "unknowns": {
+     "physical_values": "Unknown",
+     "actual_signal_wire_discriminator": "Unknown",
+     "materialized_defaults": "Unknown",
+     "peer_support": "Unknown",
+     "relay_polarity": "Unknown",
+     "default_true_encoding": "Unknown"
+    },
+    "physical": "Unknown",
+    "qualified": false,
+    "fields": {
+     "secondary_heating_pump": {
+      "raw": [
+       32
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "circulation_pump": {
+      "raw": [
+       255
+      ],
+      "grade": "Hypothesis",
+      "state": "mapped",
+      "label": "function-unavailable"
+     },
+     "solar_pump": {
+      "raw": [
+       80
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "error_relay": {
+      "raw": [
+       15
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-0F"
+     },
+     "loading_pump": {
+      "raw": [
+       96
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "fume_flap": {
+      "raw": [
+       240
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-F0"
+     }
+    },
+    "state": "complete",
+    "feedback": {
+     "origin": "origin-Unknown",
+     "grade": "Hypothesis"
+    }
+   }
+  },
+  {
+   "id": "ab15ao15-ff-request-solar_pump",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "fields": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      255
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    }
+   },
+   "expect": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "raw": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      255
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    },
+    "unknowns": {
+     "physical_values": "Unknown",
+     "actual_signal_wire_discriminator": "Unknown",
+     "materialized_defaults": "Unknown",
+     "peer_support": "Unknown",
+     "relay_polarity": "Unknown",
+     "default_true_encoding": "Unknown"
+    },
+    "physical": "Unknown",
+    "qualified": false,
+    "fields": {
+     "secondary_heating_pump": {
+      "raw": [
+       32
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "circulation_pump": {
+      "raw": [
+       64
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "solar_pump": {
+      "raw": [
+       255
+      ],
+      "grade": "Hypothesis",
+      "state": "mapped",
+      "label": "leave-unchanged"
+     },
+     "error_relay": {
+      "raw": [
+       15
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-0F"
+     },
+     "loading_pump": {
+      "raw": [
+       96
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "fume_flap": {
+      "raw": [
+       240
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-F0"
+     }
+    },
+    "state": "complete",
+    "feedback": {
+     "origin": "origin-Unknown",
+     "grade": "Hypothesis"
+    }
+   }
+  },
+  {
+   "id": "ab15ao15-ff-positive-solar_pump",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "positive",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "fields": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      255
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    }
+   },
+   "expect": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "positive",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "raw": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      255
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    },
+    "unknowns": {
+     "physical_values": "Unknown",
+     "actual_signal_wire_discriminator": "Unknown",
+     "materialized_defaults": "Unknown",
+     "peer_support": "Unknown",
+     "relay_polarity": "Unknown",
+     "default_true_encoding": "Unknown"
+    },
+    "physical": "Unknown",
+    "qualified": false,
+    "fields": {
+     "secondary_heating_pump": {
+      "raw": [
+       32
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "circulation_pump": {
+      "raw": [
+       64
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "solar_pump": {
+      "raw": [
+       255
+      ],
+      "grade": "Hypothesis",
+      "state": "mapped",
+      "label": "function-unavailable"
+     },
+     "error_relay": {
+      "raw": [
+       15
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-0F"
+     },
+     "loading_pump": {
+      "raw": [
+       96
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "fume_flap": {
+      "raw": [
+       240
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-F0"
+     }
+    },
+    "state": "complete",
+    "feedback": {
+     "origin": "origin-Unknown",
+     "grade": "Hypothesis"
+    }
+   }
+  },
+  {
+   "id": "ab15ao15-ff-request-loading_pump",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "fields": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      255
+     ],
+     "fume_flap": [
+      240
+     ]
+    }
+   },
+   "expect": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "raw": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      255
+     ],
+     "fume_flap": [
+      240
+     ]
+    },
+    "unknowns": {
+     "physical_values": "Unknown",
+     "actual_signal_wire_discriminator": "Unknown",
+     "materialized_defaults": "Unknown",
+     "peer_support": "Unknown",
+     "relay_polarity": "Unknown",
+     "default_true_encoding": "Unknown"
+    },
+    "physical": "Unknown",
+    "qualified": false,
+    "fields": {
+     "secondary_heating_pump": {
+      "raw": [
+       32
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "circulation_pump": {
+      "raw": [
+       64
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "solar_pump": {
+      "raw": [
+       80
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "error_relay": {
+      "raw": [
+       15
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-0F"
+     },
+     "loading_pump": {
+      "raw": [
+       255
+      ],
+      "grade": "Hypothesis",
+      "state": "mapped",
+      "label": "leave-unchanged"
+     },
+     "fume_flap": {
+      "raw": [
+       240
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-F0"
+     }
+    },
+    "state": "complete",
+    "feedback": {
+     "origin": "origin-Unknown",
+     "grade": "Hypothesis"
+    }
+   }
+  },
+  {
+   "id": "ab15ao15-ff-positive-loading_pump",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "positive",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "fields": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      255
+     ],
+     "fume_flap": [
+      240
+     ]
+    }
+   },
+   "expect": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "positive",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "raw": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      255
+     ],
+     "fume_flap": [
+      240
+     ]
+    },
+    "unknowns": {
+     "physical_values": "Unknown",
+     "actual_signal_wire_discriminator": "Unknown",
+     "materialized_defaults": "Unknown",
+     "peer_support": "Unknown",
+     "relay_polarity": "Unknown",
+     "default_true_encoding": "Unknown"
+    },
+    "physical": "Unknown",
+    "qualified": false,
+    "fields": {
+     "secondary_heating_pump": {
+      "raw": [
+       32
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "circulation_pump": {
+      "raw": [
+       64
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "solar_pump": {
+      "raw": [
+       80
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "error_relay": {
+      "raw": [
+       15
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-0F"
+     },
+     "loading_pump": {
+      "raw": [
+       255
+      ],
+      "grade": "Hypothesis",
+      "state": "mapped",
+      "label": "function-unavailable"
+     },
+     "fume_flap": {
+      "raw": [
+       240
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-F0"
+     }
+    },
+    "state": "complete",
+    "feedback": {
+     "origin": "origin-Unknown",
+     "grade": "Hypothesis"
+    }
+   }
+  },
+  {
+   "id": "ab15ao15-relay-0F",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "fields": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    }
+   },
+   "expect": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "raw": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    },
+    "unknowns": {
+     "physical_values": "Unknown",
+     "actual_signal_wire_discriminator": "Unknown",
+     "materialized_defaults": "Unknown",
+     "peer_support": "Unknown",
+     "relay_polarity": "Unknown",
+     "default_true_encoding": "Unknown"
+    },
+    "physical": "Unknown",
+    "qualified": false,
+    "fields": {
+     "secondary_heating_pump": {
+      "raw": [
+       32
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "circulation_pump": {
+      "raw": [
+       64
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "solar_pump": {
+      "raw": [
+       80
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "error_relay": {
+      "raw": [
+       15
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-0F"
+     },
+     "loading_pump": {
+      "raw": [
+       96
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "fume_flap": {
+      "raw": [
+       240
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-F0"
+     }
+    },
+    "state": "complete",
+    "feedback": {
+     "origin": "origin-Unknown",
+     "grade": "Hypothesis"
+    }
+   }
+  },
+  {
+   "id": "ab15ao15-relay-F0",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "fields": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      240
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    }
+   },
+   "expect": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "raw": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      240
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    },
+    "unknowns": {
+     "physical_values": "Unknown",
+     "actual_signal_wire_discriminator": "Unknown",
+     "materialized_defaults": "Unknown",
+     "peer_support": "Unknown",
+     "relay_polarity": "Unknown",
+     "default_true_encoding": "Unknown"
+    },
+    "physical": "Unknown",
+    "qualified": false,
+    "fields": {
+     "secondary_heating_pump": {
+      "raw": [
+       32
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "circulation_pump": {
+      "raw": [
+       64
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "solar_pump": {
+      "raw": [
+       80
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "error_relay": {
+      "raw": [
+       240
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-F0"
+     },
+     "loading_pump": {
+      "raw": [
+       96
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "fume_flap": {
+      "raw": [
+       240
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-F0"
+     }
+    },
+    "state": "complete",
+    "feedback": {
+     "origin": "origin-Unknown",
+     "grade": "Hypothesis"
+    }
+   }
+  },
+  {
+   "id": "ab15ao15-relay-00",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "fields": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      0
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    }
+   },
+   "expect": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "raw": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      0
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    },
+    "unknowns": {
+     "physical_values": "Unknown",
+     "actual_signal_wire_discriminator": "Unknown",
+     "materialized_defaults": "Unknown",
+     "peer_support": "Unknown",
+     "relay_polarity": "Unknown",
+     "default_true_encoding": "Unknown"
+    },
+    "physical": "Unknown",
+    "qualified": false,
+    "fields": {
+     "secondary_heating_pump": {
+      "raw": [
+       32
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "circulation_pump": {
+      "raw": [
+       64
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "solar_pump": {
+      "raw": [
+       80
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "error_relay": {
+      "raw": [
+       0
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "no-action-candidate"
+     },
+     "loading_pump": {
+      "raw": [
+       96
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "fume_flap": {
+      "raw": [
+       240
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-F0"
+     }
+    },
+    "state": "complete",
+    "feedback": {
+     "origin": "origin-Unknown",
+     "grade": "Hypothesis"
+    }
+   }
+  },
+  {
+   "id": "ab15ao15-relay-01",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "fields": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      1
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    }
+   },
+   "expect": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "raw": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      1
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    },
+    "unknowns": {
+     "physical_values": "Unknown",
+     "actual_signal_wire_discriminator": "Unknown",
+     "materialized_defaults": "Unknown",
+     "peer_support": "Unknown",
+     "relay_polarity": "Unknown",
+     "default_true_encoding": "Unknown"
+    },
+    "physical": "Unknown",
+    "qualified": false,
+    "fields": {
+     "secondary_heating_pump": {
+      "raw": [
+       32
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "circulation_pump": {
+      "raw": [
+       64
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "solar_pump": {
+      "raw": [
+       80
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "error_relay": {
+      "raw": [
+       1
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "no-action-candidate"
+     },
+     "loading_pump": {
+      "raw": [
+       96
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "fume_flap": {
+      "raw": [
+       240
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-F0"
+     }
+    },
+    "state": "complete",
+    "feedback": {
+     "origin": "origin-Unknown",
+     "grade": "Hypothesis"
+    }
+   }
+  },
+  {
+   "id": "ab15ao15-relay-FF",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "fields": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      255
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    }
+   },
+   "expect": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "raw": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      255
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    },
+    "unknowns": {
+     "physical_values": "Unknown",
+     "actual_signal_wire_discriminator": "Unknown",
+     "materialized_defaults": "Unknown",
+     "peer_support": "Unknown",
+     "relay_polarity": "Unknown",
+     "default_true_encoding": "Unknown"
+    },
+    "physical": "Unknown",
+    "qualified": false,
+    "fields": {
+     "secondary_heating_pump": {
+      "raw": [
+       32
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "circulation_pump": {
+      "raw": [
+       64
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "solar_pump": {
+      "raw": [
+       80
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "error_relay": {
+      "raw": [
+       255
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "no-action-candidate"
+     },
+     "loading_pump": {
+      "raw": [
+       96
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "fume_flap": {
+      "raw": [
+       240
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-F0"
+     }
+    },
+    "state": "complete",
+    "feedback": {
+     "origin": "origin-Unknown",
+     "grade": "Hypothesis"
+    }
+   }
+  },
+  {
+   "id": "ab15ao15-fume-0F",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "fields": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      15
+     ]
+    }
+   },
+   "expect": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "raw": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      15
+     ]
+    },
+    "unknowns": {
+     "physical_values": "Unknown",
+     "actual_signal_wire_discriminator": "Unknown",
+     "materialized_defaults": "Unknown",
+     "peer_support": "Unknown",
+     "relay_polarity": "Unknown",
+     "default_true_encoding": "Unknown"
+    },
+    "physical": "Unknown",
+    "qualified": false,
+    "fields": {
+     "secondary_heating_pump": {
+      "raw": [
+       32
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "circulation_pump": {
+      "raw": [
+       64
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "solar_pump": {
+      "raw": [
+       80
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "error_relay": {
+      "raw": [
+       15
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-0F"
+     },
+     "loading_pump": {
+      "raw": [
+       96
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "fume_flap": {
+      "raw": [
+       15
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-0F"
+     }
+    },
+    "state": "complete",
+    "feedback": {
+     "origin": "origin-Unknown",
+     "grade": "Hypothesis"
+    }
+   }
+  },
+  {
+   "id": "ab15ao15-fume-F0",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "fields": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    }
+   },
+   "expect": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "raw": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    },
+    "unknowns": {
+     "physical_values": "Unknown",
+     "actual_signal_wire_discriminator": "Unknown",
+     "materialized_defaults": "Unknown",
+     "peer_support": "Unknown",
+     "relay_polarity": "Unknown",
+     "default_true_encoding": "Unknown"
+    },
+    "physical": "Unknown",
+    "qualified": false,
+    "fields": {
+     "secondary_heating_pump": {
+      "raw": [
+       32
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "circulation_pump": {
+      "raw": [
+       64
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "solar_pump": {
+      "raw": [
+       80
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "error_relay": {
+      "raw": [
+       15
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-0F"
+     },
+     "loading_pump": {
+      "raw": [
+       96
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "fume_flap": {
+      "raw": [
+       240
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-F0"
+     }
+    },
+    "state": "complete",
+    "feedback": {
+     "origin": "origin-Unknown",
+     "grade": "Hypothesis"
+    }
+   }
+  },
+  {
+   "id": "ab15ao15-fume-00",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "fields": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      0
+     ]
+    }
+   },
+   "expect": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "raw": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      0
+     ]
+    },
+    "unknowns": {
+     "physical_values": "Unknown",
+     "actual_signal_wire_discriminator": "Unknown",
+     "materialized_defaults": "Unknown",
+     "peer_support": "Unknown",
+     "relay_polarity": "Unknown",
+     "default_true_encoding": "Unknown"
+    },
+    "physical": "Unknown",
+    "qualified": false,
+    "fields": {
+     "secondary_heating_pump": {
+      "raw": [
+       32
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "circulation_pump": {
+      "raw": [
+       64
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "solar_pump": {
+      "raw": [
+       80
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "error_relay": {
+      "raw": [
+       15
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-0F"
+     },
+     "loading_pump": {
+      "raw": [
+       96
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "fume_flap": {
+      "raw": [
+       0
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "no-action-candidate"
+     }
+    },
+    "state": "complete",
+    "feedback": {
+     "origin": "origin-Unknown",
+     "grade": "Hypothesis"
+    }
+   }
+  },
+  {
+   "id": "ab15ao15-fume-01",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "fields": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      1
+     ]
+    }
+   },
+   "expect": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "raw": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      1
+     ]
+    },
+    "unknowns": {
+     "physical_values": "Unknown",
+     "actual_signal_wire_discriminator": "Unknown",
+     "materialized_defaults": "Unknown",
+     "peer_support": "Unknown",
+     "relay_polarity": "Unknown",
+     "default_true_encoding": "Unknown"
+    },
+    "physical": "Unknown",
+    "qualified": false,
+    "fields": {
+     "secondary_heating_pump": {
+      "raw": [
+       32
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "circulation_pump": {
+      "raw": [
+       64
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "solar_pump": {
+      "raw": [
+       80
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "error_relay": {
+      "raw": [
+       15
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-0F"
+     },
+     "loading_pump": {
+      "raw": [
+       96
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "fume_flap": {
+      "raw": [
+       1
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "no-action-candidate"
+     }
+    },
+    "state": "complete",
+    "feedback": {
+     "origin": "origin-Unknown",
+     "grade": "Hypothesis"
+    }
+   }
+  },
+  {
+   "id": "ab15ao15-fume-FF",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "fields": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      255
+     ]
+    }
+   },
+   "expect": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "raw": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      255
+     ]
+    },
+    "unknowns": {
+     "physical_values": "Unknown",
+     "actual_signal_wire_discriminator": "Unknown",
+     "materialized_defaults": "Unknown",
+     "peer_support": "Unknown",
+     "relay_polarity": "Unknown",
+     "default_true_encoding": "Unknown"
+    },
+    "physical": "Unknown",
+    "qualified": false,
+    "fields": {
+     "secondary_heating_pump": {
+      "raw": [
+       32
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "circulation_pump": {
+      "raw": [
+       64
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "solar_pump": {
+      "raw": [
+       80
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "error_relay": {
+      "raw": [
+       15
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-0F"
+     },
+     "loading_pump": {
+      "raw": [
+       96
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "fume_flap": {
+      "raw": [
+       255
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "no-action-candidate"
+     }
+    },
+    "state": "complete",
+    "feedback": {
+     "origin": "origin-Unknown",
+     "grade": "Hypothesis"
+    }
+   }
+  },
+  {
+   "id": "ab15ao15-relay-01-positive",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "positive",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "fields": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      1
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    }
+   },
+   "expect": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "positive",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "raw": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      1
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    },
+    "unknowns": {
+     "physical_values": "Unknown",
+     "actual_signal_wire_discriminator": "Unknown",
+     "materialized_defaults": "Unknown",
+     "peer_support": "Unknown",
+     "relay_polarity": "Unknown",
+     "default_true_encoding": "Unknown"
+    },
+    "physical": "Unknown",
+    "qualified": false,
+    "fields": {
+     "secondary_heating_pump": {
+      "raw": [
+       32
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "circulation_pump": {
+      "raw": [
+       64
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "solar_pump": {
+      "raw": [
+       80
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "error_relay": {
+      "raw": [
+       1
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "no-action-candidate"
+     },
+     "loading_pump": {
+      "raw": [
+       96
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "fume_flap": {
+      "raw": [
+       240
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-F0"
+     }
+    },
+    "state": "complete",
+    "feedback": {
+     "origin": "origin-Unknown",
+     "grade": "Hypothesis"
+    }
+   }
+  },
+  {
+   "id": "ab15ao15-actual-absent-equal",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "fields": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ],
+     "setpoint": [
+      50
+     ],
+     "feedback": [
+      50
+     ]
+    }
+   },
+   "expect": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "raw": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ],
+     "setpoint": [
+      50
+     ],
+     "feedback": [
+      50
+     ]
+    },
+    "unknowns": {
+     "physical_values": "Unknown",
+     "actual_signal_wire_discriminator": "Unknown",
+     "materialized_defaults": "Unknown",
+     "peer_support": "Unknown",
+     "relay_polarity": "Unknown",
+     "default_true_encoding": "Unknown"
+    },
+    "physical": "Unknown",
+    "qualified": false,
+    "fields": {
+     "secondary_heating_pump": {
+      "raw": [
+       32
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "circulation_pump": {
+      "raw": [
+       64
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "solar_pump": {
+      "raw": [
+       80
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "error_relay": {
+      "raw": [
+       15
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-0F"
+     },
+     "loading_pump": {
+      "raw": [
+       96
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "fume_flap": {
+      "raw": [
+       240
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-F0"
+     }
+    },
+    "state": "complete",
+    "feedback": {
+     "origin": "origin-Unknown",
+     "grade": "Hypothesis",
+     "raw_equal": true,
+     "calculation": "Proven"
+    }
+   }
+  },
+  {
+   "id": "ab15ao15-actual-absent-differ",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "fields": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ],
+     "setpoint": [
+      50
+     ],
+     "feedback": [
+      51
+     ]
+    }
+   },
+   "expect": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "raw": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ],
+     "setpoint": [
+      50
+     ],
+     "feedback": [
+      51
+     ]
+    },
+    "unknowns": {
+     "physical_values": "Unknown",
+     "actual_signal_wire_discriminator": "Unknown",
+     "materialized_defaults": "Unknown",
+     "peer_support": "Unknown",
+     "relay_polarity": "Unknown",
+     "default_true_encoding": "Unknown"
+    },
+    "physical": "Unknown",
+    "qualified": false,
+    "fields": {
+     "secondary_heating_pump": {
+      "raw": [
+       32
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "circulation_pump": {
+      "raw": [
+       64
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "solar_pump": {
+      "raw": [
+       80
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "error_relay": {
+      "raw": [
+       15
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-0F"
+     },
+     "loading_pump": {
+      "raw": [
+       96
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "fume_flap": {
+      "raw": [
+       240
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-F0"
+     }
+    },
+    "state": "complete",
+    "feedback": {
+     "origin": "origin-Unknown",
+     "grade": "Hypothesis",
+     "raw_equal": false,
+     "calculation": "Proven"
+    }
+   }
+  },
+  {
+   "id": "ab15ao15-actual-false-equal",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "fields": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ],
+     "setpoint": [
+      50
+     ],
+     "feedback": [
+      50
+     ]
+    },
+    "arguments": {
+     "actual_signal": false
+    }
+   },
+   "expect": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "raw": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ],
+     "setpoint": [
+      50
+     ],
+     "feedback": [
+      50
+     ]
+    },
+    "arguments": {
+     "actual_signal": false
+    },
+    "unknowns": {
+     "physical_values": "Unknown",
+     "actual_signal_wire_discriminator": "Unknown",
+     "materialized_defaults": "Unknown",
+     "peer_support": "Unknown",
+     "relay_polarity": "Unknown",
+     "default_true_encoding": "Unknown"
+    },
+    "physical": "Unknown",
+    "qualified": false,
+    "fields": {
+     "secondary_heating_pump": {
+      "raw": [
+       32
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "circulation_pump": {
+      "raw": [
+       64
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "solar_pump": {
+      "raw": [
+       80
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "error_relay": {
+      "raw": [
+       15
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-0F"
+     },
+     "loading_pump": {
+      "raw": [
+       96
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "fume_flap": {
+      "raw": [
+       240
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-F0"
+     }
+    },
+    "state": "complete",
+    "feedback": {
+     "origin": "fallback-candidate",
+     "grade": "Hypothesis",
+     "raw_equal": true,
+     "calculation": "Proven"
+    }
+   }
+  },
+  {
+   "id": "ab15ao15-actual-false-differ",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "fields": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ],
+     "setpoint": [
+      50
+     ],
+     "feedback": [
+      51
+     ]
+    },
+    "arguments": {
+     "actual_signal": false
+    }
+   },
+   "expect": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "raw": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ],
+     "setpoint": [
+      50
+     ],
+     "feedback": [
+      51
+     ]
+    },
+    "arguments": {
+     "actual_signal": false
+    },
+    "unknowns": {
+     "physical_values": "Unknown",
+     "actual_signal_wire_discriminator": "Unknown",
+     "materialized_defaults": "Unknown",
+     "peer_support": "Unknown",
+     "relay_polarity": "Unknown",
+     "default_true_encoding": "Unknown"
+    },
+    "physical": "Unknown",
+    "qualified": false,
+    "fields": {
+     "secondary_heating_pump": {
+      "raw": [
+       32
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "circulation_pump": {
+      "raw": [
+       64
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "solar_pump": {
+      "raw": [
+       80
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "error_relay": {
+      "raw": [
+       15
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-0F"
+     },
+     "loading_pump": {
+      "raw": [
+       96
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "fume_flap": {
+      "raw": [
+       240
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-F0"
+     }
+    },
+    "state": "complete",
+    "feedback": {
+     "origin": "fallback-candidate",
+     "grade": "Hypothesis",
+     "raw_equal": false,
+     "calculation": "Proven"
+    }
+   }
+  },
+  {
+   "id": "ab15ao15-actual-true-equal",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "fields": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ],
+     "setpoint": [
+      50
+     ],
+     "feedback": [
+      50
+     ]
+    },
+    "arguments": {
+     "actual_signal": true
+    }
+   },
+   "expect": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "raw": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ],
+     "setpoint": [
+      50
+     ],
+     "feedback": [
+      50
+     ]
+    },
+    "arguments": {
+     "actual_signal": true
+    },
+    "unknowns": {
+     "physical_values": "Unknown",
+     "actual_signal_wire_discriminator": "Unknown",
+     "materialized_defaults": "Unknown",
+     "peer_support": "Unknown",
+     "relay_polarity": "Unknown",
+     "default_true_encoding": "Unknown"
+    },
+    "physical": "Unknown",
+    "qualified": false,
+    "fields": {
+     "secondary_heating_pump": {
+      "raw": [
+       32
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "circulation_pump": {
+      "raw": [
+       64
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "solar_pump": {
+      "raw": [
+       80
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "error_relay": {
+      "raw": [
+       15
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-0F"
+     },
+     "loading_pump": {
+      "raw": [
+       96
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "fume_flap": {
+      "raw": [
+       240
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-F0"
+     }
+    },
+    "state": "complete",
+    "feedback": {
+     "origin": "actual-input-candidate",
+     "grade": "Hypothesis",
+     "raw_equal": true,
+     "calculation": "Proven"
+    }
+   }
+  },
+  {
+   "id": "ab15ao15-actual-true-differ",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "fields": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ],
+     "setpoint": [
+      50
+     ],
+     "feedback": [
+      51
+     ]
+    },
+    "arguments": {
+     "actual_signal": true
+    }
+   },
+   "expect": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "raw": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ],
+     "setpoint": [
+      50
+     ],
+     "feedback": [
+      51
+     ]
+    },
+    "arguments": {
+     "actual_signal": true
+    },
+    "unknowns": {
+     "physical_values": "Unknown",
+     "actual_signal_wire_discriminator": "Unknown",
+     "materialized_defaults": "Unknown",
+     "peer_support": "Unknown",
+     "relay_polarity": "Unknown",
+     "default_true_encoding": "Unknown"
+    },
+    "physical": "Unknown",
+    "qualified": false,
+    "fields": {
+     "secondary_heating_pump": {
+      "raw": [
+       32
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "circulation_pump": {
+      "raw": [
+       64
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "solar_pump": {
+      "raw": [
+       80
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "error_relay": {
+      "raw": [
+       15
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-0F"
+     },
+     "loading_pump": {
+      "raw": [
+       96
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "fume_flap": {
+      "raw": [
+       240
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-F0"
+     }
+    },
+    "state": "complete",
+    "feedback": {
+     "origin": "actual-input-candidate",
+     "grade": "Hypothesis",
+     "raw_equal": false,
+     "calculation": "Proven"
+    }
+   }
+  },
+  {
+   "id": "ab15ao15-actual-absent-empty-arguments",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "fields": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    },
+    "arguments": {}
+   },
+   "expect": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "raw": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    },
+    "arguments": {},
+    "unknowns": {
+     "physical_values": "Unknown",
+     "actual_signal_wire_discriminator": "Unknown",
+     "materialized_defaults": "Unknown",
+     "peer_support": "Unknown",
+     "relay_polarity": "Unknown",
+     "default_true_encoding": "Unknown"
+    },
+    "physical": "Unknown",
+    "qualified": false,
+    "fields": {
+     "secondary_heating_pump": {
+      "raw": [
+       32
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "circulation_pump": {
+      "raw": [
+       64
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "solar_pump": {
+      "raw": [
+       80
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "error_relay": {
+      "raw": [
+       15
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-0F"
+     },
+     "loading_pump": {
+      "raw": [
+       96
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "fume_flap": {
+      "raw": [
+       240
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-F0"
+     }
+    },
+    "state": "complete",
+    "feedback": {
+     "origin": "origin-Unknown",
+     "grade": "Hypothesis"
+    }
+   }
+  },
+  {
+   "id": "ab15ao15-actual-true-no-feedback-field",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "fields": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ],
+     "setpoint": [
+      50
+     ]
+    },
+    "arguments": {
+     "actual_signal": true
+    }
+   },
+   "expect": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "raw": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ],
+     "setpoint": [
+      50
+     ]
+    },
+    "arguments": {
+     "actual_signal": true
+    },
+    "unknowns": {
+     "physical_values": "Unknown",
+     "actual_signal_wire_discriminator": "Unknown",
+     "materialized_defaults": "Unknown",
+     "peer_support": "Unknown",
+     "relay_polarity": "Unknown",
+     "default_true_encoding": "Unknown"
+    },
+    "physical": "Unknown",
+    "qualified": false,
+    "fields": {
+     "secondary_heating_pump": {
+      "raw": [
+       32
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "circulation_pump": {
+      "raw": [
+       64
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "solar_pump": {
+      "raw": [
+       80
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "error_relay": {
+      "raw": [
+       15
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-0F"
+     },
+     "loading_pump": {
+      "raw": [
+       96
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "fume_flap": {
+      "raw": [
+       240
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-F0"
+     }
+    },
+    "state": "complete",
+    "feedback": {
+     "origin": "actual-input-candidate",
+     "grade": "Hypothesis"
+    }
+   }
+  },
+  {
+   "id": "ab15ao15-missing-error-relay",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "fields": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    }
+   },
+   "expect": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "raw": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    },
+    "unknowns": {
+     "physical_values": "Unknown",
+     "actual_signal_wire_discriminator": "Unknown",
+     "materialized_defaults": "Unknown",
+     "peer_support": "Unknown",
+     "relay_polarity": "Unknown",
+     "default_true_encoding": "Unknown"
+    },
+    "physical": "Unknown",
+    "qualified": false,
+    "fields": {
+     "secondary_heating_pump": {
+      "raw": [
+       32
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "circulation_pump": {
+      "raw": [
+       64
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "solar_pump": {
+      "raw": [
+       80
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "error_relay": {
+      "state": "missing",
+      "grade": "Hypothesis"
+     },
+     "loading_pump": {
+      "raw": [
+       96
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "fume_flap": {
+      "raw": [
+       240
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-F0"
+     }
+    },
+    "state": "partial",
+    "feedback": {
+     "origin": "origin-Unknown",
+     "grade": "Hypothesis"
+    }
+   }
+  },
+  {
+   "id": "ab15ao15-short-solar-pump",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "fields": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    }
+   },
+   "expect": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "raw": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    },
+    "unknowns": {
+     "physical_values": "Unknown",
+     "actual_signal_wire_discriminator": "Unknown",
+     "materialized_defaults": "Unknown",
+     "peer_support": "Unknown",
+     "relay_polarity": "Unknown",
+     "default_true_encoding": "Unknown"
+    },
+    "physical": "Unknown",
+    "qualified": false,
+    "fields": {
+     "secondary_heating_pump": {
+      "raw": [
+       32
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "circulation_pump": {
+      "raw": [
+       64
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "solar_pump": {
+      "raw": [],
+      "grade": "Hypothesis",
+      "state": "short"
+     },
+     "error_relay": {
+      "raw": [
+       15
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-0F"
+     },
+     "loading_pump": {
+      "raw": [
+       96
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "fume_flap": {
+      "raw": [
+       240
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-F0"
+     }
+    },
+    "state": "partial",
+    "feedback": {
+     "origin": "origin-Unknown",
+     "grade": "Hypothesis"
+    }
+   }
+  },
+  {
+   "id": "ab15ao15-overlong-circulation-pump",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "fields": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      1,
+      2
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    }
+   },
+   "expect": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "raw": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      1,
+      2
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    },
+    "unknowns": {
+     "physical_values": "Unknown",
+     "actual_signal_wire_discriminator": "Unknown",
+     "materialized_defaults": "Unknown",
+     "peer_support": "Unknown",
+     "relay_polarity": "Unknown",
+     "default_true_encoding": "Unknown"
+    },
+    "physical": "Unknown",
+    "qualified": false,
+    "fields": {
+     "secondary_heating_pump": {
+      "raw": [
+       32
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "circulation_pump": {
+      "raw": [
+       1,
+       2
+      ],
+      "grade": "Hypothesis",
+      "state": "overlong"
+     },
+     "solar_pump": {
+      "raw": [
+       80
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "error_relay": {
+      "raw": [
+       15
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-0F"
+     },
+     "loading_pump": {
+      "raw": [
+       96
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "fume_flap": {
+      "raw": [
+       240
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-F0"
+     }
+    },
+    "state": "partial",
+    "feedback": {
+     "origin": "origin-Unknown",
+     "grade": "Hypothesis"
+    }
+   }
+  },
+  {
+   "id": "ab15ao15-missing-all-fields",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "fields": {}
+   },
+   "expect": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "raw": {},
+    "unknowns": {
+     "physical_values": "Unknown",
+     "actual_signal_wire_discriminator": "Unknown",
+     "materialized_defaults": "Unknown",
+     "peer_support": "Unknown",
+     "relay_polarity": "Unknown",
+     "default_true_encoding": "Unknown"
+    },
+    "physical": "Unknown",
+    "qualified": false,
+    "fields": {
+     "secondary_heating_pump": {
+      "state": "missing",
+      "grade": "Hypothesis"
+     },
+     "circulation_pump": {
+      "state": "missing",
+      "grade": "Hypothesis"
+     },
+     "solar_pump": {
+      "state": "missing",
+      "grade": "Hypothesis"
+     },
+     "error_relay": {
+      "state": "missing",
+      "grade": "Hypothesis"
+     },
+     "loading_pump": {
+      "state": "missing",
+      "grade": "Hypothesis"
+     },
+     "fume_flap": {
+      "state": "missing",
+      "grade": "Hypothesis"
+     }
+    },
+    "state": "raw-only",
+    "feedback": {
+     "origin": "origin-Unknown",
+     "grade": "Hypothesis"
+    }
+   }
+  },
+  {
+   "id": "ab15ao15-tail-and-context-preserved",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a",
+     "note": {
+      "nested": [
+       1,
+       {
+        "k": true
+       }
+      ]
+     }
+    },
+    "fields": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ],
+     "unmodelled_tail": [
+      9,
+      8,
+      0,
+      255
+     ]
+    }
+   },
+   "expect": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a",
+     "note": {
+      "nested": [
+       1,
+       {
+        "k": true
+       }
+      ]
+     }
+    },
+    "raw": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ],
+     "unmodelled_tail": [
+      9,
+      8,
+      0,
+      255
+     ]
+    },
+    "unknowns": {
+     "physical_values": "Unknown",
+     "actual_signal_wire_discriminator": "Unknown",
+     "materialized_defaults": "Unknown",
+     "peer_support": "Unknown",
+     "relay_polarity": "Unknown",
+     "default_true_encoding": "Unknown"
+    },
+    "physical": "Unknown",
+    "qualified": false,
+    "fields": {
+     "secondary_heating_pump": {
+      "raw": [
+       32
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "circulation_pump": {
+      "raw": [
+       64
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "solar_pump": {
+      "raw": [
+       80
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "error_relay": {
+      "raw": [
+       15
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-0F"
+     },
+     "loading_pump": {
+      "raw": [
+       96
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "fume_flap": {
+      "raw": [
+       240
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-F0"
+     }
+    },
+    "state": "complete",
+    "feedback": {
+     "origin": "origin-Unknown",
+     "grade": "Hypothesis"
+    }
+   }
+  },
+  {
+   "id": "ab15ao15-opaque-context-b",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-b",
+     "variant": 7
+    },
+    "fields": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    }
+   },
+   "expect": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-b",
+     "variant": 7
+    },
+    "raw": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    },
+    "unknowns": {
+     "physical_values": "Unknown",
+     "actual_signal_wire_discriminator": "Unknown",
+     "materialized_defaults": "Unknown",
+     "peer_support": "Unknown",
+     "relay_polarity": "Unknown",
+     "default_true_encoding": "Unknown"
+    },
+    "physical": "Unknown",
+    "qualified": false,
+    "fields": {
+     "secondary_heating_pump": {
+      "raw": [
+       32
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "circulation_pump": {
+      "raw": [
+       64
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "solar_pump": {
+      "raw": [
+       80
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "error_relay": {
+      "raw": [
+       15
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-0F"
+     },
+     "loading_pump": {
+      "raw": [
+       96
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "fume_flap": {
+      "raw": [
+       240
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-F0"
+     }
+    },
+    "state": "complete",
+    "feedback": {
+     "origin": "origin-Unknown",
+     "grade": "Hypothesis"
+    }
+   }
+  },
+  {
+   "id": "ab15ao15-opaque-context-absent-labels",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields"
+    },
+    "fields": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    }
+   },
+   "expect": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields"
+    },
+    "raw": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    },
+    "unknowns": {
+     "physical_values": "Unknown",
+     "actual_signal_wire_discriminator": "Unknown",
+     "materialized_defaults": "Unknown",
+     "peer_support": "Unknown",
+     "relay_polarity": "Unknown",
+     "default_true_encoding": "Unknown"
+    },
+    "physical": "Unknown",
+    "qualified": false,
+    "fields": {
+     "secondary_heating_pump": {
+      "raw": [
+       32
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "circulation_pump": {
+      "raw": [
+       64
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "solar_pump": {
+      "raw": [
+       80
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "error_relay": {
+      "raw": [
+       15
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-0F"
+     },
+     "loading_pump": {
+      "raw": [
+       96
+      ],
+      "grade": "Hypothesis",
+      "state": "raw"
+     },
+     "fume_flap": {
+      "raw": [
+       240
+      ],
+      "grade": "Hypothesis",
+      "state": "candidate",
+      "label": "state-F0"
+     }
+    },
+    "state": "complete",
+    "feedback": {
+     "origin": "origin-Unknown",
+     "grade": "Hypothesis"
+    }
+   }
+  },
+  {
+   "id": "ab15ao15-unknown-primary",
+   "input": {
+    "context": {
+     "primary": 180,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "fields": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    }
+   },
+   "expect": {
+    "context": {
+     "primary": 180,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "raw": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    },
+    "unknowns": {
+     "physical_values": "Unknown",
+     "actual_signal_wire_discriminator": "Unknown",
+     "materialized_defaults": "Unknown",
+     "peer_support": "Unknown",
+     "relay_polarity": "Unknown",
+     "default_true_encoding": "Unknown"
+    },
+    "physical": "Unknown",
+    "qualified": false,
+    "state": "unknown",
+    "reason": "unknown-primary",
+    "fields": {}
+   }
+  },
+  {
+   "id": "ab15ao15-unknown-secondary",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 19,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "fields": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    }
+   },
+   "expect": {
+    "context": {
+     "primary": 181,
+     "secondary": 19,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "raw": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    },
+    "unknowns": {
+     "physical_values": "Unknown",
+     "actual_signal_wire_discriminator": "Unknown",
+     "materialized_defaults": "Unknown",
+     "peer_support": "Unknown",
+     "relay_polarity": "Unknown",
+     "default_true_encoding": "Unknown"
+    },
+    "physical": "Unknown",
+    "qualified": false,
+    "state": "unknown",
+    "reason": "unknown-secondary",
+    "fields": {}
+   }
+  },
+  {
+   "id": "ab15ao15-unknown-operation",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 2,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "fields": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    }
+   },
+   "expect": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 2,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "raw": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    },
+    "unknowns": {
+     "physical_values": "Unknown",
+     "actual_signal_wire_discriminator": "Unknown",
+     "materialized_defaults": "Unknown",
+     "peer_support": "Unknown",
+     "relay_polarity": "Unknown",
+     "default_true_encoding": "Unknown"
+    },
+    "physical": "Unknown",
+    "qualified": false,
+    "state": "unknown",
+    "reason": "unknown-operation",
+    "fields": {}
+   }
+  },
+  {
+   "id": "ab15ao15-unknown-operation-zero",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 0,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "fields": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    }
+   },
+   "expect": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 0,
+     "direction": "request",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "raw": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    },
+    "unknowns": {
+     "physical_values": "Unknown",
+     "actual_signal_wire_discriminator": "Unknown",
+     "materialized_defaults": "Unknown",
+     "peer_support": "Unknown",
+     "relay_polarity": "Unknown",
+     "default_true_encoding": "Unknown"
+    },
+    "physical": "Unknown",
+    "qualified": false,
+    "state": "unknown",
+    "reason": "unknown-operation",
+    "fields": {}
+   }
+  },
+  {
+   "id": "ab15ao15-unknown-direction",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "response",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "fields": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    }
+   },
+   "expect": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "response",
+     "view": "directional-fields",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "raw": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    },
+    "unknowns": {
+     "physical_values": "Unknown",
+     "actual_signal_wire_discriminator": "Unknown",
+     "materialized_defaults": "Unknown",
+     "peer_support": "Unknown",
+     "relay_polarity": "Unknown",
+     "default_true_encoding": "Unknown"
+    },
+    "physical": "Unknown",
+    "qualified": false,
+    "state": "unknown",
+    "reason": "unknown-direction",
+    "fields": {}
+   }
+  },
+  {
+   "id": "ab15ao15-unknown-view",
+   "input": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields-v2",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "fields": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    }
+   },
+   "expect": {
+    "context": {
+     "primary": 181,
+     "secondary": 18,
+     "operation": 1,
+     "direction": "request",
+     "view": "directional-fields-v2",
+     "family": "opaque-family-a",
+     "variant": "opaque-variant-a"
+    },
+    "raw": {
+     "secondary_heating_pump": [
+      32
+     ],
+     "circulation_pump": [
+      64
+     ],
+     "solar_pump": [
+      80
+     ],
+     "error_relay": [
+      15
+     ],
+     "loading_pump": [
+      96
+     ],
+     "fume_flap": [
+      240
+     ]
+    },
+    "unknowns": {
+     "physical_values": "Unknown",
+     "actual_signal_wire_discriminator": "Unknown",
+     "materialized_defaults": "Unknown",
+     "peer_support": "Unknown",
+     "relay_polarity": "Unknown",
+     "default_true_encoding": "Unknown"
+    },
+    "physical": "Unknown",
+    "qualified": false,
+    "state": "unknown",
+    "reason": "unknown-view",
+    "fields": {}
+   }
+  }
+ ],
+ "errors": [
+  {
+   "id": "ab15ao15-error-duplicate-top-level-key",
+   "input_text": "{\"context\":{},\"fields\":{},\"fields\":{}}",
+   "error": true
+  },
+  {
+   "id": "ab15ao15-error-duplicate-field-key",
+   "input_text": "{\"context\":{\"primary\": 181, \"secondary\": 18, \"operation\": 1, \"direction\": \"request\", \"view\": \"directional-fields\", \"family\": \"opaque-family-a\", \"variant\": \"opaque-variant-a\"},\"fields\":{\"solar_pump\":[1],\"solar_pump\":[2]}}",
+   "error": true
+  },
+  {
+   "id": "ab15ao15-error-duplicate-context-key",
+   "input_text": "{\"context\":{\"primary\":181,\"primary\":181},\"fields\":{}}",
+   "error": true
+  },
+  {
+   "id": "ab15ao15-error-malformed-json",
+   "input_text": "{\"context\":",
+   "error": true
+  },
+  {
+   "id": "ab15ao15-error-trailing-data",
+   "input_text": "{\"context\":{\"primary\": 181, \"secondary\": 18, \"operation\": 1, \"direction\": \"request\", \"view\": \"directional-fields\", \"family\": \"opaque-family-a\", \"variant\": \"opaque-variant-a\"},\"fields\":{}} 1",
+   "error": true
+  },
+  {
+   "id": "ab15ao15-error-byte-256",
+   "input_text": "{\"context\":{\"primary\": 181, \"secondary\": 18, \"operation\": 1, \"direction\": \"request\", \"view\": \"directional-fields\", \"family\": \"opaque-family-a\", \"variant\": \"opaque-variant-a\"},\"fields\":{\"solar_pump\":[256]}}",
+   "error": true
+  },
+  {
+   "id": "ab15ao15-error-byte-negative",
+   "input_text": "{\"context\":{\"primary\": 181, \"secondary\": 18, \"operation\": 1, \"direction\": \"request\", \"view\": \"directional-fields\", \"family\": \"opaque-family-a\", \"variant\": \"opaque-variant-a\"},\"fields\":{\"solar_pump\":[-1]}}",
+   "error": true
+  },
+  {
+   "id": "ab15ao15-error-byte-fraction",
+   "input_text": "{\"context\":{\"primary\": 181, \"secondary\": 18, \"operation\": 1, \"direction\": \"request\", \"view\": \"directional-fields\", \"family\": \"opaque-family-a\", \"variant\": \"opaque-variant-a\"},\"fields\":{\"solar_pump\":[1.5]}}",
+   "error": true
+  },
+  {
+   "id": "ab15ao15-error-byte-exponent",
+   "input_text": "{\"context\":{\"primary\": 181, \"secondary\": 18, \"operation\": 1, \"direction\": \"request\", \"view\": \"directional-fields\", \"family\": \"opaque-family-a\", \"variant\": \"opaque-variant-a\"},\"fields\":{\"solar_pump\":[1e1]}}",
+   "error": true
+  },
+  {
+   "id": "ab15ao15-error-byte-string",
+   "input_text": "{\"context\":{\"primary\": 181, \"secondary\": 18, \"operation\": 1, \"direction\": \"request\", \"view\": \"directional-fields\", \"family\": \"opaque-family-a\", \"variant\": \"opaque-variant-a\"},\"fields\":{\"solar_pump\":[\"1\"]}}",
+   "error": true
+  },
+  {
+   "id": "ab15ao15-error-byte-null",
+   "input_text": "{\"context\":{\"primary\": 181, \"secondary\": 18, \"operation\": 1, \"direction\": \"request\", \"view\": \"directional-fields\", \"family\": \"opaque-family-a\", \"variant\": \"opaque-variant-a\"},\"fields\":{\"solar_pump\":[null]}}",
+   "error": true
+  },
+  {
+   "id": "ab15ao15-error-field-not-array",
+   "input_text": "{\"context\":{\"primary\": 181, \"secondary\": 18, \"operation\": 1, \"direction\": \"request\", \"view\": \"directional-fields\", \"family\": \"opaque-family-a\", \"variant\": \"opaque-variant-a\"},\"fields\":{\"solar_pump\":1}}",
+   "error": true
+  },
+  {
+   "id": "ab15ao15-error-field-null",
+   "input_text": "{\"context\":{\"primary\": 181, \"secondary\": 18, \"operation\": 1, \"direction\": \"request\", \"view\": \"directional-fields\", \"family\": \"opaque-family-a\", \"variant\": \"opaque-variant-a\"},\"fields\":{\"solar_pump\":null}}",
+   "error": true
+  },
+  {
+   "id": "ab15ao15-error-fields-not-object",
+   "input_text": "{\"context\":{\"primary\": 181, \"secondary\": 18, \"operation\": 1, \"direction\": \"request\", \"view\": \"directional-fields\", \"family\": \"opaque-family-a\", \"variant\": \"opaque-variant-a\"},\"fields\":[]}",
+   "error": true
+  },
+  {
+   "id": "ab15ao15-error-fields-missing",
+   "input_text": "{\"context\":{\"primary\": 181, \"secondary\": 18, \"operation\": 1, \"direction\": \"request\", \"view\": \"directional-fields\", \"family\": \"opaque-family-a\", \"variant\": \"opaque-variant-a\"}}",
+   "error": true
+  },
+  {
+   "id": "ab15ao15-error-context-missing",
+   "input_text": "{\"fields\":{}}",
+   "error": true
+  },
+  {
+   "id": "ab15ao15-error-context-not-object",
+   "input_text": "{\"context\":[],\"fields\":{}}",
+   "error": true
+  },
+  {
+   "id": "ab15ao15-error-operation-string",
+   "input_text": "{\"context\":{\"primary\": 181, \"secondary\": 18, \"operation\": \"1\", \"direction\": \"request\", \"view\": \"directional-fields\", \"family\": \"opaque-family-a\", \"variant\": \"opaque-variant-a\"},\"fields\":{}}",
+   "error": true
+  },
+  {
+   "id": "ab15ao15-error-primary-missing",
+   "input_text": "{\"context\":{\"secondary\": 18, \"operation\": 1, \"direction\": \"request\", \"view\": \"directional-fields\", \"family\": \"opaque-family-a\", \"variant\": \"opaque-variant-a\"},\"fields\":{}}",
+   "error": true
+  },
+  {
+   "id": "ab15ao15-error-direction-not-string",
+   "input_text": "{\"context\":{\"primary\": 181, \"secondary\": 18, \"operation\": 1, \"direction\": 1, \"view\": \"directional-fields\", \"family\": \"opaque-family-a\", \"variant\": \"opaque-variant-a\"},\"fields\":{}}",
+   "error": true
+  },
+  {
+   "id": "ab15ao15-error-view-missing",
+   "input_text": "{\"context\":{\"primary\": 181, \"secondary\": 18, \"operation\": 1, \"direction\": \"request\", \"family\": \"opaque-family-a\", \"variant\": \"opaque-variant-a\"},\"fields\":{}}",
+   "error": true
+  },
+  {
+   "id": "ab15ao15-error-actual-signal-string",
+   "input_text": "{\"context\":{\"primary\": 181, \"secondary\": 18, \"operation\": 1, \"direction\": \"request\", \"view\": \"directional-fields\", \"family\": \"opaque-family-a\", \"variant\": \"opaque-variant-a\"},\"fields\":{},\"arguments\":{\"actual_signal\":\"true\"}}",
+   "error": true
+  },
+  {
+   "id": "ab15ao15-error-actual-signal-null",
+   "input_text": "{\"context\":{\"primary\": 181, \"secondary\": 18, \"operation\": 1, \"direction\": \"request\", \"view\": \"directional-fields\", \"family\": \"opaque-family-a\", \"variant\": \"opaque-variant-a\"},\"fields\":{},\"arguments\":{\"actual_signal\":null}}",
+   "error": true
+  },
+  {
+   "id": "ab15ao15-error-actual-signal-integer",
+   "input_text": "{\"context\":{\"primary\": 181, \"secondary\": 18, \"operation\": 1, \"direction\": \"request\", \"view\": \"directional-fields\", \"family\": \"opaque-family-a\", \"variant\": \"opaque-variant-a\"},\"fields\":{},\"arguments\":{\"actual_signal\":1}}",
+   "error": true
+  },
+  {
+   "id": "ab15ao15-error-arguments-unknown-key",
+   "input_text": "{\"context\":{\"primary\": 181, \"secondary\": 18, \"operation\": 1, \"direction\": \"request\", \"view\": \"directional-fields\", \"family\": \"opaque-family-a\", \"variant\": \"opaque-variant-a\"},\"fields\":{},\"arguments\":{\"default_true\":true}}",
+   "error": true
+  },
+  {
+   "id": "ab15ao15-error-arguments-not-object",
+   "input_text": "{\"context\":{\"primary\": 181, \"secondary\": 18, \"operation\": 1, \"direction\": \"request\", \"view\": \"directional-fields\", \"family\": \"opaque-family-a\", \"variant\": \"opaque-variant-a\"},\"fields\":{},\"arguments\":[]}",
+   "error": true
+  },
+  {
+   "id": "ab15ao15-error-top-level-unknown-key",
+   "input_text": "{\"context\":{\"primary\": 181, \"secondary\": 18, \"operation\": 1, \"direction\": \"request\", \"view\": \"directional-fields\", \"family\": \"opaque-family-a\", \"variant\": \"opaque-variant-a\"},\"fields\":{},\"extra\":1}",
+   "error": true
+  },
+  {
+   "id": "ab15ao15-error-top-level-not-object",
+   "input_text": "[]",
+   "error": true
+  }
+ ]
+}

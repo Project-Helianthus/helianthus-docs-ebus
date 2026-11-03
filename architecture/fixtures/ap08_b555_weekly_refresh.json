@@ -1,0 +1,3310 @@
+{
+  "grade": "Hypothesis",
+  "physical": "Unknown",
+  "qualified": false,
+  "scenarios": [
+    {
+      "id": "ab07ap07_shape_0",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 85,
+          "operation": 166,
+          "direction": "local",
+          "view": "nonheating-shape",
+          "family": "synthetic family",
+          "variant": null,
+          "opaque": {
+            "keep": [
+              false,
+              0,
+              null
+            ]
+          }
+        },
+        "fields": {
+          "opaque_bytes": [
+            0,
+            255
+          ],
+          "empty_bytes": []
+        },
+        "arguments": {
+          "initial": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "count": 0,
+          "slot_setpoints": [
+            10,
+            20,
+            30
+          ]
+        }
+      },
+      "expected": {
+        "initial": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "processed": [],
+        "unused": [
+          10,
+          20,
+          30
+        ],
+        "processed_slots": 0
+      }
+    },
+    {
+      "id": "ab07ap07_shape_1",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 85,
+          "operation": 166,
+          "direction": "local",
+          "view": "nonheating-shape",
+          "family": "synthetic family",
+          "variant": null,
+          "opaque": {
+            "keep": [
+              false,
+              0,
+              null
+            ]
+          }
+        },
+        "fields": {
+          "opaque_bytes": [
+            0,
+            255
+          ],
+          "empty_bytes": []
+        },
+        "arguments": {
+          "initial": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "count": 1,
+          "slot_setpoints": [
+            10,
+            20,
+            30
+          ]
+        }
+      },
+      "expected": {
+        "initial": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "processed": [
+          65535
+        ],
+        "unused": [
+          20,
+          30
+        ],
+        "processed_slots": 1
+      }
+    },
+    {
+      "id": "ab07ap07_shape_2",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 85,
+          "operation": 166,
+          "direction": "local",
+          "view": "nonheating-shape",
+          "family": "synthetic family",
+          "variant": null,
+          "opaque": {
+            "keep": [
+              false,
+              0,
+              null
+            ]
+          }
+        },
+        "fields": {
+          "opaque_bytes": [
+            0,
+            255
+          ],
+          "empty_bytes": []
+        },
+        "arguments": {
+          "initial": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "count": 2,
+          "slot_setpoints": [
+            10,
+            20,
+            30
+          ]
+        }
+      },
+      "expected": {
+        "initial": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "processed": [
+          65535,
+          65535
+        ],
+        "unused": [
+          30
+        ],
+        "processed_slots": 2
+      }
+    },
+    {
+      "id": "ab07ap07_status",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 85,
+          "operation": 164,
+          "direction": "local",
+          "view": "weekly",
+          "family": "synthetic family",
+          "variant": null,
+          "opaque": {
+            "keep": [
+              false,
+              0,
+              null
+            ]
+          }
+        },
+        "fields": {
+          "opaque_bytes": [
+            0,
+            255
+          ],
+          "empty_bytes": []
+        },
+        "arguments": {
+          "status_ok": false,
+          "slot_limit": 2,
+          "days": [
+            {
+              "count": 1,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 0,
+              "slots": []
+            },
+            {
+              "count": 0,
+              "slots": []
+            },
+            {
+              "count": 0,
+              "slots": []
+            },
+            {
+              "count": 0,
+              "slots": []
+            },
+            {
+              "count": 0,
+              "slots": []
+            },
+            {
+              "count": 0,
+              "slots": []
+            }
+          ]
+        }
+      },
+      "expected": {
+        "reason": "status-failure",
+        "attempts": 0,
+        "completed_days": 0,
+        "successful_slots": 0,
+        "complete": false
+      }
+    },
+    {
+      "id": "ab07ap07_zero",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 85,
+          "operation": 164,
+          "direction": "local",
+          "view": "weekly",
+          "family": "synthetic family",
+          "variant": null,
+          "opaque": {
+            "keep": [
+              false,
+              0,
+              null
+            ]
+          }
+        },
+        "fields": {
+          "opaque_bytes": [
+            0,
+            255
+          ],
+          "empty_bytes": []
+        },
+        "arguments": {
+          "status_ok": true,
+          "slot_limit": 0,
+          "days": [
+            {
+              "count": 0,
+              "slots": []
+            },
+            {
+              "count": 0,
+              "slots": []
+            },
+            {
+              "count": 0,
+              "slots": []
+            },
+            {
+              "count": 0,
+              "slots": []
+            },
+            {
+              "count": 0,
+              "slots": []
+            },
+            {
+              "count": 0,
+              "slots": []
+            },
+            {
+              "count": 0,
+              "slots": []
+            }
+          ]
+        }
+      },
+      "expected": {
+        "reason": null,
+        "attempts": 0,
+        "completed_days": 7,
+        "successful_slots": 0,
+        "complete": true
+      }
+    },
+    {
+      "id": "ab07ap07_overflow",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 85,
+          "operation": 164,
+          "direction": "local",
+          "view": "weekly",
+          "family": "synthetic family",
+          "variant": null,
+          "opaque": {
+            "keep": [
+              false,
+              0,
+              null
+            ]
+          }
+        },
+        "fields": {
+          "opaque_bytes": [
+            0,
+            255
+          ],
+          "empty_bytes": []
+        },
+        "arguments": {
+          "status_ok": true,
+          "slot_limit": 2,
+          "days": [
+            {
+              "count": 1,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 1,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 3,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 0,
+              "slots": []
+            },
+            {
+              "count": 0,
+              "slots": []
+            },
+            {
+              "count": 0,
+              "slots": []
+            },
+            {
+              "count": 0,
+              "slots": []
+            }
+          ]
+        }
+      },
+      "expected": {
+        "reason": "count-overflow",
+        "attempts": 2,
+        "completed_days": 2,
+        "successful_slots": 2,
+        "complete": false
+      }
+    },
+    {
+      "id": "ab07ap07_fail_0_0",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 85,
+          "operation": 164,
+          "direction": "local",
+          "view": "weekly",
+          "family": "synthetic family",
+          "variant": null,
+          "opaque": {
+            "keep": [
+              false,
+              0,
+              null
+            ]
+          }
+        },
+        "fields": {
+          "opaque_bytes": [
+            0,
+            255
+          ],
+          "empty_bytes": []
+        },
+        "arguments": {
+          "status_ok": true,
+          "slot_limit": 2,
+          "days": [
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": false,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "reason": "slot-failure",
+        "attempts": 1,
+        "completed_days": 0,
+        "successful_slots": 0,
+        "complete": false
+      }
+    },
+    {
+      "id": "ab07ap07_fail_0_1",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 85,
+          "operation": 164,
+          "direction": "local",
+          "view": "weekly",
+          "family": "synthetic family",
+          "variant": null,
+          "opaque": {
+            "keep": [
+              false,
+              0,
+              null
+            ]
+          }
+        },
+        "fields": {
+          "opaque_bytes": [
+            0,
+            255
+          ],
+          "empty_bytes": []
+        },
+        "arguments": {
+          "status_ok": true,
+          "slot_limit": 2,
+          "days": [
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": false,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "reason": "slot-failure",
+        "attempts": 2,
+        "completed_days": 0,
+        "successful_slots": 1,
+        "complete": false
+      }
+    },
+    {
+      "id": "ab07ap07_fail_1_0",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 85,
+          "operation": 164,
+          "direction": "local",
+          "view": "weekly",
+          "family": "synthetic family",
+          "variant": null,
+          "opaque": {
+            "keep": [
+              false,
+              0,
+              null
+            ]
+          }
+        },
+        "fields": {
+          "opaque_bytes": [
+            0,
+            255
+          ],
+          "empty_bytes": []
+        },
+        "arguments": {
+          "status_ok": true,
+          "slot_limit": 2,
+          "days": [
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": false,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "reason": "slot-failure",
+        "attempts": 3,
+        "completed_days": 1,
+        "successful_slots": 2,
+        "complete": false
+      }
+    },
+    {
+      "id": "ab07ap07_fail_1_1",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 85,
+          "operation": 164,
+          "direction": "local",
+          "view": "weekly",
+          "family": "synthetic family",
+          "variant": null,
+          "opaque": {
+            "keep": [
+              false,
+              0,
+              null
+            ]
+          }
+        },
+        "fields": {
+          "opaque_bytes": [
+            0,
+            255
+          ],
+          "empty_bytes": []
+        },
+        "arguments": {
+          "status_ok": true,
+          "slot_limit": 2,
+          "days": [
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": false,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "reason": "slot-failure",
+        "attempts": 4,
+        "completed_days": 1,
+        "successful_slots": 3,
+        "complete": false
+      }
+    },
+    {
+      "id": "ab07ap07_fail_2_0",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 85,
+          "operation": 164,
+          "direction": "local",
+          "view": "weekly",
+          "family": "synthetic family",
+          "variant": null,
+          "opaque": {
+            "keep": [
+              false,
+              0,
+              null
+            ]
+          }
+        },
+        "fields": {
+          "opaque_bytes": [
+            0,
+            255
+          ],
+          "empty_bytes": []
+        },
+        "arguments": {
+          "status_ok": true,
+          "slot_limit": 2,
+          "days": [
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": false,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "reason": "slot-failure",
+        "attempts": 5,
+        "completed_days": 2,
+        "successful_slots": 4,
+        "complete": false
+      }
+    },
+    {
+      "id": "ab07ap07_fail_2_1",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 85,
+          "operation": 164,
+          "direction": "local",
+          "view": "weekly",
+          "family": "synthetic family",
+          "variant": null,
+          "opaque": {
+            "keep": [
+              false,
+              0,
+              null
+            ]
+          }
+        },
+        "fields": {
+          "opaque_bytes": [
+            0,
+            255
+          ],
+          "empty_bytes": []
+        },
+        "arguments": {
+          "status_ok": true,
+          "slot_limit": 2,
+          "days": [
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": false,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "reason": "slot-failure",
+        "attempts": 6,
+        "completed_days": 2,
+        "successful_slots": 5,
+        "complete": false
+      }
+    },
+    {
+      "id": "ab07ap07_fail_3_0",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 85,
+          "operation": 164,
+          "direction": "local",
+          "view": "weekly",
+          "family": "synthetic family",
+          "variant": null,
+          "opaque": {
+            "keep": [
+              false,
+              0,
+              null
+            ]
+          }
+        },
+        "fields": {
+          "opaque_bytes": [
+            0,
+            255
+          ],
+          "empty_bytes": []
+        },
+        "arguments": {
+          "status_ok": true,
+          "slot_limit": 2,
+          "days": [
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": false,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "reason": "slot-failure",
+        "attempts": 7,
+        "completed_days": 3,
+        "successful_slots": 6,
+        "complete": false
+      }
+    },
+    {
+      "id": "ab07ap07_fail_3_1",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 85,
+          "operation": 164,
+          "direction": "local",
+          "view": "weekly",
+          "family": "synthetic family",
+          "variant": null,
+          "opaque": {
+            "keep": [
+              false,
+              0,
+              null
+            ]
+          }
+        },
+        "fields": {
+          "opaque_bytes": [
+            0,
+            255
+          ],
+          "empty_bytes": []
+        },
+        "arguments": {
+          "status_ok": true,
+          "slot_limit": 2,
+          "days": [
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": false,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "reason": "slot-failure",
+        "attempts": 8,
+        "completed_days": 3,
+        "successful_slots": 7,
+        "complete": false
+      }
+    },
+    {
+      "id": "ab07ap07_fail_4_0",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 85,
+          "operation": 164,
+          "direction": "local",
+          "view": "weekly",
+          "family": "synthetic family",
+          "variant": null,
+          "opaque": {
+            "keep": [
+              false,
+              0,
+              null
+            ]
+          }
+        },
+        "fields": {
+          "opaque_bytes": [
+            0,
+            255
+          ],
+          "empty_bytes": []
+        },
+        "arguments": {
+          "status_ok": true,
+          "slot_limit": 2,
+          "days": [
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": false,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "reason": "slot-failure",
+        "attempts": 9,
+        "completed_days": 4,
+        "successful_slots": 8,
+        "complete": false
+      }
+    },
+    {
+      "id": "ab07ap07_fail_4_1",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 85,
+          "operation": 164,
+          "direction": "local",
+          "view": "weekly",
+          "family": "synthetic family",
+          "variant": null,
+          "opaque": {
+            "keep": [
+              false,
+              0,
+              null
+            ]
+          }
+        },
+        "fields": {
+          "opaque_bytes": [
+            0,
+            255
+          ],
+          "empty_bytes": []
+        },
+        "arguments": {
+          "status_ok": true,
+          "slot_limit": 2,
+          "days": [
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": false,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "reason": "slot-failure",
+        "attempts": 10,
+        "completed_days": 4,
+        "successful_slots": 9,
+        "complete": false
+      }
+    },
+    {
+      "id": "ab07ap07_fail_5_0",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 85,
+          "operation": 164,
+          "direction": "local",
+          "view": "weekly",
+          "family": "synthetic family",
+          "variant": null,
+          "opaque": {
+            "keep": [
+              false,
+              0,
+              null
+            ]
+          }
+        },
+        "fields": {
+          "opaque_bytes": [
+            0,
+            255
+          ],
+          "empty_bytes": []
+        },
+        "arguments": {
+          "status_ok": true,
+          "slot_limit": 2,
+          "days": [
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": false,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "reason": "slot-failure",
+        "attempts": 11,
+        "completed_days": 5,
+        "successful_slots": 10,
+        "complete": false
+      }
+    },
+    {
+      "id": "ab07ap07_fail_5_1",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 85,
+          "operation": 164,
+          "direction": "local",
+          "view": "weekly",
+          "family": "synthetic family",
+          "variant": null,
+          "opaque": {
+            "keep": [
+              false,
+              0,
+              null
+            ]
+          }
+        },
+        "fields": {
+          "opaque_bytes": [
+            0,
+            255
+          ],
+          "empty_bytes": []
+        },
+        "arguments": {
+          "status_ok": true,
+          "slot_limit": 2,
+          "days": [
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": false,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "reason": "slot-failure",
+        "attempts": 12,
+        "completed_days": 5,
+        "successful_slots": 11,
+        "complete": false
+      }
+    },
+    {
+      "id": "ab07ap07_fail_6_0",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 85,
+          "operation": 164,
+          "direction": "local",
+          "view": "weekly",
+          "family": "synthetic family",
+          "variant": null,
+          "opaque": {
+            "keep": [
+              false,
+              0,
+              null
+            ]
+          }
+        },
+        "fields": {
+          "opaque_bytes": [
+            0,
+            255
+          ],
+          "empty_bytes": []
+        },
+        "arguments": {
+          "status_ok": true,
+          "slot_limit": 2,
+          "days": [
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": false,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "reason": "slot-failure",
+        "attempts": 13,
+        "completed_days": 6,
+        "successful_slots": 12,
+        "complete": false
+      }
+    },
+    {
+      "id": "ab07ap07_fail_6_1",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 85,
+          "operation": 164,
+          "direction": "local",
+          "view": "weekly",
+          "family": "synthetic family",
+          "variant": null,
+          "opaque": {
+            "keep": [
+              false,
+              0,
+              null
+            ]
+          }
+        },
+        "fields": {
+          "opaque_bytes": [
+            0,
+            255
+          ],
+          "empty_bytes": []
+        },
+        "arguments": {
+          "status_ok": true,
+          "slot_limit": 2,
+          "days": [
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": false,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "reason": "slot-failure",
+        "attempts": 14,
+        "completed_days": 6,
+        "successful_slots": 13,
+        "complete": false
+      }
+    },
+    {
+      "id": "ab07ap07_first_failure",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 85,
+          "operation": 164,
+          "direction": "local",
+          "view": "weekly",
+          "family": "synthetic family",
+          "variant": null,
+          "opaque": {
+            "keep": [
+              false,
+              0,
+              null
+            ]
+          }
+        },
+        "fields": {
+          "opaque_bytes": [
+            0,
+            255
+          ],
+          "empty_bytes": []
+        },
+        "arguments": {
+          "status_ok": true,
+          "slot_limit": 2,
+          "days": [
+            {
+              "count": 1,
+              "slots": [
+                {
+                  "ok": false,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 0,
+              "slots": []
+            },
+            {
+              "count": 0,
+              "slots": []
+            },
+            {
+              "count": 0,
+              "slots": []
+            },
+            {
+              "count": 0,
+              "slots": []
+            },
+            {
+              "count": 0,
+              "slots": []
+            },
+            {
+              "count": 0,
+              "slots": []
+            }
+          ]
+        }
+      },
+      "expected": {
+        "reason": "slot-failure",
+        "attempts": 1,
+        "completed_days": 0,
+        "successful_slots": 0,
+        "complete": false
+      }
+    },
+    {
+      "id": "ab07ap07_missing",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 85,
+          "operation": 164,
+          "direction": "local",
+          "view": "weekly",
+          "family": "synthetic family",
+          "variant": null,
+          "opaque": {
+            "keep": [
+              false,
+              0,
+              null
+            ]
+          }
+        },
+        "fields": {
+          "opaque_bytes": [
+            0,
+            255
+          ],
+          "empty_bytes": []
+        },
+        "arguments": {
+          "status_ok": true,
+          "slot_limit": 2,
+          "days": [
+            {
+              "count": 1,
+              "slots": []
+            },
+            {
+              "count": 0,
+              "slots": []
+            },
+            {
+              "count": 0,
+              "slots": []
+            },
+            {
+              "count": 0,
+              "slots": []
+            },
+            {
+              "count": 0,
+              "slots": []
+            },
+            {
+              "count": 0,
+              "slots": []
+            },
+            {
+              "count": 0,
+              "slots": []
+            }
+          ]
+        }
+      },
+      "expected": {
+        "reason": "missing-slot",
+        "attempts": 0,
+        "completed_days": 0,
+        "successful_slots": 0,
+        "complete": false
+      }
+    },
+    {
+      "id": "ab07ap07_extra",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 85,
+          "operation": 164,
+          "direction": "local",
+          "view": "weekly",
+          "family": "synthetic family",
+          "variant": null,
+          "opaque": {
+            "keep": [
+              false,
+              0,
+              null
+            ]
+          }
+        },
+        "fields": {
+          "opaque_bytes": [
+            0,
+            255
+          ],
+          "empty_bytes": []
+        },
+        "arguments": {
+          "status_ok": true,
+          "slot_limit": 2,
+          "days": [
+            {
+              "count": 1,
+              "slots": [
+                {
+                  "ok": true,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                },
+                {
+                  "ok": false,
+                  "raw": [
+                    17,
+                    0,
+                    255
+                  ]
+                }
+              ]
+            },
+            {
+              "count": 0,
+              "slots": []
+            },
+            {
+              "count": 0,
+              "slots": []
+            },
+            {
+              "count": 0,
+              "slots": []
+            },
+            {
+              "count": 0,
+              "slots": []
+            },
+            {
+              "count": 0,
+              "slots": []
+            },
+            {
+              "count": 0,
+              "slots": []
+            }
+          ]
+        }
+      },
+      "expected": {
+        "reason": null,
+        "attempts": 1,
+        "completed_days": 7,
+        "successful_slots": 1,
+        "complete": true
+      }
+    }
+  ]
+}
