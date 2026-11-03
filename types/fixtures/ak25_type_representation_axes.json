@@ -1,0 +1,576 @@
+{
+  "provenance": "synthetic arithmetic only",
+  "contract_grade": "Hypothesis",
+  "qualification": "Unknown",
+  "unknown": {
+    "native_field_selection": "Unknown",
+    "mixed_encodings": "Unknown",
+    "decimal_sign_conventions": "Unknown",
+    "physical_qualification": "Unknown",
+    "native_support": "Unknown",
+    "physical_effects": "Unknown",
+    "persistence": "Unknown",
+    "delivery": "Unknown"
+  },
+  "cases": [
+    {
+      "id": "packed42",
+      "representation": "packed-decimal",
+      "raw": [
+        66
+      ],
+      "width_bits": 8,
+      "byte_order": "not-applicable",
+      "signedness": "not-applicable",
+      "expected": 42,
+      "grade": "Proven",
+      "native": "Unknown"
+    },
+    {
+      "id": "packed00",
+      "representation": "packed-decimal",
+      "raw": [
+        0
+      ],
+      "width_bits": 8,
+      "byte_order": "not-applicable",
+      "signedness": "not-applicable",
+      "expected": 0,
+      "grade": "Proven",
+      "native": "Unknown"
+    },
+    {
+      "id": "packed99",
+      "representation": "packed-decimal",
+      "raw": [
+        153
+      ],
+      "width_bits": 8,
+      "byte_order": "not-applicable",
+      "signedness": "not-applicable",
+      "expected": 99,
+      "grade": "Proven",
+      "native": "Unknown"
+    },
+    {
+      "id": "packedFA",
+      "representation": "packed-decimal",
+      "raw": [
+        250
+      ],
+      "width_bits": 8,
+      "byte_order": "not-applicable",
+      "signedness": "not-applicable",
+      "expected": null,
+      "grade": "Proven",
+      "native": "Unknown"
+    },
+    {
+      "id": "packed_low_invalid",
+      "representation": "packed-decimal",
+      "raw": [
+        74
+      ],
+      "width_bits": 8,
+      "byte_order": "not-applicable",
+      "signedness": "not-applicable",
+      "expected": null,
+      "grade": "Proven",
+      "native": "Unknown"
+    },
+    {
+      "id": "packed_empty",
+      "representation": "packed-decimal",
+      "raw": [],
+      "width_bits": 8,
+      "byte_order": "not-applicable",
+      "signedness": "not-applicable",
+      "expected": null,
+      "grade": "Proven",
+      "native": "Unknown"
+    },
+    {
+      "id": "packed_wide",
+      "representation": "packed-decimal",
+      "raw": [
+        0,
+        66
+      ],
+      "width_bits": 8,
+      "byte_order": "not-applicable",
+      "signedness": "not-applicable",
+      "expected": null,
+      "grade": "Proven",
+      "native": "Unknown"
+    },
+    {
+      "id": "unpacked-decimal_42",
+      "representation": "unpacked-decimal",
+      "raw": [
+        4,
+        2
+      ],
+      "width_bits": 16,
+      "byte_order": "not-applicable",
+      "signedness": "not-applicable",
+      "expected": 42,
+      "grade": "Proven",
+      "native": "Unknown"
+    },
+    {
+      "id": "unpacked-decimal_leading",
+      "representation": "unpacked-decimal",
+      "raw": [
+        0,
+        2
+      ],
+      "width_bits": 16,
+      "byte_order": "not-applicable",
+      "signedness": "not-applicable",
+      "expected": 2,
+      "grade": "Proven",
+      "native": "Unknown"
+    },
+    {
+      "id": "unpacked-decimal_invalid",
+      "representation": "unpacked-decimal",
+      "raw": [
+        4,
+        10
+      ],
+      "width_bits": 16,
+      "byte_order": "not-applicable",
+      "signedness": "not-applicable",
+      "expected": null,
+      "grade": "Proven",
+      "native": "Unknown"
+    },
+    {
+      "id": "unpacked-decimal_ascii",
+      "representation": "unpacked-decimal",
+      "raw": [
+        52,
+        50
+      ],
+      "width_bits": 16,
+      "byte_order": "not-applicable",
+      "signedness": "not-applicable",
+      "expected": null,
+      "grade": "Proven",
+      "native": "Unknown"
+    },
+    {
+      "id": "unpacked-decimal_short",
+      "representation": "unpacked-decimal",
+      "raw": [
+        4
+      ],
+      "width_bits": 16,
+      "byte_order": "not-applicable",
+      "signedness": "not-applicable",
+      "expected": null,
+      "grade": "Proven",
+      "native": "Unknown"
+    },
+    {
+      "id": "ASCII-digits_42",
+      "representation": "ASCII-digits",
+      "raw": [
+        52,
+        50
+      ],
+      "width_bits": 16,
+      "byte_order": "not-applicable",
+      "signedness": "not-applicable",
+      "expected": 42,
+      "grade": "Proven",
+      "native": "Unknown"
+    },
+    {
+      "id": "ASCII-digits_leading",
+      "representation": "ASCII-digits",
+      "raw": [
+        48,
+        50
+      ],
+      "width_bits": 16,
+      "byte_order": "not-applicable",
+      "signedness": "not-applicable",
+      "expected": 2,
+      "grade": "Proven",
+      "native": "Unknown"
+    },
+    {
+      "id": "ASCII-digits_invalid",
+      "representation": "ASCII-digits",
+      "raw": [
+        52,
+        65
+      ],
+      "width_bits": 16,
+      "byte_order": "not-applicable",
+      "signedness": "not-applicable",
+      "expected": null,
+      "grade": "Proven",
+      "native": "Unknown"
+    },
+    {
+      "id": "ASCII-digits_unpacked",
+      "representation": "ASCII-digits",
+      "raw": [
+        4,
+        2
+      ],
+      "width_bits": 16,
+      "byte_order": "not-applicable",
+      "signedness": "not-applicable",
+      "expected": null,
+      "grade": "Proven",
+      "native": "Unknown"
+    },
+    {
+      "id": "ASCII-digits_short",
+      "representation": "ASCII-digits",
+      "raw": [
+        52
+      ],
+      "width_bits": 16,
+      "byte_order": "not-applicable",
+      "signedness": "not-applicable",
+      "expected": null,
+      "grade": "Proven",
+      "native": "Unknown"
+    },
+    {
+      "id": "signed_le",
+      "representation": "integer",
+      "raw": [
+        254,
+        255
+      ],
+      "width_bits": 16,
+      "byte_order": "little",
+      "signedness": "signed",
+      "expected": -2,
+      "grade": "Proven",
+      "native": "Unknown"
+    },
+    {
+      "id": "signed_be",
+      "representation": "integer",
+      "raw": [
+        254,
+        255
+      ],
+      "width_bits": 16,
+      "byte_order": "big",
+      "signedness": "signed",
+      "expected": -257,
+      "grade": "Proven",
+      "native": "Unknown"
+    },
+    {
+      "id": "unsigned_le",
+      "representation": "integer",
+      "raw": [
+        254,
+        255
+      ],
+      "width_bits": 16,
+      "byte_order": "little",
+      "signedness": "unsigned",
+      "expected": 65534,
+      "grade": "Proven",
+      "native": "Unknown"
+    },
+    {
+      "id": "signed_min",
+      "representation": "integer",
+      "raw": [
+        0,
+        128
+      ],
+      "width_bits": 16,
+      "byte_order": "little",
+      "signedness": "signed",
+      "expected": -32768,
+      "grade": "Proven",
+      "native": "Unknown"
+    },
+    {
+      "id": "signed_max",
+      "representation": "integer",
+      "raw": [
+        255,
+        127
+      ],
+      "width_bits": 16,
+      "byte_order": "little",
+      "signedness": "signed",
+      "expected": 32767,
+      "grade": "Proven",
+      "native": "Unknown"
+    },
+    {
+      "id": "integer_short",
+      "representation": "integer",
+      "raw": [
+        254
+      ],
+      "width_bits": 16,
+      "byte_order": "little",
+      "signedness": "signed",
+      "expected": null,
+      "grade": "Proven",
+      "native": "Unknown"
+    },
+    {
+      "id": "float",
+      "representation": "binary32",
+      "raw": [
+        0,
+        0,
+        192,
+        63
+      ],
+      "width_bits": 32,
+      "byte_order": "little",
+      "signedness": "not-applicable",
+      "expected": 1.5,
+      "grade": "Proven",
+      "native": "Unknown"
+    },
+    {
+      "id": "float_integer",
+      "representation": "integer",
+      "raw": [
+        0,
+        0,
+        192,
+        63
+      ],
+      "width_bits": 32,
+      "byte_order": "little",
+      "signedness": "unsigned",
+      "expected": 1069547520,
+      "grade": "Proven",
+      "native": "Unknown"
+    },
+    {
+      "id": "float_short",
+      "representation": "binary32",
+      "raw": [
+        0,
+        192,
+        63
+      ],
+      "width_bits": 32,
+      "byte_order": "little",
+      "signedness": "not-applicable",
+      "expected": null,
+      "grade": "Proven",
+      "native": "Unknown"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "base",
+      "contract": {
+        "representation": "integer",
+        "raw": [
+          52,
+          50
+        ],
+        "width_bits": 16,
+        "byte_order": "little",
+        "signedness": "unsigned",
+        "computation": "identity",
+        "unit": "Unknown"
+      },
+      "expected": 12852,
+      "grade": "Proven",
+      "native": "Unknown"
+    },
+    {
+      "id": "representation",
+      "contract": {
+        "representation": "ASCII-digits",
+        "raw": [
+          52,
+          50
+        ],
+        "width_bits": 16,
+        "byte_order": "little",
+        "signedness": "unsigned",
+        "computation": "identity",
+        "unit": "Unknown"
+      },
+      "expected": 42,
+      "grade": "Proven",
+      "native": "Unknown"
+    },
+    {
+      "id": "width_bits",
+      "contract": {
+        "representation": "integer",
+        "raw": [
+          52,
+          50
+        ],
+        "width_bits": 8,
+        "byte_order": "little",
+        "signedness": "unsigned",
+        "computation": "identity",
+        "unit": "Unknown"
+      },
+      "expected": null,
+      "grade": "Proven",
+      "native": "Unknown"
+    },
+    {
+      "id": "byte_order",
+      "contract": {
+        "representation": "integer",
+        "raw": [
+          52,
+          50
+        ],
+        "width_bits": 16,
+        "byte_order": "big",
+        "signedness": "unsigned",
+        "computation": "identity",
+        "unit": "Unknown"
+      },
+      "expected": 13362,
+      "grade": "Proven",
+      "native": "Unknown"
+    },
+    {
+      "id": "computation",
+      "contract": {
+        "representation": "integer",
+        "raw": [
+          52,
+          50
+        ],
+        "width_bits": 16,
+        "byte_order": "little",
+        "signedness": "unsigned",
+        "computation": "raw/16",
+        "unit": "Unknown"
+      },
+      "expected": 803.25,
+      "grade": "Proven",
+      "native": "Unknown"
+    },
+    {
+      "id": "unit",
+      "contract": {
+        "representation": "integer",
+        "raw": [
+          52,
+          50
+        ],
+        "width_bits": 16,
+        "byte_order": "little",
+        "signedness": "unsigned",
+        "computation": "identity",
+        "unit": "degrees Celsius"
+      },
+      "expected": 12852,
+      "grade": "Proven",
+      "native": "Unknown"
+    },
+    {
+      "id": "sign_control",
+      "contract": {
+        "representation": "integer",
+        "raw": [
+          254,
+          255
+        ],
+        "width_bits": 16,
+        "byte_order": "little",
+        "signedness": "unsigned",
+        "computation": "identity",
+        "unit": "Unknown"
+      },
+      "expected": 65534,
+      "grade": "Proven",
+      "native": "Unknown"
+    },
+    {
+      "id": "signedness",
+      "contract": {
+        "representation": "integer",
+        "raw": [
+          254,
+          255
+        ],
+        "width_bits": 16,
+        "byte_order": "little",
+        "signedness": "signed",
+        "computation": "identity",
+        "unit": "Unknown"
+      },
+      "expected": -2,
+      "grade": "Proven",
+      "native": "Unknown"
+    }
+  ],
+  "fixed_characters": {
+    "raw": [
+      65,
+      0,
+      66,
+      0,
+      0
+    ],
+    "retained": [
+      65,
+      0,
+      66,
+      0,
+      0
+    ],
+    "width_bits": 40,
+    "grade": "Proven",
+    "native": "Unknown",
+    "text_encoding": "Unknown",
+    "termination": "Unknown",
+    "padding": "Unknown",
+    "normalization": "Unknown"
+  },
+  "domains": [
+    {
+      "width_bits": 16,
+      "raw_domain": [
+        0,
+        65535
+      ],
+      "allowed_semantic_domain": [
+        0,
+        100
+      ],
+      "value": 42,
+      "admitted": true,
+      "grade": "Hypothesis",
+      "native": "Unknown"
+    },
+    {
+      "width_bits": 16,
+      "raw_domain": [
+        0,
+        65535
+      ],
+      "allowed_semantic_domain": [
+        0,
+        40
+      ],
+      "value": 42,
+      "admitted": false,
+      "grade": "Hypothesis",
+      "native": "Unknown"
+    }
+  ]
+}
