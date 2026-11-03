@@ -1,0 +1,774 @@
+{
+  "facts": {
+    "candidate_grade": "Hypothesis",
+    "native_behavior": "Unknown",
+    "physical_qualification": "Unknown",
+    "production_capacity": "Unknown",
+    "replacement_policy": "Unknown",
+    "coalescing_policy": "Unknown",
+    "nonfinite_handling": "Unknown",
+    "intermediate_overflow_handling": "Unknown",
+    "native_units": "Unknown",
+    "exact_changeability_predicate": "Unknown",
+    "exact_active_predicate": "Unknown",
+    "ack_correlation": "Unknown",
+    "applied_OP01": "Unknown",
+    "applied_OP03": "Unknown",
+    "implemented": false,
+    "health_seconds": 10,
+    "health_is_physical_timeout": false,
+    "upstream_metadata": [
+      "consume",
+      "obligation",
+      "active-power-limit",
+      "W"
+    ],
+    "heartbeat_seconds": [
+      60,
+      120
+    ],
+    "statuses": [
+      2,
+      3,
+      8
+    ],
+    "optional_wait_seconds": 2,
+    "ack_signature": "(u32,u32,bool)->bool",
+    "request_identifier": null
+  },
+  "synthetic_capacity": 2,
+  "pending": [
+    {
+      "identity": "request-a",
+      "requested": true,
+      "queued": true,
+      "dispatched": false,
+      "completed": false,
+      "applied": "Unknown"
+    },
+    {
+      "identity": "request-b",
+      "requested": true,
+      "queued": true,
+      "dispatched": true,
+      "completed": false,
+      "applied": "Unknown"
+    },
+    {
+      "identity": "request-c",
+      "requested": true,
+      "queued": false,
+      "dispatched": false,
+      "completed": false,
+      "applied": "Unknown",
+      "overflow": "unresolved policy"
+    }
+  ],
+  "stages": [
+    {
+      "stage": "requested only",
+      "requested": true,
+      "queued": false,
+      "dispatched": false,
+      "completed": false,
+      "applied": "Unknown"
+    },
+    {
+      "stage": "queued",
+      "requested": true,
+      "queued": true,
+      "dispatched": false,
+      "completed": false,
+      "applied": "Unknown"
+    },
+    {
+      "stage": "dispatched",
+      "requested": true,
+      "queued": true,
+      "dispatched": true,
+      "completed": false,
+      "applied": "Unknown"
+    },
+    {
+      "stage": "completed",
+      "requested": true,
+      "queued": true,
+      "dispatched": true,
+      "completed": true,
+      "applied": "Unknown"
+    }
+  ],
+  "arithmetic": [
+    {
+      "number": 123,
+      "scale": -1,
+      "expected": 12
+    },
+    {
+      "number": 2,
+      "scale": 1,
+      "expected": 20
+    },
+    {
+      "number": -2,
+      "scale": 0,
+      "expected": 0
+    },
+    {
+      "number": 4294967296,
+      "scale": 0,
+      "expected": 4294967295
+    }
+  ],
+  "records": [
+    {
+      "case": "control",
+      "record": {
+        "family": "synthetic-heat-pump",
+        "limit_id": "limit-a",
+        "operation": "merge",
+        "direction": "local-request",
+        "value": 123,
+        "number": 123,
+        "scale": -1,
+        "active": true,
+        "duration": 60,
+        "end_time": 120,
+        "changeable": true
+      }
+    },
+    {
+      "case": "family",
+      "record": {
+        "family": "synthetic-backup-heater",
+        "limit_id": "limit-a",
+        "operation": "merge",
+        "direction": "local-request",
+        "value": 123,
+        "number": 123,
+        "scale": -1,
+        "active": true,
+        "duration": 60,
+        "end_time": 120,
+        "changeable": true
+      }
+    },
+    {
+      "case": "limit_id",
+      "record": {
+        "family": "synthetic-heat-pump",
+        "limit_id": "limit-b",
+        "operation": "merge",
+        "direction": "local-request",
+        "value": 123,
+        "number": 123,
+        "scale": -1,
+        "active": true,
+        "duration": 60,
+        "end_time": 120,
+        "changeable": true
+      }
+    },
+    {
+      "case": "operation",
+      "record": {
+        "family": "synthetic-heat-pump",
+        "limit_id": "limit-a",
+        "operation": "partial",
+        "direction": "local-request",
+        "value": 123,
+        "number": 123,
+        "scale": -1,
+        "active": true,
+        "duration": 60,
+        "end_time": 120,
+        "changeable": true
+      }
+    },
+    {
+      "case": "direction",
+      "record": {
+        "family": "synthetic-heat-pump",
+        "limit_id": "limit-a",
+        "operation": "merge",
+        "direction": "local-feedback",
+        "value": 123,
+        "number": 123,
+        "scale": -1,
+        "active": true,
+        "duration": 60,
+        "end_time": 120,
+        "changeable": true
+      }
+    },
+    {
+      "case": "value",
+      "record": {
+        "family": "synthetic-heat-pump",
+        "limit_id": "limit-a",
+        "operation": "merge",
+        "direction": "local-request",
+        "value": 124,
+        "number": 123,
+        "scale": -1,
+        "active": true,
+        "duration": 60,
+        "end_time": 120,
+        "changeable": true
+      }
+    },
+    {
+      "case": "number",
+      "record": {
+        "family": "synthetic-heat-pump",
+        "limit_id": "limit-a",
+        "operation": "merge",
+        "direction": "local-request",
+        "value": 123,
+        "number": 124,
+        "scale": -1,
+        "active": true,
+        "duration": 60,
+        "end_time": 120,
+        "changeable": true
+      }
+    },
+    {
+      "case": "scale",
+      "record": {
+        "family": "synthetic-heat-pump",
+        "limit_id": "limit-a",
+        "operation": "merge",
+        "direction": "local-request",
+        "value": 123,
+        "number": 123,
+        "scale": 1,
+        "active": true,
+        "duration": 60,
+        "end_time": 120,
+        "changeable": true
+      }
+    },
+    {
+      "case": "active",
+      "record": {
+        "family": "synthetic-heat-pump",
+        "limit_id": "limit-a",
+        "operation": "merge",
+        "direction": "local-request",
+        "value": 123,
+        "number": 123,
+        "scale": -1,
+        "active": false,
+        "duration": 60,
+        "end_time": 120,
+        "changeable": true
+      }
+    },
+    {
+      "case": "duration",
+      "record": {
+        "family": "synthetic-heat-pump",
+        "limit_id": "limit-a",
+        "operation": "merge",
+        "direction": "local-request",
+        "value": 123,
+        "number": 123,
+        "scale": -1,
+        "active": true,
+        "duration": 61,
+        "end_time": 120,
+        "changeable": true
+      }
+    },
+    {
+      "case": "end_time",
+      "record": {
+        "family": "synthetic-heat-pump",
+        "limit_id": "limit-a",
+        "operation": "merge",
+        "direction": "local-request",
+        "value": 123,
+        "number": 123,
+        "scale": -1,
+        "active": true,
+        "duration": 60,
+        "end_time": 121,
+        "changeable": true
+      }
+    },
+    {
+      "case": "changeable",
+      "record": {
+        "family": "synthetic-heat-pump",
+        "limit_id": "limit-a",
+        "operation": "merge",
+        "direction": "local-request",
+        "value": 123,
+        "number": 123,
+        "scale": -1,
+        "active": true,
+        "duration": 60,
+        "end_time": 120,
+        "changeable": false
+      }
+    },
+    {
+      "case": "delete",
+      "record": {
+        "family": "synthetic-heat-pump",
+        "limit_id": "limit-a",
+        "operation": "delete",
+        "direction": "local-request",
+        "value": 123,
+        "number": 123,
+        "scale": -1,
+        "active": true,
+        "duration": 60,
+        "end_time": 120,
+        "changeable": true
+      }
+    }
+  ],
+  "partial": {
+    "before": {
+      "family": "synthetic-heat-pump",
+      "limit_id": "limit-a",
+      "operation": "merge",
+      "direction": "local-request",
+      "value": 123,
+      "number": 123,
+      "scale": -1,
+      "active": true,
+      "duration": 60,
+      "end_time": 120,
+      "changeable": true
+    },
+    "patch": {
+      "active": false
+    },
+    "after": {
+      "family": "synthetic-heat-pump",
+      "limit_id": "limit-a",
+      "operation": "merge",
+      "direction": "local-request",
+      "value": 123,
+      "number": 123,
+      "scale": -1,
+      "active": false,
+      "duration": 60,
+      "end_time": 120,
+      "changeable": true
+    },
+    "raw_patch": {
+      "active": false
+    },
+    "omitted_fields": "preserved",
+    "admission": false
+  },
+  "capability": [
+    {
+      "event": "initialization",
+      "requested": false,
+      "feedback": false,
+      "before": true,
+      "after": false,
+      "last_known_good": {
+        "number": 123,
+        "scale": -1
+      },
+      "admission": false
+    },
+    {
+      "event": "initialization",
+      "requested": false,
+      "feedback": true,
+      "before": true,
+      "after": false,
+      "last_known_good": {
+        "number": 123,
+        "scale": -1
+      },
+      "admission": false
+    },
+    {
+      "event": "initialization",
+      "requested": true,
+      "feedback": false,
+      "before": true,
+      "after": false,
+      "last_known_good": {
+        "number": 123,
+        "scale": -1
+      },
+      "admission": false
+    },
+    {
+      "event": "initialization",
+      "requested": true,
+      "feedback": true,
+      "before": true,
+      "after": false,
+      "last_known_good": {
+        "number": 123,
+        "scale": -1
+      },
+      "admission": false
+    },
+    {
+      "event": "reset",
+      "requested": false,
+      "feedback": false,
+      "before": true,
+      "after": false,
+      "last_known_good": {
+        "number": 123,
+        "scale": -1
+      },
+      "admission": false
+    },
+    {
+      "event": "reset",
+      "requested": false,
+      "feedback": true,
+      "before": true,
+      "after": false,
+      "last_known_good": {
+        "number": 123,
+        "scale": -1
+      },
+      "admission": false
+    },
+    {
+      "event": "reset",
+      "requested": true,
+      "feedback": false,
+      "before": true,
+      "after": false,
+      "last_known_good": {
+        "number": 123,
+        "scale": -1
+      },
+      "admission": false
+    },
+    {
+      "event": "reset",
+      "requested": true,
+      "feedback": true,
+      "before": true,
+      "after": false,
+      "last_known_good": {
+        "number": 123,
+        "scale": -1
+      },
+      "admission": false
+    },
+    {
+      "event": "topology change",
+      "requested": false,
+      "feedback": false,
+      "before": true,
+      "after": false,
+      "last_known_good": {
+        "number": 123,
+        "scale": -1
+      },
+      "admission": false
+    },
+    {
+      "event": "topology change",
+      "requested": false,
+      "feedback": true,
+      "before": true,
+      "after": false,
+      "last_known_good": {
+        "number": 123,
+        "scale": -1
+      },
+      "admission": false
+    },
+    {
+      "event": "topology change",
+      "requested": true,
+      "feedback": false,
+      "before": true,
+      "after": false,
+      "last_known_good": {
+        "number": 123,
+        "scale": -1
+      },
+      "admission": false
+    },
+    {
+      "event": "topology change",
+      "requested": true,
+      "feedback": true,
+      "before": true,
+      "after": false,
+      "last_known_good": {
+        "number": 123,
+        "scale": -1
+      },
+      "admission": false
+    },
+    {
+      "event": "late completion",
+      "requested": false,
+      "feedback": false,
+      "before": true,
+      "after": false,
+      "last_known_good": {
+        "number": 123,
+        "scale": -1
+      },
+      "admission": false
+    },
+    {
+      "event": "late completion",
+      "requested": false,
+      "feedback": true,
+      "before": true,
+      "after": false,
+      "last_known_good": {
+        "number": 123,
+        "scale": -1
+      },
+      "admission": false
+    },
+    {
+      "event": "late completion",
+      "requested": true,
+      "feedback": false,
+      "before": true,
+      "after": false,
+      "last_known_good": {
+        "number": 123,
+        "scale": -1
+      },
+      "admission": false
+    },
+    {
+      "event": "late completion",
+      "requested": true,
+      "feedback": true,
+      "before": true,
+      "after": false,
+      "last_known_good": {
+        "number": 123,
+        "scale": -1
+      },
+      "admission": false
+    }
+  ],
+  "acknowledgements": [
+    {
+      "arguments": [
+        7,
+        9,
+        true
+      ],
+      "result": true,
+      "request_identifier": null,
+      "correlated_request": null
+    },
+    {
+      "arguments": [
+        7,
+        9,
+        true
+      ],
+      "result": true,
+      "request_identifier": null,
+      "correlated_request": null
+    }
+  ],
+  "feedback_variants": [
+    {
+      "case": "control",
+      "local": {
+        "first_u32": 7,
+        "second_u32": 9,
+        "argument_flag": true,
+        "result": true,
+        "heartbeat_seconds": 60,
+        "status": 2,
+        "wait_seconds": 2,
+        "value": 123,
+        "engaged": true
+      },
+      "request_identifier": null,
+      "correlated_request": null,
+      "applied": "Unknown"
+    },
+    {
+      "case": "first_u32",
+      "local": {
+        "first_u32": 8,
+        "second_u32": 9,
+        "argument_flag": true,
+        "result": true,
+        "heartbeat_seconds": 60,
+        "status": 2,
+        "wait_seconds": 2,
+        "value": 123,
+        "engaged": true
+      },
+      "request_identifier": null,
+      "correlated_request": null,
+      "applied": "Unknown"
+    },
+    {
+      "case": "second_u32",
+      "local": {
+        "first_u32": 7,
+        "second_u32": 10,
+        "argument_flag": true,
+        "result": true,
+        "heartbeat_seconds": 60,
+        "status": 2,
+        "wait_seconds": 2,
+        "value": 123,
+        "engaged": true
+      },
+      "request_identifier": null,
+      "correlated_request": null,
+      "applied": "Unknown"
+    },
+    {
+      "case": "argument_flag",
+      "local": {
+        "first_u32": 7,
+        "second_u32": 9,
+        "argument_flag": false,
+        "result": true,
+        "heartbeat_seconds": 60,
+        "status": 2,
+        "wait_seconds": 2,
+        "value": 123,
+        "engaged": true
+      },
+      "request_identifier": null,
+      "correlated_request": null,
+      "applied": "Unknown"
+    },
+    {
+      "case": "result",
+      "local": {
+        "first_u32": 7,
+        "second_u32": 9,
+        "argument_flag": true,
+        "result": false,
+        "heartbeat_seconds": 60,
+        "status": 2,
+        "wait_seconds": 2,
+        "value": 123,
+        "engaged": true
+      },
+      "request_identifier": null,
+      "correlated_request": null,
+      "applied": "Unknown"
+    },
+    {
+      "case": "heartbeat_seconds",
+      "local": {
+        "first_u32": 7,
+        "second_u32": 9,
+        "argument_flag": true,
+        "result": true,
+        "heartbeat_seconds": 120,
+        "status": 2,
+        "wait_seconds": 2,
+        "value": 123,
+        "engaged": true
+      },
+      "request_identifier": null,
+      "correlated_request": null,
+      "applied": "Unknown"
+    },
+    {
+      "case": "status",
+      "local": {
+        "first_u32": 7,
+        "second_u32": 9,
+        "argument_flag": true,
+        "result": true,
+        "heartbeat_seconds": 60,
+        "status": 3,
+        "wait_seconds": 2,
+        "value": 123,
+        "engaged": true
+      },
+      "request_identifier": null,
+      "correlated_request": null,
+      "applied": "Unknown"
+    },
+    {
+      "case": "wait_seconds",
+      "local": {
+        "first_u32": 7,
+        "second_u32": 9,
+        "argument_flag": true,
+        "result": true,
+        "heartbeat_seconds": 60,
+        "status": 2,
+        "wait_seconds": null,
+        "value": 123,
+        "engaged": true
+      },
+      "request_identifier": null,
+      "correlated_request": null,
+      "applied": "Unknown"
+    },
+    {
+      "case": "value",
+      "local": {
+        "first_u32": 7,
+        "second_u32": 9,
+        "argument_flag": true,
+        "result": true,
+        "heartbeat_seconds": 60,
+        "status": 2,
+        "wait_seconds": 2,
+        "value": 124,
+        "engaged": true
+      },
+      "request_identifier": null,
+      "correlated_request": null,
+      "applied": "Unknown"
+    },
+    {
+      "case": "engaged",
+      "local": {
+        "first_u32": 7,
+        "second_u32": 9,
+        "argument_flag": true,
+        "result": true,
+        "heartbeat_seconds": 60,
+        "status": 2,
+        "wait_seconds": 2,
+        "value": 123,
+        "engaged": false
+      },
+      "request_identifier": null,
+      "correlated_request": null,
+      "applied": "Unknown"
+    },
+    {
+      "case": "status-8",
+      "local": {
+        "first_u32": 7,
+        "second_u32": 9,
+        "argument_flag": true,
+        "result": true,
+        "heartbeat_seconds": 60,
+        "status": 8,
+        "wait_seconds": 2,
+        "value": 123,
+        "engaged": true
+      },
+      "request_identifier": null,
+      "correlated_request": null,
+      "applied": "Unknown"
+    }
+  ]
+}

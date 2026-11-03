@@ -1,0 +1,134 @@
+{
+  "evidence": "synthetic representation only",
+  "coordinate_system": "logical declaration positions, not physical offsets",
+  "family_availability": "Unknown",
+  "endpoint_support": "Unknown",
+  "lifecycle": "Unknown",
+  "effects": "Unknown",
+  "forms": [
+    {
+      "direction": "request",
+      "positive_prefix_context": null,
+      "encoding_declaration": "explicit",
+      "encoding": null,
+      "constants": [
+        {
+          "raw_hex": "FE",
+          "logical_position": 0,
+          "bit": 0,
+          "width_bits": 8
+        },
+        {
+          "raw_hex": "01",
+          "logical_position": 1,
+          "bit": 0,
+          "width_bits": 8
+        }
+      ],
+      "status": "Hypothesis",
+      "qualification": "Unknown",
+      "body": null,
+      "unit": null,
+      "enum": null,
+      "selector": null,
+      "sentinel": null,
+      "text": null,
+      "termination": null,
+      "physical_offsets": null,
+      "physical_length": null
+    },
+    {
+      "direction": "request",
+      "positive_prefix_context": null,
+      "encoding_declaration": "unspecified",
+      "encoding": null,
+      "constants": [
+        {
+          "raw_hex": "FE",
+          "logical_position": 0,
+          "bit": 0,
+          "width_bits": 8
+        },
+        {
+          "raw_hex": "01",
+          "logical_position": 1,
+          "bit": 0,
+          "width_bits": 8
+        }
+      ],
+      "status": "Hypothesis",
+      "qualification": "Unknown",
+      "body": null,
+      "unit": null,
+      "enum": null,
+      "selector": null,
+      "sentinel": null,
+      "text": null,
+      "termination": null,
+      "physical_offsets": null,
+      "physical_length": null
+    },
+    {
+      "direction": "positive",
+      "positive_prefix_context": "PeBUS declaration",
+      "encoding_declaration": "explicit",
+      "encoding": null,
+      "constants": [
+        {
+          "raw_hex": "FE",
+          "logical_position": 0,
+          "bit": 0,
+          "width_bits": 8
+        },
+        {
+          "raw_hex": "01",
+          "logical_position": 1,
+          "bit": 0,
+          "width_bits": 8
+        }
+      ],
+      "status": "Hypothesis",
+      "qualification": "Unknown",
+      "body": null,
+      "unit": null,
+      "enum": null,
+      "selector": null,
+      "sentinel": null,
+      "text": null,
+      "termination": null,
+      "physical_offsets": null,
+      "physical_length": null
+    },
+    {
+      "direction": "positive",
+      "positive_prefix_context": "PeBUS declaration",
+      "encoding_declaration": "unspecified",
+      "encoding": null,
+      "constants": [
+        {
+          "raw_hex": "FE",
+          "logical_position": 0,
+          "bit": 0,
+          "width_bits": 8
+        },
+        {
+          "raw_hex": "01",
+          "logical_position": 1,
+          "bit": 0,
+          "width_bits": 8
+        }
+      ],
+      "status": "Hypothesis",
+      "qualification": "Unknown",
+      "body": null,
+      "unit": null,
+      "enum": null,
+      "selector": null,
+      "sentinel": null,
+      "text": null,
+      "termination": null,
+      "physical_offsets": null,
+      "physical_length": null
+    }
+  ]
+}

@@ -6,6 +6,22 @@ This document specifies the publishable, implementation-neutral wire contract fo
 
 ## Status and evidence
 
+Evidence grades apply to individual claims, independently of implementation
+behavior, codec qualification, or physical support:
+
+- **Proven**: the stated conclusion is supported by its cited evidence within
+  that evidence's scope. A candidate form cannot inherit native authority from
+  a blanket normative label.
+- **Hypothesis**: a candidate interpretation or layout remains unconfirmed on
+  the wire; the category form and candidate layouts below retain this grade.
+- **Unknown**: the evidence does not establish the property. Native settlement
+  after a state-changing command remains Unknown; an ACK or NAK alone does not
+  establish settlement.
+
+Qualification of an implementation or target does not promote a candidate's
+native evidence grade. Public catalog evidence, observed examples, and
+candidate interpretations keep their separate scopes below.
+
 The selector catalog is based on the public `ebusd-configuration` TypeSpec sources listed in [References](#references). The observed response example is an evidence example for its stated device class only. Device coverage and write effects remain `Unknown` unless corroborated for the target device.
 
 Beyond the public catalog this page records two further kinds of layout, both **Hypothesis** and unconfirmed on the wire:
@@ -214,9 +230,9 @@ Profile availability: `B5 09 18` is available under both the eBUS and the PeBUS 
 
 ## References
 
-- [errors_inc.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/errors_inc.tsp)
-- [service_inc.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/service_inc.tsp)
-- [08.hmu.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/08.hmu.tsp)
+- [errors_inc.tsp](https://github.com/john30/ebusd-configuration/blob/HEAD/src/vaillant/errors_inc.tsp)
+- [service_inc.tsp](https://github.com/john30/ebusd-configuration/blob/HEAD/src/vaillant/service_inc.tsp)
+- [08.hmu.tsp](https://github.com/john30/ebusd-configuration/blob/HEAD/src/vaillant/08.hmu.tsp)
 - [eBUS wire overview](../ebus-services/ebus-overview.md)
 - [Vaillant family index](ebus-vaillant.md)
 - [Vaillant B509 register access](ebus-vaillant-B509.md)

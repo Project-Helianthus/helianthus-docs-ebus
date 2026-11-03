@@ -1,0 +1,285 @@
+{
+  "evidence": "synthetic candidate representation only",
+  "coordinate_system": "logical including two service-prefix positions",
+  "forms": [
+    {
+      "pb": "03",
+      "sb": "04",
+      "status": "Hypothesis",
+      "components": [
+        {
+          "name": "decimal_1s",
+          "logical_position": 2,
+          "width_bits": 8,
+          "type": "unsigned8",
+          "minimum": 0,
+          "maximum": 99,
+          "default": 0,
+          "conversion": "identity",
+          "unit": "raw",
+          "encoding": null
+        },
+        {
+          "name": "decimal_100s",
+          "logical_position": 3,
+          "width_bits": 8,
+          "type": "unsigned8",
+          "minimum": 0,
+          "maximum": 99,
+          "default": 0,
+          "conversion": "identity",
+          "unit": "raw",
+          "encoding": null
+        },
+        {
+          "name": "decimal_10000s",
+          "logical_position": 4,
+          "width_bits": 8,
+          "type": "unsigned8",
+          "minimum": 0,
+          "maximum": 99,
+          "default": 0,
+          "conversion": "identity",
+          "unit": "raw",
+          "encoding": null
+        }
+      ],
+      "placement_alternatives": [
+        "request",
+        "positive"
+      ],
+      "positive_prefix_only_alternative": true,
+      "physical_offsets": null,
+      "physical_response_length": null,
+      "qualification": "Unknown",
+      "raw_component_hex": [
+        "63",
+        "63",
+        "63"
+      ],
+      "values": [
+        99,
+        99,
+        99
+      ]
+    },
+    {
+      "pb": "03",
+      "sb": "05",
+      "status": "Hypothesis",
+      "components": [
+        {
+          "name": "minutes",
+          "logical_position": 2,
+          "width_bits": 8,
+          "type": "unsigned8",
+          "minimum": 0,
+          "maximum": 59,
+          "default": 0,
+          "conversion": "identity",
+          "unit": "raw",
+          "encoding": null
+        },
+        {
+          "name": "hours_100s",
+          "logical_position": 3,
+          "width_bits": 8,
+          "type": "unsigned8",
+          "minimum": 0,
+          "maximum": 59,
+          "default": 0,
+          "conversion": "identity",
+          "unit": "raw",
+          "encoding": null
+        },
+        {
+          "name": "hours_10000s",
+          "logical_position": 4,
+          "width_bits": 8,
+          "type": "unsigned8",
+          "minimum": 0,
+          "maximum": 59,
+          "default": 0,
+          "conversion": "identity",
+          "unit": "raw",
+          "encoding": null
+        }
+      ],
+      "placement_alternatives": [
+        "request",
+        "positive"
+      ],
+      "positive_prefix_only_alternative": true,
+      "physical_offsets": null,
+      "physical_response_length": null,
+      "qualification": "Unknown",
+      "raw_component_hex": [
+        "3b",
+        "3b",
+        "3b"
+      ],
+      "values": [
+        59,
+        59,
+        59
+      ]
+    },
+    {
+      "pb": "03",
+      "sb": "06",
+      "status": "Hypothesis",
+      "components": [
+        {
+          "name": "minutes",
+          "logical_position": 2,
+          "width_bits": 8,
+          "type": "unsigned8",
+          "minimum": 0,
+          "maximum": 59,
+          "default": 0,
+          "conversion": "identity",
+          "unit": "raw",
+          "encoding": null
+        },
+        {
+          "name": "hours_1s",
+          "logical_position": 3,
+          "width_bits": 8,
+          "type": "unsigned8",
+          "minimum": 0,
+          "maximum": 99,
+          "default": 0,
+          "conversion": "identity",
+          "unit": "raw",
+          "encoding": null
+        },
+        {
+          "name": "hours_100s",
+          "logical_position": 4,
+          "width_bits": 8,
+          "type": "unsigned8",
+          "minimum": 0,
+          "maximum": 99,
+          "default": 0,
+          "conversion": "identity",
+          "unit": "raw",
+          "encoding": null
+        },
+        {
+          "name": "hours_10000s",
+          "logical_position": 5,
+          "width_bits": 8,
+          "type": "unsigned8",
+          "minimum": 0,
+          "maximum": 99,
+          "default": 0,
+          "conversion": "identity",
+          "unit": "raw",
+          "encoding": null
+        }
+      ],
+      "placement_alternatives": [
+        "request",
+        "positive"
+      ],
+      "positive_prefix_only_alternative": true,
+      "physical_offsets": null,
+      "physical_response_length": null,
+      "qualification": "Unknown",
+      "raw_component_hex": [
+        "3b",
+        "63",
+        "63",
+        "63"
+      ],
+      "values": [
+        59,
+        99,
+        99,
+        99
+      ]
+    }
+  ],
+  "unknown_body_forms": [
+    "0307",
+    "0308",
+    "0310"
+  ],
+  "encoding_controls": [
+    {
+      "declaration": "explicit",
+      "encoding": "unsigned8"
+    },
+    {
+      "declaration": "unspecified",
+      "encoding": null
+    }
+  ],
+  "invalid_examples": [
+    {
+      "service": "0304",
+      "values": [
+        99,
+        99
+      ],
+      "reason": "width"
+    },
+    {
+      "service": "0305",
+      "values": [
+        59,
+        59,
+        59,
+        0
+      ],
+      "reason": "width"
+    },
+    {
+      "service": "0306",
+      "values": [
+        59,
+        99,
+        99
+      ],
+      "reason": "width"
+    },
+    {
+      "service": "0304",
+      "values": [
+        100,
+        99,
+        99
+      ],
+      "reason": "domain"
+    },
+    {
+      "service": "0305",
+      "values": [
+        59,
+        60,
+        59
+      ],
+      "reason": "domain"
+    },
+    {
+      "service": "0306",
+      "values": [
+        60,
+        99,
+        99,
+        99
+      ],
+      "reason": "domain"
+    },
+    {
+      "service": "0306",
+      "values": [
+        59,
+        100,
+        99,
+        99
+      ],
+      "reason": "domain"
+    }
+  ]
+}
