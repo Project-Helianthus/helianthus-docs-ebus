@@ -1,0 +1,334 @@
+{
+  "provenance": "synthetic; no device observation",
+  "policy": {
+    "identity_axes": [
+      "PB",
+      "SB",
+      "direction"
+    ],
+    "service_identity_count": 7,
+    "invocable_route": false,
+    "ff04_declared_nn": [
+      1,
+      10
+    ],
+    "ff04_minimum_overhead": 2,
+    "ff04_minimum_implies_semantic_validity": false,
+    "ff06_declared_nn": [
+      1,
+      10
+    ],
+    "ff06_complete_nn": "1+2n",
+    "ff06_even_complete": false,
+    "pair_count_implies_peer_response": false
+  },
+  "grades": {
+    "representation": "Proven",
+    "candidate_interpretation": "Hypothesis"
+  },
+  "qualification": {
+    "physical_support": "Unknown",
+    "presence": "Unknown",
+    "freshness": "Unknown",
+    "native_execution": "Unknown",
+    "installed_support": "Unknown",
+    "native_emission": "Unknown",
+    "forwarding_eligibility": "Unknown",
+    "target_identity": "Unknown",
+    "correlation": "Unknown",
+    "lifecycle_effects": "Unknown"
+  },
+  "lookup_examples": [
+    {
+      "id": "exact",
+      "key": {
+        "PB": 255,
+        "SB": 6,
+        "direction": "initiator-to-target"
+      },
+      "selected_service": "FF06"
+    },
+    {
+      "id": "wrong-pb",
+      "key": {
+        "PB": 254,
+        "SB": 6,
+        "direction": "initiator-to-target"
+      },
+      "selected_service": null
+    },
+    {
+      "id": "wrong-sb",
+      "key": {
+        "PB": 255,
+        "SB": 7,
+        "direction": "initiator-to-target"
+      },
+      "selected_service": null
+    },
+    {
+      "id": "wrong-direction",
+      "key": {
+        "PB": 255,
+        "SB": 6,
+        "direction": "target-to-initiator"
+      },
+      "selected_service": null
+    }
+  ],
+  "body_examples": [
+    {
+      "id": "ff04-one",
+      "identity": {
+        "PB": 255,
+        "SB": 4,
+        "direction": "initiator-to-target"
+      },
+      "body": [
+        128
+      ],
+      "expected": {
+        "raw_body": [
+          128
+        ],
+        "available_overhead_raw": [
+          128
+        ],
+        "minimum_overhead_met": false,
+        "complete_pairs": null,
+        "pair_bytes": [],
+        "pair_layout_complete": null,
+        "body_state": "truncated/raw",
+        "raw_remainder": [
+          128
+        ],
+        "semantic_validity": "Unknown"
+      }
+    },
+    {
+      "id": "ff04-two",
+      "identity": {
+        "PB": 255,
+        "SB": 4,
+        "direction": "initiator-to-target"
+      },
+      "body": [
+        128,
+        165
+      ],
+      "expected": {
+        "raw_body": [
+          128,
+          165
+        ],
+        "available_overhead_raw": [
+          128,
+          165
+        ],
+        "minimum_overhead_met": true,
+        "complete_pairs": null,
+        "pair_bytes": [],
+        "pair_layout_complete": null,
+        "body_state": "minimum-overhead-only",
+        "raw_remainder": [
+          128,
+          165
+        ],
+        "semantic_validity": "Unknown"
+      }
+    },
+    {
+      "id": "ff06-one",
+      "identity": {
+        "PB": 255,
+        "SB": 6,
+        "direction": "initiator-to-target"
+      },
+      "body": [
+        128
+      ],
+      "expected": {
+        "raw_body": [
+          128
+        ],
+        "available_overhead_raw": [
+          128
+        ],
+        "minimum_overhead_met": true,
+        "complete_pairs": 0,
+        "pair_bytes": [],
+        "pair_layout_complete": true,
+        "body_state": "complete-pairs",
+        "raw_remainder": [],
+        "semantic_validity": "Unknown"
+      }
+    },
+    {
+      "id": "ff06-two",
+      "identity": {
+        "PB": 255,
+        "SB": 6,
+        "direction": "initiator-to-target"
+      },
+      "body": [
+        128,
+        49
+      ],
+      "expected": {
+        "raw_body": [
+          128,
+          49
+        ],
+        "available_overhead_raw": [
+          128
+        ],
+        "minimum_overhead_met": true,
+        "complete_pairs": 0,
+        "pair_bytes": [],
+        "pair_layout_complete": false,
+        "body_state": "incomplete/raw",
+        "raw_remainder": [
+          49
+        ],
+        "semantic_validity": "Unknown"
+      }
+    },
+    {
+      "id": "ff06-three",
+      "identity": {
+        "PB": 255,
+        "SB": 6,
+        "direction": "initiator-to-target"
+      },
+      "body": [
+        128,
+        49,
+        66
+      ],
+      "expected": {
+        "raw_body": [
+          128,
+          49,
+          66
+        ],
+        "available_overhead_raw": [
+          128
+        ],
+        "minimum_overhead_met": true,
+        "complete_pairs": 1,
+        "pair_bytes": [
+          [
+            49,
+            66
+          ]
+        ],
+        "pair_layout_complete": true,
+        "body_state": "complete-pairs",
+        "raw_remainder": [],
+        "semantic_validity": "Unknown"
+      }
+    },
+    {
+      "id": "ff06-four",
+      "identity": {
+        "PB": 255,
+        "SB": 6,
+        "direction": "initiator-to-target"
+      },
+      "body": [
+        128,
+        49,
+        66,
+        83
+      ],
+      "expected": {
+        "raw_body": [
+          128,
+          49,
+          66,
+          83
+        ],
+        "available_overhead_raw": [
+          128
+        ],
+        "minimum_overhead_met": true,
+        "complete_pairs": 1,
+        "pair_bytes": [
+          [
+            49,
+            66
+          ]
+        ],
+        "pair_layout_complete": false,
+        "body_state": "incomplete/raw",
+        "raw_remainder": [
+          83
+        ],
+        "semantic_validity": "Unknown"
+      }
+    },
+    {
+      "id": "ff06-five",
+      "identity": {
+        "PB": 255,
+        "SB": 6,
+        "direction": "initiator-to-target"
+      },
+      "body": [
+        128,
+        49,
+        66,
+        83,
+        100
+      ],
+      "expected": {
+        "raw_body": [
+          128,
+          49,
+          66,
+          83,
+          100
+        ],
+        "available_overhead_raw": [
+          128
+        ],
+        "minimum_overhead_met": true,
+        "complete_pairs": 2,
+        "pair_bytes": [
+          [
+            49,
+            66
+          ],
+          [
+            83,
+            100
+          ]
+        ],
+        "pair_layout_complete": true,
+        "body_state": "complete-pairs",
+        "raw_remainder": [],
+        "semantic_validity": "Unknown"
+      }
+    }
+  ],
+  "empty_body_controls": [
+    {
+      "service": "FF01",
+      "body": [],
+      "nn": 0,
+      "emitter_added": false
+    },
+    {
+      "service": "FF02",
+      "responder_available": true,
+      "body": [],
+      "nn": 0
+    },
+    {
+      "service": "FF02",
+      "responder_available": false,
+      "body": [],
+      "nn": 0
+    }
+  ]
+}

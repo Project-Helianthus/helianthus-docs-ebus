@@ -425,7 +425,11 @@ python3 -m pytest -q tests/test_runtime_driver_registration.py
 python3 scripts/check_bidirectional_registration.py
 python3 -m pytest -q tests/test_bidirectional_registration.py
 python3 scripts/check_runtime_control_contract.py
-python3 -m pytest -q tests/test_runtime_control_contract.py
+if [ "${RUNTIME_CONTROL_CONTRACT_INPUTS_UNCHANGED:-}" = "1" ]; then
+  echo "Skipping tests/test_runtime_control_contract.py: none of its inputs changed in this pull request (main pushes and the nightly run still run it)."
+else
+  python3 -m pytest -q -n 2 tests/test_runtime_control_contract.py
+fi
 python3 -m pytest -q tests/test_runtime_driver_registration_rendered.py
 python3 -m pytest -q tests/test_fronius_sunspec_phase1_contract.py
 python3 -m pytest -q tests/test_sunspec_model_chain_contract.py

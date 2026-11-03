@@ -1,12 +1,15 @@
 import copy
 from collections import OrderedDict
+import dataclasses
 import functools
 import json
 from pathlib import Path
+import pickle
 import re
 import subprocess
 import sys
 
+from markdown_it.token import Token
 import pytest
 
 from scripts import check_runtime_control_contract as checker
@@ -29,9 +32,21 @@ O02_MARKDOWN_IT = checker.MarkdownIt
 
 
 def O02_cached_parser(O02_parse=None):
-    """Cache stock MarkdownIt configurations used by this module only."""
+    """Cache stock MarkdownIt configurations used by this module only.
+
+    Every hit hands out the cached token stream itself, not a copy. Each entry
+    keeps a pickle of the stream taken when it was parsed; O02_verify() compares
+    the stream with it when the entry is evicted and when the cache is retired,
+    so a consumer that changes any shared token, child, map, attribute or the
+    list itself fails the module instead of leaking into a later validation.
+    """
     O02_tokens = OrderedDict()
     O02_parse = O02_parse or O02_MARKDOWN_IT.parse
+
+    def O02_check(O02_key, O02_entry):
+        O02_stream, O02_pristine = O02_entry
+        if pickle.dumps(O02_stream, pickle.HIGHEST_PROTOCOL) != O02_pristine:
+            raise AssertionError(f"O02 cached tokens were mutated: {O02_key[0][:60]!r}")
 
     class O02MarkdownIt(O02_MARKDOWN_IT):
         def parse(self, src, env=None):
@@ -42,20 +57,29 @@ def O02_cached_parser(O02_parse=None):
                        tuple((O02_stage, tuple(O02_rules)) for O02_stage, O02_rules
                              in self.get_active_rules().items()))
             if O02_key not in O02_tokens:
-                O02_tokens[O02_key] = O02_parse(self, src)
+                O02_stream = O02_parse(self, src)
+                O02_tokens[O02_key] = (
+                    O02_stream, pickle.dumps(O02_stream, pickle.HIGHEST_PROTOCOL))
                 if len(O02_tokens) > 64:
-                    O02_tokens.popitem(last=False)
+                    O02_check(*O02_tokens.popitem(last=False))
             O02_tokens.move_to_end(O02_key)
-            return copy.deepcopy(O02_tokens[O02_key])
+            return O02_tokens[O02_key][0]
+
+        @staticmethod
+        def O02_verify():
+            for O02_entry in O02_tokens.items():
+                O02_check(*O02_entry)
 
     return O02MarkdownIt
 
 
 @pytest.fixture(scope="module", autouse=True)
 def O02_cache_rendered_sections():
+    O02_parser = O02_cached_parser()
     with pytest.MonkeyPatch.context() as O02_patch:
-        O02_patch.setattr(checker, "MarkdownIt", O02_cached_parser())
+        O02_patch.setattr(checker, "MarkdownIt", O02_parser)
         yield
+    O02_parser.O02_verify()
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -433,7 +457,7 @@ def test_runtime_control_contract_cli(tmp_path: Path) -> None:
 def test_runtime_control_contract_registered_in_local_gate() -> None:
     gate = (checker.ROOT / "scripts/ci_local.sh").read_text(encoding="utf-8")
     assert "python3 scripts/check_runtime_control_contract.py\n" in gate
-    assert "python3 -m pytest -q tests/test_runtime_control_contract.py\n" in gate
+    assert "python3 -m pytest -q -n 2 tests/test_runtime_control_contract.py\n" in gate
 
 
 @pytest.mark.parametrize(("before", "after"), [
@@ -1380,18 +1404,54 @@ def test_O02_parser_key_fields(O02_field):
     assert O02_cached_original.parse(O02_text) == O02_original.parse(O02_text)
 
 
-def test_O02_parser_detaches_nested_tokens():
+# One in-place change per Token field (on a block token and on an inline
+# child), plus list-level changes of the stream and of a children list.
+O02_MUTATIONS = {
+    "type": lambda O02_t: setattr(O02_t[0], "type", "changed"),
+    "tag": lambda O02_t: setattr(O02_t[0], "tag", "div"),
+    "nesting": lambda O02_t: setattr(O02_t[0], "nesting", 0),
+    "attrs": lambda O02_t: O02_t[1].attrs.__setitem__("O02", "changed"),
+    "map": lambda O02_t: O02_t[0].map.__setitem__(0, 99),
+    "level": lambda O02_t: setattr(O02_t[0], "level", 7),
+    "children": lambda O02_t: O02_t[1].children.clear(),
+    "content": lambda O02_t: setattr(O02_t[1], "content", "changed"),
+    "markup": lambda O02_t: setattr(O02_t[1].children[1], "markup", "__"),
+    "info": lambda O02_t: setattr(O02_t[0], "info", "changed"),
+    "meta": lambda O02_t: O02_t[0].meta.__setitem__("O02", "changed"),
+    "block": lambda O02_t: setattr(O02_t[0], "block", False),
+    "hidden": lambda O02_t: setattr(O02_t[0], "hidden", True),
+    "child_content": lambda O02_t: setattr(O02_t[1].children[2], "content", "changed"),
+    "stream_pop": lambda O02_t: O02_t.pop(),
+    "stream_append": lambda O02_t: O02_t.append(O02_t[0]),
+}
+
+
+def test_O02_parser_mutations_cover_every_token_field():
+    assert ({O02_field.name for O02_field in dataclasses.fields(Token)}
+            <= O02_MUTATIONS.keys())
+
+
+def test_O02_parser_hands_out_one_unchanged_stream():
     O02_parser = O02_cached_parser()()
     O02_text = '**public** example\n'
-    O02_expected = O02_MARKDOWN_IT().parse(O02_text)
     O02_result = O02_parser.parse(O02_text)
-    O02_result[0].map[0] = 99
-    O02_result[1].children[1].content = "changed"
-    O02_result[1].attrs["O02"] = "changed"
-    O02_result.pop()
-    assert O02_parser.parse(O02_text) == O02_expected
-    O02_parser.parse(O02_text)[1].children.clear()
-    assert O02_parser.parse(O02_text) == O02_expected
+    assert O02_result == O02_MARKDOWN_IT().parse(O02_text)
+    assert O02_parser.parse(O02_text) is O02_result
+    O02_parser.O02_verify()
+
+
+@pytest.mark.parametrize("O02_mutation", O02_MUTATIONS)
+@pytest.mark.parametrize("O02_detected_by", ["verify", "eviction"])
+def test_O02_parser_rejects_mutated_shared_tokens(O02_mutation, O02_detected_by):
+    O02_parser = O02_cached_parser()()
+    O02_text = '**public** example\n'
+    O02_MUTATIONS[O02_mutation](O02_parser.parse(O02_text))
+    with pytest.raises(AssertionError, match="O02 cached tokens were mutated"):
+        if O02_detected_by == "verify":
+            O02_parser.O02_verify()
+        else:
+            for O02_index in range(64):
+                O02_parser.parse(f'O02 example {O02_index}')
 
 
 def test_O02_parser_cache_is_bounded_and_uses_recent_entries():
@@ -1461,13 +1521,15 @@ def test_O02_validation_parity_and_parser_counts():
         class O02CountingMarkdownIt(O02_MARKDOWN_IT):
             parse = O02_count
 
+        O02_parser = (O02_cached_parser(O02_count) if O02_cached
+                      else O02CountingMarkdownIt)
         with pytest.MonkeyPatch.context() as O02_patch:
-            O02_patch.setattr(checker, 'MarkdownIt',
-                             O02_cached_parser(O02_count) if O02_cached
-                             else O02CountingMarkdownIt)
+            O02_patch.setattr(checker, 'MarkdownIt', O02_parser)
             O02_results.append([checker.validate(O02_documents)
                                 for O02_documents in O02_inputs])
         O02_counts.append(len(O02_calls))
+    # The checker read every shared stream without changing it.
+    O02_parser.O02_verify()
     assert O02_results[0] == O02_results[1]
     assert O02_results[0][:2] == [[], []]
     assert any(RESET_PATH in O02_error for O02_error in O02_results[0][2])

@@ -1,0 +1,1652 @@
+{
+  "ab05ap05_base": {
+    "context": {
+      "primary": 181,
+      "secondary": 22,
+      "operation": 20,
+      "direction": "local",
+      "view": "cycle",
+      "family": "synthetic-family",
+      "variant": "synthetic-variant",
+      "opaque": {
+        "values": [
+          null,
+          0,
+          false
+        ]
+      }
+    },
+    "fields": {
+      "sample": [
+        0,
+        255
+      ],
+      "empty": []
+    },
+    "arguments": {
+      "failure_counter": 9,
+      "slots": [
+        {
+          "registered": true,
+          "capable": true,
+          "prior": 0,
+          "prior_previous": 77,
+          "prior_changed": false,
+          "outcome": "success",
+          "value": 0
+        },
+        {
+          "registered": true,
+          "capable": true,
+          "prior": 0,
+          "prior_previous": 77,
+          "prior_changed": false,
+          "outcome": "success",
+          "value": 0
+        },
+        {
+          "registered": true,
+          "capable": true,
+          "prior": 0,
+          "prior_previous": 77,
+          "prior_changed": false,
+          "outcome": "success",
+          "value": 0
+        },
+        {
+          "registered": true,
+          "capable": true,
+          "prior": 0,
+          "prior_previous": 77,
+          "prior_changed": false,
+          "outcome": "success",
+          "value": 0
+        },
+        {
+          "registered": true,
+          "capable": true,
+          "prior": 0,
+          "prior_previous": 77,
+          "prior_changed": false,
+          "outcome": "success",
+          "value": 0
+        },
+        {
+          "registered": true,
+          "capable": true,
+          "prior": 0,
+          "prior_previous": 77,
+          "prior_changed": false,
+          "outcome": "success",
+          "value": 0
+        },
+        {
+          "registered": true,
+          "capable": true,
+          "prior": 0,
+          "prior_previous": 77,
+          "prior_changed": false,
+          "outcome": "success",
+          "value": 0
+        },
+        {
+          "registered": true,
+          "capable": true,
+          "prior": 0,
+          "prior_previous": 77,
+          "prior_changed": false,
+          "outcome": "success",
+          "value": 0
+        },
+        {
+          "registered": true,
+          "capable": true,
+          "prior": 0,
+          "prior_previous": 77,
+          "prior_changed": false,
+          "outcome": "success",
+          "value": 0
+        }
+      ],
+      "opaque": {
+        "values": [
+          0,
+          false,
+          null
+        ]
+      }
+    }
+  },
+  "ab05ap05_cases": [
+    {
+      "id": "ab05ap05_clean",
+      "slot_updates": {},
+      "argument_updates": {},
+      "expected": {
+        "slots": [
+          [
+            0,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            1,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            2,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            3,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            4,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            5,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            6,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            7,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            8,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ]
+        ],
+        "sum": 0,
+        "successful": 9,
+        "failed": 0,
+        "skipped": 0,
+        "attempts": 9,
+        "counter": 0,
+        "prior_failure_counter": 9,
+        "partial_cycle": false,
+        "state": "complete"
+      }
+    },
+    {
+      "id": "ab05ap05_delta_one",
+      "slot_updates": {
+        "0": {
+          "registered": true,
+          "capable": true,
+          "prior": 10,
+          "prior_previous": 77,
+          "prior_changed": false,
+          "outcome": "success",
+          "value": 11
+        }
+      },
+      "argument_updates": {},
+      "expected": {
+        "slots": [
+          [
+            0,
+            true,
+            "success",
+            11,
+            10,
+            false,
+            false
+          ],
+          [
+            1,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            2,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            3,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            4,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            5,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            6,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            7,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            8,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ]
+        ],
+        "sum": 11,
+        "successful": 9,
+        "failed": 0,
+        "skipped": 0,
+        "attempts": 9,
+        "counter": 0,
+        "prior_failure_counter": 9,
+        "partial_cycle": false,
+        "state": "complete"
+      }
+    },
+    {
+      "id": "ab05ap05_delta_two",
+      "slot_updates": {
+        "0": {
+          "registered": true,
+          "capable": true,
+          "prior": 10,
+          "prior_previous": 77,
+          "prior_changed": false,
+          "outcome": "success",
+          "value": 12
+        }
+      },
+      "argument_updates": {},
+      "expected": {
+        "slots": [
+          [
+            0,
+            true,
+            "success",
+            12,
+            10,
+            true,
+            false
+          ],
+          [
+            1,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            2,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            3,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            4,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            5,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            6,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            7,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            8,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ]
+        ],
+        "sum": 12,
+        "successful": 9,
+        "failed": 0,
+        "skipped": 0,
+        "attempts": 9,
+        "counter": 0,
+        "prior_failure_counter": 9,
+        "partial_cycle": false,
+        "state": "complete"
+      }
+    },
+    {
+      "id": "ab05ap05_wrap_delta",
+      "slot_updates": {
+        "0": {
+          "registered": true,
+          "capable": true,
+          "prior": 12,
+          "prior_previous": 77,
+          "prior_changed": false,
+          "outcome": "success",
+          "value": 10
+        }
+      },
+      "argument_updates": {},
+      "expected": {
+        "slots": [
+          [
+            0,
+            true,
+            "success",
+            10,
+            12,
+            true,
+            false
+          ],
+          [
+            1,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            2,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            3,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            4,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            5,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            6,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            7,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            8,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ]
+        ],
+        "sum": 10,
+        "successful": 9,
+        "failed": 0,
+        "skipped": 0,
+        "attempts": 9,
+        "counter": 0,
+        "prior_failure_counter": 9,
+        "partial_cycle": false,
+        "state": "complete"
+      }
+    },
+    {
+      "id": "ab05ap05_sentinel_zero",
+      "slot_updates": {
+        "0": {
+          "registered": true,
+          "capable": true,
+          "prior": 4294967295,
+          "prior_previous": 77,
+          "prior_changed": false,
+          "outcome": "success",
+          "value": 0
+        }
+      },
+      "argument_updates": {},
+      "expected": {
+        "slots": [
+          [
+            0,
+            true,
+            "success",
+            0,
+            4294967295,
+            true,
+            false
+          ],
+          [
+            1,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            2,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            3,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            4,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            5,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            6,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            7,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            8,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ]
+        ],
+        "sum": 0,
+        "successful": 9,
+        "failed": 0,
+        "skipped": 0,
+        "attempts": 9,
+        "counter": 0,
+        "prior_failure_counter": 9,
+        "partial_cycle": false,
+        "state": "complete"
+      }
+    },
+    {
+      "id": "ab05ap05_sum_wrap",
+      "slot_updates": {
+        "0": {
+          "registered": true,
+          "capable": true,
+          "prior": 0,
+          "prior_previous": 77,
+          "prior_changed": false,
+          "outcome": "success",
+          "value": 4294967294
+        },
+        "1": {
+          "registered": true,
+          "capable": true,
+          "prior": 0,
+          "prior_previous": 77,
+          "prior_changed": false,
+          "outcome": "success",
+          "value": 3
+        }
+      },
+      "argument_updates": {},
+      "expected": {
+        "slots": [
+          [
+            0,
+            true,
+            "success",
+            4294967294,
+            0,
+            true,
+            false
+          ],
+          [
+            1,
+            true,
+            "success",
+            3,
+            0,
+            true,
+            false
+          ],
+          [
+            2,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            3,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            4,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            5,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            6,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            7,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            8,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ]
+        ],
+        "sum": 1,
+        "successful": 9,
+        "failed": 0,
+        "skipped": 0,
+        "attempts": 9,
+        "counter": 0,
+        "prior_failure_counter": 9,
+        "partial_cycle": false,
+        "state": "complete"
+      }
+    },
+    {
+      "id": "ab05ap05_success_sentinel",
+      "slot_updates": {
+        "0": {
+          "registered": true,
+          "capable": true,
+          "prior": 0,
+          "prior_previous": 77,
+          "prior_changed": false,
+          "outcome": "success",
+          "value": 4294967295
+        }
+      },
+      "argument_updates": {},
+      "expected": {
+        "slots": [
+          [
+            0,
+            true,
+            "success",
+            4294967295,
+            0,
+            true,
+            false
+          ],
+          [
+            1,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            2,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            3,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            4,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            5,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            6,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            7,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            8,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ]
+        ],
+        "sum": 4294967295,
+        "successful": 9,
+        "failed": 0,
+        "skipped": 0,
+        "attempts": 9,
+        "counter": 0,
+        "prior_failure_counter": 9,
+        "partial_cycle": false,
+        "state": "complete"
+      }
+    },
+    {
+      "id": "ab05ap05_failure_increment",
+      "slot_updates": {
+        "0": {
+          "registered": true,
+          "capable": true,
+          "prior": 10,
+          "prior_previous": 77,
+          "prior_changed": true,
+          "outcome": "read-failure"
+        }
+      },
+      "argument_updates": {
+        "failure_counter": 4294967295,
+        "counter_increment": 1
+      },
+      "expected": {
+        "slots": [
+          [
+            0,
+            true,
+            "read-failure",
+            4294967295,
+            10,
+            "Unknown",
+            true
+          ],
+          [
+            1,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            2,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            3,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            4,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            5,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            6,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            7,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            8,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ]
+        ],
+        "sum": 0,
+        "successful": 8,
+        "failed": 1,
+        "skipped": 0,
+        "attempts": 9,
+        "counter": 0,
+        "prior_failure_counter": 4294967295,
+        "partial_cycle": true,
+        "state": "partial"
+      }
+    },
+    {
+      "id": "ab05ap05_failure_unknown",
+      "slot_updates": {
+        "0": {
+          "registered": true,
+          "capable": true,
+          "prior": 10,
+          "prior_previous": 77,
+          "prior_changed": true,
+          "outcome": "read-failure"
+        }
+      },
+      "argument_updates": {
+        "failure_counter": 4294967295
+      },
+      "expected": {
+        "slots": [
+          [
+            0,
+            true,
+            "read-failure",
+            4294967295,
+            10,
+            "Unknown",
+            true
+          ],
+          [
+            1,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            2,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            3,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            4,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            5,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            6,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            7,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            8,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ]
+        ],
+        "sum": 0,
+        "successful": 8,
+        "failed": 1,
+        "skipped": 0,
+        "attempts": 9,
+        "counter": "Unknown",
+        "prior_failure_counter": 4294967295,
+        "partial_cycle": true,
+        "state": "partial"
+      }
+    },
+    {
+      "id": "ab05ap05_failure_explicit_zero",
+      "slot_updates": {
+        "0": {
+          "registered": true,
+          "capable": true,
+          "prior": 0,
+          "prior_previous": 77,
+          "prior_changed": false,
+          "outcome": "parse-failure"
+        }
+      },
+      "argument_updates": {
+        "counter_increment": 0
+      },
+      "expected": {
+        "slots": [
+          [
+            0,
+            true,
+            "parse-failure",
+            4294967295,
+            0,
+            "Unknown",
+            false
+          ],
+          [
+            1,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            2,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            3,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            4,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            5,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            6,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            7,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            8,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ]
+        ],
+        "sum": 0,
+        "successful": 8,
+        "failed": 1,
+        "skipped": 0,
+        "attempts": 9,
+        "counter": 9,
+        "prior_failure_counter": 9,
+        "partial_cycle": true,
+        "state": "partial"
+      }
+    },
+    {
+      "id": "ab05ap05_skip_registration",
+      "slot_updates": {
+        "0": {
+          "registered": false,
+          "capable": true,
+          "prior": 10,
+          "prior_previous": 77,
+          "prior_changed": true,
+          "outcome": "success",
+          "value": 0
+        }
+      },
+      "argument_updates": {
+        "counter_increment": 4294967295
+      },
+      "expected": {
+        "slots": [
+          [
+            0,
+            false,
+            "skipped",
+            4294967295,
+            77,
+            "Unknown",
+            true
+          ],
+          [
+            1,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            2,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            3,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            4,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            5,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            6,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            7,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            8,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ]
+        ],
+        "sum": 0,
+        "successful": 8,
+        "failed": 0,
+        "skipped": 1,
+        "attempts": 8,
+        "counter": 0,
+        "prior_failure_counter": 9,
+        "partial_cycle": true,
+        "state": "partial"
+      }
+    },
+    {
+      "id": "ab05ap05_skip_capability",
+      "slot_updates": {
+        "0": {
+          "registered": true,
+          "capable": false,
+          "prior": 10,
+          "prior_previous": 77,
+          "prior_changed": true,
+          "outcome": "parse-failure"
+        }
+      },
+      "argument_updates": {},
+      "expected": {
+        "slots": [
+          [
+            0,
+            false,
+            "skipped",
+            4294967295,
+            77,
+            "Unknown",
+            true
+          ],
+          [
+            1,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            2,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            3,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            4,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            5,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            6,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            7,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            8,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ]
+        ],
+        "sum": 0,
+        "successful": 8,
+        "failed": 0,
+        "skipped": 1,
+        "attempts": 8,
+        "counter": 0,
+        "prior_failure_counter": 9,
+        "partial_cycle": true,
+        "state": "partial"
+      }
+    },
+    {
+      "id": "ab05ap05_partial_sibling",
+      "slot_updates": {
+        "0": {
+          "registered": true,
+          "capable": true,
+          "prior": 0,
+          "prior_previous": 77,
+          "prior_changed": false,
+          "outcome": "parse-failure"
+        },
+        "1": {
+          "registered": true,
+          "capable": true,
+          "prior": 0,
+          "prior_previous": 77,
+          "prior_changed": false,
+          "outcome": "success",
+          "value": 12
+        }
+      },
+      "argument_updates": {},
+      "expected": {
+        "slots": [
+          [
+            0,
+            true,
+            "parse-failure",
+            4294967295,
+            0,
+            "Unknown",
+            false
+          ],
+          [
+            1,
+            true,
+            "success",
+            12,
+            0,
+            true,
+            false
+          ],
+          [
+            2,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            3,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            4,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            5,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            6,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            7,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            8,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ]
+        ],
+        "sum": 12,
+        "successful": 8,
+        "failed": 1,
+        "skipped": 0,
+        "attempts": 9,
+        "counter": "Unknown",
+        "prior_failure_counter": 9,
+        "partial_cycle": true,
+        "state": "partial"
+      }
+    },
+    {
+      "id": "ab05ap05_clean_ignores_increment",
+      "slot_updates": {},
+      "argument_updates": {
+        "counter_increment": 7
+      },
+      "expected": {
+        "slots": [
+          [
+            0,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            1,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            2,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            3,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            4,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            5,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            6,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            7,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ],
+          [
+            8,
+            true,
+            "success",
+            0,
+            0,
+            false,
+            false
+          ]
+        ],
+        "sum": 0,
+        "successful": 9,
+        "failed": 0,
+        "skipped": 0,
+        "attempts": 9,
+        "counter": 0,
+        "prior_failure_counter": 9,
+        "partial_cycle": false,
+        "state": "complete"
+      }
+    }
+  ]
+}

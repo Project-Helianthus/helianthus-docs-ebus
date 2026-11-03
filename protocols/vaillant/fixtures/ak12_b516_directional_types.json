@@ -1,0 +1,284 @@
+{
+  "service": "B516",
+  "provenance": "synthetic",
+  "grade": "Hypothesis",
+  "entries": [
+    {
+      "id": "ak12-time-header",
+      "identity": {
+        "family": "vaillant-b516",
+        "variant": "generic-system-time",
+        "primary": 181,
+        "secondary": 22,
+        "direction": "positive",
+        "field": "system-time",
+        "alternative": "none",
+        "instance_scope": "none"
+      },
+      "representation": {
+        "kind": "header-only-positive"
+      },
+      "raw_form": "header-only-declaration",
+      "grade": "Hypothesis",
+      "unknown": [
+        "encoded operation numbers",
+        "complete enum tables",
+        "missing field positions",
+        "physical reply length",
+        "timeout",
+        "broadcast"
+      ],
+      "qualification": {
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      },
+      "physical_reply_length": "Unknown"
+    },
+    {
+      "id": "ak12-time-absent",
+      "identity": {
+        "family": "vaillant-b516",
+        "variant": "other-system-time",
+        "primary": 181,
+        "secondary": 22,
+        "direction": "positive",
+        "field": "system-time",
+        "alternative": "none",
+        "instance_scope": "none"
+      },
+      "representation": {
+        "kind": "absent-positive"
+      },
+      "raw_form": "undeclared-positive",
+      "grade": "Hypothesis",
+      "unknown": [
+        "encoded operation numbers",
+        "complete enum tables",
+        "missing field positions",
+        "physical reply length",
+        "timeout",
+        "broadcast"
+      ],
+      "qualification": {
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      },
+      "physical_reply_length": "Unknown"
+    },
+    {
+      "id": "ak12-energy-request",
+      "identity": {
+        "family": "vaillant-b516",
+        "variant": "energy-type",
+        "primary": 181,
+        "secondary": 22,
+        "direction": "request",
+        "field": "energy-type",
+        "alternative": "none",
+        "instance_scope": "none"
+      },
+      "representation": {
+        "kind": "raw-u8-enum",
+        "width_bits": 8
+      },
+      "raw_form": "u8-field-slice",
+      "grade": "Hypothesis",
+      "unknown": [
+        "encoded operation numbers",
+        "complete enum tables",
+        "missing field positions",
+        "physical reply length",
+        "timeout",
+        "broadcast"
+      ],
+      "qualification": {
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      },
+      "physical_reply_length": "Unknown"
+    },
+    {
+      "id": "ak12-energy-read",
+      "identity": {
+        "family": "vaillant-b516",
+        "variant": "energy-type",
+        "primary": 181,
+        "secondary": 22,
+        "direction": "read-positive",
+        "field": "energy-type",
+        "alternative": "none",
+        "instance_scope": "none"
+      },
+      "representation": {
+        "kind": "low-six-with-independent-flags",
+        "value_bits": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "independent_flags": {
+          "bit6": 6,
+          "bit7": 7
+        }
+      },
+      "raw_form": "u8-field-slice",
+      "grade": "Hypothesis",
+      "unknown": [
+        "encoded operation numbers",
+        "complete enum tables",
+        "missing field positions",
+        "physical reply length",
+        "timeout",
+        "broadcast"
+      ],
+      "qualification": {
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      },
+      "physical_reply_length": "Unknown"
+    },
+    {
+      "id": "ak12-energy-write",
+      "identity": {
+        "family": "vaillant-b516",
+        "variant": "energy-type",
+        "primary": 181,
+        "secondary": 22,
+        "direction": "write-positive",
+        "field": "energy-type",
+        "alternative": "none",
+        "instance_scope": "none"
+      },
+      "representation": {
+        "kind": "six-bit-scalar-with-unmodeled-upper-bits",
+        "value_bits": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "unmodeled_bits": [
+          6,
+          7
+        ]
+      },
+      "raw_form": "u8-field-slice",
+      "grade": "Hypothesis",
+      "unknown": [
+        "encoded operation numbers",
+        "complete enum tables",
+        "missing field positions",
+        "physical reply length",
+        "timeout",
+        "broadcast"
+      ],
+      "qualification": {
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      },
+      "physical_reply_length": "Unknown"
+    }
+  ],
+  "cases": [
+    {
+      "id": "request-c1",
+      "row": "ak12-energy-request",
+      "interpretation": {
+        "enum_token": 193
+      },
+      "grade": "Hypothesis",
+      "physical_reply_length": "Unknown",
+      "raw": [
+        193
+      ]
+    },
+    {
+      "id": "read-c1",
+      "row": "ak12-energy-read",
+      "interpretation": {
+        "low_six": 1,
+        "bit6": true,
+        "bit7": true
+      },
+      "grade": "Hypothesis",
+      "physical_reply_length": "Unknown",
+      "raw": [
+        193
+      ]
+    },
+    {
+      "id": "write-c1",
+      "row": "ak12-energy-write",
+      "interpretation": {
+        "low_six": 1,
+        "unmodeled_raw": 192
+      },
+      "grade": "Hypothesis",
+      "physical_reply_length": "Unknown",
+      "raw": [
+        193
+      ]
+    },
+    {
+      "id": "read-bit6",
+      "row": "ak12-energy-read",
+      "interpretation": {
+        "low_six": 0,
+        "bit6": true,
+        "bit7": false
+      },
+      "grade": "Hypothesis",
+      "physical_reply_length": "Unknown",
+      "raw": [
+        64
+      ]
+    },
+    {
+      "id": "read-bit7",
+      "row": "ak12-energy-read",
+      "interpretation": {
+        "low_six": 0,
+        "bit6": false,
+        "bit7": true
+      },
+      "grade": "Hypothesis",
+      "physical_reply_length": "Unknown",
+      "raw": [
+        128
+      ]
+    },
+    {
+      "id": "time-header",
+      "row": "ak12-time-header",
+      "interpretation": {
+        "declared_positive": "header-only-positive"
+      },
+      "grade": "Hypothesis",
+      "physical_reply_length": "Unknown"
+    },
+    {
+      "id": "time-absent",
+      "row": "ak12-time-absent",
+      "interpretation": {
+        "declared_positive": "absent-positive"
+      },
+      "grade": "Hypothesis",
+      "physical_reply_length": "Unknown"
+    }
+  ]
+}
