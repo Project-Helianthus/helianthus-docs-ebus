@@ -1,0 +1,39 @@
+{
+  "provenance": "synthetic only; no physical qualification",
+  "native_grade": "Hypothesis",
+  "native_unit": "Unknown",
+  "cases": [
+    {
+      "id": "endpoints",
+      "minimum_raw": "00 00",
+      "maximum_raw": "FF FF",
+      "minimum_unsigned": 0,
+      "maximum_unsigned": 65535,
+      "native_unit": "Unknown"
+    },
+    {
+      "id": "independent-order",
+      "minimum_raw": "02 00",
+      "maximum_raw": "01 00",
+      "minimum_unsigned": 2,
+      "maximum_unsigned": 1,
+      "native_unit": "Unknown"
+    },
+    {
+      "id": "minimum-only",
+      "minimum_raw": "02 00",
+      "maximum_raw": "FF FF",
+      "minimum_unsigned": 2,
+      "maximum_unsigned": 65535,
+      "native_unit": "Unknown"
+    },
+    {
+      "id": "maximum-only",
+      "minimum_raw": "00 00",
+      "maximum_raw": "01 00",
+      "minimum_unsigned": 0,
+      "maximum_unsigned": 1,
+      "native_unit": "Unknown"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "provenance": "synthetic only; no physical qualification",
+  "arithmetic_grade": "Proven",
+  "native_grade": "Hypothesis",
+  "native_unit": "Unknown",
+  "cases": [
+    {
+      "id": "endpoints",
+      "minimum_unsigned": 0,
+      "maximum_unsigned": 65535,
+      "minimum_times_ten": 0,
+      "maximum_times_ten": 655350
+    },
+    {
+      "id": "independent-order",
+      "minimum_unsigned": 2,
+      "maximum_unsigned": 1,
+      "minimum_times_ten": 20,
+      "maximum_times_ten": 10
+    },
+    {
+      "id": "minimum-only",
+      "minimum_unsigned": 2,
+      "maximum_unsigned": 65535,
+      "minimum_times_ten": 20,
+      "maximum_times_ten": 655350
+    },
+    {
+      "id": "maximum-only",
+      "minimum_unsigned": 0,
+      "maximum_unsigned": 1,
+      "minimum_times_ten": 0,
+      "maximum_times_ten": 10
+    }
+  ]
+}
