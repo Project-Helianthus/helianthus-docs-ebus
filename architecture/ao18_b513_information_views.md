@@ -96,6 +96,7 @@ qualification. Flags are objects containing each allocated label with a boolean
 value. `reserved` is the integer mask of reserved bits in their original bit
 positions, including zero, and never becomes a flag or semantic claim.
 
+<!-- legacy-role-mapping:begin -->
 | output field | logical position | mapping |
 |---|---:|---|
 | type | 3 | number 0 / modulating; 1 / single-step; 2 / two-step; 3..255 Unknown, no number or label |
@@ -105,6 +106,7 @@ positions, including zero, and never becomes a flag or semantic claim.
 | features | 7 | bits 0..5: solar-compact, basic-solar, AAPS, advanced-power, partial-load, parameter-master; reserved bits 6..7 |
 | pump_mode | 8 | number 0 or 1, no invented label; 2..255 Unknown, no number or label |
 | no semantic field | 0..2, 9..11 | opaque; preserve in raw.logical_object only |
+<!-- legacy-role-mapping:end -->
 
 Feedback requires the separately supplied `fields.feedback` array of exactly one
 byte; a logical object cannot substitute for it. Missing, empty or wider arrays
@@ -140,6 +142,7 @@ must invoke the exact API separately when implementation ownership is available.
 MCP compatibility and GraphQL parity are unchanged; there are no transport,
 executor, active request, UI or scan-default changes in this companion.
 
+<!-- legacy-role-mapping:begin -->
 <!-- ab17ao17-finite-table -->
 ```json
 {
@@ -307,3 +310,4 @@ executor, active request, UI or scan-default changes in this companion.
   ]
 }
 ```
+<!-- legacy-role-mapping:end -->
