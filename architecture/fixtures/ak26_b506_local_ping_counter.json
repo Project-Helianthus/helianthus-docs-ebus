@@ -1,0 +1,28 @@
+{
+  "grade": "Hypothesis",
+  "unknown": {
+    "line_admission_rule": "Unknown",
+    "rx_tx_selection": "Unknown",
+    "reset_conditions": "Unknown",
+    "fallback_conditions": "Unknown",
+    "initial_state": "Unknown",
+    "native_support": "Unknown",
+    "physical_effects": "Unknown",
+    "persistence": "Unknown",
+    "delivery": "Unknown"
+  },
+  "events": [
+    {"id": "admitted-token-100", "context": "RX", "start": 7, "event": {"admitted": true, "token": "100"}, "expected": 8},
+    {"id": "non-admitted-token-100", "context": "RX", "start": 7, "event": {"admitted": false, "token": "100"}, "expected": 7},
+    {"id": "admitted-token-0", "context": "TX", "start": 7, "event": {"admitted": true, "token": "0"}, "expected": 8},
+    {"id": "non-admitted-token-0", "context": "TX", "start": 7, "event": {"admitted": false, "token": "0"}, "expected": 7},
+    {"id": "near-wrap", "context": "RX", "start": 4294967294, "event": {"admitted": true, "token": "x"}, "expected": 4294967295},
+    {"id": "wrap", "context": "RX", "start": 4294967295, "event": {"admitted": true, "token": "x"}, "expected": 0},
+    {"id": "wrap-tx", "context": "TX", "start": 4294967295, "event": {"admitted": true, "token": "x"}, "expected": 0},
+    {"id": "non-admitted-at-max", "context": "TX", "start": 4294967295, "event": {"admitted": false, "token": "x"}, "expected": 4294967295}
+  ],
+  "reset": [
+    {"id": "reset-rx-unprovided", "context": "RX", "start": 7, "rules": null, "outcome": "Unknown", "next": null},
+    {"id": "reset-tx-unprovided", "context": "TX", "start": 7, "rules": null, "outcome": "Unknown", "next": null}
+  ]
+}
