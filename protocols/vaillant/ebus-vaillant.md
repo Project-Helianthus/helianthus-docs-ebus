@@ -19,6 +19,7 @@ For detailed coverage of selector-heavy identifiers, see:
   — [diagnostic-menu feedback and pressure candidates supplement](ebus-b514-menu-feedback.md) (**Hypothesis**)
 - `0xB5 0x15` (B515, legacy timer template): [`ebus-vaillant-B515.md`](ebus-vaillant-B515.md)
 - `0xB5 0x16` (B516, Energy statistics): [`ebus-vaillant-B516-energy.md`](ebus-vaillant-B516-energy.md)
+- `0xB5 0x17` (B517, sub-eBUS tunnel candidate declarations): [`ebus-vaillant-B517.md`](ebus-vaillant-B517.md)
 - `0xB5 0x19` (B519, test and echo services, opaque data and CRC bytes): [`ebus-vaillant-B519.md`](ebus-vaillant-B519.md)
 - `0xB5 0x1A` (B51A, heat-pump statistics and live-monitor): [`ebus-vaillant-B51A.md`](ebus-vaillant-B51A.md)
 - `0xB5 0x20` (B520, simulator actuator ranges and ADC quantities): [`ebus-vaillant-B520.md`](ebus-vaillant-B520.md)
