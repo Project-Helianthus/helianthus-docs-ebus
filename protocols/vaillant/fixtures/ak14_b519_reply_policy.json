@@ -1,0 +1,673 @@
+{
+  "provenance": "synthetic declarations only; not wire observations",
+  "representation_grade": "Proven",
+  "rows": [
+    {
+      "id": "ak14-op03-target",
+      "identity": {
+        "family": "Vaillant",
+        "variant": "Unknown",
+        "primary": 181,
+        "secondary": 25,
+        "operation": 3,
+        "direction": "initiator-to-target",
+        "field": "reply-policy",
+        "alternative": "mode-dependent",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relations": {
+        "reply_policy": "target-response",
+        "related_participant": "receiving-target-B",
+        "associated_initiator": "none",
+        "later_query_operation": null
+      },
+      "data_length": {
+        "minimum_bytes": 0,
+        "maximum_bytes": "Unknown",
+        "block_number_in_data": false
+      },
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "unknowns": {
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "routing": "Unknown",
+        "actual_acknowledgement": "Unknown",
+        "storage_effects": "Unknown",
+        "peer_capacity_bytes": "Unknown",
+        "crc_algorithm": "Unknown",
+        "crc_coverage": "Unknown"
+      },
+      "raw_form": {
+        "service_prefix": [
+          181,
+          25,
+          3
+        ],
+        "data_encoding": "opaque",
+        "block_position": "Unknown",
+        "crc_bytes": "Unknown"
+      }
+    },
+    {
+      "id": "ak14-op03-initiator",
+      "identity": {
+        "family": "Vaillant",
+        "variant": "Unknown",
+        "primary": 181,
+        "secondary": 25,
+        "operation": 3,
+        "direction": "initiator-to-initiator",
+        "field": "reply-policy",
+        "alternative": "mode-dependent",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relations": {
+        "reply_policy": "service-toward-A",
+        "related_participant": "sender-A",
+        "associated_initiator": "associated-initiator-C",
+        "later_query_operation": null
+      },
+      "data_length": {
+        "minimum_bytes": 0,
+        "maximum_bytes": "Unknown",
+        "block_number_in_data": false
+      },
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "unknowns": {
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "routing": "Unknown",
+        "actual_acknowledgement": "Unknown",
+        "storage_effects": "Unknown",
+        "peer_capacity_bytes": "Unknown",
+        "crc_algorithm": "Unknown",
+        "crc_coverage": "Unknown"
+      },
+      "raw_form": {
+        "service_prefix": [
+          181,
+          25,
+          3
+        ],
+        "data_encoding": "opaque",
+        "block_position": "Unknown",
+        "crc_bytes": "Unknown"
+      }
+    },
+    {
+      "id": "ak14-op03-broadcast",
+      "identity": {
+        "family": "Vaillant",
+        "variant": "Unknown",
+        "primary": 181,
+        "secondary": 25,
+        "operation": 3,
+        "direction": "broadcast",
+        "field": "reply-policy",
+        "alternative": "mode-dependent",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relations": {
+        "reply_policy": "retained-CRC-for-02",
+        "related_participant": "none",
+        "associated_initiator": "associated-initiator-C",
+        "later_query_operation": 2
+      },
+      "data_length": {
+        "minimum_bytes": 0,
+        "maximum_bytes": "Unknown",
+        "block_number_in_data": false
+      },
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "unknowns": {
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "routing": "Unknown",
+        "actual_acknowledgement": "Unknown",
+        "storage_effects": "Unknown",
+        "peer_capacity_bytes": "Unknown",
+        "crc_algorithm": "Unknown",
+        "crc_coverage": "Unknown"
+      },
+      "raw_form": {
+        "service_prefix": [
+          181,
+          25,
+          3
+        ],
+        "data_encoding": "opaque",
+        "block_position": "Unknown",
+        "crc_bytes": "Unknown"
+      }
+    },
+    {
+      "id": "ak14-op01-initiator-ack",
+      "identity": {
+        "family": "Vaillant",
+        "variant": "Unknown",
+        "primary": 181,
+        "secondary": 25,
+        "operation": 1,
+        "direction": "initiator-to-initiator",
+        "field": "reply-policy",
+        "alternative": "ack-only",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relations": {
+        "reply_policy": "ACK-only",
+        "related_participant": "Unknown",
+        "associated_initiator": "associated-initiator-C",
+        "later_query_operation": null
+      },
+      "data_length": {
+        "minimum_bytes": "Unknown",
+        "maximum_bytes": "Unknown",
+        "block_number_in_data": false
+      },
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "unknowns": {
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "routing": "Unknown",
+        "actual_acknowledgement": "Unknown",
+        "storage_effects": "Unknown",
+        "peer_capacity_bytes": "Unknown",
+        "crc_algorithm": "Unknown",
+        "crc_coverage": "Unknown"
+      },
+      "raw_form": {
+        "service_prefix": [
+          181,
+          25,
+          1
+        ],
+        "data_encoding": "opaque",
+        "block_position": "Unknown",
+        "crc_bytes": "Unknown"
+      }
+    },
+    {
+      "id": "ak14-op01-initiator-crc",
+      "identity": {
+        "family": "Vaillant",
+        "variant": "Unknown",
+        "primary": 181,
+        "secondary": 25,
+        "operation": 1,
+        "direction": "initiator-to-initiator",
+        "field": "reply-policy",
+        "alternative": "crc-positive",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relations": {
+        "reply_policy": "CRC-positive",
+        "related_participant": "Unknown",
+        "associated_initiator": "associated-initiator-C",
+        "later_query_operation": null
+      },
+      "data_length": {
+        "minimum_bytes": "Unknown",
+        "maximum_bytes": "Unknown",
+        "block_number_in_data": false
+      },
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "unknowns": {
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "routing": "Unknown",
+        "actual_acknowledgement": "Unknown",
+        "storage_effects": "Unknown",
+        "peer_capacity_bytes": "Unknown",
+        "crc_algorithm": "Unknown",
+        "crc_coverage": "Unknown"
+      },
+      "raw_form": {
+        "service_prefix": [
+          181,
+          25,
+          1
+        ],
+        "data_encoding": "opaque",
+        "block_position": "Unknown",
+        "crc_bytes": "Unknown"
+      }
+    },
+    {
+      "id": "ak14-op01-broadcast-ack",
+      "identity": {
+        "family": "Vaillant",
+        "variant": "Unknown",
+        "primary": 181,
+        "secondary": 25,
+        "operation": 1,
+        "direction": "broadcast",
+        "field": "reply-policy",
+        "alternative": "ack-only",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relations": {
+        "reply_policy": "ACK-only",
+        "related_participant": "Unknown",
+        "associated_initiator": "associated-initiator-C",
+        "later_query_operation": null
+      },
+      "data_length": {
+        "minimum_bytes": "Unknown",
+        "maximum_bytes": "Unknown",
+        "block_number_in_data": false
+      },
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "unknowns": {
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "routing": "Unknown",
+        "actual_acknowledgement": "Unknown",
+        "storage_effects": "Unknown",
+        "peer_capacity_bytes": "Unknown",
+        "crc_algorithm": "Unknown",
+        "crc_coverage": "Unknown"
+      },
+      "raw_form": {
+        "service_prefix": [
+          181,
+          25,
+          1
+        ],
+        "data_encoding": "opaque",
+        "block_position": "Unknown",
+        "crc_bytes": "Unknown"
+      }
+    },
+    {
+      "id": "ak14-op01-broadcast-crc",
+      "identity": {
+        "family": "Vaillant",
+        "variant": "Unknown",
+        "primary": 181,
+        "secondary": 25,
+        "operation": 1,
+        "direction": "broadcast",
+        "field": "reply-policy",
+        "alternative": "crc-positive",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relations": {
+        "reply_policy": "CRC-positive",
+        "related_participant": "Unknown",
+        "associated_initiator": "associated-initiator-C",
+        "later_query_operation": null
+      },
+      "data_length": {
+        "minimum_bytes": "Unknown",
+        "maximum_bytes": "Unknown",
+        "block_number_in_data": false
+      },
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "unknowns": {
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "routing": "Unknown",
+        "actual_acknowledgement": "Unknown",
+        "storage_effects": "Unknown",
+        "peer_capacity_bytes": "Unknown",
+        "crc_algorithm": "Unknown",
+        "crc_coverage": "Unknown"
+      },
+      "raw_form": {
+        "service_prefix": [
+          181,
+          25,
+          1
+        ],
+        "data_encoding": "opaque",
+        "block_position": "Unknown",
+        "crc_bytes": "Unknown"
+      }
+    }
+  ],
+  "cases": [
+    {
+      "id": "ak14-op03-target-empty",
+      "row_id": "ak14-op03-target",
+      "participants": {
+        "initial_sender": "sender-A",
+        "receiving_target": "receiving-target-B",
+        "associated_initiator": "associated-initiator-C"
+      },
+      "raw": {
+        "service_prefix": [
+          181,
+          25,
+          3
+        ],
+        "data": [],
+        "block_token": "fabricated-block-token"
+      },
+      "expected_relation": {
+        "reply_policy": "target-response",
+        "related_participant": "receiving-target-B",
+        "associated_initiator": "none",
+        "later_query_operation": null
+      },
+      "peer_capacity_bytes": "Unknown",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "physical_outcome": "Unknown"
+    },
+    {
+      "id": "ak14-op03-target-three",
+      "row_id": "ak14-op03-target",
+      "participants": {
+        "initial_sender": "sender-A",
+        "receiving_target": "receiving-target-B",
+        "associated_initiator": "associated-initiator-C"
+      },
+      "raw": {
+        "service_prefix": [
+          181,
+          25,
+          3
+        ],
+        "data": [
+          0,
+          255,
+          65
+        ],
+        "block_token": "fabricated-block-token"
+      },
+      "expected_relation": {
+        "reply_policy": "target-response",
+        "related_participant": "receiving-target-B",
+        "associated_initiator": "none",
+        "later_query_operation": null
+      },
+      "peer_capacity_bytes": "Unknown",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "physical_outcome": "Unknown"
+    },
+    {
+      "id": "ak14-op03-initiator-empty",
+      "row_id": "ak14-op03-initiator",
+      "participants": {
+        "initial_sender": "sender-A",
+        "receiving_target": "receiving-target-B",
+        "associated_initiator": "associated-initiator-C"
+      },
+      "raw": {
+        "service_prefix": [
+          181,
+          25,
+          3
+        ],
+        "data": [],
+        "block_token": "fabricated-block-token"
+      },
+      "expected_relation": {
+        "reply_policy": "service-toward-A",
+        "related_participant": "sender-A",
+        "associated_initiator": "associated-initiator-C",
+        "later_query_operation": null
+      },
+      "peer_capacity_bytes": "Unknown",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "physical_outcome": "Unknown"
+    },
+    {
+      "id": "ak14-op03-initiator-three",
+      "row_id": "ak14-op03-initiator",
+      "participants": {
+        "initial_sender": "sender-A",
+        "receiving_target": "receiving-target-B",
+        "associated_initiator": "associated-initiator-C"
+      },
+      "raw": {
+        "service_prefix": [
+          181,
+          25,
+          3
+        ],
+        "data": [
+          0,
+          255,
+          65
+        ],
+        "block_token": "fabricated-block-token"
+      },
+      "expected_relation": {
+        "reply_policy": "service-toward-A",
+        "related_participant": "sender-A",
+        "associated_initiator": "associated-initiator-C",
+        "later_query_operation": null
+      },
+      "peer_capacity_bytes": "Unknown",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "physical_outcome": "Unknown"
+    },
+    {
+      "id": "ak14-op03-broadcast-empty",
+      "row_id": "ak14-op03-broadcast",
+      "participants": {
+        "initial_sender": "sender-A",
+        "receiving_target": "receiving-target-B",
+        "associated_initiator": "associated-initiator-C"
+      },
+      "raw": {
+        "service_prefix": [
+          181,
+          25,
+          3
+        ],
+        "data": [],
+        "block_token": "fabricated-block-token"
+      },
+      "expected_relation": {
+        "reply_policy": "retained-CRC-for-02",
+        "related_participant": "none",
+        "associated_initiator": "associated-initiator-C",
+        "later_query_operation": 2
+      },
+      "peer_capacity_bytes": "Unknown",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "physical_outcome": "Unknown"
+    },
+    {
+      "id": "ak14-op03-broadcast-three",
+      "row_id": "ak14-op03-broadcast",
+      "participants": {
+        "initial_sender": "sender-A",
+        "receiving_target": "receiving-target-B",
+        "associated_initiator": "associated-initiator-C"
+      },
+      "raw": {
+        "service_prefix": [
+          181,
+          25,
+          3
+        ],
+        "data": [
+          0,
+          255,
+          65
+        ],
+        "block_token": "fabricated-block-token"
+      },
+      "expected_relation": {
+        "reply_policy": "retained-CRC-for-02",
+        "related_participant": "none",
+        "associated_initiator": "associated-initiator-C",
+        "later_query_operation": 2
+      },
+      "peer_capacity_bytes": "Unknown",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "physical_outcome": "Unknown"
+    },
+    {
+      "id": "ak14-op01-initiator-ack-three",
+      "row_id": "ak14-op01-initiator-ack",
+      "participants": {
+        "initial_sender": "sender-A",
+        "receiving_target": "receiving-target-B",
+        "associated_initiator": "associated-initiator-C"
+      },
+      "raw": {
+        "service_prefix": [
+          181,
+          25,
+          1
+        ],
+        "data": [
+          0,
+          255,
+          65
+        ],
+        "block_token": "fabricated-block-token"
+      },
+      "expected_relation": {
+        "reply_policy": "ACK-only",
+        "related_participant": "Unknown",
+        "associated_initiator": "associated-initiator-C",
+        "later_query_operation": null
+      },
+      "peer_capacity_bytes": "Unknown",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "physical_outcome": "Unknown"
+    },
+    {
+      "id": "ak14-op01-initiator-crc-three",
+      "row_id": "ak14-op01-initiator-crc",
+      "participants": {
+        "initial_sender": "sender-A",
+        "receiving_target": "receiving-target-B",
+        "associated_initiator": "associated-initiator-C"
+      },
+      "raw": {
+        "service_prefix": [
+          181,
+          25,
+          1
+        ],
+        "data": [
+          0,
+          255,
+          65
+        ],
+        "block_token": "fabricated-block-token"
+      },
+      "expected_relation": {
+        "reply_policy": "CRC-positive",
+        "related_participant": "Unknown",
+        "associated_initiator": "associated-initiator-C",
+        "later_query_operation": null
+      },
+      "peer_capacity_bytes": "Unknown",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "physical_outcome": "Unknown"
+    },
+    {
+      "id": "ak14-op01-broadcast-ack-three",
+      "row_id": "ak14-op01-broadcast-ack",
+      "participants": {
+        "initial_sender": "sender-A",
+        "receiving_target": "receiving-target-B",
+        "associated_initiator": "associated-initiator-C"
+      },
+      "raw": {
+        "service_prefix": [
+          181,
+          25,
+          1
+        ],
+        "data": [
+          0,
+          255,
+          65
+        ],
+        "block_token": "fabricated-block-token"
+      },
+      "expected_relation": {
+        "reply_policy": "ACK-only",
+        "related_participant": "Unknown",
+        "associated_initiator": "associated-initiator-C",
+        "later_query_operation": null
+      },
+      "peer_capacity_bytes": "Unknown",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "physical_outcome": "Unknown"
+    },
+    {
+      "id": "ak14-op01-broadcast-crc-three",
+      "row_id": "ak14-op01-broadcast-crc",
+      "participants": {
+        "initial_sender": "sender-A",
+        "receiving_target": "receiving-target-B",
+        "associated_initiator": "associated-initiator-C"
+      },
+      "raw": {
+        "service_prefix": [
+          181,
+          25,
+          1
+        ],
+        "data": [
+          0,
+          255,
+          65
+        ],
+        "block_token": "fabricated-block-token"
+      },
+      "expected_relation": {
+        "reply_policy": "CRC-positive",
+        "related_participant": "Unknown",
+        "associated_initiator": "associated-initiator-C",
+        "later_query_operation": null
+      },
+      "peer_capacity_bytes": "Unknown",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "physical_outcome": "Unknown"
+    }
+  ]
+}

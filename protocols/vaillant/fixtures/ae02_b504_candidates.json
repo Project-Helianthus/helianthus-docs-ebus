@@ -1,0 +1,237 @@
+{
+  "provenance": "Synthetic field-level declarations; no physical reply or observed device behavior.",
+  "qualification": "Unknown",
+  "absent_metadata": {
+    "physical_adaptation": null,
+    "installed_support": null,
+    "polling_permission": null,
+    "wire_offsets": null
+  },
+  "columns": [
+    "ID",
+    "Grade",
+    "Identity",
+    "Direction",
+    "Logical position / extent",
+    "Raw type / domain",
+    "Scale",
+    "Sentinel / default / conflict",
+    "Unresolved properties"
+  ],
+  "claims": [
+    [
+      "op16-div16",
+      "Hypothesis",
+      "OP16 corrected outside temperature /16",
+      "response",
+      "logical 3; 16 bits",
+      "i16 LE; -32768..32767",
+      "raw / 16 \u00b0C",
+      "Default and sentinels Unknown; /256 is a separate unqualified alternative",
+      "Physical adaptation, installed support and polling permission Unknown; reply length cannot select variant"
+    ],
+    [
+      "op16-div256",
+      "Hypothesis",
+      "OP16 corrected outside temperature /256",
+      "response",
+      "logical 3; 16 bits",
+      "i16 LE; -32768..32767",
+      "raw / 256 \u00b0C",
+      "Default and sentinels Unknown; separate unqualified alternative to /16",
+      "Physical adaptation, installed support and polling permission Unknown; reply length cannot select variant"
+    ],
+    [
+      "op16-tail",
+      "Unknown",
+      "OP16 unused tail",
+      "response",
+      "position Unknown; extent Unknown",
+      "raw bytes; domain Unknown",
+      "Unknown",
+      "Default and sentinels Unknown; no fixed trailing offset",
+      "Meaning, physical adaptation, installed support and polling permission Unknown"
+    ],
+    [
+      "op20-setpoint",
+      "Hypothesis",
+      "OP20 setpoint",
+      "response",
+      "position Unknown; extent Unknown",
+      "zero or nonzero; raw type Unknown",
+      "Nonzero includes declared offsets; exact arithmetic Unknown",
+      "0 = no-demand; default and other sentinels Unknown",
+      "Physical adaptation, installed support and polling permission Unknown"
+    ],
+    [
+      "op21-protection",
+      "Hypothesis",
+      "OP21 protection temperature",
+      "response",
+      "position Unknown; extent Unknown",
+      "zero or positive; raw type Unknown",
+      "Unknown",
+      "0 = off; positive = protection-active; default and other sentinels Unknown",
+      "Physical adaptation, installed support and polling permission Unknown"
+    ],
+    [
+      "op26-adjustment",
+      "Hypothesis",
+      "OP26 adjustment flag",
+      "response",
+      "position Unknown; extent Unknown",
+      "flag; other raw values Unknown",
+      "Unknown",
+      "1 = permits setpoint change; default and other sentinels Unknown",
+      "Physical adaptation, installed support and polling permission Unknown; no writable contract established"
+    ],
+    [
+      "op26-room",
+      "Hypothesis",
+      "OP26 room temperature",
+      "response",
+      "position Unknown; extent Unknown",
+      "FF; remaining raw domain Unknown",
+      "Unknown",
+      "FF = unavailable only in this context; default and other sentinels Unknown",
+      "Other selectors inherit no FF label; physical adaptation, installed support and polling permission Unknown"
+    ],
+    [
+      "solar-three",
+      "Hypothesis",
+      "solar-state scalar 0/1/2",
+      "response",
+      "position Unknown; extent Unknown",
+      "scalar codes {0,1,2}",
+      "None declared",
+      "Competing bit descriptions remain separate; default and sentinels Unknown",
+      "Exact selector binding, physical adaptation, installed support and polling permission Unknown"
+    ],
+    [
+      "solar-two",
+      "Hypothesis",
+      "solar-state scalar 0/1",
+      "response",
+      "position Unknown; extent Unknown",
+      "scalar codes {0,1}",
+      "None declared",
+      "Code 2 outside this table; competing bit descriptions separate; default and sentinels Unknown",
+      "Exact selector binding, physical adaptation, installed support and polling permission Unknown"
+    ],
+    [
+      "preheat-five",
+      "Hypothesis",
+      "preheating five-minute variant",
+      "response",
+      "position Unknown; extent Unknown",
+      "duration 0..60 minutes; step 5; raw type Unknown",
+      "Raw conversion Unknown",
+      "Separate from 0..300 alternative; default and sentinels Unknown",
+      "Exact selector binding, physical adaptation, installed support and polling permission Unknown"
+    ],
+    [
+      "preheat-300",
+      "Hypothesis",
+      "preheating 300-minute variant",
+      "response",
+      "position Unknown; extent Unknown",
+      "duration 0..300 minutes; step Unknown; raw type Unknown",
+      "Raw conversion Unknown",
+      "Separate from five-minute alternative; default and sentinels Unknown",
+      "Exact selector binding, physical adaptation, installed support and polling permission Unknown"
+    ]
+  ],
+  "cases": {
+    "temperature": [
+      {
+        "raw_hex": "10 00",
+        "signed": 16,
+        "div16": 1.0,
+        "div256": 0.0625
+      },
+      {
+        "raw_hex": "F0 FF",
+        "signed": -16,
+        "div16": -1.0,
+        "div256": -0.0625
+      }
+    ],
+    "setpoint": [
+      {
+        "op": "20",
+        "raw": 0,
+        "meaning": "no-demand"
+      },
+      {
+        "op": "20",
+        "raw": 1,
+        "meaning": "nonzero-candidate"
+      }
+    ],
+    "protection": [
+      {
+        "op": "21",
+        "raw": 0,
+        "meaning": "off"
+      },
+      {
+        "op": "21",
+        "raw": 1,
+        "meaning": "protection-active"
+      }
+    ],
+    "adjustment": [
+      {
+        "op": "26",
+        "raw": 1,
+        "meaning": "permits-setpoint-change"
+      }
+    ],
+    "room": [
+      {
+        "op": "26",
+        "raw_hex": "FF",
+        "meaning": "unavailable"
+      },
+      {
+        "op": "20",
+        "raw_hex": "FF",
+        "meaning": null
+      }
+    ],
+    "duration": [
+      {
+        "minutes": 60,
+        "five_minute": true,
+        "alternative_300": true
+      },
+      {
+        "minutes": 65,
+        "five_minute": false,
+        "alternative_300": true
+      },
+      {
+        "minutes": 300,
+        "five_minute": false,
+        "alternative_300": true
+      }
+    ],
+    "solar": [
+      {
+        "code": 0,
+        "three_value": true,
+        "two_value": true
+      },
+      {
+        "code": 1,
+        "three_value": true,
+        "two_value": true
+      },
+      {
+        "code": 2,
+        "three_value": true,
+        "two_value": false
+      }
+    ]
+  }
+}
