@@ -1,0 +1,517 @@
+{
+  "service": {
+    "primary": 181,
+    "secondary": 36
+  },
+  "evidence": "synthetic-isolated-components",
+  "date_domains": {
+    "day": [
+      1,
+      31
+    ],
+    "month": [
+      1,
+      12
+    ],
+    "year": [
+      0,
+      99
+    ]
+  },
+  "time_representation_range": [
+    0,
+    255
+  ],
+  "unknown": {
+    "century": "Unknown",
+    "timezone": "Unknown",
+    "joint_date_validity": "Unknown",
+    "zone_name": {
+      "selectors": "Unknown",
+      "encoding": "Unknown",
+      "width": "Unknown",
+      "termination": "Unknown"
+    },
+    "source": "Unknown",
+    "destination": "Unknown",
+    "firmware": "Unknown",
+    "capture_conditions": "Unknown",
+    "installed_zone_domain": "Unknown",
+    "da_db_role_conflict": "Unknown"
+  },
+  "entries": [
+    {
+      "id": "controller-700-clock-date",
+      "family": "controller-700",
+      "opcode": 2,
+      "group": 0,
+      "instance_scope": "00",
+      "register": 52,
+      "direction": "read",
+      "field": "clock-date",
+      "shape": "date",
+      "components": [
+        "day",
+        "month",
+        "year"
+      ],
+      "encoding": "plain-u8",
+      "raw_form": "three-ordered-isolated-bytes",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "selector_relations": [],
+      "unknown": {
+        "native_support": "Unknown",
+        "complete_reply_positions": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      }
+    },
+    {
+      "id": "controller-700-clock-time",
+      "family": "controller-700",
+      "opcode": 2,
+      "group": 0,
+      "instance_scope": "00",
+      "register": 53,
+      "direction": "read",
+      "field": "clock-time",
+      "shape": "time",
+      "components": [
+        "hour",
+        "minute",
+        "second"
+      ],
+      "encoding": "plain-u8",
+      "raw_form": "three-ordered-isolated-bytes",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "selector_relations": [],
+      "unknown": {
+        "native_support": "Unknown",
+        "complete_reply_positions": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      }
+    },
+    {
+      "id": "controller-700-system-holiday-start-date",
+      "family": "controller-700",
+      "opcode": 2,
+      "group": 0,
+      "instance_scope": "00",
+      "register": 113,
+      "direction": "read",
+      "field": "system-holiday-start-date",
+      "shape": "date",
+      "components": [
+        "day",
+        "month",
+        "year"
+      ],
+      "encoding": "plain-u8",
+      "raw_form": "three-ordered-isolated-bytes",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "selector_relations": [],
+      "unknown": {
+        "native_support": "Unknown",
+        "complete_reply_positions": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      }
+    },
+    {
+      "id": "controller-700-system-holiday-end-date",
+      "family": "controller-700",
+      "opcode": 2,
+      "group": 0,
+      "instance_scope": "00",
+      "register": 114,
+      "direction": "read",
+      "field": "system-holiday-end-date",
+      "shape": "date",
+      "components": [
+        "day",
+        "month",
+        "year"
+      ],
+      "encoding": "plain-u8",
+      "raw_form": "three-ordered-isolated-bytes",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "selector_relations": [],
+      "unknown": {
+        "native_support": "Unknown",
+        "complete_reply_positions": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      }
+    },
+    {
+      "id": "controller-700-zone-holiday-start-date",
+      "family": "controller-700",
+      "opcode": 2,
+      "group": 3,
+      "instance_scope": "dynamic",
+      "register": 3,
+      "direction": "read",
+      "field": "zone-holiday-start-date",
+      "shape": "date",
+      "components": [
+        "day",
+        "month",
+        "year"
+      ],
+      "encoding": "plain-u8",
+      "raw_form": "three-ordered-isolated-bytes",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "selector_relations": [],
+      "unknown": {
+        "native_support": "Unknown",
+        "complete_reply_positions": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      }
+    },
+    {
+      "id": "controller-700-zone-holiday-end-date",
+      "family": "controller-700",
+      "opcode": 2,
+      "group": 3,
+      "instance_scope": "dynamic",
+      "register": 4,
+      "direction": "read",
+      "field": "zone-holiday-end-date",
+      "shape": "date",
+      "components": [
+        "day",
+        "month",
+        "year"
+      ],
+      "encoding": "plain-u8",
+      "raw_form": "three-ordered-isolated-bytes",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "selector_relations": [],
+      "unknown": {
+        "native_support": "Unknown",
+        "complete_reply_positions": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      }
+    },
+    {
+      "id": "controller-720-clock-date",
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 0,
+      "instance_scope": "00",
+      "register": 52,
+      "direction": "read",
+      "field": "clock-date",
+      "shape": "date",
+      "components": [
+        "day",
+        "month",
+        "year"
+      ],
+      "encoding": "plain-u8",
+      "raw_form": "three-ordered-isolated-bytes",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "selector_relations": [],
+      "unknown": {
+        "native_support": "Unknown",
+        "complete_reply_positions": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      }
+    },
+    {
+      "id": "controller-720-clock-time",
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 0,
+      "instance_scope": "00",
+      "register": 53,
+      "direction": "read",
+      "field": "clock-time",
+      "shape": "time",
+      "components": [
+        "hour",
+        "minute",
+        "second"
+      ],
+      "encoding": "plain-u8",
+      "raw_form": "three-ordered-isolated-bytes",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "selector_relations": [],
+      "unknown": {
+        "native_support": "Unknown",
+        "complete_reply_positions": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      }
+    },
+    {
+      "id": "controller-720-system-holiday-start-date",
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 0,
+      "instance_scope": "00",
+      "register": 218,
+      "direction": "read",
+      "field": "system-holiday-start-date",
+      "shape": "date",
+      "components": [
+        "day",
+        "month",
+        "year"
+      ],
+      "encoding": "plain-u8",
+      "raw_form": "three-ordered-isolated-bytes",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "selector_relations": [],
+      "unknown": {
+        "native_support": "Unknown",
+        "complete_reply_positions": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      }
+    },
+    {
+      "id": "controller-720-system-holiday-end-date",
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 0,
+      "instance_scope": "00",
+      "register": 219,
+      "direction": "read",
+      "field": "system-holiday-end-date",
+      "shape": "date",
+      "components": [
+        "day",
+        "month",
+        "year"
+      ],
+      "encoding": "plain-u8",
+      "raw_form": "three-ordered-isolated-bytes",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "selector_relations": [],
+      "unknown": {
+        "native_support": "Unknown",
+        "complete_reply_positions": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      }
+    },
+    {
+      "id": "controller-720-zone-holiday-start-date",
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 3,
+      "instance_scope": "dynamic",
+      "register": 3,
+      "direction": "read",
+      "field": "zone-holiday-start-date",
+      "shape": "date",
+      "components": [
+        "day",
+        "month",
+        "year"
+      ],
+      "encoding": "plain-u8",
+      "raw_form": "three-ordered-isolated-bytes",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "selector_relations": [],
+      "unknown": {
+        "native_support": "Unknown",
+        "complete_reply_positions": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      }
+    },
+    {
+      "id": "controller-720-zone-holiday-end-date",
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 3,
+      "instance_scope": "dynamic",
+      "register": 4,
+      "direction": "read",
+      "field": "zone-holiday-end-date",
+      "shape": "date",
+      "components": [
+        "day",
+        "month",
+        "year"
+      ],
+      "encoding": "plain-u8",
+      "raw_form": "three-ordered-isolated-bytes",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "selector_relations": [],
+      "unknown": {
+        "native_support": "Unknown",
+        "complete_reply_positions": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      }
+    },
+    {
+      "id": "controller-720-zone-time-001e",
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 3,
+      "instance_scope": "dynamic",
+      "register": 30,
+      "direction": "read",
+      "field": "zone-time-001e",
+      "shape": "time",
+      "components": [
+        "hour",
+        "minute",
+        "second"
+      ],
+      "encoding": "plain-u8",
+      "raw_form": "three-ordered-isolated-bytes",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "selector_relations": [],
+      "unknown": {
+        "native_support": "Unknown",
+        "complete_reply_positions": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      }
+    },
+    {
+      "id": "controller-720-zone-time-0020",
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 3,
+      "instance_scope": "dynamic",
+      "register": 32,
+      "direction": "read",
+      "field": "zone-time-0020",
+      "shape": "time",
+      "components": [
+        "hour",
+        "minute",
+        "second"
+      ],
+      "encoding": "plain-u8",
+      "raw_form": "three-ordered-isolated-bytes",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "selector_relations": [],
+      "unknown": {
+        "native_support": "Unknown",
+        "complete_reply_positions": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      }
+    },
+    {
+      "id": "controller-720-zone-time-0021",
+      "family": "controller-720",
+      "opcode": 2,
+      "group": 3,
+      "instance_scope": "dynamic",
+      "register": 33,
+      "direction": "read",
+      "field": "zone-time-0021",
+      "shape": "time",
+      "components": [
+        "hour",
+        "minute",
+        "second"
+      ],
+      "encoding": "plain-u8",
+      "raw_form": "three-ordered-isolated-bytes",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "selector_relations": [],
+      "unknown": {
+        "native_support": "Unknown",
+        "complete_reply_positions": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      }
+    }
+  ],
+  "synthetic_cases": [
+    {
+      "id": "date-plain",
+      "shape": "date",
+      "raw_hex": [
+        "1F",
+        "0C",
+        "63"
+      ],
+      "components": [
+        31,
+        12,
+        99
+      ],
+      "numeric_grade": "Proven",
+      "semantic_grade": "Hypothesis",
+      "native_grade": "Unknown"
+    },
+    {
+      "id": "time-plain",
+      "shape": "time",
+      "raw_hex": [
+        "17",
+        "3B",
+        "3A"
+      ],
+      "components": [
+        23,
+        59,
+        58
+      ],
+      "numeric_grade": "Proven",
+      "semantic_grade": "Hypothesis",
+      "native_grade": "Unknown"
+    },
+    {
+      "id": "hex12-plain",
+      "shape": "time",
+      "raw_hex": [
+        "12",
+        "00",
+        "00"
+      ],
+      "components": [
+        18,
+        0,
+        0
+      ],
+      "numeric_grade": "Proven",
+      "semantic_grade": "Hypothesis",
+      "native_grade": "Unknown"
+    }
+  ]
+}
