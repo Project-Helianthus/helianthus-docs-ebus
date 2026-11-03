@@ -10,6 +10,7 @@ For detailed coverage of selector-heavy identifiers, see:
 - `0xB5 0x07` (B507, heat pump load/poll): [`ebus-vaillant-B507.md`](ebus-vaillant-B507.md)
 - `0xB5 0x08` (B508, NoiseReduction broadcast): [`ebus-vaillant-B508.md`](ebus-vaillant-B508.md)
 - `0xB5 0x09` (B509, register access / scan-id): [`ebus-vaillant-B509.md`](ebus-vaillant-B509.md)
+- `0xB5 0x0B` (B50B, candidate holiday field declarations — **Hypothesis**): [`ebus-vaillant-B50B.md`](ebus-vaillant-B50B.md)
 - `0xB5 0x10` (B510, SetMode): [`ebus-vaillant-B510.md`](ebus-vaillant-B510.md)
 - `0xB5 0x11` (B511, remote control): [`ebus-vaillant-B511.md`](ebus-vaillant-B511.md)
 - `0xB5 0x12` (B512, circulation pump / VR65-style state): [`ebus-vaillant-B512.md`](ebus-vaillant-B512.md)
@@ -27,7 +28,8 @@ For detailed coverage of selector-heavy identifiers, see:
 - `0xB5 0x24` (B524, GetExtendedRegisters): [`ebus-vaillant-B524.md`](ebus-vaillant-B524.md)
 - `0xB5 0x55` (B555, timer/schedule protocol): [`ebus-vaillant-b555-timer-protocol.md`](ebus-vaillant-b555-timer-protocol.md)
 - VR90 room controller protocol: [`ebus-vaillant-vr90-emulation.md`](ebus-vaillant-vr90-emulation.md)
-- B5 services without a dedicated page (B501, B502, B50A to B50D, B50F, B517, B518, B525, header-only identities): [Other B5 services](#other-b5-services-candidate-layouts)
+- `0xB5 0x0F` (B50F, demand and integrity candidates): [`ebus-vaillant-B50F.md`](ebus-vaillant-B50F.md)
+- B5 services without a dedicated page (B501, B502, B50A, B50C, B50D, B517, B518, B525, header-only identities): [Other B5 services](#other-b5-services-candidate-layouts)
 
 ## Scope
 
@@ -492,7 +494,7 @@ On heat pump systems with VWZIO (0x76), B511 traffic involving that device has a
 ## Other B5 services (candidate layouts)
 
 The services below have no dedicated page except for
-[B520](ebus-vaillant-B520.md). Every layout in this section is a candidate layout,
+[B520](ebus-vaillant-B520.md) and [B50B](ebus-vaillant-B50B.md). Every layout in this section is a candidate layout,
 unconfirmed on the wire. No exchange of any of these services
 on the wire is known (see [Open questions](#open-questions)). No service in this
 section is documented as safe to send; the state-changing ones (including, but
@@ -633,6 +635,11 @@ B50D fields or establish physical behavior for another family.
 | `B5 0B 04` | circuit name written as 10 ASCII bytes @3..12 (default: the ten characters `0000000000`); no explicit circuit index |
 
 ### B50F: safety-relevant temperature, status and demand
+
+The scoped declarations for this family are on the
+[B50F candidate page](ebus-vaillant-B50F.md). The layout below is a separate,
+older Hypothesis; where it differs from that page (direction, absolute
+positions), neither is Proven and both stay Unknown on the wire.
 
 Candidate layout: all four services put their values in the request and reply
 with a `u8` feedback @3 (1 accepted; 0 and 2..255 not accepted).

@@ -1,0 +1,1492 @@
+{
+  "scope": {
+    "family": "vaillant",
+    "variant": "B50F",
+    "primary": 181,
+    "secondary": 15,
+    "qualification": "Unknown",
+    "native_evidence": "Unknown",
+    "grade": "Hypothesis"
+  },
+  "columns": [
+    "Grade",
+    "Identity",
+    "Direction",
+    "Logical position / extent",
+    "Raw type / domain",
+    "Scale / unit",
+    "Sentinel / default / conflict",
+    "Unresolved properties"
+  ],
+  "declarations": [
+    [
+      "Hypothesis",
+      "vaillant / B50F / PB=B5 / SB=0F / OP=03 / demand",
+      "Unknown",
+      "Unknown / 8 bits",
+      "uint8 00..FF; bits 0..4: five positional flags, individual meanings Unknown; bits 5..7 reserved",
+      "none",
+      "Sentinel/default Unknown; demand is not applied actuation",
+      "Reserved semantics and physical effect Unknown; preserve all bits"
+    ],
+    [
+      "Hypothesis",
+      "vaillant / B50F / PB=B5 / SB=0F / OP=00 / temperature_1",
+      "Unknown",
+      "Unknown / 16 bits",
+      "signed int16 little-endian -32768..32767",
+      "divide by 16 / degrees Celsius",
+      "Sentinel/default Unknown",
+      "Absolute scalar position and channel meaning Unknown"
+    ],
+    [
+      "Hypothesis",
+      "vaillant / B50F / PB=B5 / SB=0F / OP=00 / error_1",
+      "Unknown",
+      "immediately after temperature_1 / 8 bits",
+      "uint8 00..FF",
+      "none",
+      "Sentinel/default Unknown; independent raw error byte",
+      "Absolute scalar position and error meanings Unknown"
+    ],
+    [
+      "Hypothesis",
+      "vaillant / B50F / PB=B5 / SB=0F / OP=00 / temperature_2",
+      "Unknown",
+      "Unknown / 16 bits",
+      "signed int16 little-endian -32768..32767",
+      "divide by 16 / degrees Celsius",
+      "Sentinel/default Unknown",
+      "Absolute scalar position and channel meaning Unknown"
+    ],
+    [
+      "Hypothesis",
+      "vaillant / B50F / PB=B5 / SB=0F / OP=00 / error_2",
+      "Unknown",
+      "immediately after temperature_2 / 8 bits",
+      "uint8 00..FF",
+      "none",
+      "Sentinel/default Unknown; independent raw error byte",
+      "Absolute scalar position and error meanings Unknown"
+    ],
+    [
+      "Hypothesis",
+      "vaillant / B50F / PB=B5 / SB=0F / OP=00 / temperature_3",
+      "Unknown",
+      "Unknown / 16 bits",
+      "signed int16 little-endian -32768..32767",
+      "divide by 16 / degrees Celsius",
+      "Sentinel/default Unknown",
+      "Absolute scalar position and channel meaning Unknown"
+    ],
+    [
+      "Hypothesis",
+      "vaillant / B50F / PB=B5 / SB=0F / OP=00 / error_3",
+      "Unknown",
+      "immediately after temperature_3 / 8 bits",
+      "uint8 00..FF",
+      "none",
+      "Sentinel/default Unknown; independent raw error byte",
+      "Absolute scalar position and error meanings Unknown"
+    ],
+    [
+      "Hypothesis",
+      "vaillant / B50F / PB=B5 / SB=0F / OP=01 / temperature_1",
+      "Unknown",
+      "Unknown / 16 bits",
+      "signed int16 little-endian -32768..32767",
+      "divide by 16 / degrees Celsius",
+      "Sentinel/default Unknown",
+      "Absolute scalar position and channel meaning Unknown"
+    ],
+    [
+      "Hypothesis",
+      "vaillant / B50F / PB=B5 / SB=0F / OP=01 / error_1",
+      "Unknown",
+      "immediately after temperature_1 / 8 bits",
+      "uint8 00..FF",
+      "none",
+      "Sentinel/default Unknown; independent raw error byte",
+      "Absolute scalar position and error meanings Unknown"
+    ],
+    [
+      "Hypothesis",
+      "vaillant / B50F / PB=B5 / SB=0F / OP=01 / temperature_2",
+      "Unknown",
+      "Unknown / 16 bits",
+      "signed int16 little-endian -32768..32767",
+      "divide by 16 / degrees Celsius",
+      "Sentinel/default Unknown",
+      "Absolute scalar position and channel meaning Unknown"
+    ],
+    [
+      "Hypothesis",
+      "vaillant / B50F / PB=B5 / SB=0F / OP=01 / error_2",
+      "Unknown",
+      "immediately after temperature_2 / 8 bits",
+      "uint8 00..FF",
+      "none",
+      "Sentinel/default Unknown; independent raw error byte",
+      "Absolute scalar position and error meanings Unknown"
+    ],
+    [
+      "Hypothesis",
+      "vaillant / B50F / PB=B5 / SB=0F / OP=01 / stack_voltage_label",
+      "Unknown",
+      "Unknown / 16 bits",
+      "raw ordered pair 00..FF each",
+      "Unknown / Unknown",
+      "Stack-voltage label conflicts with temperature conversion metadata; no voltage scale chosen; sentinel/default Unknown",
+      "Conversion, unit, signedness and absolute scalar position Unknown"
+    ],
+    [
+      "Hypothesis",
+      "vaillant / B50F / PB=B5 / SB=0F / OP=00 / integrity",
+      "Unknown",
+      "12, 13 / two independent 8-bit bytes",
+      "two uint8 00..FF; ordered bytes, not a word",
+      "none",
+      "Sentinel/default Unknown; preserve each byte independently",
+      "Word byte order, polynomial, initialization, reflection, final transform and coverage Unknown"
+    ],
+    [
+      "Hypothesis",
+      "vaillant / B50F / PB=B5 / SB=0F / OP=01 / integrity",
+      "Unknown",
+      "12, 13 / two independent 8-bit bytes",
+      "two uint8 00..FF; ordered bytes, not a word",
+      "none",
+      "Sentinel/default Unknown; preserve each byte independently",
+      "Word byte order, polynomial, initialization, reflection, final transform and coverage Unknown"
+    ],
+    [
+      "Hypothesis",
+      "vaillant / B50F / PB=B5 / SB=0F / OP=02 / integrity",
+      "Unknown",
+      "11, 12 / two independent 8-bit bytes",
+      "two uint8 00..FF; ordered bytes, not a word",
+      "none",
+      "Sentinel/default Unknown; preserve each byte independently",
+      "Word byte order, polynomial, initialization, reflection, final transform and coverage Unknown"
+    ],
+    [
+      "Hypothesis",
+      "vaillant / B50F / PB=B5 / SB=0F / OP=03 / integrity",
+      "Unknown",
+      "4, 5 / two independent 8-bit bytes",
+      "two uint8 00..FF; ordered bytes, not a word",
+      "none",
+      "Sentinel/default Unknown; preserve each byte independently",
+      "Word byte order, polynomial, initialization, reflection, final transform and coverage Unknown"
+    ],
+    [
+      "Hypothesis",
+      "vaillant / B50F / PB=B5 / SB=0F / OP=00 / feedback",
+      "Unknown",
+      "Unknown / 8 bits",
+      "uint8 00..FF; 01 accepted; 00 and 02..FF rejected",
+      "none",
+      "Sentinel/default Unknown; acceptance does not validate integrity",
+      "Physical effect Unknown; feedback does not establish physical effect"
+    ],
+    [
+      "Hypothesis",
+      "vaillant / B50F / PB=B5 / SB=0F / OP=01 / feedback",
+      "Unknown",
+      "Unknown / 8 bits",
+      "uint8 00..FF; 01 accepted; 00 and 02..FF rejected",
+      "none",
+      "Sentinel/default Unknown; acceptance does not validate integrity",
+      "Physical effect Unknown; feedback does not establish physical effect"
+    ],
+    [
+      "Hypothesis",
+      "vaillant / B50F / PB=B5 / SB=0F / OP=02 / feedback",
+      "Unknown",
+      "Unknown / 8 bits",
+      "uint8 00..FF; 01 accepted; 00 and 02..FF rejected",
+      "none",
+      "Sentinel/default Unknown; acceptance does not validate integrity",
+      "Physical effect Unknown; feedback does not establish physical effect"
+    ],
+    [
+      "Hypothesis",
+      "vaillant / B50F / PB=B5 / SB=0F / OP=03 / feedback",
+      "Unknown",
+      "Unknown / 8 bits",
+      "uint8 00..FF; 01 accepted; 00 and 02..FF rejected",
+      "none",
+      "Sentinel/default Unknown; acceptance does not validate integrity",
+      "Physical effect Unknown; feedback does not establish physical effect"
+    ]
+  ],
+  "demand_cases": [
+    [
+      "00",
+      [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "00"
+    ],
+    [
+      "01",
+      [
+        true,
+        false,
+        false,
+        false,
+        false
+      ],
+      "00"
+    ],
+    [
+      "1F",
+      [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "00"
+    ],
+    [
+      "E0",
+      [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "E0"
+    ],
+    [
+      "FF",
+      [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "E0"
+    ],
+    [
+      "02",
+      [
+        false,
+        true,
+        false,
+        false,
+        false
+      ],
+      "00"
+    ],
+    [
+      "04",
+      [
+        false,
+        false,
+        true,
+        false,
+        false
+      ],
+      "00"
+    ],
+    [
+      "08",
+      [
+        false,
+        false,
+        false,
+        true,
+        false
+      ],
+      "00"
+    ],
+    [
+      "10",
+      [
+        false,
+        false,
+        false,
+        false,
+        true
+      ],
+      "00"
+    ],
+    [
+      "20",
+      [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "20"
+    ],
+    [
+      "40",
+      [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "40"
+    ],
+    [
+      "80",
+      [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "80"
+    ]
+  ],
+  "temperature_cases": [
+    [
+      "F0 FF",
+      -16,
+      -1
+    ],
+    [
+      "00 00",
+      0,
+      0
+    ],
+    [
+      "10 00",
+      16,
+      1
+    ]
+  ],
+  "error_cases": [
+    [
+      "F0 FF",
+      "00",
+      -1
+    ],
+    [
+      "F0 FF",
+      "01",
+      -1
+    ],
+    [
+      "F0 FF",
+      "FF",
+      -1
+    ]
+  ],
+  "stack_voltage_case": {
+    "raw": "10 00",
+    "label": "stack-voltage",
+    "converted_value": null,
+    "unit": null,
+    "conflict": "temperature conversion metadata"
+  },
+  "integrity_cases": [
+    [
+      "00",
+      [
+        12,
+        13
+      ],
+      [
+        "00",
+        "00"
+      ],
+      null
+    ],
+    [
+      "00",
+      [
+        12,
+        13
+      ],
+      [
+        "12",
+        "00"
+      ],
+      null
+    ],
+    [
+      "00",
+      [
+        12,
+        13
+      ],
+      [
+        "00",
+        "34"
+      ],
+      null
+    ],
+    [
+      "00",
+      [
+        12,
+        13
+      ],
+      [
+        "12",
+        "34"
+      ],
+      null
+    ],
+    [
+      "01",
+      [
+        12,
+        13
+      ],
+      [
+        "00",
+        "00"
+      ],
+      null
+    ],
+    [
+      "01",
+      [
+        12,
+        13
+      ],
+      [
+        "12",
+        "00"
+      ],
+      null
+    ],
+    [
+      "01",
+      [
+        12,
+        13
+      ],
+      [
+        "00",
+        "34"
+      ],
+      null
+    ],
+    [
+      "01",
+      [
+        12,
+        13
+      ],
+      [
+        "12",
+        "34"
+      ],
+      null
+    ],
+    [
+      "02",
+      [
+        11,
+        12
+      ],
+      [
+        "00",
+        "00"
+      ],
+      null
+    ],
+    [
+      "02",
+      [
+        11,
+        12
+      ],
+      [
+        "12",
+        "00"
+      ],
+      null
+    ],
+    [
+      "02",
+      [
+        11,
+        12
+      ],
+      [
+        "00",
+        "34"
+      ],
+      null
+    ],
+    [
+      "02",
+      [
+        11,
+        12
+      ],
+      [
+        "12",
+        "34"
+      ],
+      null
+    ],
+    [
+      "03",
+      [
+        4,
+        5
+      ],
+      [
+        "00",
+        "00"
+      ],
+      null
+    ],
+    [
+      "03",
+      [
+        4,
+        5
+      ],
+      [
+        "12",
+        "00"
+      ],
+      null
+    ],
+    [
+      "03",
+      [
+        4,
+        5
+      ],
+      [
+        "00",
+        "34"
+      ],
+      null
+    ],
+    [
+      "03",
+      [
+        4,
+        5
+      ],
+      [
+        "12",
+        "34"
+      ],
+      null
+    ]
+  ],
+  "feedback_cases": [
+    [
+      "00",
+      [
+        "00",
+        "00"
+      ],
+      "00",
+      false,
+      null,
+      null
+    ],
+    [
+      "00",
+      [
+        "00",
+        "00"
+      ],
+      "01",
+      true,
+      null,
+      null
+    ],
+    [
+      "00",
+      [
+        "00",
+        "00"
+      ],
+      "02",
+      false,
+      null,
+      null
+    ],
+    [
+      "00",
+      [
+        "00",
+        "00"
+      ],
+      "FF",
+      false,
+      null,
+      null
+    ],
+    [
+      "00",
+      [
+        "12",
+        "00"
+      ],
+      "00",
+      false,
+      null,
+      null
+    ],
+    [
+      "00",
+      [
+        "12",
+        "00"
+      ],
+      "01",
+      true,
+      null,
+      null
+    ],
+    [
+      "00",
+      [
+        "12",
+        "00"
+      ],
+      "02",
+      false,
+      null,
+      null
+    ],
+    [
+      "00",
+      [
+        "12",
+        "00"
+      ],
+      "FF",
+      false,
+      null,
+      null
+    ],
+    [
+      "00",
+      [
+        "00",
+        "34"
+      ],
+      "00",
+      false,
+      null,
+      null
+    ],
+    [
+      "00",
+      [
+        "00",
+        "34"
+      ],
+      "01",
+      true,
+      null,
+      null
+    ],
+    [
+      "00",
+      [
+        "00",
+        "34"
+      ],
+      "02",
+      false,
+      null,
+      null
+    ],
+    [
+      "00",
+      [
+        "00",
+        "34"
+      ],
+      "FF",
+      false,
+      null,
+      null
+    ],
+    [
+      "00",
+      [
+        "12",
+        "34"
+      ],
+      "00",
+      false,
+      null,
+      null
+    ],
+    [
+      "00",
+      [
+        "12",
+        "34"
+      ],
+      "01",
+      true,
+      null,
+      null
+    ],
+    [
+      "00",
+      [
+        "12",
+        "34"
+      ],
+      "02",
+      false,
+      null,
+      null
+    ],
+    [
+      "00",
+      [
+        "12",
+        "34"
+      ],
+      "FF",
+      false,
+      null,
+      null
+    ],
+    [
+      "01",
+      [
+        "00",
+        "00"
+      ],
+      "00",
+      false,
+      null,
+      null
+    ],
+    [
+      "01",
+      [
+        "00",
+        "00"
+      ],
+      "01",
+      true,
+      null,
+      null
+    ],
+    [
+      "01",
+      [
+        "00",
+        "00"
+      ],
+      "02",
+      false,
+      null,
+      null
+    ],
+    [
+      "01",
+      [
+        "00",
+        "00"
+      ],
+      "FF",
+      false,
+      null,
+      null
+    ],
+    [
+      "01",
+      [
+        "12",
+        "00"
+      ],
+      "00",
+      false,
+      null,
+      null
+    ],
+    [
+      "01",
+      [
+        "12",
+        "00"
+      ],
+      "01",
+      true,
+      null,
+      null
+    ],
+    [
+      "01",
+      [
+        "12",
+        "00"
+      ],
+      "02",
+      false,
+      null,
+      null
+    ],
+    [
+      "01",
+      [
+        "12",
+        "00"
+      ],
+      "FF",
+      false,
+      null,
+      null
+    ],
+    [
+      "01",
+      [
+        "00",
+        "34"
+      ],
+      "00",
+      false,
+      null,
+      null
+    ],
+    [
+      "01",
+      [
+        "00",
+        "34"
+      ],
+      "01",
+      true,
+      null,
+      null
+    ],
+    [
+      "01",
+      [
+        "00",
+        "34"
+      ],
+      "02",
+      false,
+      null,
+      null
+    ],
+    [
+      "01",
+      [
+        "00",
+        "34"
+      ],
+      "FF",
+      false,
+      null,
+      null
+    ],
+    [
+      "01",
+      [
+        "12",
+        "34"
+      ],
+      "00",
+      false,
+      null,
+      null
+    ],
+    [
+      "01",
+      [
+        "12",
+        "34"
+      ],
+      "01",
+      true,
+      null,
+      null
+    ],
+    [
+      "01",
+      [
+        "12",
+        "34"
+      ],
+      "02",
+      false,
+      null,
+      null
+    ],
+    [
+      "01",
+      [
+        "12",
+        "34"
+      ],
+      "FF",
+      false,
+      null,
+      null
+    ],
+    [
+      "02",
+      [
+        "00",
+        "00"
+      ],
+      "00",
+      false,
+      null,
+      null
+    ],
+    [
+      "02",
+      [
+        "00",
+        "00"
+      ],
+      "01",
+      true,
+      null,
+      null
+    ],
+    [
+      "02",
+      [
+        "00",
+        "00"
+      ],
+      "02",
+      false,
+      null,
+      null
+    ],
+    [
+      "02",
+      [
+        "00",
+        "00"
+      ],
+      "FF",
+      false,
+      null,
+      null
+    ],
+    [
+      "02",
+      [
+        "12",
+        "00"
+      ],
+      "00",
+      false,
+      null,
+      null
+    ],
+    [
+      "02",
+      [
+        "12",
+        "00"
+      ],
+      "01",
+      true,
+      null,
+      null
+    ],
+    [
+      "02",
+      [
+        "12",
+        "00"
+      ],
+      "02",
+      false,
+      null,
+      null
+    ],
+    [
+      "02",
+      [
+        "12",
+        "00"
+      ],
+      "FF",
+      false,
+      null,
+      null
+    ],
+    [
+      "02",
+      [
+        "00",
+        "34"
+      ],
+      "00",
+      false,
+      null,
+      null
+    ],
+    [
+      "02",
+      [
+        "00",
+        "34"
+      ],
+      "01",
+      true,
+      null,
+      null
+    ],
+    [
+      "02",
+      [
+        "00",
+        "34"
+      ],
+      "02",
+      false,
+      null,
+      null
+    ],
+    [
+      "02",
+      [
+        "00",
+        "34"
+      ],
+      "FF",
+      false,
+      null,
+      null
+    ],
+    [
+      "02",
+      [
+        "12",
+        "34"
+      ],
+      "00",
+      false,
+      null,
+      null
+    ],
+    [
+      "02",
+      [
+        "12",
+        "34"
+      ],
+      "01",
+      true,
+      null,
+      null
+    ],
+    [
+      "02",
+      [
+        "12",
+        "34"
+      ],
+      "02",
+      false,
+      null,
+      null
+    ],
+    [
+      "02",
+      [
+        "12",
+        "34"
+      ],
+      "FF",
+      false,
+      null,
+      null
+    ],
+    [
+      "03",
+      [
+        "00",
+        "00"
+      ],
+      "00",
+      false,
+      null,
+      null
+    ],
+    [
+      "03",
+      [
+        "00",
+        "00"
+      ],
+      "01",
+      true,
+      null,
+      null
+    ],
+    [
+      "03",
+      [
+        "00",
+        "00"
+      ],
+      "02",
+      false,
+      null,
+      null
+    ],
+    [
+      "03",
+      [
+        "00",
+        "00"
+      ],
+      "FF",
+      false,
+      null,
+      null
+    ],
+    [
+      "03",
+      [
+        "12",
+        "00"
+      ],
+      "00",
+      false,
+      null,
+      null
+    ],
+    [
+      "03",
+      [
+        "12",
+        "00"
+      ],
+      "01",
+      true,
+      null,
+      null
+    ],
+    [
+      "03",
+      [
+        "12",
+        "00"
+      ],
+      "02",
+      false,
+      null,
+      null
+    ],
+    [
+      "03",
+      [
+        "12",
+        "00"
+      ],
+      "FF",
+      false,
+      null,
+      null
+    ],
+    [
+      "03",
+      [
+        "00",
+        "34"
+      ],
+      "00",
+      false,
+      null,
+      null
+    ],
+    [
+      "03",
+      [
+        "00",
+        "34"
+      ],
+      "01",
+      true,
+      null,
+      null
+    ],
+    [
+      "03",
+      [
+        "00",
+        "34"
+      ],
+      "02",
+      false,
+      null,
+      null
+    ],
+    [
+      "03",
+      [
+        "00",
+        "34"
+      ],
+      "FF",
+      false,
+      null,
+      null
+    ],
+    [
+      "03",
+      [
+        "12",
+        "34"
+      ],
+      "00",
+      false,
+      null,
+      null
+    ],
+    [
+      "03",
+      [
+        "12",
+        "34"
+      ],
+      "01",
+      true,
+      null,
+      null
+    ],
+    [
+      "03",
+      [
+        "12",
+        "34"
+      ],
+      "02",
+      false,
+      null,
+      null
+    ],
+    [
+      "03",
+      [
+        "12",
+        "34"
+      ],
+      "FF",
+      false,
+      null,
+      null
+    ]
+  ],
+  "partial_case": {
+    "operation": "00",
+    "positions": [
+      12,
+      13
+    ],
+    "current": [
+      "12",
+      null
+    ],
+    "last_known_good": [
+      "12",
+      "34"
+    ],
+    "current_word": null,
+    "admitted_as_complete": false
+  },
+  "channel_cases": [
+    [
+      "00",
+      1,
+      "F0 FF",
+      "00",
+      -1
+    ],
+    [
+      "00",
+      1,
+      "F0 FF",
+      "01",
+      -1
+    ],
+    [
+      "00",
+      1,
+      "F0 FF",
+      "FF",
+      -1
+    ],
+    [
+      "00",
+      1,
+      "00 00",
+      "00",
+      0
+    ],
+    [
+      "00",
+      1,
+      "10 00",
+      "00",
+      1
+    ],
+    [
+      "00",
+      2,
+      "F0 FF",
+      "00",
+      -1
+    ],
+    [
+      "00",
+      2,
+      "F0 FF",
+      "01",
+      -1
+    ],
+    [
+      "00",
+      2,
+      "F0 FF",
+      "FF",
+      -1
+    ],
+    [
+      "00",
+      2,
+      "00 00",
+      "00",
+      0
+    ],
+    [
+      "00",
+      2,
+      "10 00",
+      "00",
+      1
+    ],
+    [
+      "00",
+      3,
+      "F0 FF",
+      "00",
+      -1
+    ],
+    [
+      "00",
+      3,
+      "F0 FF",
+      "01",
+      -1
+    ],
+    [
+      "00",
+      3,
+      "F0 FF",
+      "FF",
+      -1
+    ],
+    [
+      "00",
+      3,
+      "00 00",
+      "00",
+      0
+    ],
+    [
+      "00",
+      3,
+      "10 00",
+      "00",
+      1
+    ],
+    [
+      "01",
+      1,
+      "F0 FF",
+      "00",
+      -1
+    ],
+    [
+      "01",
+      1,
+      "F0 FF",
+      "01",
+      -1
+    ],
+    [
+      "01",
+      1,
+      "F0 FF",
+      "FF",
+      -1
+    ],
+    [
+      "01",
+      1,
+      "00 00",
+      "00",
+      0
+    ],
+    [
+      "01",
+      1,
+      "10 00",
+      "00",
+      1
+    ],
+    [
+      "01",
+      2,
+      "F0 FF",
+      "00",
+      -1
+    ],
+    [
+      "01",
+      2,
+      "F0 FF",
+      "01",
+      -1
+    ],
+    [
+      "01",
+      2,
+      "F0 FF",
+      "FF",
+      -1
+    ],
+    [
+      "01",
+      2,
+      "00 00",
+      "00",
+      0
+    ],
+    [
+      "01",
+      2,
+      "10 00",
+      "00",
+      1
+    ]
+  ]
+}

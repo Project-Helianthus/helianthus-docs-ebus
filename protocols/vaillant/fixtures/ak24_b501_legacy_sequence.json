@@ -1,0 +1,136 @@
+{
+  "grade": "Hypothesis",
+  "qualification": "Unknown",
+  "rows": [
+    {
+      "id": "ak24-legacy-sequence-none",
+      "family": "legacy-interface",
+      "variant": "computer-interface",
+      "primary": 181,
+      "secondary": 1,
+      "operation": null,
+      "direction": "initiator-to-initiator",
+      "field": "sequencing",
+      "alternative": "none",
+      "group": null,
+      "instance_scope": "none",
+      "register": null,
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": "retain-original-bytes",
+      "unknown": {
+        "exact_synchronization_bytes": "Unknown",
+        "state_order_beyond_wait": "Unknown",
+        "timeout_duration": "Unknown",
+        "segmentation": "Unknown",
+        "retries": "Unknown",
+        "return_codec": "Unknown",
+        "transport_adaptation": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown"
+      },
+      "synchronization_required": true,
+      "cooldown": {
+        "trigger": "timeout",
+        "minimum_ms": 3500
+      },
+      "service_roles": [
+        {
+          "role": "request",
+          "service": "B501",
+          "body": "opaque-request"
+        },
+        {
+          "role": "positive-status",
+          "service": "B501",
+          "body": "status-form"
+        },
+        {
+          "role": "return-data",
+          "service": "B502",
+          "body": "opaque-return-data"
+        }
+      ]
+    }
+  ],
+  "timing_cases": [
+    {
+      "id": "timeout-below",
+      "family": "legacy-interface",
+      "event": "timeout",
+      "elapsed_ms": 3499,
+      "result": "below-minimum",
+      "grade": "Hypothesis"
+    },
+    {
+      "id": "timeout-at",
+      "family": "legacy-interface",
+      "event": "timeout",
+      "elapsed_ms": 3500,
+      "result": "minimum-met",
+      "grade": "Hypothesis"
+    },
+    {
+      "id": "timeout-above",
+      "family": "legacy-interface",
+      "event": "timeout",
+      "elapsed_ms": 3501,
+      "result": "minimum-met",
+      "grade": "Hypothesis"
+    },
+    {
+      "id": "successful-return",
+      "family": "legacy-interface",
+      "event": "successful-return",
+      "elapsed_ms": 3499,
+      "result": "not-applicable",
+      "grade": "Hypothesis"
+    },
+    {
+      "id": "no-timeout",
+      "family": "legacy-interface",
+      "event": "none",
+      "elapsed_ms": 3500,
+      "result": "not-applicable",
+      "grade": "Hypothesis"
+    },
+    {
+      "id": "missing-elapsed",
+      "family": "legacy-interface",
+      "event": "timeout",
+      "elapsed_ms": null,
+      "result": "elapsed-unknown",
+      "grade": "Unknown"
+    },
+    {
+      "id": "modern-timeout",
+      "family": "modern-controller",
+      "event": "timeout",
+      "elapsed_ms": 3500,
+      "result": "no-family-entry",
+      "grade": "Unknown"
+    }
+  ],
+  "raw_cases": [
+    {
+      "raw_hex": "",
+      "retention": "retain-original-bytes",
+      "interpretation": "opaque",
+      "qualification": "Unknown"
+    },
+    {
+      "raw_hex": "B5 01",
+      "retention": "retain-original-bytes",
+      "interpretation": "opaque",
+      "qualification": "Unknown"
+    },
+    {
+      "raw_hex": "B5 02 A6",
+      "retention": "retain-original-bytes",
+      "interpretation": "opaque",
+      "qualification": "Unknown"
+    }
+  ]
+}
