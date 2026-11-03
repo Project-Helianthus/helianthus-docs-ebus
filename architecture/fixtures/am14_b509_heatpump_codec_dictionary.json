@@ -1,0 +1,1348 @@
+{
+  "kind": "AM14SyntheticCodecDictionary",
+  "contract": {
+    "key_fields": [
+      "target_family",
+      "variant",
+      "primary",
+      "secondary",
+      "operation",
+      "direction",
+      "selector"
+    ],
+    "selected": {
+      "target_family": "heat_pump",
+      "variant": "direct-symbolic-candidate",
+      "primary": 181,
+      "secondary": 9,
+      "operation": 13,
+      "direction": "request",
+      "selector": "D000"
+    },
+    "access": "read",
+    "row_count": 28,
+    "selector": "two ordered bytes as four uppercase hex digits",
+    "software_grade": "Proven",
+    "association_grade": "Hypothesis",
+    "qualification": false,
+    "unknown": [
+      "native_support",
+      "presence",
+      "freshness",
+      "execution",
+      "effects",
+      "persistence",
+      "delivery",
+      "physical_qualification"
+    ],
+    "absent_properties": [
+      "width",
+      "endian",
+      "mapping",
+      "sentinel",
+      "converter"
+    ],
+    "no_row": null,
+    "malformed": "ValueError",
+    "copy_policy": "deep independent",
+    "provider_registration": false,
+    "generic_raw_access": "unchanged",
+    "discovery": "unchanged",
+    "mcp": "unchanged",
+    "graphql": "unchanged"
+  },
+  "rows": [
+    {
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "D000"
+      },
+      "quantity": "heat_pump_status",
+      "codec": {
+        "declaration": "hpstatus enum"
+      },
+      "grade": "Hypothesis",
+      "conflicts": []
+    },
+    {
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "BC00"
+      },
+      "quantity": "environmental_energy_yield_total",
+      "codec": {
+        "declaration": "energy4",
+        "unit": "kWh"
+      },
+      "grade": "Hypothesis",
+      "conflicts": [
+        "environmental versus delivered yield unresolved"
+      ]
+    },
+    {
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "BA00"
+      },
+      "quantity": "environmental_power",
+      "codec": {
+        "declaration": "power",
+        "unit": "kW"
+      },
+      "grade": "Hypothesis",
+      "conflicts": []
+    },
+    {
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "BB00"
+      },
+      "quantity": "environmental_power_ratio",
+      "codec": {
+        "declaration": "percent0",
+        "unit": "%"
+      },
+      "grade": "Hypothesis",
+      "conflicts": []
+    },
+    {
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "8D00"
+      },
+      "quantity": "refrigerant_superheat",
+      "codec": {
+        "declaration": "temp",
+        "unit": "K delta"
+      },
+      "grade": "Hypothesis",
+      "conflicts": []
+    },
+    {
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "8E00"
+      },
+      "quantity": "refrigerant_subcooling",
+      "codec": {
+        "declaration": "temp",
+        "unit": "K delta"
+      },
+      "grade": "Hypothesis",
+      "conflicts": []
+    },
+    {
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "0F00"
+      },
+      "quantity": "source_inlet_temperature",
+      "codec": {
+        "declaration": "tempsensor",
+        "unit": "C"
+      },
+      "grade": "Hypothesis",
+      "conflicts": []
+    },
+    {
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "1400"
+      },
+      "quantity": "refrigerant_high_pressure",
+      "codec": {
+        "declaration": "sensor",
+        "unit": "bar"
+      },
+      "grade": "Hypothesis",
+      "conflicts": []
+    },
+    {
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "1500"
+      },
+      "quantity": "refrigerant_low_pressure",
+      "codec": {
+        "declaration": "sensor",
+        "unit": "bar"
+      },
+      "grade": "Hypothesis",
+      "conflicts": []
+    },
+    {
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "E400"
+      },
+      "quantity": "compressor_state",
+      "codec": {
+        "declaration": "UCH enum"
+      },
+      "grade": "Hypothesis",
+      "conflicts": []
+    },
+    {
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "E900"
+      },
+      "quantity": "compressor_control_state",
+      "codec": {
+        "declaration": "UCH enum"
+      },
+      "grade": "Hypothesis",
+      "conflicts": []
+    },
+    {
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "E600"
+      },
+      "quantity": "compressor_minimum_on_duration",
+      "codec": {
+        "declaration": "seconds",
+        "unit": "s"
+      },
+      "grade": "Hypothesis",
+      "conflicts": []
+    },
+    {
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "E700"
+      },
+      "quantity": "compressor_minimum_off_duration",
+      "codec": {
+        "declaration": "seconds",
+        "unit": "s"
+      },
+      "grade": "Hypothesis",
+      "conflicts": []
+    },
+    {
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "E800"
+      },
+      "quantity": "compressor_minimum_start_interval",
+      "codec": {
+        "declaration": "seconds",
+        "unit": "s"
+      },
+      "grade": "Hypothesis",
+      "conflicts": []
+    },
+    {
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "A800"
+      },
+      "quantity": "compressor_dhw_start_count",
+      "codec": {
+        "declaration": "counter",
+        "unit": "count"
+      },
+      "grade": "Hypothesis",
+      "conflicts": []
+    },
+    {
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "B400"
+      },
+      "quantity": "compressor_high_pressure_cutout_count",
+      "codec": {
+        "declaration": "counter",
+        "unit": "count"
+      },
+      "grade": "Hypothesis",
+      "conflicts": []
+    },
+    {
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "CE01"
+      },
+      "quantity": "defrost_active",
+      "codec": {
+        "declaration": "yesno",
+        "unit": "bool"
+      },
+      "grade": "Hypothesis",
+      "conflicts": []
+    },
+    {
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "5701"
+      },
+      "quantity": "phase_order_status",
+      "codec": {
+        "declaration": "phaseok enum"
+      },
+      "grade": "Hypothesis",
+      "conflicts": []
+    },
+    {
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "8800"
+      },
+      "quantity": "phase_status_flags",
+      "codec": {
+        "declaration": "phase flags (bitmask)"
+      },
+      "grade": "Hypothesis",
+      "conflicts": []
+    },
+    {
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "3F00"
+      },
+      "quantity": "inrush_current_limiter_output_active",
+      "codec": {
+        "declaration": "on/off"
+      },
+      "grade": "Hypothesis",
+      "conflicts": []
+    },
+    {
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "A901"
+      },
+      "quantity": "noise_reduction_active",
+      "codec": {
+        "declaration": "yesno",
+        "unit": "bool"
+      },
+      "grade": "Hypothesis",
+      "conflicts": []
+    },
+    {
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "2401"
+      },
+      "quantity": "noise_reduction_factor",
+      "codec": {
+        "declaration": "percent0"
+      },
+      "grade": "Hypothesis",
+      "conflicts": [
+        "ratio unit Unknown"
+      ]
+    },
+    {
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "E201"
+      },
+      "quantity": "environmental_power",
+      "codec": {
+        "declaration": "UCH",
+        "unit": "100W units",
+        "qualifiers": [
+          "100 W per unsigned byte"
+        ]
+      },
+      "grade": "Hypothesis",
+      "conflicts": []
+    },
+    {
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "E301"
+      },
+      "quantity": "bivalent_mode",
+      "codec": {
+        "declaration": "UCH enum"
+      },
+      "grade": "Hypothesis",
+      "conflicts": []
+    },
+    {
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "E401"
+      },
+      "quantity": "source_temperature_limit_at_maximum_flow",
+      "codec": {
+        "declaration": "SCH",
+        "unit": "C",
+        "qualifiers": [
+          "signed"
+        ]
+      },
+      "grade": "Hypothesis",
+      "conflicts": []
+    },
+    {
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "E501"
+      },
+      "quantity": "source_temperature_limit_slope",
+      "codec": {
+        "declaration": "UCH (slope)"
+      },
+      "grade": "Hypothesis",
+      "conflicts": []
+    },
+    {
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "E901"
+      },
+      "quantity": "refrigerant_low_pressure_maximum",
+      "codec": {
+        "declaration": "ULG"
+      },
+      "grade": "Hypothesis",
+      "conflicts": [
+        "pressure unit Unknown"
+      ]
+    },
+    {
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "8000"
+      },
+      "quantity": "compressor_energy_integral",
+      "codec": {
+        "declaration": "value (unknown)"
+      },
+      "grade": "Hypothesis",
+      "conflicts": [
+        "integral codec and unit Unknown"
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "id": "match",
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "D000"
+      },
+      "raw": {
+        "payload": [
+          0,
+          17
+        ],
+        "independent": [
+          42
+        ]
+      },
+      "last_known_good": {
+        "independent": {
+          "raw": [
+            42
+          ],
+          "grade": "Unknown"
+        }
+      },
+      "expect": {
+        "row_selector": "D000",
+        "error": null
+      }
+    },
+    {
+      "id": "same-name-ba",
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "BA00"
+      },
+      "raw": {
+        "payload": [
+          0,
+          17
+        ],
+        "independent": [
+          42
+        ]
+      },
+      "last_known_good": {
+        "independent": {
+          "raw": [
+            42
+          ],
+          "grade": "Unknown"
+        }
+      },
+      "expect": {
+        "row_selector": "BA00",
+        "error": null
+      }
+    },
+    {
+      "id": "same-name-e2",
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "E201"
+      },
+      "raw": {
+        "payload": [
+          0,
+          17
+        ],
+        "independent": [
+          42
+        ]
+      },
+      "last_known_good": {
+        "independent": {
+          "raw": [
+            42
+          ],
+          "grade": "Unknown"
+        }
+      },
+      "expect": {
+        "row_selector": "E201",
+        "error": null
+      }
+    },
+    {
+      "id": "unknown-family",
+      "key": {
+        "target_family": "unknown",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "D000"
+      },
+      "raw": {
+        "payload": [
+          0,
+          17
+        ],
+        "independent": [
+          42
+        ]
+      },
+      "last_known_good": {
+        "independent": {
+          "raw": [
+            42
+          ],
+          "grade": "Unknown"
+        }
+      },
+      "expect": {
+        "row_selector": null,
+        "error": null
+      }
+    },
+    {
+      "id": "interface-family",
+      "key": {
+        "target_family": "heat_pump_interface_unit",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "D000"
+      },
+      "raw": {
+        "payload": [
+          0,
+          17
+        ],
+        "independent": [
+          42
+        ]
+      },
+      "last_known_good": {
+        "independent": {
+          "raw": [
+            42
+          ],
+          "grade": "Unknown"
+        }
+      },
+      "expect": {
+        "row_selector": null,
+        "error": null
+      }
+    },
+    {
+      "id": "other-variant",
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "other-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "D000"
+      },
+      "raw": {
+        "payload": [
+          0,
+          17
+        ],
+        "independent": [
+          42
+        ]
+      },
+      "last_known_good": {
+        "independent": {
+          "raw": [
+            42
+          ],
+          "grade": "Unknown"
+        }
+      },
+      "expect": {
+        "row_selector": null,
+        "error": null
+      }
+    },
+    {
+      "id": "wrong-primary",
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 0,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "D000"
+      },
+      "raw": {
+        "payload": [
+          0,
+          17
+        ],
+        "independent": [
+          42
+        ]
+      },
+      "last_known_good": {
+        "independent": {
+          "raw": [
+            42
+          ],
+          "grade": "Unknown"
+        }
+      },
+      "expect": {
+        "row_selector": null,
+        "error": null
+      }
+    },
+    {
+      "id": "wrong-secondary",
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 0,
+        "operation": 13,
+        "direction": "request",
+        "selector": "D000"
+      },
+      "raw": {
+        "payload": [
+          0,
+          17
+        ],
+        "independent": [
+          42
+        ]
+      },
+      "last_known_good": {
+        "independent": {
+          "raw": [
+            42
+          ],
+          "grade": "Unknown"
+        }
+      },
+      "expect": {
+        "row_selector": null,
+        "error": null
+      }
+    },
+    {
+      "id": "op0e",
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 14,
+        "direction": "request",
+        "selector": "D000"
+      },
+      "raw": {
+        "payload": [
+          0,
+          17
+        ],
+        "independent": [
+          42
+        ]
+      },
+      "last_known_good": {
+        "independent": {
+          "raw": [
+            42
+          ],
+          "grade": "Unknown"
+        }
+      },
+      "expect": {
+        "row_selector": null,
+        "error": null
+      }
+    },
+    {
+      "id": "op29",
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 41,
+        "direction": "request",
+        "selector": "D000"
+      },
+      "raw": {
+        "payload": [
+          0,
+          17
+        ],
+        "independent": [
+          42
+        ]
+      },
+      "last_known_good": {
+        "independent": {
+          "raw": [
+            42
+          ],
+          "grade": "Unknown"
+        }
+      },
+      "expect": {
+        "row_selector": null,
+        "error": null
+      }
+    },
+    {
+      "id": "positive",
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "positive",
+        "selector": "D000"
+      },
+      "raw": {
+        "payload": [
+          0,
+          17
+        ],
+        "independent": [
+          42
+        ]
+      },
+      "last_known_good": {
+        "independent": {
+          "raw": [
+            42
+          ],
+          "grade": "Unknown"
+        }
+      },
+      "expect": {
+        "row_selector": null,
+        "error": null
+      }
+    },
+    {
+      "id": "reversed",
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "00D0"
+      },
+      "raw": {
+        "payload": [
+          0,
+          17
+        ],
+        "independent": [
+          42
+        ]
+      },
+      "last_known_good": {
+        "independent": {
+          "raw": [
+            42
+          ],
+          "grade": "Unknown"
+        }
+      },
+      "expect": {
+        "row_selector": null,
+        "error": null
+      }
+    },
+    {
+      "id": "first-byte",
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "D100"
+      },
+      "raw": {
+        "payload": [
+          0,
+          17
+        ],
+        "independent": [
+          42
+        ]
+      },
+      "last_known_good": {
+        "independent": {
+          "raw": [
+            42
+          ],
+          "grade": "Unknown"
+        }
+      },
+      "expect": {
+        "row_selector": null,
+        "error": null
+      }
+    },
+    {
+      "id": "second-byte",
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "D001"
+      },
+      "raw": {
+        "payload": [
+          0,
+          17
+        ],
+        "independent": [
+          42
+        ]
+      },
+      "last_known_good": {
+        "independent": {
+          "raw": [
+            42
+          ],
+          "grade": "Unknown"
+        }
+      },
+      "expect": {
+        "row_selector": null,
+        "error": null
+      }
+    },
+    {
+      "id": "zero-selector",
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "0000"
+      },
+      "raw": {
+        "payload": [
+          0,
+          17
+        ],
+        "independent": [
+          42
+        ]
+      },
+      "last_known_good": {
+        "independent": {
+          "raw": [
+            42
+          ],
+          "grade": "Unknown"
+        }
+      },
+      "expect": {
+        "row_selector": null,
+        "error": null
+      }
+    },
+    {
+      "id": "missing-selector",
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request"
+      },
+      "raw": {
+        "payload": [
+          0,
+          17
+        ],
+        "independent": [
+          42
+        ]
+      },
+      "last_known_good": {
+        "independent": {
+          "raw": [
+            42
+          ],
+          "grade": "Unknown"
+        }
+      },
+      "expect": {
+        "row_selector": null,
+        "error": "malformed-key"
+      }
+    },
+    {
+      "id": "missing-operation",
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "direction": "request",
+        "selector": "D000"
+      },
+      "raw": {
+        "payload": [
+          0,
+          17
+        ],
+        "independent": [
+          42
+        ]
+      },
+      "last_known_good": {
+        "independent": {
+          "raw": [
+            42
+          ],
+          "grade": "Unknown"
+        }
+      },
+      "expect": {
+        "row_selector": null,
+        "error": "malformed-key"
+      }
+    },
+    {
+      "id": "zero-operation",
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 0,
+        "direction": "request",
+        "selector": "D000"
+      },
+      "raw": {
+        "payload": [
+          0,
+          17
+        ],
+        "independent": [
+          42
+        ]
+      },
+      "last_known_good": {
+        "independent": {
+          "raw": [
+            42
+          ],
+          "grade": "Unknown"
+        }
+      },
+      "expect": {
+        "row_selector": null,
+        "error": null
+      }
+    },
+    {
+      "id": "extra-key",
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "D000",
+        "extra": 0
+      },
+      "raw": {
+        "payload": [
+          0,
+          17
+        ],
+        "independent": [
+          42
+        ]
+      },
+      "last_known_good": {
+        "independent": {
+          "raw": [
+            42
+          ],
+          "grade": "Unknown"
+        }
+      },
+      "expect": {
+        "row_selector": null,
+        "error": "malformed-key"
+      }
+    },
+    {
+      "id": "malformed-selector",
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "D0"
+      },
+      "raw": {
+        "payload": [
+          0,
+          17
+        ],
+        "independent": [
+          42
+        ]
+      },
+      "last_known_good": {
+        "independent": {
+          "raw": [
+            42
+          ],
+          "grade": "Unknown"
+        }
+      },
+      "expect": {
+        "row_selector": null,
+        "error": "malformed-key"
+      }
+    },
+    {
+      "id": "raw-absent",
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "D000"
+      },
+      "raw": {
+        "independent": [
+          42
+        ]
+      },
+      "last_known_good": {
+        "independent": {
+          "raw": [
+            42
+          ],
+          "grade": "Unknown"
+        }
+      },
+      "expect": {
+        "row_selector": "D000",
+        "error": null
+      }
+    },
+    {
+      "id": "raw-empty",
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "D000"
+      },
+      "raw": {
+        "payload": [],
+        "independent": [
+          42
+        ]
+      },
+      "last_known_good": {
+        "independent": {
+          "raw": [
+            42
+          ],
+          "grade": "Unknown"
+        }
+      },
+      "expect": {
+        "row_selector": "D000",
+        "error": null
+      }
+    },
+    {
+      "id": "raw-zero",
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "D000"
+      },
+      "raw": {
+        "payload": [
+          0
+        ],
+        "independent": [
+          42
+        ]
+      },
+      "last_known_good": {
+        "independent": {
+          "raw": [
+            42
+          ],
+          "grade": "Unknown"
+        }
+      },
+      "expect": {
+        "row_selector": "D000",
+        "error": null
+      }
+    },
+    {
+      "id": "partial-raw",
+      "key": {
+        "target_family": "heat_pump",
+        "variant": "direct-symbolic-candidate",
+        "primary": 181,
+        "secondary": 9,
+        "operation": 13,
+        "direction": "request",
+        "selector": "D000"
+      },
+      "raw": {
+        "payload": [
+          0
+        ],
+        "independent": [
+          42
+        ],
+        "unresolved": []
+      },
+      "last_known_good": {
+        "independent": {
+          "raw": [
+            42
+          ],
+          "grade": "Unknown"
+        }
+      },
+      "expect": {
+        "row_selector": "D000",
+        "error": null
+      }
+    }
+  ]
+}
