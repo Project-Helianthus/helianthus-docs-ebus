@@ -1,0 +1,985 @@
+{
+  "service": "B504",
+  "primary": "B5",
+  "secondary": "04",
+  "family": "Vaillant B504 family",
+  "provenance": "synthetic",
+  "grade": "Hypothesis",
+  "entries": [
+    {
+      "operation": "0B",
+      "direction": "response",
+      "field": "reload-delay",
+      "context": "solar-storage",
+      "role": "solar-storage-charging",
+      "grade": "Hypothesis",
+      "byte_position": "Unknown",
+      "width": "Unknown",
+      "raw_form": "independent logical token; wire encoding Unknown"
+    },
+    {
+      "operation": "0B",
+      "direction": "response",
+      "field": "parallel-tank-filling",
+      "context": "mixer",
+      "role": "global-mixer-circuits",
+      "grade": "Hypothesis",
+      "byte_position": "Unknown",
+      "width": "Unknown",
+      "raw_form": "independent logical token; wire encoding Unknown"
+    },
+    {
+      "operation": "2D",
+      "direction": "response",
+      "field": "room-setpoint",
+      "context": "inverter-indoor",
+      "role": "indoor-room-setpoint",
+      "grade": "Hypothesis",
+      "byte_position": "Unknown",
+      "width": "Unknown",
+      "raw_form": "independent logical token; wire encoding Unknown"
+    },
+    {
+      "operation": "2D",
+      "direction": "response",
+      "field": "room-temperature",
+      "context": "inverter-indoor",
+      "role": "regulation-input",
+      "grade": "Hypothesis",
+      "byte_position": "Unknown",
+      "width": "Unknown",
+      "raw_form": "independent logical token; wire encoding Unknown"
+    },
+    {
+      "operation": "0D",
+      "direction": "request",
+      "field": "system-support",
+      "context": "system",
+      "role": "cooling-support-bit-0",
+      "grade": "Hypothesis",
+      "byte_position": "Unknown",
+      "width": "Unknown",
+      "raw_form": "independent logical token; wire encoding Unknown"
+    },
+    {
+      "operation": "0D",
+      "direction": "request",
+      "field": "system-generation",
+      "context": "system",
+      "role": "separate-byte-generation-unknown",
+      "grade": "Hypothesis",
+      "byte_position": "Unknown",
+      "width": "Unknown",
+      "raw_form": "independent logical token; wire encoding Unknown"
+    },
+    {
+      "operation": "0D",
+      "direction": "response",
+      "field": "dhw-request",
+      "context": "dhw",
+      "role": "dhw-circuit-request",
+      "grade": "Hypothesis",
+      "byte_position": "Unknown",
+      "width": "Unknown",
+      "raw_form": "independent logical token; wire encoding Unknown"
+    },
+    {
+      "operation": "0D",
+      "direction": "response",
+      "field": "circuit-temperature",
+      "context": "burner",
+      "role": "common-sensor-temperature",
+      "grade": "Hypothesis",
+      "byte_position": "Unknown",
+      "width": "Unknown",
+      "raw_form": "independent logical token; wire encoding Unknown"
+    },
+    {
+      "operation": "0D",
+      "direction": "response",
+      "field": "circuit-temperature",
+      "context": "mixer",
+      "role": "flow-temperature",
+      "grade": "Hypothesis",
+      "byte_position": "Unknown",
+      "width": "Unknown",
+      "raw_form": "independent logical token; wire encoding Unknown"
+    },
+    {
+      "operation": "0D",
+      "direction": "response",
+      "field": "circuit-temperature",
+      "context": "dhw",
+      "role": "tank-temperature",
+      "grade": "Hypothesis",
+      "byte_position": "Unknown",
+      "width": "Unknown",
+      "raw_form": "independent logical token; wire encoding Unknown"
+    },
+    {
+      "operation": "0D",
+      "direction": "response",
+      "field": "desired-temperature",
+      "context": "burner",
+      "role": "desired-common-sensor-temperature",
+      "grade": "Hypothesis",
+      "byte_position": "Unknown",
+      "width": "Unknown",
+      "raw_form": "independent logical token; wire encoding Unknown"
+    },
+    {
+      "operation": "0D",
+      "direction": "response",
+      "field": "desired-temperature",
+      "context": "mixer",
+      "role": "desired-flow-temperature",
+      "grade": "Hypothesis",
+      "byte_position": "Unknown",
+      "width": "Unknown",
+      "raw_form": "independent logical token; wire encoding Unknown"
+    },
+    {
+      "operation": "0D",
+      "direction": "response",
+      "field": "desired-temperature",
+      "context": "dhw",
+      "role": "desired-tank-temperature",
+      "grade": "Hypothesis",
+      "byte_position": "Unknown",
+      "width": "Unknown",
+      "raw_form": "independent logical token; wire encoding Unknown"
+    },
+    {
+      "operation": "18",
+      "direction": "response",
+      "field": "unsuppressed-desired-flow",
+      "context": "heating",
+      "role": "unsuppressed-demand",
+      "grade": "Hypothesis",
+      "byte_position": "Unknown",
+      "width": "Unknown",
+      "raw_form": "independent logical token; wire encoding Unknown"
+    },
+    {
+      "operation": "18",
+      "direction": "response",
+      "field": "suppressed-flow",
+      "context": "tank-charging",
+      "role": "suppressed-zero",
+      "grade": "Hypothesis",
+      "byte_position": "Unknown",
+      "width": "Unknown",
+      "raw_form": "independent logical token; wire encoding Unknown"
+    },
+    {
+      "operation": "01",
+      "direction": "response",
+      "field": "drying-day",
+      "context": "circuit",
+      "role": "nonzero-program-indication",
+      "grade": "Hypothesis",
+      "byte_position": "Unknown",
+      "width": "Unknown",
+      "raw_form": "independent logical token; wire encoding Unknown"
+    },
+    {
+      "operation": "33",
+      "direction": "response",
+      "field": "averaged-outside-temperature",
+      "context": "system",
+      "role": "correction-included",
+      "grade": "Hypothesis",
+      "byte_position": "Unknown",
+      "width": "Unknown",
+      "raw_form": "independent logical token; wire encoding Unknown"
+    },
+    {
+      "operation": "21",
+      "direction": "response",
+      "field": "maximum-solar-temperature",
+      "context": "solar",
+      "role": "all-solar-circuits",
+      "grade": "Hypothesis",
+      "byte_position": "Unknown",
+      "width": "Unknown",
+      "raw_form": "independent logical token; wire encoding Unknown"
+    },
+    {
+      "operation": "21",
+      "direction": "response",
+      "field": "tank-state",
+      "context": "solar",
+      "role": "temperature-to-maximum-percentage",
+      "grade": "Hypothesis",
+      "byte_position": "Unknown",
+      "width": "Unknown",
+      "raw_form": "independent logical token; wire encoding Unknown"
+    },
+    {
+      "operation": "21",
+      "direction": "response",
+      "field": "solar-yield",
+      "context": "solar",
+      "role": "collector-to-tank-switching-ratio",
+      "grade": "Hypothesis",
+      "byte_position": "Unknown",
+      "width": "Unknown",
+      "raw_form": "independent logical token; wire encoding Unknown"
+    }
+  ],
+  "unknown": {
+    "byte_positions": "Unknown",
+    "widths": "Unknown",
+    "generation_values": "Unknown",
+    "suppression_algorithm": "Unknown",
+    "tank_percentage_formula": "Unknown",
+    "switching_ratio_formula": "Unknown",
+    "wire_encoding": "Unknown",
+    "unit_encoding": "Unknown"
+  },
+  "qualification": {
+    "native_support": "Unknown",
+    "physical_effects": "Unknown",
+    "persistence": "Unknown",
+    "delivery": "Unknown"
+  },
+  "cases": {
+    "role_cells": [
+      {
+        "cell": "burner-temperature",
+        "operation": "0D",
+        "field": "circuit-temperature",
+        "context": "burner",
+        "raw_token": 40,
+        "role": "common-sensor-temperature",
+        "grade": "Hypothesis"
+      },
+      {
+        "cell": "mixer-temperature",
+        "operation": "0D",
+        "field": "circuit-temperature",
+        "context": "mixer",
+        "raw_token": 40,
+        "role": "flow-temperature",
+        "grade": "Hypothesis"
+      },
+      {
+        "cell": "dhw-temperature",
+        "operation": "0D",
+        "field": "circuit-temperature",
+        "context": "dhw",
+        "raw_token": 40,
+        "role": "tank-temperature",
+        "grade": "Hypothesis"
+      },
+      {
+        "cell": "burner-desired",
+        "operation": "0D",
+        "field": "desired-temperature",
+        "context": "burner",
+        "raw_token": 40,
+        "role": "desired-common-sensor-temperature",
+        "grade": "Hypothesis"
+      },
+      {
+        "cell": "mixer-desired",
+        "operation": "0D",
+        "field": "desired-temperature",
+        "context": "mixer",
+        "raw_token": 40,
+        "role": "desired-flow-temperature",
+        "grade": "Hypothesis"
+      },
+      {
+        "cell": "dhw-desired",
+        "operation": "0D",
+        "field": "desired-temperature",
+        "context": "dhw",
+        "raw_token": 40,
+        "role": "desired-tank-temperature",
+        "grade": "Hypothesis"
+      },
+      {
+        "cell": "unsuppressed-demand",
+        "operation": "18",
+        "field": "unsuppressed-desired-flow",
+        "context": "heating",
+        "raw_token": 45,
+        "role": "unsuppressed-demand",
+        "grade": "Hypothesis"
+      },
+      {
+        "cell": "suppressed-flow",
+        "operation": "18",
+        "field": "suppressed-flow",
+        "context": "tank-charging",
+        "raw_token": 0,
+        "role": "suppressed-zero",
+        "grade": "Hypothesis"
+      },
+      {
+        "cell": "tank-percentage",
+        "operation": "21",
+        "field": "tank-state",
+        "context": "solar",
+        "raw_token": 50,
+        "role": "temperature-to-maximum-percentage",
+        "grade": "Hypothesis"
+      },
+      {
+        "cell": "switching-ratio",
+        "operation": "21",
+        "field": "solar-yield",
+        "context": "solar",
+        "raw_token": 50,
+        "role": "collector-to-tank-switching-ratio",
+        "grade": "Hypothesis"
+      }
+    ],
+    "independent_cells": [
+      {
+        "changed_cell": "burner-temperature",
+        "before": [
+          40,
+          40,
+          40,
+          40,
+          40,
+          40,
+          45,
+          0,
+          50,
+          50
+        ],
+        "after": [
+          61,
+          40,
+          40,
+          40,
+          40,
+          40,
+          45,
+          0,
+          50,
+          50
+        ],
+        "roles": [
+          "common-sensor-temperature",
+          "flow-temperature",
+          "tank-temperature",
+          "desired-common-sensor-temperature",
+          "desired-flow-temperature",
+          "desired-tank-temperature",
+          "unsuppressed-demand",
+          "suppressed-zero",
+          "temperature-to-maximum-percentage",
+          "collector-to-tank-switching-ratio"
+        ]
+      },
+      {
+        "changed_cell": "mixer-temperature",
+        "before": [
+          40,
+          40,
+          40,
+          40,
+          40,
+          40,
+          45,
+          0,
+          50,
+          50
+        ],
+        "after": [
+          40,
+          62,
+          40,
+          40,
+          40,
+          40,
+          45,
+          0,
+          50,
+          50
+        ],
+        "roles": [
+          "common-sensor-temperature",
+          "flow-temperature",
+          "tank-temperature",
+          "desired-common-sensor-temperature",
+          "desired-flow-temperature",
+          "desired-tank-temperature",
+          "unsuppressed-demand",
+          "suppressed-zero",
+          "temperature-to-maximum-percentage",
+          "collector-to-tank-switching-ratio"
+        ]
+      },
+      {
+        "changed_cell": "dhw-temperature",
+        "before": [
+          40,
+          40,
+          40,
+          40,
+          40,
+          40,
+          45,
+          0,
+          50,
+          50
+        ],
+        "after": [
+          40,
+          40,
+          63,
+          40,
+          40,
+          40,
+          45,
+          0,
+          50,
+          50
+        ],
+        "roles": [
+          "common-sensor-temperature",
+          "flow-temperature",
+          "tank-temperature",
+          "desired-common-sensor-temperature",
+          "desired-flow-temperature",
+          "desired-tank-temperature",
+          "unsuppressed-demand",
+          "suppressed-zero",
+          "temperature-to-maximum-percentage",
+          "collector-to-tank-switching-ratio"
+        ]
+      },
+      {
+        "changed_cell": "burner-desired",
+        "before": [
+          40,
+          40,
+          40,
+          40,
+          40,
+          40,
+          45,
+          0,
+          50,
+          50
+        ],
+        "after": [
+          40,
+          40,
+          40,
+          64,
+          40,
+          40,
+          45,
+          0,
+          50,
+          50
+        ],
+        "roles": [
+          "common-sensor-temperature",
+          "flow-temperature",
+          "tank-temperature",
+          "desired-common-sensor-temperature",
+          "desired-flow-temperature",
+          "desired-tank-temperature",
+          "unsuppressed-demand",
+          "suppressed-zero",
+          "temperature-to-maximum-percentage",
+          "collector-to-tank-switching-ratio"
+        ]
+      },
+      {
+        "changed_cell": "mixer-desired",
+        "before": [
+          40,
+          40,
+          40,
+          40,
+          40,
+          40,
+          45,
+          0,
+          50,
+          50
+        ],
+        "after": [
+          40,
+          40,
+          40,
+          40,
+          65,
+          40,
+          45,
+          0,
+          50,
+          50
+        ],
+        "roles": [
+          "common-sensor-temperature",
+          "flow-temperature",
+          "tank-temperature",
+          "desired-common-sensor-temperature",
+          "desired-flow-temperature",
+          "desired-tank-temperature",
+          "unsuppressed-demand",
+          "suppressed-zero",
+          "temperature-to-maximum-percentage",
+          "collector-to-tank-switching-ratio"
+        ]
+      },
+      {
+        "changed_cell": "dhw-desired",
+        "before": [
+          40,
+          40,
+          40,
+          40,
+          40,
+          40,
+          45,
+          0,
+          50,
+          50
+        ],
+        "after": [
+          40,
+          40,
+          40,
+          40,
+          40,
+          66,
+          45,
+          0,
+          50,
+          50
+        ],
+        "roles": [
+          "common-sensor-temperature",
+          "flow-temperature",
+          "tank-temperature",
+          "desired-common-sensor-temperature",
+          "desired-flow-temperature",
+          "desired-tank-temperature",
+          "unsuppressed-demand",
+          "suppressed-zero",
+          "temperature-to-maximum-percentage",
+          "collector-to-tank-switching-ratio"
+        ]
+      },
+      {
+        "changed_cell": "unsuppressed-demand",
+        "before": [
+          40,
+          40,
+          40,
+          40,
+          40,
+          40,
+          45,
+          0,
+          50,
+          50
+        ],
+        "after": [
+          40,
+          40,
+          40,
+          40,
+          40,
+          40,
+          67,
+          0,
+          50,
+          50
+        ],
+        "roles": [
+          "common-sensor-temperature",
+          "flow-temperature",
+          "tank-temperature",
+          "desired-common-sensor-temperature",
+          "desired-flow-temperature",
+          "desired-tank-temperature",
+          "unsuppressed-demand",
+          "suppressed-zero",
+          "temperature-to-maximum-percentage",
+          "collector-to-tank-switching-ratio"
+        ]
+      },
+      {
+        "changed_cell": "suppressed-flow",
+        "before": [
+          40,
+          40,
+          40,
+          40,
+          40,
+          40,
+          45,
+          0,
+          50,
+          50
+        ],
+        "after": [
+          40,
+          40,
+          40,
+          40,
+          40,
+          40,
+          45,
+          68,
+          50,
+          50
+        ],
+        "roles": [
+          "common-sensor-temperature",
+          "flow-temperature",
+          "tank-temperature",
+          "desired-common-sensor-temperature",
+          "desired-flow-temperature",
+          "desired-tank-temperature",
+          "unsuppressed-demand",
+          "suppressed-zero",
+          "temperature-to-maximum-percentage",
+          "collector-to-tank-switching-ratio"
+        ]
+      },
+      {
+        "changed_cell": "tank-percentage",
+        "before": [
+          40,
+          40,
+          40,
+          40,
+          40,
+          40,
+          45,
+          0,
+          50,
+          50
+        ],
+        "after": [
+          40,
+          40,
+          40,
+          40,
+          40,
+          40,
+          45,
+          0,
+          69,
+          50
+        ],
+        "roles": [
+          "common-sensor-temperature",
+          "flow-temperature",
+          "tank-temperature",
+          "desired-common-sensor-temperature",
+          "desired-flow-temperature",
+          "desired-tank-temperature",
+          "unsuppressed-demand",
+          "suppressed-zero",
+          "temperature-to-maximum-percentage",
+          "collector-to-tank-switching-ratio"
+        ]
+      },
+      {
+        "changed_cell": "switching-ratio",
+        "before": [
+          40,
+          40,
+          40,
+          40,
+          40,
+          40,
+          45,
+          0,
+          50,
+          50
+        ],
+        "after": [
+          40,
+          40,
+          40,
+          40,
+          40,
+          40,
+          45,
+          0,
+          50,
+          70
+        ],
+        "roles": [
+          "common-sensor-temperature",
+          "flow-temperature",
+          "tank-temperature",
+          "desired-common-sensor-temperature",
+          "desired-flow-temperature",
+          "desired-tank-temperature",
+          "unsuppressed-demand",
+          "suppressed-zero",
+          "temperature-to-maximum-percentage",
+          "collector-to-tank-switching-ratio"
+        ]
+      }
+    ],
+    "dhw_request": [
+      {
+        "operation": "0D",
+        "context": "dhw",
+        "raw_token": 1,
+        "role": "dhw-circuit-request",
+        "grade": "Hypothesis"
+      },
+      {
+        "operation": "0D",
+        "context": "mixer",
+        "raw_token": 1,
+        "role": "no-dhw-interpretation",
+        "grade": "Hypothesis"
+      },
+      {
+        "operation": "0D",
+        "context": "burner",
+        "raw_token": 1,
+        "role": "no-dhw-interpretation",
+        "grade": "Hypothesis"
+      }
+    ],
+    "drying_day": [
+      {
+        "operation": "01",
+        "raw_token": 0,
+        "nonzero_program_indication": false,
+        "grade": "Hypothesis"
+      },
+      {
+        "operation": "01",
+        "raw_token": 1,
+        "nonzero_program_indication": true,
+        "grade": "Hypothesis"
+      }
+    ],
+    "outside_average": {
+      "operation": "33",
+      "raw_token": 17,
+      "configured_correction_token": 3,
+      "correction_included": true,
+      "arithmetic": "Unknown",
+      "grade": "Hypothesis"
+    },
+    "support_generation": {
+      "operation": "0D",
+      "direction": "request",
+      "support_token": 1,
+      "support_bit": 0,
+      "support_role": "system-cooling-support",
+      "generation_token": 7,
+      "generation_role": "system-generation",
+      "generation_value_meaning": "Unknown",
+      "different_byte": true,
+      "grade": "Hypothesis"
+    },
+    "support_generation_independence": [
+      {
+        "support_token": 0,
+        "generation_token": 7
+      },
+      {
+        "support_token": 1,
+        "generation_token": 8
+      }
+    ],
+    "scopes": [
+      {
+        "operation": "0B",
+        "field": "reload-delay",
+        "context": "solar-storage",
+        "role": "solar-storage-charging",
+        "raw_token": 2,
+        "grade": "Hypothesis"
+      },
+      {
+        "operation": "0B",
+        "field": "parallel-tank-filling",
+        "context": "mixer",
+        "role": "global-mixer-circuits",
+        "raw_token": 1,
+        "grade": "Hypothesis"
+      },
+      {
+        "operation": "2D",
+        "field": "room-setpoint",
+        "context": "inverter-indoor",
+        "role": "indoor-room-setpoint",
+        "raw_token": 21,
+        "grade": "Hypothesis"
+      },
+      {
+        "operation": "2D",
+        "field": "room-temperature",
+        "context": "inverter-indoor",
+        "role": "regulation-input",
+        "raw_token": 20,
+        "grade": "Hypothesis"
+      },
+      {
+        "operation": "21",
+        "field": "maximum-solar-temperature",
+        "context": "solar",
+        "role": "all-solar-circuits",
+        "raw_token": 60,
+        "grade": "Hypothesis"
+      }
+    ],
+    "raw_fallback": {
+      "operation": "0D",
+      "field": "circuit-temperature",
+      "context": "unclassified",
+      "raw_token": 40,
+      "role": "Unknown",
+      "grade": "Unknown"
+    },
+    "scope_independence": [
+      {
+        "changed_field": "reload-delay",
+        "before": [
+          2,
+          1,
+          21,
+          20,
+          60
+        ],
+        "after": [
+          70,
+          1,
+          21,
+          20,
+          60
+        ],
+        "roles": [
+          "solar-storage-charging",
+          "global-mixer-circuits",
+          "indoor-room-setpoint",
+          "regulation-input",
+          "all-solar-circuits"
+        ]
+      },
+      {
+        "changed_field": "parallel-tank-filling",
+        "before": [
+          2,
+          1,
+          21,
+          20,
+          60
+        ],
+        "after": [
+          2,
+          71,
+          21,
+          20,
+          60
+        ],
+        "roles": [
+          "solar-storage-charging",
+          "global-mixer-circuits",
+          "indoor-room-setpoint",
+          "regulation-input",
+          "all-solar-circuits"
+        ]
+      },
+      {
+        "changed_field": "room-setpoint",
+        "before": [
+          2,
+          1,
+          21,
+          20,
+          60
+        ],
+        "after": [
+          2,
+          1,
+          72,
+          20,
+          60
+        ],
+        "roles": [
+          "solar-storage-charging",
+          "global-mixer-circuits",
+          "indoor-room-setpoint",
+          "regulation-input",
+          "all-solar-circuits"
+        ]
+      },
+      {
+        "changed_field": "room-temperature",
+        "before": [
+          2,
+          1,
+          21,
+          20,
+          60
+        ],
+        "after": [
+          2,
+          1,
+          21,
+          73,
+          60
+        ],
+        "roles": [
+          "solar-storage-charging",
+          "global-mixer-circuits",
+          "indoor-room-setpoint",
+          "regulation-input",
+          "all-solar-circuits"
+        ]
+      },
+      {
+        "changed_field": "maximum-solar-temperature",
+        "before": [
+          2,
+          1,
+          21,
+          20,
+          60
+        ],
+        "after": [
+          2,
+          1,
+          21,
+          20,
+          74
+        ],
+        "roles": [
+          "solar-storage-charging",
+          "global-mixer-circuits",
+          "indoor-room-setpoint",
+          "regulation-input",
+          "all-solar-circuits"
+        ]
+      }
+    ],
+    "outside_average_independence": [
+      {
+        "raw_token": 18,
+        "configured_correction_token": 3,
+        "correction_included": true,
+        "arithmetic": "Unknown"
+      },
+      {
+        "raw_token": 17,
+        "configured_correction_token": 4,
+        "correction_included": true,
+        "arithmetic": "Unknown"
+      }
+    ]
+  }
+}
