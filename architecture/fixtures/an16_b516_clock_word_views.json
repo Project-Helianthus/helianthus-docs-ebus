@@ -1,0 +1,83 @@
+{
+  "policy": {
+    "context_fields": ["family", "variant", "operation", "direction"],
+    "families": ["synthetic-display-family-a", "synthetic-display-family-b"],
+    "variants": ["synthetic-variant-a", "synthetic-variant-b"],
+    "operations": ["OP08", "OP0D"],
+    "direction": "positive",
+    "clock_order": ["minute", "hour", "day", "month", "year"],
+    "seconds_component": false,
+    "century": false,
+    "timezone": false,
+    "implicit_date_completion": false,
+    "replacement_byte": 255,
+    "replacement_before_packed_decimal": true,
+    "both_nibbles_required": true,
+    "numeric_min": 0,
+    "numeric_max": 99,
+    "clock_numeric_of_raw_12": 12,
+    "plain_byte_value_of_raw_12": 18,
+    "calendar_validator": false,
+    "setpoint_divisor": 2,
+    "setpoint_unit": "Celsius",
+    "missing_setpoint_is_zero": false,
+    "message_count": 5,
+    "word_count": 4,
+    "word_codec": "uint16le",
+    "word_unit": null,
+    "word_scale": 1,
+    "word_sentinel": false,
+    "word_positions": "Unknown",
+    "failed_cell_discards_neighbors": false,
+    "native_support": "Unknown",
+    "physical_adaptation": "Unknown",
+    "interpretation_grade": "Hypothesis",
+    "software_contract": "Proven"
+  },
+  "identity_axes": {
+    "families": ["synthetic-display-family-a", "synthetic-display-family-b", "unknown-family"],
+    "variants": ["synthetic-variant-a", "synthetic-variant-b", "unknown-variant"],
+    "operations": ["OP08", "OP0D", "OP10"],
+    "directions": ["positive", "request"]
+  },
+  "clock_rows": [
+    {"case": "canonical", "cell": "minute", "raw": "12", "state": "present_numeric", "numeric": 12},
+    {"case": "canonical", "cell": "hour", "raw": "23", "state": "present_numeric", "numeric": 23},
+    {"case": "canonical", "cell": "day", "raw": "31", "state": "present_numeric", "numeric": 31},
+    {"case": "canonical", "cell": "month", "raw": "12", "state": "present_numeric", "numeric": 12},
+    {"case": "canonical", "cell": "year", "raw": "99", "state": "present_numeric", "numeric": 99},
+    {"case": "replacement", "cell": "minute", "raw": "FF", "state": "replacement", "numeric": null},
+    {"case": "malformed_fa", "cell": "minute", "raw": "FA", "state": "malformed_decimal", "numeric": null},
+    {"case": "malformed_low", "cell": "minute", "raw": "1A", "state": "malformed_decimal", "numeric": null},
+    {"case": "malformed_high", "cell": "minute", "raw": "A0", "state": "malformed_decimal", "numeric": null},
+    {"case": "missing_month", "cell": "month", "raw": "missing", "state": "missing", "numeric": null},
+    {"case": "failed_month", "cell": "month", "raw": "3112", "state": "failed", "numeric": null}
+  ],
+  "neighbor_rows": [
+    {"case": "missing_month", "minute": "12", "hour": "23", "day": "31", "month": "missing", "year": "99"},
+    {"case": "failed_month", "minute": "12", "hour": "23", "day": "31", "month": "failed", "year": "99"}
+  ],
+  "setpoint_rows": [
+    {"case": "present_half", "raw": "01", "state": "present_numeric", "numeric": 0.5, "unit": "Celsius"},
+    {"case": "present_zero", "raw": "00", "state": "present_numeric", "numeric": 0.0, "unit": "Celsius"},
+    {"case": "missing", "raw": "missing", "state": "missing", "numeric": null, "unit": "none"}
+  ],
+  "message_rows": [
+    {"index": 0, "raw": "10", "state": "present_raw"},
+    {"index": 1, "raw": "21", "state": "present_raw"},
+    {"index": 2, "raw": "32", "state": "present_raw"},
+    {"index": 3, "raw": "43", "state": "present_raw"},
+    {"index": 4, "raw": "54", "state": "present_raw"}
+  ],
+  "word_rows": [
+    {"index": 0, "raw": "00 00", "state": "present_numeric", "numeric": 0, "unit": "none", "sentinel": false},
+    {"index": 1, "raw": "01 00", "state": "present_numeric", "numeric": 1, "unit": "none", "sentinel": false},
+    {"index": 2, "raw": "00 01", "state": "present_numeric", "numeric": 256, "unit": "none", "sentinel": false},
+    {"index": 3, "raw": "FF FF", "state": "present_numeric", "numeric": 65535, "unit": "none", "sentinel": false}
+  ],
+  "operation_rows": [
+    {"operation": "OP08", "branch": "OP08", "clock": "admitted", "words": "withheld"},
+    {"operation": "OP0D", "branch": "OP0D", "clock": "withheld", "words": "admitted"},
+    {"operation": "OP10", "branch": "none", "clock": "withheld", "words": "withheld"}
+  ]
+}
