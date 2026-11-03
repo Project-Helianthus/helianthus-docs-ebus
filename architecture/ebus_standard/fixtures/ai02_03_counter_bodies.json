@@ -1,0 +1,418 @@
+{
+  "evidence": "synthetic only",
+  "fields": [
+    {
+      "pb": "03",
+      "sb": "04",
+      "order": 0,
+      "name": "decimal_1s",
+      "width_bits": 8,
+      "type": "unsigned8",
+      "minimum": 0,
+      "maximum": 99,
+      "default": 0,
+      "conversion": "identity",
+      "unit": "raw",
+      "encoding": null,
+      "native_position": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "pb": "03",
+      "sb": "04",
+      "order": 1,
+      "name": "decimal_100s",
+      "width_bits": 8,
+      "type": "unsigned8",
+      "minimum": 0,
+      "maximum": 99,
+      "default": 0,
+      "conversion": "identity",
+      "unit": "raw",
+      "encoding": null,
+      "native_position": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "pb": "03",
+      "sb": "04",
+      "order": 2,
+      "name": "decimal_10000s",
+      "width_bits": 8,
+      "type": "unsigned8",
+      "minimum": 0,
+      "maximum": 99,
+      "default": 0,
+      "conversion": "identity",
+      "unit": "raw",
+      "encoding": null,
+      "native_position": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "pb": "03",
+      "sb": "05",
+      "order": 0,
+      "name": "minutes",
+      "width_bits": 8,
+      "type": "unsigned8",
+      "minimum": 0,
+      "maximum": 59,
+      "default": null,
+      "conversion": "identity",
+      "unit": "raw",
+      "encoding": null,
+      "native_position": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "pb": "03",
+      "sb": "05",
+      "order": 1,
+      "name": "hours_100s",
+      "width_bits": 8,
+      "type": "unsigned8",
+      "minimum": 0,
+      "maximum": 59,
+      "default": null,
+      "conversion": "identity",
+      "unit": "raw",
+      "encoding": null,
+      "native_position": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "pb": "03",
+      "sb": "05",
+      "order": 2,
+      "name": "hours_10000s",
+      "width_bits": 8,
+      "type": "unsigned8",
+      "minimum": 0,
+      "maximum": 59,
+      "default": null,
+      "conversion": "identity",
+      "unit": "raw",
+      "encoding": null,
+      "native_position": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "pb": "03",
+      "sb": "06",
+      "order": 0,
+      "name": "minutes",
+      "width_bits": 8,
+      "type": "unsigned8",
+      "minimum": 0,
+      "maximum": 59,
+      "default": null,
+      "conversion": "identity",
+      "unit": "raw",
+      "encoding": null,
+      "native_position": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "pb": "03",
+      "sb": "06",
+      "order": 1,
+      "name": "hours_1s",
+      "width_bits": 8,
+      "type": "unsigned8",
+      "minimum": 0,
+      "maximum": 99,
+      "default": null,
+      "conversion": "identity",
+      "unit": "raw",
+      "encoding": null,
+      "native_position": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "pb": "03",
+      "sb": "06",
+      "order": 2,
+      "name": "hours_100s",
+      "width_bits": 8,
+      "type": "unsigned8",
+      "minimum": 0,
+      "maximum": 99,
+      "default": null,
+      "conversion": "identity",
+      "unit": "raw",
+      "encoding": null,
+      "native_position": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "pb": "03",
+      "sb": "06",
+      "order": 3,
+      "name": "hours_10000s",
+      "width_bits": 8,
+      "type": "unsigned8",
+      "minimum": 0,
+      "maximum": 99,
+      "default": null,
+      "conversion": "identity",
+      "unit": "raw",
+      "encoding": null,
+      "native_position": null,
+      "grade": "Hypothesis"
+    }
+  ],
+  "variants": [
+    {
+      "pb": "03",
+      "sb": "04",
+      "variant": "candidate-request",
+      "body_state": "declared",
+      "field_count": 3,
+      "constructor": false,
+      "callable": false,
+      "physical_side": "Unknown",
+      "qualification": "Unknown",
+      "grade": "Hypothesis"
+    },
+    {
+      "pb": "03",
+      "sb": "04",
+      "variant": "standard-response",
+      "body_state": "Unknown",
+      "field_count": null,
+      "constructor": false,
+      "callable": false,
+      "physical_side": "Unknown",
+      "qualification": "Unknown",
+      "grade": "Unknown"
+    },
+    {
+      "pb": "03",
+      "sb": "05",
+      "variant": "candidate-request",
+      "body_state": "declared",
+      "field_count": 3,
+      "constructor": false,
+      "callable": false,
+      "physical_side": "Unknown",
+      "qualification": "Unknown",
+      "grade": "Hypothesis"
+    },
+    {
+      "pb": "03",
+      "sb": "05",
+      "variant": "standard-response",
+      "body_state": "Unknown",
+      "field_count": null,
+      "constructor": false,
+      "callable": false,
+      "physical_side": "Unknown",
+      "qualification": "Unknown",
+      "grade": "Unknown"
+    },
+    {
+      "pb": "03",
+      "sb": "06",
+      "variant": "candidate-request",
+      "body_state": "declared",
+      "field_count": 4,
+      "constructor": false,
+      "callable": false,
+      "physical_side": "Unknown",
+      "qualification": "Unknown",
+      "grade": "Hypothesis"
+    },
+    {
+      "pb": "03",
+      "sb": "06",
+      "variant": "standard-response",
+      "body_state": "Unknown",
+      "field_count": null,
+      "constructor": false,
+      "callable": false,
+      "physical_side": "Unknown",
+      "qualification": "Unknown",
+      "grade": "Unknown"
+    },
+    {
+      "pb": "03",
+      "sb": "07",
+      "variant": "candidate-request",
+      "body_state": "Unknown",
+      "field_count": null,
+      "constructor": false,
+      "callable": false,
+      "physical_side": "Unknown",
+      "qualification": "Unknown",
+      "grade": "Unknown"
+    },
+    {
+      "pb": "03",
+      "sb": "07",
+      "variant": "standard-response",
+      "body_state": "Unknown",
+      "field_count": null,
+      "constructor": false,
+      "callable": false,
+      "physical_side": "Unknown",
+      "qualification": "Unknown",
+      "grade": "Unknown"
+    },
+    {
+      "pb": "03",
+      "sb": "08",
+      "variant": "candidate-request",
+      "body_state": "Unknown",
+      "field_count": null,
+      "constructor": false,
+      "callable": false,
+      "physical_side": "Unknown",
+      "qualification": "Unknown",
+      "grade": "Unknown"
+    },
+    {
+      "pb": "03",
+      "sb": "08",
+      "variant": "standard-response",
+      "body_state": "Unknown",
+      "field_count": null,
+      "constructor": false,
+      "callable": false,
+      "physical_side": "Unknown",
+      "qualification": "Unknown",
+      "grade": "Unknown"
+    },
+    {
+      "pb": "03",
+      "sb": "10",
+      "variant": "candidate-request",
+      "body_state": "Unknown",
+      "field_count": null,
+      "constructor": false,
+      "callable": false,
+      "physical_side": "Unknown",
+      "qualification": "Unknown",
+      "grade": "Unknown"
+    },
+    {
+      "pb": "03",
+      "sb": "10",
+      "variant": "standard-response",
+      "body_state": "Unknown",
+      "field_count": null,
+      "constructor": false,
+      "callable": false,
+      "physical_side": "Unknown",
+      "qualification": "Unknown",
+      "grade": "Unknown"
+    }
+  ],
+  "cases": [
+    {
+      "id": "decimal",
+      "pb": "03",
+      "sb": "04",
+      "raw": [
+        12,
+        34,
+        56
+      ],
+      "accepted": true,
+      "illustrative_count": 563412
+    },
+    {
+      "id": "raw99",
+      "pb": "03",
+      "sb": "04",
+      "raw": [
+        99,
+        0,
+        0
+      ],
+      "accepted": true,
+      "illustrative_count": 99
+    },
+    {
+      "id": "middle60",
+      "pb": "03",
+      "sb": "05",
+      "raw": [
+        1,
+        60,
+        2
+      ],
+      "accepted": false,
+      "illustrative_count": null
+    },
+    {
+      "id": "three",
+      "pb": "03",
+      "sb": "05",
+      "raw": [
+        1,
+        2,
+        3
+      ],
+      "accepted": true,
+      "illustrative_count": null
+    },
+    {
+      "id": "four",
+      "pb": "03",
+      "sb": "06",
+      "raw": [
+        59,
+        99,
+        99,
+        99
+      ],
+      "accepted": true,
+      "illustrative_count": null
+    },
+    {
+      "id": "incomplete",
+      "pb": "03",
+      "sb": "06",
+      "raw": [
+        59,
+        99,
+        99
+      ],
+      "accepted": false,
+      "illustrative_count": null
+    },
+    {
+      "id": "unknown",
+      "pb": "03",
+      "sb": "07",
+      "raw": [],
+      "accepted": false,
+      "illustrative_count": null
+    }
+  ],
+  "encoding_controls": [
+    {},
+    {
+      "encoding": "raw"
+    }
+  ],
+  "position_controls": [
+    {},
+    {
+      "native_position": 0
+    }
+  ],
+  "positive_alternatives": [
+    {
+      "name": "body-positive",
+      "pebus_relevant": true,
+      "physical_reply": "Unknown"
+    },
+    {
+      "name": "prefix-only-positive",
+      "pebus_relevant": true,
+      "physical_reply": "Unknown"
+    }
+  ]
+}
