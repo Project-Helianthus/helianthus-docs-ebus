@@ -1,0 +1,437 @@
+{
+  "policy": {
+    "context_fields": [
+      "family",
+      "variant",
+      "operation",
+      "direction",
+      "selector",
+      "form",
+      "candidate_grade"
+    ],
+    "families": [
+      "synthetic-radio-family-a",
+      "synthetic-radio-family-b"
+    ],
+    "variants": [
+      "synthetic-variant-a",
+      "synthetic-variant-b"
+    ],
+    "operation": "B525",
+    "direction": "request",
+    "form": "isolated_values",
+    "selectors": [
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23
+    ],
+    "width": 32,
+    "codec": "signed8",
+    "grade": "Hypothesis",
+    "positive_values": false,
+    "frequency_mapping": false,
+    "fill_missing": false,
+    "complete_distinct_blocks": 8
+  },
+  "blocks": [
+    {
+      "name": "block_10",
+      "context": {
+        "family": "synthetic-radio-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "B525",
+        "direction": "request",
+        "selector": 16,
+        "form": "isolated_values",
+        "candidate_grade": "Hypothesis"
+      },
+      "raw_hex": "007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff",
+      "expected": {
+        "first": 0,
+        "last": 31,
+        "count": 32,
+        "grade": "Hypothesis",
+        "state": "exact",
+        "valid": true,
+        "remainder_hex": ""
+      }
+    },
+    {
+      "name": "block_11",
+      "context": {
+        "family": "synthetic-radio-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "B525",
+        "direction": "request",
+        "selector": 17,
+        "form": "isolated_values",
+        "candidate_grade": "Hypothesis"
+      },
+      "raw_hex": "007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff",
+      "expected": {
+        "first": 32,
+        "last": 63,
+        "count": 32,
+        "grade": "Hypothesis",
+        "state": "exact",
+        "valid": true,
+        "remainder_hex": ""
+      }
+    },
+    {
+      "name": "block_12",
+      "context": {
+        "family": "synthetic-radio-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "B525",
+        "direction": "request",
+        "selector": 18,
+        "form": "isolated_values",
+        "candidate_grade": "Hypothesis"
+      },
+      "raw_hex": "007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff",
+      "expected": {
+        "first": 64,
+        "last": 95,
+        "count": 32,
+        "grade": "Hypothesis",
+        "state": "exact",
+        "valid": true,
+        "remainder_hex": ""
+      }
+    },
+    {
+      "name": "block_13",
+      "context": {
+        "family": "synthetic-radio-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "B525",
+        "direction": "request",
+        "selector": 19,
+        "form": "isolated_values",
+        "candidate_grade": "Hypothesis"
+      },
+      "raw_hex": "007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff",
+      "expected": {
+        "first": 96,
+        "last": 127,
+        "count": 32,
+        "grade": "Hypothesis",
+        "state": "exact",
+        "valid": true,
+        "remainder_hex": ""
+      }
+    },
+    {
+      "name": "block_14",
+      "context": {
+        "family": "synthetic-radio-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "B525",
+        "direction": "request",
+        "selector": 20,
+        "form": "isolated_values",
+        "candidate_grade": "Hypothesis"
+      },
+      "raw_hex": "007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff",
+      "expected": {
+        "first": 128,
+        "last": 159,
+        "count": 32,
+        "grade": "Hypothesis",
+        "state": "exact",
+        "valid": true,
+        "remainder_hex": ""
+      }
+    },
+    {
+      "name": "block_15",
+      "context": {
+        "family": "synthetic-radio-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "B525",
+        "direction": "request",
+        "selector": 21,
+        "form": "isolated_values",
+        "candidate_grade": "Hypothesis"
+      },
+      "raw_hex": "007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff",
+      "expected": {
+        "first": 160,
+        "last": 191,
+        "count": 32,
+        "grade": "Hypothesis",
+        "state": "exact",
+        "valid": true,
+        "remainder_hex": ""
+      }
+    },
+    {
+      "name": "block_16",
+      "context": {
+        "family": "synthetic-radio-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "B525",
+        "direction": "request",
+        "selector": 22,
+        "form": "isolated_values",
+        "candidate_grade": "Hypothesis"
+      },
+      "raw_hex": "007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff",
+      "expected": {
+        "first": 192,
+        "last": 223,
+        "count": 32,
+        "grade": "Hypothesis",
+        "state": "exact",
+        "valid": true,
+        "remainder_hex": ""
+      }
+    },
+    {
+      "name": "block_17",
+      "context": {
+        "family": "synthetic-radio-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "B525",
+        "direction": "request",
+        "selector": 23,
+        "form": "isolated_values",
+        "candidate_grade": "Hypothesis"
+      },
+      "raw_hex": "007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff",
+      "expected": {
+        "first": 224,
+        "last": 255,
+        "count": 32,
+        "grade": "Hypothesis",
+        "state": "exact",
+        "valid": true,
+        "remainder_hex": ""
+      }
+    }
+  ],
+  "scenarios": [
+    {
+      "name": "short",
+      "patch": {},
+      "raw_hex": "007f80ff",
+      "expected": {
+        "count": 4,
+        "state": "short",
+        "valid": false,
+        "remainder_hex": "",
+        "grade": "Hypothesis"
+      }
+    },
+    {
+      "name": "extra",
+      "patch": {},
+      "raw_hex": "007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff80ff",
+      "expected": {
+        "count": 32,
+        "state": "extra",
+        "valid": false,
+        "remainder_hex": "80ff",
+        "grade": "Hypothesis"
+      }
+    },
+    {
+      "name": "empty_vector",
+      "patch": {},
+      "raw_hex": "",
+      "expected": {
+        "count": 0,
+        "state": "short",
+        "valid": false,
+        "remainder_hex": "",
+        "grade": "Hypothesis"
+      }
+    },
+    {
+      "name": "positive",
+      "patch": {
+        "form": "positive_prefix"
+      },
+      "raw_hex": "007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff",
+      "expected": {
+        "count": 0,
+        "state": "raw_only",
+        "valid": false,
+        "remainder_hex": "007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff",
+        "grade": null
+      }
+    },
+    {
+      "name": "positive_direction",
+      "patch": {
+        "direction": "positive"
+      },
+      "raw_hex": "007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff",
+      "expected": {
+        "count": 0,
+        "state": "raw_only",
+        "valid": false,
+        "remainder_hex": "007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff",
+        "grade": null
+      }
+    },
+    {
+      "name": "unknown_form",
+      "patch": {
+        "form": "unknown"
+      },
+      "raw_hex": "007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff",
+      "expected": {
+        "count": 0,
+        "state": "raw_only",
+        "valid": false,
+        "remainder_hex": "007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff",
+        "grade": null
+      }
+    },
+    {
+      "name": "unknown_selector",
+      "patch": {
+        "selector": 24
+      },
+      "raw_hex": "007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff",
+      "expected": {
+        "count": 0,
+        "state": "raw_only",
+        "valid": false,
+        "remainder_hex": "007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff",
+        "grade": null
+      }
+    },
+    {
+      "name": "unknown_family",
+      "patch": {
+        "family": "unknown"
+      },
+      "raw_hex": "007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff",
+      "expected": {
+        "count": 0,
+        "state": "raw_only",
+        "valid": false,
+        "remainder_hex": "007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff",
+        "grade": null
+      }
+    },
+    {
+      "name": "unknown_grade",
+      "patch": {
+        "candidate_grade": "Unknown"
+      },
+      "raw_hex": "007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff",
+      "expected": {
+        "count": 0,
+        "state": "raw_only",
+        "valid": false,
+        "remainder_hex": "007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff",
+        "grade": null
+      }
+    },
+    {
+      "name": "proven_input",
+      "patch": {
+        "candidate_grade": "Proven"
+      },
+      "raw_hex": "007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff007f80ff",
+      "expected": {
+        "count": 32,
+        "state": "exact",
+        "valid": true,
+        "remainder_hex": "",
+        "grade": "Hypothesis"
+      }
+    }
+  ],
+  "joins": [
+    {
+      "name": "all_reversed",
+      "blocks": 8,
+      "indices": 256,
+      "absent": 0,
+      "accepted": true,
+      "complete": true
+    },
+    {
+      "name": "missing_middle",
+      "blocks": 7,
+      "indices": 224,
+      "absent": 32,
+      "accepted": true,
+      "complete": false
+    },
+    {
+      "name": "short_last",
+      "blocks": 8,
+      "indices": 228,
+      "absent": 28,
+      "accepted": true,
+      "complete": false
+    },
+    {
+      "name": "extra_last",
+      "blocks": 8,
+      "indices": 256,
+      "absent": 0,
+      "accepted": true,
+      "complete": false
+    },
+    {
+      "name": "conflicting_duplicate",
+      "blocks": 9,
+      "indices": 0,
+      "absent": 256,
+      "accepted": false,
+      "complete": false
+    },
+    {
+      "name": "cross_family",
+      "blocks": 8,
+      "indices": 0,
+      "absent": 256,
+      "accepted": false,
+      "complete": false
+    },
+    {
+      "name": "cross_variant",
+      "blocks": 8,
+      "indices": 0,
+      "absent": 256,
+      "accepted": false,
+      "complete": false
+    },
+    {
+      "name": "identical_duplicate",
+      "blocks": 9,
+      "indices": 256,
+      "absent": 0,
+      "accepted": true,
+      "complete": true
+    },
+    {
+      "name": "positive_only",
+      "blocks": 1,
+      "indices": 0,
+      "absent": 256,
+      "accepted": true,
+      "complete": false
+    },
+    {
+      "name": "empty",
+      "blocks": 0,
+      "indices": 0,
+      "absent": 256,
+      "accepted": true,
+      "complete": false
+    }
+  ]
+}

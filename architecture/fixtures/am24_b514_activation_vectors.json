@@ -1,0 +1,17 @@
+{
+  "grade": "Hypothesis",
+  "qualification": "Unknown",
+  "identity": {"family": "vaillant", "variant": "B514", "direction": "positive"},
+  "operations": {"3": {"size": 10, "kind": "bit-vector"}, "4": {"size": 12, "kind": "scalar-vector"}},
+  "cases": [
+    {"id": "op03-empty", "operation": 3, "input": "", "present_mask": 0, "complete": false, "remainder": ""},
+    {"id": "op03-short-zero", "operation": 3, "input": "00", "present_mask": 1, "complete": false, "remainder": ""},
+    {"id": "op03-short-three", "operation": 3, "input": "8001ff", "present_mask": 7, "complete": false, "remainder": ""},
+    {"id": "op03-full", "operation": 3, "input": "01000000000000000080", "present_mask": 1023, "complete": true, "remainder": ""},
+    {"id": "op03-extra", "operation": 3, "input": "0100000000000000000080", "present_mask": 1023, "complete": false, "remainder": "80"},
+    {"id": "op04-short", "operation": 4, "input": "0003", "present_mask": 3, "complete": false, "remainder": ""},
+    {"id": "op04-full", "operation": 4, "input": "000380ff0102040810204055", "present_mask": 4095, "complete": true, "remainder": ""},
+    {"id": "op04-extra", "operation": 4, "input": "000380ff010204081020405500", "present_mask": 4095, "complete": false, "remainder": "00"},
+    {"id": "raw-only-operation", "operation": 5, "input": "0003", "present_mask": null, "complete": false, "remainder": ""}
+  ]
+}

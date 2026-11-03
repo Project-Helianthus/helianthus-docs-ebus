@@ -1,0 +1,81 @@
+{
+  "grade": "Hypothesis",
+  "physical_qualification": "Unknown",
+  "metadata": {
+    "primary": "0F",
+    "secondary": null,
+    "secondary_state": "absent",
+    "body": "Unknown",
+    "typed_positive_data": "absent"
+  },
+  "identity_cases": [
+    {
+      "primary": "0F",
+      "secondary": null,
+      "key": [
+        "0F",
+        null
+      ]
+    },
+    {
+      "primary": "0F",
+      "secondary": "00",
+      "key": [
+        "0F",
+        "00"
+      ]
+    },
+    {
+      "primary": "0F",
+      "secondary": "01",
+      "key": [
+        "0F",
+        "01"
+      ]
+    },
+    {
+      "primary": "0F",
+      "secondary": "02",
+      "key": [
+        "0F",
+        "02"
+      ]
+    },
+    {
+      "primary": "0F",
+      "secondary": "03",
+      "key": [
+        "0F",
+        "03"
+      ]
+    }
+  ],
+  "declaration": {
+    "raw_hex": "0F",
+    "declared_byte_count": 1,
+    "sendable": false
+  },
+  "positive": {
+    "grade": "Hypothesis",
+    "prefix": "PeBUS-relevant",
+    "typed_data": "absent",
+    "body": "Unknown",
+    "physical_nn": "Unknown",
+    "ack": "Unknown"
+  },
+  "opaque_reply": {
+    "raw_hex": "AA",
+    "raw_bytes": [
+      170
+    ],
+    "meaning": "Unknown",
+    "retained": true
+  },
+  "support": {
+    "grade": "Unknown",
+    "installed": "Unknown",
+    "effects": "Unknown",
+    "executable_support": false,
+    "active_testing_permission": false
+  }
+}

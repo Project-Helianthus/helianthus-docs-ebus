@@ -1,0 +1,1869 @@
+{
+  "policy": {
+    "helper": "ab17an17.view(context, body)",
+    "context_fields": [
+      "family",
+      "variant",
+      "operation",
+      "direction",
+      "declared_count",
+      "selection"
+    ],
+    "families": [
+      "synthetic-power-family-a",
+      "synthetic-power-family-b"
+    ],
+    "variants": [
+      "synthetic-variant-a",
+      "synthetic-variant-b"
+    ],
+    "operation": "OP14",
+    "direction": "positive",
+    "selection": "preselected",
+    "declared_count": "nonnegative integer",
+    "body": "owned available-byte slice",
+    "transport_adaptation": false,
+    "preselected_normalized_body": true,
+    "extent_rule": "both",
+    "status_end": 1,
+    "word0_end": 5,
+    "word1_end": 9,
+    "two_word_minimum": 9,
+    "accept_eight_byte_two_words": false,
+    "declared_count_alone": false,
+    "available_length_alone": false,
+    "capacity_is_extent": false,
+    "read_past_actual": false,
+    "status_label": null,
+    "status_converter": null,
+    "word0_codec": "float32le",
+    "word0_quantity": "candidate_power",
+    "word0_unit": null,
+    "word0_native_sign": "Unknown",
+    "asserts_watts": false,
+    "unsigned_power_conversion": false,
+    "word1_label": null,
+    "word1_type": "Unknown",
+    "word1_scale": "Unknown",
+    "word1_sign": "Unknown",
+    "word1_converter": null,
+    "partial_word0_without_word1": true,
+    "retain_nonfinite_raw": true,
+    "usable_finite_for_nonfinite": false,
+    "trailing_raw": true,
+    "complete_two_word_implies_complete_message": false,
+    "complete_two_word_implies_successful_response": false,
+    "complete_two_word_implies_presence": false,
+    "physical_reply_extent": "Unknown",
+    "support": "Unknown",
+    "cache_generation": "Unknown",
+    "cadence": "Unknown",
+    "runtime_publication": "Unknown",
+    "native_units": "Unknown",
+    "interpretation_grade": "Hypothesis",
+    "software_contract": "Proven",
+    "native_grade": "Unknown"
+  },
+  "identity_axes": {
+    "families": [
+      "synthetic-power-family-a",
+      "synthetic-power-family-b",
+      "unknown-family"
+    ],
+    "variants": [
+      "synthetic-variant-a",
+      "synthetic-variant-b",
+      "unknown-variant"
+    ],
+    "operations": [
+      "OP14",
+      "OP08",
+      "OP10"
+    ],
+    "directions": [
+      "positive",
+      "request"
+    ],
+    "selections": [
+      "preselected",
+      "missing"
+    ],
+    "declared_counts": [
+      0,
+      4,
+      8,
+      9,
+      10,
+      -1
+    ],
+    "available_lengths": [
+      0,
+      4,
+      8,
+      9,
+      10
+    ]
+  },
+  "extent_rows": [
+    {
+      "case": "both0",
+      "declared": 0,
+      "available": 0,
+      "status": false,
+      "word0": false,
+      "word1": false,
+      "complete_two_word": false
+    },
+    {
+      "case": "both1",
+      "declared": 1,
+      "available": 1,
+      "status": true,
+      "word0": false,
+      "word1": false,
+      "complete_two_word": false
+    },
+    {
+      "case": "both5",
+      "declared": 5,
+      "available": 5,
+      "status": true,
+      "word0": true,
+      "word1": false,
+      "complete_two_word": false
+    },
+    {
+      "case": "actual9_declared4",
+      "declared": 4,
+      "available": 9,
+      "status": true,
+      "word0": false,
+      "word1": false,
+      "complete_two_word": false
+    },
+    {
+      "case": "actual8_declared9",
+      "declared": 9,
+      "available": 8,
+      "status": true,
+      "word0": true,
+      "word1": false,
+      "complete_two_word": false
+    },
+    {
+      "case": "actual9_declared8",
+      "declared": 8,
+      "available": 9,
+      "status": true,
+      "word0": true,
+      "word1": false,
+      "complete_two_word": false
+    },
+    {
+      "case": "canonical",
+      "declared": 9,
+      "available": 9,
+      "status": true,
+      "word0": true,
+      "word1": true,
+      "complete_two_word": true
+    },
+    {
+      "case": "tail10",
+      "declared": 10,
+      "available": 10,
+      "status": true,
+      "word0": true,
+      "word1": true,
+      "complete_two_word": true
+    }
+  ],
+  "float_rows": [
+    {
+      "case": "canonical",
+      "raw": "00 00 80 3F",
+      "finite": true,
+      "numeric": "1"
+    },
+    {
+      "case": "zero",
+      "raw": "00 00 00 00",
+      "finite": true,
+      "numeric": "0"
+    },
+    {
+      "case": "negative_zero",
+      "raw": "00 00 00 80",
+      "finite": true,
+      "numeric": "-0"
+    },
+    {
+      "case": "negative",
+      "raw": "00 00 80 BF",
+      "finite": true,
+      "numeric": "-1"
+    },
+    {
+      "case": "nan",
+      "raw": "00 00 C0 7F",
+      "finite": false,
+      "numeric": "none"
+    },
+    {
+      "case": "payload_nan",
+      "raw": "01 00 80 7F",
+      "finite": false,
+      "numeric": "none"
+    },
+    {
+      "case": "positive_infinity",
+      "raw": "00 00 80 7F",
+      "finite": false,
+      "numeric": "none"
+    },
+    {
+      "case": "negative_infinity",
+      "raw": "00 00 80 FF",
+      "finite": false,
+      "numeric": "none"
+    }
+  ],
+  "grid": [
+    {
+      "declared": 0,
+      "available": 0,
+      "status_available": false,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 0,
+      "available": 1,
+      "status_available": false,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 0,
+      "available": 2,
+      "status_available": false,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 0,
+      "available": 3,
+      "status_available": false,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 0,
+      "available": 4,
+      "status_available": false,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 0,
+      "available": 5,
+      "status_available": false,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 0,
+      "available": 6,
+      "status_available": false,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 0,
+      "available": 7,
+      "status_available": false,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 0,
+      "available": 8,
+      "status_available": false,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 0,
+      "available": 9,
+      "status_available": false,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 0,
+      "available": 10,
+      "status_available": false,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 1,
+      "available": 0,
+      "status_available": false,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 1,
+      "available": 1,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 1,
+      "available": 2,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 1,
+      "available": 3,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 1,
+      "available": 4,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 1,
+      "available": 5,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 1,
+      "available": 6,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 1,
+      "available": 7,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 1,
+      "available": 8,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 1,
+      "available": 9,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 1,
+      "available": 10,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 2,
+      "available": 0,
+      "status_available": false,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 2,
+      "available": 1,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 2,
+      "available": 2,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 2,
+      "available": 3,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 2,
+      "available": 4,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 2,
+      "available": 5,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 2,
+      "available": 6,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 2,
+      "available": 7,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 2,
+      "available": 8,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 2,
+      "available": 9,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 2,
+      "available": 10,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 3,
+      "available": 0,
+      "status_available": false,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 3,
+      "available": 1,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 3,
+      "available": 2,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 3,
+      "available": 3,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 3,
+      "available": 4,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 3,
+      "available": 5,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 3,
+      "available": 6,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 3,
+      "available": 7,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 3,
+      "available": 8,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 3,
+      "available": 9,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 3,
+      "available": 10,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 4,
+      "available": 0,
+      "status_available": false,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 4,
+      "available": 1,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 4,
+      "available": 2,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 4,
+      "available": 3,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 4,
+      "available": 4,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 4,
+      "available": 5,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 4,
+      "available": 6,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 4,
+      "available": 7,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 4,
+      "available": 8,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 4,
+      "available": 9,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 4,
+      "available": 10,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 5,
+      "available": 0,
+      "status_available": false,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 5,
+      "available": 1,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 5,
+      "available": 2,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 5,
+      "available": 3,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 5,
+      "available": 4,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 5,
+      "available": 5,
+      "status_available": true,
+      "word0_available": true,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 5,
+      "available": 6,
+      "status_available": true,
+      "word0_available": true,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 5,
+      "available": 7,
+      "status_available": true,
+      "word0_available": true,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 5,
+      "available": 8,
+      "status_available": true,
+      "word0_available": true,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 5,
+      "available": 9,
+      "status_available": true,
+      "word0_available": true,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 5,
+      "available": 10,
+      "status_available": true,
+      "word0_available": true,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 6,
+      "available": 0,
+      "status_available": false,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 6,
+      "available": 1,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 6,
+      "available": 2,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 6,
+      "available": 3,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 6,
+      "available": 4,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 6,
+      "available": 5,
+      "status_available": true,
+      "word0_available": true,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 6,
+      "available": 6,
+      "status_available": true,
+      "word0_available": true,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 6,
+      "available": 7,
+      "status_available": true,
+      "word0_available": true,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 6,
+      "available": 8,
+      "status_available": true,
+      "word0_available": true,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 6,
+      "available": 9,
+      "status_available": true,
+      "word0_available": true,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 6,
+      "available": 10,
+      "status_available": true,
+      "word0_available": true,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 7,
+      "available": 0,
+      "status_available": false,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 7,
+      "available": 1,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 7,
+      "available": 2,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 7,
+      "available": 3,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 7,
+      "available": 4,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 7,
+      "available": 5,
+      "status_available": true,
+      "word0_available": true,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 7,
+      "available": 6,
+      "status_available": true,
+      "word0_available": true,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 7,
+      "available": 7,
+      "status_available": true,
+      "word0_available": true,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 7,
+      "available": 8,
+      "status_available": true,
+      "word0_available": true,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 7,
+      "available": 9,
+      "status_available": true,
+      "word0_available": true,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 7,
+      "available": 10,
+      "status_available": true,
+      "word0_available": true,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 8,
+      "available": 0,
+      "status_available": false,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 8,
+      "available": 1,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 8,
+      "available": 2,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 8,
+      "available": 3,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 8,
+      "available": 4,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 8,
+      "available": 5,
+      "status_available": true,
+      "word0_available": true,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 8,
+      "available": 6,
+      "status_available": true,
+      "word0_available": true,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 8,
+      "available": 7,
+      "status_available": true,
+      "word0_available": true,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 8,
+      "available": 8,
+      "status_available": true,
+      "word0_available": true,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 8,
+      "available": 9,
+      "status_available": true,
+      "word0_available": true,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 8,
+      "available": 10,
+      "status_available": true,
+      "word0_available": true,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 9,
+      "available": 0,
+      "status_available": false,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 9,
+      "available": 1,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 9,
+      "available": 2,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 9,
+      "available": 3,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 9,
+      "available": 4,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 9,
+      "available": 5,
+      "status_available": true,
+      "word0_available": true,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 9,
+      "available": 6,
+      "status_available": true,
+      "word0_available": true,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 9,
+      "available": 7,
+      "status_available": true,
+      "word0_available": true,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 9,
+      "available": 8,
+      "status_available": true,
+      "word0_available": true,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 9,
+      "available": 9,
+      "status_available": true,
+      "word0_available": true,
+      "word1_available": true,
+      "complete_two_word": true
+    },
+    {
+      "declared": 9,
+      "available": 10,
+      "status_available": true,
+      "word0_available": true,
+      "word1_available": true,
+      "complete_two_word": true
+    },
+    {
+      "declared": 10,
+      "available": 0,
+      "status_available": false,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 10,
+      "available": 1,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 10,
+      "available": 2,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 10,
+      "available": 3,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 10,
+      "available": 4,
+      "status_available": true,
+      "word0_available": false,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 10,
+      "available": 5,
+      "status_available": true,
+      "word0_available": true,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 10,
+      "available": 6,
+      "status_available": true,
+      "word0_available": true,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 10,
+      "available": 7,
+      "status_available": true,
+      "word0_available": true,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 10,
+      "available": 8,
+      "status_available": true,
+      "word0_available": true,
+      "word1_available": false,
+      "complete_two_word": false
+    },
+    {
+      "declared": 10,
+      "available": 9,
+      "status_available": true,
+      "word0_available": true,
+      "word1_available": true,
+      "complete_two_word": true
+    },
+    {
+      "declared": 10,
+      "available": 10,
+      "status_available": true,
+      "word0_available": true,
+      "word1_available": true,
+      "complete_two_word": true
+    }
+  ],
+  "examples": [
+    {
+      "name": "canonical",
+      "raw_hex": "000000803f01020304",
+      "context": {
+        "family": "synthetic-power-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP14",
+        "direction": "positive",
+        "declared_count": 9,
+        "selection": "preselected"
+      },
+      "expect": {
+        "state": "candidate",
+        "reason": null,
+        "status_available": true,
+        "status_raw": 0,
+        "status_label": null,
+        "word0_available": true,
+        "word0_raw_hex": "0000803f",
+        "word0_numeric": 1.0,
+        "word0_finite": true,
+        "word0_unit": null,
+        "word1_available": true,
+        "word1": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "word1_label": null,
+        "complete_two_word": true,
+        "finite_numeric": true,
+        "complete_message": false,
+        "successful_response": false,
+        "presence": "Unknown",
+        "trailing_hex": "",
+        "raw_hex": "000000803f01020304"
+      }
+    },
+    {
+      "name": "actual8_declared9",
+      "raw_hex": "000000803f010203",
+      "context": {
+        "family": "synthetic-power-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP14",
+        "direction": "positive",
+        "declared_count": 9,
+        "selection": "preselected"
+      },
+      "expect": {
+        "state": "candidate",
+        "reason": null,
+        "status_available": true,
+        "status_raw": 0,
+        "status_label": null,
+        "word0_available": true,
+        "word0_raw_hex": "0000803f",
+        "word0_numeric": 1.0,
+        "word0_finite": true,
+        "word0_unit": null,
+        "word1_available": false,
+        "word1": null,
+        "word1_label": null,
+        "complete_two_word": false,
+        "finite_numeric": true,
+        "complete_message": false,
+        "successful_response": false,
+        "presence": "Unknown",
+        "trailing_hex": "",
+        "raw_hex": "000000803f010203"
+      }
+    },
+    {
+      "name": "actual9_declared8",
+      "raw_hex": "000000803f01020304",
+      "context": {
+        "family": "synthetic-power-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP14",
+        "direction": "positive",
+        "declared_count": 8,
+        "selection": "preselected"
+      },
+      "expect": {
+        "state": "candidate",
+        "reason": null,
+        "status_available": true,
+        "status_raw": 0,
+        "status_label": null,
+        "word0_available": true,
+        "word0_raw_hex": "0000803f",
+        "word0_numeric": 1.0,
+        "word0_finite": true,
+        "word0_unit": null,
+        "word1_available": false,
+        "word1": null,
+        "word1_label": null,
+        "complete_two_word": false,
+        "finite_numeric": true,
+        "complete_message": false,
+        "successful_response": false,
+        "presence": "Unknown",
+        "trailing_hex": "",
+        "raw_hex": "000000803f01020304"
+      }
+    },
+    {
+      "name": "actual9_declared4",
+      "raw_hex": "000000803f01020304",
+      "context": {
+        "family": "synthetic-power-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP14",
+        "direction": "positive",
+        "declared_count": 4,
+        "selection": "preselected"
+      },
+      "expect": {
+        "state": "candidate",
+        "reason": null,
+        "status_available": true,
+        "status_raw": 0,
+        "status_label": null,
+        "word0_available": false,
+        "word0_raw_hex": null,
+        "word0_numeric": null,
+        "word0_finite": false,
+        "word0_unit": null,
+        "word1_available": false,
+        "word1": null,
+        "word1_label": null,
+        "complete_two_word": false,
+        "finite_numeric": false,
+        "complete_message": false,
+        "successful_response": false,
+        "presence": "Unknown",
+        "trailing_hex": "",
+        "raw_hex": "000000803f01020304"
+      }
+    },
+    {
+      "name": "zero",
+      "raw_hex": "000000000001020304",
+      "context": {
+        "family": "synthetic-power-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP14",
+        "direction": "positive",
+        "declared_count": 9,
+        "selection": "preselected"
+      },
+      "expect": {
+        "state": "candidate",
+        "reason": null,
+        "status_available": true,
+        "status_raw": 0,
+        "status_label": null,
+        "word0_available": true,
+        "word0_raw_hex": "00000000",
+        "word0_numeric": 0.0,
+        "word0_finite": true,
+        "word0_unit": null,
+        "word1_available": true,
+        "word1": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "word1_label": null,
+        "complete_two_word": true,
+        "finite_numeric": true,
+        "complete_message": false,
+        "successful_response": false,
+        "presence": "Unknown",
+        "trailing_hex": "",
+        "raw_hex": "000000000001020304"
+      }
+    },
+    {
+      "name": "negative",
+      "raw_hex": "00000080bf01020304",
+      "context": {
+        "family": "synthetic-power-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP14",
+        "direction": "positive",
+        "declared_count": 9,
+        "selection": "preselected"
+      },
+      "expect": {
+        "state": "candidate",
+        "reason": null,
+        "status_available": true,
+        "status_raw": 0,
+        "status_label": null,
+        "word0_available": true,
+        "word0_raw_hex": "000080bf",
+        "word0_numeric": -1.0,
+        "word0_finite": true,
+        "word0_unit": null,
+        "word1_available": true,
+        "word1": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "word1_label": null,
+        "complete_two_word": true,
+        "finite_numeric": true,
+        "complete_message": false,
+        "successful_response": false,
+        "presence": "Unknown",
+        "trailing_hex": "",
+        "raw_hex": "00000080bf01020304"
+      }
+    },
+    {
+      "name": "negative_zero",
+      "raw_hex": "000000008001020304",
+      "context": {
+        "family": "synthetic-power-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP14",
+        "direction": "positive",
+        "declared_count": 9,
+        "selection": "preselected"
+      },
+      "expect": {
+        "state": "candidate",
+        "reason": null,
+        "status_available": true,
+        "status_raw": 0,
+        "status_label": null,
+        "word0_available": true,
+        "word0_raw_hex": "00000080",
+        "word0_numeric": -0.0,
+        "word0_finite": true,
+        "word0_unit": null,
+        "word1_available": true,
+        "word1": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "word1_label": null,
+        "complete_two_word": true,
+        "finite_numeric": true,
+        "complete_message": false,
+        "successful_response": false,
+        "presence": "Unknown",
+        "trailing_hex": "",
+        "raw_hex": "000000008001020304"
+      }
+    },
+    {
+      "name": "nan",
+      "raw_hex": "000000c07f01020304",
+      "context": {
+        "family": "synthetic-power-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP14",
+        "direction": "positive",
+        "declared_count": 9,
+        "selection": "preselected"
+      },
+      "expect": {
+        "state": "candidate",
+        "reason": null,
+        "status_available": true,
+        "status_raw": 0,
+        "status_label": null,
+        "word0_available": true,
+        "word0_raw_hex": "0000c07f",
+        "word0_numeric": null,
+        "word0_finite": false,
+        "word0_unit": null,
+        "word1_available": true,
+        "word1": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "word1_label": null,
+        "complete_two_word": true,
+        "finite_numeric": false,
+        "complete_message": false,
+        "successful_response": false,
+        "presence": "Unknown",
+        "trailing_hex": "",
+        "raw_hex": "000000c07f01020304"
+      }
+    },
+    {
+      "name": "payload_nan",
+      "raw_hex": "000100807f01020304",
+      "context": {
+        "family": "synthetic-power-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP14",
+        "direction": "positive",
+        "declared_count": 9,
+        "selection": "preselected"
+      },
+      "expect": {
+        "state": "candidate",
+        "reason": null,
+        "status_available": true,
+        "status_raw": 0,
+        "status_label": null,
+        "word0_available": true,
+        "word0_raw_hex": "0100807f",
+        "word0_numeric": null,
+        "word0_finite": false,
+        "word0_unit": null,
+        "word1_available": true,
+        "word1": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "word1_label": null,
+        "complete_two_word": true,
+        "finite_numeric": false,
+        "complete_message": false,
+        "successful_response": false,
+        "presence": "Unknown",
+        "trailing_hex": "",
+        "raw_hex": "000100807f01020304"
+      }
+    },
+    {
+      "name": "positive_infinity",
+      "raw_hex": "000000807f01020304",
+      "context": {
+        "family": "synthetic-power-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP14",
+        "direction": "positive",
+        "declared_count": 9,
+        "selection": "preselected"
+      },
+      "expect": {
+        "state": "candidate",
+        "reason": null,
+        "status_available": true,
+        "status_raw": 0,
+        "status_label": null,
+        "word0_available": true,
+        "word0_raw_hex": "0000807f",
+        "word0_numeric": null,
+        "word0_finite": false,
+        "word0_unit": null,
+        "word1_available": true,
+        "word1": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "word1_label": null,
+        "complete_two_word": true,
+        "finite_numeric": false,
+        "complete_message": false,
+        "successful_response": false,
+        "presence": "Unknown",
+        "trailing_hex": "",
+        "raw_hex": "000000807f01020304"
+      }
+    },
+    {
+      "name": "negative_infinity",
+      "raw_hex": "00000080ff01020304",
+      "context": {
+        "family": "synthetic-power-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP14",
+        "direction": "positive",
+        "declared_count": 9,
+        "selection": "preselected"
+      },
+      "expect": {
+        "state": "candidate",
+        "reason": null,
+        "status_available": true,
+        "status_raw": 0,
+        "status_label": null,
+        "word0_available": true,
+        "word0_raw_hex": "000080ff",
+        "word0_numeric": null,
+        "word0_finite": false,
+        "word0_unit": null,
+        "word1_available": true,
+        "word1": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "word1_label": null,
+        "complete_two_word": true,
+        "finite_numeric": false,
+        "complete_message": false,
+        "successful_response": false,
+        "presence": "Unknown",
+        "trailing_hex": "",
+        "raw_hex": "00000080ff01020304"
+      }
+    },
+    {
+      "name": "tail_aa",
+      "raw_hex": "000000803f01020304aa",
+      "context": {
+        "family": "synthetic-power-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP14",
+        "direction": "positive",
+        "declared_count": 10,
+        "selection": "preselected"
+      },
+      "expect": {
+        "state": "candidate",
+        "reason": null,
+        "status_available": true,
+        "status_raw": 0,
+        "status_label": null,
+        "word0_available": true,
+        "word0_raw_hex": "0000803f",
+        "word0_numeric": 1.0,
+        "word0_finite": true,
+        "word0_unit": null,
+        "word1_available": true,
+        "word1": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "word1_label": null,
+        "complete_two_word": true,
+        "finite_numeric": true,
+        "complete_message": false,
+        "successful_response": false,
+        "presence": "Unknown",
+        "trailing_hex": "aa",
+        "raw_hex": "000000803f01020304aa"
+      }
+    },
+    {
+      "name": "status_unlabelled",
+      "raw_hex": "2a0000803f01020304",
+      "context": {
+        "family": "synthetic-power-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP14",
+        "direction": "positive",
+        "declared_count": 9,
+        "selection": "preselected"
+      },
+      "expect": {
+        "state": "candidate",
+        "reason": null,
+        "status_available": true,
+        "status_raw": 42,
+        "status_label": null,
+        "word0_available": true,
+        "word0_raw_hex": "0000803f",
+        "word0_numeric": 1.0,
+        "word0_finite": true,
+        "word0_unit": null,
+        "word1_available": true,
+        "word1": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "word1_label": null,
+        "complete_two_word": true,
+        "finite_numeric": true,
+        "complete_message": false,
+        "successful_response": false,
+        "presence": "Unknown",
+        "trailing_hex": "",
+        "raw_hex": "2a0000803f01020304"
+      }
+    },
+    {
+      "name": "word1_unlabelled",
+      "raw_hex": "000000803fffffffff",
+      "context": {
+        "family": "synthetic-power-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP14",
+        "direction": "positive",
+        "declared_count": 9,
+        "selection": "preselected"
+      },
+      "expect": {
+        "state": "candidate",
+        "reason": null,
+        "status_available": true,
+        "status_raw": 0,
+        "status_label": null,
+        "word0_available": true,
+        "word0_raw_hex": "0000803f",
+        "word0_numeric": 1.0,
+        "word0_finite": true,
+        "word0_unit": null,
+        "word1_available": true,
+        "word1": [
+          255,
+          255,
+          255,
+          255
+        ],
+        "word1_label": null,
+        "complete_two_word": true,
+        "finite_numeric": true,
+        "complete_message": false,
+        "successful_response": false,
+        "presence": "Unknown",
+        "trailing_hex": "",
+        "raw_hex": "000000803fffffffff"
+      }
+    },
+    {
+      "name": "wrong_operation",
+      "raw_hex": "000000803f01020304",
+      "context": {
+        "family": "synthetic-power-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP08",
+        "direction": "positive",
+        "declared_count": 9,
+        "selection": "preselected"
+      },
+      "expect": {
+        "state": "raw_only",
+        "reason": "operation",
+        "status_available": false,
+        "status_raw": null,
+        "status_label": null,
+        "word0_available": false,
+        "word0_raw_hex": null,
+        "word0_numeric": null,
+        "word0_finite": false,
+        "word0_unit": null,
+        "word1_available": false,
+        "word1": null,
+        "word1_label": null,
+        "complete_two_word": false,
+        "finite_numeric": false,
+        "complete_message": false,
+        "successful_response": false,
+        "presence": "Unknown",
+        "trailing_hex": "",
+        "raw_hex": "000000803f01020304"
+      }
+    },
+    {
+      "name": "wrong_direction",
+      "raw_hex": "000000803f01020304",
+      "context": {
+        "family": "synthetic-power-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP14",
+        "direction": "request",
+        "declared_count": 9,
+        "selection": "preselected"
+      },
+      "expect": {
+        "state": "raw_only",
+        "reason": "direction",
+        "status_available": false,
+        "status_raw": null,
+        "status_label": null,
+        "word0_available": false,
+        "word0_raw_hex": null,
+        "word0_numeric": null,
+        "word0_finite": false,
+        "word0_unit": null,
+        "word1_available": false,
+        "word1": null,
+        "word1_label": null,
+        "complete_two_word": false,
+        "finite_numeric": false,
+        "complete_message": false,
+        "successful_response": false,
+        "presence": "Unknown",
+        "trailing_hex": "",
+        "raw_hex": "000000803f01020304"
+      }
+    },
+    {
+      "name": "missing_selection",
+      "raw_hex": "000000803f01020304",
+      "context": {
+        "family": "synthetic-power-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP14",
+        "direction": "positive",
+        "declared_count": 9
+      },
+      "expect": {
+        "state": "missing_selection",
+        "reason": "selection",
+        "status_available": false,
+        "status_raw": null,
+        "status_label": null,
+        "word0_available": false,
+        "word0_raw_hex": null,
+        "word0_numeric": null,
+        "word0_finite": false,
+        "word0_unit": null,
+        "word1_available": false,
+        "word1": null,
+        "word1_label": null,
+        "complete_two_word": false,
+        "finite_numeric": false,
+        "complete_message": false,
+        "successful_response": false,
+        "presence": "Unknown",
+        "trailing_hex": "",
+        "raw_hex": "000000803f01020304"
+      }
+    },
+    {
+      "name": "negative_declared",
+      "raw_hex": "000000803f01020304",
+      "context": {
+        "family": "synthetic-power-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP14",
+        "direction": "positive",
+        "declared_count": -1,
+        "selection": "preselected"
+      },
+      "expect": {
+        "state": "raw_only",
+        "reason": "declared_count",
+        "status_available": false,
+        "status_raw": null,
+        "status_label": null,
+        "word0_available": false,
+        "word0_raw_hex": null,
+        "word0_numeric": null,
+        "word0_finite": false,
+        "word0_unit": null,
+        "word1_available": false,
+        "word1": null,
+        "word1_label": null,
+        "complete_two_word": false,
+        "finite_numeric": false,
+        "complete_message": false,
+        "successful_response": false,
+        "presence": "Unknown",
+        "trailing_hex": "",
+        "raw_hex": "000000803f01020304"
+      }
+    }
+  ]
+}

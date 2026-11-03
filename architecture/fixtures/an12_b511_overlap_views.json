@@ -1,0 +1,1927 @@
+{
+  "policy": {
+    "signature": "ab11an11.view(context, logical_image)",
+    "context_fields": [
+      "family",
+      "variant",
+      "operation",
+      "direction",
+      "alternative",
+      "select_room_setpoint"
+    ],
+    "direction": "positive",
+    "operations": [
+      "OP00",
+      "OP07"
+    ],
+    "op00_alternatives": [
+      "reserved",
+      "fan"
+    ],
+    "op07_alternatives": [
+      "base",
+      "extended"
+    ],
+    "op00_required_extent": 12,
+    "op07_base_required_extent": 8,
+    "op07_extended_required_extent": 9,
+    "prefix_positions": [
+      0,
+      1,
+      2
+    ],
+    "insert_or_remove_prefix": false,
+    "transmission_shape_defined": false,
+    "select_alternative_from_length": false,
+    "select_variant_from_length": false,
+    "infer_operation_from_prefix": false,
+    "infer_fields_from_list_order": false,
+    "logical8_bit7": 7,
+    "reserved_bit7_label": "reserved",
+    "fan_bit7_label": "fan-running",
+    "label_reserved_bit7_as_fan": false,
+    "concatenate_overlapping_fields": false,
+    "room_setpoint_position": 7,
+    "room_setpoint_scale": "u8/2",
+    "room_setpoint_divisor": 2,
+    "room_setpoint_unit": "degrees_Celsius",
+    "pressure_position": 8,
+    "pressure_label": "building-circuit-pressure",
+    "pressure_unit": "percent",
+    "pressure_domain_min": 0,
+    "pressure_domain_max": 100,
+    "convert_percent_to_bar": false,
+    "clip_out_of_domain": false,
+    "hide_missing_ninth_position": false,
+    "invent_offsets_for_other_classes": false,
+    "other_class_offsets": {},
+    "preserve_complete_raw_image": true,
+    "preserve_unknown_variant": true,
+    "detach_raw_buffers": true,
+    "unknown_overlay_invents_labels": false,
+    "software_contract": "Proven",
+    "layout_grade": "Hypothesis",
+    "native_grade": "Unknown",
+    "runtime_route_decoder": false,
+    "example_families": [
+      "synthetic-b511-family-a",
+      "synthetic-b511-family-b"
+    ],
+    "example_variants": [
+      "synthetic-variant-a",
+      "synthetic-variant-b",
+      "unknown-variant"
+    ]
+  },
+  "identity_axes": {
+    "families": [
+      "synthetic-b511-family-a",
+      "synthetic-b511-family-b",
+      "unknown-family"
+    ],
+    "variants": [
+      "synthetic-variant-a",
+      "synthetic-variant-b",
+      "unknown-variant"
+    ],
+    "operations": [
+      "OP00",
+      "OP07",
+      "OP01"
+    ],
+    "directions": [
+      "positive",
+      "request"
+    ],
+    "alternatives": [
+      "reserved",
+      "fan",
+      "base",
+      "extended",
+      "unknown-overlay"
+    ],
+    "lengths": [
+      8,
+      9,
+      12
+    ],
+    "select_room_setpoint": [
+      false,
+      true
+    ],
+    "byte8_bits": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ]
+  },
+  "bit_rows": [
+    {
+      "bit": 0,
+      "raw": 1,
+      "fan": false,
+      "pressure_domain": "in_domain",
+      "pressure_numeric": 1
+    },
+    {
+      "bit": 1,
+      "raw": 2,
+      "fan": false,
+      "pressure_domain": "in_domain",
+      "pressure_numeric": 2
+    },
+    {
+      "bit": 2,
+      "raw": 4,
+      "fan": false,
+      "pressure_domain": "in_domain",
+      "pressure_numeric": 4
+    },
+    {
+      "bit": 3,
+      "raw": 8,
+      "fan": false,
+      "pressure_domain": "in_domain",
+      "pressure_numeric": 8
+    },
+    {
+      "bit": 4,
+      "raw": 16,
+      "fan": false,
+      "pressure_domain": "in_domain",
+      "pressure_numeric": 16
+    },
+    {
+      "bit": 5,
+      "raw": 32,
+      "fan": false,
+      "pressure_domain": "in_domain",
+      "pressure_numeric": 32
+    },
+    {
+      "bit": 6,
+      "raw": 64,
+      "fan": false,
+      "pressure_domain": "in_domain",
+      "pressure_numeric": 64
+    },
+    {
+      "bit": 7,
+      "raw": 128,
+      "fan": true,
+      "pressure_domain": "out_of_domain",
+      "pressure_numeric": null
+    }
+  ],
+  "examples": [
+    {
+      "name": "op00_fan_80",
+      "context": {
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP00",
+        "direction": "positive",
+        "alternative": "fan",
+        "select_room_setpoint": false
+      },
+      "length": 12,
+      "cells": [
+        [
+          8,
+          128
+        ]
+      ],
+      "holes": [],
+      "unmodelled": [],
+      "expect": {
+        "admission": "applied",
+        "reason": null,
+        "selected_alternative": "fan",
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP00",
+        "direction": "positive",
+        "available_extent": 12,
+        "required_extent": 12,
+        "complete_logical_extent": true,
+        "extent_state": "complete",
+        "missing_positions": [],
+        "fan_running": true,
+        "fan_label": "fan-running",
+        "raw_flag_byte": 128,
+        "reserved_label": null,
+        "overlay_raw": null,
+        "overlay_state": null,
+        "room_numeric": null,
+        "room_availability": null,
+        "room_unit": null,
+        "pressure_numeric": null,
+        "pressure_raw": null,
+        "pressure_unit": null,
+        "pressure_domain": null,
+        "pressure_availability": null,
+        "concatenated": null,
+        "layout_grade": "Hypothesis",
+        "fan_grades": [
+          "Hypothesis",
+          "Hypothesis",
+          "Unknown"
+        ],
+        "room_grades": null,
+        "pressure_grades": null
+      }
+    },
+    {
+      "name": "op00_reserved_80",
+      "context": {
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP00",
+        "direction": "positive",
+        "alternative": "reserved",
+        "select_room_setpoint": false
+      },
+      "length": 12,
+      "cells": [
+        [
+          8,
+          128
+        ]
+      ],
+      "holes": [],
+      "unmodelled": [],
+      "expect": {
+        "admission": "applied",
+        "reason": null,
+        "selected_alternative": "reserved",
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP00",
+        "direction": "positive",
+        "available_extent": 12,
+        "required_extent": 12,
+        "complete_logical_extent": true,
+        "extent_state": "complete",
+        "missing_positions": [],
+        "fan_running": null,
+        "fan_label": null,
+        "raw_flag_byte": 128,
+        "reserved_label": "reserved",
+        "overlay_raw": null,
+        "overlay_state": null,
+        "room_numeric": null,
+        "room_availability": null,
+        "room_unit": null,
+        "pressure_numeric": null,
+        "pressure_raw": null,
+        "pressure_unit": null,
+        "pressure_domain": null,
+        "pressure_availability": null,
+        "concatenated": null,
+        "layout_grade": "Hypothesis",
+        "fan_grades": null,
+        "room_grades": null,
+        "pressure_grades": null
+      }
+    },
+    {
+      "name": "op00_fan_len11",
+      "context": {
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP00",
+        "direction": "positive",
+        "alternative": "fan",
+        "select_room_setpoint": false
+      },
+      "length": 11,
+      "cells": [
+        [
+          8,
+          128
+        ]
+      ],
+      "holes": [],
+      "unmodelled": [],
+      "expect": {
+        "admission": "applied",
+        "reason": null,
+        "selected_alternative": "fan",
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP00",
+        "direction": "positive",
+        "available_extent": 11,
+        "required_extent": 12,
+        "complete_logical_extent": false,
+        "extent_state": "incomplete",
+        "missing_positions": [
+          11
+        ],
+        "fan_running": true,
+        "fan_label": "fan-running",
+        "raw_flag_byte": 128,
+        "reserved_label": null,
+        "overlay_raw": null,
+        "overlay_state": null,
+        "room_numeric": null,
+        "room_availability": null,
+        "room_unit": null,
+        "pressure_numeric": null,
+        "pressure_raw": null,
+        "pressure_unit": null,
+        "pressure_domain": null,
+        "pressure_availability": null,
+        "concatenated": null,
+        "layout_grade": "Hypothesis",
+        "fan_grades": [
+          "Hypothesis",
+          "Hypothesis",
+          "Unknown"
+        ],
+        "room_grades": null,
+        "pressure_grades": null
+      }
+    },
+    {
+      "name": "op00_fan_len8",
+      "context": {
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP00",
+        "direction": "positive",
+        "alternative": "fan",
+        "select_room_setpoint": false
+      },
+      "length": 8,
+      "cells": [
+        [
+          7,
+          64
+        ]
+      ],
+      "holes": [],
+      "unmodelled": [],
+      "expect": {
+        "admission": "applied",
+        "reason": null,
+        "selected_alternative": "fan",
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP00",
+        "direction": "positive",
+        "available_extent": 8,
+        "required_extent": 12,
+        "complete_logical_extent": false,
+        "extent_state": "incomplete",
+        "missing_positions": [
+          8,
+          9,
+          10,
+          11
+        ],
+        "fan_running": null,
+        "fan_label": null,
+        "raw_flag_byte": null,
+        "reserved_label": null,
+        "overlay_raw": null,
+        "overlay_state": null,
+        "room_numeric": null,
+        "room_availability": null,
+        "room_unit": null,
+        "pressure_numeric": null,
+        "pressure_raw": null,
+        "pressure_unit": null,
+        "pressure_domain": null,
+        "pressure_availability": null,
+        "concatenated": null,
+        "layout_grade": "Hypothesis",
+        "fan_grades": null,
+        "room_grades": null,
+        "pressure_grades": null
+      }
+    },
+    {
+      "name": "op00_fan_zero",
+      "context": {
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP00",
+        "direction": "positive",
+        "alternative": "fan",
+        "select_room_setpoint": false
+      },
+      "length": 12,
+      "cells": [
+        [
+          8,
+          0
+        ]
+      ],
+      "holes": [],
+      "unmodelled": [],
+      "expect": {
+        "admission": "applied",
+        "reason": null,
+        "selected_alternative": "fan",
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP00",
+        "direction": "positive",
+        "available_extent": 12,
+        "required_extent": 12,
+        "complete_logical_extent": true,
+        "extent_state": "complete",
+        "missing_positions": [],
+        "fan_running": false,
+        "fan_label": "fan-running",
+        "raw_flag_byte": 0,
+        "reserved_label": null,
+        "overlay_raw": null,
+        "overlay_state": null,
+        "room_numeric": null,
+        "room_availability": null,
+        "room_unit": null,
+        "pressure_numeric": null,
+        "pressure_raw": null,
+        "pressure_unit": null,
+        "pressure_domain": null,
+        "pressure_availability": null,
+        "concatenated": null,
+        "layout_grade": "Hypothesis",
+        "fan_grades": [
+          "Hypothesis",
+          "Hypothesis",
+          "Unknown"
+        ],
+        "room_grades": null,
+        "pressure_grades": null
+      }
+    },
+    {
+      "name": "op00_fan_81",
+      "context": {
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP00",
+        "direction": "positive",
+        "alternative": "fan",
+        "select_room_setpoint": false
+      },
+      "length": 12,
+      "cells": [
+        [
+          8,
+          129
+        ]
+      ],
+      "holes": [],
+      "unmodelled": [],
+      "expect": {
+        "admission": "applied",
+        "reason": null,
+        "selected_alternative": "fan",
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP00",
+        "direction": "positive",
+        "available_extent": 12,
+        "required_extent": 12,
+        "complete_logical_extent": true,
+        "extent_state": "complete",
+        "missing_positions": [],
+        "fan_running": true,
+        "fan_label": "fan-running",
+        "raw_flag_byte": 129,
+        "reserved_label": null,
+        "overlay_raw": null,
+        "overlay_state": null,
+        "room_numeric": null,
+        "room_availability": null,
+        "room_unit": null,
+        "pressure_numeric": null,
+        "pressure_raw": null,
+        "pressure_unit": null,
+        "pressure_domain": null,
+        "pressure_availability": null,
+        "concatenated": null,
+        "layout_grade": "Hypothesis",
+        "fan_grades": [
+          "Hypothesis",
+          "Hypothesis",
+          "Unknown"
+        ],
+        "room_grades": null,
+        "pressure_grades": null
+      }
+    },
+    {
+      "name": "op07_ext_40_100",
+      "context": {
+        "family": "synthetic-b511-family-b",
+        "variant": "synthetic-variant-b",
+        "operation": "OP07",
+        "direction": "positive",
+        "alternative": "extended",
+        "select_room_setpoint": true
+      },
+      "length": 9,
+      "cells": [
+        [
+          7,
+          64
+        ],
+        [
+          8,
+          100
+        ]
+      ],
+      "holes": [],
+      "unmodelled": [],
+      "expect": {
+        "admission": "applied",
+        "reason": null,
+        "selected_alternative": "extended",
+        "family": "synthetic-b511-family-b",
+        "variant": "synthetic-variant-b",
+        "operation": "OP07",
+        "direction": "positive",
+        "available_extent": 9,
+        "required_extent": 9,
+        "complete_logical_extent": true,
+        "extent_state": "complete",
+        "missing_positions": [],
+        "fan_running": null,
+        "fan_label": null,
+        "raw_flag_byte": null,
+        "reserved_label": null,
+        "overlay_raw": 64,
+        "overlay_state": "present",
+        "room_numeric": 32.0,
+        "room_availability": "present",
+        "room_unit": "degrees_Celsius",
+        "pressure_numeric": 100,
+        "pressure_raw": 100,
+        "pressure_unit": "percent",
+        "pressure_domain": "in_domain",
+        "pressure_availability": "present",
+        "concatenated": null,
+        "layout_grade": "Hypothesis",
+        "fan_grades": null,
+        "room_grades": [
+          "Hypothesis",
+          "Hypothesis",
+          "Unknown"
+        ],
+        "pressure_grades": [
+          "Hypothesis",
+          "Hypothesis",
+          "Unknown"
+        ]
+      }
+    },
+    {
+      "name": "op07_ext_40_101",
+      "context": {
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP07",
+        "direction": "positive",
+        "alternative": "extended",
+        "select_room_setpoint": true
+      },
+      "length": 9,
+      "cells": [
+        [
+          7,
+          64
+        ],
+        [
+          8,
+          101
+        ]
+      ],
+      "holes": [],
+      "unmodelled": [],
+      "expect": {
+        "admission": "applied",
+        "reason": null,
+        "selected_alternative": "extended",
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP07",
+        "direction": "positive",
+        "available_extent": 9,
+        "required_extent": 9,
+        "complete_logical_extent": true,
+        "extent_state": "complete",
+        "missing_positions": [],
+        "fan_running": null,
+        "fan_label": null,
+        "raw_flag_byte": null,
+        "reserved_label": null,
+        "overlay_raw": 64,
+        "overlay_state": "present",
+        "room_numeric": 32.0,
+        "room_availability": "present",
+        "room_unit": "degrees_Celsius",
+        "pressure_numeric": null,
+        "pressure_raw": 101,
+        "pressure_unit": "percent",
+        "pressure_domain": "out_of_domain",
+        "pressure_availability": "out_of_domain",
+        "concatenated": null,
+        "layout_grade": "Hypothesis",
+        "fan_grades": null,
+        "room_grades": [
+          "Hypothesis",
+          "Hypothesis",
+          "Unknown"
+        ],
+        "pressure_grades": [
+          "Unknown",
+          "Unknown",
+          "Unknown"
+        ]
+      }
+    },
+    {
+      "name": "op07_base_len8",
+      "context": {
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP07",
+        "direction": "positive",
+        "alternative": "base",
+        "select_room_setpoint": true
+      },
+      "length": 8,
+      "cells": [
+        [
+          7,
+          64
+        ]
+      ],
+      "holes": [],
+      "unmodelled": [],
+      "expect": {
+        "admission": "applied",
+        "reason": null,
+        "selected_alternative": "base",
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP07",
+        "direction": "positive",
+        "available_extent": 8,
+        "required_extent": 8,
+        "complete_logical_extent": true,
+        "extent_state": "complete",
+        "missing_positions": [],
+        "fan_running": null,
+        "fan_label": null,
+        "raw_flag_byte": null,
+        "reserved_label": null,
+        "overlay_raw": 64,
+        "overlay_state": "present",
+        "room_numeric": 32.0,
+        "room_availability": "present",
+        "room_unit": "degrees_Celsius",
+        "pressure_numeric": null,
+        "pressure_raw": null,
+        "pressure_unit": null,
+        "pressure_domain": null,
+        "pressure_availability": null,
+        "concatenated": null,
+        "layout_grade": "Hypothesis",
+        "fan_grades": null,
+        "room_grades": [
+          "Hypothesis",
+          "Hypothesis",
+          "Unknown"
+        ],
+        "pressure_grades": null
+      }
+    },
+    {
+      "name": "op07_ext_len8",
+      "context": {
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP07",
+        "direction": "positive",
+        "alternative": "extended",
+        "select_room_setpoint": true
+      },
+      "length": 8,
+      "cells": [
+        [
+          7,
+          64
+        ]
+      ],
+      "holes": [],
+      "unmodelled": [],
+      "expect": {
+        "admission": "applied",
+        "reason": null,
+        "selected_alternative": "extended",
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP07",
+        "direction": "positive",
+        "available_extent": 8,
+        "required_extent": 9,
+        "complete_logical_extent": false,
+        "extent_state": "incomplete",
+        "missing_positions": [
+          8
+        ],
+        "fan_running": null,
+        "fan_label": null,
+        "raw_flag_byte": null,
+        "reserved_label": null,
+        "overlay_raw": 64,
+        "overlay_state": "present",
+        "room_numeric": 32.0,
+        "room_availability": "present",
+        "room_unit": "degrees_Celsius",
+        "pressure_numeric": null,
+        "pressure_raw": null,
+        "pressure_unit": null,
+        "pressure_domain": "missing",
+        "pressure_availability": "missing",
+        "concatenated": null,
+        "layout_grade": "Hypothesis",
+        "fan_grades": null,
+        "room_grades": [
+          "Hypothesis",
+          "Hypothesis",
+          "Unknown"
+        ],
+        "pressure_grades": [
+          "Unknown",
+          "Unknown",
+          "Unknown"
+        ]
+      }
+    },
+    {
+      "name": "op07_ext_not_selected",
+      "context": {
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP07",
+        "direction": "positive",
+        "alternative": "extended",
+        "select_room_setpoint": false
+      },
+      "length": 9,
+      "cells": [
+        [
+          7,
+          64
+        ],
+        [
+          8,
+          100
+        ]
+      ],
+      "holes": [],
+      "unmodelled": [],
+      "expect": {
+        "admission": "applied",
+        "reason": null,
+        "selected_alternative": "extended",
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP07",
+        "direction": "positive",
+        "available_extent": 9,
+        "required_extent": 9,
+        "complete_logical_extent": true,
+        "extent_state": "complete",
+        "missing_positions": [],
+        "fan_running": null,
+        "fan_label": null,
+        "raw_flag_byte": null,
+        "reserved_label": null,
+        "overlay_raw": 64,
+        "overlay_state": "present",
+        "room_numeric": null,
+        "room_availability": null,
+        "room_unit": null,
+        "pressure_numeric": 100,
+        "pressure_raw": 100,
+        "pressure_unit": "percent",
+        "pressure_domain": "in_domain",
+        "pressure_availability": "present",
+        "concatenated": null,
+        "layout_grade": "Hypothesis",
+        "fan_grades": null,
+        "room_grades": null,
+        "pressure_grades": [
+          "Hypothesis",
+          "Hypothesis",
+          "Unknown"
+        ]
+      }
+    },
+    {
+      "name": "op07_unknown_variant",
+      "context": {
+        "family": "synthetic-b511-family-a",
+        "variant": "unknown-variant",
+        "operation": "OP07",
+        "direction": "positive",
+        "alternative": "extended",
+        "select_room_setpoint": true
+      },
+      "length": 9,
+      "cells": [
+        [
+          7,
+          64
+        ],
+        [
+          8,
+          100
+        ]
+      ],
+      "holes": [],
+      "unmodelled": [],
+      "expect": {
+        "admission": "applied",
+        "reason": null,
+        "selected_alternative": "extended",
+        "family": "synthetic-b511-family-a",
+        "variant": "unknown-variant",
+        "operation": "OP07",
+        "direction": "positive",
+        "available_extent": 9,
+        "required_extent": 9,
+        "complete_logical_extent": true,
+        "extent_state": "complete",
+        "missing_positions": [],
+        "fan_running": null,
+        "fan_label": null,
+        "raw_flag_byte": null,
+        "reserved_label": null,
+        "overlay_raw": 64,
+        "overlay_state": "present",
+        "room_numeric": 32.0,
+        "room_availability": "present",
+        "room_unit": "degrees_Celsius",
+        "pressure_numeric": 100,
+        "pressure_raw": 100,
+        "pressure_unit": "percent",
+        "pressure_domain": "in_domain",
+        "pressure_availability": "present",
+        "concatenated": null,
+        "layout_grade": "Hypothesis",
+        "fan_grades": null,
+        "room_grades": [
+          "Hypothesis",
+          "Hypothesis",
+          "Unknown"
+        ],
+        "pressure_grades": [
+          "Hypothesis",
+          "Hypothesis",
+          "Unknown"
+        ]
+      }
+    },
+    {
+      "name": "op07_split_42_100",
+      "context": {
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP07",
+        "direction": "positive",
+        "alternative": "extended",
+        "select_room_setpoint": true
+      },
+      "length": 9,
+      "cells": [
+        [
+          7,
+          66
+        ],
+        [
+          8,
+          100
+        ]
+      ],
+      "holes": [],
+      "unmodelled": [],
+      "expect": {
+        "admission": "applied",
+        "reason": null,
+        "selected_alternative": "extended",
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP07",
+        "direction": "positive",
+        "available_extent": 9,
+        "required_extent": 9,
+        "complete_logical_extent": true,
+        "extent_state": "complete",
+        "missing_positions": [],
+        "fan_running": null,
+        "fan_label": null,
+        "raw_flag_byte": null,
+        "reserved_label": null,
+        "overlay_raw": 66,
+        "overlay_state": "present",
+        "room_numeric": 33.0,
+        "room_availability": "present",
+        "room_unit": "degrees_Celsius",
+        "pressure_numeric": 100,
+        "pressure_raw": 100,
+        "pressure_unit": "percent",
+        "pressure_domain": "in_domain",
+        "pressure_availability": "present",
+        "concatenated": null,
+        "layout_grade": "Hypothesis",
+        "fan_grades": null,
+        "room_grades": [
+          "Hypothesis",
+          "Hypothesis",
+          "Unknown"
+        ],
+        "pressure_grades": [
+          "Hypothesis",
+          "Hypothesis",
+          "Unknown"
+        ]
+      }
+    },
+    {
+      "name": "op07_pressure_0",
+      "context": {
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP07",
+        "direction": "positive",
+        "alternative": "extended",
+        "select_room_setpoint": true
+      },
+      "length": 9,
+      "cells": [
+        [
+          7,
+          64
+        ],
+        [
+          8,
+          0
+        ]
+      ],
+      "holes": [],
+      "unmodelled": [],
+      "expect": {
+        "admission": "applied",
+        "reason": null,
+        "selected_alternative": "extended",
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP07",
+        "direction": "positive",
+        "available_extent": 9,
+        "required_extent": 9,
+        "complete_logical_extent": true,
+        "extent_state": "complete",
+        "missing_positions": [],
+        "fan_running": null,
+        "fan_label": null,
+        "raw_flag_byte": null,
+        "reserved_label": null,
+        "overlay_raw": 64,
+        "overlay_state": "present",
+        "room_numeric": 32.0,
+        "room_availability": "present",
+        "room_unit": "degrees_Celsius",
+        "pressure_numeric": 0,
+        "pressure_raw": 0,
+        "pressure_unit": "percent",
+        "pressure_domain": "in_domain",
+        "pressure_availability": "present",
+        "concatenated": null,
+        "layout_grade": "Hypothesis",
+        "fan_grades": null,
+        "room_grades": [
+          "Hypothesis",
+          "Hypothesis",
+          "Unknown"
+        ],
+        "pressure_grades": [
+          "Hypothesis",
+          "Hypothesis",
+          "Unknown"
+        ]
+      }
+    },
+    {
+      "name": "op07_room_half",
+      "context": {
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP07",
+        "direction": "positive",
+        "alternative": "extended",
+        "select_room_setpoint": true
+      },
+      "length": 9,
+      "cells": [
+        [
+          7,
+          1
+        ],
+        [
+          8,
+          100
+        ]
+      ],
+      "holes": [],
+      "unmodelled": [],
+      "expect": {
+        "admission": "applied",
+        "reason": null,
+        "selected_alternative": "extended",
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP07",
+        "direction": "positive",
+        "available_extent": 9,
+        "required_extent": 9,
+        "complete_logical_extent": true,
+        "extent_state": "complete",
+        "missing_positions": [],
+        "fan_running": null,
+        "fan_label": null,
+        "raw_flag_byte": null,
+        "reserved_label": null,
+        "overlay_raw": 1,
+        "overlay_state": "present",
+        "room_numeric": 0.5,
+        "room_availability": "present",
+        "room_unit": "degrees_Celsius",
+        "pressure_numeric": 100,
+        "pressure_raw": 100,
+        "pressure_unit": "percent",
+        "pressure_domain": "in_domain",
+        "pressure_availability": "present",
+        "concatenated": null,
+        "layout_grade": "Hypothesis",
+        "fan_grades": null,
+        "room_grades": [
+          "Hypothesis",
+          "Hypothesis",
+          "Unknown"
+        ],
+        "pressure_grades": [
+          "Hypothesis",
+          "Hypothesis",
+          "Unknown"
+        ]
+      }
+    },
+    {
+      "name": "op07_room_ff",
+      "context": {
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP07",
+        "direction": "positive",
+        "alternative": "extended",
+        "select_room_setpoint": true
+      },
+      "length": 9,
+      "cells": [
+        [
+          7,
+          255
+        ],
+        [
+          8,
+          100
+        ]
+      ],
+      "holes": [],
+      "unmodelled": [],
+      "expect": {
+        "admission": "applied",
+        "reason": null,
+        "selected_alternative": "extended",
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP07",
+        "direction": "positive",
+        "available_extent": 9,
+        "required_extent": 9,
+        "complete_logical_extent": true,
+        "extent_state": "complete",
+        "missing_positions": [],
+        "fan_running": null,
+        "fan_label": null,
+        "raw_flag_byte": null,
+        "reserved_label": null,
+        "overlay_raw": 255,
+        "overlay_state": "present",
+        "room_numeric": 127.5,
+        "room_availability": "present",
+        "room_unit": "degrees_Celsius",
+        "pressure_numeric": 100,
+        "pressure_raw": 100,
+        "pressure_unit": "percent",
+        "pressure_domain": "in_domain",
+        "pressure_availability": "present",
+        "concatenated": null,
+        "layout_grade": "Hypothesis",
+        "fan_grades": null,
+        "room_grades": [
+          "Hypothesis",
+          "Hypothesis",
+          "Unknown"
+        ],
+        "pressure_grades": [
+          "Hypothesis",
+          "Hypothesis",
+          "Unknown"
+        ]
+      }
+    },
+    {
+      "name": "op01_no_offsets",
+      "context": {
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP01",
+        "direction": "positive",
+        "alternative": "fan",
+        "select_room_setpoint": true
+      },
+      "length": 12,
+      "cells": [
+        [
+          7,
+          64
+        ],
+        [
+          8,
+          128
+        ]
+      ],
+      "holes": [],
+      "unmodelled": [],
+      "expect": {
+        "admission": "raw_only",
+        "reason": "unknown_operation",
+        "selected_alternative": "fan",
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP01",
+        "direction": "positive",
+        "available_extent": 12,
+        "required_extent": null,
+        "complete_logical_extent": false,
+        "extent_state": "not_admitted",
+        "missing_positions": [],
+        "fan_running": null,
+        "fan_label": null,
+        "raw_flag_byte": null,
+        "reserved_label": null,
+        "overlay_raw": null,
+        "overlay_state": null,
+        "room_numeric": null,
+        "room_availability": null,
+        "room_unit": null,
+        "pressure_numeric": null,
+        "pressure_raw": null,
+        "pressure_unit": null,
+        "pressure_domain": null,
+        "pressure_availability": null,
+        "concatenated": null,
+        "layout_grade": null,
+        "fan_grades": null,
+        "room_grades": null,
+        "pressure_grades": null
+      }
+    },
+    {
+      "name": "direction_request",
+      "context": {
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP00",
+        "direction": "request",
+        "alternative": "fan",
+        "select_room_setpoint": false
+      },
+      "length": 12,
+      "cells": [
+        [
+          8,
+          128
+        ]
+      ],
+      "holes": [],
+      "unmodelled": [],
+      "expect": {
+        "admission": "raw_only",
+        "reason": "direction",
+        "selected_alternative": "fan",
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP00",
+        "direction": "request",
+        "available_extent": 12,
+        "required_extent": null,
+        "complete_logical_extent": false,
+        "extent_state": "not_admitted",
+        "missing_positions": [],
+        "fan_running": null,
+        "fan_label": null,
+        "raw_flag_byte": null,
+        "reserved_label": null,
+        "overlay_raw": null,
+        "overlay_state": null,
+        "room_numeric": null,
+        "room_availability": null,
+        "room_unit": null,
+        "pressure_numeric": null,
+        "pressure_raw": null,
+        "pressure_unit": null,
+        "pressure_domain": null,
+        "pressure_availability": null,
+        "concatenated": null,
+        "layout_grade": null,
+        "fan_grades": null,
+        "room_grades": null,
+        "pressure_grades": null
+      }
+    },
+    {
+      "name": "unknown_overlay",
+      "context": {
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP07",
+        "direction": "positive",
+        "alternative": "unknown-overlay",
+        "select_room_setpoint": true
+      },
+      "length": 9,
+      "cells": [
+        [
+          7,
+          64
+        ],
+        [
+          8,
+          100
+        ]
+      ],
+      "holes": [],
+      "unmodelled": [],
+      "expect": {
+        "admission": "raw_only",
+        "reason": "unknown_overlay",
+        "selected_alternative": "unknown-overlay",
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP07",
+        "direction": "positive",
+        "available_extent": 9,
+        "required_extent": null,
+        "complete_logical_extent": false,
+        "extent_state": "not_admitted",
+        "missing_positions": [],
+        "fan_running": null,
+        "fan_label": null,
+        "raw_flag_byte": null,
+        "reserved_label": null,
+        "overlay_raw": null,
+        "overlay_state": null,
+        "room_numeric": null,
+        "room_availability": null,
+        "room_unit": null,
+        "pressure_numeric": null,
+        "pressure_raw": null,
+        "pressure_unit": null,
+        "pressure_domain": null,
+        "pressure_availability": null,
+        "concatenated": null,
+        "layout_grade": null,
+        "fan_grades": null,
+        "room_grades": null,
+        "pressure_grades": null
+      }
+    },
+    {
+      "name": "op07_fan_mismatch",
+      "context": {
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP07",
+        "direction": "positive",
+        "alternative": "fan",
+        "select_room_setpoint": true
+      },
+      "length": 9,
+      "cells": [
+        [
+          7,
+          64
+        ],
+        [
+          8,
+          128
+        ]
+      ],
+      "holes": [],
+      "unmodelled": [],
+      "expect": {
+        "admission": "raw_only",
+        "reason": "unknown_overlay",
+        "selected_alternative": "fan",
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP07",
+        "direction": "positive",
+        "available_extent": 9,
+        "required_extent": null,
+        "complete_logical_extent": false,
+        "extent_state": "not_admitted",
+        "missing_positions": [],
+        "fan_running": null,
+        "fan_label": null,
+        "raw_flag_byte": null,
+        "reserved_label": null,
+        "overlay_raw": null,
+        "overlay_state": null,
+        "room_numeric": null,
+        "room_availability": null,
+        "room_unit": null,
+        "pressure_numeric": null,
+        "pressure_raw": null,
+        "pressure_unit": null,
+        "pressure_domain": null,
+        "pressure_availability": null,
+        "concatenated": null,
+        "layout_grade": null,
+        "fan_grades": null,
+        "room_grades": null,
+        "pressure_grades": null
+      }
+    },
+    {
+      "name": "op00_extended_mismatch",
+      "context": {
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP00",
+        "direction": "positive",
+        "alternative": "extended",
+        "select_room_setpoint": true
+      },
+      "length": 12,
+      "cells": [
+        [
+          7,
+          64
+        ],
+        [
+          8,
+          100
+        ]
+      ],
+      "holes": [],
+      "unmodelled": [],
+      "expect": {
+        "admission": "raw_only",
+        "reason": "unknown_overlay",
+        "selected_alternative": "extended",
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP00",
+        "direction": "positive",
+        "available_extent": 12,
+        "required_extent": null,
+        "complete_logical_extent": false,
+        "extent_state": "not_admitted",
+        "missing_positions": [],
+        "fan_running": null,
+        "fan_label": null,
+        "raw_flag_byte": null,
+        "reserved_label": null,
+        "overlay_raw": null,
+        "overlay_state": null,
+        "room_numeric": null,
+        "room_availability": null,
+        "room_unit": null,
+        "pressure_numeric": null,
+        "pressure_raw": null,
+        "pressure_unit": null,
+        "pressure_domain": null,
+        "pressure_availability": null,
+        "concatenated": null,
+        "layout_grade": null,
+        "fan_grades": null,
+        "room_grades": null,
+        "pressure_grades": null
+      }
+    },
+    {
+      "name": "empty_family",
+      "context": {
+        "family": "",
+        "variant": "synthetic-variant-a",
+        "operation": "OP00",
+        "direction": "positive",
+        "alternative": "fan",
+        "select_room_setpoint": false
+      },
+      "length": 12,
+      "cells": [
+        [
+          8,
+          128
+        ]
+      ],
+      "holes": [],
+      "unmodelled": [],
+      "expect": {
+        "admission": "raw_only",
+        "reason": "context",
+        "selected_alternative": "fan",
+        "family": "",
+        "variant": "synthetic-variant-a",
+        "operation": "OP00",
+        "direction": "positive",
+        "available_extent": 12,
+        "required_extent": null,
+        "complete_logical_extent": false,
+        "extent_state": "not_admitted",
+        "missing_positions": [],
+        "fan_running": null,
+        "fan_label": null,
+        "raw_flag_byte": null,
+        "reserved_label": null,
+        "overlay_raw": null,
+        "overlay_state": null,
+        "room_numeric": null,
+        "room_availability": null,
+        "room_unit": null,
+        "pressure_numeric": null,
+        "pressure_raw": null,
+        "pressure_unit": null,
+        "pressure_domain": null,
+        "pressure_availability": null,
+        "concatenated": null,
+        "layout_grade": null,
+        "fan_grades": null,
+        "room_grades": null,
+        "pressure_grades": null
+      }
+    },
+    {
+      "name": "missing_alternative",
+      "context": {
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP00",
+        "direction": "positive",
+        "select_room_setpoint": false
+      },
+      "length": 12,
+      "cells": [
+        [
+          8,
+          128
+        ]
+      ],
+      "holes": [],
+      "unmodelled": [],
+      "expect": {
+        "admission": "raw_only",
+        "reason": "context",
+        "selected_alternative": null,
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP00",
+        "direction": "positive",
+        "available_extent": 12,
+        "required_extent": null,
+        "complete_logical_extent": false,
+        "extent_state": "not_admitted",
+        "missing_positions": [],
+        "fan_running": null,
+        "fan_label": null,
+        "raw_flag_byte": null,
+        "reserved_label": null,
+        "overlay_raw": null,
+        "overlay_state": null,
+        "room_numeric": null,
+        "room_availability": null,
+        "room_unit": null,
+        "pressure_numeric": null,
+        "pressure_raw": null,
+        "pressure_unit": null,
+        "pressure_domain": null,
+        "pressure_availability": null,
+        "concatenated": null,
+        "layout_grade": null,
+        "fan_grades": null,
+        "room_grades": null,
+        "pressure_grades": null
+      }
+    },
+    {
+      "name": "room_flag_integer",
+      "context": {
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP00",
+        "direction": "positive",
+        "alternative": "fan",
+        "select_room_setpoint": 1
+      },
+      "length": 12,
+      "cells": [
+        [
+          8,
+          128
+        ]
+      ],
+      "holes": [],
+      "unmodelled": [],
+      "expect": {
+        "admission": "raw_only",
+        "reason": "context",
+        "selected_alternative": "fan",
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP00",
+        "direction": "positive",
+        "available_extent": 12,
+        "required_extent": null,
+        "complete_logical_extent": false,
+        "extent_state": "not_admitted",
+        "missing_positions": [],
+        "fan_running": null,
+        "fan_label": null,
+        "raw_flag_byte": null,
+        "reserved_label": null,
+        "overlay_raw": null,
+        "overlay_state": null,
+        "room_numeric": null,
+        "room_availability": null,
+        "room_unit": null,
+        "pressure_numeric": null,
+        "pressure_raw": null,
+        "pressure_unit": null,
+        "pressure_domain": null,
+        "pressure_availability": null,
+        "concatenated": null,
+        "layout_grade": null,
+        "fan_grades": null,
+        "room_grades": null,
+        "pressure_grades": null
+      }
+    },
+    {
+      "name": "empty_image",
+      "context": {
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP00",
+        "direction": "positive",
+        "alternative": "fan",
+        "select_room_setpoint": false
+      },
+      "length": 0,
+      "cells": [],
+      "holes": [],
+      "unmodelled": [],
+      "expect": {
+        "admission": "applied",
+        "reason": null,
+        "selected_alternative": "fan",
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP00",
+        "direction": "positive",
+        "available_extent": 0,
+        "required_extent": 12,
+        "complete_logical_extent": false,
+        "extent_state": "incomplete",
+        "missing_positions": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11
+        ],
+        "fan_running": null,
+        "fan_label": null,
+        "raw_flag_byte": null,
+        "reserved_label": null,
+        "overlay_raw": null,
+        "overlay_state": null,
+        "room_numeric": null,
+        "room_availability": null,
+        "room_unit": null,
+        "pressure_numeric": null,
+        "pressure_raw": null,
+        "pressure_unit": null,
+        "pressure_domain": null,
+        "pressure_availability": null,
+        "concatenated": null,
+        "layout_grade": "Hypothesis",
+        "fan_grades": null,
+        "room_grades": null,
+        "pressure_grades": null
+      }
+    },
+    {
+      "name": "hole_logical8",
+      "context": {
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP07",
+        "direction": "positive",
+        "alternative": "extended",
+        "select_room_setpoint": true
+      },
+      "length": 12,
+      "cells": [
+        [
+          7,
+          64
+        ],
+        [
+          9,
+          100
+        ]
+      ],
+      "holes": [
+        8
+      ],
+      "unmodelled": [],
+      "expect": {
+        "admission": "applied",
+        "reason": null,
+        "selected_alternative": "extended",
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP07",
+        "direction": "positive",
+        "available_extent": 12,
+        "required_extent": 9,
+        "complete_logical_extent": false,
+        "extent_state": "incomplete",
+        "missing_positions": [
+          8
+        ],
+        "fan_running": null,
+        "fan_label": null,
+        "raw_flag_byte": null,
+        "reserved_label": null,
+        "overlay_raw": 64,
+        "overlay_state": "present",
+        "room_numeric": 32.0,
+        "room_availability": "present",
+        "room_unit": "degrees_Celsius",
+        "pressure_numeric": null,
+        "pressure_raw": null,
+        "pressure_unit": null,
+        "pressure_domain": "missing",
+        "pressure_availability": "missing",
+        "concatenated": null,
+        "layout_grade": "Hypothesis",
+        "fan_grades": null,
+        "room_grades": [
+          "Hypothesis",
+          "Hypothesis",
+          "Unknown"
+        ],
+        "pressure_grades": [
+          "Unknown",
+          "Unknown",
+          "Unknown"
+        ]
+      }
+    },
+    {
+      "name": "unmodelled_byte7",
+      "context": {
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP07",
+        "direction": "positive",
+        "alternative": "extended",
+        "select_room_setpoint": true
+      },
+      "length": 9,
+      "cells": [
+        [
+          8,
+          100
+        ]
+      ],
+      "holes": [],
+      "unmodelled": [
+        [
+          7,
+          64
+        ]
+      ],
+      "expect": {
+        "admission": "applied",
+        "reason": null,
+        "selected_alternative": "extended",
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP07",
+        "direction": "positive",
+        "available_extent": 9,
+        "required_extent": 9,
+        "complete_logical_extent": false,
+        "extent_state": "incomplete",
+        "missing_positions": [
+          7
+        ],
+        "fan_running": null,
+        "fan_label": null,
+        "raw_flag_byte": null,
+        "reserved_label": null,
+        "overlay_raw": 64,
+        "overlay_state": "unmodelled",
+        "room_numeric": null,
+        "room_availability": "unmodelled",
+        "room_unit": null,
+        "pressure_numeric": 100,
+        "pressure_raw": 100,
+        "pressure_unit": "percent",
+        "pressure_domain": "in_domain",
+        "pressure_availability": "present",
+        "concatenated": null,
+        "layout_grade": "Hypothesis",
+        "fan_grades": null,
+        "room_grades": [
+          "Unknown",
+          "Unknown",
+          "Unknown"
+        ],
+        "pressure_grades": [
+          "Hypothesis",
+          "Hypothesis",
+          "Unknown"
+        ]
+      }
+    },
+    {
+      "name": "op00_len13",
+      "context": {
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP00",
+        "direction": "positive",
+        "alternative": "fan",
+        "select_room_setpoint": false
+      },
+      "length": 13,
+      "cells": [
+        [
+          8,
+          128
+        ],
+        [
+          12,
+          9
+        ]
+      ],
+      "holes": [],
+      "unmodelled": [],
+      "expect": {
+        "admission": "applied",
+        "reason": null,
+        "selected_alternative": "fan",
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP00",
+        "direction": "positive",
+        "available_extent": 13,
+        "required_extent": 12,
+        "complete_logical_extent": true,
+        "extent_state": "complete",
+        "missing_positions": [],
+        "fan_running": true,
+        "fan_label": "fan-running",
+        "raw_flag_byte": 128,
+        "reserved_label": null,
+        "overlay_raw": null,
+        "overlay_state": null,
+        "room_numeric": null,
+        "room_availability": null,
+        "room_unit": null,
+        "pressure_numeric": null,
+        "pressure_raw": null,
+        "pressure_unit": null,
+        "pressure_domain": null,
+        "pressure_availability": null,
+        "concatenated": null,
+        "layout_grade": "Hypothesis",
+        "fan_grades": [
+          "Hypothesis",
+          "Hypothesis",
+          "Unknown"
+        ],
+        "room_grades": null,
+        "pressure_grades": null
+      }
+    },
+    {
+      "name": "op07_ext_len13",
+      "context": {
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP07",
+        "direction": "positive",
+        "alternative": "extended",
+        "select_room_setpoint": true
+      },
+      "length": 13,
+      "cells": [
+        [
+          7,
+          64
+        ],
+        [
+          8,
+          100
+        ],
+        [
+          12,
+          9
+        ]
+      ],
+      "holes": [],
+      "unmodelled": [],
+      "expect": {
+        "admission": "applied",
+        "reason": null,
+        "selected_alternative": "extended",
+        "family": "synthetic-b511-family-a",
+        "variant": "synthetic-variant-a",
+        "operation": "OP07",
+        "direction": "positive",
+        "available_extent": 13,
+        "required_extent": 9,
+        "complete_logical_extent": true,
+        "extent_state": "complete",
+        "missing_positions": [],
+        "fan_running": null,
+        "fan_label": null,
+        "raw_flag_byte": null,
+        "reserved_label": null,
+        "overlay_raw": 64,
+        "overlay_state": "present",
+        "room_numeric": 32.0,
+        "room_availability": "present",
+        "room_unit": "degrees_Celsius",
+        "pressure_numeric": 100,
+        "pressure_raw": 100,
+        "pressure_unit": "percent",
+        "pressure_domain": "in_domain",
+        "pressure_availability": "present",
+        "concatenated": null,
+        "layout_grade": "Hypothesis",
+        "fan_grades": null,
+        "room_grades": [
+          "Hypothesis",
+          "Hypothesis",
+          "Unknown"
+        ],
+        "pressure_grades": [
+          "Hypothesis",
+          "Hypothesis",
+          "Unknown"
+        ]
+      }
+    }
+  ]
+}
