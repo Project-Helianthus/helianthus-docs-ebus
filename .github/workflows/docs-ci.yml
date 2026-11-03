@@ -31,6 +31,11 @@ on:
       - ".github/workflows/platform-contracts-combined-ref.yml"
       - "requirements-ci.txt"
       - "Makefile"
+  # Nightly full run of the docs gate, including the runtime-control contract
+  # tests that pull requests skip when none of their inputs changed.
+  schedule:
+    - cron: "17 2 * * *"
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -57,7 +62,7 @@ jobs:
           persist-credentials: false
 
       - name: Checkout push commit
-        if: github.event_name == 'push'
+        if: github.event_name != 'pull_request'
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           repository: ${{ github.repository }}
@@ -240,6 +245,60 @@ jobs:
           M625_TRUSTED_BASE_ROOT: ${{ github.workspace }}/checkouts/m625-trusted-base
           PLATFORM_M625_DOCS_EEBUS_ROOT: ${{ github.workspace }}/checkouts/m625-docs-eebus
           PLATFORM_M625_EXECUTION_PLANS_ROOT: ${{ github.workspace }}/checkouts/m625-execution-plans
+          # A same-repository pull request skips only tests/test_runtime_control_contract.py
+          # when every input of that module has the same content at the PR head as at
+          # the trusted base checkout. Fork pull requests, main pushes, the nightly
+          # schedule and manual dispatches always run it.
+          RUNTIME_CONTROL_CONTRACT_INPUTS_UNCHANGED: >-
+            ${{ github.event_name == 'pull_request'
+            && github.event.pull_request.head.repo.full_name == github.repository
+            && hashFiles(
+            'checkouts/docs-ebus-base/api/mcp.md',
+            'checkouts/docs-ebus-base/api/driver-runtime-v1.md',
+            'checkouts/docs-ebus-base/api/portal.md',
+            'checkouts/docs-ebus-base/api/modbus-v1-addon-runtime.md',
+            'checkouts/docs-ebus-base/architecture/runtime-driver-lifecycle.md',
+            'checkouts/docs-ebus-base/architecture/runtime-state.md',
+            'checkouts/docs-ebus-base/architecture/runtime-control-reset-durability.md',
+            'checkouts/docs-ebus-base/docs/platform/driver-runtime-manager-v1.md',
+            'checkouts/docs-ebus-base/scripts/check_runtime_control_contract.py',
+            'checkouts/docs-ebus-base/scripts/runtime_control_contract.json',
+            'checkouts/docs-ebus-base/tests/test_runtime_control_contract.py',
+            'checkouts/docs-ebus-base/scripts/ci_local.sh',
+            'checkouts/docs-ebus-base/requirements-ci.txt',
+            'checkouts/docs-ebus-base/.github/workflows/docs-ci.yml')
+            != ''
+            && hashFiles(
+            'checkouts/docs-ebus/api/mcp.md',
+            'checkouts/docs-ebus/api/driver-runtime-v1.md',
+            'checkouts/docs-ebus/api/portal.md',
+            'checkouts/docs-ebus/api/modbus-v1-addon-runtime.md',
+            'checkouts/docs-ebus/architecture/runtime-driver-lifecycle.md',
+            'checkouts/docs-ebus/architecture/runtime-state.md',
+            'checkouts/docs-ebus/architecture/runtime-control-reset-durability.md',
+            'checkouts/docs-ebus/docs/platform/driver-runtime-manager-v1.md',
+            'checkouts/docs-ebus/scripts/check_runtime_control_contract.py',
+            'checkouts/docs-ebus/scripts/runtime_control_contract.json',
+            'checkouts/docs-ebus/tests/test_runtime_control_contract.py',
+            'checkouts/docs-ebus/scripts/ci_local.sh',
+            'checkouts/docs-ebus/requirements-ci.txt',
+            'checkouts/docs-ebus/.github/workflows/docs-ci.yml')
+            == hashFiles(
+            'checkouts/docs-ebus-base/api/mcp.md',
+            'checkouts/docs-ebus-base/api/driver-runtime-v1.md',
+            'checkouts/docs-ebus-base/api/portal.md',
+            'checkouts/docs-ebus-base/api/modbus-v1-addon-runtime.md',
+            'checkouts/docs-ebus-base/architecture/runtime-driver-lifecycle.md',
+            'checkouts/docs-ebus-base/architecture/runtime-state.md',
+            'checkouts/docs-ebus-base/architecture/runtime-control-reset-durability.md',
+            'checkouts/docs-ebus-base/docs/platform/driver-runtime-manager-v1.md',
+            'checkouts/docs-ebus-base/scripts/check_runtime_control_contract.py',
+            'checkouts/docs-ebus-base/scripts/runtime_control_contract.json',
+            'checkouts/docs-ebus-base/tests/test_runtime_control_contract.py',
+            'checkouts/docs-ebus-base/scripts/ci_local.sh',
+            'checkouts/docs-ebus-base/requirements-ci.txt',
+            'checkouts/docs-ebus-base/.github/workflows/docs-ci.yml')
+            && '1' || '' }}
         working-directory: checkouts/docs-ebus
         run: ./scripts/ci_local.sh
 
