@@ -1,0 +1,2342 @@
+{
+  "provenance": "synthetic; finite candidate relationships; no device observation",
+  "grade": "Hypothesis",
+  "qualification": "Unknown",
+  "rows": [
+    {
+      "id": "ak04_5a_room_setpoint_room",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 90,
+        "direction": "request",
+        "field": "room_setpoint",
+        "alternative": "room",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "explicit_replacement_before_numeric",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:5A:room_setpoint:room",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_3d_day_setpoint_day",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 61,
+        "direction": "request",
+        "field": "day_setpoint",
+        "alternative": "day",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "explicit_replacement_before_numeric",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:3D:day_setpoint:day",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_3d_night_setpoint_night",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 61,
+        "direction": "request",
+        "field": "night_setpoint",
+        "alternative": "night",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "explicit_replacement_before_numeric",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:3D:night_setpoint:night",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_47_night_heating_inverter_indoor",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 71,
+        "direction": "request",
+        "field": "night_heating",
+        "alternative": "inverter_indoor",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "night_room_heating",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:47:night_heating:inverter_indoor",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_47_night_cooling_inverter_indoor",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 71,
+        "direction": "request",
+        "field": "night_cooling",
+        "alternative": "inverter_indoor",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "night_room_cooling",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:47:night_cooling:inverter_indoor",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_48_holiday_heating_inverter_indoor",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 72,
+        "direction": "request",
+        "field": "holiday_heating",
+        "alternative": "inverter_indoor",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "holiday_room_heating",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:48:holiday_heating:inverter_indoor",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_48_holiday_cooling_inverter_indoor",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 72,
+        "direction": "request",
+        "field": "holiday_cooling",
+        "alternative": "inverter_indoor",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "holiday_room_cooling",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:48:holiday_cooling:inverter_indoor",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_41_frost_protection_solar",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 65,
+        "direction": "request",
+        "field": "frost_protection",
+        "alternative": "solar",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "off_replacement_code_unknown",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:41:frost_protection:solar",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_40_minimum_temperature_second_solar_circuit",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 64,
+        "direction": "request",
+        "field": "minimum_temperature",
+        "alternative": "second_solar_circuit",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "minimum_temperature",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:40:minimum_temperature:second_solar_circuit",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_40_minimum_temperature_solid_fuel_boiler",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 64,
+        "direction": "request",
+        "field": "minimum_temperature",
+        "alternative": "solid_fuel_boiler",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "minimum_temperature",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:40:minimum_temperature:solid_fuel_boiler",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_10_maximum_preheat_heating",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 16,
+        "direction": "request",
+        "field": "maximum_preheat",
+        "alternative": "heating",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "advance_before_first_period",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:10:maximum_preheat:heating",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_3f_maximum_preheat_heating",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 63,
+        "direction": "request",
+        "field": "maximum_preheat",
+        "alternative": "heating",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "advance_before_first_period",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:3F:maximum_preheat:heating",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_15_early_cutoff_heating",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 21,
+        "direction": "request",
+        "field": "early_cutoff",
+        "alternative": "heating",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "stop_demand_before_reduction",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:15:early_cutoff:heating",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_2b_early_cutoff_heating",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 43,
+        "direction": "request",
+        "field": "early_cutoff",
+        "alternative": "heating",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "stop_demand_before_reduction",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:2B:early_cutoff:heating",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_3c_uncorrected_room_room",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 60,
+        "direction": "request",
+        "field": "uncorrected_room",
+        "alternative": "room",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "self_heating_without_user_correction",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:3C:uncorrected_room:room",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_3c_corrected_room_room",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 60,
+        "direction": "request",
+        "field": "corrected_room",
+        "alternative": "room",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "self_heating_with_user_correction",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:3C:corrected_room:room",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_1b_switch_on_difference_solar_tank_one",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 27,
+        "direction": "request",
+        "field": "switch_on_difference",
+        "alternative": "solar_tank_one",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "switch_on_difference",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:1B:switch_on_difference:solar_tank_one",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_1b_cutoff_difference_solar_tank_one",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 27,
+        "direction": "request",
+        "field": "cutoff_difference",
+        "alternative": "solar_tank_one",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "cutoff_difference",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:1B:cutoff_difference:solar_tank_one",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_1e_switch_on_difference_solar_tank_two",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 30,
+        "direction": "request",
+        "field": "switch_on_difference",
+        "alternative": "solar_tank_two",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "switch_on_difference",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:1E:switch_on_difference:solar_tank_two",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_1e_cutoff_difference_solar_tank_two",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 30,
+        "direction": "request",
+        "field": "cutoff_difference",
+        "alternative": "solar_tank_two",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "cutoff_difference",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:1E:cutoff_difference:solar_tank_two",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_38_switch_on_difference_solar_tank_three",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 56,
+        "direction": "request",
+        "field": "switch_on_difference",
+        "alternative": "solar_tank_three",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "switch_on_difference",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:38:switch_on_difference:solar_tank_three",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_38_cutoff_difference_solar_tank_three",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 56,
+        "direction": "request",
+        "field": "cutoff_difference",
+        "alternative": "solar_tank_three",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "cutoff_difference",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:38:cutoff_difference:solar_tank_three",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_1a_maximum_loading_temperature_solar_tank_one",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 26,
+        "direction": "request",
+        "field": "maximum_loading_temperature",
+        "alternative": "solar_tank_one",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "maximum_loading_temperature",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:1A:maximum_loading_temperature:solar_tank_one",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_1d_maximum_loading_temperature_solar_tank_two",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 29,
+        "direction": "request",
+        "field": "maximum_loading_temperature",
+        "alternative": "solar_tank_two",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "maximum_loading_temperature",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:1D:maximum_loading_temperature:solar_tank_two",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_37_maximum_loading_temperature_solar_tank_three",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 55,
+        "direction": "request",
+        "field": "maximum_loading_temperature",
+        "alternative": "solar_tank_three",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "maximum_loading_temperature",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:37:maximum_loading_temperature:solar_tank_three",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_31_ordinary_enable_dhw",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 49,
+        "direction": "request",
+        "field": "ordinary_enable",
+        "alternative": "dhw",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "one_permits_ordinary_blocked_frost_only",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:31:ordinary_enable:dhw",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_19_charging_enable_dhw_tank",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 25,
+        "direction": "request",
+        "field": "charging_enable",
+        "alternative": "dhw_tank",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "one_enables_charging",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:19:charging_enable:dhw_tank",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_27_charging_enable_dhw_tank",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 39,
+        "direction": "request",
+        "field": "charging_enable",
+        "alternative": "dhw_tank",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "one_enables_charging",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:27:charging_enable:dhw_tank",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_18_charging_disable_circuit",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 24,
+        "direction": "request",
+        "field": "charging_disable",
+        "alternative": "circuit",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "one_suppresses_without_parallel",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:18:charging_disable:circuit",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_27_charging_disable_circuit",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 39,
+        "direction": "request",
+        "field": "charging_disable",
+        "alternative": "circuit",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "one_suppresses_without_parallel",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:27:charging_disable:circuit",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_14_parallel_charging_mixer",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 20,
+        "direction": "request",
+        "field": "parallel_charging",
+        "alternative": "mixer",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "mixer_exception_only",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:14:parallel_charging:mixer",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_27_tank_flow_temperature_dhw",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 39,
+        "direction": "request",
+        "field": "tank_flow_temperature",
+        "alternative": "dhw",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "flow_temperature",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:27:tank_flow_temperature:dhw",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_2f_external_storage_sensor_storage",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 47,
+        "direction": "request",
+        "field": "external_storage_sensor",
+        "alternative": "storage",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "external_sensor_temperature",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:2F:external_storage_sensor:storage",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_1c_outside_correction_outside",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 28,
+        "direction": "request",
+        "field": "outside_correction",
+        "alternative": "outside",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "temperature_correction",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:1C:outside_correction:outside",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_26_hydraulic_schema_solar_controller",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 38,
+        "direction": "request",
+        "field": "hydraulic_schema",
+        "alternative": "solar_controller",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "controller_specific_schema",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:26:hydraulic_schema:solar_controller",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_23_duty_control_collector_pump",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 35,
+        "direction": "request",
+        "field": "duty_control",
+        "alternative": "collector_pump",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "pump_duty",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:23:duty_control:collector_pump",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_21_flow_collector_water",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 33,
+        "direction": "request",
+        "field": "flow",
+        "alternative": "collector_water",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "water_flow",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:21:flow:collector_water",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_22_reset_solar_pump_hours",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 34,
+        "direction": "request",
+        "field": "reset",
+        "alternative": "solar_pump_hours",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "one_requests_clear_hours",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:22:reset:solar_pump_hours",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_20_reset_solar_yield",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 32,
+        "direction": "request",
+        "field": "reset",
+        "alternative": "solar_yield",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "one_requests_clear_yield",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:20:reset:solar_yield",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_17_excess_demanded_flow",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 23,
+        "direction": "request",
+        "field": "excess",
+        "alternative": "demanded_flow",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "add_excess_to_demand",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:17:excess:demanded_flow",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_0f_maximum_flow_demand",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 15,
+        "direction": "request",
+        "field": "maximum",
+        "alternative": "flow_demand",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "maximum_flow_demand",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:0F:maximum:flow_demand",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_0e_minimum_flow_demand",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 14,
+        "direction": "request",
+        "field": "minimum",
+        "alternative": "flow_demand",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "zero_is_off",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:0E:minimum:flow_demand",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_12_overrun_charging_pump",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 18,
+        "direction": "request",
+        "field": "overrun",
+        "alternative": "charging_pump",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "retain_pump_inhibit_boiler_after_charging",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:12:overrun:charging_pump",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_11_recharge_delay_solar_charging",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 17,
+        "direction": "request",
+        "field": "recharge_delay",
+        "alternative": "solar_charging",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "limit_recharge_delay",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:11:recharge_delay:solar_charging",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_0d_pump_idle_heating",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 13,
+        "direction": "request",
+        "field": "pump_idle",
+        "alternative": "heating",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "energy_saving_after_flow_exceeds_desired",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:0D:pump_idle:heating",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_0c_outside_cutoff_heating",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 12,
+        "direction": "request",
+        "field": "outside_cutoff",
+        "alternative": "heating",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "select_summer_operation",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:0C:outside_cutoff:heating",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_01_day_setpoint_heating",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 1,
+        "direction": "request",
+        "field": "day_setpoint",
+        "alternative": "heating",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "room_temperature",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:01:day_setpoint:heating",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_01_day_setpoint_fixed_value",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 1,
+        "direction": "request",
+        "field": "day_setpoint",
+        "alternative": "fixed_value",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "flow_temperature",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:01:day_setpoint:fixed_value",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_01_day_setpoint_dhw",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 1,
+        "direction": "request",
+        "field": "day_setpoint",
+        "alternative": "dhw",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "tank_temperature",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:01:day_setpoint:dhw",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_0a_reduction_room",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 10,
+        "direction": "request",
+        "field": "reduction",
+        "alternative": "room",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "room_reduction",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:0A:reduction:room",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_0a_reduction_fixed_flow",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 10,
+        "direction": "request",
+        "field": "reduction",
+        "alternative": "fixed_flow",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "flow_reduction",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:0A:reduction:fixed_flow",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_09_first_period_start_programming",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 9,
+        "direction": "request",
+        "field": "first_period_start",
+        "alternative": "programming",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "ignored_outside_mode_zero",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:09:first_period_start:programming",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_07_saving_heating",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 7,
+        "direction": "request",
+        "field": "saving",
+        "alternative": "heating",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "zero_is_off",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:07:saving:heating",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    },
+    {
+      "id": "ak04_03_drying_day_floor_drying",
+      "identity": {
+        "family": "vaillant",
+        "variant": "B505",
+        "primary": 181,
+        "secondary": 5,
+        "operation": 3,
+        "direction": "request",
+        "field": "drying_day",
+        "alternative": "floor_drying",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "relation": "zero_disables_drying",
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": {
+        "token": "synthetic:03:drying_day:floor_drying",
+        "bytes": null
+      },
+      "unknown": {
+        "encoding": "Unknown",
+        "offset": "Unknown",
+        "width": "Unknown",
+        "scale": "Unknown",
+        "duration": "Unknown",
+        "other_formulas": "Unknown",
+        "raw_replacement_code": "Unknown",
+        "native_support": "Unknown",
+        "physical_effects": "Unknown",
+        "acceptance": "Unknown",
+        "persistence": "Unknown",
+        "delivery": "Unknown",
+        "enforcement": "Unknown"
+      }
+    }
+  ],
+  "cases": {
+    "replacement": [
+      {
+        "operation": "5A",
+        "field": "room_setpoint",
+        "replacement": true,
+        "prior": "prior-room-token",
+        "input": 23,
+        "raw_code": null,
+        "output": "prior-room-token",
+        "interpretation": "retained",
+        "scale": null
+      },
+      {
+        "operation": "5A",
+        "field": "room_setpoint",
+        "replacement": false,
+        "prior": "prior-room-token",
+        "input": 23,
+        "raw_code": null,
+        "output": 23,
+        "interpretation": "numeric_candidate",
+        "scale": null
+      },
+      {
+        "operation": "3D",
+        "field": "day_setpoint",
+        "replacement": true,
+        "prior": "prior-day-token",
+        "input": 21,
+        "raw_code": null,
+        "output": "prior-day-token",
+        "interpretation": "retained",
+        "scale": null
+      },
+      {
+        "operation": "3D",
+        "field": "day_setpoint",
+        "replacement": false,
+        "prior": "prior-day-token",
+        "input": 21,
+        "raw_code": null,
+        "output": 21,
+        "interpretation": "numeric_candidate",
+        "scale": null
+      },
+      {
+        "operation": "3D",
+        "field": "night_setpoint",
+        "replacement": true,
+        "prior": "prior-night-token",
+        "input": 17,
+        "raw_code": null,
+        "output": "prior-night-token",
+        "interpretation": "retained",
+        "scale": null
+      },
+      {
+        "operation": "3D",
+        "field": "night_setpoint",
+        "replacement": false,
+        "prior": "prior-night-token",
+        "input": 17,
+        "raw_code": null,
+        "output": 17,
+        "interpretation": "numeric_candidate",
+        "scale": null
+      }
+    ],
+    "indoor_setpoints": {
+      "night_heating": 17,
+      "night_cooling": 26,
+      "holiday_heating": 13,
+      "holiday_cooling": 29
+    },
+    "solar_tanks": [
+      {
+        "tank": "solar_tank_one",
+        "token": "tank-alpha",
+        "difference_operation": "1B",
+        "maximum_operation": "1A"
+      },
+      {
+        "tank": "solar_tank_two",
+        "token": "tank-beta",
+        "difference_operation": "1E",
+        "maximum_operation": "1D"
+      },
+      {
+        "tank": "solar_tank_three",
+        "token": "tank-gamma",
+        "difference_operation": "38",
+        "maximum_operation": "37"
+      }
+    ],
+    "ordinary_dhw": [
+      {
+        "enabled": false,
+        "ordinary_eligible": false,
+        "frost_eligible": true,
+        "execution": "Unknown"
+      },
+      {
+        "enabled": true,
+        "ordinary_eligible": true,
+        "frost_eligible": true,
+        "execution": "Unknown"
+      }
+    ],
+    "charge_disable": [
+      {
+        "operation": "18",
+        "disable": 1,
+        "role": "mixer",
+        "parallel": false,
+        "suppressed_candidate": true
+      },
+      {
+        "operation": "18",
+        "disable": 1,
+        "role": "mixer",
+        "parallel": true,
+        "suppressed_candidate": false
+      },
+      {
+        "operation": "18",
+        "disable": 1,
+        "role": "direct",
+        "parallel": false,
+        "suppressed_candidate": true
+      },
+      {
+        "operation": "18",
+        "disable": 1,
+        "role": "direct",
+        "parallel": true,
+        "suppressed_candidate": true
+      },
+      {
+        "operation": "27",
+        "disable": 1,
+        "role": "mixer",
+        "parallel": false,
+        "suppressed_candidate": true
+      },
+      {
+        "operation": "27",
+        "disable": 1,
+        "role": "mixer",
+        "parallel": true,
+        "suppressed_candidate": false
+      },
+      {
+        "operation": "27",
+        "disable": 1,
+        "role": "direct",
+        "parallel": false,
+        "suppressed_candidate": true
+      },
+      {
+        "operation": "27",
+        "disable": 1,
+        "role": "direct",
+        "parallel": true,
+        "suppressed_candidate": true
+      }
+    ],
+    "excess": {
+      "operation": "17",
+      "demand": 40,
+      "excess": 5,
+      "candidate": 45,
+      "byte_encoding": null
+    },
+    "resets": [
+      {
+        "operation": "22",
+        "reset": 1,
+        "requested": "clear_solar_pump_hours",
+        "accepted": "Unknown",
+        "persistent": "Unknown"
+      },
+      {
+        "operation": "20",
+        "reset": 1,
+        "requested": "clear_solar_yield",
+        "accepted": "Unknown",
+        "persistent": "Unknown"
+      }
+    ],
+    "day_setpoints": [
+      {
+        "operation": "01",
+        "circuit": "heating",
+        "input": 21,
+        "quantity": "room_temperature"
+      },
+      {
+        "operation": "01",
+        "circuit": "fixed_value",
+        "input": 21,
+        "quantity": "flow_temperature"
+      },
+      {
+        "operation": "01",
+        "circuit": "dhw",
+        "input": 21,
+        "quantity": "tank_temperature"
+      }
+    ],
+    "programming": [
+      {
+        "operation": "09",
+        "mode": 0,
+        "first_period": "period-alpha",
+        "other_periods": [
+          "period-beta",
+          "period-gamma"
+        ],
+        "first_period_candidate": "period-alpha"
+      },
+      {
+        "operation": "09",
+        "mode": 1,
+        "first_period": "period-alpha",
+        "other_periods": [
+          "period-beta",
+          "period-gamma"
+        ],
+        "first_period_candidate": "ignored"
+      }
+    ],
+    "zero_controls": [
+      {
+        "operation": "0E",
+        "input": 0,
+        "candidate": "off"
+      },
+      {
+        "operation": "07",
+        "input": 0,
+        "candidate": "off"
+      },
+      {
+        "operation": "03",
+        "input": 0,
+        "candidate": "disabled"
+      }
+    ],
+    "frost_off": {
+      "operation": "41",
+      "replacement": "off",
+      "raw_code": null,
+      "candidate": "off",
+      "execution": "Unknown"
+    },
+    "room_correction": [
+      {
+        "field": "uncorrected_room",
+        "self_heating": true,
+        "user_correction": false
+      },
+      {
+        "field": "corrected_room",
+        "self_heating": true,
+        "user_correction": true
+      }
+    ],
+    "partial_state": {
+      "prior": {
+        "room": "prior-room-token",
+        "flow": "prior-flow-token"
+      },
+      "unresolved_update": {
+        "room": null
+      },
+      "retained": {
+        "room": "prior-room-token",
+        "flow": "prior-flow-token"
+      },
+      "admission": "Unknown"
+    }
+  }
+}

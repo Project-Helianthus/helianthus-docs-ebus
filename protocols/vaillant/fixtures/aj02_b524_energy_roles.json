@@ -1,0 +1,114 @@
+{
+  "synthetic_only": true,
+  "entries": [
+    {
+      "key": {
+        "family": "Vaillant controller family",
+        "variant": "local-energy",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "command",
+        "field": "setpoint",
+        "group": 1,
+        "requested_instance": 255,
+        "register": 4,
+        "command_role": "energy-setpoint"
+      },
+      "grade": "Hypothesis",
+      "codec": "binary32",
+      "width_bytes": 4
+    },
+    {
+      "key": {
+        "family": "Vaillant controller family",
+        "variant": "local-energy",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "command",
+        "field": "hysteresis",
+        "group": 0,
+        "requested_instance": 255,
+        "register": 39,
+        "command_role": "energy-hysteresis"
+      },
+      "grade": "Hypothesis",
+      "codec": "binary32",
+      "width_bytes": 4
+    },
+    {
+      "key": {
+        "family": "Vaillant controller family",
+        "variant": "local-energy",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "command",
+        "field": "control",
+        "group": 1,
+        "requested_instance": 255,
+        "register": 13,
+        "command_role": "energy-control"
+      },
+      "grade": "Hypothesis",
+      "codec": null,
+      "width_bytes": null
+    },
+    {
+      "key": {
+        "family": "Vaillant controller family",
+        "variant": "local-energy",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "command",
+        "field": "offset",
+        "group": 0,
+        "requested_instance": 255,
+        "register": 162,
+        "command_role": "energy-offset"
+      },
+      "grade": "Hypothesis",
+      "codec": "binary32",
+      "width_bytes": 4
+    },
+    {
+      "key": {
+        "family": "Vaillant controller family",
+        "variant": "local-energy",
+        "primary": 181,
+        "secondary": 36,
+        "operation": 2,
+        "direction": "command",
+        "field": "activation",
+        "group": 0,
+        "requested_instance": 255,
+        "register": 182,
+        "command_role": "energy-activation"
+      },
+      "grade": "Hypothesis",
+      "codec": "byte",
+      "width_bytes": 1
+    }
+  ],
+  "context": {
+    "readback_instance": 0,
+    "physical_qualification": "Unknown",
+    "applied_state": "Unknown",
+    "installed_capability": "Unknown",
+    "metadata_limit_grade": "Proven",
+    "metadata_establishes_applied_state": false,
+    "metadata_establishes_installed_capability": false,
+    "preserve_raw": true,
+    "preserve_partial_last_known_good": true,
+    "admit_on_invalid_evidence": false
+  },
+  "unknowns": {
+    "binary32_byte_order": null,
+    "field_offsets": null,
+    "control_enumeration": null,
+    "native_units": null,
+    "response_forms": null
+  }
+}

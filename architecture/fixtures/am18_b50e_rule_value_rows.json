@@ -1,0 +1,382 @@
+{
+  "kind": "AM18SyntheticRowPackage",
+  "contract": {
+    "identity": {
+      "family": "vaillant",
+      "variant": "B50E",
+      "primary": 181,
+      "secondary": 14,
+      "operation": 2,
+      "direction": "positive",
+      "field": "rule_value_row"
+    },
+    "count": 19,
+    "offset_origin": "isolated_row",
+    "byte_order": "Unknown",
+    "default": "Unknown",
+    "inverse": "opaque",
+    "numeric_decoder": false,
+    "universal_boolean": false,
+    "qualified": false,
+    "grades": {
+      "software": "Proven",
+      "meaning": "Hypothesis",
+      "native": "Unknown"
+    },
+    "unknown": [
+      "physical_support",
+      "presence",
+      "freshness",
+      "execution",
+      "effects",
+      "persistence",
+      "delivery",
+      "physical_base",
+      "logical_base"
+    ]
+  },
+  "rows": [
+    {
+      "key": 0,
+      "grade": "Hypothesis",
+      "value": {
+        "kind": "opaque",
+        "offset": 0
+      }
+    },
+    {
+      "key": 1,
+      "grade": "Hypothesis",
+      "value": {
+        "kind": "boolean_u8",
+        "offset": 0,
+        "width": 1
+      }
+    },
+    {
+      "key": 2,
+      "grade": "Hypothesis",
+      "value": {
+        "kind": "u8",
+        "offset": 0,
+        "width": 1
+      }
+    },
+    {
+      "key": 3,
+      "grade": "Hypothesis",
+      "value": {
+        "kind": "i8",
+        "offset": 0,
+        "width": 1
+      }
+    },
+    {
+      "key": 4,
+      "grade": "Hypothesis",
+      "value": {
+        "kind": "u16",
+        "offset": 0,
+        "width": 2
+      }
+    },
+    {
+      "key": 5,
+      "grade": "Hypothesis",
+      "value": {
+        "kind": "i16",
+        "offset": 0,
+        "width": 2
+      }
+    },
+    {
+      "key": 6,
+      "grade": "Hypothesis",
+      "value": {
+        "kind": "u32",
+        "offset": 0,
+        "width": 4
+      }
+    },
+    {
+      "key": 7,
+      "grade": "Hypothesis",
+      "value": {
+        "kind": "i32",
+        "offset": 0,
+        "width": 4
+      }
+    },
+    {
+      "key": 8,
+      "grade": "Hypothesis",
+      "value": {
+        "kind": "secure_boolean_u8",
+        "offset": 0,
+        "width": 1
+      }
+    },
+    {
+      "key": 9,
+      "grade": "Hypothesis",
+      "value": {
+        "kind": "u8",
+        "offset": 0,
+        "width": 1
+      },
+      "companion": {
+        "kind": "inverse",
+        "offset": 1,
+        "width": 1
+      }
+    },
+    {
+      "key": 10,
+      "grade": "Hypothesis",
+      "value": {
+        "kind": "i8",
+        "offset": 0,
+        "width": 1
+      },
+      "companion": {
+        "kind": "inverse",
+        "offset": 1,
+        "width": 1
+      }
+    },
+    {
+      "key": 11,
+      "grade": "Hypothesis",
+      "value": {
+        "kind": "u16",
+        "offset": 0,
+        "width": 2
+      },
+      "companion": {
+        "kind": "inverse",
+        "offset": 2,
+        "width": 2
+      }
+    },
+    {
+      "key": 12,
+      "grade": "Hypothesis",
+      "value": {
+        "kind": "i16",
+        "offset": 0,
+        "width": 2
+      },
+      "companion": {
+        "kind": "inverse",
+        "offset": 2,
+        "width": 2
+      }
+    },
+    {
+      "key": 13,
+      "grade": "Hypothesis",
+      "value": {
+        "kind": "u32",
+        "offset": 0,
+        "width": 4
+      },
+      "companion": {
+        "kind": "inverse",
+        "offset": 4,
+        "width": 4
+      }
+    },
+    {
+      "key": 14,
+      "grade": "Hypothesis",
+      "value": {
+        "kind": "i32",
+        "offset": 0,
+        "width": 4
+      },
+      "companion": {
+        "kind": "inverse",
+        "offset": 4,
+        "width": 4
+      }
+    },
+    {
+      "key": 15,
+      "grade": "Hypothesis",
+      "value": {
+        "kind": "opaque",
+        "offset": 0
+      }
+    },
+    {
+      "key": 16,
+      "grade": "Hypothesis",
+      "value": {
+        "kind": "opaque",
+        "offset": 0
+      }
+    },
+    {
+      "key": 17,
+      "grade": "Hypothesis",
+      "value": {
+        "kind": "temperature_i16_div16_celsius",
+        "offset": 0,
+        "width": 2
+      },
+      "companion": {
+        "kind": "status",
+        "offset": 2,
+        "width": 1
+      }
+    },
+    {
+      "key": 18,
+      "grade": "Hypothesis",
+      "value": {
+        "kind": "temperature_i16_div16_celsius",
+        "offset": 0,
+        "width": 2
+      },
+      "companion": {
+        "kind": "inverse",
+        "offset": 2,
+        "width": 2
+      }
+    }
+  ],
+  "examples": [
+    {
+      "key": 0,
+      "raw": "d37a"
+    },
+    {
+      "key": 1,
+      "raw": "01"
+    },
+    {
+      "key": 2,
+      "raw": "c7"
+    },
+    {
+      "key": 3,
+      "raw": "80"
+    },
+    {
+      "key": 4,
+      "raw": "1234"
+    },
+    {
+      "key": 5,
+      "raw": "0080"
+    },
+    {
+      "key": 6,
+      "raw": "12345678"
+    },
+    {
+      "key": 7,
+      "raw": "00000080"
+    },
+    {
+      "key": 8,
+      "raw": "0f"
+    },
+    {
+      "key": 9,
+      "raw": "a517"
+    },
+    {
+      "key": 10,
+      "raw": "8062"
+    },
+    {
+      "key": 11,
+      "raw": "12341952"
+    },
+    {
+      "key": 12,
+      "raw": "00806328"
+    },
+    {
+      "key": 13,
+      "raw": "1234567807243958"
+    },
+    {
+      "key": 14,
+      "raw": "0000008018365572"
+    },
+    {
+      "key": 15,
+      "raw": "9b"
+    },
+    {
+      "key": 16,
+      "raw": "8271"
+    },
+    {
+      "key": 17,
+      "raw": "008055"
+    },
+    {
+      "key": 18,
+      "raw": "ff7f2361"
+    }
+  ],
+  "mapping_cases": [
+    {
+      "name": "key8_true",
+      "key": 8,
+      "raw": "0f",
+      "mapping": "true"
+    },
+    {
+      "name": "key8_false",
+      "key": 8,
+      "raw": "f0",
+      "mapping": "false"
+    },
+    {
+      "name": "key8_unmapped",
+      "key": 8,
+      "raw": "00",
+      "mapping": "unmapped"
+    },
+    {
+      "name": "key17_okay",
+      "key": 17,
+      "raw": "123400",
+      "mapping": "okay"
+    },
+    {
+      "name": "key17_short",
+      "key": 17,
+      "raw": "123455",
+      "mapping": "short"
+    },
+    {
+      "name": "key17_interrupted",
+      "key": 17,
+      "raw": "1234aa",
+      "mapping": "interrupted"
+    },
+    {
+      "name": "key17_unmapped",
+      "key": 17,
+      "raw": "1234ff",
+      "mapping": "unmapped"
+    }
+  ],
+  "partial": {
+    "key": 13,
+    "raw": "123456780724",
+    "previous": {
+      "independent_field": 0
+    }
+  },
+  "extra": {
+    "key": 9,
+    "raw": "a517ee",
+    "tail": "ee"
+  }
+}
