@@ -147,6 +147,67 @@ carries is unresolved.
 
 No op on this page is documented as safe to send; a state-changing op needs a separately established safety procedure and target qualification, and an ACK does not show the resulting device state.
 
+## Pump roles and independent solar flags
+
+**Hypothesis:** these B508 family declarations are candidate interpretations,
+not physical behavior. The boiler-pump correspondence is role-qualified;
+universal boiler support and exclusivity to one appliance remain **Unknown**.
+
+Logical positions include PB, SB and the operation at positions 0, 1 and 2;
+they are not established physical offsets. The following scoped alternatives
+preserve absent extents as **Unknown**, not zero. They do not replace the
+separately qualified candidate layouts above.
+
+| Family | Variant | Direction | Service | Operation | Alternative | Logical extent | Grade | Physical qualification |
+|---|---|---|---|---|---|---|---|---|
+| B508 | pump role | Unknown | B508 | OP05 | candidate default | Unknown | Hypothesis | Unknown |
+| B508 | solar cascading | Unknown | B508 | OP0B | independent tank flags | Unknown | Hypothesis | Unknown |
+| B508 | noise-reduction | broadcast | B508 | OP02 | distinct noise-reduction candidate | Unknown | Hypothesis | Unknown |
+
+| Operation | Field | Logical position | Candidate declaration | Operational default | Grade |
+|---|---|---|---|---|---|
+| OP05 | pump state | Unknown | raw 0 = blocked; raw 1 = released | Unknown | Hypothesis |
+| OP0B | cycle-pause | 3 | interpretation unresolved in this scoped alternative | Unknown | Hypothesis |
+| OP0B | tank-one flag byte | 4 | bit 0 = flag; bits 1..7 reserved | Unknown | Hypothesis |
+| OP0B | tank-two flag byte | 5 | bit 0 = flag; bits 1..7 reserved | Unknown | Hypothesis |
+
+Cycle-pause is a **Hypothesis** candidate label at logical position 3.
+Here, "interpretation unresolved" leaves its physical meaning and operational
+default **Unknown**; the earlier candidate flag declaration remains a separate
+qualified layout.
+
+Each tank byte is unsigned and one byte wide. Its candidate flag conversion is
+`(raw & 1) >> 0`; 0 means flag clear and 1 means flag set. No bit in one tank
+byte supplies the other tank's state. Preserve the complete raw bytes, including
+reserved bits and unmapped values; reserved bits have no assigned meaning.
+
+| Synthetic tank-one / tank-two bytes | Flag one | Flag two | Reserved one / two |
+|---|---|---|---|
+| 01 / 00 | 1 | 0 | 00 / 00 |
+| 00 / 01 | 0 | 1 | 00 / 00 |
+| 80 / 00 | 0 | 0 | 80 / 00 |
+
+The synthetic examples in [`fixtures/ac08_pump_roles.json`](fixtures/ac08_pump_roles.json)
+validate only the declared representation. **Proven** applies only to software
+verification of that representation; physical interpretations remain
+**Hypothesis**. Native adaptation, peer effects and physical qualification
+remain **Unknown**. No runtime capability or permission to send follows.
+
+The OP05 operational default is **Unknown**. Two default descriptions conflict
+and both are preserved as unresolved alternatives; neither is selected, and
+neither is the meaning of a raw value by itself. Physical qualification remains
+**Unknown**.
+
+| OP05 default description | Raw value it names | Grade |
+|---|---|---|
+| default is blocked | 0 | Hypothesis |
+| default is released | 1 | Hypothesis |
+
+The existing OP02 NoiseReduction broadcast remains a distinct candidate and is
+not replaced by the pump form. A candidate broadcast, timer and later register
+change establish no causal chain, physical support or exclusive use. An actuator
+effect remains **Unknown**.
+
 ## Profiles
 
 No op of this service is known to be available only on PeBUS (candidate);

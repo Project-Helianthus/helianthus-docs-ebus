@@ -21,9 +21,18 @@ CLAUSES = (
     native locators and empty selection as `INVALID_ARGUMENT`. IDs are compared
     byte-for-byte, without trimming, case folding or protocol interpretation.""",
     """All GraphQL aliases in one operation share that capture and one
-    evaluation context; take the union of their selected IDs before capture.
+    wall TimePoint and clock-domain coordinates as defined below; take the union
+    of their selected IDs before capture.
     The operation-wide union also has the 32-asset bound. MCP captures once per
     tool call.""",
+    """Evaluate each captured snapshot with an explicit `EvaluationContext`: one
+    shared wall `TimePoint`, and the sampled monotonic coordinate for that
+    snapshot's clock epoch. Snapshots in the same epoch use the same coordinate;
+    distinct epochs require coordinates in their own domains, not one identical
+    context across unrelated epochs. Serialize this immutable result, not
+    resolver-time clock reads. Capture the pack-definition catalog used for
+    projection with the view too. The detached objects cannot observe later hub,
+    registry or caller mutation.""",
     """Bound the complete serialized shared view to 4 MiB, before GraphQL field
     selection or MCP wrapping. Kernel and projection collection limits also
     apply, including 32 source keys per disposition. Overflow

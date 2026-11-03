@@ -1,0 +1,1109 @@
+{
+  "family": "system-data",
+  "variant": "vaillant-candidate",
+  "grade": "Hypothesis",
+  "qualification": "Unknown",
+  "coordinates": "body offsets after PB/SB; PB/SB excluded",
+  "candidate_identities": [
+    "0700",
+    "0702",
+    "0703",
+    "0704",
+    "0705",
+    "07FE",
+    "07FF"
+  ],
+  "identity_only": [
+    "0704"
+  ],
+  "undefined_bodies": [
+    "0701"
+  ],
+  "shapes": [
+    {
+      "service": "0700",
+      "direction": "body",
+      "body_width": 9
+    },
+    {
+      "service": "0702",
+      "direction": "request",
+      "body_width": 3
+    },
+    {
+      "service": "0703",
+      "direction": "request",
+      "body_width": 1
+    },
+    {
+      "service": "0703",
+      "direction": "positive",
+      "body_width": 10
+    },
+    {
+      "service": "0705",
+      "direction": "request",
+      "body_width": 2
+    },
+    {
+      "service": "0705",
+      "direction": "positive",
+      "body_width": 10
+    },
+    {
+      "service": "07FE",
+      "direction": "pair-only",
+      "body_width": 0
+    },
+    {
+      "service": "07FF",
+      "direction": "pair-only",
+      "body_width": 0
+    }
+  ],
+  "fields": [
+    {
+      "id": "ak18-0700-body-outside_temperature",
+      "service": "0700",
+      "direction": "body",
+      "field": "outside_temperature",
+      "offset": 0,
+      "width": 2,
+      "encoding": "signed-le16/256",
+      "domain": [
+        -50,
+        50
+      ],
+      "unit": "degrees Celsius",
+      "default": null,
+      "labels": null,
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": "retained"
+    },
+    {
+      "id": "ak18-0700-body-second",
+      "service": "0700",
+      "direction": "body",
+      "field": "second",
+      "offset": 2,
+      "width": 1,
+      "encoding": "packed-decimal",
+      "domain": [
+        0,
+        59
+      ],
+      "unit": "none",
+      "default": null,
+      "labels": null,
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": "retained"
+    },
+    {
+      "id": "ak18-0700-body-minute",
+      "service": "0700",
+      "direction": "body",
+      "field": "minute",
+      "offset": 3,
+      "width": 1,
+      "encoding": "packed-decimal",
+      "domain": [
+        0,
+        59
+      ],
+      "unit": "none",
+      "default": null,
+      "labels": null,
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": "retained"
+    },
+    {
+      "id": "ak18-0700-body-hour",
+      "service": "0700",
+      "direction": "body",
+      "field": "hour",
+      "offset": 4,
+      "width": 1,
+      "encoding": "packed-decimal",
+      "domain": [
+        0,
+        23
+      ],
+      "unit": "none",
+      "default": null,
+      "labels": null,
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": "retained"
+    },
+    {
+      "id": "ak18-0700-body-day",
+      "service": "0700",
+      "direction": "body",
+      "field": "day",
+      "offset": 5,
+      "width": 1,
+      "encoding": "packed-decimal",
+      "domain": [
+        1,
+        31
+      ],
+      "unit": "none",
+      "default": null,
+      "labels": null,
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": "retained"
+    },
+    {
+      "id": "ak18-0700-body-month",
+      "service": "0700",
+      "direction": "body",
+      "field": "month",
+      "offset": 6,
+      "width": 1,
+      "encoding": "packed-decimal",
+      "domain": [
+        1,
+        12
+      ],
+      "unit": "none",
+      "default": null,
+      "labels": null,
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": "retained"
+    },
+    {
+      "id": "ak18-0700-body-weekday",
+      "service": "0700",
+      "direction": "body",
+      "field": "weekday",
+      "offset": 7,
+      "width": 1,
+      "encoding": "u8",
+      "domain": [
+        0,
+        255
+      ],
+      "unit": "none",
+      "default": null,
+      "labels": {
+        "0": "Monday",
+        "1": "Tuesday",
+        "2": "Wednesday",
+        "3": "Thursday",
+        "4": "Friday",
+        "5": "Saturday",
+        "6": "Sunday"
+      },
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": "retained"
+    },
+    {
+      "id": "ak18-0700-body-year",
+      "service": "0700",
+      "direction": "body",
+      "field": "year",
+      "offset": 8,
+      "width": 1,
+      "encoding": "packed-decimal",
+      "domain": [
+        0,
+        99
+      ],
+      "unit": "none",
+      "default": null,
+      "labels": null,
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": "retained"
+    },
+    {
+      "id": "ak18-0702-request-outside_temperature",
+      "service": "0702",
+      "direction": "request",
+      "field": "outside_temperature",
+      "offset": 0,
+      "width": 2,
+      "encoding": "signed-le16/256",
+      "domain": [
+        -50,
+        50
+      ],
+      "unit": "degrees Celsius",
+      "default": null,
+      "labels": null,
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": "retained"
+    },
+    {
+      "id": "ak18-0702-request-duration",
+      "service": "0702",
+      "direction": "request",
+      "field": "duration",
+      "offset": 2,
+      "width": 1,
+      "encoding": "u8",
+      "domain": [
+        0,
+        255
+      ],
+      "unit": "minutes",
+      "default": 0,
+      "labels": null,
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": "retained"
+    },
+    {
+      "id": "ak18-0703-request-secondary_block",
+      "service": "0703",
+      "direction": "request",
+      "field": "secondary_block",
+      "offset": 0,
+      "width": 1,
+      "encoding": "u8",
+      "domain": [
+        0,
+        255
+      ],
+      "unit": "none",
+      "default": null,
+      "labels": null,
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": "retained"
+    },
+    {
+      "id": "ak18-0705-request-secondary_block",
+      "service": "0705",
+      "direction": "request",
+      "field": "secondary_block",
+      "offset": 0,
+      "width": 1,
+      "encoding": "u8",
+      "domain": [
+        0,
+        255
+      ],
+      "unit": "none",
+      "default": null,
+      "labels": null,
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": "retained"
+    },
+    {
+      "id": "ak18-0705-request-primary_block",
+      "service": "0705",
+      "direction": "request",
+      "field": "primary_block",
+      "offset": 1,
+      "width": 1,
+      "encoding": "u8",
+      "domain": [
+        0,
+        255
+      ],
+      "unit": "none",
+      "default": null,
+      "labels": null,
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": "retained"
+    },
+    {
+      "id": "ak18-0703-positive-version",
+      "service": "0703",
+      "direction": "positive",
+      "field": "version",
+      "offset": 0,
+      "width": 1,
+      "encoding": "packed-decimal",
+      "domain": [
+        0,
+        99
+      ],
+      "unit": "none",
+      "default": null,
+      "labels": null,
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": "retained"
+    },
+    {
+      "id": "ak18-0703-positive-revision",
+      "service": "0703",
+      "direction": "positive",
+      "field": "revision",
+      "offset": 1,
+      "width": 1,
+      "encoding": "packed-decimal",
+      "domain": [
+        0,
+        99
+      ],
+      "unit": "none",
+      "default": null,
+      "labels": null,
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": "retained"
+    },
+    {
+      "id": "ak18-0703-positive-bitmap_0",
+      "service": "0703",
+      "direction": "positive",
+      "field": "bitmap_0",
+      "offset": 2,
+      "width": 1,
+      "encoding": "raw-bitmap",
+      "domain": [
+        0,
+        255
+      ],
+      "unit": "none",
+      "default": null,
+      "labels": null,
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": "retained"
+    },
+    {
+      "id": "ak18-0703-positive-bitmap_1",
+      "service": "0703",
+      "direction": "positive",
+      "field": "bitmap_1",
+      "offset": 3,
+      "width": 1,
+      "encoding": "raw-bitmap",
+      "domain": [
+        0,
+        255
+      ],
+      "unit": "none",
+      "default": null,
+      "labels": null,
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": "retained"
+    },
+    {
+      "id": "ak18-0703-positive-bitmap_2",
+      "service": "0703",
+      "direction": "positive",
+      "field": "bitmap_2",
+      "offset": 4,
+      "width": 1,
+      "encoding": "raw-bitmap",
+      "domain": [
+        0,
+        255
+      ],
+      "unit": "none",
+      "default": null,
+      "labels": null,
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": "retained"
+    },
+    {
+      "id": "ak18-0703-positive-bitmap_3",
+      "service": "0703",
+      "direction": "positive",
+      "field": "bitmap_3",
+      "offset": 5,
+      "width": 1,
+      "encoding": "raw-bitmap",
+      "domain": [
+        0,
+        255
+      ],
+      "unit": "none",
+      "default": null,
+      "labels": null,
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": "retained"
+    },
+    {
+      "id": "ak18-0703-positive-bitmap_4",
+      "service": "0703",
+      "direction": "positive",
+      "field": "bitmap_4",
+      "offset": 6,
+      "width": 1,
+      "encoding": "raw-bitmap",
+      "domain": [
+        0,
+        255
+      ],
+      "unit": "none",
+      "default": null,
+      "labels": null,
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": "retained"
+    },
+    {
+      "id": "ak18-0703-positive-bitmap_5",
+      "service": "0703",
+      "direction": "positive",
+      "field": "bitmap_5",
+      "offset": 7,
+      "width": 1,
+      "encoding": "raw-bitmap",
+      "domain": [
+        0,
+        255
+      ],
+      "unit": "none",
+      "default": null,
+      "labels": null,
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": "retained"
+    },
+    {
+      "id": "ak18-0703-positive-bitmap_6",
+      "service": "0703",
+      "direction": "positive",
+      "field": "bitmap_6",
+      "offset": 8,
+      "width": 1,
+      "encoding": "raw-bitmap",
+      "domain": [
+        0,
+        255
+      ],
+      "unit": "none",
+      "default": null,
+      "labels": null,
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": "retained"
+    },
+    {
+      "id": "ak18-0703-positive-bitmap_7",
+      "service": "0703",
+      "direction": "positive",
+      "field": "bitmap_7",
+      "offset": 9,
+      "width": 1,
+      "encoding": "raw-bitmap",
+      "domain": [
+        0,
+        255
+      ],
+      "unit": "none",
+      "default": null,
+      "labels": null,
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": "retained"
+    },
+    {
+      "id": "ak18-0705-positive-version",
+      "service": "0705",
+      "direction": "positive",
+      "field": "version",
+      "offset": 0,
+      "width": 1,
+      "encoding": "packed-decimal",
+      "domain": [
+        0,
+        99
+      ],
+      "unit": "none",
+      "default": null,
+      "labels": null,
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": "retained"
+    },
+    {
+      "id": "ak18-0705-positive-revision",
+      "service": "0705",
+      "direction": "positive",
+      "field": "revision",
+      "offset": 1,
+      "width": 1,
+      "encoding": "packed-decimal",
+      "domain": [
+        0,
+        99
+      ],
+      "unit": "none",
+      "default": null,
+      "labels": null,
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": "retained"
+    },
+    {
+      "id": "ak18-0705-positive-bitmap_0",
+      "service": "0705",
+      "direction": "positive",
+      "field": "bitmap_0",
+      "offset": 2,
+      "width": 1,
+      "encoding": "raw-bitmap",
+      "domain": [
+        0,
+        255
+      ],
+      "unit": "none",
+      "default": null,
+      "labels": null,
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": "retained"
+    },
+    {
+      "id": "ak18-0705-positive-bitmap_1",
+      "service": "0705",
+      "direction": "positive",
+      "field": "bitmap_1",
+      "offset": 3,
+      "width": 1,
+      "encoding": "raw-bitmap",
+      "domain": [
+        0,
+        255
+      ],
+      "unit": "none",
+      "default": null,
+      "labels": null,
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": "retained"
+    },
+    {
+      "id": "ak18-0705-positive-bitmap_2",
+      "service": "0705",
+      "direction": "positive",
+      "field": "bitmap_2",
+      "offset": 4,
+      "width": 1,
+      "encoding": "raw-bitmap",
+      "domain": [
+        0,
+        255
+      ],
+      "unit": "none",
+      "default": null,
+      "labels": null,
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": "retained"
+    },
+    {
+      "id": "ak18-0705-positive-bitmap_3",
+      "service": "0705",
+      "direction": "positive",
+      "field": "bitmap_3",
+      "offset": 5,
+      "width": 1,
+      "encoding": "raw-bitmap",
+      "domain": [
+        0,
+        255
+      ],
+      "unit": "none",
+      "default": null,
+      "labels": null,
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": "retained"
+    },
+    {
+      "id": "ak18-0705-positive-bitmap_4",
+      "service": "0705",
+      "direction": "positive",
+      "field": "bitmap_4",
+      "offset": 6,
+      "width": 1,
+      "encoding": "raw-bitmap",
+      "domain": [
+        0,
+        255
+      ],
+      "unit": "none",
+      "default": null,
+      "labels": null,
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": "retained"
+    },
+    {
+      "id": "ak18-0705-positive-bitmap_5",
+      "service": "0705",
+      "direction": "positive",
+      "field": "bitmap_5",
+      "offset": 7,
+      "width": 1,
+      "encoding": "raw-bitmap",
+      "domain": [
+        0,
+        255
+      ],
+      "unit": "none",
+      "default": null,
+      "labels": null,
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": "retained"
+    },
+    {
+      "id": "ak18-0705-positive-bitmap_6",
+      "service": "0705",
+      "direction": "positive",
+      "field": "bitmap_6",
+      "offset": 8,
+      "width": 1,
+      "encoding": "raw-bitmap",
+      "domain": [
+        0,
+        255
+      ],
+      "unit": "none",
+      "default": null,
+      "labels": null,
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": "retained"
+    },
+    {
+      "id": "ak18-0705-positive-bitmap_7",
+      "service": "0705",
+      "direction": "positive",
+      "field": "bitmap_7",
+      "offset": 9,
+      "width": 1,
+      "encoding": "raw-bitmap",
+      "domain": [
+        0,
+        255
+      ],
+      "unit": "none",
+      "default": null,
+      "labels": null,
+      "grade": "Hypothesis",
+      "qualification": "Unknown",
+      "raw_form": "retained"
+    }
+  ],
+  "unassociated_defaults": [
+    {
+      "service": "0700",
+      "literal": 6,
+      "field": null,
+      "association": "Unknown"
+    },
+    {
+      "service": "0702",
+      "literal": 1,
+      "field": null,
+      "association": "Unknown"
+    }
+  ],
+  "temperature_representation": {
+    "raw_domain": [
+      -12800,
+      12800
+    ],
+    "logical_domain": [
+      -50,
+      50
+    ],
+    "raw_word_hex": "8000",
+    "sentinel": "Unknown"
+  },
+  "unknowns": {
+    "native_support": "Unknown",
+    "emission": "Unknown",
+    "physical_responses": "Unknown",
+    "physical_effects": "Unknown",
+    "persistence": "Unknown",
+    "delivery": "Unknown",
+    "century": "Unknown",
+    "timezone": "Unknown",
+    "calendar_validation": "Unknown",
+    "complete_native_decimal_conversion": "Unknown",
+    "bit_selection": "Unknown",
+    "version_control_overlap_0704": "Unknown",
+    "duration_zero_permanent": "Unknown",
+    "temperature_8000_sentinel": "Unknown",
+    "direct_inquiry_reply": "Unknown"
+  },
+  "cases": [
+    {
+      "name": "weekday-6",
+      "service": "0700",
+      "direction": "body",
+      "raw": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        6,
+        0
+      ],
+      "expected": {
+        "weekday_raw": 6,
+        "weekday_label": "Sunday"
+      },
+      "grade": "Hypothesis",
+      "qualification": "Unknown"
+    },
+    {
+      "name": "weekday-7",
+      "service": "0700",
+      "direction": "body",
+      "raw": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        7,
+        0
+      ],
+      "expected": {
+        "weekday_raw": 7,
+        "weekday_label": null
+      },
+      "grade": "Hypothesis",
+      "qualification": "Unknown"
+    },
+    {
+      "name": "weekday-255",
+      "service": "0700",
+      "direction": "body",
+      "raw": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        255,
+        0
+      ],
+      "expected": {
+        "weekday_raw": 255,
+        "weekday_label": null
+      },
+      "grade": "Hypothesis",
+      "qualification": "Unknown"
+    },
+    {
+      "name": "temperature-50",
+      "service": "0702",
+      "direction": "request",
+      "raw": [
+        0,
+        50,
+        0
+      ],
+      "expected": {
+        "temperature": 50,
+        "duration": 0,
+        "permanent": "Unknown"
+      },
+      "grade": "Hypothesis",
+      "qualification": "Unknown"
+    },
+    {
+      "name": "temperature--50",
+      "service": "0702",
+      "direction": "request",
+      "raw": [
+        0,
+        206,
+        0
+      ],
+      "expected": {
+        "temperature": -50,
+        "duration": 0,
+        "permanent": "Unknown"
+      },
+      "grade": "Hypothesis",
+      "qualification": "Unknown"
+    },
+    {
+      "name": "duration-zero",
+      "service": "0702",
+      "direction": "request",
+      "raw": [
+        0,
+        0,
+        0
+      ],
+      "expected": {
+        "temperature": 0,
+        "duration": 0,
+        "permanent": "Unknown"
+      },
+      "grade": "Hypothesis",
+      "qualification": "Unknown"
+    },
+    {
+      "name": "calendar-domains",
+      "service": "0700",
+      "direction": "body",
+      "raw": [
+        0,
+        0,
+        89,
+        88,
+        35,
+        49,
+        18,
+        6,
+        153
+      ],
+      "expected": {
+        "second": 59,
+        "minute": 58,
+        "hour": 23,
+        "day": 31,
+        "month": 12,
+        "weekday_raw": 6,
+        "weekday_label": "Sunday",
+        "year": 99
+      },
+      "grade": "Hypothesis",
+      "qualification": "Unknown"
+    },
+    {
+      "name": "version-bitmap-0703",
+      "service": "0703",
+      "direction": "positive",
+      "raw": [
+        18,
+        52,
+        128,
+        1,
+        2,
+        4,
+        8,
+        16,
+        32,
+        64
+      ],
+      "expected": {
+        "version": 12,
+        "revision": 34,
+        "bitmaps": [
+          128,
+          1,
+          2,
+          4,
+          8,
+          16,
+          32,
+          64
+        ],
+        "selected_services": "Unknown"
+      },
+      "grade": "Hypothesis",
+      "qualification": "Unknown"
+    },
+    {
+      "name": "version-bitmap-0705",
+      "service": "0705",
+      "direction": "positive",
+      "raw": [
+        18,
+        52,
+        128,
+        1,
+        2,
+        4,
+        8,
+        16,
+        32,
+        64
+      ],
+      "expected": {
+        "version": 12,
+        "revision": 34,
+        "bitmaps": [
+          128,
+          1,
+          2,
+          4,
+          8,
+          16,
+          32,
+          64
+        ],
+        "selected_services": "Unknown"
+      },
+      "grade": "Hypothesis",
+      "qualification": "Unknown"
+    },
+    {
+      "name": "block-0703-0",
+      "service": "0703",
+      "direction": "request",
+      "raw": [
+        0
+      ],
+      "expected": {
+        "secondary_block": 0
+      },
+      "grade": "Hypothesis",
+      "qualification": "Unknown"
+    },
+    {
+      "name": "block-0703-1",
+      "service": "0703",
+      "direction": "request",
+      "raw": [
+        1
+      ],
+      "expected": {
+        "secondary_block": 1
+      },
+      "grade": "Hypothesis",
+      "qualification": "Unknown"
+    },
+    {
+      "name": "block-0703-255",
+      "service": "0703",
+      "direction": "request",
+      "raw": [
+        255
+      ],
+      "expected": {
+        "secondary_block": 255
+      },
+      "grade": "Hypothesis",
+      "qualification": "Unknown"
+    },
+    {
+      "name": "blocks-0705-0-0",
+      "service": "0705",
+      "direction": "request",
+      "raw": [
+        0,
+        0
+      ],
+      "expected": {
+        "secondary_block": 0,
+        "primary_block": 0
+      },
+      "grade": "Hypothesis",
+      "qualification": "Unknown"
+    },
+    {
+      "name": "blocks-0705-1-0",
+      "service": "0705",
+      "direction": "request",
+      "raw": [
+        1,
+        0
+      ],
+      "expected": {
+        "secondary_block": 1,
+        "primary_block": 0
+      },
+      "grade": "Hypothesis",
+      "qualification": "Unknown"
+    },
+    {
+      "name": "blocks-0705-0-1",
+      "service": "0705",
+      "direction": "request",
+      "raw": [
+        0,
+        1
+      ],
+      "expected": {
+        "secondary_block": 0,
+        "primary_block": 1
+      },
+      "grade": "Hypothesis",
+      "qualification": "Unknown"
+    },
+    {
+      "name": "blocks-0705-255-0",
+      "service": "0705",
+      "direction": "request",
+      "raw": [
+        255,
+        0
+      ],
+      "expected": {
+        "secondary_block": 255,
+        "primary_block": 0
+      },
+      "grade": "Hypothesis",
+      "qualification": "Unknown"
+    },
+    {
+      "name": "blocks-0705-0-255",
+      "service": "0705",
+      "direction": "request",
+      "raw": [
+        0,
+        255
+      ],
+      "expected": {
+        "secondary_block": 0,
+        "primary_block": 255
+      },
+      "grade": "Hypothesis",
+      "qualification": "Unknown"
+    },
+    {
+      "name": "pair-07FE",
+      "service": "07FE",
+      "direction": "pair-only",
+      "raw": [],
+      "expected": {
+        "pair": [
+          7,
+          254
+        ],
+        "relationship": "inquiry",
+        "emission": "Unknown",
+        "physical_response": "Unknown",
+        "direct_reply_required": false
+      },
+      "grade": "Hypothesis",
+      "qualification": "Unknown"
+    },
+    {
+      "name": "pair-07FF",
+      "service": "07FF",
+      "direction": "pair-only",
+      "raw": [],
+      "expected": {
+        "pair": [
+          7,
+          255
+        ],
+        "relationship": "sign-of-life",
+        "emission": "Unknown",
+        "physical_response": "Unknown",
+        "direct_reply_required": false
+      },
+      "grade": "Hypothesis",
+      "qualification": "Unknown"
+    }
+  ]
+}

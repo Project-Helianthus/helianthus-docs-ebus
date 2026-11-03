@@ -1,0 +1,350 @@
+{
+  "family": "vaillant",
+  "primary": 181,
+  "secondary": 6,
+  "grade": "Hypothesis",
+  "native_qualification": "Unknown",
+  "physical_qualification": "Unknown",
+  "parameters": {
+    "operation": 17,
+    "variant": "production-test",
+    "field": "parameter",
+    "rows": [
+      {
+        "key": 10,
+        "representation": "boolean",
+        "grade": "Hypothesis",
+        "direction": null,
+        "logical_position": null,
+        "width": 1,
+        "minimum_bytes": null,
+        "maximum_bytes": null,
+        "scale": null,
+        "sentinel": null,
+        "default": null,
+        "boolean_values": {
+          "0": "no",
+          "1": "yes"
+        }
+      },
+      {
+        "key": 37,
+        "representation": "raw-byte",
+        "grade": "Hypothesis",
+        "direction": null,
+        "logical_position": null,
+        "width": 1,
+        "minimum_bytes": null,
+        "maximum_bytes": null,
+        "scale": null,
+        "sentinel": null,
+        "default": null,
+        "boolean_values": null
+      },
+      {
+        "key": 2,
+        "representation": "opaque-through-end",
+        "grade": "Hypothesis",
+        "direction": null,
+        "logical_position": null,
+        "width": null,
+        "minimum_bytes": null,
+        "maximum_bytes": null,
+        "scale": null,
+        "sentinel": null,
+        "default": null,
+        "boolean_values": null
+      },
+      {
+        "key": 6,
+        "representation": "raw-byte",
+        "grade": "Hypothesis",
+        "direction": null,
+        "logical_position": null,
+        "width": 1,
+        "minimum_bytes": null,
+        "maximum_bytes": null,
+        "scale": null,
+        "sentinel": null,
+        "default": null,
+        "boolean_values": null
+      },
+      {
+        "key": 0,
+        "representation": "opaque-through-end",
+        "grade": "Hypothesis",
+        "direction": null,
+        "logical_position": null,
+        "width": null,
+        "minimum_bytes": null,
+        "maximum_bytes": null,
+        "scale": null,
+        "sentinel": null,
+        "default": null,
+        "boolean_values": null
+      },
+      {
+        "key": 33,
+        "representation": "raw-byte",
+        "grade": "Hypothesis",
+        "direction": null,
+        "logical_position": null,
+        "width": 1,
+        "minimum_bytes": null,
+        "maximum_bytes": null,
+        "scale": null,
+        "sentinel": null,
+        "default": null,
+        "boolean_values": null
+      },
+      {
+        "key": 4,
+        "representation": "opaque-through-end",
+        "grade": "Hypothesis",
+        "direction": null,
+        "logical_position": null,
+        "width": null,
+        "minimum_bytes": null,
+        "maximum_bytes": null,
+        "scale": null,
+        "sentinel": null,
+        "default": null,
+        "boolean_values": null
+      },
+      {
+        "key": 8,
+        "representation": "raw-byte",
+        "grade": "Hypothesis",
+        "direction": null,
+        "logical_position": null,
+        "width": 1,
+        "minimum_bytes": null,
+        "maximum_bytes": null,
+        "scale": null,
+        "sentinel": null,
+        "default": null,
+        "boolean_values": null
+      },
+      {
+        "key": 35,
+        "representation": "raw-byte",
+        "grade": "Hypothesis",
+        "direction": null,
+        "logical_position": null,
+        "width": 1,
+        "minimum_bytes": null,
+        "maximum_bytes": null,
+        "scale": null,
+        "sentinel": null,
+        "default": null,
+        "boolean_values": null
+      },
+      {
+        "key": 1,
+        "representation": "opaque-through-end",
+        "grade": "Hypothesis",
+        "direction": null,
+        "logical_position": null,
+        "width": null,
+        "minimum_bytes": null,
+        "maximum_bytes": null,
+        "scale": null,
+        "sentinel": null,
+        "default": null,
+        "boolean_values": null
+      },
+      {
+        "key": 32,
+        "representation": "raw-byte",
+        "grade": "Hypothesis",
+        "direction": null,
+        "logical_position": null,
+        "width": 1,
+        "minimum_bytes": null,
+        "maximum_bytes": null,
+        "scale": null,
+        "sentinel": null,
+        "default": null,
+        "boolean_values": null
+      },
+      {
+        "key": 9,
+        "representation": "raw-byte",
+        "grade": "Hypothesis",
+        "direction": null,
+        "logical_position": null,
+        "width": 1,
+        "minimum_bytes": null,
+        "maximum_bytes": null,
+        "scale": null,
+        "sentinel": null,
+        "default": null,
+        "boolean_values": null
+      },
+      {
+        "key": 5,
+        "representation": "opaque-through-end",
+        "grade": "Hypothesis",
+        "direction": null,
+        "logical_position": null,
+        "width": null,
+        "minimum_bytes": null,
+        "maximum_bytes": null,
+        "scale": null,
+        "sentinel": null,
+        "default": null,
+        "boolean_values": null
+      },
+      {
+        "key": 34,
+        "representation": "raw-byte",
+        "grade": "Hypothesis",
+        "direction": null,
+        "logical_position": null,
+        "width": 1,
+        "minimum_bytes": null,
+        "maximum_bytes": null,
+        "scale": null,
+        "sentinel": null,
+        "default": null,
+        "boolean_values": null
+      },
+      {
+        "key": 3,
+        "representation": "raw-byte",
+        "grade": "Hypothesis",
+        "direction": null,
+        "logical_position": null,
+        "width": 1,
+        "minimum_bytes": null,
+        "maximum_bytes": null,
+        "scale": null,
+        "sentinel": null,
+        "default": null,
+        "boolean_values": null
+      },
+      {
+        "key": 36,
+        "representation": "raw-byte",
+        "grade": "Hypothesis",
+        "direction": null,
+        "logical_position": null,
+        "width": 1,
+        "minimum_bytes": null,
+        "maximum_bytes": null,
+        "scale": null,
+        "sentinel": null,
+        "default": null,
+        "boolean_values": null
+      },
+      {
+        "key": 7,
+        "representation": "raw-byte",
+        "grade": "Hypothesis",
+        "direction": null,
+        "logical_position": null,
+        "width": 1,
+        "minimum_bytes": null,
+        "maximum_bytes": null,
+        "scale": null,
+        "sentinel": null,
+        "default": null,
+        "boolean_values": null
+      }
+    ],
+    "unmapped_keys": [
+      31,
+      38
+    ],
+    "opaque_cases": [
+      {
+        "raw": [
+          0,
+          170,
+          255
+        ],
+        "length": 3
+      },
+      {
+        "raw": [],
+        "length": 0
+      }
+    ],
+    "empty_request_acceptance": "Unknown"
+  },
+  "outputs": [
+    {
+      "operation": 2,
+      "variant": "backlight-only",
+      "field": "outputs",
+      "direction": null,
+      "logical_position": null,
+      "width": 1,
+      "scale": null,
+      "sentinel": null,
+      "default": null,
+      "output_mask": 1,
+      "reserved_mask": 254,
+      "raw": 7,
+      "active": 1,
+      "reserved": 6
+    },
+    {
+      "operation": 2,
+      "variant": "three-output",
+      "field": "outputs",
+      "direction": null,
+      "logical_position": null,
+      "width": 1,
+      "scale": null,
+      "sentinel": null,
+      "default": null,
+      "output_mask": 7,
+      "reserved_mask": 248,
+      "raw": 7,
+      "active": 7,
+      "reserved": 0
+    }
+  ],
+  "checksum": {
+    "operation": null,
+    "variant": "eeprom-checksum",
+    "field": "checksum_type",
+    "direction": null,
+    "logical_position": null,
+    "type_width": 1,
+    "scale": null,
+    "sentinel": null,
+    "default": null,
+    "interpretation": "scalar, not flags",
+    "query": 0,
+    "scalar_min": 1,
+    "scalar_max": 127,
+    "algorithm": "Unknown",
+    "returned_checksum_width": null,
+    "completion": "Unknown",
+    "checksum_data": "Unknown",
+    "cases": [
+      {
+        "raw": 0,
+        "meaning": "query-supported-types"
+      },
+      {
+        "raw": 1,
+        "meaning": "scalar-type"
+      },
+      {
+        "raw": 3,
+        "meaning": "scalar-type"
+      },
+      {
+        "raw": 127,
+        "meaning": "scalar-type"
+      },
+      {
+        "raw": 128,
+        "meaning": null
+      }
+    ]
+  }
+}
