@@ -1,0 +1,68 @@
+{
+  "schema": "al25-b514-typed-row-boundaries",
+  "family": "B514",
+  "grade_scope": "shape-and-anomaly-constraints-only",
+  "op02": {
+    "grade": "Hypothesis",
+    "contracts_declared": 20,
+    "logical_base": 5,
+    "reused_existing_key_position": 3,
+    "inserted_keys": 0,
+    "required_per_row": ["width", "byte_order", "scale", "unit", "default", "enum"],
+    "row_key_to_width": {
+      "grade": "Unknown",
+      "known_associations": 0,
+      "guessed_types": 0,
+      "width": "Unknown"
+    },
+    "u8_conflict": {
+      "grade": "Hypothesis",
+      "status": "unresolved-representability-conflict",
+      "alternatives": 2,
+      "declared_default": 256,
+      "storage_type": "u8",
+      "domain_min": 0,
+      "domain_max": 255,
+      "repaired_value": null,
+      "modulo_repair": false
+    }
+  },
+  "op03": {
+    "grade": "Hypothesis",
+    "separate_bytes": 10,
+    "bits_per_byte": 8,
+    "independent_bits": 80
+  },
+  "op04": {
+    "grade": "Hypothesis",
+    "scalar_enum_tables": 12,
+    "mappings_total": 96,
+    "bitmasks": 0,
+    "equal_distribution_asserted": false,
+    "bitwise_semantics_asserted": false
+  },
+  "op05": {
+    "grade": "Hypothesis",
+    "typed_rows": 128,
+    "divisor_10_rows": 50,
+    "divisor_10_unit": "Unknown",
+    "divisor_10_unit_state": "raw"
+  },
+  "temperature_candidate": {
+    "grade": "Hypothesis",
+    "encoding": "signed-LE16",
+    "divisor": 16,
+    "applies_to_divisor_10_rows": false
+  },
+  "raw03_activity_flags": {
+    "grade": "Unknown",
+    "boolean_mapping": "Unknown"
+  },
+  "examples": {
+    "signed_le16_div16": {"bytes": ["F0", "FF"], "divisor": 16, "result": -1},
+    "unsigned_le16_div10": {"bytes": ["F0", "FF"], "divisor": 10, "result": 6552.0, "unit": "Unknown"},
+    "u8_domain": {"value": 256, "in_domain": false},
+    "bit_positions": {"bytes": 10, "bits": 80},
+    "enum_total": {"tables": 12, "mappings": 96}
+  }
+}

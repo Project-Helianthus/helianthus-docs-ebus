@@ -1,0 +1,187 @@
+{
+  "scope": "synthetic representation examples only; not a catalog or native profile",
+  "grades": {
+    "candidate_interpretation": "Hypothesis",
+    "synthetic_arithmetic": "Proven",
+    "companion_runtime": "Unknown"
+  },
+  "qualification": {
+    "physical": "Unknown",
+    "presence": "Unknown",
+    "freshness": "Unknown",
+    "execution": "Unknown",
+    "effects": "Unknown",
+    "persistence": "Unknown",
+    "delivery": "Unknown"
+  },
+  "unknown": {
+    "catalog_size": null,
+    "offsets": null,
+    "variant_associations": null,
+    "clock_widths": null,
+    "mode_width": null,
+    "special_function_width": null,
+    "century": null,
+    "timezone": null,
+    "voltage_conversion": null,
+    "op03_fields": null
+  },
+  "clock_rule": {
+    "order": [
+      "minute",
+      "hour",
+      "day",
+      "month",
+      "year"
+    ],
+    "replacement_before_decimal": true,
+    "replacement_meaning": null,
+    "controls": [
+      {
+        "raw": "12",
+        "status": "value",
+        "value": 12
+      },
+      {
+        "raw": "FF",
+        "status": "replacement",
+        "value": null
+      },
+      {
+        "raw": "FA",
+        "status": "invalid",
+        "value": null
+      }
+    ]
+  },
+  "examples": [
+    {
+      "key": {
+        "family": "B516",
+        "variant": "synthetic-residual",
+        "primary": 181,
+        "secondary": 22,
+        "operation": 8,
+        "direction": "none",
+        "field": "clock-message",
+        "alternative": "none",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "setpoint": {
+        "raw": "12",
+        "encoding": "u8/2",
+        "value": 9,
+        "unit": "degrees Celsius"
+      },
+      "mode_raw": "21",
+      "special_function_raw": "31",
+      "message_bytes": [
+        "41",
+        "42",
+        "43",
+        "44",
+        "45"
+      ],
+      "clock_raw": [
+        "12",
+        "23",
+        "31",
+        "12",
+        "99"
+      ],
+      "clock_values": [
+        12,
+        23,
+        31,
+        12,
+        99
+      ]
+    },
+    {
+      "key": {
+        "family": "B516",
+        "variant": "synthetic-residual",
+        "primary": 181,
+        "secondary": 22,
+        "operation": 13,
+        "direction": "none",
+        "field": "raw-words",
+        "alternative": "none",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "raw_words": [
+        "00 00",
+        "01 00",
+        "00 01",
+        "FF FF"
+      ],
+      "values": [
+        0,
+        1,
+        256,
+        65535
+      ],
+      "unit": null,
+      "labels": null,
+      "sentinels": null
+    },
+    {
+      "key": {
+        "family": "B516",
+        "variant": "synthetic-residual",
+        "primary": 181,
+        "secondary": 22,
+        "operation": 14,
+        "direction": "none",
+        "field": "page-data",
+        "alternative": "none",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "page_raw": null,
+      "page_width": null,
+      "maximum_data_length": null,
+      "peer_acceptance": "Unknown",
+      "data_examples": [
+        "",
+        "01AB"
+      ]
+    },
+    {
+      "key": {
+        "family": "B516",
+        "variant": "synthetic-residual",
+        "primary": 181,
+        "secondary": 22,
+        "operation": 2,
+        "direction": "none",
+        "field": "calendar-conflicts",
+        "alternative": "none",
+        "group": null,
+        "instance_scope": "none",
+        "register": null
+      },
+      "second_field_minute_metadata": true,
+      "field_associations": null,
+      "conflicts": [
+        {
+          "field": "day",
+          "default": 0,
+          "calendar_domain": "starts at 1",
+          "status": "out-of-domain"
+        },
+        {
+          "field": "month",
+          "default": 0,
+          "calendar_domain": "starts at 1",
+          "status": "out-of-domain"
+        }
+      ]
+    }
+  ]
+}

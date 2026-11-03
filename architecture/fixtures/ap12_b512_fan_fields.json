@@ -1,0 +1,1291 @@
+{
+  "contract": {
+    "signature": "Ab11Ap11Evaluate(ab11ap11Input json.RawMessage) (json.RawMessage, error)",
+    "package": "vaillant",
+    "primary": 181,
+    "secondary": 18,
+    "physical": "Unknown",
+    "qualified": false,
+    "grade": "Hypothesis",
+    "calculation": "Proven",
+    "arguments": {
+      "required": [],
+      "known": {},
+      "unknown": "preserve"
+    },
+    "fields": [
+      {
+        "view": "fan",
+        "operation": 11,
+        "direction": "request",
+        "name": "fan1",
+        "width": 2,
+        "codec": "leu16",
+        "unit": "rpm",
+        "default": null
+      },
+      {
+        "view": "fan",
+        "operation": 11,
+        "direction": "request",
+        "name": "fan2",
+        "width": 2,
+        "codec": "leu16",
+        "unit": "rpm",
+        "default": null
+      },
+      {
+        "view": "fan",
+        "operation": 11,
+        "direction": "request",
+        "name": "relay",
+        "width": 1,
+        "codec": "relay",
+        "unit": "Unknown",
+        "default": null
+      },
+      {
+        "view": "fan",
+        "operation": 11,
+        "direction": "positive",
+        "name": "fan1",
+        "width": 2,
+        "codec": "leu16",
+        "unit": "rpm",
+        "default": null
+      },
+      {
+        "view": "fan",
+        "operation": 11,
+        "direction": "positive",
+        "name": "fan2",
+        "width": 2,
+        "codec": "leu16",
+        "unit": "rpm",
+        "default": null
+      },
+      {
+        "view": "fan",
+        "operation": 11,
+        "direction": "positive",
+        "name": "status",
+        "width": 1,
+        "codec": "status",
+        "unit": "Unknown",
+        "default": null
+      },
+      {
+        "view": "fan",
+        "operation": 11,
+        "direction": "positive",
+        "name": "temperature1",
+        "width": 2,
+        "codec": "s16/16",
+        "unit": "Celsius",
+        "default": null
+      },
+      {
+        "view": "fan",
+        "operation": 11,
+        "direction": "positive",
+        "name": "temperature2",
+        "width": 2,
+        "codec": "s16/16",
+        "unit": "Celsius",
+        "default": null
+      },
+      {
+        "view": "fan",
+        "operation": 11,
+        "direction": "positive",
+        "name": "temperature3",
+        "width": 2,
+        "codec": "s16/16",
+        "unit": "Celsius",
+        "default": null
+      },
+      {
+        "view": "fan-control",
+        "operation": 12,
+        "direction": "request",
+        "name": "pulse",
+        "width": 1,
+        "codec": "u8",
+        "unit": "Unknown",
+        "default": 0
+      },
+      {
+        "view": "fan-control",
+        "operation": 12,
+        "direction": "request",
+        "name": "p",
+        "width": 1,
+        "codec": "u8",
+        "unit": "Unknown",
+        "default": 0
+      },
+      {
+        "view": "fan-control",
+        "operation": 12,
+        "direction": "request",
+        "name": "i",
+        "width": 1,
+        "codec": "u8",
+        "unit": "Unknown",
+        "default": 0
+      },
+      {
+        "view": "fan-control",
+        "operation": 12,
+        "direction": "request",
+        "name": "d",
+        "width": 1,
+        "codec": "u8",
+        "unit": "Unknown",
+        "default": 0
+      },
+      {
+        "view": "fan-control",
+        "operation": 12,
+        "direction": "request",
+        "name": "fan_count",
+        "width": 1,
+        "codec": "u8",
+        "unit": "Unknown",
+        "default": 0
+      },
+      {
+        "view": "fan-control",
+        "operation": 12,
+        "direction": "request",
+        "name": "minimum_pwm",
+        "width": 2,
+        "codec": "s16/256",
+        "unit": "percent",
+        "default": 1.0
+      },
+      {
+        "view": "fan-control",
+        "operation": 12,
+        "direction": "request",
+        "name": "maximum_pwm",
+        "width": 2,
+        "codec": "s16/256",
+        "unit": "percent",
+        "default": 1.0
+      },
+      {
+        "view": "fan-control",
+        "operation": 12,
+        "direction": "positive",
+        "name": "feedback",
+        "width": 1,
+        "codec": "feedback",
+        "unit": "Unknown",
+        "default": null
+      },
+      {
+        "view": "digital-air",
+        "operation": 13,
+        "direction": "positive",
+        "name": "digital",
+        "width": 1,
+        "codec": "digital",
+        "unit": "Unknown",
+        "default": 0
+      },
+      {
+        "view": "digital-air",
+        "operation": 13,
+        "direction": "positive",
+        "name": "temperature1",
+        "width": 2,
+        "codec": "s16/16",
+        "unit": "Celsius",
+        "default": 0
+      },
+      {
+        "view": "digital-air",
+        "operation": 13,
+        "direction": "positive",
+        "name": "temperature2",
+        "width": 2,
+        "codec": "s16/16",
+        "unit": "Celsius",
+        "default": 0
+      },
+      {
+        "view": "air-quality",
+        "operation": 14,
+        "direction": "positive",
+        "name": "temperature",
+        "width": 2,
+        "codec": "s16/16",
+        "unit": "Celsius",
+        "default": 0
+      },
+      {
+        "view": "air-quality",
+        "operation": 14,
+        "direction": "positive",
+        "name": "humidity",
+        "width": 2,
+        "codec": "leu16/16",
+        "unit": "percent",
+        "default": 0
+      },
+      {
+        "view": "air-quality",
+        "operation": 14,
+        "direction": "positive",
+        "name": "air_quality",
+        "width": 2,
+        "codec": "leu16",
+        "unit": "Unknown",
+        "default": 0
+      }
+    ],
+    "empty_views": [
+      [
+        "digital-air",
+        13,
+        "request"
+      ],
+      [
+        "air-quality",
+        14,
+        "request"
+      ]
+    ],
+    "mappings": {
+      "status": {
+        "0": "idle",
+        "1": "running",
+        "255": "fault"
+      },
+      "feedback": {
+        "1": "accepted",
+        "other": "rejected"
+      },
+      "digital": {
+        "0": false,
+        "1": true,
+        "other": "unmapped"
+      },
+      "relay": {
+        "0": "15V",
+        "1": "tray-heater-relay",
+        "reserved_mask": 252
+      }
+    },
+    "pwm_domain": [
+      -128,
+      127.99609375
+    ],
+    "rules": {
+      "input_required": [
+        "context",
+        "fields"
+      ],
+      "input_optional": [
+        "arguments"
+      ],
+      "output_required": [
+        "context",
+        "raw",
+        "state",
+        "fields",
+        "physical",
+        "qualified"
+      ],
+      "output_optional": [
+        "arguments"
+      ],
+      "arguments_presence": "same_as_input",
+      "raw_presence": "omit_if_absent_preserve_if_present",
+      "unknown_fields": "raw_and_unmodeled",
+      "unknown_selectors": "raw_only_Unknown",
+      "invalid_input": "error_no_result",
+      "duplicate_keys": "reject_at_every_depth",
+      "numeric_kinds": "integral_not_boolean_no_coercion",
+      "bounds": {
+        "u8": [
+          0,
+          255
+        ],
+        "u16": [
+          0,
+          65535
+        ],
+        "u32": [
+          0,
+          4294967295
+        ]
+      },
+      "supported_complete": "complete",
+      "any_incomplete": "partial",
+      "unmapped_sibling": "complete",
+      "storage": "deep_independent_across_calls",
+      "defaults": "annotations_never_fill",
+      "minimum_maximum_order": "not_enforced",
+      "pwm_clip": null,
+      "humidity_cap": null,
+      "family_grade": "Hypothesis",
+      "calculation_grade": "Proven",
+      "physical": "Unknown",
+      "qualified": false
+    }
+  },
+  "scenarios": [
+    {
+      "id": "ab11ap11_case_1",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 18,
+          "operation": 11,
+          "direction": "request",
+          "view": "fan",
+          "family": "synthetic-family",
+          "variant": {
+            "choice": false
+          }
+        },
+        "fields": {
+          "fan1": [
+            2,
+            1
+          ],
+          "fan2": [
+            4,
+            3
+          ],
+          "relay": [
+            4
+          ]
+        }
+      },
+      "expected_state": "complete",
+      "expected_fields": {
+        "fan1": {
+          "number": 258
+        },
+        "fan2": {
+          "number": 772
+        },
+        "relay": {
+          "flags": {
+            "bit0": "15V",
+            "bit1": "15V"
+          },
+          "reserved": 4
+        }
+      }
+    },
+    {
+      "id": "ab11ap11_case_2",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 18,
+          "operation": 11,
+          "direction": "positive",
+          "view": "fan",
+          "family": "synthetic-family",
+          "variant": {
+            "choice": false
+          }
+        },
+        "fields": {
+          "fan1": [
+            4,
+            3
+          ],
+          "fan2": [
+            2,
+            1
+          ],
+          "status": [
+            255
+          ],
+          "temperature1": [
+            16,
+            0
+          ],
+          "temperature2": [
+            240,
+            255
+          ],
+          "temperature3": [
+            32,
+            0
+          ]
+        }
+      },
+      "expected_state": "complete",
+      "expected_fields": {
+        "fan1": {
+          "number": 772
+        },
+        "fan2": {
+          "number": 258
+        },
+        "status": {
+          "label": "fault"
+        },
+        "temperature1": {
+          "number": 1
+        },
+        "temperature2": {
+          "number": -1
+        },
+        "temperature3": {
+          "number": 2
+        }
+      }
+    },
+    {
+      "id": "ab11ap11_case_3",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 18,
+          "operation": 12,
+          "direction": "request",
+          "view": "fan-control",
+          "family": "synthetic-family",
+          "variant": {
+            "choice": false
+          }
+        },
+        "fields": {
+          "pulse": [
+            2
+          ],
+          "p": [
+            3
+          ],
+          "i": [
+            4
+          ],
+          "d": [
+            5
+          ],
+          "fan_count": [
+            6
+          ],
+          "minimum_pwm": [
+            0,
+            1
+          ],
+          "maximum_pwm": [
+            0,
+            128
+          ]
+        }
+      },
+      "expected_state": "complete",
+      "expected_fields": {
+        "pulse": {
+          "number": 2
+        },
+        "p": {
+          "number": 3
+        },
+        "i": {
+          "number": 4
+        },
+        "d": {
+          "number": 5
+        },
+        "fan_count": {
+          "number": 6
+        },
+        "minimum_pwm": {
+          "number": 1
+        },
+        "maximum_pwm": {
+          "number": -128
+        }
+      }
+    },
+    {
+      "id": "ab11ap11_case_4",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 18,
+          "operation": 12,
+          "direction": "request",
+          "view": "fan-control",
+          "family": "synthetic-family",
+          "variant": {
+            "choice": false
+          }
+        },
+        "fields": {
+          "pulse": [
+            0
+          ],
+          "p": [
+            0
+          ],
+          "i": [
+            0
+          ],
+          "d": [
+            0
+          ],
+          "fan_count": [
+            0
+          ],
+          "minimum_pwm": [
+            255,
+            127
+          ],
+          "maximum_pwm": [
+            0,
+            1
+          ]
+        }
+      },
+      "expected_state": "complete",
+      "expected_fields": {
+        "pulse": {
+          "number": 0
+        },
+        "p": {
+          "number": 0
+        },
+        "i": {
+          "number": 0
+        },
+        "d": {
+          "number": 0
+        },
+        "fan_count": {
+          "number": 0
+        },
+        "minimum_pwm": {
+          "number": 127.99609375
+        },
+        "maximum_pwm": {
+          "number": 1
+        }
+      }
+    },
+    {
+      "id": "ab11ap11_case_5",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 18,
+          "operation": 12,
+          "direction": "positive",
+          "view": "fan-control",
+          "family": "synthetic-family",
+          "variant": {
+            "choice": false
+          }
+        },
+        "fields": {
+          "feedback": [
+            1
+          ]
+        }
+      },
+      "expected_state": "complete",
+      "expected_fields": {
+        "feedback": {
+          "label": "accepted"
+        }
+      }
+    },
+    {
+      "id": "ab11ap11_case_6",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 18,
+          "operation": 12,
+          "direction": "positive",
+          "view": "fan-control",
+          "family": "synthetic-family",
+          "variant": {
+            "choice": false
+          }
+        },
+        "fields": {
+          "feedback": [
+            2
+          ]
+        }
+      },
+      "expected_state": "complete",
+      "expected_fields": {
+        "feedback": {
+          "label": "rejected"
+        }
+      }
+    },
+    {
+      "id": "ab11ap11_case_7",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 18,
+          "operation": 12,
+          "direction": "positive",
+          "view": "fan-control",
+          "family": "synthetic-family",
+          "variant": {
+            "choice": false
+          }
+        },
+        "fields": {
+          "feedback": [
+            0
+          ]
+        }
+      },
+      "expected_state": "complete",
+      "expected_fields": {
+        "feedback": {
+          "label": "rejected"
+        }
+      }
+    },
+    {
+      "id": "ab11ap11_case_8",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 18,
+          "operation": 13,
+          "direction": "request",
+          "view": "digital-air",
+          "family": "synthetic-family",
+          "variant": {
+            "choice": false
+          }
+        },
+        "fields": {}
+      },
+      "expected_state": "complete",
+      "expected_fields": {}
+    },
+    {
+      "id": "ab11ap11_case_9",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 18,
+          "operation": 13,
+          "direction": "positive",
+          "view": "digital-air",
+          "family": "synthetic-family",
+          "variant": {
+            "choice": false
+          }
+        },
+        "fields": {
+          "digital": [
+            0
+          ],
+          "temperature1": [
+            16,
+            0
+          ],
+          "temperature2": [
+            240,
+            255
+          ]
+        }
+      },
+      "expected_state": "complete",
+      "expected_fields": {
+        "digital": {
+          "number": false
+        },
+        "temperature1": {
+          "number": 1
+        },
+        "temperature2": {
+          "number": -1
+        }
+      }
+    },
+    {
+      "id": "ab11ap11_case_10",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 18,
+          "operation": 13,
+          "direction": "positive",
+          "view": "digital-air",
+          "family": "synthetic-family",
+          "variant": {
+            "choice": false
+          }
+        },
+        "fields": {
+          "digital": [
+            1
+          ],
+          "temperature1": [
+            16,
+            0
+          ],
+          "temperature2": [
+            240,
+            255
+          ]
+        }
+      },
+      "expected_state": "complete",
+      "expected_fields": {
+        "digital": {
+          "number": true
+        },
+        "temperature1": {
+          "number": 1
+        },
+        "temperature2": {
+          "number": -1
+        }
+      }
+    },
+    {
+      "id": "ab11ap11_case_11",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 18,
+          "operation": 13,
+          "direction": "positive",
+          "view": "digital-air",
+          "family": "synthetic-family",
+          "variant": {
+            "choice": false
+          }
+        },
+        "fields": {
+          "digital": [
+            2
+          ],
+          "temperature1": [
+            16,
+            0
+          ],
+          "temperature2": [
+            240,
+            255
+          ]
+        }
+      },
+      "expected_state": "complete",
+      "expected_fields": {
+        "digital": {
+          "state": "unmapped"
+        },
+        "temperature1": {
+          "number": 1
+        },
+        "temperature2": {
+          "number": -1
+        }
+      }
+    },
+    {
+      "id": "ab11ap11_case_12",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 18,
+          "operation": 14,
+          "direction": "request",
+          "view": "air-quality",
+          "family": "synthetic-family",
+          "variant": {
+            "choice": false
+          }
+        },
+        "fields": {}
+      },
+      "expected_state": "complete",
+      "expected_fields": {}
+    },
+    {
+      "id": "ab11ap11_case_13",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 18,
+          "operation": 14,
+          "direction": "positive",
+          "view": "air-quality",
+          "family": "synthetic-family",
+          "variant": {
+            "choice": false
+          }
+        },
+        "fields": {
+          "temperature": [
+            240,
+            255
+          ],
+          "humidity": [
+            64,
+            6
+          ],
+          "air_quality": [
+            255,
+            255
+          ]
+        }
+      },
+      "expected_state": "complete",
+      "expected_fields": {
+        "temperature": {
+          "number": -1
+        },
+        "humidity": {
+          "number": 100
+        },
+        "air_quality": {
+          "number": 65535,
+          "unit": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "ab11ap11_case_14",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 18,
+          "operation": 14,
+          "direction": "positive",
+          "view": "air-quality",
+          "family": "synthetic-family",
+          "variant": {
+            "choice": false
+          }
+        },
+        "fields": {
+          "temperature": [
+            240,
+            255
+          ],
+          "humidity": [
+            80,
+            6
+          ],
+          "air_quality": [
+            255,
+            255
+          ]
+        }
+      },
+      "expected_state": "complete",
+      "expected_fields": {
+        "temperature": {
+          "number": -1
+        },
+        "humidity": {
+          "number": 101
+        },
+        "air_quality": {
+          "number": 65535,
+          "unit": "Unknown"
+        }
+      }
+    },
+    {
+      "id": "ab11ap11_case_15",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 18,
+          "operation": 11,
+          "direction": "request",
+          "view": "fan",
+          "family": "synthetic-family",
+          "variant": {
+            "choice": false
+          }
+        },
+        "fields": {
+          "fan2": [
+            4,
+            3
+          ],
+          "relay": [
+            4
+          ]
+        }
+      },
+      "expected_state": "partial",
+      "expected_fields": {
+        "fan1": {
+          "state": "incomplete"
+        },
+        "fan2": {
+          "number": 772
+        },
+        "relay": {
+          "reserved": 4
+        }
+      }
+    },
+    {
+      "id": "ab11ap11_case_16",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 18,
+          "operation": 11,
+          "direction": "request",
+          "view": "fan",
+          "family": "synthetic-family",
+          "variant": {
+            "choice": false
+          }
+        },
+        "fields": {
+          "fan2": [
+            4,
+            3
+          ],
+          "relay": [
+            4
+          ],
+          "fan1": []
+        }
+      },
+      "expected_state": "partial",
+      "expected_fields": {
+        "fan1": {
+          "state": "incomplete"
+        },
+        "fan2": {
+          "number": 772
+        },
+        "relay": {
+          "reserved": 4
+        }
+      }
+    },
+    {
+      "id": "ab11ap11_case_17",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 18,
+          "operation": 11,
+          "direction": "request",
+          "view": "fan",
+          "family": "synthetic-family",
+          "variant": {
+            "choice": false
+          }
+        },
+        "fields": {
+          "fan2": [
+            4,
+            3
+          ],
+          "relay": [
+            4
+          ],
+          "fan1": [
+            2
+          ]
+        }
+      },
+      "expected_state": "partial",
+      "expected_fields": {
+        "fan1": {
+          "state": "incomplete"
+        },
+        "fan2": {
+          "number": 772
+        },
+        "relay": {
+          "reserved": 4
+        }
+      }
+    },
+    {
+      "id": "ab11ap11_case_18",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 18,
+          "operation": 11,
+          "direction": "request",
+          "view": "fan",
+          "family": "synthetic-family",
+          "variant": {
+            "choice": false
+          }
+        },
+        "fields": {
+          "fan2": [
+            4,
+            3
+          ],
+          "relay": [
+            4
+          ],
+          "fan1": [
+            2,
+            1,
+            0
+          ]
+        }
+      },
+      "expected_state": "partial",
+      "expected_fields": {
+        "fan1": {
+          "state": "incomplete"
+        },
+        "fan2": {
+          "number": 772
+        },
+        "relay": {
+          "reserved": 4
+        }
+      }
+    },
+    {
+      "id": "ab11ap11_case_19",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 18,
+          "operation": 11,
+          "direction": "positive",
+          "view": "fan",
+          "family": "synthetic-family",
+          "variant": {
+            "choice": false
+          }
+        },
+        "fields": {
+          "fan1": [
+            0,
+            0
+          ],
+          "fan2": [
+            0,
+            0
+          ],
+          "status": [
+            2
+          ],
+          "temperature1": [
+            0,
+            0
+          ],
+          "temperature2": [
+            0,
+            0
+          ],
+          "temperature3": [
+            0,
+            0
+          ]
+        }
+      },
+      "expected_state": "complete",
+      "expected_fields": {
+        "status": {
+          "state": "unmapped"
+        },
+        "fan1": {
+          "number": 0
+        },
+        "fan2": {
+          "number": 0
+        },
+        "temperature1": {
+          "number": 0
+        },
+        "temperature2": {
+          "number": 0
+        },
+        "temperature3": {
+          "number": 0
+        }
+      }
+    },
+    {
+      "id": "ab11ap11_case_20",
+      "input": {
+        "context": {
+          "primary": 180,
+          "secondary": 18,
+          "operation": 11,
+          "direction": "request",
+          "view": "fan",
+          "family": "synthetic-family",
+          "variant": {
+            "choice": false
+          }
+        },
+        "fields": {
+          "fan1": [
+            2,
+            1
+          ]
+        }
+      },
+      "expected_state": "Unknown",
+      "expected_fields": {}
+    },
+    {
+      "id": "ab11ap11_case_21",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 19,
+          "operation": 11,
+          "direction": "request",
+          "view": "fan",
+          "family": "synthetic-family",
+          "variant": {
+            "choice": false
+          }
+        },
+        "fields": {
+          "fan1": [
+            2,
+            1
+          ]
+        }
+      },
+      "expected_state": "Unknown",
+      "expected_fields": {}
+    },
+    {
+      "id": "ab11ap11_case_22",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 18,
+          "operation": 1,
+          "direction": "request",
+          "view": "fan",
+          "family": "synthetic-family",
+          "variant": {
+            "choice": false
+          }
+        },
+        "fields": {
+          "fan1": [
+            2,
+            1
+          ]
+        }
+      },
+      "expected_state": "Unknown",
+      "expected_fields": {}
+    },
+    {
+      "id": "ab11ap11_case_23",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 18,
+          "operation": 11,
+          "direction": "negative",
+          "view": "fan",
+          "family": "synthetic-family",
+          "variant": {
+            "choice": false
+          }
+        },
+        "fields": {
+          "fan1": [
+            2,
+            1
+          ]
+        }
+      },
+      "expected_state": "Unknown",
+      "expected_fields": {}
+    },
+    {
+      "id": "ab11ap11_case_24",
+      "input": {
+        "context": {
+          "primary": 181,
+          "secondary": 18,
+          "operation": 11,
+          "direction": "request",
+          "view": "other",
+          "family": "synthetic-family",
+          "variant": {
+            "choice": false
+          }
+        },
+        "fields": {
+          "fan1": [
+            2,
+            1
+          ]
+        }
+      },
+      "expected_state": "Unknown",
+      "expected_fields": {}
+    }
+  ],
+  "invalid_byte_arrays": [
+    null,
+    false,
+    0,
+    "00",
+    [
+      false
+    ],
+    [
+      true
+    ],
+    [
+      null
+    ],
+    [
+      "0"
+    ],
+    [
+      0.5
+    ],
+    [
+      -1
+    ],
+    [
+      256
+    ],
+    [
+      []
+    ],
+    [
+      {}
+    ]
+  ],
+  "valid_byte_arrays": [
+    [],
+    [
+      0
+    ],
+    [
+      255
+    ],
+    [
+      0,
+      255
+    ]
+  ]
+}
