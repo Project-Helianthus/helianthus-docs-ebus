@@ -236,6 +236,34 @@ jobs:
       - name: Install actionlint
         run: go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.7
 
+      # A same-repository pull request lists the heavy suites whose inputs
+      # (scripts/ci_suite_inputs.json) are byte-identical at the PR head and at
+      # the trusted base. The base copy of the classifier and of its input lists
+      # decides, so a pull request cannot narrow its own suites; a base without
+      # the classifier, or any classifier error, lists nothing and every suite
+      # runs. Fork pull requests, main pushes, the nightly schedule and manual
+      # dispatches skip this step and run every suite.
+      - name: Classify unchanged heavy suites
+        id: suite_inputs
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        shell: bash
+        run: |
+          set -euo pipefail
+          base_root="${GITHUB_WORKSPACE}/checkouts/docs-ebus-base"
+          head_root="${GITHUB_WORKSPACE}/checkouts/docs-ebus"
+          classifier="${base_root}/scripts/ci_suite_inputs.py"
+          unchanged=""
+          if [[ -f "${classifier}" && ! -L "${classifier}" ]]; then
+            if ! unchanged="$(python3 "${classifier}" --base "${base_root}" --head "${head_root}")"; then
+              echo "::warning::Suite input classification failed; every heavy suite runs."
+              unchanged=""
+            fi
+          else
+            echo "The trusted base has no suite input classifier; every heavy suite runs."
+          fi
+          echo "Heavy suites with unchanged inputs: ${unchanged:-none}"
+          printf 'unchanged=%s\n' "${unchanged}" >> "${GITHUB_OUTPUT}"
+
       - name: Run local docs CI
         env:
           PLATFORM_DOCS_EBUS_REPOSITORY: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name || github.repository }}
@@ -245,6 +273,8 @@ jobs:
           M625_TRUSTED_BASE_ROOT: ${{ github.workspace }}/checkouts/m625-trusted-base
           PLATFORM_M625_DOCS_EEBUS_ROOT: ${{ github.workspace }}/checkouts/m625-docs-eebus
           PLATFORM_M625_EXECUTION_PLANS_ROOT: ${{ github.workspace }}/checkouts/m625-execution-plans
+          # Empty unless the classification step above ran for this pull request.
+          CI_UNCHANGED_SUITES: ${{ steps.suite_inputs.outputs.unchanged }}
           # A same-repository pull request skips only tests/test_runtime_control_contract.py
           # when every input of that module has the same content at the PR head as at
           # the trusted base checkout. Fork pull requests, main pushes, the nightly
