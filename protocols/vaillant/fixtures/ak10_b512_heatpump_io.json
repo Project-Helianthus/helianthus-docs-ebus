@@ -1,0 +1,1983 @@
+{
+  "family": "Vaillant heat-pump I/O",
+  "service": {
+    "primary": 181,
+    "secondary": 18
+  },
+  "coordinate_system": "abstract logical positions; not physical wire offsets",
+  "representation_grade": "Proven",
+  "candidate_grade": "Hypothesis",
+  "unknown": {
+    "native_support": "Unknown",
+    "physical_effects": "Unknown",
+    "persistence": "Unknown",
+    "delivery": "Unknown",
+    "physical_reply_form": "Unknown",
+    "qualification": "Unknown",
+    "physical_lengths": "Unknown",
+    "negative_replies": "Unknown"
+  },
+  "raw_policy": "retain original bytes, including short, extra, reserved and unmodeled data",
+  "entries": [
+    {
+      "operation": 15,
+      "direction": "request",
+      "grade": "Hypothesis",
+      "field": {
+        "position": 3,
+        "width_bits": 8,
+        "encoding": "bits",
+        "bits": [
+          {
+            "bit": 0,
+            "label": "output one",
+            "status": "candidate"
+          },
+          {
+            "bit": 1,
+            "label": "output two",
+            "status": "candidate"
+          },
+          {
+            "bit": 2,
+            "label": "reserved",
+            "status": "reserved"
+          },
+          {
+            "bit": 3,
+            "label": "reserved",
+            "status": "reserved"
+          },
+          {
+            "bit": 4,
+            "label": "reserved",
+            "status": "reserved"
+          },
+          {
+            "bit": 5,
+            "label": "reserved",
+            "status": "reserved"
+          },
+          {
+            "bit": 6,
+            "label": "reserved",
+            "status": "reserved"
+          },
+          {
+            "bit": 7,
+            "label": "reserved",
+            "status": "reserved"
+          }
+        ],
+        "name": "outputs"
+      }
+    },
+    {
+      "operation": 15,
+      "direction": "request",
+      "grade": "Hypothesis",
+      "field": {
+        "position": 4,
+        "width_bits": 8,
+        "encoding": "u8",
+        "values": {
+          "0": "off",
+          "1": "CH",
+          "2": "DHW"
+        },
+        "name": "valve"
+      }
+    },
+    {
+      "operation": 15,
+      "direction": "positive",
+      "grade": "Hypothesis",
+      "field": {
+        "position": 3,
+        "width_bits": 16,
+        "encoding": "signed-le16",
+        "scale": 0.0625,
+        "unit": "degrees Celsius",
+        "replacement": {
+          "raw_word": 32768,
+          "selection": "before_scaling",
+          "meaning": "replacement",
+          "unavailable_assertion": false
+        },
+        "name": "temperature_one"
+      }
+    },
+    {
+      "operation": 15,
+      "direction": "positive",
+      "grade": "Hypothesis",
+      "field": {
+        "position": 6,
+        "width_bits": 16,
+        "encoding": "signed-le16",
+        "scale": 0.0625,
+        "unit": "degrees Celsius",
+        "replacement": {
+          "raw_word": 32768,
+          "selection": "before_scaling",
+          "meaning": "replacement",
+          "unavailable_assertion": false
+        },
+        "name": "temperature_two"
+      }
+    },
+    {
+      "operation": 15,
+      "direction": "positive",
+      "grade": "Hypothesis",
+      "field": {
+        "position": 5,
+        "width_bits": 8,
+        "encoding": "u8",
+        "values": {
+          "0": "multipurpose",
+          "1": "utility contact"
+        },
+        "name": "input"
+      }
+    },
+    {
+      "operation": 15,
+      "direction": "positive",
+      "grade": "Hypothesis",
+      "field": {
+        "position": 8,
+        "width_bits": 8,
+        "encoding": "u8",
+        "scale": 0.1,
+        "unit": "bar",
+        "domain": [
+          0,
+          25.5
+        ],
+        "default": 255.0,
+        "default_conflict": true,
+        "raw_domain": [
+          0,
+          255
+        ],
+        "name": "pressure"
+      }
+    },
+    {
+      "operation": 15,
+      "direction": "positive",
+      "grade": "Hypothesis",
+      "field": {
+        "position": 9,
+        "width_bits": 8,
+        "encoding": "u8",
+        "values": {
+          "0": "off",
+          "1": "step one",
+          "2": "step two",
+          "3": "step three"
+        },
+        "replacement": {
+          "raw_word": 255,
+          "selection": "before_scaling",
+          "meaning": "replacement",
+          "unavailable_assertion": false
+        },
+        "name": "backup"
+      }
+    },
+    {
+      "operation": 16,
+      "direction": "request",
+      "grade": "Hypothesis",
+      "field": {
+        "position": 3,
+        "width_bits": 8,
+        "encoding": "bits",
+        "bits": [
+          {
+            "bit": 0,
+            "label": "cooling valve",
+            "status": "candidate"
+          },
+          {
+            "bit": 1,
+            "label": "passive mixer one",
+            "status": "candidate"
+          },
+          {
+            "bit": 2,
+            "label": "passive mixer two",
+            "status": "candidate"
+          },
+          {
+            "bit": 3,
+            "label": "cooling active",
+            "status": "candidate"
+          },
+          {
+            "bit": 4,
+            "label": "well pump",
+            "status": "candidate"
+          },
+          {
+            "bit": 5,
+            "label": "backup safety",
+            "status": "candidate"
+          },
+          {
+            "bit": 6,
+            "label": "backup one",
+            "status": "candidate"
+          },
+          {
+            "bit": 7,
+            "label": "backup two",
+            "status": "candidate"
+          }
+        ],
+        "name": "actuators_one"
+      }
+    },
+    {
+      "operation": 16,
+      "direction": "request",
+      "grade": "Hypothesis",
+      "field": {
+        "position": 4,
+        "width_bits": 8,
+        "encoding": "bits",
+        "bits": [
+          {
+            "bit": 0,
+            "label": "backup three",
+            "status": "candidate"
+          },
+          {
+            "bit": 1,
+            "label": "external valve",
+            "status": "candidate"
+          },
+          {
+            "bit": 2,
+            "label": "external backup",
+            "status": "candidate"
+          },
+          {
+            "bit": 3,
+            "label": "reserved",
+            "status": "reserved"
+          },
+          {
+            "bit": 4,
+            "label": "reserved",
+            "status": "reserved"
+          },
+          {
+            "bit": 5,
+            "label": "reserved",
+            "status": "reserved"
+          },
+          {
+            "bit": 6,
+            "label": "reserved",
+            "status": "reserved"
+          },
+          {
+            "bit": 7,
+            "label": "reserved",
+            "status": "reserved"
+          }
+        ],
+        "name": "actuators_two"
+      }
+    },
+    {
+      "operation": 16,
+      "direction": "request",
+      "grade": "Hypothesis",
+      "field": {
+        "position": 5,
+        "width_bits": 16,
+        "encoding": "opaque-16",
+        "algorithm": "Unknown",
+        "name": "inverse_actuator"
+      }
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "grade": "Hypothesis",
+      "field": {
+        "position": 3,
+        "width_bits": 8,
+        "encoding": "bits",
+        "bits": [
+          {
+            "bit": 0,
+            "label": "anode channel one",
+            "status": "candidate"
+          },
+          {
+            "bit": 1,
+            "label": "anode channel two",
+            "status": "candidate"
+          },
+          {
+            "bit": 2,
+            "label": "smart-grid",
+            "status": "candidate"
+          },
+          {
+            "bit": 3,
+            "label": "well",
+            "status": "candidate"
+          },
+          {
+            "bit": 4,
+            "label": "safety limiter",
+            "status": "candidate"
+          },
+          {
+            "bit": 5,
+            "label": "safety",
+            "status": "candidate"
+          },
+          {
+            "bit": 6,
+            "label": "reserved",
+            "status": "reserved"
+          },
+          {
+            "bit": 7,
+            "label": "reserved",
+            "status": "reserved"
+          }
+        ],
+        "name": "status"
+      }
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "grade": "Hypothesis",
+      "field": {
+        "position": 4,
+        "width_bits": 8,
+        "encoding": "u8",
+        "unit": "percent",
+        "relations": [
+          {
+            "raw": 50,
+            "comparison": "approximately",
+            "meaning": "powered"
+          },
+          {
+            "raw": 0,
+            "comparison": "exact",
+            "meaning": "absent"
+          }
+        ],
+        "tolerance": "Unknown",
+        "name": "single_phase"
+      }
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "grade": "Hypothesis",
+      "field": {
+        "position": 5,
+        "width_bits": 8,
+        "encoding": "u8",
+        "unit": "percent",
+        "values": {
+          "100": "powered",
+          "0": "all phases absent",
+          "33": "one phase absent",
+          "66": "two phases absent"
+        },
+        "name": "three_phase"
+      }
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "grade": "Hypothesis",
+      "field": {
+        "position": 6,
+        "width_bits": 16,
+        "encoding": "raw-le16",
+        "name": "adc_1"
+      }
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "grade": "Hypothesis",
+      "field": {
+        "position": 8,
+        "width_bits": 16,
+        "encoding": "raw-le16",
+        "name": "adc_2"
+      }
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "grade": "Hypothesis",
+      "field": {
+        "position": 10,
+        "width_bits": 16,
+        "encoding": "raw-le16",
+        "name": "adc_3"
+      }
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "grade": "Hypothesis",
+      "field": {
+        "position": 12,
+        "width_bits": 16,
+        "encoding": "raw-le16",
+        "name": "adc_4"
+      }
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "grade": "Hypothesis",
+      "field": {
+        "position": 14,
+        "width_bits": 16,
+        "encoding": "raw-le16",
+        "name": "adc_5"
+      }
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "grade": "Hypothesis",
+      "field": {
+        "position": 16,
+        "width_bits": 16,
+        "encoding": "raw-le16",
+        "name": "adc_6"
+      }
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "grade": "Hypothesis",
+      "field": {
+        "position": 18,
+        "width_bits": 8,
+        "encoding": "u8",
+        "values": {
+          "0": "opaque",
+          "1": "opaque",
+          "2": "opaque",
+          "3": "opaque",
+          "11": "opaque",
+          "12": "opaque"
+        },
+        "unmapped": "retain_raw",
+        "name": "board"
+      }
+    },
+    {
+      "operation": 17,
+      "direction": "request",
+      "grade": "Hypothesis",
+      "field": {
+        "position": 3,
+        "width_bits": 16,
+        "encoding": "signed-le16",
+        "scale": 0.0625,
+        "unit": "degrees Celsius",
+        "name": "temperature_1"
+      }
+    },
+    {
+      "operation": 17,
+      "direction": "request",
+      "grade": "Hypothesis",
+      "field": {
+        "position": 5,
+        "width_bits": 16,
+        "encoding": "signed-le16",
+        "scale": 0.0625,
+        "unit": "degrees Celsius",
+        "name": "temperature_2"
+      }
+    },
+    {
+      "operation": 17,
+      "direction": "request",
+      "grade": "Hypothesis",
+      "field": {
+        "position": 7,
+        "width_bits": 16,
+        "encoding": "signed-le16",
+        "scale": 0.0625,
+        "unit": "degrees Celsius",
+        "name": "temperature_3"
+      }
+    },
+    {
+      "operation": 17,
+      "direction": "request",
+      "grade": "Hypothesis",
+      "field": {
+        "position": 9,
+        "width_bits": 8,
+        "encoding": "u8",
+        "scale": 0.1,
+        "unit": "bar",
+        "name": "pressure"
+      }
+    },
+    {
+      "operation": 17,
+      "direction": "request",
+      "grade": "Hypothesis",
+      "field": {
+        "position": 10,
+        "width_bits": 8,
+        "encoding": "signed8",
+        "scale": 10,
+        "unit": "l/h",
+        "name": "flow"
+      }
+    },
+    {
+      "operation": 17,
+      "direction": "request",
+      "grade": "Hypothesis",
+      "field": {
+        "position": 11,
+        "width_bits": 8,
+        "encoding": "raw-u8",
+        "name": "pump_status"
+      }
+    },
+    {
+      "operation": 17,
+      "direction": "request",
+      "grade": "Hypothesis",
+      "field": {
+        "position": 12,
+        "width_bits": 8,
+        "encoding": "bits",
+        "bits": [
+          {
+            "bit": 0,
+            "label": "compressor-off",
+            "status": "candidate"
+          },
+          {
+            "bit": 1,
+            "label": "reserved",
+            "status": "reserved"
+          },
+          {
+            "bit": 2,
+            "label": "reserved",
+            "status": "reserved"
+          },
+          {
+            "bit": 3,
+            "label": "reserved",
+            "status": "reserved"
+          },
+          {
+            "bit": 4,
+            "label": "reserved",
+            "status": "reserved"
+          },
+          {
+            "bit": 5,
+            "label": "reserved",
+            "status": "reserved"
+          },
+          {
+            "bit": 6,
+            "label": "reserved",
+            "status": "reserved"
+          },
+          {
+            "bit": 7,
+            "label": "unmodeled",
+            "status": "unmodeled"
+          }
+        ],
+        "name": "compressor"
+      }
+    },
+    {
+      "operation": 17,
+      "direction": "positive",
+      "grade": "Hypothesis",
+      "field": {
+        "position": 3,
+        "width_bits": 8,
+        "encoding": "bits",
+        "bits": [
+          {
+            "bit": 0,
+            "label": "compressor-off",
+            "status": "candidate"
+          },
+          {
+            "bit": 1,
+            "label": "pump-relay",
+            "status": "candidate"
+          },
+          {
+            "bit": 2,
+            "label": "reserved",
+            "status": "reserved"
+          },
+          {
+            "bit": 3,
+            "label": "reserved",
+            "status": "reserved"
+          },
+          {
+            "bit": 4,
+            "label": "reserved",
+            "status": "reserved"
+          },
+          {
+            "bit": 5,
+            "label": "reserved",
+            "status": "reserved"
+          },
+          {
+            "bit": 6,
+            "label": "reserved",
+            "status": "reserved"
+          },
+          {
+            "bit": 7,
+            "label": "reserved",
+            "status": "reserved"
+          }
+        ],
+        "name": "status"
+      }
+    },
+    {
+      "operation": 17,
+      "direction": "positive",
+      "grade": "Hypothesis",
+      "field": {
+        "position": 4,
+        "width_bits": 8,
+        "encoding": "u8",
+        "domain": [
+          0,
+          100
+        ],
+        "unit": "percent",
+        "name": "setpoint"
+      }
+    },
+    {
+      "operation": 18,
+      "direction": "request",
+      "grade": "Hypothesis",
+      "field": {
+        "position": 3,
+        "width_bits": 8,
+        "encoding": "bits",
+        "bits": [
+          {
+            "bit": 0,
+            "label": "emergency",
+            "status": "candidate"
+          },
+          {
+            "bit": 1,
+            "label": "reserved",
+            "status": "reserved"
+          },
+          {
+            "bit": 2,
+            "label": "reserved",
+            "status": "reserved"
+          },
+          {
+            "bit": 3,
+            "label": "reserved",
+            "status": "reserved"
+          },
+          {
+            "bit": 4,
+            "label": "reserved",
+            "status": "reserved"
+          },
+          {
+            "bit": 5,
+            "label": "reserved",
+            "status": "reserved"
+          },
+          {
+            "bit": 6,
+            "label": "reserved",
+            "status": "reserved"
+          },
+          {
+            "bit": 7,
+            "label": "unmodeled",
+            "status": "unmodeled"
+          }
+        ],
+        "name": "emergency"
+      }
+    },
+    {
+      "operation": 18,
+      "direction": "request",
+      "grade": "Hypothesis",
+      "field": {
+        "position": 4,
+        "width_bits": 8,
+        "encoding": "raw-u8",
+        "name": "switch"
+      }
+    },
+    {
+      "operation": 18,
+      "direction": "request",
+      "grade": "Hypothesis",
+      "field": {
+        "position": 5,
+        "width_bits": 16,
+        "encoding": "raw-le16",
+        "domain": [
+          0,
+          65535
+        ],
+        "unit": "ppm",
+        "name": "co2_1"
+      }
+    },
+    {
+      "operation": 18,
+      "direction": "request",
+      "grade": "Hypothesis",
+      "field": {
+        "position": 7,
+        "width_bits": 16,
+        "encoding": "raw-le16",
+        "domain": [
+          0,
+          65535
+        ],
+        "unit": "ppm",
+        "name": "co2_2"
+      }
+    },
+    {
+      "operation": 18,
+      "direction": "positive",
+      "grade": "Hypothesis",
+      "field": {
+        "position": 3,
+        "width_bits": 8,
+        "encoding": "bits",
+        "bits": [
+          {
+            "bit": 0,
+            "label": "LED",
+            "status": "candidate"
+          },
+          {
+            "bit": 1,
+            "label": "reserved",
+            "status": "reserved"
+          },
+          {
+            "bit": 2,
+            "label": "reserved",
+            "status": "reserved"
+          },
+          {
+            "bit": 3,
+            "label": "reserved",
+            "status": "reserved"
+          },
+          {
+            "bit": 4,
+            "label": "reserved",
+            "status": "reserved"
+          },
+          {
+            "bit": 5,
+            "label": "reserved",
+            "status": "reserved"
+          },
+          {
+            "bit": 6,
+            "label": "reserved",
+            "status": "reserved"
+          },
+          {
+            "bit": 7,
+            "label": "unmodeled",
+            "status": "unmodeled"
+          }
+        ],
+        "name": "led"
+      }
+    }
+  ],
+  "positive_conflicts": [
+    {
+      "requested_operation": 17,
+      "declared_positive": [
+        181,
+        18,
+        12
+      ],
+      "association": "Unknown"
+    },
+    {
+      "requested_operation": 18,
+      "declared_positive": [
+        181,
+        18,
+        12
+      ],
+      "association": "Unknown"
+    }
+  ],
+  "cases": [
+    {
+      "operation": 15,
+      "direction": "positive",
+      "field": "temperature_one",
+      "raw": "00 80",
+      "value": null,
+      "replacement": true
+    },
+    {
+      "operation": 15,
+      "direction": "positive",
+      "field": "temperature_one",
+      "raw": "F0 FF",
+      "value": -1,
+      "replacement": false
+    },
+    {
+      "operation": 15,
+      "direction": "positive",
+      "field": "temperature_two",
+      "raw": "00 80",
+      "value": null,
+      "replacement": true
+    },
+    {
+      "operation": 15,
+      "direction": "positive",
+      "field": "temperature_two",
+      "raw": "F0 FF",
+      "value": -1,
+      "replacement": false
+    },
+    {
+      "operation": 15,
+      "direction": "positive",
+      "field": "pressure",
+      "raw": "FF",
+      "value": 25.5,
+      "replacement": false,
+      "raw_integer": 255
+    },
+    {
+      "operation": 15,
+      "direction": "positive",
+      "field": "backup",
+      "raw": "FF",
+      "value": null,
+      "replacement": true
+    },
+    {
+      "operation": 15,
+      "direction": "request",
+      "field": "outputs",
+      "raw": "01",
+      "value": 1,
+      "replacement": false,
+      "active_bits": [
+        0
+      ]
+    },
+    {
+      "operation": 15,
+      "direction": "request",
+      "field": "outputs",
+      "raw": "02",
+      "value": 2,
+      "replacement": false,
+      "active_bits": [
+        1
+      ]
+    },
+    {
+      "operation": 15,
+      "direction": "request",
+      "field": "outputs",
+      "raw": "04",
+      "value": 4,
+      "replacement": false,
+      "active_bits": [
+        2
+      ]
+    },
+    {
+      "operation": 15,
+      "direction": "request",
+      "field": "outputs",
+      "raw": "08",
+      "value": 8,
+      "replacement": false,
+      "active_bits": [
+        3
+      ]
+    },
+    {
+      "operation": 15,
+      "direction": "request",
+      "field": "outputs",
+      "raw": "10",
+      "value": 16,
+      "replacement": false,
+      "active_bits": [
+        4
+      ]
+    },
+    {
+      "operation": 15,
+      "direction": "request",
+      "field": "outputs",
+      "raw": "20",
+      "value": 32,
+      "replacement": false,
+      "active_bits": [
+        5
+      ]
+    },
+    {
+      "operation": 15,
+      "direction": "request",
+      "field": "outputs",
+      "raw": "40",
+      "value": 64,
+      "replacement": false,
+      "active_bits": [
+        6
+      ]
+    },
+    {
+      "operation": 15,
+      "direction": "request",
+      "field": "outputs",
+      "raw": "80",
+      "value": 128,
+      "replacement": false,
+      "active_bits": [
+        7
+      ]
+    },
+    {
+      "operation": 16,
+      "direction": "request",
+      "field": "actuators_one",
+      "raw": "01",
+      "value": 1,
+      "replacement": false,
+      "active_bits": [
+        0
+      ]
+    },
+    {
+      "operation": 16,
+      "direction": "request",
+      "field": "actuators_one",
+      "raw": "02",
+      "value": 2,
+      "replacement": false,
+      "active_bits": [
+        1
+      ]
+    },
+    {
+      "operation": 16,
+      "direction": "request",
+      "field": "actuators_one",
+      "raw": "04",
+      "value": 4,
+      "replacement": false,
+      "active_bits": [
+        2
+      ]
+    },
+    {
+      "operation": 16,
+      "direction": "request",
+      "field": "actuators_one",
+      "raw": "08",
+      "value": 8,
+      "replacement": false,
+      "active_bits": [
+        3
+      ]
+    },
+    {
+      "operation": 16,
+      "direction": "request",
+      "field": "actuators_one",
+      "raw": "10",
+      "value": 16,
+      "replacement": false,
+      "active_bits": [
+        4
+      ]
+    },
+    {
+      "operation": 16,
+      "direction": "request",
+      "field": "actuators_one",
+      "raw": "20",
+      "value": 32,
+      "replacement": false,
+      "active_bits": [
+        5
+      ]
+    },
+    {
+      "operation": 16,
+      "direction": "request",
+      "field": "actuators_one",
+      "raw": "40",
+      "value": 64,
+      "replacement": false,
+      "active_bits": [
+        6
+      ]
+    },
+    {
+      "operation": 16,
+      "direction": "request",
+      "field": "actuators_one",
+      "raw": "80",
+      "value": 128,
+      "replacement": false,
+      "active_bits": [
+        7
+      ]
+    },
+    {
+      "operation": 16,
+      "direction": "request",
+      "field": "actuators_two",
+      "raw": "01",
+      "value": 1,
+      "replacement": false,
+      "active_bits": [
+        0
+      ]
+    },
+    {
+      "operation": 16,
+      "direction": "request",
+      "field": "actuators_two",
+      "raw": "02",
+      "value": 2,
+      "replacement": false,
+      "active_bits": [
+        1
+      ]
+    },
+    {
+      "operation": 16,
+      "direction": "request",
+      "field": "actuators_two",
+      "raw": "04",
+      "value": 4,
+      "replacement": false,
+      "active_bits": [
+        2
+      ]
+    },
+    {
+      "operation": 16,
+      "direction": "request",
+      "field": "actuators_two",
+      "raw": "08",
+      "value": 8,
+      "replacement": false,
+      "active_bits": [
+        3
+      ]
+    },
+    {
+      "operation": 16,
+      "direction": "request",
+      "field": "actuators_two",
+      "raw": "10",
+      "value": 16,
+      "replacement": false,
+      "active_bits": [
+        4
+      ]
+    },
+    {
+      "operation": 16,
+      "direction": "request",
+      "field": "actuators_two",
+      "raw": "20",
+      "value": 32,
+      "replacement": false,
+      "active_bits": [
+        5
+      ]
+    },
+    {
+      "operation": 16,
+      "direction": "request",
+      "field": "actuators_two",
+      "raw": "40",
+      "value": 64,
+      "replacement": false,
+      "active_bits": [
+        6
+      ]
+    },
+    {
+      "operation": 16,
+      "direction": "request",
+      "field": "actuators_two",
+      "raw": "80",
+      "value": 128,
+      "replacement": false,
+      "active_bits": [
+        7
+      ]
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "field": "status",
+      "raw": "01",
+      "value": 1,
+      "replacement": false,
+      "active_bits": [
+        0
+      ]
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "field": "status",
+      "raw": "02",
+      "value": 2,
+      "replacement": false,
+      "active_bits": [
+        1
+      ]
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "field": "status",
+      "raw": "04",
+      "value": 4,
+      "replacement": false,
+      "active_bits": [
+        2
+      ]
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "field": "status",
+      "raw": "08",
+      "value": 8,
+      "replacement": false,
+      "active_bits": [
+        3
+      ]
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "field": "status",
+      "raw": "10",
+      "value": 16,
+      "replacement": false,
+      "active_bits": [
+        4
+      ]
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "field": "status",
+      "raw": "20",
+      "value": 32,
+      "replacement": false,
+      "active_bits": [
+        5
+      ]
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "field": "status",
+      "raw": "40",
+      "value": 64,
+      "replacement": false,
+      "active_bits": [
+        6
+      ]
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "field": "status",
+      "raw": "80",
+      "value": 128,
+      "replacement": false,
+      "active_bits": [
+        7
+      ]
+    },
+    {
+      "operation": 17,
+      "direction": "request",
+      "field": "compressor",
+      "raw": "01",
+      "value": 1,
+      "replacement": false,
+      "active_bits": [
+        0
+      ]
+    },
+    {
+      "operation": 17,
+      "direction": "request",
+      "field": "compressor",
+      "raw": "02",
+      "value": 2,
+      "replacement": false,
+      "active_bits": [
+        1
+      ]
+    },
+    {
+      "operation": 17,
+      "direction": "request",
+      "field": "compressor",
+      "raw": "04",
+      "value": 4,
+      "replacement": false,
+      "active_bits": [
+        2
+      ]
+    },
+    {
+      "operation": 17,
+      "direction": "request",
+      "field": "compressor",
+      "raw": "08",
+      "value": 8,
+      "replacement": false,
+      "active_bits": [
+        3
+      ]
+    },
+    {
+      "operation": 17,
+      "direction": "request",
+      "field": "compressor",
+      "raw": "10",
+      "value": 16,
+      "replacement": false,
+      "active_bits": [
+        4
+      ]
+    },
+    {
+      "operation": 17,
+      "direction": "request",
+      "field": "compressor",
+      "raw": "20",
+      "value": 32,
+      "replacement": false,
+      "active_bits": [
+        5
+      ]
+    },
+    {
+      "operation": 17,
+      "direction": "request",
+      "field": "compressor",
+      "raw": "40",
+      "value": 64,
+      "replacement": false,
+      "active_bits": [
+        6
+      ]
+    },
+    {
+      "operation": 17,
+      "direction": "request",
+      "field": "compressor",
+      "raw": "80",
+      "value": 128,
+      "replacement": false,
+      "active_bits": [
+        7
+      ]
+    },
+    {
+      "operation": 17,
+      "direction": "positive",
+      "field": "status",
+      "raw": "01",
+      "value": 1,
+      "replacement": false,
+      "active_bits": [
+        0
+      ]
+    },
+    {
+      "operation": 17,
+      "direction": "positive",
+      "field": "status",
+      "raw": "02",
+      "value": 2,
+      "replacement": false,
+      "active_bits": [
+        1
+      ]
+    },
+    {
+      "operation": 17,
+      "direction": "positive",
+      "field": "status",
+      "raw": "04",
+      "value": 4,
+      "replacement": false,
+      "active_bits": [
+        2
+      ]
+    },
+    {
+      "operation": 17,
+      "direction": "positive",
+      "field": "status",
+      "raw": "08",
+      "value": 8,
+      "replacement": false,
+      "active_bits": [
+        3
+      ]
+    },
+    {
+      "operation": 17,
+      "direction": "positive",
+      "field": "status",
+      "raw": "10",
+      "value": 16,
+      "replacement": false,
+      "active_bits": [
+        4
+      ]
+    },
+    {
+      "operation": 17,
+      "direction": "positive",
+      "field": "status",
+      "raw": "20",
+      "value": 32,
+      "replacement": false,
+      "active_bits": [
+        5
+      ]
+    },
+    {
+      "operation": 17,
+      "direction": "positive",
+      "field": "status",
+      "raw": "40",
+      "value": 64,
+      "replacement": false,
+      "active_bits": [
+        6
+      ]
+    },
+    {
+      "operation": 17,
+      "direction": "positive",
+      "field": "status",
+      "raw": "80",
+      "value": 128,
+      "replacement": false,
+      "active_bits": [
+        7
+      ]
+    },
+    {
+      "operation": 18,
+      "direction": "request",
+      "field": "emergency",
+      "raw": "01",
+      "value": 1,
+      "replacement": false,
+      "active_bits": [
+        0
+      ]
+    },
+    {
+      "operation": 18,
+      "direction": "request",
+      "field": "emergency",
+      "raw": "02",
+      "value": 2,
+      "replacement": false,
+      "active_bits": [
+        1
+      ]
+    },
+    {
+      "operation": 18,
+      "direction": "request",
+      "field": "emergency",
+      "raw": "04",
+      "value": 4,
+      "replacement": false,
+      "active_bits": [
+        2
+      ]
+    },
+    {
+      "operation": 18,
+      "direction": "request",
+      "field": "emergency",
+      "raw": "08",
+      "value": 8,
+      "replacement": false,
+      "active_bits": [
+        3
+      ]
+    },
+    {
+      "operation": 18,
+      "direction": "request",
+      "field": "emergency",
+      "raw": "10",
+      "value": 16,
+      "replacement": false,
+      "active_bits": [
+        4
+      ]
+    },
+    {
+      "operation": 18,
+      "direction": "request",
+      "field": "emergency",
+      "raw": "20",
+      "value": 32,
+      "replacement": false,
+      "active_bits": [
+        5
+      ]
+    },
+    {
+      "operation": 18,
+      "direction": "request",
+      "field": "emergency",
+      "raw": "40",
+      "value": 64,
+      "replacement": false,
+      "active_bits": [
+        6
+      ]
+    },
+    {
+      "operation": 18,
+      "direction": "request",
+      "field": "emergency",
+      "raw": "80",
+      "value": 128,
+      "replacement": false,
+      "active_bits": [
+        7
+      ]
+    },
+    {
+      "operation": 18,
+      "direction": "positive",
+      "field": "led",
+      "raw": "01",
+      "value": 1,
+      "replacement": false,
+      "active_bits": [
+        0
+      ]
+    },
+    {
+      "operation": 18,
+      "direction": "positive",
+      "field": "led",
+      "raw": "02",
+      "value": 2,
+      "replacement": false,
+      "active_bits": [
+        1
+      ]
+    },
+    {
+      "operation": 18,
+      "direction": "positive",
+      "field": "led",
+      "raw": "04",
+      "value": 4,
+      "replacement": false,
+      "active_bits": [
+        2
+      ]
+    },
+    {
+      "operation": 18,
+      "direction": "positive",
+      "field": "led",
+      "raw": "08",
+      "value": 8,
+      "replacement": false,
+      "active_bits": [
+        3
+      ]
+    },
+    {
+      "operation": 18,
+      "direction": "positive",
+      "field": "led",
+      "raw": "10",
+      "value": 16,
+      "replacement": false,
+      "active_bits": [
+        4
+      ]
+    },
+    {
+      "operation": 18,
+      "direction": "positive",
+      "field": "led",
+      "raw": "20",
+      "value": 32,
+      "replacement": false,
+      "active_bits": [
+        5
+      ]
+    },
+    {
+      "operation": 18,
+      "direction": "positive",
+      "field": "led",
+      "raw": "40",
+      "value": 64,
+      "replacement": false,
+      "active_bits": [
+        6
+      ]
+    },
+    {
+      "operation": 18,
+      "direction": "positive",
+      "field": "led",
+      "raw": "80",
+      "value": 128,
+      "replacement": false,
+      "active_bits": [
+        7
+      ]
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "field": "adc_1",
+      "raw": "00 00",
+      "value": 0,
+      "replacement": false
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "field": "adc_1",
+      "raw": "01 00",
+      "value": 1,
+      "replacement": false
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "field": "adc_1",
+      "raw": "00 01",
+      "value": 256,
+      "replacement": false
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "field": "adc_1",
+      "raw": "FF FF",
+      "value": 65535,
+      "replacement": false
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "field": "adc_2",
+      "raw": "00 00",
+      "value": 0,
+      "replacement": false
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "field": "adc_2",
+      "raw": "01 00",
+      "value": 1,
+      "replacement": false
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "field": "adc_2",
+      "raw": "00 01",
+      "value": 256,
+      "replacement": false
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "field": "adc_2",
+      "raw": "FF FF",
+      "value": 65535,
+      "replacement": false
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "field": "adc_3",
+      "raw": "00 00",
+      "value": 0,
+      "replacement": false
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "field": "adc_3",
+      "raw": "01 00",
+      "value": 1,
+      "replacement": false
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "field": "adc_3",
+      "raw": "00 01",
+      "value": 256,
+      "replacement": false
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "field": "adc_3",
+      "raw": "FF FF",
+      "value": 65535,
+      "replacement": false
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "field": "adc_4",
+      "raw": "00 00",
+      "value": 0,
+      "replacement": false
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "field": "adc_4",
+      "raw": "01 00",
+      "value": 1,
+      "replacement": false
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "field": "adc_4",
+      "raw": "00 01",
+      "value": 256,
+      "replacement": false
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "field": "adc_4",
+      "raw": "FF FF",
+      "value": 65535,
+      "replacement": false
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "field": "adc_5",
+      "raw": "00 00",
+      "value": 0,
+      "replacement": false
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "field": "adc_5",
+      "raw": "01 00",
+      "value": 1,
+      "replacement": false
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "field": "adc_5",
+      "raw": "00 01",
+      "value": 256,
+      "replacement": false
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "field": "adc_5",
+      "raw": "FF FF",
+      "value": 65535,
+      "replacement": false
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "field": "adc_6",
+      "raw": "00 00",
+      "value": 0,
+      "replacement": false
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "field": "adc_6",
+      "raw": "01 00",
+      "value": 1,
+      "replacement": false
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "field": "adc_6",
+      "raw": "00 01",
+      "value": 256,
+      "replacement": false
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "field": "adc_6",
+      "raw": "FF FF",
+      "value": 65535,
+      "replacement": false
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "field": "single_phase",
+      "raw": "00",
+      "value": 0,
+      "replacement": false
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "field": "single_phase",
+      "raw": "21",
+      "value": 33,
+      "replacement": false
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "field": "single_phase",
+      "raw": "32",
+      "value": 50,
+      "replacement": false
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "field": "single_phase",
+      "raw": "42",
+      "value": 66,
+      "replacement": false
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "field": "single_phase",
+      "raw": "64",
+      "value": 100,
+      "replacement": false
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "field": "three_phase",
+      "raw": "00",
+      "value": 0,
+      "replacement": false
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "field": "three_phase",
+      "raw": "21",
+      "value": 33,
+      "replacement": false
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "field": "three_phase",
+      "raw": "32",
+      "value": 50,
+      "replacement": false
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "field": "three_phase",
+      "raw": "42",
+      "value": 66,
+      "replacement": false
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "field": "three_phase",
+      "raw": "64",
+      "value": 100,
+      "replacement": false
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "field": "board",
+      "raw": "0C",
+      "value": 12,
+      "replacement": false,
+      "mapped": true
+    },
+    {
+      "operation": 16,
+      "direction": "positive",
+      "field": "board",
+      "raw": "0D",
+      "value": 13,
+      "replacement": false,
+      "mapped": false
+    },
+    {
+      "operation": 16,
+      "direction": "request",
+      "field": "inverse_actuator",
+      "raw": "FF FF",
+      "value": null,
+      "replacement": false
+    },
+    {
+      "operation": 16,
+      "direction": "request",
+      "field": "inverse_actuator",
+      "raw": "00 00",
+      "value": null,
+      "replacement": false
+    },
+    {
+      "operation": 16,
+      "direction": "request",
+      "field": "inverse_actuator",
+      "raw": "AA 55",
+      "value": null,
+      "replacement": false
+    },
+    {
+      "operation": 17,
+      "direction": "request",
+      "field": "temperature_1",
+      "raw": "F0 FF",
+      "value": -1,
+      "replacement": false
+    },
+    {
+      "operation": 17,
+      "direction": "request",
+      "field": "temperature_2",
+      "raw": "F0 FF",
+      "value": -1,
+      "replacement": false
+    },
+    {
+      "operation": 17,
+      "direction": "request",
+      "field": "temperature_3",
+      "raw": "F0 FF",
+      "value": -1,
+      "replacement": false
+    },
+    {
+      "operation": 17,
+      "direction": "request",
+      "field": "pressure",
+      "raw": "FF",
+      "value": 25.5,
+      "replacement": false
+    },
+    {
+      "operation": 17,
+      "direction": "request",
+      "field": "flow",
+      "raw": "FF",
+      "value": -10,
+      "replacement": false
+    },
+    {
+      "operation": 18,
+      "direction": "request",
+      "field": "co2_1",
+      "raw": "FF FF",
+      "value": 65535,
+      "replacement": false
+    },
+    {
+      "operation": 18,
+      "direction": "request",
+      "field": "co2_2",
+      "raw": "FF FF",
+      "value": 65535,
+      "replacement": false
+    }
+  ]
+}
