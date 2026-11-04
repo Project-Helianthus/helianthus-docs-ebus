@@ -1,0 +1,182 @@
+{
+  "version": 1,
+  "description": "Inputs of the heavy Docs Checks suites. A same-repository pull request skips a suite only when no file matched by shared_inputs or by the suite's inputs differs between the trusted base checkout and the pull-request head. Main pushes, the nightly run, manual dispatches and fork pull requests run every suite. Patterns are repository-relative POSIX paths: a plain path names one file, a trailing /** names a directory tree, and *, ? and [] are shell-style wildcards that may also match a slash. The lists were derived by tracing every file each suite opens, lists or globs while it runs (Python audit hooks, child processes included), then widened to whole directories where a suite enumerates them.",
+  "shared_inputs": [
+    "scripts/**",
+    "requirements-ci.txt",
+    ".github/workflows/**",
+    ".gitattributes",
+    "conftest.py",
+    "tests/conftest.py",
+    "tests/__init__.py",
+    "pytest.ini",
+    "pyproject.toml",
+    "setup.cfg",
+    "tox.ini"
+  ],
+  "suites": {
+    "adversarial_runtime_report": {
+      "inputs": [
+        "tests/test_adversarial_runtime_report_v1.py",
+        "scripts/validate_adversarial_runtime_report_v1.py",
+        "docs/platform/**"
+      ]
+    },
+    "graphql_face_provenance": {
+      "inputs": [
+        "tests/test_graphql_face_provenance_checker.py",
+        "scripts/check_graphql_face_provenance.py",
+        "api/graphql.md",
+        "api/mcp.md",
+        "architecture/atr/07-live-validation-acceptance.md"
+      ]
+    },
+    "semantic_operation_route": {
+      "inputs": [
+        "tests/test_semantic_operation_route_contract.py",
+        "tests/semantic_operation_route_contract.json",
+        "api/semantic-operation-route.md",
+        "scripts/ci_local.sh"
+      ]
+    },
+    "portal_ux": {
+      "inputs": [
+        "tests/test_portal_ux_contract_checker.py",
+        "scripts/check_portal_ux_contract.py",
+        "api/portal.md"
+      ]
+    },
+    "b503_milestones": {
+      "inputs": [
+        "tests/test_vaillant_b503_milestone_checker.py",
+        "scripts/check_vaillant_b503_milestones.py",
+        "architecture/protocol-routing-vaillant-b503.md"
+      ]
+    },
+    "basv0_profile": {
+      "inputs": [
+        "tests/test_b524_basv0_description_profile.py",
+        "tests/test_b524_calendar_edge_vectors.py",
+        "tests/test_b524_description_schema_privacy.py",
+        "tests/test_b524_exp_nonfinite_limits.py",
+        "tests/test_b524_evidence_join_permutations.py",
+        "tests/test_b524_external_bundle_cli.py",
+        "tests/test_b524_cli_input_errors.py",
+        "tests/test_b524_overlay_cli_rejection.py",
+        "tests/test_b524_bounded_survey_profile.py",
+        "scripts/validate_b524_basv0_description_profile.py",
+        "scripts/validate_b524_bounded_survey_profile.py",
+        "scripts/ci_local.sh",
+        "protocols/vaillant/ebus-vaillant-B524-register-map.md",
+        "protocols/vaillant/ebus-vaillant-b524-basv0-profile-v1.md",
+        "protocols/vaillant/ebus-vaillant-b524-survey-*.md",
+        "protocols/vaillant/fixtures/b524-basv0-*",
+        "protocols/vaillant/fixtures/b524-bounded-survey-*",
+        "protocols/vaillant/fixtures/b524-op02-*",
+        "development/fixtures/b524-basv0-*"
+      ]
+    },
+    "msp_docs_clean": {
+      "inputs": [
+        "tests/test_m625_cross_seed_contract.py",
+        "tests/test_platform_contracts.py",
+        "tests/test_synchronized_evidence_contract.py",
+        "tests/test_synchronized_evidence_executable_contract.py",
+        "tests/test_synchronized_evidence_m625_contract.py",
+        "tests/test_synchronized_evidence_one_shot_contract.py",
+        "tests/test_candidate_fact_graph_contract.py",
+        "tests/test_candidate_fact_graph_executable_contract.py",
+        "tests/test_multi_runtime_live_coexistence_contract.py",
+        "tests/test_leaf_promotion_dossier_contract.py",
+        "tests/test_captured_multi_leaf_promotion_contract.py",
+        "tests/test_msp085_live_completion.py",
+        "tests/test_msp085_final_18_leaf_completion.py",
+        "scripts/generate_captured_multi_leaf_promotion_fixture.py",
+        "scripts/generate_multi_runtime_coexistence_fixture.py",
+        "scripts/generate_synchronized_evidence_m625_fixture.py",
+        "scripts/platform_publication_token.py",
+        "scripts/project_candidate_fact_public_status.py",
+        "scripts/validate_candidate_fact_graph.py",
+        "scripts/validate_captured_multi_leaf_promotion.py",
+        "scripts/validate_leaf_promotion_dossier.py",
+        "scripts/validate_multi_runtime_coexistence.py",
+        "scripts/validate_platform_combined_ref.py",
+        "scripts/validate_platform_contracts.py",
+        "scripts/validate_synchronized_evidence.py",
+        "scripts/ci_local.sh",
+        "requirements-ci.txt",
+        ".github/workflows/docs-ci.yml",
+        ".github/workflows/platform-contracts-combined-ref.yml",
+        "Makefile",
+        "docs/platform/**"
+      ]
+    },
+    "modbus_companion": {
+      "inputs": [
+        "tests/test_modbus_companion_contract.py",
+        "tests/test_modbus_trusted_revision.py",
+        "tests/test_modbus_v1_mcp_contract.py",
+        "tests/test_modbus_v1_addon_runtime_contract.py",
+        "tests/test_modbus_v1_live_qualification_contract.py",
+        "tests/test_fronius_m4_05_live_evidence.py",
+        "tests/test_fronius_m4_05_0651_go.py",
+        "tests/test_fronius_flavor_v1_2_walk_evidence.py",
+        "tests/test_fronius_m5_continuous_acquisition.py",
+        "tests/test_modbus_vendor_evidence_v1.py",
+        "tests/test_canonical_pv_semantics_v1.py",
+        "tests/test_public_graphql_m2m_v1.py",
+        "tests/test_eebus_operator_admin_contract.py",
+        "tests/test_driver_runtime_manager_v1.py",
+        "tests/test_runtime_driver_registration.py",
+        "tests/test_bidirectional_registration.py",
+        "tests/test_runtime_driver_registration_rendered.py",
+        "tests/test_fronius_sunspec_phase1_contract.py",
+        "tests/test_sunspec_model_chain_contract.py",
+        "tests/test_sunspec_fronius_flavor_contract.py",
+        "tests/test_sunspec_model_123_fronius_v3_contract.py",
+        "scripts/bidirectional_registration_contract.json",
+        "scripts/check_bidirectional_registration.py",
+        "scripts/check_runtime_driver_registration.py",
+        "scripts/validate_canonical_pv_v1.py",
+        "scripts/validate_modbus_companion.py",
+        "scripts/validate_modbus_revision_transition.py",
+        "scripts/validate_platform_contracts.py",
+        "scripts/validate_public_graphql_m2m_v1.py",
+        "scripts/ci_local.sh",
+        ".github/workflows/modbus-trusted-revision.yml",
+        "README.md",
+        "api/driver-runtime-v1.md",
+        "api/eebus-operator-admin.md",
+        "api/graphql.md",
+        "api/mcp.md",
+        "api/modbus-multi-endpoint-runtime.md",
+        "api/modbus-v1-addon-runtime.md",
+        "api/modbus-v1-mcp.md",
+        "api/portal.md",
+        "api/public-graphql-m2m-v1.graphql",
+        "api/public-graphql-m2m-v1.query.graphql",
+        "architecture/b524-semantic-mapping.md",
+        "architecture/b524-structural-decisions.md",
+        "architecture/bidirectional-driver-registration.md",
+        "architecture/decisions.md",
+        "architecture/protocol-routing-vendor-*",
+        "architecture/runtime-driver-lifecycle.md",
+        "architecture/semantic-configuration-gates.md",
+        "architecture/semantic-structure-fsm-map.md",
+        "development/ha-integration.md",
+        "protocols/LICENSE",
+        "protocols/modbus/**",
+        "protocols/sunspec/**",
+        "docs/platform/**"
+      ]
+    },
+    "opaque_runtime_acquisition": {
+      "inputs": [
+        "tests/test_opaque_runtime_acquisition_contract.py",
+        "scripts/validate_opaque_runtime_acquisition.py",
+        "README.md",
+        "docs/platform/**"
+      ]
+    }
+  }
+}

@@ -87,6 +87,22 @@ python3 -m pytest -q tests/test_workflow_shells.py
 python3 -m pytest -q tests/test_workflow_lint_cleanup.py
 echo "Pinned workflow/schema gate tools passed."
 
+# A same-repository pull request may list heavy suites whose inputs did not
+# change (CI_UNCHANGED_SUITES, computed by the trusted base copy of
+# scripts/ci_suite_inputs.py from scripts/ci_suite_inputs.json). Only the
+# listed suites' pytest modules are skipped; their cheap validators still run.
+# Main pushes, the nightly run, manual dispatches, fork pull requests and local
+# runs leave the variable empty and run every suite.
+ci_suite_unchanged() {
+  case " ${CI_UNCHANGED_SUITES:-} " in
+    *" $1 "*)
+      echo "Skipping the $1 suite: none of its inputs changed in this pull request (main pushes and the nightly run still run it)."
+      return 0
+      ;;
+  esac
+  return 1
+}
+
 echo "==> verify markdown files are present"
 count="$(git ls-files '*.md' | wc -l | tr -d ' ')"
 if [ "${count}" -eq 0 ]; then
@@ -227,7 +243,9 @@ done
 for driver in docs/platform/fixtures/adversarial-runtime/v1/inputs/*.json; do
   jv docs/platform/schemas/adversarial-runtime-offline-fixture-v1.schema.json "$driver"
 done
-python3 -m pytest -q tests/test_adversarial_runtime_report_v1.py
+if ! ci_suite_unchanged adversarial_runtime_report; then
+  python3 -m pytest -q tests/test_adversarial_runtime_report_v1.py
+fi
 
 echo "==> check Vaillant regulator capability API contract"
 python3 scripts/validate_vaillant_regulator_capability_api_v1.py
@@ -235,17 +253,23 @@ python3 -m pytest -q tests/test_vaillant_regulator_capability_api_v1.py
 
 echo "==> check GraphQL device-face provenance contract"
 python3 scripts/check_graphql_face_provenance.py
-python3 -m pytest -q tests/test_graphql_face_provenance_checker.py
+if ! ci_suite_unchanged graphql_face_provenance; then
+  python3 -m pytest -q tests/test_graphql_face_provenance_checker.py
+fi
 python3 -m pytest -q -p no:cacheprovider tests/test_system_config_bound_contract.py
 python3 -m pytest -q tests/test_semantic_snapshot_read_contract.py
-python3 -m pytest -q tests/test_semantic_operation_route_contract.py
+if ! ci_suite_unchanged semantic_operation_route; then
+  python3 -m pytest -q tests/test_semantic_operation_route_contract.py
+fi
 python3 -m pytest -q tests/test_aj17_b516_projection.py
 python3 -m pytest -q tests/test_aj28_ff_local_liveness.py
 python3 -m pytest -q tests/test_aj19_b531_distribution_consumers.py
 
 echo "==> check contribution-driven Portal UX contract"
 python3 scripts/check_portal_ux_contract.py
-python3 -m pytest -q tests/test_portal_ux_contract_checker.py
+if ! ci_suite_unchanged portal_ux; then
+  python3 -m pytest -q tests/test_portal_ux_contract_checker.py
+fi
 
 echo "==> check CC0 and AGPL documentation boundary"
 python3 scripts/check_public_domain_boundary.py
@@ -256,7 +280,9 @@ python3 -m pytest -q tests/test_ac06_room_actions.py
 
 echo "==> check Vaillant B503 milestone contract"
 python3 scripts/check_vaillant_b503_milestones.py
-python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py
+if ! ci_suite_unchanged b503_milestones; then
+  python3 -m pytest -q tests/test_vaillant_b503_milestone_checker.py
+fi
 python3 -m pytest -q tests/test_ae14_b510_candidates.py
 
 echo "==> check AI-28 B510/B511 local-cache contract"
@@ -341,15 +367,17 @@ python3 scripts/validate_b524_basv0_description_profile.py \
   --observations protocols/vaillant/fixtures/b524-basv0-register-observations-v1.json
 jv protocols/vaillant/fixtures/b524-basv0-register-observations-schema-v1.json \
   protocols/vaillant/fixtures/b524-basv0-register-observations-v1.json
-python3 -m pytest -q tests/test_b524_basv0_description_profile.py
-python3 -m pytest -q tests/test_b524_calendar_edge_vectors.py
-python3 -m pytest -q tests/test_b524_description_schema_privacy.py
-python3 -m pytest -q tests/test_b524_exp_nonfinite_limits.py
-python3 -m pytest -q tests/test_b524_evidence_join_permutations.py
-python3 -m pytest -q tests/test_b524_external_bundle_cli.py
-python3 -m pytest -q tests/test_b524_cli_input_errors.py
-python3 -m pytest -q tests/test_b524_overlay_cli_rejection.py
-python3 -m pytest -q tests/test_b524_bounded_survey_profile.py
+if ! ci_suite_unchanged basv0_profile; then
+  python3 -m pytest -q tests/test_b524_basv0_description_profile.py
+  python3 -m pytest -q tests/test_b524_calendar_edge_vectors.py
+  python3 -m pytest -q tests/test_b524_description_schema_privacy.py
+  python3 -m pytest -q tests/test_b524_exp_nonfinite_limits.py
+  python3 -m pytest -q tests/test_b524_evidence_join_permutations.py
+  python3 -m pytest -q tests/test_b524_external_bundle_cli.py
+  python3 -m pytest -q tests/test_b524_cli_input_errors.py
+  python3 -m pytest -q tests/test_b524_overlay_cli_rejection.py
+  python3 -m pytest -q tests/test_b524_bounded_survey_profile.py
+fi
 for profile in protocols/vaillant/fixtures/b524-bounded-survey-*-v1.json; do
   case "$profile" in
     *-profile-schema-v1.json|*-profile-template-v1.json) continue ;;
@@ -372,36 +400,40 @@ python3 -m pytest -q tests/test_b524_operation_reads.py
 python3 -m pytest -q tests/test_al08_b524_system_information.py
 
 echo "==> check cross-runtime platform contracts (MSP-DOCS-CLEAN)"
-python3 -m pytest -q tests/test_m625_cross_seed_contract.py
-python3 -m pytest -q tests/test_platform_contracts.py -k trusted_prior_workflow
-python3 -m pytest -q tests/test_platform_contracts.py -k 'not trusted_prior_workflow'
-python3 -m pytest -q tests/test_synchronized_evidence_contract.py
-python3 -m pytest -q tests/test_synchronized_evidence_executable_contract.py
-python3 -m pytest -q tests/test_synchronized_evidence_m625_contract.py
-python3 -m pytest -q tests/test_synchronized_evidence_one_shot_contract.py
-python3 -m pytest -q tests/test_candidate_fact_graph_contract.py
-python3 -m pytest -q tests/test_candidate_fact_graph_executable_contract.py
-python3 -m pytest -q tests/test_multi_runtime_live_coexistence_contract.py
-python3 -m pytest -q tests/test_leaf_promotion_dossier_contract.py
-python3 -m pytest -q tests/test_captured_multi_leaf_promotion_contract.py
-python3 -m pytest -q tests/test_msp085_live_completion.py
-python3 -m pytest -q tests/test_msp085_final_18_leaf_completion.py
+if ! ci_suite_unchanged msp_docs_clean; then
+  python3 -m pytest -q tests/test_m625_cross_seed_contract.py
+  python3 -m pytest -q tests/test_platform_contracts.py -k trusted_prior_workflow
+  python3 -m pytest -q tests/test_platform_contracts.py -k 'not trusted_prior_workflow'
+  python3 -m pytest -q tests/test_synchronized_evidence_contract.py
+  python3 -m pytest -q tests/test_synchronized_evidence_executable_contract.py
+  python3 -m pytest -q tests/test_synchronized_evidence_m625_contract.py
+  python3 -m pytest -q tests/test_synchronized_evidence_one_shot_contract.py
+  python3 -m pytest -q tests/test_candidate_fact_graph_contract.py
+  python3 -m pytest -q tests/test_candidate_fact_graph_executable_contract.py
+  python3 -m pytest -q tests/test_multi_runtime_live_coexistence_contract.py
+  python3 -m pytest -q tests/test_leaf_promotion_dossier_contract.py
+  python3 -m pytest -q tests/test_captured_multi_leaf_promotion_contract.py
+  python3 -m pytest -q tests/test_msp085_live_completion.py
+  python3 -m pytest -q tests/test_msp085_final_18_leaf_completion.py
+fi
 python3 -m pytest -q tests/test_aj23_b555_narrow_refresh.py
 
 echo "==> check Modbus M1/M2 companion contract"
-python3 -m pytest -q \
-  tests/test_modbus_companion_contract.py \
-  tests/test_modbus_trusted_revision.py \
-  tests/test_modbus_v1_mcp_contract.py \
-  tests/test_modbus_v1_addon_runtime_contract.py \
-  tests/test_modbus_v1_live_qualification_contract.py \
-  tests/test_fronius_m4_05_live_evidence.py \
-  tests/test_fronius_m4_05_0651_go.py \
-  tests/test_fronius_flavor_v1_2_walk_evidence.py \
-  tests/test_fronius_m5_continuous_acquisition.py \
-  tests/test_modbus_vendor_evidence_v1.py \
-  tests/test_canonical_pv_semantics_v1.py \
-  tests/test_public_graphql_m2m_v1.py
+if ! ci_suite_unchanged modbus_companion; then
+  python3 -m pytest -q \
+    tests/test_modbus_companion_contract.py \
+    tests/test_modbus_trusted_revision.py \
+    tests/test_modbus_v1_mcp_contract.py \
+    tests/test_modbus_v1_addon_runtime_contract.py \
+    tests/test_modbus_v1_live_qualification_contract.py \
+    tests/test_fronius_m4_05_live_evidence.py \
+    tests/test_fronius_m4_05_0651_go.py \
+    tests/test_fronius_flavor_v1_2_walk_evidence.py \
+    tests/test_fronius_m5_continuous_acquisition.py \
+    tests/test_modbus_vendor_evidence_v1.py \
+    tests/test_canonical_pv_semantics_v1.py \
+    tests/test_public_graphql_m2m_v1.py
+fi
 python3 scripts/validate_canonical_pv_v1.py \
   --document docs/platform/fixtures/canonical-pv/v1/golden-three-phase.json \
   --manifest docs/platform/manifests/canonical-pv-v1.json \
@@ -418,23 +450,31 @@ python3 scripts/validate_canonical_pv_v1.py \
   --schema docs/platform/schemas/canonical-pv-observation-v1.schema.json \
   --source-registry docs/platform/fixtures/canonical-pv/v1/source-registry-bindings.json \
   --source-registry-schema docs/platform/schemas/canonical-pv-source-registry-bindings-v1.schema.json
-python3 -m pytest -q tests/test_eebus_operator_admin_contract.py
-python3 -m pytest -q tests/test_driver_runtime_manager_v1.py
+if ! ci_suite_unchanged modbus_companion; then
+  python3 -m pytest -q tests/test_eebus_operator_admin_contract.py
+  python3 -m pytest -q tests/test_driver_runtime_manager_v1.py
+fi
 python3 scripts/check_runtime_driver_registration.py
-python3 -m pytest -q tests/test_runtime_driver_registration.py
+if ! ci_suite_unchanged modbus_companion; then
+  python3 -m pytest -q tests/test_runtime_driver_registration.py
+fi
 python3 scripts/check_bidirectional_registration.py
-python3 -m pytest -q tests/test_bidirectional_registration.py
+if ! ci_suite_unchanged modbus_companion; then
+  python3 -m pytest -q tests/test_bidirectional_registration.py
+fi
 python3 scripts/check_runtime_control_contract.py
 if [ "${RUNTIME_CONTROL_CONTRACT_INPUTS_UNCHANGED:-}" = "1" ]; then
   echo "Skipping tests/test_runtime_control_contract.py: none of its inputs changed in this pull request (main pushes and the nightly run still run it)."
 else
-  python3 -m pytest -q tests/test_runtime_control_contract.py
+  python3 -m pytest -q -n 2 tests/test_runtime_control_contract.py
 fi
-python3 -m pytest -q tests/test_runtime_driver_registration_rendered.py
-python3 -m pytest -q tests/test_fronius_sunspec_phase1_contract.py
-python3 -m pytest -q tests/test_sunspec_model_chain_contract.py
-python3 -m pytest -q tests/test_sunspec_fronius_flavor_contract.py
-python3 -m pytest -q tests/test_sunspec_model_123_fronius_v3_contract.py
+if ! ci_suite_unchanged modbus_companion; then
+  python3 -m pytest -q tests/test_runtime_driver_registration_rendered.py
+  python3 -m pytest -q tests/test_fronius_sunspec_phase1_contract.py
+  python3 -m pytest -q tests/test_sunspec_model_chain_contract.py
+  python3 -m pytest -q tests/test_sunspec_fronius_flavor_contract.py
+  python3 -m pytest -q tests/test_sunspec_model_123_fronius_v3_contract.py
+fi
 if [ -n "${MODBUS_PRIOR_ROOT:-}" ]; then
   python3 scripts/validate_modbus_companion.py \
     --root . \
@@ -444,7 +484,9 @@ else
 fi
 
 echo "==> check opaque runtime acquisition companion contract"
-python3 -m pytest -q tests/test_opaque_runtime_acquisition_contract.py
+if ! ci_suite_unchanged opaque_runtime_acquisition; then
+  python3 -m pytest -q tests/test_opaque_runtime_acquisition_contract.py
+fi
 if [ -n "${MODBUS_PRIOR_ROOT:-}" ]; then
   python3 scripts/validate_opaque_runtime_acquisition.py \
     --root . \
