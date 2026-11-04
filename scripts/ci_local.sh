@@ -466,7 +466,7 @@ python3 scripts/check_runtime_control_contract.py
 if [ "${RUNTIME_CONTROL_CONTRACT_INPUTS_UNCHANGED:-}" = "1" ]; then
   echo "Skipping tests/test_runtime_control_contract.py: none of its inputs changed in this pull request (main pushes and the nightly run still run it)."
 else
-  python3 -m pytest -q tests/test_runtime_control_contract.py
+  python3 -m pytest -q -n 2 tests/test_runtime_control_contract.py
 fi
 if ! ci_suite_unchanged modbus_companion; then
   python3 -m pytest -q tests/test_runtime_driver_registration_rendered.py
