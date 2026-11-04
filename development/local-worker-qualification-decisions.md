@@ -1,11 +1,14 @@
 # Local-worker qualification decisions
 
-Status: **Unknown — owner acceptance choices incomplete; every physical profile
-remains unqualified and off.** This record is a partial slice of
+Status: **Hypothesis: acceptance requirements decided 2026-11-03 under delegated
+owner authority; every physical profile remains unqualified and off until a
+recorded run makes a requirement Proven for that profile.** This record is a
+partial slice of
 [docs issue #1132](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/1132).
 Refs [Project-Helianthus/helianthus-ebusgateway#991](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/991),
-which remains open. Recording requirements does not authorize physical-backend
-activation, arming, deployment or a real-bus response.
+which remains open. Recording requirements or evidence does not authorize
+physical-backend activation, arming, deployment, device access, a bench run, a
+live write or a real-bus response.
 
 ## Evidence and software boundary
 
@@ -51,30 +54,89 @@ counter/MMIO primitives, shared-memory ABI/atomics, leases/revocation,
 registration API, minimal read-only scope and fault containment. The table below
 gives each area's required owner answer; the software reference contracts linked
 above define the proposed software choices, not physical acceptance.
-No accepted numeric product budgets or qualified platform profile were supplied.
-All unchosen physical rows remain **Unknown** and block physical-backend
-qualification; proposals in the third column are **Hypothesis**, not owner answers.
+The owner's decided answers are recorded in the next section and cited by number
+in the second column. They are requirements graded **Hypothesis**; no measurement
+record or qualified platform profile exists.
+All physical suitability and every row without a decided answer remain **Unknown**
+and block physical-backend qualification; proposals in the third column are
+**Hypothesis**, not evidence.
 
 | Decision | Actual accepted choice / evidence | Proposed conservative disposition and required owner answer |
 | --- | --- | --- |
-| Timing, errors and tail acceptance | **Unknown**; no accepted values or measurement record | Specify every edge, deadline, percentile, maximum lateness, allowed miss/error rate and recovery threshold, with units and denominator. Keep off until measured against the accepted contract. |
-| Board, kernel and toolchain profile | **Unknown**; no qualified profile | Select a board/frontend family and separately qualified revision/configuration, kernel/configuration, toolchain/build, runtime, scheduling, memory, clock, load, power and thermal envelope. No transfer of qualification between platforms. |
-| Counter and MMIO primitives | **Unknown**; no qualified counter or MMIO access profile | Require monotonic counter resolution, access/rollover behavior and clock comparability evidence; audit MMIO mapping attributes, access widths, ordering/barriers and exclusive ownership. Select primitives only after evidence; no hardware addresses or setup recipe here. |
-| Shared-memory ABI and cross-process atomics | Offline transport contract specifies the software reference; physical proof **Unknown** | Retain the reference layout and ownership rules. Require aligned atomic-width and release/acquire proof across processes for the exact architecture/kernel/toolchain, including publication, reclamation and paused readers. Same-process tests and serialization are insufficient. |
-| Leases, revocation and in-flight output | Offline transport contract specifies software expiry/reclamation; physical bounds and policy **Unknown** | Accept finite arm, registration, plan, command and control-service budgets under parent pauses. Require exact acknowledgement or original lease expiry for admission closure, plus quiescence for reuse. Choose a native-phase-safe finish/abort policy for output already in flight; absent that policy, physical admission stays closed. |
-| Registration API | Registration contract specifies the software reference; physical integration **Unknown** | Preserve exact-key lifecycle, duplicate refusal, cleanup, single wire authority and fresh identities after restart. Require evidence that physical conflicts, disconnect/reset and delayed cleanup cannot retain or revive admission. Registration alone grants no live transmit authority. |
-| Minimal read-only virtual-device admission | Registration contract specifies synthetic identification; physical profile acceptance **Unknown** | Owner must accept the exact supported read-only request/response scope, native evidence, source/freshness constraints, finite limits and unavailable behavior. Unsupported or invalid authority stays silent; no invented universal NACK, stateful command or write support. |
-| Fault containment | **Unknown**; no accepted electrical containment requirement or proof | Owner must define the allowed fault envelope and independent containment needed for stuck drive, process pause/death, abnormal stop and recovery. Supervision, heartbeat, process kill or software cleanup cannot bound a stuck electrical pulse. |
+| Timing, errors and tail acceptance | Requirement decided 2026-11-03 (**Hypothesis**): rows 1-3 and 5-7 below; measurement record **Unknown** | Specify every edge, deadline, percentile, maximum lateness, allowed miss/error rate and recovery threshold, with units and denominator. Keep off until measured against the accepted contract. |
+| Board, kernel and toolchain profile | Requirement decided 2026-11-03 (**Hypothesis**): row 8 below; qualified profile **Unknown** | Select a board/frontend family and separately qualified revision/configuration, kernel/configuration, toolchain/build, runtime, scheduling, memory, clock, load, power and thermal envelope. No transfer of qualification between platforms. |
+| Counter and MMIO primitives | Requirement decided 2026-11-03 (**Hypothesis**): row 10 below; qualified counter or MMIO access profile **Unknown** | Require monotonic counter resolution, access/rollover behavior and clock comparability evidence; audit MMIO mapping attributes, access widths, ordering/barriers and exclusive ownership. Select primitives only after evidence; no hardware addresses or setup recipe here. |
+| Shared-memory ABI and cross-process atomics | Offline transport contract specifies the software reference; requirement decided 2026-11-03 (**Hypothesis**): row 11 below; physical proof **Unknown** | Retain the reference layout and ownership rules. Require aligned atomic-width and release/acquire proof across processes for the exact architecture/kernel/toolchain, including publication, reclamation and paused readers. Same-process tests and serialization are insufficient. |
+| Leases, revocation and in-flight output | Offline transport contract specifies software expiry/reclamation; requirement decided 2026-11-03 (**Hypothesis**): row 12 below; physical bounds and policy proof **Unknown** | Accept finite arm, registration, plan, command and control-service budgets under parent pauses. Require exact acknowledgement or original lease expiry for admission closure, plus quiescence for reuse. Choose a native-phase-safe finish/abort policy for output already in flight; absent that policy, physical admission stays closed. |
+| Registration API | Registration contract specifies the software reference; requirement decided 2026-11-03 (**Hypothesis**): row 4 below; physical integration **Unknown** | Preserve exact-key lifecycle, duplicate refusal, cleanup, single wire authority and fresh identities after restart. Require evidence that physical conflicts, disconnect/reset and delayed cleanup cannot retain or revive admission. Registration alone grants no live transmit authority. |
+| Minimal read-only virtual-device admission | Registration contract specifies synthetic identification; requirement decided 2026-11-03 (**Hypothesis**): row 13 below; physical profile acceptance **Unknown** | Owner must accept the exact supported read-only request/response scope, native evidence, source/freshness constraints, finite limits and unavailable behavior. Unsupported or invalid authority stays silent; no invented universal NACK, stateful command or write support. |
+| Fault containment | Requirement decided 2026-11-03 (**Hypothesis**): rows 14-15 below; electrical containment proof **Unknown** | Owner must define the allowed fault envelope and independent containment needed for stuck drive, process pause/death, abnormal stop and recovery. Supervision, heartbeat, process kill or software cleanup cannot bound a stuck electrical pulse. |
 
-**Hypothesis**: the proposed first candidate from the planning inputs is the
-**10x GPIO bit-level engine**: GPIO observation at 10 observations per nominal
-bit period, with bit-level receive/transmit handling. This is not an accepted
-owner qualification choice. No public measurement artifact is supplied for this
-candidate; its physical suitability remains **Unknown**.
+**Hypothesis**: the first engine to qualify is the **10x GPIO bit-level
+engine**: GPIO observation at 10 observations per nominal bit period, with
+bit-level receive/transmit handling. Decided requirement 2 below accepts it as
+the first engine; that acceptance is a requirement, not evidence. No public
+measurement artifact is supplied for this engine; its physical suitability
+remains **Unknown**. The designated second engine, tried only when the first
+fails qualification or cannot hold the 41.7 µs edge budget, is a dedicated
+PL011 kernel-driver path. This record supplies no such driver; its existence
+and physical suitability are **Unknown**.
 The abstraction and acceptance contract stay engine-independent; sampling rate
-is a measurable candidate choice, not a product threshold. Alternative engines
-need their own evidence and cannot inherit this candidate's prospective result.
+is a measurable engine choice, not a product threshold. Each engine needs its
+own evidence and cannot inherit another engine's prospective result.
 No board, Linux arm64, latency, power or thermal suitability is established.
+
+## Decided acceptance requirements (2026-11-03)
+
+The owner delegated the fifteen qualification choices to the project
+orchestrator, who adopted every proposed default. These are accepted
+**requirements**. Meeting them needs separate evidence (next section). Every
+answer stays **Hypothesis** until a run on the chosen profile makes it Proven.
+
+| # | Accepted requirement | Grade |
+| --- | --- | --- |
+| 1 | Budgets are measured against nominal 2400 baud (bit 416.7 µs, character 4.167 ms), anchored at the observed start edge. Only external bus-side timing qualifies. | **Hypothesis** |
+| 2 | First engine: the 10x GPIO bit-level userland engine. RX uses three central samples; TX edge error ≤ 41.7 µs, abort beyond. Designated second engine, tried only if the first fails qualification or cannot hold the 41.7 µs edge budget: a dedicated PL011 kernel-driver path. One engine is qualified per profile at a time. | **Hypothesis** |
+| 3 | A SYN is a framed, unescaped 0xAA and ends any wait. 100 ms with neither SYN nor character withdraws admission until a fresh SYN. | **Hypothesis** |
+| 4 | Responder-only first. Physical arbitration stays Unknown and initiator traffic stays on the existing adapter path. The later arbitration budget is start-bit jitter ≤ 10 µs. | **Hypothesis** |
+| 5 | Inter-character abort gap 10 ms; our responses are contiguous. | **Hypothesis** |
+| 6 | Turnaround ≤ one bit; never start beyond one character (4.167 ms); final-ACK wait 200 ms; one NACK retransmit. | **Hypothesis** |
+| 7 | Passive and responder runs are zero-defect, with maximum edge lateness ≤ 41.7 µs. Collision-rate budgets are set at the arbitration stage. | **Hypothesis** |
+| 8 | Exactly one profile: the bench host generation, the adapter board family in raw mode, one recorded kernel, one exact toolchain. Every other combination is Unknown and off. | **Hypothesis** |
+| 9 | Passive, isolated-TX and responder stages, each ≥ 90 min under load, plus a 24 h passive run and a 24 h responder run. Tails and failed attempts are reported. | **Hypothesis** |
+| 10 | Userland engine: architecture monotonic counter plus descriptor-validated MMIO, with the descriptor owner-provisioned per profile and no guessed or looked-up addresses. PL011 kernel-driver path: driver interface, no user-space MMIO. | **Hypothesis** |
+| 11 | A cross-process aligned-u64 acquire/release proof on the exact profile before any shared mapping. MMIO is ordered by explicit barriers. | **Hypothesis** |
+| 12 | 5 s non-extendable lease; revocation before the next symbol; immediate single release on echo mismatch, late edge or foreign start; parent death withdraws admission at once. | **Hypothesis** |
+| 13 | Arm only the synthetic identification read at a device-free address; silence (no ACK, no NACK) otherwise; selectors are added one at a time. | **Hypothesis** |
+| 14 | Worker faults stay in the child process. The gateway, other transports and mux sessions see "backend unavailable"; restart is passive with no re-arm. | **Hypothesis** |
+| 15 | TX only in attended, action-authorized bench runs. Independent hardware containment is required before any unattended arming. | **Hypothesis** |
+
+Two clarifications apply to the table:
+
+- Row 2: the first engine is the 10x GPIO bit-level userland engine. The
+  designated second engine is the dedicated PL011 kernel-driver path, tried when
+  the first fails qualification or cannot hold the 41.7 µs edge budget. Only one
+  engine is qualified per profile at a time.
+- Row 10: counter plus descriptor-validated MMIO applies to the userland engine.
+  On the PL011 kernel-driver path the driver owns the UART registers and the user
+  side sees timestamps and bytes through the driver's interface, so no MMIO
+  descriptor is provisioned for that engine and row 10 reads "driver interface,
+  no user-space MMIO" there.
+
+This page authorizes no device access, bench run or live write. Every hardware
+stage needs its own action-time authorization from the owner.
+
+## Qualification evidence
+
+One row per run, including failed and aborted runs. Raw captures, device
+identities, build identities and capture times stay in the private verification
+record; this table carries counts, durations, grades and opaque profile labels
+only. A row grades only its own profile and stage. A finite zero-defect run is
+evidence for that run, not a bound.
+
+| Run | Stage | Profile (opaque label) | Engine | Duration | Samples / symbols / segments | Gaps | Framing faults (bus-confirmed) | Lost or corrupted vs reference | Lateness p99 / p99.9 / max | Failed attempts | External timing | Grade and remaining Unknowns |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| — | — | — | — | — | — | — | — | — | — | — | — | No run recorded. Every requirement above remains a requirement; qualified external timing (`AA22QualifiedTiming`) is Unknown for every profile. |
 
 ## Required acceptance detail
 
