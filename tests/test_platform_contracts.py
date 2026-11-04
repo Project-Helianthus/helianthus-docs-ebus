@@ -2436,7 +2436,10 @@ def test_combined_ref_expiry_uses_trusted_validator_and_runner_clock() -> None:
     ]
     assert len(expiry_steps) == 1
     step = expiry_steps[0]
-    assert "if" not in step
+    # Pull requests and main pushes run the expiry check with the rest of the
+    # combined-ref validation when platform inputs changed; the nightly run
+    # always takes this branch (see tests/test_docs_ci_run_cost_gates.py).
+    assert step["if"] == "steps.platform_inputs.outputs.changed == 'true'"
     assert "RAW_EVALUATED_AT" not in step.get("env", {})
     assert step["env"]["ENFORCE_THROUGH"] == "${{ inputs.enforce_through }}"
     assert (
@@ -2517,9 +2520,12 @@ def test_docs_ci_binds_pr_head_and_runs_trusted_expiry_on_push() -> None:
         "'pull_request' && github.event.pull_request.head.repo.full_name || "
         "github.repository }}" in caller
     )
-    assert "if: github.event_name == 'pull_request' || github.event_name == 'push'" in caller
+    assert (
+        "if: github.event_name == 'pull_request' || github.event_name == 'push' "
+        "|| github.event_name == 'schedule'" in caller
+    )
     assert "docs_ebus_ref: ${{ github.event_name == 'pull_request'" in caller
-    assert "github.event.before }}" in caller
+    assert "github.event_name == 'schedule' && github.sha || github.event.before }}" in caller
 
 
 def test_combined_ref_executes_pr_m625_and_trusted_validator_checkouts() -> None:

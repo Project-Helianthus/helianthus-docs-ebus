@@ -154,7 +154,46 @@ jobs:
           clean: true
           persist-credentials: false
 
+      # A same-repository pull request validates only when docs/platform/** or
+      # the validator inputs (scripts/**, the workflows, requirements-ci.txt)
+      # differ between the trusted base and the candidate; both validators read
+      # nothing else from docs-ebus. The job itself always runs, so the required
+      # check keeps its name and reports. Main pushes (whose superseded runs may
+      # be cancelled, so a skipped transition could otherwise go unchecked), fork
+      # pull requests, the nightly schedule, manual dispatches and any comparison
+      # that cannot be completed always validate.
+      - name: Classify platform input changes
+        id: platform_inputs
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          SAME_REPOSITORY: ${{ inputs.docs_ebus_repository == github.repository }}
+        run: |
+          set -euo pipefail
+          changed=true
+          if [[ "${EVENT_NAME}" == "pull_request" && "${SAME_REPOSITORY}" == "true" ]]; then
+            changed=false
+            base_root="${GITHUB_WORKSPACE}/checkouts/docs-ebus-base"
+            head_root="${GITHUB_WORKSPACE}/checkouts/docs-ebus"
+            for path in docs/platform scripts .github/workflows requirements-ci.txt; do
+              status=0
+              diff -rq --exclude=.git --exclude=__pycache__ -- \
+                "${base_root}/${path}" "${head_root}/${path}" > /dev/null || status=$?
+              if [[ "${status}" -ne 0 ]]; then
+                echo "Platform input changed or not comparable: ${path}"
+                changed=true
+              fi
+            done
+          fi
+          if [[ "${changed}" == "true" ]]; then
+            echo "Combined-ref validation runs."
+          else
+            echo "Skipping combined-ref validation: no platform input changed (the nightly run still validates main)."
+          fi
+          printf 'changed=%s\n' "${changed}" >> "${GITHUB_OUTPUT}"
+
       - name: Materialize trusted prior manifest
+        if: steps.platform_inputs.outputs.changed == 'true'
         id: prior_manifest
         shell: bash
         env:
@@ -218,6 +257,7 @@ jobs:
           fi
 
       - name: Checkout docs-eebus ref
+        if: steps.platform_inputs.outputs.changed == 'true'
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           repository: Project-Helianthus/helianthus-docs-eebus
@@ -227,6 +267,7 @@ jobs:
           persist-credentials: false
 
       - name: Checkout eebusreg ref
+        if: steps.platform_inputs.outputs.changed == 'true'
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           repository: Project-Helianthus/helianthus-eebusreg
@@ -236,6 +277,7 @@ jobs:
           persist-credentials: false
 
       - name: Checkout M6.25 docs-eebus source
+        if: steps.platform_inputs.outputs.changed == 'true'
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           repository: Project-Helianthus/helianthus-docs-eebus
@@ -245,6 +287,7 @@ jobs:
           persist-credentials: false
 
       - name: Checkout M6.25 execution-plan source
+        if: steps.platform_inputs.outputs.changed == 'true'
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           repository: Project-Helianthus/helianthus-execution-plans
@@ -254,6 +297,7 @@ jobs:
           persist-credentials: false
 
       - name: Prepare hash-locked pip bootstrap
+        if: steps.platform_inputs.outputs.changed == 'true'
         run: |
           set -euo pipefail
           bootstrap_dir="${RUNNER_TEMP}/helianthus-pip-bootstrap"
@@ -268,6 +312,7 @@ jobs:
           mv "${wheel}.part" "${wheel}"
 
       - name: Set up pinned Python
+        if: steps.platform_inputs.outputs.changed == 'true'
         uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         env:
           PIP_FIND_LINKS: ${{ runner.temp }}/helianthus-pip-bootstrap
@@ -276,6 +321,7 @@ jobs:
           python-version: "3.12.10"
 
       - name: Create job-local virtualenv with hash-locked pip
+        if: steps.platform_inputs.outputs.changed == 'true'
         run: |
           set -euo pipefail
           wheel="${RUNNER_TEMP}/helianthus-pip-bootstrap/pip-25.0.1-py3-none-any.whl"
@@ -286,6 +332,7 @@ jobs:
           echo "${RUNNER_TEMP}/venv/bin" >> "${GITHUB_PATH}"
 
       - name: Verify pinned Python and pip
+        if: steps.platform_inputs.outputs.changed == 'true'
         run: |
           python - <<'PY'
           import importlib.metadata
@@ -298,6 +345,7 @@ jobs:
           PY
 
       - name: Install pinned validator dependencies
+        if: steps.platform_inputs.outputs.changed == 'true'
         run: |
           python -m pip install --disable-pip-version-check --no-deps \
             --no-build-isolation --require-hashes \
@@ -305,6 +353,7 @@ jobs:
           python -m pip check
 
       - name: Validate PR M6.25 provenance contract
+        if: steps.platform_inputs.outputs.changed == 'true'
         env:
           ENFORCE_THROUGH: ${{ inputs.enforce_through }}
           PRIOR_MANIFEST: ${{ steps.prior_manifest.outputs.path }}
@@ -325,6 +374,7 @@ jobs:
             --toolchain-mode exact
 
       - name: Validate combined refs
+        if: steps.platform_inputs.outputs.changed == 'true'
         env:
           ENFORCE_THROUGH: ${{ inputs.enforce_through }}
           PRIOR_MANIFEST: ${{ steps.prior_manifest.outputs.path }}
@@ -345,6 +395,7 @@ jobs:
             --toolchain-mode exact
 
       - name: Enforce trusted manifest expiry
+        if: steps.platform_inputs.outputs.changed == 'true'
         env:
           DOCS_EBUS_REPOSITORY: ${{ inputs.docs_ebus_repository }}
           ENFORCE_THROUGH: ${{ inputs.enforce_through }}

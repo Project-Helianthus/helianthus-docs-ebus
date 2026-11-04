@@ -37,9 +37,13 @@ on:
     - cron: "17 2 * * *"
   workflow_dispatch:
 
+# One group per pull request, one for main pushes, and separate groups for the
+# nightly schedule and manual dispatches. A newer push to a pull request, or a
+# newer main push, cancels the run in progress, so only the newest main commit
+# gets a full run; a push never cancels the nightly run or a dispatch.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
 
 jobs:
   markdown-checks:
@@ -334,16 +338,20 @@ jobs:
 
   platform-contracts-combined-ref:
     name: Platform Contracts Combined Ref
-    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    if: github.event_name == 'pull_request' || github.event_name == 'push' || github.event_name == 'schedule'
     permissions:
       contents: read
     # Candidate workflow runs the PR's M6.25 validator; it separately checks
     # out and invokes the trusted base validator for the combined-ref guard.
+    # Pull requests validate only when the platform inputs changed (see the
+    # reusable workflow); main pushes always validate. The nightly run
+    # validates main against itself, which keeps the time-based trusted
+    # manifest expiry check running every day.
     uses: ./.github/workflows/platform-contracts-combined-ref.yml
     with:
       docs_ebus_repository: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name || github.repository }}
       docs_ebus_ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
-      docs_ebus_base_ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+      docs_ebus_base_ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event_name == 'schedule' && github.sha || github.event.before }}
       docs_eebus_ref: b9413bda992b99e4f719ad2e26e1937ff11a5b4a
       eebusreg_ref: 7c00bacbba34b796b79e64d7460cbeeb2f306553
       execution_plans_ref: fb384ab57d79f0020c54d2c66416e8a7666f0ceb
