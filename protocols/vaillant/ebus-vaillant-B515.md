@@ -6,7 +6,7 @@
 
 `B515` appears in john30 TypeSpec templates as a generic read/write timer
 family. It is distinct from the newer `B555` timer/schedule protocol documented
-for VRC700/VRC720-style controllers.
+for newer controller families.
 
 Evidence labels:
 
@@ -53,7 +53,7 @@ Concrete timer include files add two selector bytes via `@ext(day, group)`.
 > where the template has up to one ignored byte; both forms are kept and the
 > difference is unresolved.
 
-The first payload byte is the weekday (`0` Monday .. `6` Sunday) and the
+In this candidate physical form, the first payload byte is the weekday (`0` Monday .. `6` Sunday) and the
 second byte the channel:
 
 ```text
@@ -67,7 +67,7 @@ Write reply:     <weekday>                                    (1 payload byte)
 `n` with `0..144` meaning `n` x 10 minutes (`00:00`..`24:00`); the meaning of `FF` is
 unresolved. A period with `start == end` is not known to be a deletion.
 
-Example write for Monday, heating circuit one (candidate):
+Synthetic candidate bytes for Monday, heating circuit one (not a transmission instruction):
 `B5 15 00 00 21 30 57 60 6F 7E 01` = `05:30-08:00`, `14:30-16:00`,
 `18:30-21:00`, mode `1`.
 
@@ -83,7 +83,8 @@ Example write for Monday, heating circuit one (candidate):
 | `07` | mixer two |
 | `08` | cooling two |
 
-Programming mode (the last byte, candidate): `0` valid for the given day, `1`
+Generic programming mode (the last byte, candidate; separate from the five
+unnamed variants below): `0` valid for the given day, `1`
 Monday..Sunday, `2` Monday..Friday, `3` Saturday..Sunday. On some targets the
 candidate names cover `0..3`, all as "valid for the given day" (unresolved;
 candidate, unconfirmed on the wire). Mode `0` is not "off" (candidate,
@@ -94,6 +95,107 @@ and all `00:00` with mode `0` in the heating-circuit form.
 Candidate, unconfirmed on the wire: the read and the write service of this
 family are available under both the eBUS and the PeBUS profiles; neither is
 known to be available only on PeBUS.
+
+## Finite period declarations
+
+These are **Hypothesis** candidate declarations for the Vaillant legacy timer
+family, not confirmed native behavior. The synthetic representation can be
+checked as **Proven** software behavior; physical qualification remains
+**Unknown**. A fixture validates the declared representation only.
+
+### Period vocabulary
+
+| Raw decimal | Declared time | Grade |
+|---|---|---|
+| 0 | 00:00 | Hypothesis |
+| 54 | 09:00 | Hypothesis |
+| 144 | 24:00 | Hypothesis |
+| 145 | Unknown | Unknown |
+| 255 (FF) | Unknown | Unknown |
+
+Raw 0..144 inclusive declares ten-minute steps: 145 labels, not 144.
+There is no declared conversion or rounding rule for 09:05.
+Raw 145 and FF have no established role; preserve their raw bytes.
+
+### Selector carriers and defaults
+
+The carrier domain does not establish a meaning for every value. Request
+defaults are declarations, not instructions to send or evidence of peer effects.
+The weekday default is Monday; the narrower Monday..Sunday names in the generic
+layout do not restrict the raw carrier. A default channel is not a channel map:
+mixer two default zero does not resolve the generic channel 07 candidate above.
+
+| Field | Raw decimal domain | Context | Default | Grade |
+|---|---|---|---|---|
+| weekday | 0..255 | read/write request and read positive | Monday | Hypothesis |
+| channel | 0..255 | read/write request: circulation | 2 | Hypothesis |
+| channel | 0..255 | read/write request: DHW | 1 | Hypothesis |
+| channel | 0..255 | read/write request: mixer one | 0 | Hypothesis |
+| channel | 0..255 | read/write request: mixer two | 0 | Hypothesis |
+| channel | 0..255 | read positive | 0 | Hypothesis |
+| mode | 0..255 | read/write request and read positive | Unknown | Hypothesis |
+
+### Logical extents
+
+Logical extents include prefix positions; they are not physical offsets or
+validated payload lengths. The physical forms, including the competing
+two-position gap, remain Unknown. Keep both the echoed day/channel reply and
+the template's up-to-one-ignored-byte reply above as unresolved alternatives.
+An absent extent is Unknown, never zero.
+
+| Family | Variant | Direction | Service | Operation | Alternative | Logical extent | Physical extent | Grade |
+|---|---|---|---|---|---|---|---|---|
+| Vaillant legacy timer | periods | request | B515 | read | request | 4 | Unknown | Hypothesis |
+| Vaillant legacy timer | periods | response | B515 | read | positive | 11 | Unknown | Hypothesis |
+| Vaillant legacy timer | periods | response | B515 | read | negative | Unknown | Unknown | Hypothesis |
+| Vaillant legacy timer | periods | request | B515 | write | request | 11 | Unknown | Hypothesis |
+| Vaillant legacy timer | periods | response | B515 | write | positive | 3 | Unknown | Hypothesis |
+| Vaillant legacy timer | periods | response | B515 | write | negative | Unknown | Unknown | Hypothesis |
+
+### Unnamed mode variants
+
+Five candidate variants map raw 0..3 non-injectively. Their exact per-variant
+labels remain absent. Preserve each variant and raw value; do not derive a
+reversible default or merge these variants with the generic ordering above.
+The numbers below distinguish unresolved variants only, not device identities.
+
+| Family | Variant | Direction | Service | Operation | Alternative | Raw decimal domain | Injective | Inverse default | Labels | Grade |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Vaillant legacy timer | mode candidate 1 | Unknown | B515 | Unknown | mode candidate 1 | 0..3 | no | Unknown | Unknown | Hypothesis |
+| Vaillant legacy timer | mode candidate 2 | Unknown | B515 | Unknown | mode candidate 2 | 0..3 | no | Unknown | Unknown | Hypothesis |
+| Vaillant legacy timer | mode candidate 3 | Unknown | B515 | Unknown | mode candidate 3 | 0..3 | no | Unknown | Unknown | Hypothesis |
+| Vaillant legacy timer | mode candidate 4 | Unknown | B515 | Unknown | mode candidate 4 | 0..3 | no | Unknown | Unknown | Hypothesis |
+| Vaillant legacy timer | mode candidate 5 | Unknown | B515 | Unknown | mode candidate 5 | 0..3 | no | Unknown | Unknown | Hypothesis |
+
+### Ordering and qualification
+
+Hypothesis: a written start equal to end declares a disabled interval.
+First-before-second-before-third ordering is declared as Hypothesis.
+An out-of-order interval example remains unqualified; it does not establish
+rejection, sorting, or any other peer enforcement. Disabled does not establish
+deletion or reset. Preserve complete native bytes and independent useful fields
+beside any candidate interpretation. Native adaptation and peer effects remain
+Unknown; these declarations grant no runtime capability or write admission.
+
+| Property | Grade |
+|---|---|
+| physical forms | Unknown |
+| competing two-position gap | Unknown |
+| enforcement | Unknown |
+| deletion/reset | Unknown |
+| atomicity | Unknown |
+| overlap | Unknown |
+| midnight-crossing | Unknown |
+| timezone/DST | Unknown |
+| physical schedule effects | Unknown |
+| native adaptation | Unknown |
+| peer effects | Unknown |
+| physical qualification | Unknown |
+
+This is a partial catalog. Completing mode tables and physical layout remains
+later work. Synthetic examples are in
+[the finite-period fixture](fixtures/ac12_legacy_timer.json); they are not
+captures or physical qualification evidence.
 
 ## Relationship to B555
 
@@ -125,7 +227,7 @@ schedule opcodes such as `A3`..`A6` and different payload semantics.
 
 ## References
 
-- Public TypeSpec template: [_templates.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/_templates.tsp)
-- Public TypeSpec: [timerhc_inc.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/timerhc_inc.tsp)
-- Public TypeSpec: [timerhwc_inc.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/timerhwc_inc.tsp)
+- Public TypeSpec template: [`src/vaillant/_templates.tsp`](https://github.com/john30/ebusd-configuration)
+- Public TypeSpec: [`src/vaillant/timerhc_inc.tsp`](https://github.com/john30/ebusd-configuration)
+- Public TypeSpec: [`src/vaillant/timerhwc_inc.tsp`](https://github.com/john30/ebusd-configuration)
 - B555 schedule protocol: [`ebus-vaillant-b555-timer-protocol.md`](ebus-vaillant-b555-timer-protocol.md)
