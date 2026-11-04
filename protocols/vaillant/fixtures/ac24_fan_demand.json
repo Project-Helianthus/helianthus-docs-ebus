@@ -1,0 +1,282 @@
+{
+  "synthetic": true,
+  "software_representation": "Proven",
+  "candidate_semantics": "Hypothesis",
+  "physical_qualification": "Unknown",
+  "unknown": {
+    "physical_mapping": "Unknown",
+    "installed_support": "Unknown",
+    "execution": "Unknown",
+    "semantic_equivalence": "Unknown",
+    "native_adaptation": "Unknown",
+    "peer_effects": "Unknown"
+  },
+  "identities": [
+    {
+      "family": "vaillant",
+      "variant": "B522",
+      "direction": null,
+      "service": "B522",
+      "operation": null,
+      "alternative": "current-mode",
+      "logical_extent": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "vaillant",
+      "variant": "B522",
+      "direction": "request",
+      "service": "B522",
+      "operation": null,
+      "alternative": "request",
+      "logical_extent": 7,
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "vaillant",
+      "variant": "B522",
+      "direction": "response",
+      "service": "B522",
+      "operation": null,
+      "alternative": "positive",
+      "logical_extent": 4,
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "vaillant",
+      "variant": "B522",
+      "direction": "response",
+      "service": "B522",
+      "operation": null,
+      "alternative": "negative",
+      "logical_extent": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "family": "vaillant",
+      "variant": "B522",
+      "direction": null,
+      "service": "B522",
+      "operation": null,
+      "alternative": "FF FF unset",
+      "logical_extent": null,
+      "grade": "Hypothesis"
+    }
+  ],
+  "fields": [
+    {
+      "alternative": "current-mode",
+      "name": "current_mode",
+      "kind": "u8",
+      "domain": [
+        0,
+        255
+      ],
+      "default": 0,
+      "scale": 1,
+      "bits": null,
+      "reserved_mask": 0,
+      "coordinate": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "alternative": "request",
+      "name": "fan",
+      "kind": "u8",
+      "domain": [
+        0,
+        255
+      ],
+      "default": 0,
+      "scale": 1,
+      "bits": null,
+      "reserved_mask": 0,
+      "coordinate": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "alternative": "request",
+      "name": "automatic",
+      "kind": "boolean",
+      "domain": [
+        0,
+        1
+      ],
+      "default": false,
+      "scale": 1,
+      "bits": [
+        0
+      ],
+      "reserved_mask": 254,
+      "coordinate": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "alternative": "request",
+      "name": "room_temperature",
+      "kind": "u8",
+      "domain": [
+        0,
+        255
+      ],
+      "default": 0,
+      "scale": 0.5,
+      "bits": null,
+      "reserved_mask": 0,
+      "coordinate": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "alternative": "request",
+      "name": "mode",
+      "kind": "u8",
+      "domain": [
+        0,
+        255
+      ],
+      "default": 0,
+      "scale": 1,
+      "bits": null,
+      "reserved_mask": 0,
+      "coordinate": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "alternative": "positive",
+      "name": null,
+      "kind": "boolean",
+      "domain": [
+        0,
+        1
+      ],
+      "default": false,
+      "scale": 1,
+      "bits": [
+        0
+      ],
+      "reserved_mask": 248,
+      "coordinate": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "alternative": "positive",
+      "name": null,
+      "kind": "boolean",
+      "domain": [
+        0,
+        1
+      ],
+      "default": false,
+      "scale": 1,
+      "bits": [
+        1
+      ],
+      "reserved_mask": 248,
+      "coordinate": null,
+      "grade": "Hypothesis"
+    },
+    {
+      "alternative": "positive",
+      "name": null,
+      "kind": "boolean",
+      "domain": [
+        0,
+        1
+      ],
+      "default": false,
+      "scale": 1,
+      "bits": [
+        2
+      ],
+      "reserved_mask": 248,
+      "coordinate": null,
+      "grade": "Hypothesis"
+    }
+  ],
+  "current_modes": {
+    "0": [
+      "no heating demand to source/circuits"
+    ],
+    "1": [
+      "no source demand but demand from a sink",
+      null
+    ],
+    "2": [
+      "source heating demand"
+    ],
+    "3": [
+      "no source cooling demand but demand from a sink"
+    ],
+    "4": [
+      "source cooling demand"
+    ]
+  },
+  "unset": {
+    "raw_hex": "FF FF",
+    "interpretation": "candidate unset",
+    "coordinate": null,
+    "grade": "Hypothesis"
+  },
+  "examples": [
+    {
+      "alternative": "request",
+      "field": "room_temperature",
+      "raw_hex": "00",
+      "value": 0,
+      "reserved_hex": "00"
+    },
+    {
+      "alternative": "request",
+      "field": "room_temperature",
+      "raw_hex": "01",
+      "value": 0.5,
+      "reserved_hex": "00"
+    },
+    {
+      "alternative": "request",
+      "field": "room_temperature",
+      "raw_hex": "FF",
+      "value": 127.5,
+      "reserved_hex": "00"
+    },
+    {
+      "alternative": "request",
+      "field": "fan",
+      "raw_hex": "FF",
+      "value": 255,
+      "reserved_hex": "00"
+    },
+    {
+      "alternative": "request",
+      "field": "mode",
+      "raw_hex": "FF",
+      "value": 255,
+      "reserved_hex": "00"
+    },
+    {
+      "alternative": "request",
+      "field": "automatic",
+      "raw_hex": "01",
+      "value": true,
+      "reserved_hex": "00"
+    },
+    {
+      "alternative": "request",
+      "field": "automatic",
+      "raw_hex": "80",
+      "value": false,
+      "reserved_hex": "80"
+    },
+    {
+      "alternative": "positive",
+      "field": null,
+      "raw_hex": "08",
+      "value": [
+        false,
+        false,
+        false
+      ],
+      "reserved_hex": "08"
+    }
+  ]
+}
