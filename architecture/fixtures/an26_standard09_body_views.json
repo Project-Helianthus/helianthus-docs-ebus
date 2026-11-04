@@ -1,0 +1,2396 @@
+{
+  "fixture_id": "an26-standard09-body-views",
+  "synthetic": true,
+  "device_family": "ebus-module",
+  "cases": [
+    {
+      "id": "body-0900-aa55",
+      "kind": "body",
+      "varies": [
+        "baseline"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "positive"
+      },
+      "object": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "positive",
+        "object_state": "complete",
+        "logical_bytes": [
+          9,
+          0,
+          170,
+          85
+        ]
+      },
+      "expect": {
+        "admission": "represented",
+        "raw_logical_bytes": [
+          9,
+          0,
+          170,
+          85
+        ],
+        "data": [
+          170,
+          85
+        ],
+        "unresolved_tail": null,
+        "typed_data": "opaque",
+        "execution": "not_executed",
+        "mutation_success": false,
+        "native_success_claim": false,
+        "local_representation": true,
+        "native_physical_offset": "Unknown",
+        "positive_prefix_relevance": "Unknown",
+        "peer_acceptance": "Unknown",
+        "numeric_grade": "not_applicable",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "body-0903-aa55",
+      "kind": "body",
+      "varies": [
+        "service"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0903",
+        "direction": "positive"
+      },
+      "object": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0903",
+        "direction": "positive",
+        "object_state": "complete",
+        "logical_bytes": [
+          9,
+          3,
+          170,
+          85
+        ]
+      },
+      "expect": {
+        "admission": "represented",
+        "raw_logical_bytes": [
+          9,
+          3,
+          170,
+          85
+        ],
+        "data": [
+          170,
+          85
+        ],
+        "unresolved_tail": null,
+        "typed_data": "opaque",
+        "execution": "not_executed",
+        "mutation_success": false,
+        "native_success_claim": false,
+        "local_representation": true,
+        "native_physical_offset": "Unknown",
+        "positive_prefix_relevance": "Unknown",
+        "peer_acceptance": "Unknown",
+        "numeric_grade": "not_applicable",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "body-0902-aa55-kept",
+      "kind": "body",
+      "varies": [
+        "service",
+        "prefix_byte_0",
+        "prefix_byte_1"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0902",
+        "direction": "positive"
+      },
+      "object": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0902",
+        "direction": "positive",
+        "object_state": "complete",
+        "logical_bytes": [
+          9,
+          2,
+          170,
+          85
+        ]
+      },
+      "expect": {
+        "admission": "represented",
+        "raw_logical_bytes": [
+          9,
+          2,
+          170,
+          85
+        ],
+        "data": [
+          9,
+          2,
+          170,
+          85
+        ],
+        "unresolved_tail": null,
+        "typed_data": "opaque",
+        "execution": "not_executed",
+        "mutation_success": false,
+        "native_success_claim": false,
+        "local_representation": true,
+        "native_physical_offset": "Unknown",
+        "positive_prefix_relevance": "Unknown",
+        "peer_acceptance": "Unknown",
+        "numeric_grade": "not_applicable",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "body-0901-constants-only",
+      "kind": "body",
+      "varies": [
+        "service",
+        "body_extent"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0901",
+        "direction": "positive"
+      },
+      "object": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0901",
+        "direction": "positive",
+        "object_state": "complete",
+        "logical_bytes": [
+          9,
+          1
+        ]
+      },
+      "expect": {
+        "admission": "represented",
+        "raw_logical_bytes": [
+          9,
+          1
+        ],
+        "data": null,
+        "unresolved_tail": [],
+        "typed_data": null,
+        "execution": "not_executed",
+        "mutation_success": false,
+        "native_success_claim": false,
+        "local_representation": true,
+        "native_physical_offset": "Unknown",
+        "positive_prefix_relevance": "Unknown",
+        "peer_acceptance": "Unknown",
+        "numeric_grade": "not_applicable",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "body-0901-unresolved-aa",
+      "kind": "body",
+      "varies": [
+        "body_extent"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0901",
+        "direction": "positive"
+      },
+      "object": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0901",
+        "direction": "positive",
+        "object_state": "complete",
+        "logical_bytes": [
+          9,
+          1,
+          170
+        ]
+      },
+      "expect": {
+        "admission": "represented",
+        "raw_logical_bytes": [
+          9,
+          1,
+          170
+        ],
+        "data": null,
+        "unresolved_tail": [
+          170
+        ],
+        "typed_data": null,
+        "execution": "not_executed",
+        "mutation_success": false,
+        "native_success_claim": false,
+        "local_representation": true,
+        "native_physical_offset": "Unknown",
+        "positive_prefix_relevance": "Unknown",
+        "peer_acceptance": "Unknown",
+        "numeric_grade": "not_applicable",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "body-0900-truncated",
+      "kind": "body",
+      "varies": [
+        "body_extent",
+        "prefix_byte_1"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "positive"
+      },
+      "object": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "positive",
+        "object_state": "complete",
+        "logical_bytes": [
+          9
+        ]
+      },
+      "expect": {
+        "admission": "incomplete",
+        "raw_logical_bytes": [
+          9
+        ],
+        "data": null,
+        "unresolved_tail": null,
+        "typed_data": null,
+        "execution": "not_executed",
+        "mutation_success": false,
+        "native_success_claim": false,
+        "local_representation": false,
+        "native_physical_offset": "Unknown",
+        "positive_prefix_relevance": "Unknown",
+        "peer_acceptance": "Unknown",
+        "numeric_grade": "not_applicable",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "body-0901-truncated",
+      "kind": "body",
+      "varies": [
+        "body_extent"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0901",
+        "direction": "positive"
+      },
+      "object": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0901",
+        "direction": "positive",
+        "object_state": "complete",
+        "logical_bytes": [
+          9
+        ]
+      },
+      "expect": {
+        "admission": "incomplete",
+        "raw_logical_bytes": [
+          9
+        ],
+        "data": null,
+        "unresolved_tail": null,
+        "typed_data": null,
+        "execution": "not_executed",
+        "mutation_success": false,
+        "native_success_claim": false,
+        "local_representation": false,
+        "native_physical_offset": "Unknown",
+        "positive_prefix_relevance": "Unknown",
+        "peer_acceptance": "Unknown",
+        "numeric_grade": "not_applicable",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "body-0903-truncated",
+      "kind": "body",
+      "varies": [
+        "body_extent"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0903",
+        "direction": "positive"
+      },
+      "object": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0903",
+        "direction": "positive",
+        "object_state": "complete",
+        "logical_bytes": [
+          9
+        ]
+      },
+      "expect": {
+        "admission": "incomplete",
+        "raw_logical_bytes": [
+          9
+        ],
+        "data": null,
+        "unresolved_tail": null,
+        "typed_data": null,
+        "execution": "not_executed",
+        "mutation_success": false,
+        "native_success_claim": false,
+        "local_representation": false,
+        "native_physical_offset": "Unknown",
+        "positive_prefix_relevance": "Unknown",
+        "peer_acceptance": "Unknown",
+        "numeric_grade": "not_applicable",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "body-0900-prefix-mismatch",
+      "kind": "body",
+      "varies": [
+        "prefix_byte_0"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "positive"
+      },
+      "object": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "positive",
+        "object_state": "complete",
+        "logical_bytes": [
+          8,
+          0,
+          170,
+          85
+        ]
+      },
+      "expect": {
+        "admission": "incomplete",
+        "raw_logical_bytes": [
+          8,
+          0,
+          170,
+          85
+        ],
+        "data": null,
+        "unresolved_tail": null,
+        "typed_data": null,
+        "execution": "not_executed",
+        "mutation_success": false,
+        "native_success_claim": false,
+        "local_representation": false,
+        "native_physical_offset": "Unknown",
+        "positive_prefix_relevance": "Unknown",
+        "peer_acceptance": "Unknown",
+        "numeric_grade": "not_applicable",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "body-0901-prefix-mismatch",
+      "kind": "body",
+      "varies": [
+        "prefix_byte_1"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0901",
+        "direction": "positive"
+      },
+      "object": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0901",
+        "direction": "positive",
+        "object_state": "complete",
+        "logical_bytes": [
+          9,
+          0
+        ]
+      },
+      "expect": {
+        "admission": "incomplete",
+        "raw_logical_bytes": [
+          9,
+          0
+        ],
+        "data": null,
+        "unresolved_tail": null,
+        "typed_data": null,
+        "execution": "not_executed",
+        "mutation_success": false,
+        "native_success_claim": false,
+        "local_representation": false,
+        "native_physical_offset": "Unknown",
+        "positive_prefix_relevance": "Unknown",
+        "peer_acceptance": "Unknown",
+        "numeric_grade": "not_applicable",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "body-0903-prefix-mismatch",
+      "kind": "body",
+      "varies": [
+        "prefix_byte_1"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0903",
+        "direction": "positive"
+      },
+      "object": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0903",
+        "direction": "positive",
+        "object_state": "complete",
+        "logical_bytes": [
+          9,
+          2,
+          170,
+          85
+        ]
+      },
+      "expect": {
+        "admission": "incomplete",
+        "raw_logical_bytes": [
+          9,
+          2,
+          170,
+          85
+        ],
+        "data": null,
+        "unresolved_tail": null,
+        "typed_data": null,
+        "execution": "not_executed",
+        "mutation_success": false,
+        "native_success_claim": false,
+        "local_representation": false,
+        "native_physical_offset": "Unknown",
+        "positive_prefix_relevance": "Unknown",
+        "peer_acceptance": "Unknown",
+        "numeric_grade": "not_applicable",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "body-0902-empty",
+      "kind": "body",
+      "varies": [
+        "body_extent"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0902",
+        "direction": "positive"
+      },
+      "object": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0902",
+        "direction": "positive",
+        "object_state": "complete",
+        "logical_bytes": []
+      },
+      "expect": {
+        "admission": "represented",
+        "raw_logical_bytes": [],
+        "data": [],
+        "unresolved_tail": null,
+        "typed_data": "opaque",
+        "execution": "not_executed",
+        "mutation_success": false,
+        "native_success_claim": false,
+        "local_representation": true,
+        "native_physical_offset": "Unknown",
+        "positive_prefix_relevance": "Unknown",
+        "peer_acceptance": "Unknown",
+        "numeric_grade": "not_applicable",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "body-0900-prefix-only",
+      "kind": "body",
+      "varies": [
+        "body_extent"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "positive"
+      },
+      "object": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "positive",
+        "object_state": "complete",
+        "logical_bytes": [
+          9,
+          0
+        ]
+      },
+      "expect": {
+        "admission": "represented",
+        "raw_logical_bytes": [
+          9,
+          0
+        ],
+        "data": [],
+        "unresolved_tail": null,
+        "typed_data": "opaque",
+        "execution": "not_executed",
+        "mutation_success": false,
+        "native_success_claim": false,
+        "local_representation": true,
+        "native_physical_offset": "Unknown",
+        "positive_prefix_relevance": "Unknown",
+        "peer_acceptance": "Unknown",
+        "numeric_grade": "not_applicable",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "body-0903-prefix-only",
+      "kind": "body",
+      "varies": [
+        "body_extent"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0903",
+        "direction": "positive"
+      },
+      "object": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0903",
+        "direction": "positive",
+        "object_state": "complete",
+        "logical_bytes": [
+          9,
+          3
+        ]
+      },
+      "expect": {
+        "admission": "represented",
+        "raw_logical_bytes": [
+          9,
+          3
+        ],
+        "data": [],
+        "unresolved_tail": null,
+        "typed_data": "opaque",
+        "execution": "not_executed",
+        "mutation_success": false,
+        "native_success_claim": false,
+        "local_representation": true,
+        "native_physical_offset": "Unknown",
+        "positive_prefix_relevance": "Unknown",
+        "peer_acceptance": "Unknown",
+        "numeric_grade": "not_applicable",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "body-0902-ordinary",
+      "kind": "body",
+      "varies": [
+        "prefix_byte_0",
+        "prefix_byte_1"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0902",
+        "direction": "positive"
+      },
+      "object": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0902",
+        "direction": "positive",
+        "object_state": "complete",
+        "logical_bytes": [
+          170,
+          85
+        ]
+      },
+      "expect": {
+        "admission": "represented",
+        "raw_logical_bytes": [
+          170,
+          85
+        ],
+        "data": [
+          170,
+          85
+        ],
+        "unresolved_tail": null,
+        "typed_data": "opaque",
+        "execution": "not_executed",
+        "mutation_success": false,
+        "native_success_claim": false,
+        "local_representation": true,
+        "native_physical_offset": "Unknown",
+        "positive_prefix_relevance": "Unknown",
+        "peer_acceptance": "Unknown",
+        "numeric_grade": "not_applicable",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "body-0902-prefix-bytes-are-data",
+      "kind": "body",
+      "varies": [
+        "body_extent"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0902",
+        "direction": "positive"
+      },
+      "object": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0902",
+        "direction": "positive",
+        "object_state": "complete",
+        "logical_bytes": [
+          9,
+          2
+        ]
+      },
+      "expect": {
+        "admission": "represented",
+        "raw_logical_bytes": [
+          9,
+          2
+        ],
+        "data": [
+          9,
+          2
+        ],
+        "unresolved_tail": null,
+        "typed_data": "opaque",
+        "execution": "not_executed",
+        "mutation_success": false,
+        "native_success_claim": false,
+        "local_representation": true,
+        "native_physical_offset": "Unknown",
+        "positive_prefix_relevance": "Unknown",
+        "peer_acceptance": "Unknown",
+        "numeric_grade": "not_applicable",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "body-service-mismatch",
+      "kind": "body",
+      "varies": [
+        "service"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "positive"
+      },
+      "object": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0903",
+        "direction": "positive",
+        "object_state": "complete",
+        "logical_bytes": [
+          9,
+          0,
+          170,
+          85
+        ]
+      },
+      "expect": {
+        "admission": "unmatched",
+        "raw_logical_bytes": [
+          9,
+          0,
+          170,
+          85
+        ],
+        "data": null,
+        "unresolved_tail": null,
+        "typed_data": null,
+        "execution": "not_executed",
+        "mutation_success": false,
+        "native_success_claim": false,
+        "local_representation": false,
+        "native_physical_offset": "Unknown",
+        "positive_prefix_relevance": "Unknown",
+        "peer_acceptance": "Unknown",
+        "numeric_grade": "not_applicable",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "body-direction-mismatch",
+      "kind": "body",
+      "varies": [
+        "direction"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "positive"
+      },
+      "object": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "initiator-request",
+        "object_state": "complete",
+        "logical_bytes": [
+          9,
+          0,
+          170,
+          85
+        ]
+      },
+      "expect": {
+        "admission": "unmatched",
+        "raw_logical_bytes": [
+          9,
+          0,
+          170,
+          85
+        ],
+        "data": null,
+        "unresolved_tail": null,
+        "typed_data": null,
+        "execution": "not_executed",
+        "mutation_success": false,
+        "native_success_claim": false,
+        "local_representation": false,
+        "native_physical_offset": "Unknown",
+        "positive_prefix_relevance": "Unknown",
+        "peer_acceptance": "Unknown",
+        "numeric_grade": "not_applicable",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "body-profile-mismatch",
+      "kind": "body",
+      "varies": [
+        "profile_variant"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "positive"
+      },
+      "object": {
+        "family": "ebus-module",
+        "profile_variant": "other-profile",
+        "service": "0900",
+        "direction": "positive",
+        "object_state": "complete",
+        "logical_bytes": [
+          9,
+          0,
+          170,
+          85
+        ]
+      },
+      "expect": {
+        "admission": "unmatched",
+        "raw_logical_bytes": [
+          9,
+          0,
+          170,
+          85
+        ],
+        "data": null,
+        "unresolved_tail": null,
+        "typed_data": null,
+        "execution": "not_executed",
+        "mutation_success": false,
+        "native_success_claim": false,
+        "local_representation": false,
+        "native_physical_offset": "Unknown",
+        "positive_prefix_relevance": "Unknown",
+        "peer_acceptance": "Unknown",
+        "numeric_grade": "not_applicable",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "body-family-mismatch",
+      "kind": "body",
+      "varies": [
+        "family"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "positive"
+      },
+      "object": {
+        "family": "other-family",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "positive",
+        "object_state": "complete",
+        "logical_bytes": [
+          9,
+          0,
+          170,
+          85
+        ]
+      },
+      "expect": {
+        "admission": "unmatched",
+        "raw_logical_bytes": [
+          9,
+          0,
+          170,
+          85
+        ],
+        "data": null,
+        "unresolved_tail": null,
+        "typed_data": null,
+        "execution": "not_executed",
+        "mutation_success": false,
+        "native_success_claim": false,
+        "local_representation": false,
+        "native_physical_offset": "Unknown",
+        "positive_prefix_relevance": "Unknown",
+        "peer_acceptance": "Unknown",
+        "numeric_grade": "not_applicable",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "body-matched-nonpositive",
+      "kind": "body",
+      "varies": [
+        "direction"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "initiator-request"
+      },
+      "object": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "initiator-request",
+        "object_state": "complete",
+        "logical_bytes": [
+          9,
+          0,
+          170,
+          85
+        ]
+      },
+      "expect": {
+        "admission": "unknown",
+        "raw_logical_bytes": [
+          9,
+          0,
+          170,
+          85
+        ],
+        "data": null,
+        "unresolved_tail": null,
+        "typed_data": null,
+        "execution": "not_executed",
+        "mutation_success": false,
+        "native_success_claim": false,
+        "local_representation": false,
+        "native_physical_offset": "Unknown",
+        "positive_prefix_relevance": "Unknown",
+        "peer_acceptance": "Unknown",
+        "numeric_grade": "not_applicable",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "body-incomplete-state",
+      "kind": "body",
+      "varies": [
+        "body_extent"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "positive"
+      },
+      "object": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "positive",
+        "object_state": "incomplete",
+        "logical_bytes": [
+          9,
+          0,
+          170,
+          85
+        ]
+      },
+      "expect": {
+        "admission": "incomplete",
+        "raw_logical_bytes": [
+          9,
+          0,
+          170,
+          85
+        ],
+        "data": null,
+        "unresolved_tail": null,
+        "typed_data": null,
+        "execution": "not_executed",
+        "mutation_success": false,
+        "native_success_claim": false,
+        "local_representation": false,
+        "native_physical_offset": "Unknown",
+        "positive_prefix_relevance": "Unknown",
+        "peer_acceptance": "Unknown",
+        "numeric_grade": "not_applicable",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "body-unknown-state",
+      "kind": "body",
+      "varies": [
+        "body_extent"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "positive"
+      },
+      "object": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "positive",
+        "object_state": "unknown",
+        "logical_bytes": [
+          9,
+          0,
+          170,
+          85
+        ]
+      },
+      "expect": {
+        "admission": "unknown",
+        "raw_logical_bytes": [
+          9,
+          0,
+          170,
+          85
+        ],
+        "data": null,
+        "unresolved_tail": null,
+        "typed_data": null,
+        "execution": "not_executed",
+        "mutation_success": false,
+        "native_success_claim": false,
+        "local_representation": false,
+        "native_physical_offset": "Unknown",
+        "positive_prefix_relevance": "Unknown",
+        "peer_acceptance": "Unknown",
+        "numeric_grade": "not_applicable",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "address-0900-3412",
+      "kind": "address",
+      "varies": [
+        "address_low",
+        "address_high"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "positive"
+      },
+      "identity": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "positive"
+      },
+      "delimited": [
+        52,
+        18
+      ],
+      "decoy_packet": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "decoy_offset": 0,
+      "expect": {
+        "admission": "represented",
+        "raw": [
+          52,
+          18
+        ],
+        "form": "leu16",
+        "leu16": 4660,
+        "low_u8": null,
+        "high_u8": null,
+        "packet_offset": null,
+        "address_space": null,
+        "execution": "not_executed",
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "address-0901-3412",
+      "kind": "address",
+      "varies": [
+        "service"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0901",
+        "direction": "positive"
+      },
+      "identity": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0901",
+        "direction": "positive"
+      },
+      "delimited": [
+        52,
+        18
+      ],
+      "decoy_packet": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "decoy_offset": 0,
+      "expect": {
+        "admission": "represented",
+        "raw": [
+          52,
+          18
+        ],
+        "form": "leu16",
+        "leu16": 4660,
+        "low_u8": null,
+        "high_u8": null,
+        "packet_offset": null,
+        "address_space": null,
+        "execution": "not_executed",
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "address-0902-3412",
+      "kind": "address",
+      "varies": [
+        "service",
+        "address_low",
+        "address_high"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0902",
+        "direction": "positive"
+      },
+      "identity": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0902",
+        "direction": "positive"
+      },
+      "delimited": [
+        52,
+        18
+      ],
+      "decoy_packet": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "decoy_offset": 0,
+      "expect": {
+        "admission": "represented",
+        "raw": [
+          52,
+          18
+        ],
+        "form": "split_u8",
+        "leu16": null,
+        "low_u8": 52,
+        "high_u8": 18,
+        "packet_offset": null,
+        "address_space": null,
+        "execution": "not_executed",
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "address-0903-3412",
+      "kind": "address",
+      "varies": [
+        "service"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0903",
+        "direction": "positive"
+      },
+      "identity": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0903",
+        "direction": "positive"
+      },
+      "delimited": [
+        52,
+        18
+      ],
+      "decoy_packet": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "decoy_offset": 0,
+      "expect": {
+        "admission": "represented",
+        "raw": [
+          52,
+          18
+        ],
+        "form": "split_u8",
+        "leu16": null,
+        "low_u8": 52,
+        "high_u8": 18,
+        "packet_offset": null,
+        "address_space": null,
+        "execution": "not_executed",
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "address-0900-low",
+      "kind": "address",
+      "varies": [
+        "address_low"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "positive"
+      },
+      "identity": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "positive"
+      },
+      "delimited": [
+        53,
+        18
+      ],
+      "decoy_packet": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "decoy_offset": 0,
+      "expect": {
+        "admission": "represented",
+        "raw": [
+          53,
+          18
+        ],
+        "form": "leu16",
+        "leu16": 4661,
+        "low_u8": null,
+        "high_u8": null,
+        "packet_offset": null,
+        "address_space": null,
+        "execution": "not_executed",
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "address-0900-high",
+      "kind": "address",
+      "varies": [
+        "address_high"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "positive"
+      },
+      "identity": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "positive"
+      },
+      "delimited": [
+        52,
+        19
+      ],
+      "decoy_packet": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "decoy_offset": 0,
+      "expect": {
+        "admission": "represented",
+        "raw": [
+          52,
+          19
+        ],
+        "form": "leu16",
+        "leu16": 4916,
+        "low_u8": null,
+        "high_u8": null,
+        "packet_offset": null,
+        "address_space": null,
+        "execution": "not_executed",
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "address-0902-low",
+      "kind": "address",
+      "varies": [
+        "address_low"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0902",
+        "direction": "positive"
+      },
+      "identity": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0902",
+        "direction": "positive"
+      },
+      "delimited": [
+        53,
+        18
+      ],
+      "decoy_packet": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "decoy_offset": 0,
+      "expect": {
+        "admission": "represented",
+        "raw": [
+          53,
+          18
+        ],
+        "form": "split_u8",
+        "leu16": null,
+        "low_u8": 53,
+        "high_u8": 18,
+        "packet_offset": null,
+        "address_space": null,
+        "execution": "not_executed",
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "address-0902-high",
+      "kind": "address",
+      "varies": [
+        "address_high"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0902",
+        "direction": "positive"
+      },
+      "identity": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0902",
+        "direction": "positive"
+      },
+      "delimited": [
+        52,
+        19
+      ],
+      "decoy_packet": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "decoy_offset": 0,
+      "expect": {
+        "admission": "represented",
+        "raw": [
+          52,
+          19
+        ],
+        "form": "split_u8",
+        "leu16": null,
+        "low_u8": 52,
+        "high_u8": 19,
+        "packet_offset": null,
+        "address_space": null,
+        "execution": "not_executed",
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "address-0900-swapped",
+      "kind": "address",
+      "varies": [
+        "address_low",
+        "address_high"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "positive"
+      },
+      "identity": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "positive"
+      },
+      "delimited": [
+        18,
+        52
+      ],
+      "decoy_packet": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "decoy_offset": 0,
+      "expect": {
+        "admission": "represented",
+        "raw": [
+          18,
+          52
+        ],
+        "form": "leu16",
+        "leu16": 13330,
+        "low_u8": null,
+        "high_u8": null,
+        "packet_offset": null,
+        "address_space": null,
+        "execution": "not_executed",
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "address-0900-extent-zero",
+      "kind": "address",
+      "varies": [
+        "address_extent"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "positive"
+      },
+      "identity": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "positive"
+      },
+      "delimited": [],
+      "decoy_packet": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "decoy_offset": 0,
+      "expect": {
+        "admission": "incomplete",
+        "raw": [],
+        "form": null,
+        "leu16": null,
+        "low_u8": null,
+        "high_u8": null,
+        "packet_offset": null,
+        "address_space": null,
+        "execution": "not_executed",
+        "numeric_grade": "not_applicable",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "address-0900-extent-one",
+      "kind": "address",
+      "varies": [
+        "address_extent"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "positive"
+      },
+      "identity": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "positive"
+      },
+      "delimited": [
+        52
+      ],
+      "decoy_packet": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "decoy_offset": 0,
+      "expect": {
+        "admission": "incomplete",
+        "raw": [
+          52
+        ],
+        "form": null,
+        "leu16": null,
+        "low_u8": null,
+        "high_u8": null,
+        "packet_offset": null,
+        "address_space": null,
+        "execution": "not_executed",
+        "numeric_grade": "not_applicable",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "address-0900-extent-three",
+      "kind": "address",
+      "varies": [
+        "address_extent"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "positive"
+      },
+      "identity": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "positive"
+      },
+      "delimited": [
+        52,
+        18,
+        0
+      ],
+      "decoy_packet": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "decoy_offset": 0,
+      "expect": {
+        "admission": "incomplete",
+        "raw": [
+          52,
+          18,
+          0
+        ],
+        "form": null,
+        "leu16": null,
+        "low_u8": null,
+        "high_u8": null,
+        "packet_offset": null,
+        "address_space": null,
+        "execution": "not_executed",
+        "numeric_grade": "not_applicable",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "address-0902-extent-one",
+      "kind": "address",
+      "varies": [
+        "address_extent"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0902",
+        "direction": "positive"
+      },
+      "identity": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0902",
+        "direction": "positive"
+      },
+      "delimited": [
+        52
+      ],
+      "decoy_packet": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "decoy_offset": 0,
+      "expect": {
+        "admission": "incomplete",
+        "raw": [
+          52
+        ],
+        "form": null,
+        "leu16": null,
+        "low_u8": null,
+        "high_u8": null,
+        "packet_offset": null,
+        "address_space": null,
+        "execution": "not_executed",
+        "numeric_grade": "not_applicable",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "address-service-mismatch",
+      "kind": "address",
+      "varies": [
+        "service"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "positive"
+      },
+      "identity": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0902",
+        "direction": "positive"
+      },
+      "delimited": [
+        52,
+        18
+      ],
+      "decoy_packet": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "decoy_offset": 0,
+      "expect": {
+        "admission": "unmatched",
+        "raw": [
+          52,
+          18
+        ],
+        "form": null,
+        "leu16": null,
+        "low_u8": null,
+        "high_u8": null,
+        "packet_offset": null,
+        "address_space": null,
+        "execution": "not_executed",
+        "numeric_grade": "not_applicable",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "address-direction-mismatch",
+      "kind": "address",
+      "varies": [
+        "direction"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "positive"
+      },
+      "identity": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "initiator-request"
+      },
+      "delimited": [
+        52,
+        18
+      ],
+      "decoy_packet": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "decoy_offset": 0,
+      "expect": {
+        "admission": "unmatched",
+        "raw": [
+          52,
+          18
+        ],
+        "form": null,
+        "leu16": null,
+        "low_u8": null,
+        "high_u8": null,
+        "packet_offset": null,
+        "address_space": null,
+        "execution": "not_executed",
+        "numeric_grade": "not_applicable",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "address-profile-mismatch",
+      "kind": "address",
+      "varies": [
+        "profile_variant"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "positive"
+      },
+      "identity": {
+        "family": "ebus-module",
+        "profile_variant": "other-profile",
+        "service": "0900",
+        "direction": "positive"
+      },
+      "delimited": [
+        52,
+        18
+      ],
+      "decoy_packet": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "decoy_offset": 0,
+      "expect": {
+        "admission": "unmatched",
+        "raw": [
+          52,
+          18
+        ],
+        "form": null,
+        "leu16": null,
+        "low_u8": null,
+        "high_u8": null,
+        "packet_offset": null,
+        "address_space": null,
+        "execution": "not_executed",
+        "numeric_grade": "not_applicable",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "address-family-mismatch",
+      "kind": "address",
+      "varies": [
+        "family"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "positive"
+      },
+      "identity": {
+        "family": "other-family",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "positive"
+      },
+      "delimited": [
+        52,
+        18
+      ],
+      "decoy_packet": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "decoy_offset": 0,
+      "expect": {
+        "admission": "unmatched",
+        "raw": [
+          52,
+          18
+        ],
+        "form": null,
+        "leu16": null,
+        "low_u8": null,
+        "high_u8": null,
+        "packet_offset": null,
+        "address_space": null,
+        "execution": "not_executed",
+        "numeric_grade": "not_applicable",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "count-0900-0",
+      "kind": "count",
+      "varies": [
+        "count"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "positive"
+      },
+      "identity": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "positive"
+      },
+      "count": 0,
+      "expect": {
+        "admission": "represented",
+        "raw": 0,
+        "value": 0,
+        "clipped": false,
+        "rejected": false,
+        "conflict": null,
+        "execution": "not_executed",
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "count-0900-10",
+      "kind": "count",
+      "varies": [
+        "count"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "positive"
+      },
+      "identity": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "positive"
+      },
+      "count": 10,
+      "expect": {
+        "admission": "represented",
+        "raw": 10,
+        "value": 10,
+        "clipped": false,
+        "rejected": false,
+        "conflict": null,
+        "execution": "not_executed",
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "count-0900-11",
+      "kind": "count",
+      "varies": [
+        "count"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "positive"
+      },
+      "identity": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "positive"
+      },
+      "count": 11,
+      "expect": {
+        "admission": "represented",
+        "raw": 11,
+        "value": 11,
+        "clipped": false,
+        "rejected": false,
+        "conflict": null,
+        "execution": "not_executed",
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "count-0900-255",
+      "kind": "count",
+      "varies": [
+        "count"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "positive"
+      },
+      "identity": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "positive"
+      },
+      "count": 255,
+      "expect": {
+        "admission": "represented",
+        "raw": 255,
+        "value": 255,
+        "clipped": false,
+        "rejected": false,
+        "conflict": null,
+        "execution": "not_executed",
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "count-0902-0",
+      "kind": "count",
+      "varies": [
+        "count"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0902",
+        "direction": "positive"
+      },
+      "identity": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0902",
+        "direction": "positive"
+      },
+      "count": 0,
+      "expect": {
+        "admission": "represented",
+        "raw": 0,
+        "value": 0,
+        "clipped": false,
+        "rejected": false,
+        "conflict": {
+          "candidate_recommendation_maximum": 10,
+          "formal_domain": "u8-0-255",
+          "value_outside_candidate_recommendation": false
+        },
+        "execution": "not_executed",
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "count-0902-10",
+      "kind": "count",
+      "varies": [
+        "count"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0902",
+        "direction": "positive"
+      },
+      "identity": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0902",
+        "direction": "positive"
+      },
+      "count": 10,
+      "expect": {
+        "admission": "represented",
+        "raw": 10,
+        "value": 10,
+        "clipped": false,
+        "rejected": false,
+        "conflict": {
+          "candidate_recommendation_maximum": 10,
+          "formal_domain": "u8-0-255",
+          "value_outside_candidate_recommendation": false
+        },
+        "execution": "not_executed",
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "count-0902-11",
+      "kind": "count",
+      "varies": [
+        "count"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0902",
+        "direction": "positive"
+      },
+      "identity": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0902",
+        "direction": "positive"
+      },
+      "count": 11,
+      "expect": {
+        "admission": "represented",
+        "raw": 11,
+        "value": 11,
+        "clipped": false,
+        "rejected": false,
+        "conflict": {
+          "candidate_recommendation_maximum": 10,
+          "formal_domain": "u8-0-255",
+          "value_outside_candidate_recommendation": true
+        },
+        "execution": "not_executed",
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "count-0902-255",
+      "kind": "count",
+      "varies": [
+        "count"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0902",
+        "direction": "positive"
+      },
+      "identity": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0902",
+        "direction": "positive"
+      },
+      "count": 255,
+      "expect": {
+        "admission": "represented",
+        "raw": 255,
+        "value": 255,
+        "clipped": false,
+        "rejected": false,
+        "conflict": {
+          "candidate_recommendation_maximum": 10,
+          "formal_domain": "u8-0-255",
+          "value_outside_candidate_recommendation": true
+        },
+        "execution": "not_executed",
+        "numeric_grade": "Proven",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "count-0901-inapplicable",
+      "kind": "count",
+      "varies": [
+        "service",
+        "count"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0901",
+        "direction": "positive"
+      },
+      "identity": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0901",
+        "direction": "positive"
+      },
+      "count": 11,
+      "expect": {
+        "admission": "inapplicable",
+        "raw": 11,
+        "value": null,
+        "clipped": false,
+        "rejected": false,
+        "conflict": null,
+        "execution": "not_executed",
+        "numeric_grade": "not_applicable",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "count-0903-inapplicable",
+      "kind": "count",
+      "varies": [
+        "service",
+        "count"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0903",
+        "direction": "positive"
+      },
+      "identity": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0903",
+        "direction": "positive"
+      },
+      "count": 11,
+      "expect": {
+        "admission": "inapplicable",
+        "raw": 11,
+        "value": null,
+        "clipped": false,
+        "rejected": false,
+        "conflict": null,
+        "execution": "not_executed",
+        "numeric_grade": "not_applicable",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "count-service-mismatch",
+      "kind": "count",
+      "varies": [
+        "service"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0902",
+        "direction": "positive"
+      },
+      "identity": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0900",
+        "direction": "positive"
+      },
+      "count": 11,
+      "expect": {
+        "admission": "unmatched",
+        "raw": 11,
+        "value": null,
+        "clipped": false,
+        "rejected": false,
+        "conflict": null,
+        "execution": "not_executed",
+        "numeric_grade": "not_applicable",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "count-direction-mismatch",
+      "kind": "count",
+      "varies": [
+        "direction"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0902",
+        "direction": "positive"
+      },
+      "identity": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0902",
+        "direction": "initiator-request"
+      },
+      "count": 11,
+      "expect": {
+        "admission": "unmatched",
+        "raw": 11,
+        "value": null,
+        "clipped": false,
+        "rejected": false,
+        "conflict": null,
+        "execution": "not_executed",
+        "numeric_grade": "not_applicable",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "count-profile-mismatch",
+      "kind": "count",
+      "varies": [
+        "profile_variant"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0902",
+        "direction": "positive"
+      },
+      "identity": {
+        "family": "ebus-module",
+        "profile_variant": "other-profile",
+        "service": "0902",
+        "direction": "positive"
+      },
+      "count": 11,
+      "expect": {
+        "admission": "unmatched",
+        "raw": 11,
+        "value": null,
+        "clipped": false,
+        "rejected": false,
+        "conflict": null,
+        "execution": "not_executed",
+        "numeric_grade": "not_applicable",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    },
+    {
+      "id": "count-family-mismatch",
+      "kind": "count",
+      "varies": [
+        "family"
+      ],
+      "selection": {
+        "family": "ebus-module",
+        "profile_variant": "standard-09",
+        "service": "0902",
+        "direction": "positive"
+      },
+      "identity": {
+        "family": "other-family",
+        "profile_variant": "standard-09",
+        "service": "0902",
+        "direction": "positive"
+      },
+      "count": 11,
+      "expect": {
+        "admission": "unmatched",
+        "raw": 11,
+        "value": null,
+        "clipped": false,
+        "rejected": false,
+        "conflict": null,
+        "execution": "not_executed",
+        "numeric_grade": "not_applicable",
+        "semantic_grade": "Hypothesis",
+        "native_grade": "Unknown",
+        "physical_support": "Unknown"
+      }
+    }
+  ]
+}
