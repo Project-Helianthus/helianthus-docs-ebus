@@ -1,0 +1,234 @@
+{
+  "ab96Family": "Vaillant",
+  "ab96Primary": 181,
+  "ab96Secondary": 3,
+  "ab96Declarations": [
+    {
+      "ab96Operation": 3,
+      "ab96Variant": null,
+      "ab96Direction": null,
+      "ab96Field": "unlock",
+      "ab96Width": 8,
+      "ab96Encoding": null,
+      "ab96Default": null,
+      "ab96Coordinate": null,
+      "ab96Grade": "Hypothesis"
+    },
+    {
+      "ab96Operation": 3,
+      "ab96Variant": null,
+      "ab96Direction": null,
+      "ab96Field": "trailing-byte",
+      "ab96Width": 1,
+      "ab96Encoding": "unsigned byte",
+      "ab96Default": 0,
+      "ab96Coordinate": null,
+      "ab96Grade": "Hypothesis"
+    },
+    {
+      "ab96Operation": 4,
+      "ab96Variant": null,
+      "ab96Direction": null,
+      "ab96Field": "text",
+      "ab96Width": null,
+      "ab96Encoding": "ASCII",
+      "ab96Default": null,
+      "ab96Coordinate": null,
+      "ab96Grade": "Hypothesis"
+    },
+    {
+      "ab96Operation": 5,
+      "ab96Variant": null,
+      "ab96Direction": null,
+      "ab96Field": "text",
+      "ab96Width": null,
+      "ab96Encoding": "ASCII",
+      "ab96Default": null,
+      "ab96Coordinate": null,
+      "ab96Grade": "Hypothesis"
+    },
+    {
+      "ab96Operation": 5,
+      "ab96Variant": null,
+      "ab96Direction": null,
+      "ab96Field": "mode",
+      "ab96Width": 1,
+      "ab96Encoding": "unsigned byte",
+      "ab96Default": null,
+      "ab96Coordinate": null,
+      "ab96Grade": "Hypothesis"
+    },
+    {
+      "ab96Operation": 6,
+      "ab96Variant": null,
+      "ab96Direction": null,
+      "ab96Field": "unlock",
+      "ab96Width": 8,
+      "ab96Encoding": null,
+      "ab96Default": null,
+      "ab96Coordinate": null,
+      "ab96Grade": "Hypothesis"
+    },
+    {
+      "ab96Operation": 6,
+      "ab96Variant": null,
+      "ab96Direction": null,
+      "ab96Field": "trailing-byte",
+      "ab96Width": 1,
+      "ab96Encoding": "unsigned byte",
+      "ab96Default": 0,
+      "ab96Coordinate": null,
+      "ab96Grade": "Hypothesis"
+    }
+  ],
+  "ab96Categories": [
+    {
+      "ab96Family": "Vaillant",
+      "ab96Variant": "common",
+      "ab96Direction": null,
+      "ab96Category": 1,
+      "ab96Named": true,
+      "ab96Label": null,
+      "ab96Grade": "Hypothesis"
+    },
+    {
+      "ab96Family": "Vaillant",
+      "ab96Variant": "common",
+      "ab96Direction": null,
+      "ab96Category": 2,
+      "ab96Named": true,
+      "ab96Label": "predictive maintenance",
+      "ab96Grade": "Hypothesis"
+    },
+    {
+      "ab96Family": "Vaillant",
+      "ab96Variant": "common",
+      "ab96Direction": null,
+      "ab96Category": 3,
+      "ab96Named": true,
+      "ab96Label": null,
+      "ab96Grade": "Hypothesis"
+    },
+    {
+      "ab96Family": "Vaillant",
+      "ab96Variant": "common",
+      "ab96Direction": null,
+      "ab96Category": 4,
+      "ab96Named": true,
+      "ab96Label": null,
+      "ab96Grade": "Hypothesis"
+    },
+    {
+      "ab96Family": "Vaillant",
+      "ab96Variant": "common",
+      "ab96Direction": null,
+      "ab96Category": 5,
+      "ab96Named": true,
+      "ab96Label": null,
+      "ab96Grade": "Hypothesis"
+    },
+    {
+      "ab96Family": "Vaillant",
+      "ab96Variant": "reset",
+      "ab96Direction": null,
+      "ab96Category": 1,
+      "ab96Named": true,
+      "ab96Label": "error",
+      "ab96Grade": "Hypothesis"
+    },
+    {
+      "ab96Family": "Vaillant",
+      "ab96Variant": "reset",
+      "ab96Direction": null,
+      "ab96Category": 2,
+      "ab96Named": false,
+      "ab96Label": null,
+      "ab96Grade": "Unknown"
+    },
+    {
+      "ab96Family": "Vaillant",
+      "ab96Variant": "reset",
+      "ab96Direction": null,
+      "ab96Category": 3,
+      "ab96Named": true,
+      "ab96Label": "status",
+      "ab96Grade": "Hypothesis"
+    }
+  ],
+  "ab96Unknown": [
+    "physical offsets",
+    "wire termination",
+    "success",
+    "session exclusivity",
+    "physical effects",
+    "unlock encoding",
+    "unlock padding",
+    "mode position"
+  ],
+  "ab96UnlockCases": [
+    {
+      "ab96Raw": "ABCDEFG",
+      "ab96DeclaredWidthMatch": false
+    },
+    {
+      "ab96Raw": "ABCDEFGH",
+      "ab96DeclaredWidthMatch": true
+    },
+    {
+      "ab96Raw": "ABCDEFGHI",
+      "ab96DeclaredWidthMatch": false
+    }
+  ],
+  "ab96TextCases": [
+    {
+      "ab96Operation": 4,
+      "ab96Raw": [
+        65,
+        66
+      ],
+      "ab96Text": "AB",
+      "ab96ModeCoordinate": null
+    },
+    {
+      "ab96Operation": 5,
+      "ab96Raw": [],
+      "ab96Text": "",
+      "ab96ModeCoordinate": null
+    },
+    {
+      "ab96Operation": 5,
+      "ab96Raw": [
+        65,
+        66
+      ],
+      "ab96Text": "AB",
+      "ab96ModeCoordinate": null
+    },
+    {
+      "ab96Operation": 5,
+      "ab96Raw": [
+        65,
+        66,
+        67,
+        68,
+        69
+      ],
+      "ab96Text": "ABCDE",
+      "ab96ModeCoordinate": null
+    }
+  ],
+  "ab96Partial": {
+    "ab96Raw": [
+      181,
+      3,
+      5
+    ],
+    "ab96LastKnownGoodRaw": [
+      65,
+      66
+    ],
+    "ab96PhysicalSuccess": null,
+    "ab96ReplaceLastKnownGood": false,
+    "ab96Qualification": "Unknown"
+  }
+}

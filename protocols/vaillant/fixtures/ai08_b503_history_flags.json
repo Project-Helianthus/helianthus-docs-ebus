@@ -1,0 +1,408 @@
+{
+  "identity": {
+    "family": "B503",
+    "primary": 181,
+    "secondary": 3
+  },
+  "positions": {
+    "marker": null,
+    "code": null,
+    "minute": null,
+    "hour": null,
+    "day": null,
+    "month": null,
+    "year": null,
+    "reset_acceptance": null
+  },
+  "grade": "Hypothesis",
+  "qualification": "Unknown",
+  "tables": [
+    [
+      [
+        "Family",
+        "PB",
+        "SB",
+        "Grade"
+      ],
+      [
+        "B503",
+        "0xB5",
+        "0x03",
+        "Hypothesis"
+      ]
+    ],
+    [
+      [
+        "Marker",
+        "Raw condition",
+        "Candidate result",
+        "Grade"
+      ],
+      [
+        "0x00",
+        "seven 0xFF bytes",
+        "no_item",
+        "Hypothesis"
+      ],
+      [
+        "0x01",
+        "code retained, even with five 0xFF components",
+        "code_only",
+        "Hypothesis"
+      ],
+      [
+        "0x02",
+        "validate each of five components first",
+        "calendar_components",
+        "Hypothesis"
+      ]
+    ],
+    [
+      [
+        "Component",
+        "Minimum",
+        "Maximum",
+        "Replacement",
+        "Absolute position",
+        "Grade"
+      ],
+      [
+        "minute",
+        "0",
+        "59",
+        "0xFF",
+        "null",
+        "Hypothesis"
+      ],
+      [
+        "hour",
+        "0",
+        "23",
+        "0xFF",
+        "null",
+        "Hypothesis"
+      ],
+      [
+        "day",
+        "1",
+        "31",
+        "0xFF",
+        "null",
+        "Hypothesis"
+      ],
+      [
+        "month",
+        "1",
+        "12",
+        "0xFF",
+        "null",
+        "Hypothesis"
+      ],
+      [
+        "year",
+        "0",
+        "99",
+        "0xFF",
+        "null",
+        "Hypothesis"
+      ]
+    ],
+    [
+      [
+        "Raw range",
+        "Label",
+        "Default",
+        "Grade"
+      ],
+      [
+        "0",
+        "false",
+        "0",
+        "Hypothesis"
+      ],
+      [
+        "1",
+        "true",
+        "none",
+        "Hypothesis"
+      ],
+      [
+        "2..255",
+        "unlabeled",
+        "none",
+        "Hypothesis"
+      ]
+    ],
+    [
+      [
+        "Bit",
+        "Name",
+        "Grade"
+      ],
+      [
+        "0",
+        "history_flag_0",
+        "Hypothesis"
+      ],
+      [
+        "1",
+        "history_flag_1",
+        "Hypothesis"
+      ],
+      [
+        "2",
+        "history_flag_2",
+        "Hypothesis"
+      ],
+      [
+        "3",
+        "history_flag_3",
+        "Hypothesis"
+      ],
+      [
+        "4",
+        "history_flag_4",
+        "Hypothesis"
+      ],
+      [
+        "5..7",
+        "reserved",
+        "Hypothesis"
+      ]
+    ],
+    [
+      [
+        "Word",
+        "Low byte",
+        "High byte",
+        "Decimal value",
+        "Grade"
+      ],
+      [
+        "current_error_1",
+        "0x01",
+        "0x00",
+        "1",
+        "Hypothesis"
+      ],
+      [
+        "current_error_2",
+        "0x00",
+        "0x01",
+        "256",
+        "Hypothesis"
+      ],
+      [
+        "current_error_3",
+        "0x34",
+        "0x12",
+        "4660",
+        "Hypothesis"
+      ],
+      [
+        "current_error_4",
+        "0x00",
+        "0x00",
+        "0",
+        "Hypothesis"
+      ],
+      [
+        "current_error_5",
+        "0xFF",
+        "0xFF",
+        "65535",
+        "Hypothesis"
+      ]
+    ],
+    [
+      [
+        "Raw range",
+        "Result",
+        "Grade"
+      ],
+      [
+        "0",
+        "rejected",
+        "Hypothesis"
+      ],
+      [
+        "1",
+        "accepted",
+        "Hypothesis"
+      ],
+      [
+        "2..255",
+        "rejected",
+        "Hypothesis"
+      ]
+    ],
+    [
+      [
+        "Case",
+        "Field-level raw alternative",
+        "Independent expected result"
+      ],
+      [
+        "no_item",
+        "marker 0x00; tail FF FF FF FF FF FF FF",
+        "no_item; no code or calendar claim"
+      ],
+      [
+        "code_only",
+        "marker 0x01; code 0x1234; components FF FF FF FF FF",
+        "code 4660 retained; no calendar claim"
+      ],
+      [
+        "calendar",
+        "marker 0x02; components 59,23,31,12,99",
+        "preserve 59,23,31,12,99; date validity Unknown"
+      ],
+      [
+        "minute_outside",
+        "marker 0x02; components 60,23,31,12,99",
+        "minute invalid; retain valid sibling components"
+      ],
+      [
+        "hour_outside",
+        "marker 0x02; components 59,24,31,12,99",
+        "hour invalid; retain valid sibling components"
+      ],
+      [
+        "named_flags",
+        "flags 0x1F",
+        "named bits 0,1,2,3,4; reserved raw 0"
+      ],
+      [
+        "reserved_flags",
+        "flags 0xE0",
+        "no named bits; reserved raw 224"
+      ],
+      [
+        "reset_two",
+        "reset acceptance 2",
+        "unlabeled"
+      ],
+      [
+        "feedback_two",
+        "OP07 feedback 2",
+        "rejected"
+      ]
+    ]
+  ],
+  "cases": [
+    {
+      "name": "no_item",
+      "operation": 1,
+      "marker": 0,
+      "tail": [
+        255,
+        255,
+        255,
+        255,
+        255,
+        255,
+        255
+      ],
+      "code": null,
+      "components": null
+    },
+    {
+      "name": "code_only",
+      "operation": 1,
+      "marker": 1,
+      "tail": null,
+      "code": 4660,
+      "components": [
+        255,
+        255,
+        255,
+        255,
+        255
+      ]
+    },
+    {
+      "name": "calendar",
+      "operation": 1,
+      "marker": 2,
+      "tail": null,
+      "code": 4660,
+      "components": [
+        59,
+        23,
+        31,
+        12,
+        99
+      ]
+    },
+    {
+      "name": "minute_outside",
+      "operation": 1,
+      "marker": 2,
+      "tail": null,
+      "code": 4660,
+      "components": [
+        60,
+        23,
+        31,
+        12,
+        99
+      ]
+    },
+    {
+      "name": "hour_outside",
+      "operation": 1,
+      "marker": 2,
+      "tail": null,
+      "code": 4660,
+      "components": [
+        59,
+        24,
+        31,
+        12,
+        99
+      ]
+    },
+    {
+      "name": "named_flags",
+      "operation": 7,
+      "raw": 31
+    },
+    {
+      "name": "reserved_flags",
+      "operation": 7,
+      "raw": 224
+    },
+    {
+      "name": "reset_two",
+      "operation": null,
+      "raw": 2
+    },
+    {
+      "name": "feedback_two",
+      "operation": 7,
+      "raw": 2
+    }
+  ],
+  "words": [
+    [
+      1,
+      0
+    ],
+    [
+      0,
+      1
+    ],
+    [
+      52,
+      18
+    ],
+    [
+      0,
+      0
+    ],
+    [
+      255,
+      255
+    ]
+  ]
+}

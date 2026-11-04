@@ -8,7 +8,7 @@
 > documented as "Service Test-Menu Values" with 5 TypeSpec-derived selectors only.
 > Enrichment from two independent live-install sources (P1: cyberthom42/vaillant-arotherm-plus,
 > P5: OpenHAB eBUS binding hmu08_config.json) shows B514 carries **37 live sensor
-> registers** across two device groups, plus 1 unresolved TypeSpec-only entry (0x45).
+> registers** across two device groups, plus 1 unresolved legacy entry (0x45).
 > The protocol delivers continuous compressor temperatures, refrigerant pressures,
 > fan speeds, valve states, and hydraulic readings — readable without documented
 > service-mode activation (see OQ-2 caveat).
@@ -32,9 +32,9 @@ Evidence labels:
 
 > **CORRECTION C1 (2026-04-14):** The previous wire format described a 2-byte read
 > form `05 <selector>` and a separate write form `05 03 FF FF <selector>`. This was
-> derived from TypeSpec template parsing only. Both P1 (38 registers) and P5 (20
-> registers) use a **5-byte read payload** for ALL reads. The 2-byte short-form read
-> has no live capture evidence.
+> derived from schema-template parsing only. Both live-install sources (37 current
+> register rows documented below; 20 registers) use a **5-byte read payload** for
+> ALL reads. The cited sources do not establish the 2-byte short-form read.
 
 Corrected universal read request payload:
 
@@ -47,7 +47,8 @@ Corrected universal read request payload:
 - `03 FF FF` — service-mode read qualifier + padding, present on ALL read requests
 
 Evidence: P5 `hmu08_config.json` field `"command": "05 [REG] 03 FF FF"` for all 20
-registers. P1 `08.hmu.csv` uses the same 5-byte payload for all 38 distinct registers.
+registers. The 37 current register rows below cite the other source with the same
+5-byte payload; the additional legacy entry 0x45 is absent from both sources.
 
 Falsification test: capture any B514 read on a live arotherm plus installation and
 show the request payload is `05 <REG>` (2 bytes) rather than `05 [REG] 03 FF FF`
@@ -104,7 +105,7 @@ until verified by capture.
 | 0x5D | 93 | T.0.93 | `compressor_speed` | `CompressorSpeed` | word/10 | rev/s | BOTH | P1: 08.hmu.csv T.0.93 (UIN/10); P5: hmu08_config.json reg 93 (word x 0.1) | Read 0x5D; active compressor: 20-120 rev/s. Compressor off: 0. |
 | 0x7B | 123 | T.0.123 | `comp_temp_switch` | `CompTempSwitch` | openclose | -- | P1-ONLY | P1: 08.hmu.csv T.0.123 (openclose); absent from P5 | Read 0x7B; normal(closed)=0x01, tripped(open)=0x00. |
 
-**Group T.0 total: 27 registers (16 BOTH, 8 P1-ONLY, 2 pressure type-UNRESOLVED, 1 TypeSpec-legacy 0x45)**
+**Group T.0 total: 27 current register rows (18 BOTH, 7 single-source, 2 pressure type-UNRESOLVED). The additional legacy entry 0x45 is separate.**
 
 ### Group T.1 — VWZIO Indoor Hydraulic Station (address 0x76)
 
@@ -219,7 +220,9 @@ availability of the header-only entry (B514 `09`) is not established.
 
 **Was:** `05 <selector>` is the read form; `05 03 FF FF <selector>` is write-only.
 **Now:** `05 [REG] 03 FF FF` is universal for all reads.
-**Evidence:** P5 (20 registers, all 5-byte); P1 (38 registers, same pattern).
+**Evidence:** The two cited configurations use this request shape. The tables
+below contain 27 outdoor-group rows and 10 indoor-group rows. The additional
+legacy entry 0x45 is absent from both configurations.
 **Falsifiable:** Show a live capture with a 2-byte B514 read request that returns valid data.
 
 ### C2 — Temperature registers must be decoded as signed int16
@@ -295,7 +298,8 @@ unit with no service-menu session open.
 ### OQ-3 — Register 0x45 (TestOutdoorTemp)
 
 REG 0x45 (decimal 69) appears in the TypeSpec as `TestOutdoorTemp` but is absent
-from both P1 (38 registers) and P5 (20 registers). Possibly a firmware-variant
+from both cited configurations. It is an additional legacy entry, separate
+from the 37 current register rows. **Unknown:** whether it is a firmware-variant
 artifact, an alias for AirInTemp (0x30), or a remapped register.
 
 ### OQ-4 — T.1 register addressing on VWZIO
@@ -329,31 +333,36 @@ differ (`0x2E`, `0x48`, `0x77`) are unresolved.
 
 ## Enrichment Summary (2026-04-14)
 
+**Proven (page accounting):** 37 current register rows (27 T.0 + 10 T.1),
+one additional legacy entry (0x45), and seven open questions (OQ-1 through OQ-7).
+These counts describe the tables and headings, not installed-device support,
+codec qualification, or physical qualification.
+
 | Metric | Before | After |
 |--------|--------|-------|
-| Total registers | 5 (TypeSpec-only) | 38 distinct REG indices (+33 new) |
-| Live sensor registers | 0 | 25 confirmed + 2 type-unresolved |
+| Register rows | 5 (TypeSpec-only) | 37 current register rows + one additional legacy entry (0x45) |
+| Register rows by group | 0 | 27 T.0 + 10 T.1 = 37; includes 2 pressure type-unresolved rows |
 | Wire format | Partial (2-byte read assumed) | Corrected: `05 [REG] 03 FF FF` |
 | Group T.0 (HMU outdoor) | 2 (TypeSpec, misidentified) | 27 registers |
 | Group T.1 (VWZIO indoor) | 2 (TypeSpec, misidentified) | 10 registers |
-| Confidence | TypeSpec-only (LOW) | 16 BOTH (HIGH), 8 P1-ONLY (MEDIUM) |
+| Source coverage | TypeSpec-only (LOW) | Outdoor group: 18 rows in both sources, 7 in one source, 2 with conflicting pressure types; indoor group: 10 rows in one source |
 | Corrections | 0 | 5 (C1-C5) |
-| Open questions | 3 | 5 (refined + new) |
+| Open questions | 3 | 7 (OQ-1 through OQ-7) |
 
 ## References
 
 ### Primary sources (live-install)
 
 - **P1**: `cyberthom42/vaillant-arotherm-plus` GitHub repo — `08.hmu.csv`
-  (38 B514 registers, arotherm plus HMU00 + VWZIO)
+  (cited by the 37 B514 register rows above, HMU outdoor + VWZIO indoor families)
 - **P5**: OpenHAB eBUS binding community thread — `hmu08_config.json`
   (20 B514 registers, HMU00 only)
 
 ### Secondary sources (TypeSpec / protocol spec)
 
-- Public TypeSpec: [08.hmu.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/08.hmu.tsp)
-- Public TypeSpec: [76.vwz.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/76.vwz.tsp)
-- Public TypeSpec: [76.vwzio.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/76.vwzio.tsp)
+- Public TypeSpec: [08.hmu.tsp](https://github.com/john30/ebusd-configuration) path `src/vaillant/08.hmu.tsp`
+- Public TypeSpec: [76.vwz.tsp](https://github.com/john30/ebusd-configuration) path `src/vaillant/76.vwz.tsp`
+- Public TypeSpec: [76.vwzio.tsp](https://github.com/john30/ebusd-configuration) path `src/vaillant/76.vwzio.tsp`
 
 ## Appendix: Semantic FSM — `four_way_valve_position` (REG 0x14)
 

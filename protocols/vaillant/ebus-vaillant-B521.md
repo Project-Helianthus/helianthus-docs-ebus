@@ -28,7 +28,7 @@ Request payload:
 ```
 
 The exact read/write byte order is inherited from shared register templates and
-must be verified with captures before implementing a a writer.
+must be verified with captures before implementing a writer.
 
 ## Known Selector Examples
 
@@ -49,30 +49,105 @@ heat-pump safety and performance.
 
 ## Candidate layout
 
-One candidate layout is known for B521, the op `B5 21 00`, an operational-data
-exchange with the outdoor unit of a heat pump and with ventilation; it is
-unconfirmed on the wire and has not been observed on a bus. Both the request and
-the response carry values (offsets count from the first byte of the service
-prefix; a target response on the bus carries no such prefix, and how the
-candidate response offsets map onto the bytes of a bus response is unconfirmed on
-the wire; **Hypothesis**: response offset 3 is the first data byte; see
-[`ebus-vaillant.md`](ebus-vaillant.md#other-b5-services-candidate-layouts)):
+### Evidence boundary
 
-- Request (candidate, unconfirmed on the wire): control bits at offset 3 (bits
-  0..5: compressor demand, de-icing release, brine OK or heater allow, noise
-  period, manual de-icing, fan mode); offset 4 unknown; a `u8` percentage
-  parameter at offset 5 (**Hypothesis**: a noise reduction factor); a frost
-  protection `u8` °C at offset 6.
-- Response (candidate, unconfirmed on the wire): offsets 3 and 4 unknown;
-  brine temperature `i16` LE ÷16 °C at offset 5, air inlet temperature at offset 7, brine pump `u8` % at offset
-  9, fan speed `u8` × 10 rpm at offset 10 and fan PWM `u8` % at offset 11.
+**Hypothesis:** the outdoor-module family has a candidate process-data
+interpretation of B521 alongside the public TypeSpec register-family
+interpretation above. Whether these describe the same service, separate variants,
+or both remains **Unknown**. Variant and operation are **Unknown**; neither the
+service prefix nor a register selector establishes a process-data operation.
+Ventilation role is **Unknown**.
 
-The community TypeSpec rows treat `B5 21 00` as `00 <selector> 00 <value>`
-register reads and writes (selector examples `4a 00`, `45 00`), whereas the
-candidate layout is a fixed process-data layout with control bytes; whether the
-service is a register family, a process-data exchange or both is unresolved.
+**Proven** applies only to the declared representation checked by the
+[synthetic examples](fixtures/ac22_outdoor_module.json), not to native behavior.
+Every field interpretation below is **Hypothesis**. Physical qualification,
+native adaptation and peer effects are **Unknown**. This partial declaration
+establishes no runtime capability or safe transmission.
 
-No op on this page is documented as safe to send; a state-changing op needs a separately established safety procedure and target qualification, and an ACK does not show the resulting device state.
+Logical positions include the service prefix in an abstract coordinate system;
+they are not physical payload offsets. Abstract request extent is 7; abstract
+positive extent is 12. Physical lengths are **Unknown**, not zero. The negative
+alternative has no established logical extent or fields. Preserve raw bytes and
+unresolved alternatives, including useful independently declared fields; an
+unknown property does not justify discarding those fields or filling gaps.
+
+### Request bits (Hypothesis)
+
+Each listed bit is independent: 0 means disabled, 1 means enabled, and the
+default is disabled. Exact names of request logical 3 bits 0..5 are **Unknown**;
+raw labels deliberately preserve that gap. No composite appliance-code enum is
+established. Reserved bits default to zero and retain their raw values.
+
+| Logical | Bits | Field | Mask |
+|---|---|---|---|
+| 3 | 0 | raw-bit-0 | 0x01 |
+| 3 | 1 | raw-bit-1 | 0x02 |
+| 3 | 2 | raw-bit-2 | 0x04 |
+| 3 | 3 | raw-bit-3 | 0x08 |
+| 3 | 4 | raw-bit-4 | 0x10 |
+| 3 | 5 | raw-bit-5 | 0x20 |
+| 3 | 6..7 | reserved | 0xC0 |
+| 4 | 0 | appliance-code-bit-0 | 0x01 |
+| 4 | 1 | appliance-code-bit-1 | 0x02 |
+| 4 | 2 | appliance-code-bit-2 | 0x04 |
+| 4 | 3 | appliance-code-bit-3 | 0x08 |
+| 4 | 4 | appliance-code-bit-4 | 0x10 |
+| 4 | 5..7 | reserved | 0xE0 |
+
+### Positive bits (Hypothesis)
+
+Each named bit uses the same independent disabled/enabled representation and
+zero default. Reserved bits default to zero and retain their raw values.
+
+| Logical | Bits | Field | Mask |
+|---|---|---|---|
+| 3 | 0 | ready | 0x01 |
+| 3 | 1 | deicing-request | 0x02 |
+| 3 | 2 | deicing-active | 0x04 |
+| 3 | 3 | deicing-timeout-error | 0x08 |
+| 3 | 4 | deicing-with-heater | 0x10 |
+| 3 | 5..6 | reserved | 0x60 |
+| 3 | 7 | cleaning-request | 0x80 |
+| 4 | 0 | heater | 0x01 |
+| 4 | 1 | relay-output | 0x02 |
+| 4 | 2 | fan-running | 0x04 |
+| 4 | 3 | brine-flow-reverse | 0x08 |
+| 4 | 4 | fan-error | 0x10 |
+| 4 | 5 | safety-limiter-error | 0x20 |
+| 4 | 6 | hot-summer | 0x40 |
+| 4 | 7 | bad-weather | 0x80 |
+
+### Scalars (Hypothesis)
+
+All scalars default to zero and retain the full raw carrier domain. Positions
+not declared here stay absent; the two temperatures have no established physical
+roles. Unit metadata does not scale the converted value again. No BCD or sentinel
+conversion is established. Percent values are not clipped to 100.
+
+| Alternative | Logical | Field | Carrier | Raw domain | Conversion | Unit |
+|---|---|---|---|---|---|---|
+| request | 5 | noise-reduction | u8 | 0..255 | raw | percent |
+| request | 6 | frost-protection-temperature | u8 | 0..255 | raw | degrees C |
+| positive | Unknown | brine-pump-speed | u8 | 0..255 | raw | percent |
+| positive | Unknown | fan-PWM | u8 | 0..255 | raw | percent |
+| positive | Unknown | fan-speed | u8 | 0..255 | raw × 10 | rpm |
+| positive | Unknown | temperature-1 | signed LE16 | -32768..32767 | raw ÷ 16 | degrees C |
+| positive | Unknown | temperature-2 | signed LE16 | -32768..32767 | raw ÷ 16 | degrees C |
+
+Synthetic examples of the declaration: walking logical 3 positive bits select
+ready at bit 0, reserved at bits 5 and 6, and cleaning-request at bit 7.
+Percent `FF` remains 255 percent; fan-speed `FF` becomes 2550 rpm;
+temperature bytes `FE FF` become -0.125 degrees C. These examples establish no
+physical result.
+
+### Unresolved properties (Unknown)
+
+Complete request-bit names; positive scalar positions; variant; operation;
+ventilation role; negative forms; acknowledgement; retries/deadlines; atomicity;
+endpoint effects; relationship to other registers; physical lengths; native
+adaptation; peer effects; physical qualification. The slice remains partial until
+missing names and positions can be represented without guessing. An
+acknowledgement alone does not establish resulting device state.
 
 ## Profiles
 
@@ -90,10 +165,10 @@ whether the service is available under the PeBUS profile is not established (see
   device implements it is not established.
 - Whether the candidate layout and the community register-family reading
   describe the same service is unresolved.
-- How the candidate response offsets map onto the data bytes of a bus response is
-  unconfirmed on the wire.
+- How abstract logical positions relate to physical request and response bytes
+  remains Unknown; positive scalar positions are not declared in this slice.
 
 ## References
 
-- Public TypeSpec: [e0.omu.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/e0.omu.tsp)
-- Public TypeSpec: [e1.omu.1.tsp](https://github.com/john30/ebusd-configuration/blob/23a460b8fe1cc6e7a7e6d549190573ccfcfc450f/src/vaillant/e1.omu.1.tsp)
+- Public TypeSpec: [e0.omu.tsp](https://github.com/john30/ebusd-configuration) path `src/vaillant/e0.omu.tsp`
+- Public TypeSpec: [e1.omu.1.tsp](https://github.com/john30/ebusd-configuration) path `src/vaillant/e1.omu.1.tsp`
