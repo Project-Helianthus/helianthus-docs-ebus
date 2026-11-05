@@ -1,0 +1,569 @@
+{
+  "synthetic": true,
+  "representation_grade": "Proven",
+  "interpretation_grade": "Hypothesis",
+  "physical_qualification": "Unknown",
+  "alternatives": [
+    "register-family",
+    "process-data"
+  ],
+  "unknown": [
+    "complete request-bit names",
+    "positive scalar positions",
+    "variant",
+    "operation",
+    "ventilation role",
+    "negative forms",
+    "acknowledgement",
+    "retries/deadlines",
+    "atomicity",
+    "endpoint effects",
+    "relationship to other registers",
+    "physical lengths",
+    "native adaptation",
+    "peer effects",
+    "physical qualification"
+  ],
+  "entries": [
+    {
+      "family": "outdoor-module",
+      "variant": null,
+      "direction": "request",
+      "service": "B521",
+      "operation": null,
+      "alternative": "request",
+      "logical_extent": 7,
+      "physical_extent": null,
+      "grade": "Hypothesis",
+      "bits": [
+        {
+          "logical": 3,
+          "bits": "0",
+          "name": "raw-bit-0",
+          "mask": 1,
+          "default": 0,
+          "mappings": {
+            "0": "disabled",
+            "1": "enabled"
+          },
+          "grade": "Hypothesis"
+        },
+        {
+          "logical": 3,
+          "bits": "1",
+          "name": "raw-bit-1",
+          "mask": 2,
+          "default": 0,
+          "mappings": {
+            "0": "disabled",
+            "1": "enabled"
+          },
+          "grade": "Hypothesis"
+        },
+        {
+          "logical": 3,
+          "bits": "2",
+          "name": "raw-bit-2",
+          "mask": 4,
+          "default": 0,
+          "mappings": {
+            "0": "disabled",
+            "1": "enabled"
+          },
+          "grade": "Hypothesis"
+        },
+        {
+          "logical": 3,
+          "bits": "3",
+          "name": "raw-bit-3",
+          "mask": 8,
+          "default": 0,
+          "mappings": {
+            "0": "disabled",
+            "1": "enabled"
+          },
+          "grade": "Hypothesis"
+        },
+        {
+          "logical": 3,
+          "bits": "4",
+          "name": "raw-bit-4",
+          "mask": 16,
+          "default": 0,
+          "mappings": {
+            "0": "disabled",
+            "1": "enabled"
+          },
+          "grade": "Hypothesis"
+        },
+        {
+          "logical": 3,
+          "bits": "5",
+          "name": "raw-bit-5",
+          "mask": 32,
+          "default": 0,
+          "mappings": {
+            "0": "disabled",
+            "1": "enabled"
+          },
+          "grade": "Hypothesis"
+        },
+        {
+          "logical": 3,
+          "bits": "6..7",
+          "name": "reserved",
+          "mask": 192,
+          "default": 0,
+          "mappings": {},
+          "grade": "Hypothesis"
+        },
+        {
+          "logical": 4,
+          "bits": "0",
+          "name": "appliance-code-bit-0",
+          "mask": 1,
+          "default": 0,
+          "mappings": {
+            "0": "disabled",
+            "1": "enabled"
+          },
+          "grade": "Hypothesis"
+        },
+        {
+          "logical": 4,
+          "bits": "1",
+          "name": "appliance-code-bit-1",
+          "mask": 2,
+          "default": 0,
+          "mappings": {
+            "0": "disabled",
+            "1": "enabled"
+          },
+          "grade": "Hypothesis"
+        },
+        {
+          "logical": 4,
+          "bits": "2",
+          "name": "appliance-code-bit-2",
+          "mask": 4,
+          "default": 0,
+          "mappings": {
+            "0": "disabled",
+            "1": "enabled"
+          },
+          "grade": "Hypothesis"
+        },
+        {
+          "logical": 4,
+          "bits": "3",
+          "name": "appliance-code-bit-3",
+          "mask": 8,
+          "default": 0,
+          "mappings": {
+            "0": "disabled",
+            "1": "enabled"
+          },
+          "grade": "Hypothesis"
+        },
+        {
+          "logical": 4,
+          "bits": "4",
+          "name": "appliance-code-bit-4",
+          "mask": 16,
+          "default": 0,
+          "mappings": {
+            "0": "disabled",
+            "1": "enabled"
+          },
+          "grade": "Hypothesis"
+        },
+        {
+          "logical": 4,
+          "bits": "5..7",
+          "name": "reserved",
+          "mask": 224,
+          "default": 0,
+          "mappings": {},
+          "grade": "Hypothesis"
+        }
+      ],
+      "scalars": [
+        {
+          "name": "noise-reduction",
+          "logical": 5,
+          "carrier": "u8",
+          "raw_domain": [
+            0,
+            255
+          ],
+          "numerator": 1,
+          "denominator": 1,
+          "unit": "percent",
+          "default": 0,
+          "grade": "Hypothesis"
+        },
+        {
+          "name": "frost-protection-temperature",
+          "logical": 6,
+          "carrier": "u8",
+          "raw_domain": [
+            0,
+            255
+          ],
+          "numerator": 1,
+          "denominator": 1,
+          "unit": "degrees C",
+          "default": 0,
+          "grade": "Hypothesis"
+        }
+      ]
+    },
+    {
+      "family": "outdoor-module",
+      "variant": null,
+      "direction": "response",
+      "service": "B521",
+      "operation": null,
+      "alternative": "positive",
+      "logical_extent": 12,
+      "physical_extent": null,
+      "grade": "Hypothesis",
+      "bits": [
+        {
+          "logical": 3,
+          "bits": "0",
+          "name": "ready",
+          "mask": 1,
+          "default": 0,
+          "mappings": {
+            "0": "disabled",
+            "1": "enabled"
+          },
+          "grade": "Hypothesis"
+        },
+        {
+          "logical": 3,
+          "bits": "1",
+          "name": "deicing-request",
+          "mask": 2,
+          "default": 0,
+          "mappings": {
+            "0": "disabled",
+            "1": "enabled"
+          },
+          "grade": "Hypothesis"
+        },
+        {
+          "logical": 3,
+          "bits": "2",
+          "name": "deicing-active",
+          "mask": 4,
+          "default": 0,
+          "mappings": {
+            "0": "disabled",
+            "1": "enabled"
+          },
+          "grade": "Hypothesis"
+        },
+        {
+          "logical": 3,
+          "bits": "3",
+          "name": "deicing-timeout-error",
+          "mask": 8,
+          "default": 0,
+          "mappings": {
+            "0": "disabled",
+            "1": "enabled"
+          },
+          "grade": "Hypothesis"
+        },
+        {
+          "logical": 3,
+          "bits": "4",
+          "name": "deicing-with-heater",
+          "mask": 16,
+          "default": 0,
+          "mappings": {
+            "0": "disabled",
+            "1": "enabled"
+          },
+          "grade": "Hypothesis"
+        },
+        {
+          "logical": 3,
+          "bits": "5..6",
+          "name": "reserved",
+          "mask": 96,
+          "default": 0,
+          "mappings": {},
+          "grade": "Hypothesis"
+        },
+        {
+          "logical": 3,
+          "bits": "7",
+          "name": "cleaning-request",
+          "mask": 128,
+          "default": 0,
+          "mappings": {
+            "0": "disabled",
+            "1": "enabled"
+          },
+          "grade": "Hypothesis"
+        },
+        {
+          "logical": 4,
+          "bits": "0",
+          "name": "heater",
+          "mask": 1,
+          "default": 0,
+          "mappings": {
+            "0": "disabled",
+            "1": "enabled"
+          },
+          "grade": "Hypothesis"
+        },
+        {
+          "logical": 4,
+          "bits": "1",
+          "name": "relay-output",
+          "mask": 2,
+          "default": 0,
+          "mappings": {
+            "0": "disabled",
+            "1": "enabled"
+          },
+          "grade": "Hypothesis"
+        },
+        {
+          "logical": 4,
+          "bits": "2",
+          "name": "fan-running",
+          "mask": 4,
+          "default": 0,
+          "mappings": {
+            "0": "disabled",
+            "1": "enabled"
+          },
+          "grade": "Hypothesis"
+        },
+        {
+          "logical": 4,
+          "bits": "3",
+          "name": "brine-flow-reverse",
+          "mask": 8,
+          "default": 0,
+          "mappings": {
+            "0": "disabled",
+            "1": "enabled"
+          },
+          "grade": "Hypothesis"
+        },
+        {
+          "logical": 4,
+          "bits": "4",
+          "name": "fan-error",
+          "mask": 16,
+          "default": 0,
+          "mappings": {
+            "0": "disabled",
+            "1": "enabled"
+          },
+          "grade": "Hypothesis"
+        },
+        {
+          "logical": 4,
+          "bits": "5",
+          "name": "safety-limiter-error",
+          "mask": 32,
+          "default": 0,
+          "mappings": {
+            "0": "disabled",
+            "1": "enabled"
+          },
+          "grade": "Hypothesis"
+        },
+        {
+          "logical": 4,
+          "bits": "6",
+          "name": "hot-summer",
+          "mask": 64,
+          "default": 0,
+          "mappings": {
+            "0": "disabled",
+            "1": "enabled"
+          },
+          "grade": "Hypothesis"
+        },
+        {
+          "logical": 4,
+          "bits": "7",
+          "name": "bad-weather",
+          "mask": 128,
+          "default": 0,
+          "mappings": {
+            "0": "disabled",
+            "1": "enabled"
+          },
+          "grade": "Hypothesis"
+        }
+      ],
+      "scalars": [
+        {
+          "name": "brine-pump-speed",
+          "logical": null,
+          "carrier": "u8",
+          "raw_domain": [
+            0,
+            255
+          ],
+          "numerator": 1,
+          "denominator": 1,
+          "unit": "percent",
+          "default": 0,
+          "grade": "Hypothesis"
+        },
+        {
+          "name": "fan-PWM",
+          "logical": null,
+          "carrier": "u8",
+          "raw_domain": [
+            0,
+            255
+          ],
+          "numerator": 1,
+          "denominator": 1,
+          "unit": "percent",
+          "default": 0,
+          "grade": "Hypothesis"
+        },
+        {
+          "name": "fan-speed",
+          "logical": null,
+          "carrier": "u8",
+          "raw_domain": [
+            0,
+            255
+          ],
+          "numerator": 10,
+          "denominator": 1,
+          "unit": "rpm",
+          "default": 0,
+          "grade": "Hypothesis"
+        },
+        {
+          "name": "temperature-1",
+          "logical": null,
+          "carrier": "signed LE16",
+          "raw_domain": [
+            -32768,
+            32767
+          ],
+          "numerator": 1,
+          "denominator": 16,
+          "unit": "degrees C",
+          "default": 0,
+          "grade": "Hypothesis"
+        },
+        {
+          "name": "temperature-2",
+          "logical": null,
+          "carrier": "signed LE16",
+          "raw_domain": [
+            -32768,
+            32767
+          ],
+          "numerator": 1,
+          "denominator": 16,
+          "unit": "degrees C",
+          "default": 0,
+          "grade": "Hypothesis"
+        }
+      ]
+    },
+    {
+      "family": "outdoor-module",
+      "variant": null,
+      "direction": "response",
+      "service": "B521",
+      "operation": null,
+      "alternative": "negative",
+      "logical_extent": null,
+      "physical_extent": null,
+      "grade": "Hypothesis",
+      "bits": [],
+      "scalars": []
+    }
+  ],
+  "examples": [
+    {
+      "alternative": "positive",
+      "field": "ready",
+      "logical": 3,
+      "raw": "01",
+      "value": "enabled"
+    },
+    {
+      "alternative": "positive",
+      "field": "reserved",
+      "logical": 3,
+      "raw": "20",
+      "value": 1
+    },
+    {
+      "alternative": "positive",
+      "field": "reserved",
+      "logical": 3,
+      "raw": "40",
+      "value": 2
+    },
+    {
+      "alternative": "positive",
+      "field": "cleaning-request",
+      "logical": 3,
+      "raw": "80",
+      "value": "enabled"
+    },
+    {
+      "alternative": "request",
+      "field": "noise-reduction",
+      "raw": "FF",
+      "value": 255,
+      "unit": "percent"
+    },
+    {
+      "alternative": "positive",
+      "field": "brine-pump-speed",
+      "raw": "FF",
+      "value": 255,
+      "unit": "percent"
+    },
+    {
+      "alternative": "positive",
+      "field": "fan-PWM",
+      "raw": "FF",
+      "value": 255,
+      "unit": "percent"
+    },
+    {
+      "alternative": "positive",
+      "field": "fan-speed",
+      "raw": "FF",
+      "value": 2550,
+      "unit": "rpm"
+    },
+    {
+      "alternative": "positive",
+      "field": "temperature-1",
+      "raw": "FE FF",
+      "value": -0.125,
+      "unit": "degrees C"
+    },
+    {
+      "alternative": "positive",
+      "field": "temperature-2",
+      "raw": "FE FF",
+      "value": -0.125,
+      "unit": "degrees C"
+    }
+  ]
+}
