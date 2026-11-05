@@ -68,7 +68,7 @@ and block physical-backend qualification; proposals in the third column are
 | Counter and MMIO primitives | Requirement decided 2026-11-03 (**Hypothesis**): row 10 below; qualified counter or MMIO access profile **Unknown** | Require monotonic counter resolution, access/rollover behavior and clock comparability evidence; audit MMIO mapping attributes, access widths, ordering/barriers and exclusive ownership. Select primitives only after evidence; no hardware addresses or setup recipe here. |
 | Shared-memory ABI and cross-process atomics | Offline transport contract specifies the software reference; requirement decided 2026-11-03 (**Hypothesis**): row 11 below; physical proof **Unknown** | Retain the reference layout and ownership rules. Require aligned atomic-width and release/acquire proof across processes for the exact architecture/kernel/toolchain, including publication, reclamation and paused readers. Same-process tests and serialization are insufficient. |
 | Leases, revocation and in-flight output | Offline transport contract specifies software expiry/reclamation; requirement decided 2026-11-03 (**Hypothesis**): row 12 below; physical bounds and policy proof **Unknown** | Accept finite arm, registration, plan, command and control-service budgets under parent pauses. Require exact acknowledgement or original lease expiry for admission closure, plus quiescence for reuse. Choose a native-phase-safe finish/abort policy for output already in flight; absent that policy, physical admission stays closed. |
-| Registration API | Registration contract specifies the software reference; requirement decided 2026-11-03 (**Hypothesis**): row 4 below; physical integration **Unknown** | Preserve exact-key lifecycle, duplicate refusal, cleanup, single wire authority and fresh identities after restart. Require evidence that physical conflicts, disconnect/reset and delayed cleanup cannot retain or revive admission. Registration alone grants no live transmit authority. |
+| Registration API | Registration contract specifies the software reference (**Hypothesis**); owner acceptance **Unknown**: row 4 decides responder-only scope and defers arbitration, but does not accept the registration lifecycle or its integration requirements; physical integration **Unknown** | Preserve exact-key lifecycle, duplicate refusal, cleanup, single wire authority and fresh identities after restart. Require explicit owner acceptance of these choices and evidence that physical conflicts, disconnect/reset and delayed cleanup cannot retain or revive admission. Registration alone grants no live transmit authority. |
 | Minimal read-only virtual-device admission | Registration contract specifies synthetic identification; requirement decided 2026-11-03 (**Hypothesis**): row 13 below; physical profile acceptance **Unknown** | Owner must accept the exact supported read-only request/response scope, native evidence, source/freshness constraints, finite limits and unavailable behavior. Unsupported or invalid authority stays silent; no invented universal NACK, stateful command or write support. |
 | Fault containment | Requirement decided 2026-11-03 (**Hypothesis**): rows 14-15 below; electrical containment proof **Unknown** | Owner must define the allowed fault envelope and independent containment needed for stuck drive, process pause/death, abnormal stop and recovery. Supervision, heartbeat, process kill or software cleanup cannot bound a stuck electrical pulse. |
 
@@ -128,15 +128,27 @@ stage needs its own action-time authorization from the owner.
 
 ## Qualification evidence
 
-One row per run, including failed and aborted runs. Raw captures, device
-identities, build identities and capture times stay in the private verification
-record; this table carries counts, durations, grades and opaque profile labels
-only. A row grades only its own profile and stage. A finite zero-defect run is
-evidence for that run, not a bound.
+One row per run, including failed and aborted runs. Each row must cite a
+public redacted raw artifact or an exact durable public reference to it, plus
+a public profile manifest; an opaque profile label alone is insufficient.
+Record the UTC capture interval, board/frontend family and revision/configuration,
+kernel/configuration, toolchain and build content digests, engine configuration,
+load, power and thermal conditions, measurement method and uncertainty, and
+capture provenance. Preserve raw bus bytes, direction, source/destination,
+service and external edge timestamps needed to reproduce the row's aggregates
+and falsify its claims. Identify the reference capture used for loss/corruption
+comparisons and explain redactions and their effect on verification.
 
-| Run | Stage | Profile (opaque label) | Engine | Duration | Samples / symbols / segments | Gaps | Framing faults (bus-confirmed) | Lost or corrupted vs reference | Lateness p99 / p99.9 / max | Failed attempts | External timing | Grade and remaining Unknowns |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| — | — | — | — | — | — | — | — | — | — | — | — | No run recorded. Every requirement above remains a requirement; qualified external timing (`AA22QualifiedTiming`) is Unknown for every profile. |
+Redact credentials, private network details and personally identifying device
+data before publication; retain the technical configuration and capture context
+needed to distinguish the tested setup. Missing public evidence or context keeps
+the affected claim **Unknown** and the profile unqualified and off. A row grades
+only its own profile and stage. A finite zero-defect run is evidence for that run,
+not a bound.
+
+| Run | Stage | Profile (label) | Public evidence / profile manifest | UTC capture interval | Engine | Duration | Samples / symbols / segments | Gaps | Framing faults (bus-confirmed) | Lost or corrupted vs reference | Lateness p99 / p99.9 / max | Failed attempts | External timing | Grade and remaining Unknowns |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| — | — | — | — | — | — | — | — | — | — | — | — | — | — | No run recorded. Every requirement above remains a requirement; qualified external timing (`AA22QualifiedTiming`) is Unknown for every profile. |
 
 ## Required acceptance detail
 
