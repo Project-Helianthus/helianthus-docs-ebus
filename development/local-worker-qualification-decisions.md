@@ -128,27 +128,26 @@ stage needs its own action-time authorization from the owner.
 
 ## Qualification evidence
 
-One row per run, including failed and aborted runs. Each row must cite a
-public redacted raw artifact or an exact durable public reference to it, plus
-a public profile manifest; an opaque profile label alone is insufficient.
-Record the UTC capture interval, board/frontend family and revision/configuration,
-kernel/configuration, toolchain and build content digests, engine configuration,
-load, power and thermal conditions, measurement method and uncertainty, and
-capture provenance. Preserve raw bus bytes, direction, source/destination,
-service and external edge timestamps needed to reproduce the row's aggregates
-and falsify its claims. Identify the reference capture used for loss/corruption
-comparisons and explain redactions and their effect on verification.
+One row per run, including failed and aborted runs. Raw captures, capture
+intervals and device-level data stay private and are never published. Each
+row instead publishes a compliant summary: the profile family and stage, the
+board/frontend family, kernel/toolchain class, engine configuration, load
+class, power and thermal class, measurement method and uncertainty, the
+aggregate counts and rates below, and the reference used for loss/corruption
+comparisons described in general terms. The summary states which evidence
+stayed private and the effect of that on verification. The owner holds the
+private artifacts and reviews them at qualification time; a published row
+grades only the claims the summary itself supports, and any claim that rests
+only on private evidence stays **Unknown**.
 
-Redact credentials, private network details and personally identifying device
-data before publication; retain the technical configuration and capture context
-needed to distinguish the tested setup. Missing public evidence or context keeps
-the affected claim **Unknown** and the profile unqualified and off. A row grades
-only its own profile and stage. A finite zero-defect run is evidence for that run,
-not a bound.
+Publish no credentials, network details or identifying device data. Missing
+summary context keeps the affected claim **Unknown** and the profile
+unqualified and off. A row grades only its own profile and stage. A finite
+zero-defect run is evidence for that run, not a bound.
 
-| Run | Stage | Profile (label) | Public evidence / profile manifest | UTC capture interval | Engine | Duration | Samples / symbols / segments | Gaps | Framing faults (bus-confirmed) | Lost or corrupted vs reference | Lateness p99 / p99.9 / max | Failed attempts | External timing | Grade and remaining Unknowns |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| — | — | — | — | — | — | — | — | — | — | — | — | — | — | No run recorded. Every requirement above remains a requirement; qualified external timing (`AA22QualifiedTiming`) is Unknown for every profile. |
+| Run | Stage | Profile (label) | Evidence class / summary | Engine | Duration | Samples / symbols / segments | Gaps | Framing faults (bus-confirmed) | Lost or corrupted vs reference | Lateness p99 / p99.9 / max | Failed attempts | External timing | Grade and remaining Unknowns |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| — | — | — | — | — | — | — | — | — | — | — | — | — | No run recorded. Every requirement above remains a requirement; qualified external timing (`AA22QualifiedTiming`) is Unknown for every profile. |
 
 ## Required acceptance detail
 
