@@ -1,8 +1,10 @@
 # Local-worker qualification decisions
 
-Status: **Hypothesis: acceptance requirements decided 2026-11-03 under delegated
-owner authority; every physical profile remains unqualified and off until a
-recorded run makes a requirement Proven for that profile.** This record is a
+Status: **Hypothesis, partial: most acceptance requirements decided 2026-11-03
+under delegated owner authority; owner acceptance of the registration lifecycle
+and its integration requirements remains Unknown. Every physical profile remains
+unqualified and off until a recorded run makes a requirement Proven for that
+profile.** This record is a
 partial slice of
 [docs issue #1132](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/1132).
 Refs [Project-Helianthus/helianthus-ebusgateway#991](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/991),
