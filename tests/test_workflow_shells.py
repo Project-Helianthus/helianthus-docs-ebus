@@ -32,13 +32,13 @@ def actionlint_reference(request, tmp_path_factory):
     return [*command, f"-shellcheck={stub}"]
 
 
-def test_current_workflows_include_original_21_and_all_23_steps(tmp_path):
+def test_current_workflows_include_original_21_and_all_25_steps(tmp_path):
     workflows = sorted((ROOT / ".github/workflows").glob("*.y*ml"))
     extracted = list(lint.scripts(workflows))
     original = [path for path in workflows if path.name in (
         "docs-ci.yml", "platform-contracts-combined-ref.yml")]
     assert len(list(lint.scripts(original))) == 21
-    assert len(extracted) == 23
+    assert len(extracted) == 25
     assert all(dialect == "bash" for _, dialect, _ in extracted)
     assert all("${{" not in source for _, _, source in extracted)
     assert lint.shellcheck(workflows, tmp_path) == 0
