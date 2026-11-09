@@ -272,13 +272,8 @@ if ! ci_suite_unchanged semantic_operation_route; then
 fi
 python3 -m pytest -q tests/test_aj17_b516_projection.py
 python3 -m pytest -q tests/test_aj28_ff_local_liveness.py
-echo "==> check live-readiness documentation against the public gateway reference"
-live_ref_dir="$(mktemp -d)"
-curl -fsSL --retry 2 -o "$live_ref_dir/semantic_live.go" \
-  "https://raw.githubusercontent.com/Project-Helianthus/helianthus-ebusgateway/main/graphql/semantic_live.go"
-GATEWAY_REFERENCE_SOURCE="$live_ref_dir/semantic_live.go" REQUIRE_GATEWAY_REFERENCE=1 \
-  python3 -m pytest -q tests/test_live_readiness_docs.py
-rm -rf "$live_ref_dir"
+echo "==> check candidate live-readiness documentation consistency"
+python3 -m pytest -q tests/test_live_readiness_docs.py
 python3 -m pytest -q tests/test_aj19_b531_distribution_consumers.py
 
 echo "==> check contribution-driven Portal UX contract"

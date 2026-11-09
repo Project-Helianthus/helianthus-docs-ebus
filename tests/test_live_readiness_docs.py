@@ -1,13 +1,12 @@
-"""Guard the documented gateway readiness contract against source drift."""
-import os
+"""Enforce candidate readiness documentation consistency, not runtime conformance."""
 from pathlib import Path
 import re
 
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = Path(os.environ.get("GATEWAY_REFERENCE_SOURCE", ROOT / ".tmp/reference/ebusgateway/graphql/semantic_live.go"))
 DOC = ROOT / "architecture/startup-semantic-fsm.md"
+API_DOC = ROOT / "api/graphql.md"
 PAIRS = {
     "Zones": ("zonePublished", "zoneLiveSeen"),
     "DHW": ("dhwPublished", "dhwLiveSeen"),
@@ -16,86 +15,69 @@ PAIRS = {
     "Radio devices": ("radioPublished", "radioLiveSeen"),
 }
 
-
-def contract(source, doc):
-    predicate = source.split("func (provider *LiveSemanticProvider) liveReadyCriteriaLocked() bool {", 1)[1].split("\n}", 1)[0]
-    caller = source.split("func (provider *LiveSemanticProvider) recordEpochUpdateLocked(", 1)[1].split("\n}\n", 1)[0]
-    for domain, (published, live) in PAIRS.items():
-        assert f"| {domain} | `{published}` | `{live}` |" in doc
-        assert re.search(rf"if provider\.{published} && !provider\.{live} \{{\s*return false\s*}}", predicate)
-    check_prose(doc)
-    expected = " || ".join(f"provider.{live}" for _, live in PAIRS.values())
-    assert f"return {expected}" in predicate
-    assert re.search(r"provider\.liveEpoch\+\+.*?if provider\.liveEpoch == 1 \{\s*return provider\.transitionPhaseLocked\(SemanticStartupPhaseLiveWarmup, reason\)\s*}.*?if provider\.liveReadyCriteriaLocked\(\) \{\s*return provider\.transitionPhaseLocked\(SemanticStartupPhaseLiveReady, reason\)", caller, re.S)
-
-
 PROSE = (
+    "**Hypothesis — candidate readiness contract.** Provenance is not published.",
     "returns `LIVE_WARMUP` on the first one",
     "On subsequent live updates it evaluates the predicate and transitions to `LIVE_READY` if it succeeds",
     "The epoch threshold belongs to the caller, not the predicate",
     "a published domain without a live observation makes the predicate false",
-    "at least one of the five live observation flags",
-    "energy-only updates do not satisfy it",
+    "at least one of the five live observation flags, regardless of publication",
+    "System and energy are not part of this predicate; energy-only updates do not satisfy it",
+    "`live_epoch >= 2`: candidate for live-ready; stream criteria still apply",
+    "actual device readiness remains **Unknown** without qualification",
+    "it does not establish implementation conformance",
+)
+API_PROSE = (
+    "**Hypothesis — candidate readiness contract.** Provenance is not published.",
+    "`LIVE_READY` requires `live_epoch >= 2`, a live observation for every published domain (zones, DHW, boiler status, circuits, and radio devices)",
+    "at least one live observation across those five domains, regardless of publication",
+    "System and energy are outside the predicate; energy-only updates do not satisfy it",
+    "The first live update returns `LIVE_WARMUP`; subsequent live updates evaluate the predicate",
+    "Actual device readiness remains **Unknown** without qualification",
 )
 
 
-def check_prose(doc):
+def check_prose(doc, phrases):
     flat = " ".join(doc.split())
-    for phrase in PROSE:
+    for phrase in phrases:
         assert phrase in flat, phrase
 
 
-def reference_excerpt():
-    """Minimal in-repo reference of the documented predicate and its caller."""
-    clauses = "".join(
-        f"\tif provider.{p} && !provider.{live} {{\n\t\treturn false\n\t}}\n"
-        for p, live in PAIRS.values()
-    )
-    expression = " || ".join(f"provider.{live}" for _, live in PAIRS.values())
-    return (
-        "func (provider *LiveSemanticProvider) liveReadyCriteriaLocked() bool {\n"
-        + clauses
-        + f"\treturn {expression}\n}}\n"
-        + "func (provider *LiveSemanticProvider) recordEpochUpdateLocked(reason string) error {\n"
-        "\tprovider.liveEpoch++\n"
-        "\tif provider.liveEpoch == 1 {\n"
-        "\t\treturn provider.transitionPhaseLocked(SemanticStartupPhaseLiveWarmup, reason)\n"
-        "\t}\n"
-        "\tif provider.liveReadyCriteriaLocked() {\n"
-        "\t\treturn provider.transitionPhaseLocked(SemanticStartupPhaseLiveReady, reason)\n"
-        "\t}\n}\n"
-    )
-
-
-def test_document_matches_contract_unconditionally():
-    contract(reference_excerpt(), DOC.read_text())
-
-
-def test_staged_source_matches_when_available():
-    if not SOURCE.is_file():
-        if os.environ.get("REQUIRE_GATEWAY_REFERENCE") == "1":
-            pytest.fail("REQUIRE_GATEWAY_REFERENCE=1 but the staged gateway reference is missing")
-        pytest.skip("staged public gateway reference unavailable; the unconditional tests still enforce the documented contract")
-    contract(SOURCE.read_text(), DOC.read_text())
-
-
-def test_mutation_controls():
-    source, doc = reference_excerpt(), DOC.read_text()
-    contract(source, doc)
-    for phrase in PROSE:
-        with pytest.raises(AssertionError):
-            contract(source, doc.replace(phrase, "x"))
+def contract(doc, api_doc):
     for domain, (published, live) in PAIRS.items():
-        row = f"| {domain} | `{published}` | `{live}` |"
-        with pytest.raises(AssertionError):
-            contract(source, doc.replace(row, ""))
-        clause = f"if provider.{published} && !provider.{live} {{\n\t\treturn false\n\t}}"
-        with pytest.raises(AssertionError):
-            contract(source.replace(clause, ""), doc)
-        with pytest.raises(AssertionError):
-            contract(source.replace(f"provider.{published} && !provider.{live}", f"provider.{published} && provider.{live}"), doc)
-    expression = " || ".join(f"provider.{live}" for _, live in PAIRS.values())
+        assert f"| {domain} | `{published}` | `{live}` |" in doc
+    check_prose(doc, PROSE)
+    startup = api_doc.split("## Semantic Startup Runtime Contract\n", 1)[1]
+    startup = startup.split("\n## ", 1)[0]
+    check_prose(startup, API_PROSE)
+
+
+def test_live_readiness_document_consistency():
+    contract(DOC.read_text(), API_DOC.read_text())
+
+
+@pytest.mark.parametrize("phrase", PROSE)
+def test_live_readiness_architecture_mutations(phrase):
+    doc, api_doc = DOC.read_text(), API_DOC.read_text()
+    contract(doc, api_doc)
     with pytest.raises(AssertionError):
-        contract(source.replace(f"return {expression}", "return true"), doc)
+        contract(doc.replace(phrase, "x"), api_doc)
+
+
+@pytest.mark.parametrize("phrase", API_PROSE)
+def test_live_readiness_api_mutations(phrase):
+    doc, api_doc = DOC.read_text(), API_DOC.read_text()
+    contract(doc, api_doc)
+    # Match normalized whitespace so wrapped Markdown is mutated too.
     with pytest.raises(AssertionError):
-        contract(source.replace("if provider.liveEpoch == 1 {", "if provider.liveEpoch == 2 {"), doc)
+        contract(doc, re.sub(r"\s+".join(re.escape(word) for word in phrase.split()), "x", api_doc))
+
+
+@pytest.mark.parametrize("domain", PAIRS)
+def test_live_readiness_domain_mutations(domain):
+    doc, api_doc = DOC.read_text(), API_DOC.read_text()
+    published, live = PAIRS[domain]
+    row = f"| {domain} | `{published}` | `{live}` |"
+    contract(doc, api_doc)
+    with pytest.raises(AssertionError):
+        contract(doc.replace(row, ""), api_doc)

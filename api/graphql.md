@@ -767,7 +767,14 @@ The semantic runtime distinguishes cache bootstrap from live updates during star
 - If `-boot-live-timeout` elapses before `LIVE_READY`, runtime enters `DEGRADED` until live epochs recover.
 - Successful `ebusd-tcp` fallback hydration from `grab result all` (zones/DHW) is classified as live runtime data.
 - Energy broadcast updates do not advance startup live epochs and cannot promote phase readiness by themselves.
-- `LIVE_READY` requires live-backed updates for each published semantic stream (zones and/or DHW), not just `live_epoch >= 2`.
+- **Hypothesis — candidate readiness contract.** Provenance is not published.
+  `LIVE_READY` requires `live_epoch >= 2`, a live observation for every published
+  domain (zones, DHW, boiler status, circuits, and radio devices), and at least
+  one live observation across those five domains, regardless of publication.
+  System and energy are outside the predicate; energy-only updates do not
+  satisfy it. The first live update returns `LIVE_WARMUP`; subsequent live
+  updates evaluate the predicate. Actual device readiness remains **Unknown**
+  without qualification. See [Live readiness](../architecture/startup-semantic-fsm.md#live-readiness).
 - Persistent semantic preload is read from `-semantic-cache-path` and loaded as stale (`CACHE_LOADED_STALE`) when valid.
 - Zone visibility is hysteresis-based: `N_miss` consecutive misses before removal and `N_hit` consecutive hits before re-introduction (`-semantic-zone-presence-miss-threshold`, `-semantic-zone-presence-hit-threshold`).
 - Transient single-miss/single-hit alternation keeps zones stable and avoids entity flapping.

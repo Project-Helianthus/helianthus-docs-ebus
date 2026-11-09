@@ -47,7 +47,7 @@ stateDiagram-v2
   - `live_epoch >= 2`: candidate for live-ready; stream criteria still apply.
 ### Live readiness
 
-**Proven (implementation contract):** `LiveSemanticProvider.liveReadyCriteriaLocked` in the gateway's [`graphql/semantic_live.go`](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/graphql/semantic_live.go) checks these domain pairs:
+**Hypothesis — candidate readiness contract.** Provenance is not published. The readiness predicate checks these domain pairs:
 
 | Domain | Published flag | Live observation flag |
 | --- | --- | --- |
@@ -59,7 +59,7 @@ stateDiagram-v2
 
 For each pair, a published domain without a live observation makes the predicate false. The predicate also requires at least one of the five live observation flags, regardless of publication. System and energy are not part of this predicate; energy-only updates do not satisfy it.
 
-The caller `recordEpochUpdateLocked` increments `liveEpoch` on a live update and returns `LIVE_WARMUP` on the first one. On subsequent live updates it evaluates the predicate and transitions to `LIVE_READY` if it succeeds. The epoch threshold belongs to the caller, not the predicate. This describes implementation behavior; actual device readiness remains **Unknown** without qualification.
+The caller `recordEpochUpdateLocked` increments `liveEpoch` on a live update and returns `LIVE_WARMUP` on the first one. On subsequent live updates it evaluates the predicate and transitions to `LIVE_READY` if it succeeds. The epoch threshold belongs to the caller, not the predicate. This candidate describes runtime behavior; actual device readiness remains **Unknown** without qualification. The documentation check enforces agreement between the readiness descriptions; it does not establish implementation conformance.
 
 ### Source classification notes
 
