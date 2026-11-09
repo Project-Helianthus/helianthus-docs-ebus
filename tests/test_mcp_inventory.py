@@ -179,3 +179,15 @@ def test_document_inventory_row_mutations(pair, mutation):
         replacement = "|".join(cells)
     with pytest.raises(ValueError):
         checker.validate(inventory, prefix + table.replace(row, replacement, 1))
+
+
+def test_fm5_contract_section_defers_availability_to_inventory():
+    text = (ROOT / "api" / "mcp.md").read_text(encoding="utf-8")
+    section = text.split("### Post-M9 FM5 Contract", 1)[1].split("\n### ", 1)[0].split("\n## ", 1)[0]
+    assert "checked\nregistration inventory" in section
+    assert not re_search_pending(section)
+
+
+def re_search_pending(section):
+    import re
+    return re.search(r"pending|not part of the implemented|until a gateway", section, re.I)
