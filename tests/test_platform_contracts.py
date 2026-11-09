@@ -63,6 +63,7 @@ PINNED_CI_REQUIREMENTS = {
     "pyyaml": "6.0.2",
     "pytest": "9.0.2",
     "pytest-xdist": "3.8.0",
+    "ruff": "0.15.10",
 }
 PYYAML_PORTABLE_HASHES = {
     # CPython 3.12: GitHub Linux x86_64, macOS x86_64, macOS arm64, sdist.
