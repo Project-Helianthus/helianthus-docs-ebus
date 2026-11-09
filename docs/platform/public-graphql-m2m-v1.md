@@ -11,8 +11,8 @@ all five settings are empty: `m2m-graphql-listen`, `m2m-graphql-server-name`,
 `m2m-graphql-server-cert`, `m2m-graphql-server-key`, and
 `m2m-graphql-allowed-assets`. Any partial non-disabled configuration fails
 validation; all five are required, and empty or duplicate asset entries fail.
-The add-on's `m2m_graphql_enabled` option defaults to false and is separate
-from these gateway settings. The listener provides server-authenticated TLS;
+The add-on's `m2m_graphql_enabled` option is separate from these gateway
+settings; its default is Unknown here (candidate, not part of the Proven status). The listener provides server-authenticated TLS;
 no client principal is derived, and retired client-certificate flags are ignored.
 
 | Surface | Status |
