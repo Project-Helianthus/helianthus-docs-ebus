@@ -185,7 +185,12 @@ def test_mcp_graphql_and_ha_expose_one_fm5_verdict() -> None:
     implemented_mcp = MCP.read_text(encoding="utf-8").split(
         "## Semantic Payload Notes", maxsplit=1
     )[0]
-    assert "ebus.v1.semantic.fm5_interpretation.get" not in implemented_mcp
+    # The checked registration inventory is a separate, machine-compared
+    # statement; this assertion covers the legacy narrative tool lists only.
+    inventory_start = implemented_mcp.index("### Checked registration inventory")
+    inventory_end = implemented_mcp.index("mcp-inventory:end")
+    narrative_mcp = implemented_mcp[:inventory_start] + implemented_mcp[inventory_end:]
+    assert "ebus.v1.semantic.fm5_interpretation.get" not in narrative_mcp
     for required in (
         "Status:** Pending gateway implementation",
         "fm5Interpretation: Fm5Interpretation",
