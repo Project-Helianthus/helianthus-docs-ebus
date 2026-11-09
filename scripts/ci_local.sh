@@ -215,6 +215,10 @@ echo "==> check eBUS source-address table"
 python3 scripts/check_source_address_table_against_official_specs.py --run-canary
 python3 -m pytest -q tests/test_source_address_table_checker.py
 
+echo "==> check register naming decomposition contract"
+python3 scripts/check_name_decomposition.py --check
+python3 -m pytest -q tests/test_name_decomposition.py
+
 echo "==> check qualified identity documentation contract"
 python3 scripts/check_regulator_identity_contract.py
 python3 -m pytest -q tests/test_regulator_identity_contract_checker.py
