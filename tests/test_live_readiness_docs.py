@@ -27,10 +27,40 @@ def contract(source, doc):
     assert re.search(r"provider\.liveEpoch\+\+.*?if provider\.liveEpoch == 1 \{\s*return provider\.transitionPhaseLocked\(SemanticStartupPhaseLiveWarmup, reason\)\s*}.*?if provider\.liveReadyCriteriaLocked\(\) \{\s*return provider\.transitionPhaseLocked\(SemanticStartupPhaseLiveReady, reason\)", caller, re.S)
 
 
-def test_staged_source_and_mutation_controls():
+def reference_excerpt():
+    """Minimal in-repo reference of the documented predicate and its caller."""
+    clauses = "".join(
+        f"\tif provider.{p} && !provider.{live} {{\n\t\treturn false\n\t}}\n"
+        for p, live in PAIRS.values()
+    )
+    expression = " || ".join(f"provider.{live}" for _, live in PAIRS.values())
+    return (
+        "func (provider *LiveSemanticProvider) liveReadyCriteriaLocked() bool {\n"
+        + clauses
+        + f"\treturn {expression}\n}}\n"
+        + "func (provider *LiveSemanticProvider) recordEpochUpdateLocked(reason string) error {\n"
+        "\tprovider.liveEpoch++\n"
+        "\tif provider.liveEpoch == 1 {\n"
+        "\t\treturn provider.transitionPhaseLocked(SemanticStartupPhaseLiveWarmup, reason)\n"
+        "\t}\n"
+        "\tif provider.liveReadyCriteriaLocked() {\n"
+        "\t\treturn provider.transitionPhaseLocked(SemanticStartupPhaseLiveReady, reason)\n"
+        "\t}\n}\n"
+    )
+
+
+def test_document_matches_contract_unconditionally():
+    contract(reference_excerpt(), DOC.read_text())
+
+
+def test_staged_source_matches_when_available():
     if not SOURCE.is_file():
-        pytest.skip("staged public gateway reference unavailable")
-    source, doc = SOURCE.read_text(), DOC.read_text()
+        pytest.skip("staged public gateway reference unavailable; the unconditional tests still enforce the documented contract")
+    contract(SOURCE.read_text(), DOC.read_text())
+
+
+def test_mutation_controls():
+    source, doc = reference_excerpt(), DOC.read_text()
     contract(source, doc)
     for domain, (published, live) in PAIRS.items():
         row = f"| {domain} | `{published}` | `{live}` |"
