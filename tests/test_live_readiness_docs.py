@@ -6,7 +6,7 @@ import re
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = ROOT / ".tmp/reference/ebusgateway/graphql/semantic_live.go"
+SOURCE = Path(os.environ.get("GATEWAY_REFERENCE_SOURCE", ROOT / ".tmp/reference/ebusgateway/graphql/semantic_live.go"))
 DOC = ROOT / "architecture/startup-semantic-fsm.md"
 PAIRS = {
     "Zones": ("zonePublished", "zoneLiveSeen"),
@@ -23,9 +23,26 @@ def contract(source, doc):
     for domain, (published, live) in PAIRS.items():
         assert f"| {domain} | `{published}` | `{live}` |" in doc
         assert re.search(rf"if provider\.{published} && !provider\.{live} \{{\s*return false\s*}}", predicate)
+    check_prose(doc)
     expected = " || ".join(f"provider.{live}" for _, live in PAIRS.values())
     assert f"return {expected}" in predicate
     assert re.search(r"provider\.liveEpoch\+\+.*?if provider\.liveEpoch == 1 \{\s*return provider\.transitionPhaseLocked\(SemanticStartupPhaseLiveWarmup, reason\)\s*}.*?if provider\.liveReadyCriteriaLocked\(\) \{\s*return provider\.transitionPhaseLocked\(SemanticStartupPhaseLiveReady, reason\)", caller, re.S)
+
+
+PROSE = (
+    "returns `LIVE_WARMUP` on the first one",
+    "On subsequent live updates it evaluates the predicate and transitions to `LIVE_READY` if it succeeds",
+    "The epoch threshold belongs to the caller, not the predicate",
+    "a published domain without a live observation makes the predicate false",
+    "at least one of the five live observation flags",
+    "energy-only updates do not satisfy it",
+)
+
+
+def check_prose(doc):
+    flat = " ".join(doc.split())
+    for phrase in PROSE:
+        assert phrase in flat, phrase
 
 
 def reference_excerpt():
@@ -65,6 +82,9 @@ def test_staged_source_matches_when_available():
 def test_mutation_controls():
     source, doc = reference_excerpt(), DOC.read_text()
     contract(source, doc)
+    for phrase in PROSE:
+        with pytest.raises(AssertionError):
+            contract(source, doc.replace(phrase, "x"))
     for domain, (published, live) in PAIRS.items():
         row = f"| {domain} | `{published}` | `{live}` |"
         with pytest.raises(AssertionError):
