@@ -42,8 +42,8 @@ This is the first external control contract for
 [docs issue #717](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/717),
 a partial slice of [gateway #1032](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1032).
 The five runtime tools are **implemented** and included in the implemented
-inventory below. They remain listed for the shell lifetime and return
-`UNAVAILABLE` without a composed service. Registration is owned by
+inventory below. The gateway always lists them while it runs and they answer
+`UNAVAILABLE` when no service is composed. Registration is owned by
 [gateway runtime control](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/mcp/runtime_control.go)
 and composed by the
 [HTTP server](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/cmd/gateway/gateway_http_server.go). A5's internal service for
