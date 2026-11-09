@@ -1,4 +1,5 @@
 """Guard the documented gateway readiness contract against source drift."""
+import os
 from pathlib import Path
 import re
 
@@ -55,6 +56,8 @@ def test_document_matches_contract_unconditionally():
 
 def test_staged_source_matches_when_available():
     if not SOURCE.is_file():
+        if os.environ.get("REQUIRE_GATEWAY_REFERENCE") == "1":
+            pytest.fail("REQUIRE_GATEWAY_REFERENCE=1 but the staged gateway reference is missing")
         pytest.skip("staged public gateway reference unavailable; the unconditional tests still enforce the documented contract")
     contract(SOURCE.read_text(), DOC.read_text())
 
