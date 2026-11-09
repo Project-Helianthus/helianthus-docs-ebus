@@ -774,7 +774,6 @@ registration inventory. In particular, the adapter information tool is
 
 - Core stable (`ebus.v1.*`)
   - `ebus.v1.runtime.status.get`
-  - `ebus.v1.adapter_info.get`
   - `ebus.v1.registry.devices.list`
   - `ebus.v1.registry.devices.get`
     - **Conclusion: Proven.**
