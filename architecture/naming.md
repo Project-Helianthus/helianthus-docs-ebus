@@ -30,7 +30,19 @@ This document describes naming patterns used in the current implementation.
 
 ## Register and field names
 
-These rules describe the intended form of every canonical register name and every canonical name of a value field decoded from a register or telegram, documented in this repository. Structural, identity and provenance fields (identifiers, references, timestamps, hashes, envelope and API-schema keys) and the control bytes of a payload (selector, block-number, transmission-control, reply-status and reserved bytes) are outside these rules, as are method strings and the conditional-schema key `target`. A canonical name within this scope that cannot yet satisfy the rules is kept and tracked as non-compliant (see [Unknown meaning](#unknown-meaning)); it is not treated as a defect of the catalog. Until Project-Helianthus/helianthus-docs-ebus#560 is merged, canonical names on the eBUS surfaces that predate this section may not conform; that issue renames them. Canonical names on other surfaces that predate this section are renamed in later issues. Every canonical name added or changed from now on follows these rules wherever its meaning is established. Vendor, application and community names are correspondence annotations only; a canonical name never copies one of them.
+These rules are a binding contract for canonical register and decoded-value
+field names on every eBUS service page and fixture, then Modbus, CAN and eeBUS,
+and for the corresponding value fields in GraphQL, MCP, Home Assistant, Portal
+and SemReg member names. The same value has the same spelling on every surface.
+Adoption is eBUS first; extending protocol vocabularies requires explicit Board
+agreement. This scope is a requirement, not a claim of ecosystem compliance.
+
+Structural, identity and provenance keys (IDs, references, timestamps, hashes,
+envelope and API-schema keys), payload control bytes, method strings and MCP
+tool names remain outside the register grammar. They must still use snake_case.
+The conditional-schema key `target` is structural. A name whose meaning remains
+open is retained and recorded as non-compliant, as described below. This contract
+does not rename existing registers, fields, metrics or consumer APIs.
 
 ### A name reads as a sentence
 
@@ -40,13 +52,14 @@ The value of a register reads as "[subject] [predicate] [object], [in these circ
 |---|---|---|
 | Subject | About what? | The component, medium or sub-entity: `compressor`, `fan`, `pump`, `burner`, `valve`, `refrigerant`, `zone`, `circuit`, `cylinder`. Implicit when it is the device itself: a device never names itself, so no device class and no `system_` appear on a controller's own registers. An attached heat generator is a subject on a controller's registers: `heat_generator`, or its kind `boiler` or `heat_pump` when the register is specific to that kind. |
 | Predicate | What is stated? | The value class, from the closed list in [Predicates](#predicates). A measured value has no predicate word. |
+| Feature | Which maker-defined function? | A documented maker vocabulary term when a generic term does not describe the function. It is described only as an observed Vaillant definition, not an inferred native meaning. The value-class predicate follows the feature. |
 | Object | What is measured, counted, timed or regulated? | A quantity (`temperature`, `pressure`, `speed`, `power`, `energy`, `current`, `flow_rate`), an event (`start`, `switch`), an activity (`operating`, `on`, `off`), a point in time (`date`, `clock_time`, `weekday`) or what a text holds (`name`, `phone_number`). |
 | Attribute | Which one? | Instance index (`fan_1`), kind (`external_pump`, `circulation_pump`, `environmental_power`), side (`low_pressure`, `high_pressure`; a side term that contains the object word supplies the object, as in `refrigerant_low_pressure`), bound (`minimum`, `maximum`; always in the bound slot at the end of the name), span boundary (`start`, `end`, before `date`, `clock_time` or `weekday`). |
 | Circumstance | In which context? | Purpose (`heating`, `cooling`, `dhw`, `ventilation`, `solar`); place (`flow`, `return`, `inlet`, `outlet`, `room`, `outdoor`, `source`, `building`, `top`, `bottom`); period (`total`, `remaining`, `daily`, `current_month`, `previous_month`, `current_year`, `previous_year`); manner (`fine`, `average`); condition (`at_…`). |
 
 ### Order of the parts
 
-`[purpose]_[attribute][subject][index]_[place]_[attribute][object]_[predicate]_[bound]_[period]_[manner]_[at_condition]`
+`[purpose]_[attribute][subject][index]_[place]_[attribute][object]_[feature]_[predicate]_[bound]_[period]_[manner]_[at_condition]`
 
 - Parts that add no information are omitted.
 - Bounds, periods and manner go at the end, in that order; a condition `at_…` closes the name, and only vocabulary terms may follow `at_`. Inside `at_…` a bound precedes its object (`at_maximum_flow_rate`).
@@ -134,7 +147,19 @@ Value 1 (true) always means the name is true. The predicate word is chosen from 
 
 ### Unknown meaning
 
-These naming rules describe the intended form of a name. They are guidance, not a contract enforced by review or CI: the decomposition gate (`scripts/check_register_names.py`) checks only the mechanical form of a name (vocabulary, order of the parts, word count). A name derived from the device maker's documented term for a register states a meaning that is documented; it is not a guess. When a name cannot yet follow the intended form because its meaning, polarity, value class, value table or the writability of the register is not established, the name derived from the documented term stays, the row is provisional, its `open_question` records what is open and the candidate reading, and the name is listed as non-compliant in the tracking issue (docs-ebus #560, or a dedicated non-compliance list) until evidence settles it. A name never encodes a guess of its own: where no documented term exists, nothing is invented. A provisional name still satisfies the format and vocabulary rules.
+The rules are a contract enforced by review and blocking mechanical checks.
+Mechanical acceptance does not establish semantic correctness. A maker-derived
+name with unresolved meaning, polarity, value class, value table or writability
+stays provisional, with its exact spelling and `open_question`. It is listed as
+non-compliant in [the provisional-name follow-up](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/573).
+No invented replacement or placeholder replaces a documented maker term.
+Existing mechanical debt is recorded separately with the violated rule and a
+follow-up. Neither category permits debt growth or waives pre-release cleanup.
+A provisional spelling is retained even when it cannot yet be decomposed; this
+is explicit non-compliance, not proof of qualification. `Proven`, `Hypothesis`
+and `Unknown` describe evidence status independently of naming compliance or
+native write qualification. Native protocol facts require the owning public
+wire contract first. Nothing here infers writable behavior or hidden meaning.
 
 The placeholder `unknown` is used only when no documented term exists at all for the register or field, or when the documented readings of a register conflict and confirmation on the wire has not settled them. The eleven placeholders that predate the review of #560's first pull request (`unknown_1` to `unknown_11`, among them `circuit_pump_unknown_8` and `unknown_11`) are of these two kinds: the maker's annotation names a value or an effect rather than the register, or two documented readings give opposite polarities; each `open_question` says which. It stands for the missing object and predicate, with any established purpose, subject or place before it and an index after it when one device has several such registers or one telegram several such fields (`unknown_1`, `heating_unknown_2`). The index is assigned when the register or field is first documented, is never reused and is not the selector or the field position. The vocabulary file gives `unknown` the role placeholder, so these names pass the decomposition test.
 
@@ -162,8 +187,68 @@ When correspondence annotations disagree on a meaning, confirmation on the wire 
 
 ### Migration and enforcement
 
-Every renamed fixture carries a `previous_name` column with the earlier canonical name; consumers outside this repository migrate through it. A vocabulary file (token, every role the token may take, definition, forbidden synonyms) and a test that decomposes every canonical name within the scope of these rules into its parts, assigning each token its role from its position in the order of the parts, enforce their mechanical form (vocabulary, order of the parts, word count) and nothing more; the test fails on any token without a known role and on any forbidden synonym, and runs in `./scripts/ci_local.sh`. Both are added by Project-Helianthus/helianthus-docs-ebus#560. The test covers the eBUS surfaces that issue renames and widens to each further surface when a later issue renames it.
+Every renamed fixture carries a `previous_name` column with the earlier
+canonical name; consumers outside this repository migrate through it.
+
+The vocabulary remains in [register-name-vocabulary.csv](fixtures/register-name-vocabulary.csv).
+A future shared vocabulary home requires an explicit decision; no relocation is
+claimed here. Rule changes require explicit Board agreement. The existing
+[surface parser](../scripts/check_register_names.py) continues its mechanical
+checks. The blocking [decomposition guard](../scripts/check_name_decomposition.py)
+checks the B524 map's primary register tables and the checked example tables on
+this page against [maintained decompositions](../scripts/name-decomposition.json).
+It reconstructs spellings from ordered vocabulary roles, verifies the predicate
+against the value class and rejects inventory drift, duplicate selectors and
+unknown acceptance entries. Existing debt retains its exact spelling, violated
+rule or documented open question and follow-up; acceptance is never generated
+from current names during CI. Unknown provisional names retain their questions.
+
+The Docs Checks local gate ([`scripts/ci_local.sh`](../scripts/ci_local.sh))
+always runs the guard and its independent mutation tests, both in Docs CI and
+locally. Coverage of other native pages and fixtures, and enforcement by each
+consuming repository remain follow-up work. F52 remains open until these are covered.
+The [eBUS adoption follow-up](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/1151)
+covers native-page adoption. Existing eBUS MCP behavior and GraphQL parity remain
+unchanged. Failed admission must preserve partial last-known-good state; naming
+validation grants no permission to admit unqualified values.
+
+### Metrics
+
+Metric vocabulary follows the same naming rules under one prefix, `helianthus`.
+The unit belongs in a constant `unit` label wherever labels are possible, with
+one unit per metric name. Unit suffixes are allowed only where labels cannot be
+used: expvar values, library-emitted names (including `process_*` and `go_*`), or
+automatic OpenTelemetry to Prometheus translation that cannot be configured
+without suffixes. Each exception records why a label is unavailable; configure
+translation without suffixes wherever possible. Library-owned spellings and
+prefixes are documented exceptions. Counter `_total` and the predicate `_ratio`
+remain. Actual metric renames and coverage are separate work, including the
+[metric follow-up](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/1153).
+
+### Checked examples
+
+These synthetic examples establish spelling, not device qualification.
+`special_function` names an observed Vaillant definition in the
+[public B524 catalog](../protocols/vaillant/ebus-vaillant-B524-register-map.md);
+a generic mode term does not distinguish this function. The `mode` predicate
+states the candidate value class; native behavior remains subject to the
+catalog's evidence status and open questions.
+Metric examples use a constant `unit` label except the documented library case.
+
+| Checked spelling | Kind and context |
+|---|---|
+| `dhw_special_function_mode` | Value; maker feature, mode enumeration |
+| `circuit_unknown_9` | Provisional value; meaning and polarity remain Unknown; no replacement invented |
+| `source_id` | Structural identity key |
+| `observed_at` | Structural provenance key |
+| `get_status` | Method string |
+| `helianthus_compressor_start_count_total` | Counter; constant unit label `count` |
+| `helianthus_compressor_operating_time_seconds_total` | Library-emitted counter; library cannot attach a constant unit label; seconds suffix retained |
+| `helianthus_pump_ratio` | Dimensionless metric; constant unit label `ratio` |
 
 ### Open questions
 
-No questions are open. A change to these rules goes through explicit agreement and is recorded in Project-Helianthus/helianthus-docs-ebus#560.
+Provisional register questions remain tracked in the non-compliance follow-up
+above. The shared vocabulary home and all-surface enforcement remain open;
+this bounded gate establishes neither whole-ecosystem compliance nor closure of
+F52. Native row changes and per-repository gates require separate children.
