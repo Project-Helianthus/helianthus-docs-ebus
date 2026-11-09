@@ -46,6 +46,24 @@
       "count": 51
     },
     {
+      "path": "scripts/check_name_decomposition.py",
+      "symbol": "extract_registers",
+      "rule": "C901",
+      "count": 11
+    },
+    {
+      "path": "scripts/check_name_decomposition.py",
+      "symbol": "validate_entry",
+      "rule": "C901",
+      "count": 35
+    },
+    {
+      "path": "scripts/check_name_decomposition.py",
+      "symbol": "validate_entry",
+      "rule": "PLR0915",
+      "count": 86
+    },
+    {
       "path": "scripts/check_portal_ux_contract.py",
       "symbol": "_html_element_route_destinations",
       "rule": "C901",
