@@ -15,6 +15,7 @@ on:
       - ".github/workflows/platform-contracts-combined-ref.yml"
       - "requirements-ci.txt"
       - "Makefile"
+      - "ruff.toml"
   push:
     branches:
       - main
@@ -31,6 +32,7 @@ on:
       - ".github/workflows/platform-contracts-combined-ref.yml"
       - "requirements-ci.txt"
       - "Makefile"
+      - "ruff.toml"
   # Nightly full run of the docs gate, including the runtime-control contract
   # tests that pull requests skip when none of their inputs changed.
   schedule:

@@ -103,6 +103,11 @@ ci_suite_unchanged() {
   return 1
 }
 
+echo "==> python readability ratchet"
+python3 scripts/check_readability.py --self-test
+python3 scripts/check_readability.py --check
+python3 -m pytest -q tests/test_readability_gate.py
+
 echo "==> verify markdown files are present"
 count="$(git ls-files '*.md' | wc -l | tr -d ' ')"
 if [ "${count}" -eq 0 ]; then
