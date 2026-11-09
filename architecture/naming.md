@@ -221,7 +221,9 @@ used: expvar values, library-emitted names (including `process_*` and `go_*`), o
 automatic OpenTelemetry to Prometheus translation that cannot be configured
 without suffixes. Each exception records why a label is unavailable; configure
 translation without suffixes wherever possible. Library-owned spellings and
-prefixes are documented exceptions. Counter `_total` and the predicate `_ratio`
+prefixes are documented exceptions, but the decomposition guard inventories only
+`helianthus`-prefixed metrics; library-prefixed names such as `process_*` and
+`go_*` are not checked by it until an enforcement child covers them. Counter `_total` and the predicate `_ratio`
 remain. Actual metric renames and coverage are separate work, including the
 [metric follow-up](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/1153).
 
