@@ -1123,6 +1123,14 @@ def test_publication_docs_ci_tracks_makefile() -> None:
     assert "Makefile" in workflow[True]["push"]["paths"]
 
 
+def test_publication_docs_ci_tracks_ruff_config() -> None:
+    workflow = yaml.safe_load(
+        (REPO_ROOT / ".github/workflows/docs-ci.yml").read_text(encoding="utf-8")
+    )
+    assert "ruff.toml" in workflow[True]["pull_request"]["paths"]
+    assert "ruff.toml" in workflow[True]["push"]["paths"]
+
+
 def test_publication_combined_ref_cli_is_canonical() -> None:
     assert COMBINED_REF_CLI_PATH.is_file()
     assert not COMBINED_REF_CLI_PATH.is_symlink()
