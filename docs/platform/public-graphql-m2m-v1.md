@@ -1,9 +1,36 @@
 # Public GraphQL M2M V1
 
-`PUBLIC_GRAPHQL_M2M_V1` is the pre-implementation public semantic contract at
-`/graphql/m2m/v1`. It is structurally separate from the gateway's generic
-GraphQL route. Its only operation is the query `m2mCurrentSnapshot`; it has no
-write, event-stream, historical, or generic fallback surface.
+**Current gateway status: Proven.** The gateway implements `/graphql/m2m/v1`
+on a dedicated TLS 1.3 listener. Its current SemReg queries are
+`semanticPVCurrent`, `semanticStorageCurrent`, and `semanticEVSECurrent`.
+The older canonical-PV `m2mCurrentSnapshot` schema is an unimplemented target;
+the implemented route does not establish that target contract.
+
+The listener is off by default. Gateway configuration is disabled exactly when
+all five settings are empty: `m2m-graphql-listen`, `m2m-graphql-server-name`,
+`m2m-graphql-server-cert`, `m2m-graphql-server-key`, and
+`m2m-graphql-allowed-assets`. Any partial non-disabled configuration fails
+validation; all five are required, and empty or duplicate asset entries fail.
+The add-on's `m2m_graphql_enabled` option defaults to false and is separate
+from these gateway settings. The listener provides server-authenticated TLS;
+no client principal is derived, and retired client-certificate flags are ignored.
+
+| Surface | Status |
+| --- | --- |
+| `/graphql/m2m/v1` | Implemented, default off |
+| `semanticPVCurrent`, `semanticStorageCurrent`, `semanticEVSECurrent` | Current SemReg queries |
+| `m2mCurrentSnapshot` | Unimplemented target |
+| Complete gateway settings | Required for a listener |
+| Partial gateway settings | Rejected |
+
+Sources: [handler](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/m2mgraphql/handler.go),
+[configuration](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/config.go),
+[flag bindings](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/cmd/gateway/m2m_graphql_config.go),
+[listener](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/cmd/gateway/m2m_graphql_runtime.go).
+
+## Archived Target Contract
+
+The following describes the unimplemented `PUBLIC_GRAPHQL_M2M_V1` target, not the current gateway query contract.
 
 ## Source And Projection
 
