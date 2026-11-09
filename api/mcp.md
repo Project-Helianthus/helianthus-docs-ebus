@@ -1318,11 +1318,11 @@ entirely. GraphQL returns `null` for `dhwBivalencePointBound`.
 
 ## Semantic Payload Notes
 
-### Post-M9 Pending FM5 Contract
+### Post-M9 FM5 Contract
 
-`ebus.v1.semantic.fm5_interpretation.get` is the target MCP-first post-M9
-behavioral remediation and is not part of the implemented surface above until
-the gateway implementation PR merges. The method returns `null` until the
+`ebus.v1.semantic.fm5_interpretation.get` is the MCP-first post-M9
+behavioral remediation. Its availability is stated only by the checked
+registration inventory above; this section freezes its response contract. The method returns `null` until the
 first coherent structural classification; it never fabricates `GPIO_ONLY` or
 `ABSENT` during bootstrap. Once available, its target object contains exactly
 `mode`, `degraded_reason`, and `evidence_revision`. Structural `mode` is the

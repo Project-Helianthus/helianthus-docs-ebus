@@ -160,7 +160,8 @@ def test_document_inventory_row_mutations(pair, mutation):
     inventory, document = pair
     start = document.index("mcp-inventory:start")
     prefix, table = document[:start], document[start:]
-    row = table.splitlines()[3]
+    row = next(line for line in table.splitlines()
+               if line.startswith("|") and not line.startswith(("| Tool", "|---")))
     cells = row.split("|")
     if mutation == "remove":
         replacement = ""

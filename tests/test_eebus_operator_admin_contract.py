@@ -179,7 +179,7 @@ def test_mcp_graphql_and_ha_expose_one_fm5_verdict() -> None:
         "`ebus.v1.semantic.fm5_interpretation.get`",
         "`mode`, `degraded_reason`, and `evidence_revision`",
         "no v2 tool or legacy alias is introduced",
-        "not part of the implemented surface above until the gateway implementation PR merges",
+        "Its availability is stated only by the checked registration inventory above",
     ):
         assert required in mcp
     implemented_mcp = MCP.read_text(encoding="utf-8").split(
