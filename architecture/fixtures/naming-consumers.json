@@ -1,6 +1,6 @@
 {
   "purpose": "Name-to-consumer candidate bindings for coordinated investigation; no rename is authorized.",
-  "coverage": "Partial: explicit named-field literals and structured name/field values in selected consumer code and configuration. Tests are included. Batch-prefixed consumer identifiers are linked by suffix as candidates only. Shared spellings may refer to different native identities; every binding requires semantic review. Dynamic/reflection paths, computed names and absence searches remain unassessed.",
+  "coverage": "Partial: explicit named-field literals and structured name/field values in selected consumer code and configuration. Tests are included. Batch-prefixed consumer identifiers are linked by suffix as candidates only. Shared spellings may refer to different native identities; every binding requires semantic review. Dynamic/reflection paths, computed names and absence searches remain unassessed. Each binding requires a structured reference (JSON pointer, named value field or declared value symbol) inside an eBUS consumer surface. Other protocol families (Modbus, EEBUS, CAN and Matter), generic test-case labels, transport metadata and bare spelling matches of a generic word do not qualify. Explicit eBUS catalog field pointers and declared schema fields may retain generic spellings. Names without a qualifying binding are listed as unbound; no absence is established.",
   "publication_policy": "Provenance is not published. Consumer locations describe references, not the origin of protocol declarations.",
   "repository_coverage": [
     {
@@ -932,61 +932,6 @@
       "status": "candidate"
     },
     {
-      "current_name": "Value",
-      "consumer_name": "Value",
-      "repository": "ebusgo",
-      "file": "types/bcd_test.go",
-      "binding": "line:20",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestBCD_Decode"
-    },
-    {
-      "current_name": "Value",
-      "consumer_name": "Value",
-      "repository": "ebusgo",
-      "file": "types/bcd_test.go",
-      "binding": "line:80",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestBCD_Encode"
-    },
-    {
-      "current_name": "Value",
-      "consumer_name": "Value",
-      "repository": "ebusgo",
-      "file": "types/bitfield_test.go",
-      "binding": "line:20",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestBITFIELD_Decode"
-    },
-    {
-      "current_name": "Value",
-      "consumer_name": "Value",
-      "repository": "ebusgo",
-      "file": "types/exp_test.go",
-      "binding": "line:32",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestEXP_Decode"
-    },
-    {
-      "current_name": "Value",
-      "consumer_name": "Value",
-      "repository": "ebusgo",
-      "file": "types/word_test.go",
-      "binding": "line:20",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestWORD_Decode"
-    },
-    {
       "current_name": "acknowledgement",
       "consumer_name": "acknowledgement",
       "repository": "ebusreg",
@@ -1095,17 +1040,6 @@
       "kind": "json-value",
       "evidence_class": "Unknown",
       "status": "candidate"
-    },
-    {
-      "current_name": "address",
-      "consumer_name": "address",
-      "repository": "ebusgateway",
-      "file": "cmd/gateway/baud_configured_presence_test.go",
-      "binding": "line:24",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestBaudPresenceSurvivesDriverPreparation"
     },
     {
       "current_name": "address",
@@ -1658,17 +1592,6 @@
       "status": "candidate"
     },
     {
-      "current_name": "bytes",
-      "consumer_name": "bytes",
-      "repository": "ebusreg",
-      "file": "router/vaillant_register_access_test.go",
-      "binding": "line:28",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestVaillantSystem_GetRegister_RequestEncodesAddr"
-    },
-    {
       "current_name": "capacity",
       "consumer_name": "capacity",
       "repository": "ebusreg",
@@ -2072,28 +1995,6 @@
     {
       "current_name": "configuration",
       "consumer_name": "configuration",
-      "repository": "ebusgateway",
-      "file": "cmd/gateway/eebus_admin_wiring_test.go",
-      "binding": "line:376",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestIssue846StartupFailureReasonsUseClosedCanonicalMapping"
-    },
-    {
-      "current_name": "configuration",
-      "consumer_name": "configuration",
-      "repository": "ebusgateway",
-      "file": "cmd/gateway/m06_bindings_test.go",
-      "binding": "line:340",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestM06FailedEEBusPreservesStartupReason"
-    },
-    {
-      "current_name": "configuration",
-      "consumer_name": "configuration",
       "repository": "ebusreg",
       "file": "catalog/vaillant/data/ab50_b511_class_candidates.json",
       "binding": "/50/key/field",
@@ -2250,17 +2151,6 @@
       "kind": "json-value",
       "evidence_class": "Unknown",
       "status": "candidate"
-    },
-    {
-      "current_name": "count",
-      "consumer_name": "count",
-      "repository": "modbus",
-      "file": "normalization_extension_budget_test.go",
-      "binding": "line:82",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestU16NormalizationExtensionBudgets"
     },
     {
       "current_name": "current_mode",
@@ -2736,74 +2626,9 @@
     {
       "current_name": "default",
       "consumer_name": "default",
-      "repository": "ebusgo",
-      "file": "protocol/source_address_selection_test.go",
-      "binding": "line:305",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestSourceAddressSelector_SelectionModeContract"
-    },
-    {
-      "current_name": "default",
-      "consumer_name": "default",
       "repository": "ebusreg",
       "file": "catalog/vaillant/data/ab59_b509_candidates.json",
       "binding": "/entries/7/key/field",
-      "kind": "json-value",
-      "evidence_class": "Unknown",
-      "status": "candidate"
-    },
-    {
-      "current_name": "default",
-      "consumer_name": "default",
-      "repository": "ebusreg",
-      "file": "schema/selector_test.go",
-      "binding": "line:14",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestSchemaSelector_SelectsByTarget"
-    },
-    {
-      "current_name": "default",
-      "consumer_name": "default",
-      "repository": "ebusreg",
-      "file": "schema/selector_test.go",
-      "binding": "line:42",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestSchemaSelector_SelectsByHardwareVersion"
-    },
-    {
-      "current_name": "default",
-      "consumer_name": "default",
-      "repository": "ebusreg",
-      "file": "schema/selector_test.go",
-      "binding": "line:70",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestSchemaSelector_SelectsFirstMatch"
-    },
-    {
-      "current_name": "default",
-      "consumer_name": "default",
-      "repository": "ebusreg",
-      "file": "schema/selector_test.go",
-      "binding": "line:99",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestSchemaSelector_ParsesHardwareVersionDigits"
-    },
-    {
-      "current_name": "default",
-      "consumer_name": "default",
-      "repository": "ebusreg",
-      "file": "schema/testdata/selector_schema.json",
-      "binding": "/default/fields/0/name",
       "kind": "json-value",
       "evidence_class": "Unknown",
       "status": "candidate"
@@ -2827,72 +2652,6 @@
       "kind": "json-value",
       "evidence_class": "Unknown",
       "status": "candidate"
-    },
-    {
-      "current_name": "dhw",
-      "consumer_name": "dhw",
-      "repository": "ebusgateway",
-      "file": "cmd/gateway/semantic_vaillant_test.go",
-      "binding": "line:3444",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestDecodeHeatingCircuitTypeToken"
-    },
-    {
-      "current_name": "dhw",
-      "consumer_name": "dhw",
-      "repository": "ebusgateway",
-      "file": "graphql/builder_test.go",
-      "binding": "line:106",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestBuildSchema_ReflectsRegistry"
-    },
-    {
-      "current_name": "dhw",
-      "consumer_name": "dhw",
-      "repository": "ebusgateway",
-      "file": "graphql/builder_test.go",
-      "binding": "line:319",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestBuilder_RebuildsOnChange"
-    },
-    {
-      "current_name": "dhw",
-      "consumer_name": "dhw",
-      "repository": "ebusgateway",
-      "file": "mcp/parity_contract_test.go",
-      "binding": "line:171",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestParityMatrixReadAndInvoke"
-    },
-    {
-      "current_name": "dhw",
-      "consumer_name": "dhw",
-      "repository": "ebusreg",
-      "file": "registry/registry_test.go",
-      "binding": "line:119",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestDeviceRegistry_RegisterLookupIterate"
-    },
-    {
-      "current_name": "dhw",
-      "consumer_name": "dhw",
-      "repository": "ebusreg",
-      "file": "vaillant/dhw/dhw.go",
-      "binding": "line:68",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "newDHWPlane"
     },
     {
       "current_name": "dhw_demand_active",
@@ -3029,17 +2788,6 @@
       "current_name": "direction",
       "consumer_name": "direction",
       "repository": "ebusreg",
-      "file": "catalog/ebus_standard/loader_test.go",
-      "binding": "line:248",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestLoadCatalog_UnknownEnumValue"
-    },
-    {
-      "current_name": "direction",
-      "consumer_name": "direction",
-      "repository": "ebusreg",
       "file": "catalog/vaillant/data/ab41_program_blocks.json",
       "binding": "/entries/24/fields/0/name",
       "kind": "json-value",
@@ -3145,17 +2893,6 @@
       "kind": "json-value",
       "evidence_class": "Unknown",
       "status": "candidate"
-    },
-    {
-      "current_name": "energy",
-      "consumer_name": "energy",
-      "repository": "ebusgateway",
-      "file": "mcp/parity_contract_test.go",
-      "binding": "line:172",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestParityMatrixReadAndInvoke"
     },
     {
       "current_name": "energy",
@@ -4174,16 +3911,6 @@
       "status": "candidate"
     },
     {
-      "current_name": "flags",
-      "consumer_name": "flags",
-      "repository": "ebusreg",
-      "file": "schema/testdata/basic_schema.json",
-      "binding": "/fields/2/name",
-      "kind": "json-value",
-      "evidence_class": "Unknown",
-      "status": "candidate"
-    },
-    {
       "current_name": "flame_active",
       "consumer_name": "flame_active",
       "repository": "ebusreg",
@@ -4506,17 +4233,6 @@
     {
       "current_name": "identity",
       "consumer_name": "identity",
-      "repository": "ebusgateway",
-      "file": "cmd/gateway/m06_bindings_test.go",
-      "binding": "line:341",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestM06FailedEEBusPreservesStartupReason"
-    },
-    {
-      "current_name": "identity",
-      "consumer_name": "identity",
       "repository": "ebusreg",
       "file": "catalog/vaillant/data/ab87_b509_diagnostic_shapes.json",
       "binding": "/fields/11/key/field",
@@ -4553,17 +4269,6 @@
       "kind": "json-value",
       "evidence_class": "Unknown",
       "status": "candidate"
-    },
-    {
-      "current_name": "input",
-      "consumer_name": "input",
-      "repository": "modbus",
-      "file": "pdu_test.go",
-      "binding": "line:35",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestNewReadRegistersRequestAndEncoding"
     },
     {
       "current_name": "inrush_current_limiter_output_active",
@@ -4614,28 +4319,6 @@
       "kind": "json-value",
       "evidence_class": "Unknown",
       "status": "candidate"
-    },
-    {
-      "current_name": "manufacturer",
-      "consumer_name": "manufacturer",
-      "repository": "ebusreg",
-      "file": "registry/qualified_identity_test.go",
-      "binding": "line:406",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestQualifiedIdentity_RetiresCorrectedTripleFromIndependentSelection"
-    },
-    {
-      "current_name": "manufacturer",
-      "consumer_name": "manufacturer",
-      "repository": "ebusreg",
-      "file": "registry/qualified_identity_witness_test.go",
-      "binding": "line:61",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestQualifiedIdentityWitness_SparseAndChangedAuthorityLifecycle"
     },
     {
       "current_name": "maximum",
@@ -4847,28 +4530,6 @@
       "kind": "json-value",
       "evidence_class": "Unknown",
       "status": "candidate"
-    },
-    {
-      "current_name": "mode",
-      "consumer_name": "mode",
-      "repository": "ebusgateway",
-      "file": "cmd/gateway/eebus_mutation_lab_profile_linux_test.go",
-      "binding": "line:246",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestIssue755MetadataValidationRejectsRootChildAndFileBoundaries"
-    },
-    {
-      "current_name": "mode",
-      "consumer_name": "mode",
-      "repository": "ebusgateway",
-      "file": "cmd/gateway/eebus_mutation_lab_profile_linux_test.go",
-      "binding": "line:268",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestIssue755MetadataValidationRejectsRootChildAndFileBoundaries"
     },
     {
       "current_name": "mode",
@@ -6237,17 +5898,6 @@
     {
       "current_name": "reset",
       "consumer_name": "reset",
-      "repository": "ebusgateway",
-      "file": "internal/adaptermux/passive_transport_test.go",
-      "binding": "line:29",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestDeliver_AllEventKinds"
-    },
-    {
-      "current_name": "reset",
-      "consumer_name": "reset",
       "repository": "ebusreg",
       "file": "catalog/vaillant/data/ab97_b512_dhw_stepper.json",
       "binding": "/29/key/field",
@@ -6390,111 +6040,12 @@
     {
       "current_name": "second",
       "consumer_name": "second",
-      "repository": "ebusgo",
-      "file": "types/structured_test.go",
-      "binding": "line:15",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestDecodeFields"
-    },
-    {
-      "current_name": "second",
-      "consumer_name": "second",
-      "repository": "ebusgo",
-      "file": "types/structured_test.go",
-      "binding": "line:38",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestDecodeFields_ShortPayload"
-    },
-    {
-      "current_name": "second",
-      "consumer_name": "second",
-      "repository": "ebusgo",
-      "file": "types/structured_test.go",
-      "binding": "line:59",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestTotalSize"
-    },
-    {
-      "current_name": "second",
-      "consumer_name": "second",
       "repository": "ebusreg",
       "file": "catalog/ebus_standard/testdata/ab28_standard07_residual_fields.json",
       "binding": "/2/key/field",
       "kind": "json-value",
       "evidence_class": "Unknown",
       "status": "candidate"
-    },
-    {
-      "current_name": "second",
-      "consumer_name": "second",
-      "repository": "ebusreg",
-      "file": "registry/snapshot_planes_p9x_test.go",
-      "binding": "line:58",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestDeviceEntrySnapshot_PlanesIsolatedFromRegistryRebind"
-    },
-    {
-      "current_name": "second",
-      "consumer_name": "second",
-      "repository": "ebusreg",
-      "file": "schema/schema_test.go",
-      "binding": "line:138",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestSchemaSize"
-    },
-    {
-      "current_name": "second",
-      "consumer_name": "second",
-      "repository": "ebusreg",
-      "file": "schema/schema_test.go",
-      "binding": "line:19",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestSchemaDecode"
-    },
-    {
-      "current_name": "second",
-      "consumer_name": "second",
-      "repository": "ebusreg",
-      "file": "schema/schema_test.go",
-      "binding": "line:43",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestSchemaEncode"
-    },
-    {
-      "current_name": "second",
-      "consumer_name": "second",
-      "repository": "ebusreg",
-      "file": "schema/schema_test.go",
-      "binding": "line:67",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestSchemaDecodeShortPayload"
-    },
-    {
-      "current_name": "second",
-      "consumer_name": "second",
-      "repository": "ebusreg",
-      "file": "schema/schema_test.go",
-      "binding": "line:81",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestSchemaEncodeMissingField"
     },
     {
       "current_name": "sequencing",
@@ -6716,72 +6267,6 @@
       "kind": "json-value",
       "evidence_class": "Unknown",
       "status": "candidate"
-    },
-    {
-      "current_name": "status",
-      "consumer_name": "status",
-      "repository": "ebusgateway",
-      "file": "graphql/builder_test.go",
-      "binding": "line:214",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestBuildSchema_ProjectionCanonicalIDs"
-    },
-    {
-      "current_name": "status",
-      "consumer_name": "status",
-      "repository": "ebusgateway",
-      "file": "graphql/builder_test.go",
-      "binding": "line:229",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestBuildSchema_ProjectionCanonicalIDs"
-    },
-    {
-      "current_name": "status",
-      "consumer_name": "status",
-      "repository": "ebusgateway",
-      "file": "graphql/builder_test.go",
-      "binding": "line:27",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestBuildSchema_ReflectsRegistry"
-    },
-    {
-      "current_name": "status",
-      "consumer_name": "status",
-      "repository": "ebusgateway",
-      "file": "graphql/builder_test.go",
-      "binding": "line:303",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestBuilder_RebuildsOnChange"
-    },
-    {
-      "current_name": "status",
-      "consumer_name": "status",
-      "repository": "ebusgateway",
-      "file": "graphql/builder_test.go",
-      "binding": "line:42",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestBuildSchema_ReflectsRegistry"
-    },
-    {
-      "current_name": "status",
-      "consumer_name": "status",
-      "repository": "ebusgateway",
-      "file": "graphql/mutations_integration_test.go",
-      "binding": "line:178",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestInvokeMutation_Integration"
     },
     {
       "current_name": "status",
@@ -7087,104 +6572,6 @@
       "current_name": "status",
       "consumer_name": "status",
       "repository": "ebusreg",
-      "file": "registry/portal_test.go",
-      "binding": "line:21",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestPortalIndex_QueryByCanonical"
-    },
-    {
-      "current_name": "status",
-      "consumer_name": "status",
-      "repository": "ebusreg",
-      "file": "registry/portal_test.go",
-      "binding": "line:36",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestPortalIndex_QueryByCanonical"
-    },
-    {
-      "current_name": "status",
-      "consumer_name": "status",
-      "repository": "ebusreg",
-      "file": "registry/projection_test.go",
-      "binding": "line:108",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestProjection_ValidatesPathsAndEdges"
-    },
-    {
-      "current_name": "status",
-      "consumer_name": "status",
-      "repository": "ebusreg",
-      "file": "registry/projection_test.go",
-      "binding": "line:129",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestProjection_ValidatesPathsAndEdges"
-    },
-    {
-      "current_name": "status",
-      "consumer_name": "status",
-      "repository": "ebusreg",
-      "file": "registry/projection_test.go",
-      "binding": "line:173",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestBuildCanonicalIndex_Success"
-    },
-    {
-      "current_name": "status",
-      "consumer_name": "status",
-      "repository": "ebusreg",
-      "file": "registry/projection_test.go",
-      "binding": "line:185",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestBuildCanonicalIndex_Success"
-    },
-    {
-      "current_name": "status",
-      "consumer_name": "status",
-      "repository": "ebusreg",
-      "file": "registry/projection_test.go",
-      "binding": "line:232",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestBuildCanonicalIndex_RejectsMismatch"
-    },
-    {
-      "current_name": "status",
-      "consumer_name": "status",
-      "repository": "ebusreg",
-      "file": "registry/projection_test.go",
-      "binding": "line:251",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestBuildCanonicalIndex_RejectsMismatch"
-    },
-    {
-      "current_name": "status",
-      "consumer_name": "status",
-      "repository": "ebusreg",
-      "file": "schema/testdata/basic_schema.json",
-      "binding": "/fields/0/name",
-      "kind": "json-value",
-      "evidence_class": "Unknown",
-      "status": "candidate"
-    },
-    {
-      "current_name": "status",
-      "consumer_name": "status",
-      "repository": "ebusreg",
       "file": "vaillant/dhw/schemas.go",
       "binding": "line:12",
       "kind": "named-field-literal",
@@ -7302,28 +6689,6 @@
       "kind": "json-value",
       "evidence_class": "Unknown",
       "status": "candidate"
-    },
-    {
-      "current_name": "stop",
-      "consumer_name": "stop",
-      "repository": "ebusgateway",
-      "file": "cmd/gateway/modbus_sunspec_driver_test.go",
-      "binding": "line:42",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestModbusSunSpecDriverRefreshesOnlyAfterSuccessfulQualification"
-    },
-    {
-      "current_name": "stop",
-      "consumer_name": "stop",
-      "repository": "ebusgateway",
-      "file": "cmd/gateway/modbus_sunspec_runtime_test.go",
-      "binding": "line:83",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestRunSunSpecLiveSmokeMapsQualificationDecision"
     },
     {
       "current_name": "stop",
@@ -7934,17 +7299,6 @@
       "kind": "json-value",
       "evidence_class": "Unknown",
       "status": "candidate"
-    },
-    {
-      "current_name": "value",
-      "consumer_name": "value",
-      "repository": "ebusgateway",
-      "file": "smoke_test.go",
-      "binding": "line:86",
-      "kind": "named-field-literal",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "symbol": "TestSmokePlaneBuildRequestAndDecode"
     },
     {
       "current_name": "value",
@@ -11899,12 +11253,6 @@
       "open_question": "Consumer binding remains unassessed; absence is not established."
     },
     {
-      "current_name": "Prefix",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "open_question": "Consumer binding remains unassessed; absence is not established."
-    },
-    {
       "current_name": "PressureCompressorHigh",
       "evidence_class": "Unknown",
       "status": "candidate",
@@ -11941,12 +11289,6 @@
       "open_question": "Consumer binding remains unassessed; absence is not established."
     },
     {
-      "current_name": "Purpose",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "open_question": "Consumer binding remains unassessed; absence is not established."
-    },
-    {
       "current_name": "QQ",
       "evidence_class": "Unknown",
       "status": "candidate",
@@ -11972,12 +11314,6 @@
     },
     {
       "current_name": "RefrigerantCircuitHighPressureSensor",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "open_question": "Consumer binding remains unassessed; absence is not established."
-    },
-    {
-      "current_name": "Relationship",
       "evidence_class": "Unknown",
       "status": "candidate",
       "open_question": "Consumer binding remains unassessed; absence is not established."
@@ -12134,6 +11470,12 @@
     },
     {
       "current_name": "Tlo",
+      "evidence_class": "Unknown",
+      "status": "candidate",
+      "open_question": "Consumer binding remains unassessed; absence is not established."
+    },
+    {
+      "current_name": "Value",
       "evidence_class": "Unknown",
       "status": "candidate",
       "open_question": "Consumer binding remains unassessed; absence is not established."
@@ -12314,6 +11656,12 @@
     },
     {
       "current_name": "decimal_1s",
+      "evidence_class": "Unknown",
+      "status": "candidate",
+      "open_question": "Consumer binding remains unassessed; absence is not established."
+    },
+    {
+      "current_name": "dhw",
       "evidence_class": "Unknown",
       "status": "candidate",
       "open_question": "Consumer binding remains unassessed; absence is not established."
@@ -12686,6 +12034,12 @@
     },
     {
       "current_name": "leistungszwang",
+      "evidence_class": "Unknown",
+      "status": "candidate",
+      "open_question": "Consumer binding remains unassessed; absence is not established."
+    },
+    {
+      "current_name": "manufacturer",
       "evidence_class": "Unknown",
       "status": "candidate",
       "open_question": "Consumer binding remains unassessed; absence is not established."

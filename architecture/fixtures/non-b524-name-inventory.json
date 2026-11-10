@@ -1,6 +1,6 @@
 {
   "purpose": "Candidate non-B524 eBUS value-name queue; no rename or runtime mapping is authorized.",
-  "coverage": "Partial: explicit identifier-shaped value fields and value-name columns only. Transport metadata, operation names and unrelated protocols are excluded. Prose-only labels and unnamed values remain unassessed. Identical spellings do not establish identical native identities.",
+  "coverage": "Partial: explicit identifier-shaped value fields and value-name columns only. Transport metadata, operation names and unrelated protocols are excluded. Prose-only labels and unnamed values remain unassessed. Identical spellings do not establish identical native identities. Candidates require a value-name position: a fixture name or value-name field, a value-name column cell, or a structured declaration. Markdown table headers, column captions, metadata labels and capitalised prose alone do not qualify; a spelling also used as a caption is retained only when it has a value-name position.",
   "publication_policy": "Provenance is not published.",
   "candidates": [
     {
@@ -4309,13 +4309,6 @@
       "open_question": "Establish native identity, value class, unit and consumer meaning before adoption."
     },
     {
-      "current_name": "Prefix",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "target": null,
-      "open_question": "Establish native identity, value class, unit and consumer meaning before adoption."
-    },
-    {
       "current_name": "PressureCompressorHigh",
       "evidence_class": "Unknown",
       "status": "candidate",
@@ -4358,13 +4351,6 @@
       "open_question": "Establish native identity, value class, unit and consumer meaning before adoption."
     },
     {
-      "current_name": "Purpose",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "target": null,
-      "open_question": "Establish native identity, value class, unit and consumer meaning before adoption."
-    },
-    {
       "current_name": "QQ",
       "evidence_class": "Unknown",
       "status": "candidate",
@@ -4401,13 +4387,6 @@
     },
     {
       "current_name": "RefrigerantCircuitHighPressureSensor",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "target": null,
-      "open_question": "Establish native identity, value class, unit and consumer meaning before adoption."
-    },
-    {
-      "current_name": "Relationship",
       "evidence_class": "Unknown",
       "status": "candidate",
       "target": null,
