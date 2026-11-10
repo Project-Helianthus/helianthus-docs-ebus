@@ -31,7 +31,7 @@ stateDiagram-v2
 | `BOOT_INIT` | `CACHE_LOADED_STALE` | first cache snapshot applied | cache is exposed as stale bootstrap data |
 | `BOOT_INIT` | `LIVE_WARMUP` | first live semantic update | first confirmed live signal |
 | `CACHE_LOADED_STALE` | `LIVE_WARMUP` | first live semantic update | stale cache begins replacement by live stream |
-| `LIVE_WARMUP` | `LIVE_READY` | `live_ready_criteria` satisfied | requires `live_epoch >= 2` and live-backed updates for every published stream |
+| `LIVE_WARMUP` | `LIVE_READY` | `live_ready_criteria` satisfied | caller evaluates the readiness predicate after the first live update; see [Live readiness](#live-readiness) |
 | `BOOT_INIT`/`CACHE_LOADED_STALE`/`LIVE_WARMUP` | `DEGRADED` | `boot_live_timeout` elapsed | startup did not reach live-ready in time |
 | `DEGRADED` | `LIVE_WARMUP` | first live semantic update after degraded | recovery started |
 | `DEGRADED` | `LIVE_READY` | `live_ready_criteria` satisfied after degraded | same stream-aware readiness criteria used during normal startup |
@@ -39,16 +39,27 @@ stateDiagram-v2
 ## Epoch Semantics
 
 - `cache_epoch` increments when cache-backed semantic payload is applied.
-- `live_epoch` increments when live semantic payload is applied from zone/DHW refresh paths.
+- `live_epoch` increments when a live semantic update is recorded.
 - `cache_epoch` and `live_epoch` are tracked independently.
 - `live_epoch` is authoritative for startup readiness:
   - `live_epoch = 0`: no live signal yet.
   - `live_epoch = 1`: warmup only.
   - `live_epoch >= 2`: candidate for live-ready; stream criteria still apply.
-- `LIVE_READY` additionally requires live updates for all published semantic streams:
-  - if zones were published, at least one zones update must be live-backed;
-  - if DHW was published, at least one DHW update must be live-backed.
-  - repeated live updates on only one stream keep runtime in `LIVE_WARMUP`.
+### Live readiness
+
+**Hypothesis — candidate readiness contract.** Provenance is not published. The readiness predicate checks these domain pairs:
+
+| Domain | Published flag | Live observation flag |
+| --- | --- | --- |
+| Zones | `zonePublished` | `zoneLiveSeen` |
+| DHW | `dhwPublished` | `dhwLiveSeen` |
+| Boiler status | `boilerPublished` | `boilerLiveSeen` |
+| Circuits | `circuitPublished` | `circuitLiveSeen` |
+| Radio devices | `radioPublished` | `radioLiveSeen` |
+
+For each pair, a published domain without a live observation makes the predicate false. The predicate also requires at least one of the five live observation flags, regardless of publication. System and energy are not part of this predicate; energy-only updates do not satisfy it.
+
+The caller `recordEpochUpdateLocked` increments `liveEpoch` on a live update and returns `LIVE_WARMUP` on the first one. On subsequent live updates it evaluates the predicate and transitions to `LIVE_READY` if it succeeds. The epoch threshold belongs to the caller, not the predicate. This candidate describes runtime behavior; actual device readiness remains **Unknown** without qualification. The documentation check enforces agreement between the readiness descriptions; it does not establish implementation conformance.
 
 ### Source classification notes
 

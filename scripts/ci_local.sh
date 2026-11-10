@@ -272,6 +272,8 @@ if ! ci_suite_unchanged semantic_operation_route; then
 fi
 python3 -m pytest -q tests/test_aj17_b516_projection.py
 python3 -m pytest -q tests/test_aj28_ff_local_liveness.py
+echo "==> check candidate live-readiness documentation consistency"
+python3 -m pytest -q tests/test_live_readiness_docs.py
 python3 -m pytest -q tests/test_aj19_b531_distribution_consumers.py
 
 echo "==> check contribution-driven Portal UX contract"
