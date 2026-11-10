@@ -4845,7 +4845,7 @@
       "status": "candidate"
     },
     {
-      "current_name": "outside_temperature",
+      "current_name": "outdoor_temperature",
       "consumer_name": "outside_temperature",
       "repository": "ebusreg",
       "file": "catalog/ebus_standard/testdata/ab28_standard07_residual_fields.json",
