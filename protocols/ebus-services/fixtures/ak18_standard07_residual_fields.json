@@ -63,10 +63,10 @@
   ],
   "fields": [
     {
-      "id": "ak18-0700-body-outside_temperature",
+      "id": "ak18-0700-body-outdoor_temperature",
       "service": "0700",
       "direction": "body",
-      "field": "outside_temperature",
+      "field": "outdoor_temperature",
       "offset": 0,
       "width": 2,
       "encoding": "signed-le16/256",
@@ -223,10 +223,10 @@
       "raw_form": "retained"
     },
     {
-      "id": "ak18-0702-request-outside_temperature",
+      "id": "ak18-0702-request-outdoor_temperature",
       "service": "0702",
       "direction": "request",
-      "field": "outside_temperature",
+      "field": "outdoor_temperature",
       "offset": 0,
       "width": 2,
       "encoding": "signed-le16/256",

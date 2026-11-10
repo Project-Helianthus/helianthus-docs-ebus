@@ -185,10 +185,10 @@ A row that describes an operation rather than a value (for example a symbolic re
 
 When correspondence annotations disagree on a meaning, confirmation on the wire prevails over all of them; among the annotations, a Vaillant name prevails over an application name, and an application name over a community name. A disagreement that confirmation on the wire does not settle keeps the name provisional, and its `open_question` records the disagreement. Each annotation keeps its source's spelling in its own correspondence column. A service-menu code (for example `d.40`) is an annotation in its own column, `service_menu_code`, and never part of a name.
 
-### Migration and enforcement
+### Correspondence and enforcement
 
-Every renamed fixture carries a `previous_name` column with the earlier
-canonical name; consumers outside this repository migrate through it.
+The `previous_name` column records documentary correspondence with the earlier
+canonical spelling. It is not a runtime alias, fallback key, or migration step.
 
 The vocabulary remains in [register-name-vocabulary.csv](fixtures/register-name-vocabulary.csv).
 A future shared vocabulary home requires an explicit decision; no relocation is

@@ -42,7 +42,7 @@ conversion or calendar validation. Each bitmap remains an independent raw byte.
 
 | Service | Direction | Field | Offset | Width | Encoding | Domain | Unit | Default | Labels |
 |---|---|---|---:|---:|---|---|---|---|---|
-| 0700 | body | outside_temperature | 0 | 2 | signed-le16/256 | -50..50 | degrees Celsius | - | - |
+| 0700 | body | outdoor_temperature | 0 | 2 | signed-le16/256 | -50..50 | degrees Celsius | - | - |
 | 0700 | body | second | 2 | 1 | packed-decimal | 0..59 | none | - | - |
 | 0700 | body | minute | 3 | 1 | packed-decimal | 0..59 | none | - | - |
 | 0700 | body | hour | 4 | 1 | packed-decimal | 0..23 | none | - | - |
@@ -50,7 +50,7 @@ conversion or calendar validation. Each bitmap remains an independent raw byte.
 | 0700 | body | month | 6 | 1 | packed-decimal | 1..12 | none | - | - |
 | 0700 | body | weekday | 7 | 1 | u8 | 0..255 | none | - | 0 Monday; 1 Tuesday; 2 Wednesday; 3 Thursday; 4 Friday; 5 Saturday; 6 Sunday |
 | 0700 | body | year | 8 | 1 | packed-decimal | 0..99 | none | - | - |
-| 0702 | request | outside_temperature | 0 | 2 | signed-le16/256 | -50..50 | degrees Celsius | - | - |
+| 0702 | request | outdoor_temperature | 0 | 2 | signed-le16/256 | -50..50 | degrees Celsius | - | - |
 | 0702 | request | duration | 2 | 1 | u8 | 0..255 | minutes | 0 | - |
 | 0703 | request | secondary_block | 0 | 1 | u8 | 0..255 | none | - | - |
 | 0705 | request | secondary_block | 0 | 1 | u8 | 0..255 | none | - | - |
@@ -75,6 +75,10 @@ conversion or calendar validation. Each bitmap remains an independent raw byte.
 | 0705 | positive | bitmap_5 | 7 | 1 | raw-bitmap | 0..255 | none | - | - |
 | 0705 | positive | bitmap_6 | 8 | 1 | raw-bitmap | 0..255 | none | - | - |
 | 0705 | positive | bitmap_7 | 9 | 1 | raw-bitmap | 0..255 | none | - | - |
+
+The `0700` body and `0702` request field `outdoor_temperature` correspond
+to the earlier documentary spelling `outside_temperature`. This correspondence
+is not a runtime alias.
 
 ## Candidate interpretation boundaries
 

@@ -20,7 +20,7 @@ SHAPES = [
     ('07FE', 'pair-only', 0), ('07FF', 'pair-only', 0),
 ]
 FIELDS = [
-    ('0700', 'body', 'outside_temperature', 0, 2, 'signed-le16/256', [-50, 50], 'degrees Celsius', None),
+    ('0700', 'body', 'outdoor_temperature', 0, 2, 'signed-le16/256', [-50, 50], 'degrees Celsius', None),
     ('0700', 'body', 'second', 2, 1, 'packed-decimal', [0, 59], 'none', None),
     ('0700', 'body', 'minute', 3, 1, 'packed-decimal', [0, 59], 'none', None),
     ('0700', 'body', 'hour', 4, 1, 'packed-decimal', [0, 23], 'none', None),
@@ -28,7 +28,7 @@ FIELDS = [
     ('0700', 'body', 'month', 6, 1, 'packed-decimal', [1, 12], 'none', None),
     ('0700', 'body', 'weekday', 7, 1, 'u8', [0, 255], 'none', None),
     ('0700', 'body', 'year', 8, 1, 'packed-decimal', [0, 99], 'none', None),
-    ('0702', 'request', 'outside_temperature', 0, 2, 'signed-le16/256', [-50, 50], 'degrees Celsius', None),
+    ('0702', 'request', 'outdoor_temperature', 0, 2, 'signed-le16/256', [-50, 50], 'degrees Celsius', None),
     ('0702', 'request', 'duration', 2, 1, 'u8', [0, 255], 'minutes', 0),
     ('0703', 'request', 'secondary_block', 0, 1, 'u8', [0, 255], 'none', None),
     ('0705', 'request', 'secondary_block', 0, 1, 'u8', [0, 255], 'none', None),
