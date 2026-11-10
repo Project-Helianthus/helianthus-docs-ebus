@@ -6857,6 +6857,13 @@
       "open_question": "Establish native identity, value class, unit and consumer meaning before adoption."
     },
     {
+      "current_name": "outdoor_temperature",
+      "evidence_class": "Hypothesis",
+      "status": "candidate",
+      "target": null,
+      "open_question": "Candidate spelling for the 0700 body and 0702 request; native support and physical behavior remain Unknown."
+    },
+    {
       "current_name": "outside_correction",
       "evidence_class": "Unknown",
       "status": "candidate",

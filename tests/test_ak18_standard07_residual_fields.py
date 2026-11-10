@@ -97,6 +97,30 @@ class ResidualContract(unittest.TestCase):
         self.assertEqual(self.data['shapes'], [dict(service=s, direction=d, body_width=w) for s, d, w in SHAPES])
         self.assertEqual(table(self.native, '## Finite body shapes'), [[s, d, str(w)] for s, d, w in SHAPES])
 
+    def test_temperature_name_inventory_and_consumer_drift(self):
+        names = {row['field'] for row in self.data['fields']
+                 if (row['service'], row['direction'], row['offset']) in
+                 {('0700', 'body', 0), ('0702', 'request', 0)}}
+        self.assertEqual(names, {'outdoor_temperature'})
+        inventory = json.loads((ROOT / 'architecture/fixtures/non-b524-name-inventory.json').read_text())
+        candidates = [row for row in inventory['candidates']
+                      if row['current_name'] in names]
+        self.assertEqual(len(candidates), 1)
+        self.assertEqual(candidates[0]['evidence_class'], 'Hypothesis')
+        self.assertEqual(candidates[0]['status'], 'candidate')
+        consumers = json.loads((ROOT / 'architecture/fixtures/naming-consumers.json').read_text())
+        bindings = [row for row in consumers['bindings']
+                    if row['repository'] == 'ebusreg'
+                    and row['file'] == 'catalog/ebus_standard/testdata/ab28_standard07_residual_fields.json'
+                    and row['binding'] == '/0/key/field']
+        self.assertEqual(len(bindings), 1)
+        self.assertIn(bindings[0]['current_name'], names)
+        # The consumer still uses its earlier spelling; this is correspondence,
+        # not a claim that a downstream rename has already been implemented.
+        self.assertEqual(bindings[0]['consumer_name'], 'outside_temperature')
+        self.assertEqual(bindings[0]['evidence_class'], 'Unknown')
+        self.assertEqual(bindings[0]['status'], 'candidate')
+
     def test_exact_native_field_rows(self):
         expected = []
         for s, d, f, o, w, encoding, domain, unit, default in FIELDS:
