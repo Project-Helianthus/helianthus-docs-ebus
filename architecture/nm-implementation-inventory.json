@@ -1,0 +1,632 @@
+[
+  {
+    "key": "nm-model-why-helianthus-implements-optional-nm",
+    "page": "architecture/nm-model.md",
+    "section": "Why Helianthus Implements Optional NM",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-model-the-nm-model-is-passive-and-indirect",
+    "page": "architecture/nm-model.md",
+    "section": "The NM Model Is Passive and Indirect",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-model-runtime-components",
+    "page": "architecture/nm-model.md",
+    "section": "Runtime Components",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-model-nm-state-machine",
+    "page": "architecture/nm-model.md",
+    "section": "NM State Machine",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-model-states",
+    "page": "architecture/nm-model.md",
+    "section": "States",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-model-transitions",
+    "page": "architecture/nm-model.md",
+    "section": "Transitions",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-model-init-nm-triggers",
+    "page": "architecture/nm-model.md",
+    "section": "Init_NM Triggers",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-model-automatic-reset-to-normal",
+    "page": "architecture/nm-model.md",
+    "section": "Automatic Reset-to-Normal",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-model-gateway-runtime-ownership",
+    "page": "architecture/nm-model.md",
+    "section": "Gateway Runtime Ownership",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-model-wire-behaviour-two-lanes",
+    "page": "architecture/nm-model.md",
+    "section": "Wire Behaviour: Two Lanes",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-model-broadcast-lane",
+    "page": "architecture/nm-model.md",
+    "section": "Broadcast Lane",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-model-mandatory-first-services",
+    "page": "architecture/nm-model.md",
+    "section": "Mandatory-First Services",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-model-optional-later-services",
+    "page": "architecture/nm-model.md",
+    "section": "Optional-Later Services",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-model-responder-lane",
+    "page": "architecture/nm-model.md",
+    "section": "Responder Lane",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-model-osi-layer-7-service-classification",
+    "page": "architecture/nm-model.md",
+    "section": "OSI Layer 7 Service Classification",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-discovery-discovery-is-adjacent-to-nm-not-identical",
+    "page": "architecture/nm-discovery.md",
+    "section": "Discovery Is Adjacent to NM, Not Identical",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-discovery-passive-evidence-sources",
+    "page": "architecture/nm-discovery.md",
+    "section": "Passive Evidence Sources",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-discovery-passive-07-04-identification",
+    "page": "architecture/nm-discovery.md",
+    "section": "Passive 07 04 (Identification)",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-discovery-passive-ff-00-nm-reset-broadcast",
+    "page": "architecture/nm-discovery.md",
+    "section": "Passive FF 00 (NM Reset Broadcast)",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-discovery-passive-ff-01-nm-state-broadcast",
+    "page": "architecture/nm-discovery.md",
+    "section": "Passive FF 01 (NM State Broadcast)",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-discovery-new-cyclic-traffic-from-unseen-addresses",
+    "page": "architecture/nm-discovery.md",
+    "section": "New Cyclic Traffic from Unseen Addresses",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-discovery-bounded-active-confirmation",
+    "page": "architecture/nm-discovery.md",
+    "section": "Bounded Active Confirmation",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-discovery-active-07-04-identification-query",
+    "page": "architecture/nm-discovery.md",
+    "section": "Active 07 04 (Identification Query)",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-discovery-07-fe-queryexistence-bounded-and-indirect-only",
+    "page": "architecture/nm-discovery.md",
+    "section": "07 FE (QueryExistence) -- Bounded and Indirect Only",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-discovery-07-ff-sign-of-life-broadcast-not-discovery",
+    "page": "architecture/nm-discovery.md",
+    "section": "07 FF (Sign of Life Broadcast) -- Not Discovery",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-discovery-discovery-to-nm-target-configuration-pipeline",
+    "page": "architecture/nm-discovery.md",
+    "section": "Discovery-to-NM Target-Configuration Pipeline",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-discovery-pipeline-stages",
+    "page": "architecture/nm-discovery.md",
+    "section": "Pipeline Stages",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-discovery-enrollment-rules",
+    "page": "architecture/nm-discovery.md",
+    "section": "Enrollment Rules",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-discovery-timer-reset-evidence-bridge",
+    "page": "architecture/nm-discovery.md",
+    "section": "Timer-Reset Evidence Bridge",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-discovery-separation-from-b524-structural-discovery",
+    "page": "architecture/nm-discovery.md",
+    "section": "Separation from B524 Structural Discovery",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-participant-policy-local-address-pair-authority",
+    "page": "architecture/nm-participant-policy.md",
+    "section": "Local Address-Pair Authority",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-participant-policy-preferred-source-sourceaddressselection",
+    "page": "architecture/nm-participant-policy.md",
+    "section": "Preferred Source: SourceAddressSelection",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-participant-policy-fallback-source-configured-policy",
+    "page": "architecture/nm-participant-policy.md",
+    "section": "Fallback Source: Configured Policy",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-participant-policy-provenance",
+    "page": "architecture/nm-participant-policy.md",
+    "section": "Provenance",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-participant-policy-init-nm-and-transport-events",
+    "page": "architecture/nm-participant-policy.md",
+    "section": "Init_NM and Transport Events",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-participant-policy-init-nm-triggers",
+    "page": "architecture/nm-participant-policy.md",
+    "section": "Init_NM Triggers",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-participant-policy-source-reselection-semantics",
+    "page": "architecture/nm-participant-policy.md",
+    "section": "Source Reselection Semantics",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-participant-policy-transport-blindness",
+    "page": "architecture/nm-participant-policy.md",
+    "section": "Transport Blindness",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-participant-policy-self-monitoring",
+    "page": "architecture/nm-participant-policy.md",
+    "section": "Self-Monitoring",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-participant-policy-self-timer",
+    "page": "architecture/nm-participant-policy.md",
+    "section": "Self Timer",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-participant-policy-self-timer-reset",
+    "page": "architecture/nm-participant-policy.md",
+    "section": "Self Timer Reset",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-participant-policy-relationship-to-transport-health",
+    "page": "architecture/nm-participant-policy.md",
+    "section": "Relationship to Transport Health",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-participant-policy-broadcast-lane-gating",
+    "page": "architecture/nm-participant-policy.md",
+    "section": "Broadcast Lane Gating",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-participant-policy-ff-00-nm-reset",
+    "page": "architecture/nm-participant-policy.md",
+    "section": "FF 00 (NM Reset)",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-participant-policy-ff-02-nm-failure",
+    "page": "architecture/nm-participant-policy.md",
+    "section": "FF 02 (NM Failure)",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-participant-policy-ff-01-nm-state-optional-later",
+    "page": "architecture/nm-participant-policy.md",
+    "section": "FF 01 (NM State) -- Optional-Later",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-participant-policy-07-ff-sign-of-life-optional-later",
+    "page": "architecture/nm-participant-policy.md",
+    "section": "07 FF (Sign of Life) -- Optional-Later",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-participant-policy-responder-lane-gating",
+    "page": "architecture/nm-participant-policy.md",
+    "section": "Responder Lane Gating",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-participant-policy-transport-capability-matrix",
+    "page": "architecture/nm-participant-policy.md",
+    "section": "Transport Capability Matrix",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-participant-policy-bus-load-policy-frozen-numeric-bounds",
+    "page": "architecture/nm-participant-policy.md",
+    "section": "Bus-Load Policy (Frozen Numeric Bounds)",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-participant-policy-sustained-load-budget",
+    "page": "architecture/nm-participant-policy.md",
+    "section": "Sustained Load Budget",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-participant-policy-burst-load-budget",
+    "page": "architecture/nm-participant-policy.md",
+    "section": "Burst Load Budget",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-participant-policy-discovery-class-burst-budget",
+    "page": "architecture/nm-participant-policy.md",
+    "section": "Discovery-Class Burst Budget",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-participant-policy-07-ff-cadence-floor",
+    "page": "architecture/nm-participant-policy.md",
+    "section": "07 FF Cadence Floor",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-participant-policy-measurement-and-enforcement",
+    "page": "architecture/nm-participant-policy.md",
+    "section": "Measurement and Enforcement",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-participant-policy-cycle-time-policy",
+    "page": "architecture/nm-participant-policy.md",
+    "section": "Cycle-Time Policy",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-participant-policy-default",
+    "page": "architecture/nm-participant-policy.md",
+    "section": "Default",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-participant-policy-evidence-review-obligation",
+    "page": "architecture/nm-participant-policy.md",
+    "section": "Evidence-Review Obligation",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-participant-policy-timer-reset-event-sources",
+    "page": "architecture/nm-participant-policy.md",
+    "section": "Timer-Reset Event Sources",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-participant-policy-failure-and-error-surfaces",
+    "page": "architecture/nm-participant-policy.md",
+    "section": "Failure and Error Surfaces",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-participant-policy-ff-02-in-scope",
+    "page": "architecture/nm-participant-policy.md",
+    "section": "FF 02 -- In Scope",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "No composed NM behavior or qualification established."
+  },
+  {
+    "key": "nm-participant-policy-fe-01-explicitly-out-of-baseline",
+    "page": "architecture/nm-participant-policy.md",
+    "section": "FE 01 -- Explicitly Out of Baseline",
+    "status": "excluded",
+    "evidence": "Unknown",
+    "candidate": false,
+    "limit": "Excluded from the baseline; future semantics remain undefined."
+  },
+  {
+    "key": "target-list",
+    "page": "architecture/nm-model.md",
+    "section": "Runtime Components",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "Target configuration is not implemented as a composed NM component."
+  },
+  {
+    "key": "cycle-timer",
+    "page": "architecture/nm-model.md",
+    "section": "Runtime Components",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "Cycle-time monitoring is not implemented as a composed NM component."
+  },
+  {
+    "key": "status-map",
+    "page": "architecture/nm-model.md",
+    "section": "Runtime Components",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "Status chart is not implemented as a composed NM component."
+  },
+  {
+    "key": "aggregate-health",
+    "page": "architecture/nm-model.md",
+    "section": "Runtime Components",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "Net status is not implemented as a composed NM component."
+  },
+  {
+    "key": "active-flag",
+    "page": "architecture/nm-model.md",
+    "section": "Runtime Components",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "Start flag is not implemented as a composed NM component."
+  },
+  {
+    "key": "state-machine",
+    "page": "architecture/nm-model.md",
+    "section": "Runtime Components",
+    "status": "target",
+    "evidence": "Unknown",
+    "candidate": true,
+    "limit": "NM state machine is not implemented as a composed NM component."
+  },
+  {
+    "key": "broadcast-helper",
+    "page": "architecture/nm-model.md",
+    "section": "Broadcast Lane",
+    "status": "candidate helper",
+    "evidence": "Hypothesis",
+    "candidate": true,
+    "limit": "Uncomposed helper candidate; no production NM service or wire qualification established. Provenance is not published."
+  },
+  {
+    "key": "responder-helper",
+    "page": "architecture/nm-model.md",
+    "section": "Responder Lane",
+    "status": "candidate helper",
+    "evidence": "Hypothesis",
+    "candidate": true,
+    "limit": "Uncomposed helper candidate; no production NM service or wire qualification established. Provenance is not published."
+  }
+]

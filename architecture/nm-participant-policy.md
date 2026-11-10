@@ -1,7 +1,6 @@
 # Local Participant Behavior and Bus-Load Policy
 
 Status: Normative
-Plan reference: ebus-good-citizen-network-management.locked (M0/ISSUE-DOC-02)
 
 SAS-01 update: local NM source authority is
 `SourceAddressSelection.Source` after `active_probe_passed`. Earlier references to
@@ -10,6 +9,10 @@ prior startup plan. NM runtime must fail closed before source-selection
 validation and during
 `DEGRADED_SOURCE_SELECTION`; it must not emit `FF 00`, `FF 02`, or `0x07/0xFF`
 without an active-probe-passed source.
+
+## Implementation status
+
+The normative behavior below is a target unless the [implementation inventory](./nm-implementation-inventory.json) identifies a narrower candidate helper or infrastructure. A helper is not a composed NM service. Qualification of wire behavior and operational bounds requires separate evidence; unknown coverage remains target. The responder wire state machine belongs to the transport library.
 
 ## Purpose
 
@@ -275,8 +278,8 @@ confirmation.
 
 ### Measurement and Enforcement
 
-Bus-load compliance is measured using the eBUS specification formula for
-bus utilization. The formula accounts for byte-level transmission time
+Bus-load compliance is measured using a bus-utilization formula. The
+formula accounts for byte-level transmission time
 at the eBUS baud rate (2400 baud, 1 start bit, 8 data bits, 1 stop bit
 = 4.167 ms per byte) plus inter-frame gaps.
 

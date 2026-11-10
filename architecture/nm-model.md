@@ -1,20 +1,27 @@
 # eBUS Network Management Model
 
 Status: Normative
-Plan reference: ebus-good-citizen-network-management.locked (M0/ISSUE-DOC-00)
 
 SAS-01 update: startup NM authority is
 `SourceAddressSelection.Source` after `active_probe_passed`. Earlier references to
 protocol membership or fixed local source are historical. During
 `DEGRADED_SOURCE_SELECTION`, Helianthus emits no NM traffic.
 
+## Implementation status
+
+The normative behavior below is a target unless the [implementation inventory](./nm-implementation-inventory.json) identifies a narrower candidate helper or infrastructure. A helper is not a composed NM service. Qualification of wire behavior and operational bounds requires separate evidence; unknown coverage remains target. The responder wire state machine belongs to the transport library.
+
+
+Uncomposed broadcast and responder emit helpers are candidates (evidence class: `Hypothesis`). They do not establish production composition, transport qualification, or a responder wire state machine. Provenance is not published.
+
 ## Purpose
 
-This document freezes the normative interpretation of the eBUS Network
-Management (NM) specification as implemented by the Helianthus gateway.
+This document freezes the normative eBUS Network Management (NM) model
+as a target for the Helianthus gateway.
 It defines the runtime model, state machine, wire behaviour lanes, and
-OSI Layer 7 service classification that must be satisfied before any NM
-runtime code lands in `helianthus-ebusgateway`.
+OSI Layer 7 service classification that must be satisfied before a composed NM
+runtime service lands in `helianthus-ebusgateway`. Uncomposed helpers may land
+independently; they do not satisfy the composed-service prerequisite.
 
 All implementation work references this document as the source of truth
 for NM semantics, ownership boundaries, and phasing constraints.
@@ -31,7 +38,7 @@ because it delivers concrete benefits:
 - **Standards alignment.** Implementing the NM state machine positions
   Helianthus as a well-behaved eBUS participant rather than a passive
   observer.
-- **MCP/RE ergonomics.** NM status feeds directly into MCP tool
+- **MCP/RE ergonomics.** Target NM status would feed into MCP tool
   responses and reverse-engineering workflows, making topology state
   queryable from external tooling.
 
@@ -58,14 +65,14 @@ This passive, indirect approach has two key properties:
 
 ### Runtime Components
 
-| eBUS NM Spec Concept | Helianthus Component | Owner |
+| eBUS NM Spec Concept | Helianthus Component | Owner and status |
 |---|---|---|
-| Target configuration | NM target list (which nodes to monitor, with per-node cycle-time) | `helianthus-ebusgateway` |
-| Cycle-time monitoring | Per-node timeout tracker driven by observed bus traffic | `helianthus-ebusgateway` |
-| Status chart (OK/NOK per node) | Per-node status map | `helianthus-ebusgateway` |
-| Net status (aggregate) | Aggregate NM health derived from status chart | `helianthus-ebusgateway` |
-| Start flag | NM active/inactive flag | `helianthus-ebusgateway` |
-| NM state machine | `NMInit -> NMReset -> NMNormal` FSM | `helianthus-ebusgateway` |
+| Target configuration | NM target list (which nodes to monitor, with per-node cycle-time) | `helianthus-ebusgateway` — target |
+| Cycle-time monitoring | Per-node timeout tracker driven by observed bus traffic | `helianthus-ebusgateway` — target |
+| Status chart (OK/NOK per node) | Per-node status map | `helianthus-ebusgateway` — target |
+| Net status (aggregate) | Aggregate NM health derived from status chart | `helianthus-ebusgateway` — target |
+| Start flag | NM active/inactive flag | `helianthus-ebusgateway` — target |
+| NM state machine | `NMInit -> NMReset -> NMNormal` FSM | `helianthus-ebusgateway` — target |
 
 ## NM State Machine
 
@@ -117,13 +124,13 @@ the status chart is cleared during `NMReset`.
 
 ## Gateway Runtime Ownership
 
-`helianthus-ebusgateway` owns the NM FSM and all runtime state: target
+The target design assigns `helianthus-ebusgateway` the NM FSM and runtime state: target
 configuration, cycle-time monitoring, status chart, net status, start
 flag, and the state machine itself.
 
 `helianthus-ebusreg` remains the identity and projection layer. It does
 not run NM logic. The registry provides device identity, bus-face data,
-and alias resolution that the gateway NM runtime consumes but does not
+and alias resolution that the target gateway NM runtime would consume but not
 own.
 
 This boundary is deliberate:
@@ -148,8 +155,7 @@ destination).
 
 #### Mandatory-First Services
 
-These services are implemented first and form the minimum viable NM
-wire presence.
+These services are targets for the minimum viable NM wire presence.
 
 | Service ID | Name | Purpose | Precondition |
 |---|---|---|---|
@@ -239,24 +245,15 @@ the broader discovery pipeline.
 
 ## Evidence Snapshot
 
-The following summarizes the current evidence base for NM model
-decisions.
+Candidate declarations (evidence class: `Hypothesis`):
 
-**Proven on live bus:**
+- Address aliases may represent multiple bus faces of one participant.
+- Addressed identification and broadcast emission require separate qualification.
+- Peer NM support must not be assumed.
+- Passive observation may support NM monitoring but does not establish a
+  composed NM service.
 
-- Vaillant bus faces observed: `0x15`, `0xEC`, `0x04`, `0xF6` with
-  alias pairs `0xEC -> 0x15` and `0xF6 -> 0x04`.
-- `07 04` identification works via targeted query to known addresses.
-- Active send path handles `0xFE` broadcast frames without companion
-  response waiting.
-- Passive observation infrastructure exists and is used by the semantic
-  polling runtime.
-
-**Tested but yielded no useful data:**
-
-- Peer `FF 03`/`FF 04`/`FF 05`/`FF 06` interrogation on the observed
-  Vaillant system returned no actionable data. This confirms that peer
-  NM support cannot be assumed.
+Provenance is not published. Wire qualification remains `Unknown`.
 
 **Not yet implemented in the gateway:**
 
@@ -266,7 +263,7 @@ decisions.
 - Net status (aggregate health).
 - Start flag (NM active/inactive).
 - NM state machine (`NMInit -> NMReset -> NMNormal`).
-- Any broadcast-lane wire services (`FF 00`, `FF 02`).
+- Composed broadcast-lane wire services (`FF 00`, `FF 02`); emit helpers remain candidates (`Hypothesis`) and do not establish a composed service.
 
 **Architectural constraint:**
 

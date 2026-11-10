@@ -123,10 +123,12 @@ See DHW lifecycle details in [`architecture/dhw-freshness-fsm.md`](./dhw-freshne
 
 ## Network Management
 
-The Helianthus NM model implements optional, passive, indirect network
-management aligned with the eBUS specification. The gateway owns the NM
-runtime: target configuration, cycle-time monitoring, status chart, net
-status, and the `NMInit -> NMReset -> NMNormal` state machine.
+The Helianthus NM model specifies optional, passive, indirect network
+management. Target configuration, cycle-time monitoring, status chart, net
+status, active flag, and the `NMInit -> NMReset -> NMNormal` state machine
+are targets, not a composed gateway service. Broadcast and responder emit
+helpers remain candidates (`Hypothesis`) without production composition. See the
+[implementation inventory](./nm-implementation-inventory.json) for limits.
 
 Full normative interpretation: [architecture/nm-model.md](./nm-model.md).
 
