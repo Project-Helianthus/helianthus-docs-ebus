@@ -1,6 +1,6 @@
 {
   "purpose": "Incomplete source inventory for consumer investigation; presence is not evidence of a binding.",
-  "coverage": "partial: filtered source-file inventories only; evidence, capture, log and revision-like filenames excluded; dynamic and reflection paths and absence searches have not been analyzed",
+  "coverage": "partial: filtered source-file inventories only; evidence, capture, log and revision-like filenames excluded; seven add-on packaged files excluded by issue scope; dynamic and reflection paths and absence searches have not been analyzed",
   "source_files": {
     "ebusreg": [
       ".github/workflows/behavior-names.yml",
@@ -2471,13 +2471,6 @@
       "helianthus/build/verify-no-secret.sh",
       "helianthus/config.json",
       "helianthus/rollout_guardrails.json",
-      "helianthus/rootfs/.gitkeep",
-      "helianthus/rootfs/etc/services.d/helianthus-gateway/run",
-      "helianthus/rootfs/usr/bin/helianthus_vrc_explorer",
-      "helianthus/rootfs/usr/share/helianthus/check_runtime_state_wrapper.py",
-      "helianthus/rootfs/usr/share/helianthus/m2m_tls_identity.py",
-      "helianthus/rootfs/usr/share/helianthus/modbus_runtime_guard.py",
-      "helianthus/rootfs/usr/share/helianthus/serial_can_options.py",
       "helianthus/translations/en.yaml",
       "repository.json",
       "requirements-ci.txt",
