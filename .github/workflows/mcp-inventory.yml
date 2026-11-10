@@ -1,0 +1,47 @@
+name: MCP inventory parity
+
+on:
+  pull_request:
+    paths:
+      - api/mcp.md
+      - scripts/check_mcp_inventory.py
+      - tests/test_mcp_inventory.py
+      - .github/workflows/mcp-inventory.yml
+  push:
+    branches: [main]
+  schedule:
+    - cron: '31 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Checkout public gateway main
+        uses: actions/checkout@v4
+        with:
+          repository: Project-Helianthus/helianthus-ebusgateway
+          ref: main
+          path: .tmp/reference/ebusgateway
+          persist-credentials: false
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: .tmp/reference/ebusgateway/go.mod
+          cache-dependency-path: .tmp/reference/ebusgateway/go.sum
+      - name: Emit and verify gateway registration inventory
+        working-directory: .tmp/reference/ebusgateway
+        env:
+          HELIANTHUS_MCP_INVENTORY_OUT: ${{ github.workspace }}/.tmp/reference/ebusgateway/.tmp/mcp-tools.json
+        run: |
+          mkdir -p .tmp
+          go test ./mcp -run '^TestMCPToolInventory' -count=1 -timeout=120s
+          go test ./cmd/gateway -run '^TestMCPInventoryRegistrationCoverage' -count=1 -timeout=120s
+      - name: Compare documentation inventory
+        run: python3 scripts/check_mcp_inventory.py --inventory .tmp/reference/ebusgateway/.tmp/mcp-tools.json
