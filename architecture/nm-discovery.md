@@ -1,7 +1,6 @@
 # NM-Aligned Device Discovery
 
 Status: Normative
-Plan reference: ebus-good-citizen-network-management.locked (M0/ISSUE-DOC-01)
 
 SAS-01 update: source-selection observation replaces Joiner warmup as the
 admission evidence stage. The only first-implementation pre-discovery
@@ -9,10 +8,14 @@ source-validation active probe is bounded addressed `0x07/0x04`; `0x07/0xFE`
 Inquiry of Existence and `0x07/0xFF` Sign of Life are not startup admission
 validation probes.
 
+## Implementation status
+
+The normative behavior below is a target unless the [implementation inventory](./nm-implementation-inventory.json) identifies a narrower implemented helper or infrastructure. A helper is not a composed NM service. Qualification of wire behavior and operational bounds requires separate evidence; unknown coverage remains target. The responder wire state machine belongs to the transport library.
+
 ## Purpose
 
 This document freezes the normative interpretation of the eBUS
-NM-aligned device discovery model as implemented by the Helianthus
+NM-aligned device discovery model as a target for the Helianthus
 gateway. It defines the realigned discovery approach that replaces
 probe-centric scanning with multi-source passive evidence fusion plus
 bounded active confirmation.
@@ -51,8 +54,8 @@ originated by other bus participants.
 
 Any identification response observed on the bus from any
 initiator/target pair contributes to device-presence evidence.
-Helianthus does not need to originate the query -- a VRC700
-identifying a BAI, or any other pair exchanging `07 04`, is
+Helianthus does not need to originate the query -- one device
+identifying another, or any other pair exchanging `07 04`, is
 equally valid evidence of both participants' existence.
 
 A single observed `07 04` exchange provides strong evidence for two
