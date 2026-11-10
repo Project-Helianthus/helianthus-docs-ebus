@@ -172,76 +172,6 @@
       "status": "candidate"
     },
     {
-      "current_name": "PB",
-      "consumer_name": "PB",
-      "repository": "ebusreg",
-      "file": "catalog/ebus_standard/testdata/ab79_09_candidates.json",
-      "binding": "/entries/0/key/field",
-      "kind": "json-value",
-      "evidence_class": "Unknown",
-      "status": "candidate"
-    },
-    {
-      "current_name": "PB",
-      "consumer_name": "PB",
-      "repository": "ebusreg",
-      "file": "catalog/ebus_standard/testdata/ab79_09_candidates.json",
-      "binding": "/entries/10/key/field",
-      "kind": "json-value",
-      "evidence_class": "Unknown",
-      "status": "candidate"
-    },
-    {
-      "current_name": "PB",
-      "consumer_name": "PB",
-      "repository": "ebusreg",
-      "file": "catalog/ebus_standard/testdata/ab79_09_candidates.json",
-      "binding": "/entries/12/key/field",
-      "kind": "json-value",
-      "evidence_class": "Unknown",
-      "status": "candidate"
-    },
-    {
-      "current_name": "PB",
-      "consumer_name": "PB",
-      "repository": "ebusreg",
-      "file": "catalog/ebus_standard/testdata/ab79_09_candidates.json",
-      "binding": "/entries/18/key/field",
-      "kind": "json-value",
-      "evidence_class": "Unknown",
-      "status": "candidate"
-    },
-    {
-      "current_name": "PB",
-      "consumer_name": "PB",
-      "repository": "ebusreg",
-      "file": "catalog/ebus_standard/testdata/ab79_09_candidates.json",
-      "binding": "/entries/22/key/field",
-      "kind": "json-value",
-      "evidence_class": "Unknown",
-      "status": "candidate"
-    },
-    {
-      "current_name": "PB",
-      "consumer_name": "PB",
-      "repository": "ebusreg",
-      "file": "catalog/ebus_standard/testdata/ab79_09_candidates.json",
-      "binding": "/entries/4/key/field",
-      "kind": "json-value",
-      "evidence_class": "Unknown",
-      "status": "candidate"
-    },
-    {
-      "current_name": "PB",
-      "consumer_name": "PB",
-      "repository": "ebusreg",
-      "file": "catalog/ebus_standard/testdata/ab79_09_candidates.json",
-      "binding": "/entries/7/key/field",
-      "kind": "json-value",
-      "evidence_class": "Unknown",
-      "status": "candidate"
-    },
-    {
       "current_name": "PWM",
       "consumer_name": "PWM",
       "repository": "ebusreg",
@@ -857,76 +787,6 @@
       "repository": "ebusreg",
       "file": "catalog/vaillant/data/ab99_b523_config_mixer.json",
       "binding": "/19/key/field",
-      "kind": "json-value",
-      "evidence_class": "Unknown",
-      "status": "candidate"
-    },
-    {
-      "current_name": "SB",
-      "consumer_name": "SB",
-      "repository": "ebusreg",
-      "file": "catalog/ebus_standard/testdata/ab79_09_candidates.json",
-      "binding": "/entries/1/key/field",
-      "kind": "json-value",
-      "evidence_class": "Unknown",
-      "status": "candidate"
-    },
-    {
-      "current_name": "SB",
-      "consumer_name": "SB",
-      "repository": "ebusreg",
-      "file": "catalog/ebus_standard/testdata/ab79_09_candidates.json",
-      "binding": "/entries/11/key/field",
-      "kind": "json-value",
-      "evidence_class": "Unknown",
-      "status": "candidate"
-    },
-    {
-      "current_name": "SB",
-      "consumer_name": "SB",
-      "repository": "ebusreg",
-      "file": "catalog/ebus_standard/testdata/ab79_09_candidates.json",
-      "binding": "/entries/13/key/field",
-      "kind": "json-value",
-      "evidence_class": "Unknown",
-      "status": "candidate"
-    },
-    {
-      "current_name": "SB",
-      "consumer_name": "SB",
-      "repository": "ebusreg",
-      "file": "catalog/ebus_standard/testdata/ab79_09_candidates.json",
-      "binding": "/entries/19/key/field",
-      "kind": "json-value",
-      "evidence_class": "Unknown",
-      "status": "candidate"
-    },
-    {
-      "current_name": "SB",
-      "consumer_name": "SB",
-      "repository": "ebusreg",
-      "file": "catalog/ebus_standard/testdata/ab79_09_candidates.json",
-      "binding": "/entries/23/key/field",
-      "kind": "json-value",
-      "evidence_class": "Unknown",
-      "status": "candidate"
-    },
-    {
-      "current_name": "SB",
-      "consumer_name": "SB",
-      "repository": "ebusreg",
-      "file": "catalog/ebus_standard/testdata/ab79_09_candidates.json",
-      "binding": "/entries/5/key/field",
-      "kind": "json-value",
-      "evidence_class": "Unknown",
-      "status": "candidate"
-    },
-    {
-      "current_name": "SB",
-      "consumer_name": "SB",
-      "repository": "ebusreg",
-      "file": "catalog/ebus_standard/testdata/ab79_09_candidates.json",
-      "binding": "/entries/8/key/field",
       "kind": "json-value",
       "evidence_class": "Unknown",
       "status": "candidate"
@@ -12514,12 +12374,6 @@
     },
     {
       "current_name": "sunday",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "open_question": "Consumer binding remains unassessed; absence is not established."
-    },
-    {
-      "current_name": "supplemental_layout",
       "evidence_class": "Unknown",
       "status": "candidate",
       "open_question": "Consumer binding remains unassessed; absence is not established."
