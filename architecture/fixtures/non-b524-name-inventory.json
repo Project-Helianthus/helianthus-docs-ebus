@@ -4204,13 +4204,6 @@
       "open_question": "Establish native identity, value class, unit and consumer meaning before adoption."
     },
     {
-      "current_name": "PB",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "target": null,
-      "open_question": "Establish native identity, value class, unit and consumer meaning before adoption."
-    },
-    {
       "current_name": "PWM",
       "evidence_class": "Unknown",
       "status": "candidate",
@@ -4492,13 +4485,6 @@
     },
     {
       "current_name": "S9",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "target": null,
-      "open_question": "Establish native identity, value class, unit and consumer meaning before adoption."
-    },
-    {
-      "current_name": "SB",
       "evidence_class": "Unknown",
       "status": "candidate",
       "target": null,
@@ -7691,13 +7677,6 @@
     },
     {
       "current_name": "sunday",
-      "evidence_class": "Unknown",
-      "status": "candidate",
-      "target": null,
-      "open_question": "Establish native identity, value class, unit and consumer meaning before adoption."
-    },
-    {
-      "current_name": "supplemental_layout",
       "evidence_class": "Unknown",
       "status": "candidate",
       "target": null,
