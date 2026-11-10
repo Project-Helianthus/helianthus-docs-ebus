@@ -1,0 +1,2164 @@
+{
+  "purpose": "Incomplete discovery queue for issue 1160; not a runtime name mapping. No target is authorized by this file.",
+  "coverage": "partial: backticked snake_case names in protocol documents only; identities, fixture formats, code declarations and bindings remain unverified",
+  "source_files": [
+    "protocols/LICENSE",
+    "protocols/brink/brink-40xx.md",
+    "protocols/ebus-services/ebus-application-layer.md",
+    "protocols/ebus-services/ebus-overview.md",
+    "protocols/ebus-services/ebus-service-03h.md",
+    "protocols/ebus-services/ebus-service-05h.md",
+    "protocols/ebus-services/ebus-service-07h.md",
+    "protocols/ebus-services/ebus-service-08h.md",
+    "protocols/ebus-services/ebus-service-09h.md",
+    "protocols/ebus-services/ebus-service-0Fh.md",
+    "protocols/ebus-services/ebus-service-FEh.md",
+    "protocols/ebus-services/ebus-service-FFh.md",
+    "protocols/ebus-services/ebus-standard07-residual-fields.md",
+    "protocols/ebus-services/fixtures/ac26_fe01.json",
+    "protocols/ebus-services/fixtures/ac27_counter_forms.json",
+    "protocols/ebus-services/fixtures/ac28_burner_forms.json",
+    "protocols/ebus-services/fixtures/ae26_07_candidates.json",
+    "protocols/ebus-services/fixtures/ae28_09_candidates.json",
+    "protocols/ebus-services/fixtures/ae30_0f_candidates.json",
+    "protocols/ebus-services/fixtures/ak18_standard07_residual_fields.json",
+    "protocols/ebusd-tcp.md",
+    "protocols/enh-info-reference.md",
+    "protocols/enh.md",
+    "protocols/ens.md",
+    "protocols/modbus/README.md",
+    "protocols/modbus/growatt-candidate-evidence-v1.md",
+    "protocols/modbus/huawei-gateway-candidate-evidence-v1.md",
+    "protocols/modbus/modbus-phase-one-wire-v1.md",
+    "protocols/sunspec/README.md",
+    "protocols/sunspec/additional-model-evidence-v1.md",
+    "protocols/sunspec/fronius-observed-flavor-v1-1.md",
+    "protocols/sunspec/fronius-observed-flavor-v1.md",
+    "protocols/sunspec/sunspec-model-chain-v1.md",
+    "protocols/udp-plain.md",
+    "protocols/vaillant/ebus-b501-legacy-sequence.md",
+    "protocols/vaillant/ebus-b503-history-flags.md",
+    "protocols/vaillant/ebus-b503-text-categories.md",
+    "protocols/vaillant/ebus-b504-circuit-roles.md",
+    "protocols/vaillant/ebus-b505-operating-roles.md",
+    "protocols/vaillant/ebus-b506-rf-sequence.md",
+    "protocols/vaillant/ebus-b507-energy-candidates.md",
+    "protocols/vaillant/ebus-b509-diagnostic-shapes.md",
+    "protocols/vaillant/ebus-b509-op59-quantities.md",
+    "protocols/vaillant/ebus-b50f-status-spans.md",
+    "protocols/vaillant/ebus-b512-air-fields.md",
+    "protocols/vaillant/ebus-b512-dhw-stepper.md",
+    "protocols/vaillant/ebus-b512-feedback-fallback.md",
+    "protocols/vaillant/ebus-b512-heatpump-io.md",
+    "protocols/vaillant/ebus-b514-menu-feedback.md",
+    "protocols/vaillant/ebus-b516-directional-types.md",
+    "protocols/vaillant/ebus-b519-reply-policy.md",
+    "protocols/vaillant/ebus-b51a-diagnostic-variants.md",
+    "protocols/vaillant/ebus-b51a-mirror-fields.md",
+    "protocols/vaillant/ebus-b51cd-partial-labels.md",
+    "protocols/vaillant/ebus-b520-blocks.md",
+    "protocols/vaillant/ebus-b523-config-mixer.md",
+    "protocols/vaillant/ebus-b523-sensor-fields.md",
+    "protocols/vaillant/ebus-b555-additional-forms.md",
+    "protocols/vaillant/ebus-b555-numeric-units.md",
+    "protocols/vaillant/ebus-vaillant-B503.md",
+    "protocols/vaillant/ebus-vaillant-B504.md",
+    "protocols/vaillant/ebus-vaillant-B505.md",
+    "protocols/vaillant/ebus-vaillant-B506.md",
+    "protocols/vaillant/ebus-vaillant-B507.md",
+    "protocols/vaillant/ebus-vaillant-B508.md",
+    "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+    "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+    "protocols/vaillant/ebus-vaillant-B509.md",
+    "protocols/vaillant/ebus-vaillant-B50B.md",
+    "protocols/vaillant/ebus-vaillant-B50E.md",
+    "protocols/vaillant/ebus-vaillant-B50F.md",
+    "protocols/vaillant/ebus-vaillant-B510.md",
+    "protocols/vaillant/ebus-vaillant-B511.md",
+    "protocols/vaillant/ebus-vaillant-B512.md",
+    "protocols/vaillant/ebus-vaillant-B513.md",
+    "protocols/vaillant/ebus-vaillant-B514.md",
+    "protocols/vaillant/ebus-vaillant-B515.md",
+    "protocols/vaillant/ebus-vaillant-B516-energy.md",
+    "protocols/vaillant/ebus-vaillant-B517.md",
+    "protocols/vaillant/ebus-vaillant-B519.md",
+    "protocols/vaillant/ebus-vaillant-B51A.md",
+    "protocols/vaillant/ebus-vaillant-B51B.md",
+    "protocols/vaillant/ebus-vaillant-B520.md",
+    "protocols/vaillant/ebus-vaillant-B521.md",
+    "protocols/vaillant/ebus-vaillant-B522.md",
+    "protocols/vaillant/ebus-vaillant-B523.md",
+    "protocols/vaillant/ebus-vaillant-B525.md",
+    "protocols/vaillant/ebus-vaillant-B531-hem-power-limit.md",
+    "protocols/vaillant/ebus-vaillant-b555-timer-protocol.md",
+    "protocols/vaillant/ebus-vaillant-regulators.md",
+    "protocols/vaillant/ebus-vaillant-vr90-emulation.md",
+    "protocols/vaillant/ebus-vaillant.md",
+    "protocols/vaillant/fixtures/ac04_holiday.json",
+    "protocols/vaillant/fixtures/ac06_room_actions.json",
+    "protocols/vaillant/fixtures/ac08_pump_roles.json",
+    "protocols/vaillant/fixtures/ac10_appliance_info.json",
+    "protocols/vaillant/fixtures/ac12_legacy_timer.json",
+    "protocols/vaillant/fixtures/ac14_tunnel.json",
+    "protocols/vaillant/fixtures/ac16_opaque_programming.json",
+    "protocols/vaillant/fixtures/ac18_program_blocks.json",
+    "protocols/vaillant/fixtures/ac20_simulator_adc.json",
+    "protocols/vaillant/fixtures/ac22_outdoor_module.json",
+    "protocols/vaillant/fixtures/ac24_fan_demand.json",
+    "protocols/vaillant/fixtures/ae02_b504_candidates.json",
+    "protocols/vaillant/fixtures/ae04_b505_candidates.json",
+    "protocols/vaillant/fixtures/ae06_b506_candidates.json",
+    "protocols/vaillant/fixtures/ae08_b509_candidates.json",
+    "protocols/vaillant/fixtures/ae10_b50e_candidates.json",
+    "protocols/vaillant/fixtures/ae12_b50f_candidates.json",
+    "protocols/vaillant/fixtures/ae14_b510_candidates.json",
+    "protocols/vaillant/fixtures/ae16_b511_candidates.json",
+    "protocols/vaillant/fixtures/ae18_b512_candidates.json",
+    "protocols/vaillant/fixtures/ae20_b523_candidates.json",
+    "protocols/vaillant/fixtures/ae22_b525_candidates.json",
+    "protocols/vaillant/fixtures/ae24_b531_candidates.json",
+    "protocols/vaillant/fixtures/ai08_b503_history_flags.json",
+    "protocols/vaillant/fixtures/ai10_b509_diagnostic_shapes.json",
+    "protocols/vaillant/fixtures/ai12_b512_air_fields.json",
+    "protocols/vaillant/fixtures/ai14_b514_menu_feedback.json",
+    "protocols/vaillant/fixtures/ai16_b51a_mirror_fields.json",
+    "protocols/vaillant/fixtures/ai18_b51cd_partial_labels.json",
+    "protocols/vaillant/fixtures/ai20_b520_blocks.json",
+    "protocols/vaillant/fixtures/ai22_b523_sensor_fields.json",
+    "protocols/vaillant/fixtures/ai24_b555_numeric_units.json",
+    "protocols/vaillant/fixtures/aj04_b503_text_categories.json",
+    "protocols/vaillant/fixtures/aj06_b512_dhw_stepper.json",
+    "protocols/vaillant/fixtures/aj08_b51a_diagnostic_variants.json",
+    "protocols/vaillant/fixtures/aj10_b523_config_mixer.json",
+    "protocols/vaillant/fixtures/aj12_b50f_status_spans.json",
+    "protocols/vaillant/fixtures/aj14_b507_energy_candidates.json",
+    "protocols/vaillant/fixtures/aj16_b509_op59_quantities.json",
+    "protocols/vaillant/fixtures/ak02_b504_circuit_roles.json",
+    "protocols/vaillant/fixtures/ak04_b505_operating_roles.json",
+    "protocols/vaillant/fixtures/ak06_b506_rf_sequence.json",
+    "protocols/vaillant/fixtures/ak08_b512_feedback_fallback.json",
+    "protocols/vaillant/fixtures/ak10_b512_heatpump_io.json",
+    "protocols/vaillant/fixtures/ak12_b516_directional_types.json",
+    "protocols/vaillant/fixtures/ak14_b519_reply_policy.json",
+    "protocols/vaillant/fixtures/ak16_b555_additional_forms.json",
+    "protocols/vaillant/fixtures/ak24_b501_legacy_sequence.json",
+    "protocols/vaillant/fixtures/b5-header-only-service-labels.csv",
+    "protocols/vaillant/fixtures/b504-b505-candidate-fields.csv",
+    "protocols/vaillant/fixtures/b506-b508-candidate-fields.csv",
+    "protocols/vaillant/fixtures/b509-register-name-correspondence.csv",
+    "protocols/vaillant/fixtures/b555-a4a5-fields.csv",
+    "protocols/vaillant/fixtures/b555-a6-request-fields.csv",
+    "protocols/vaillant/fixtures/b555-a6-status-codes.csv",
+    "protocols/vaillant/fixtures/b555-candidate-enumerations.csv",
+    "protocols/vaillant/fixtures/b555-candidate-field-layouts.csv",
+    "protocols/vaillant/fixtures/hem-b513-symbolic-addresses.csv",
+    "protocols/vaillant/fixtures/hem-b514-toolbox-ids.csv",
+    "protocols/weishaupt/kromschroeder-5000.md",
+    "protocols/weishaupt/weishaupt-wrsol.md",
+    "protocols/wolf/wolf-protocols.md"
+  ],
+  "candidates": [
+    {
+      "owning_file": "protocols/ebus-services/ebus-overview.md",
+      "current_name": "device_id",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/ebus-services/ebus-overview.md",
+      "current_name": "hardware_version",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/ebus-services/ebus-overview.md",
+      "current_name": "software_version",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/ebus-services/ebus-service-05h.md",
+      "current_name": "heat_request",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/ebus-services/ebus-service-07h.md",
+      "current_name": "clock_time",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/ebus-services/ebus-service-07h.md",
+      "current_name": "pb_block",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/ebus-services/ebus-service-FFh.md",
+      "current_name": "follow_block",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/ebus-services/ebus-service-FFh.md",
+      "current_name": "nm_status",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/enh-info-reference.md",
+      "current_name": "version_len",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/enh.md",
+      "current_name": "bs_skip",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/enh.md",
+      "current_name": "info_id",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/modbus/modbus-phase-one-wire-v1.md",
+      "current_name": "more_follows",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/modbus/modbus-phase-one-wire-v1.md",
+      "current_name": "next_object_id",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/modbus/modbus-phase-one-wire-v1.md",
+      "current_name": "number_of_objects",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-b51a-mirror-fields.md",
+      "current_name": "supplemental_layout",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B504.md",
+      "current_name": "hcmode_inc",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B504.md",
+      "current_name": "tempsetpoints_inc",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B504.md",
+      "current_name": "vaillant_name",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B505.md",
+      "current_name": "vaillant_name",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B506.md",
+      "current_name": "candidate_variant",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B506.md",
+      "current_name": "vaillant_name",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B507.md",
+      "current_name": "vaillant_name",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B508.md",
+      "current_name": "vaillant_name",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "air_control_ok",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "boiler_state_code",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "central_heating_operating_time",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "central_heating_pump_active",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "central_heating_pump_mode",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "central_heating_start_count",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "circulation_pump_active",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "dcf_time_date",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "device_specific_number",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "dhw_demand_active",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "dhw_operating_time",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "dhw_partial_load_power",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "dhw_start_count",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "dhw_temperature_setpoint",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "dhw_water_flow_rate",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "display_mode",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "diverter_valve_position",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "external_gas_valve_active",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "external_pump_active",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "fan_operating_time",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "fan_speed",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "fan_speed_setpoint",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "fire_control_deactivation_count",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "flame_active",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "flame_ionization_current",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "flame_sensing_asic_output",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "flow_temperature",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "flow_temperature_setpoint",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "flue_gas_valve_active",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "gas_valve_active",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "gas_valve_asic_feedback",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "gas_valve_microcontroller_feedback",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "heating_partial_load_power",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "heating_switch_active",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "installer_phone_number",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "maximum_dhw_flow_temperature_setpoint",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "maximum_heating_flow_temperature_setpoint",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "maximum_operating_fan_speed",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "minimum_operating_fan_speed",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "modulation_setpoint",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "predictive_air_pressure_switch_accumulated_time",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "predictive_air_pressure_switch_event_count",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "primary_circuit_flow_rate",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "pump_operating_time",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "read_symbolic_address",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "service_time_remaining",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "snake_case",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "storage_loading_pump_level",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "temperature_limiter_deactivation_count",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "water_pressure",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "current_name": "write_symbolic_address",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "air_inlet_temp",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "air_inlet_temperature",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "bivalent_mode",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "building_pump_hours",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "building_pump_operating_time",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "building_pump_output_level",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "building_pump_power",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "building_pump_start_count",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "building_pump_starts",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "compressor_control_state",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "compressor_dhw_start_count",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "compressor_energy_integral",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "compressor_high_pressure_cutout_count",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "compressor_hours",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "compressor_inlet_temp",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "compressor_inlet_temperature",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "compressor_minimum_off_duration",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "compressor_minimum_on_duration",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "compressor_minimum_start_interval",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "compressor_operating_time",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "compressor_outlet_temp",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "compressor_outlet_temperature",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "compressor_speed",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "compressor_start_count",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "compressor_starts",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "compressor_state",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "defrost_active",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "deicing_active",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "dhw_operating_time",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "diag_evaporation_temp",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "diag_flow_temp",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "diag_overheating_actual_value",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "diag_water_throughput",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "eev_outlet_temp",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "eev_position_abs",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "electric_power_consumption",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "electrical_input_power",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "electronic_expansion_valve_absolute_position",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "electronic_expansion_valve_outlet_temperature",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "environmental_energy_yield_total",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "environmental_power",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "environmental_power_ratio",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "fan1_hours",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "fan1_speed",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "fan1_starts",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "fan2_hours",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "fan2_speed",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "fan2_starts",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "fan_1_operating_time",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "fan_1_speed",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "fan_1_start_count",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "fan_2_operating_time",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "fan_2_speed",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "fan_2_start_count",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "four_way_valve_hours",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "four_way_valve_operating_time",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "four_way_valve_switch_count",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "four_way_valve_switches",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "heat_pump",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "heat_pump_interface_unit",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "heat_pump_status",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "heating_operating_time",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "high_pressure",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "hours_heating",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "hours_hwc",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "hours_total",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "inrush_current_limiter_output_active",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "noise_reduction_active",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "noise_reduction_factor",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "operating_status_code",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "phase_order_status",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "phase_status_flags",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "refrigerant_condensation_temperature",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "refrigerant_evaporation_temperature",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "refrigerant_high_pressure",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "refrigerant_low_pressure",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "refrigerant_low_pressure_maximum",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "refrigerant_subcooling",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "refrigerant_superheat",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "snake_case",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "source_inlet_temperature",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "source_temperature_limit_at_maximum_flow",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "source_temperature_limit_slope",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "total_operating_time",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "current_name": "water_flow_rate",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509.md",
+      "current_name": "central_heating_pump_active",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509.md",
+      "current_name": "device_class",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509.md",
+      "current_name": "device_specific_number",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509.md",
+      "current_name": "ebusd_name",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509.md",
+      "current_name": "fan_speed",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509.md",
+      "current_name": "flame_active",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509.md",
+      "current_name": "flow_temperature",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509.md",
+      "current_name": "gas_valve_active",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509.md",
+      "current_name": "heat_pump",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509.md",
+      "current_name": "heat_pump_interface_unit",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509.md",
+      "current_name": "legacy_api_path",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509.md",
+      "current_name": "modulation_setpoint",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509.md",
+      "current_name": "open_question",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509.md",
+      "current_name": "snake_case",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509.md",
+      "current_name": "vaillant_friendly_name",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509.md",
+      "current_name": "vaillant_name",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B509.md",
+      "current_name": "water_pressure",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B511.md",
+      "current_name": "energy_manager_state",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B511.md",
+      "current_name": "heat_pump_status",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B511.md",
+      "current_name": "heating_water",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B512.md",
+      "current_name": "hcmode_inc",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B513.md",
+      "current_name": "address_decimal",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B513.md",
+      "current_name": "bus_profile",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B513.md",
+      "current_name": "vaillant_name",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B514.md",
+      "current_name": "air_in_temp",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B514.md",
+      "current_name": "backup_heater_flow_temp",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B514.md",
+      "current_name": "building_pump_power",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B514.md",
+      "current_name": "bus_profile",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B514.md",
+      "current_name": "comp_heat",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B514.md",
+      "current_name": "comp_temp_switch",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B514.md",
+      "current_name": "compressor_in_temp",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B514.md",
+      "current_name": "compressor_out_temp",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B514.md",
+      "current_name": "compressor_speed",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B514.md",
+      "current_name": "condens_temp",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B514.md",
+      "current_name": "condenser_out_temp",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B514.md",
+      "current_name": "condenser_pan_heat",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B514.md",
+      "current_name": "dhw_priority_valve",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B514.md",
+      "current_name": "eev_out_temp",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B514.md",
+      "current_name": "eev_position",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B514.md",
+      "current_name": "evapor_temp",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B514.md",
+      "current_name": "flow_temp",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B514.md",
+      "current_name": "four_way_valve_position",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B514.md",
+      "current_name": "high_pressure",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B514.md",
+      "current_name": "high_pressure_switch",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B514.md",
+      "current_name": "lock_contact_s20",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B514.md",
+      "current_name": "lock_contact_s21",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B514.md",
+      "current_name": "low_pressure",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B514.md",
+      "current_name": "ma1_output",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B514.md",
+      "current_name": "ma2_output",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B514.md",
+      "current_name": "ma_input",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B514.md",
+      "current_name": "ma_output",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B514.md",
+      "current_name": "pos_4way_valve",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B514.md",
+      "current_name": "power_fan1",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B514.md",
+      "current_name": "power_fan2",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B514.md",
+      "current_name": "return_temp",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B514.md",
+      "current_name": "snake_case",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B514.md",
+      "current_name": "storage_temp",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B514.md",
+      "current_name": "subcooling_actual",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B514.md",
+      "current_name": "subcooling_setpoint",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B514.md",
+      "current_name": "superheat_actual",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B514.md",
+      "current_name": "superheat_setpoint",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B514.md",
+      "current_name": "system_temp",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B514.md",
+      "current_name": "toolbox_id",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B514.md",
+      "current_name": "toolbox_id_decimal",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B514.md",
+      "current_name": "vaillant_name",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B514.md",
+      "current_name": "water_pressure",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B514.md",
+      "current_name": "water_throughput",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "building_pump_hours",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "building_pump_starts",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "compressor_blocktime",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "compressor_hours",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "compressor_starts",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "cop_cooling",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "cop_cooling_month",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "cop_hc",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "cop_hc_month",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "cop_hwc",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "cop_hwc_month",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "current_compressor_util",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "current_consumed_power",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "current_yield_power",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "eev_steps",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "energy_integral",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "flow_pressure",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "flow_temp",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "four_way_valve_hours",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "four_way_valve_switches",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "heizstab_power_limit",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "hours_cool",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "hours_fan1",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "hours_fan2",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "hours_hc",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "hours_hwc",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "live_monitor_air_intake_temp",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "live_monitor_current_supply_temp",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "live_monitor_desired_supply_temp",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "snake_case",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "source_pressure",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "source_temp_input",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "source_temp_output",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "starts_fan1",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "starts_fan2",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "total_energy_usage",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "water_throughput",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "yield_cooling",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "yield_cooling_day",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "yield_cooling_month",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "yield_hc",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "yield_hc_day",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "yield_hc_month",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "yield_hwc",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "yield_hwc_day",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "current_name": "yield_hwc_month",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-B531-hem-power-limit.md",
+      "current_name": "heating_cylinder_offset_at_pv_surplus",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-b555-timer-protocol.md",
+      "current_name": "has_temp",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-b555-timer-protocol.md",
+      "current_name": "max_slots",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-b555-timer-protocol.md",
+      "current_name": "max_temp_c",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-b555-timer-protocol.md",
+      "current_name": "min_temp_c",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-b555-timer-protocol.md",
+      "current_name": "offset_after_command",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-b555-timer-protocol.md",
+      "current_name": "setpoint_step",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-b555-timer-protocol.md",
+      "current_name": "setpoint_unit",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-b555-timer-protocol.md",
+      "current_name": "target_temp_c",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-b555-timer-protocol.md",
+      "current_name": "temp_slots",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-b555-timer-protocol.md",
+      "current_name": "time_program_mode",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-b555-timer-protocol.md",
+      "current_name": "time_resolution",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-b555-timer-protocol.md",
+      "current_name": "vaillant_name",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    },
+    {
+      "owning_file": "protocols/vaillant/ebus-vaillant-regulators.md",
+      "current_name": "assigned_model",
+      "status": "provisional",
+      "target": null,
+      "open_question": "Determine complete native identity, value class, unit, vocabulary roles, evidence and consumer bindings before adoption."
+    }
+  ]
+}
