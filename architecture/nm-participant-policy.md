@@ -12,7 +12,7 @@ without an active-probe-passed source.
 
 ## Implementation status
 
-The normative behavior below is a target unless the [implementation inventory](./nm-implementation-inventory.json) identifies a narrower implemented helper or infrastructure. A helper is not a composed NM service. Qualification of wire behavior and operational bounds requires separate evidence; unknown coverage remains target. The responder wire state machine belongs to the transport library.
+The normative behavior below is a target unless the [implementation inventory](./nm-implementation-inventory.json) identifies a narrower candidate helper or infrastructure. A helper is not a composed NM service. Qualification of wire behavior and operational bounds requires separate evidence; unknown coverage remains target. The responder wire state machine belongs to the transport library.
 
 ## Purpose
 
@@ -278,8 +278,8 @@ confirmation.
 
 ### Measurement and Enforcement
 
-Bus-load compliance is measured using the eBUS specification formula for
-bus utilization. The formula accounts for byte-level transmission time
+Bus-load compliance is measured using a bus-utilization formula. The
+formula accounts for byte-level transmission time
 at the eBUS baud rate (2400 baud, 1 start bit, 8 data bits, 1 stop bit
 = 4.167 ms per byte) plus inter-frame gaps.
 

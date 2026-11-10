@@ -127,7 +127,7 @@ The Helianthus NM model specifies optional, passive, indirect network
 management. Target configuration, cycle-time monitoring, status chart, net
 status, active flag, and the `NMInit -> NMReset -> NMNormal` state machine
 are targets, not a composed gateway service. Broadcast and responder emit
-helpers exist without production composition. See the
+helpers remain candidates (`Hypothesis`) without production composition. See the
 [implementation inventory](./nm-implementation-inventory.json) for limits.
 
 Full normative interpretation: [architecture/nm-model.md](./nm-model.md).

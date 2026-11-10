@@ -9,18 +9,19 @@ protocol membership or fixed local source are historical. During
 
 ## Implementation status
 
-The normative behavior below is a target unless the [implementation inventory](./nm-implementation-inventory.json) identifies a narrower implemented helper or infrastructure. A helper is not a composed NM service. Qualification of wire behavior and operational bounds requires separate evidence; unknown coverage remains target. The responder wire state machine belongs to the transport library.
+The normative behavior below is a target unless the [implementation inventory](./nm-implementation-inventory.json) identifies a narrower candidate helper or infrastructure. A helper is not a composed NM service. Qualification of wire behavior and operational bounds requires separate evidence; unknown coverage remains target. The responder wire state machine belongs to the transport library.
 
 
-The gateway provides uncomposed broadcast [emit helpers](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/internal/nm_runtime/nm_runtime.go) (`NewRuntime`, `Emit`) and [responder emit helpers](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/internal/nm_runtime/responder_runtime.go) (`NewResponderRuntime`, `EmitResponder`). These enforce policy at the helper boundary; they do not establish production composition, transport qualification, or a responder wire state machine.
+Uncomposed broadcast and responder emit helpers are candidates (evidence class: `Hypothesis`). They do not establish production composition, transport qualification, or a responder wire state machine. Provenance is not published.
 
 ## Purpose
 
-This document freezes the normative interpretation of the eBUS Network
-Management (NM) specification as a target for the Helianthus gateway.
+This document freezes the normative eBUS Network Management (NM) model
+as a target for the Helianthus gateway.
 It defines the runtime model, state machine, wire behaviour lanes, and
-OSI Layer 7 service classification that must be satisfied before any NM
-runtime code lands in `helianthus-ebusgateway`.
+OSI Layer 7 service classification that must be satisfied before a composed NM
+runtime service lands in `helianthus-ebusgateway`. Uncomposed helpers may land
+independently; they do not satisfy the composed-service prerequisite.
 
 All implementation work references this document as the source of truth
 for NM semantics, ownership boundaries, and phasing constraints.
@@ -244,24 +245,15 @@ the broader discovery pipeline.
 
 ## Evidence Snapshot
 
-The following summarizes the current evidence base for NM model
-decisions.
+Candidate declarations (evidence class: `Hypothesis`):
 
-**Proven on live bus:**
+- Address aliases may represent multiple bus faces of one participant.
+- Addressed identification and broadcast emission require separate qualification.
+- Peer NM support must not be assumed.
+- Passive observation may support NM monitoring but does not establish a
+  composed NM service.
 
-- Vaillant bus faces observed: `0x15`, `0xEC`, `0x04`, `0xF6` with
-  alias pairs `0xEC -> 0x15` and `0xF6 -> 0x04`.
-- `07 04` identification works via targeted query to known addresses.
-- Active send path handles `0xFE` broadcast frames without companion
-  response waiting.
-- Passive observation infrastructure exists and is used by the semantic
-  polling runtime.
-
-**Tested but yielded no useful data:**
-
-- Peer `FF 03`/`FF 04`/`FF 05`/`FF 06` interrogation on the observed
-  Vaillant system returned no actionable data. This confirms that peer
-  NM support cannot be assumed.
+Provenance is not published. Wire qualification remains `Unknown`.
 
 **Not yet implemented in the gateway:**
 
@@ -271,7 +263,7 @@ decisions.
 - Net status (aggregate health).
 - Start flag (NM active/inactive).
 - NM state machine (`NMInit -> NMReset -> NMNormal`).
-- Composed broadcast-lane wire services (`FF 00`, `FF 02`); emit helpers exist but are not composed into a service.
+- Composed broadcast-lane wire services (`FF 00`, `FF 02`); emit helpers remain candidates (`Hypothesis`) and do not establish a composed service.
 
 **Architectural constraint:**
 
