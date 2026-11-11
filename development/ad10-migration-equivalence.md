@@ -154,7 +154,7 @@ confirm the executable selection and schema before using them as actual paths.
 |---|---|---|
 | One zone's identity / instance | `ebus_v1_semantic_zones_get`: fixture zone identity and instance `1`, exact member paths required. | `zones`: selected `id` matches that fixture zone, `instance = 1`; match entities before values. |
 | Zone temperature | Same tool: temperature `21.5`, degrees Celsius, correct zone receipt. | `zones.state.zone_room_temperature = 21.5` on the matched zone. |
-| DHW temperature | `ebus_v1_semantic_dhw_get`: temperature `48`, degrees Celsius, DHW receipt. | `dhw.currentTempC = 48`. |
+| DHW temperature | `ebus_v1_semantic_dhw_get`: temperature `48`, degrees Celsius, DHW receipt. | `dhw.current_temp_c = 48`. |
 | Boiler flow temperature | `ebus_v1_semantic_boiler_status_get`: flow temperature `52`, degrees Celsius, boiler receipt. | `boiler_status.state.flow_temperature_c = 52`. |
 | Known zero / false | Respective semantic tool: present numeric `0` or boolean `false` with successful native lineage. | Selected nullable numeric/boolean field contains `0` / `false`, not `null`. |
 | No known value / missing field | Preserve the surface's independently specified absent/null/error representation; no zero or false substitution. Exact MCP representation remains a baseline gap. | Requested nullable field is `null`; unselected field is outside comparison, not a missing-value observation. Record any GraphQL error separately. |

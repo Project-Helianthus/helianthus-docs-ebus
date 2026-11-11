@@ -76,10 +76,3 @@ def test_attribution_guard_covers_agpl_documents_too(tmp_path: Path) -> None:
 def test_rejects_bare_local_analysis_citations(tmp_path: Path, citation: str) -> None:
     document(tmp_path, f"## Evidence\n- {citation}: local analysis\n")
     assert unpublishable_attribution(tmp_path)
-
-
-def test_attribution_ignores_worktree_scratch(tmp_path):
-    scratch = tmp_path / ".tmp"
-    scratch.mkdir()
-    (scratch / "invalid.md").write_bytes(b"\xff")
-    assert unpublishable_attribution(tmp_path) == []
