@@ -159,7 +159,7 @@ Current value/encoding rules:
   `direct_apply_eligibility_classes`, `shadowing_enabled`).
 - Source-selection admission status follows the naming contract in
   the gateway schema: consumers query `bus_summary.status.bus_admission` and
-  `bus_admission.source_selection`. The removed `bus_admission` compatibility alias
+  `bus_admission.source_selection`. The removed `busAdmission` compatibility alias
   is intentionally absent.
 - `freshness_classes`, `direct_apply_eligibility_classes`, `inventory.state_classes`,
   `inventory.pin_classes`, `activation_counts.source_classes`, and
@@ -561,9 +561,9 @@ type circuit_managing_device {
   address: Int
 }
 enum managing_device_role {
-  regulator
-  function_module
-  unknown
+  REGULATOR
+  FUNCTION_MODULE
+  UNKNOWN
 }
 type circuit_state {
   pump_active: Boolean
@@ -684,34 +684,34 @@ type fm5_interpretation {
 }
 
 enum fm5_semantic_mode {
-  interpreted
-  gpio_only
-  absent
+  INTERPRETED
+  GPIO_ONLY
+  ABSENT
 }
 
 enum fm5_semantic_degraded_reason {
-  controller_unreachable
-  configuration_unavailable
-  configuration_not_interpretable
-  solar_acquisition_failed
-  cylinder_acquisition_failed
-  evidence_stale
-  incoherent_acquisition
+  CONTROLLER_UNREACHABLE
+  CONFIGURATION_UNAVAILABLE
+  CONFIGURATION_NOT_INTERPRETABLE
+  SOLAR_ACQUISITION_FAILED
+  CYLINDER_ACQUISITION_FAILED
+  EVIDENCE_STALE
+  INCOHERENT_ACQUISITION
 }
 ```
 
 `fm5_interpretation` is nullable until the first coherent structural
 classification. A null value is the only bootstrap/unavailable
-representation and must not synthesize `gpio_only` or `absent`. Once a verdict
+representation and must not synthesize `GPIO_ONLY` or `ABSENT`. Once a verdict
 exists, only `mode` and `evidence_revision` are non-null. `degraded_reason`
-remains nullable and is null for healthy `interpreted` and fresh coherent
-`absent`. A degraded verdict carries one closed reason; `gpio_only` requires
+remains nullable and is null for healthy `INTERPRETED` and fresh coherent
+`ABSENT`. A degraded verdict carries one closed reason; `GPIO_ONLY` requires
 fresh coherent structural evidence and carries only
-`configuration_not_interpretable`.
+`CONFIGURATION_NOT_INTERPRETABLE`.
 
 `mode` is the last coherent structural classification and does not change on a
-transient acquisition failure. A healthy current `interpreted` result and a
-fresh coherent `absent` result have null `degraded_reason`; a transient reason
+transient acquisition failure. A healthy current `INTERPRETED` result and a
+fresh coherent `ABSENT` result have null `degraded_reason`; a transient reason
 may accompany the unchanged retained mode and marks retained values non-current.
 `evidence_revision` binds all fields to one acquisition result. Existing
 `fm5_semantic_mode` remains stable for current consumers but does not authorize a
@@ -784,8 +784,8 @@ The semantic runtime distinguishes cache bootstrap from live updates during star
   machine-readable startup readiness surface used by proof-mode orchestration
   and Portal parity.
 - Cache-backed semantic payload may be published first and treated as stale bootstrap data.
-- Runtime transitions through startup phases (`BOOT_INIT` → `CACHE_LOADED_STALE` → `LIVE_WARMUP` → `LIVE_READY`, with `degraded` timeout fallback).
-- If `-boot-live-timeout` elapses before `LIVE_READY`, runtime enters `degraded` until live epochs recover.
+- Runtime transitions through startup phases (`BOOT_INIT` → `CACHE_LOADED_STALE` → `LIVE_WARMUP` → `LIVE_READY`, with `DEGRADED` timeout fallback).
+- If `-boot-live-timeout` elapses before `LIVE_READY`, runtime enters `DEGRADED` until live epochs recover.
 - Successful `ebusd-tcp` fallback hydration from `grab result all` (zones/DHW) is classified as live runtime data.
 - Energy broadcast updates do not advance startup live epochs and cannot promote phase readiness by themselves.
 - **Hypothesis — candidate readiness contract.** Provenance is not published.
@@ -1097,7 +1097,7 @@ type config_mutation_result {
   - Whole-number JSON numerics are accepted for integer fields (for example GraphQL-decoded `float64(2.0)` and `json.Number("2")`).
   - Fractional values for integer fields are rejected (`INVALID_PAYLOAD`).
 - **Error mapping**: typed errors are mapped to `code`/`category` (e.g., `TIMEOUT` → `TRANSIENT`, `NO_SUCH_DEVICE` → `DEFINITIVE`).
-- **Result normalization**: `types.value{Valid:false}` fields are returned as `null` in the JSON result map.
+- **Result normalization**: `types.Value{Valid:false}` fields are returned as `null` in the JSON result map.
 - **Boiler writes**: `set_boiler_config` accepts the provisional keys `flowsetHcMaxC`, `flowsetHwcMaxC`, `partloadHcKW`, `partloadHwcKW`, `phoneNumber` and `installerMenuCode`; selector-qualified meanings and value roles remain unresolved. The mutation accepts the value as a string, rejects non-finite input, enforces server-side ranges, and only reports success after B509 ack + read-back confirmation.
 - **Boiler write normalization**: `DATA2c` boiler temperature writes publish the normalized wire value, not the raw input string. `UCH` power-limit writes require whole-number kW.
 

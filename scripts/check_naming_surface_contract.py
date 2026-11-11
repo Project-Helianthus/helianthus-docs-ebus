@@ -80,27 +80,25 @@ def _validate_graphql_names(graphql: str) -> None:
         'heatingMode',
         'EnergyCategory',
         'EnergyBucket',
-        'REGULATOR',
-        'FUNCTION_MODULE',
         'zonesUpdate',
         'energyTotalsUpdate',
         'systemUpdate',
         'circuitsUpdate',
-        'INTERPRETED',
-        'GPIO_ONLY',
-        'ABSENT',
-        'CONTROLLER_UNREACHABLE',
-        'CONFIGURATION_UNAVAILABLE',
-        'CONFIGURATION_NOT_INTERPRETABLE',
-        'SOLAR_ACQUISITION_FAILED',
-        'CYLINDER_ACQUISITION_FAILED',
-        'EVIDENCE_STALE',
-        'INCOHERENT_ACQUISITION',
         "currentTempC", "currentHumidityPct", "targetTempC", "operatingMode",
         "semanticSnapshot", "assetIds", "assetId", "snapshotId", "packId",
         "packVersion", "factId", "candidateId", "itemId", "sourceItems",
         "unavailableReason", "zoneUpdate", "ZoneState", "ZoneConfig",
     )
+    # Enum values retain their spelling; only names are adopted by this wave.
+    preserved_values = (
+        "REGULATOR", "FUNCTION_MODULE", "UNKNOWN", "INTERPRETED", "GPIO_ONLY",
+        "ABSENT", "CONTROLLER_UNREACHABLE", "CONFIGURATION_UNAVAILABLE",
+        "CONFIGURATION_NOT_INTERPRETABLE", "SOLAR_ACQUISITION_FAILED",
+        "CYLINDER_ACQUISITION_FAILED", "EVIDENCE_STALE", "INCOHERENT_ACQUISITION",
+    )
+    for value in preserved_values:
+        if re.search(r"\b" + value.lower() + r"\b", graphql_blocks):
+            raise ValueError("GraphQL enum value spelling changed")
     for old in removed:
         if re.search(r"\b" + old + r"\b", graphql_blocks):
             raise ValueError("removed GraphQL member spelling restored")

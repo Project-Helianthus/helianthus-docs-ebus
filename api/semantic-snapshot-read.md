@@ -165,7 +165,7 @@ context and digest even when same-epoch freshness stays fixed.
 | Synthetic input variation | Required exact-route result |
 | --- | --- |
 | Tick fixed at `105`; wall moves forward or backward, including before the snapshot wall point | Same-epoch freshness stays `fresh` and availability `available`; no tick is inferred from wall elapsed time. SemReg's same-epoch ordering uses ticks. Cross-epoch candidates still follow its own policy. |
-| Tick advances through `109`, `110`, `119`, `120` with wall fixed | Respectively `fresh`, `stale`, `stale`, `expired`; availability is respectively `available`, `degraded`, `degraded`, `UNAVAILABLE`. A same-epoch retained observation is omitted from the evaluation at expiry, without deleting its stored evidence. |
+| Tick advances through `109`, `110`, `119`, `120` with wall fixed | Respectively `fresh`, `stale`, `stale`, `expired`; availability is respectively `available`, `degraded`, `degraded`, `unavailable`. A same-epoch retained observation is omitted from the evaluation at expiry, without deleting its stored evidence. |
 | Required coordinate absent; malformed tick; coordinate labeled `epoch:b` for an `epoch:a` snapshot | Refuse each case; no guessed tick or silent approximate fallback. A well-formed wrong epoch is an exact-route input failure, not a new restriction on SemReg's cross-epoch candidate policy. |
 | Same-epoch coordinate below snapshot or receipt tick | Refuse according to SemReg's monotonic ordering checks; preserve stored state. |
 | Two assets both in `epoch:a`, with different recorded ticks | Use the single sampled `epoch:a` coordinate and shared wall point for both; compare each to its own direct evaluation. Do not advance each recorded tick independently by wall delta. |
@@ -184,7 +184,7 @@ members of SemReg `Snapshot`:
 
 | Member | Type and presence | Meaning |
 | --- | --- | --- |
-| `asset_id` | `asset_id`, required | The selected opaque asset identity, including on failure. |
+| `asset_id` | `AssetID`, required | The selected opaque asset identity, including on failure. |
 | `snapshot` | `Snapshot`, optional | Complete, unchanged public-safe source snapshot. Never a filtered object labeled as a kernel snapshot. |
 | `evaluation` | `EvaluationView`, optional | Complete pure time evaluation of that snapshot. |
 | `projection` | `ProjectionReport`, optional | Explicit per-item accounting for this read target. |
@@ -206,7 +206,7 @@ surface-owned codes are exactly: `asset_unknown`, `snapshot_unavailable`,
 `value_unknown`; any other reason is the owning contract's code, preserved
 verbatim.
 
-Opaque `asset_id`, `NativeBindingID`, `SnapshotID`, candidate, source, epoch and
+Opaque `AssetID`, `NativeBindingID`, `SnapshotID`, candidate, source, epoch and
 instance IDs are references, not addresses or routing instructions. The view
 preserves `snapshot.bindings`, `identity_links`, `sources`, `facts`, `services`,
 `capabilities`, `fences` and `cursors` using the SemReg types verbatim.
@@ -239,7 +239,7 @@ otherwise withheld projection. It adds no consumer authorization mechanism.
 
 ## Scalars, presence and quality
 
-Use `value.kind` as the discriminator. Exactly its matching member is present:
+Use `Value.kind` as the discriminator. Exactly its matching member is present:
 `quantity`, `boolean`, `text`, `symbol`, `symbols` or `time`. Pack validators
 still determine which kind is legal for a particular fact. Status symbols must
 not be relabeled as booleans for convenience.

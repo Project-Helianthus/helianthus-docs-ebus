@@ -327,3 +327,8 @@ def test_semantic_snapshot_read_rejects_graphql_member_renaming(member: str) -> 
     changed = re.sub(r"\b" + member + r"\b", camel, query[1], count=1)
     with pytest.raises(AssertionError, match="GraphQL member spelling drift"):
         validate_contract(text[:query.start(1)] + changed + text[query.end(1):])
+
+
+def test_expiry_availability_spelling_is_preserved() -> None:
+    text = DOCUMENT.read_text(encoding="utf-8")
+    assert "availability is respectively `available`, `degraded`, `degraded`, `unavailable`" in text

@@ -299,7 +299,7 @@ time, runtime state, degradation, and error bindings outside the source hash.
 
 For the M6.25 eeBUS tuple, replay instead validates the closed source-owned
 payload at its root. The operation is exactly
-`eebus_v1_features_data_get`; each observation binds
+`eebus.v1.features.data.get`; each observation binds
 `/observations/{index}/value` and `/observations/{index}/unit`, while
 `path_index` selects one complete pseudonymous service/entity/feature/field
 path. One `observation_ref` may repeat only for repeated observations selecting
