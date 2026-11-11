@@ -425,7 +425,7 @@ type zone_state {
 type zone_config {
   operating_mode: String
   target_temp_c: Float
-  heatingMode: String
+  heating_mode: String
   quick_veto: Boolean
   quick_veto_setpoint: Float
   quick_veto_expiry: String
@@ -440,15 +440,15 @@ type dhw {
 }
 
 type energy_totals {
-  gas: EnergyCategory
-  electric: EnergyCategory
-  solar: EnergyCategory
+  gas: energy_category
+  electric: energy_category
+  solar: energy_category
 }
-type EnergyCategory {
-  dhw: EnergyBucket
-  climate: EnergyBucket
+type energy_category {
+  dhw: energy_bucket
+  climate: energy_bucket
 }
-type EnergyBucket {
+type energy_bucket {
   today: Float
   yearly: [Float!]!
   monthly: [Float!]!
@@ -561,8 +561,8 @@ type circuit_managing_device {
   address: Int
 }
 enum managing_device_role {
-  REGULATOR
-  FUNCTION_MODULE
+  regulator
+  function_module
   unknown
 }
 type circuit_state {
@@ -684,34 +684,34 @@ type fm5_interpretation {
 }
 
 enum fm5_semantic_mode {
-  INTERPRETED
-  GPIO_ONLY
-  ABSENT
+  interpreted
+  gpio_only
+  absent
 }
 
 enum fm5_semantic_degraded_reason {
-  CONTROLLER_UNREACHABLE
-  CONFIGURATION_UNAVAILABLE
-  CONFIGURATION_NOT_INTERPRETABLE
-  SOLAR_ACQUISITION_FAILED
-  CYLINDER_ACQUISITION_FAILED
-  EVIDENCE_STALE
-  INCOHERENT_ACQUISITION
+  controller_unreachable
+  configuration_unavailable
+  configuration_not_interpretable
+  solar_acquisition_failed
+  cylinder_acquisition_failed
+  evidence_stale
+  incoherent_acquisition
 }
 ```
 
 `fm5_interpretation` is nullable until the first coherent structural
 classification. A null value is the only bootstrap/unavailable
-representation and must not synthesize `GPIO_ONLY` or `ABSENT`. Once a verdict
+representation and must not synthesize `gpio_only` or `absent`. Once a verdict
 exists, only `mode` and `evidence_revision` are non-null. `degraded_reason`
-remains nullable and is null for healthy `INTERPRETED` and fresh coherent
-`ABSENT`. A degraded verdict carries one closed reason; `GPIO_ONLY` requires
+remains nullable and is null for healthy `interpreted` and fresh coherent
+`absent`. A degraded verdict carries one closed reason; `gpio_only` requires
 fresh coherent structural evidence and carries only
-`CONFIGURATION_NOT_INTERPRETABLE`.
+`configuration_not_interpretable`.
 
 `mode` is the last coherent structural classification and does not change on a
-transient acquisition failure. A healthy current `INTERPRETED` result and a
-fresh coherent `ABSENT` result have null `degraded_reason`; a transient reason
+transient acquisition failure. A healthy current `interpreted` result and a
+fresh coherent `absent` result have null `degraded_reason`; a transient reason
 may accompany the unchanged retained mode and marks retained values non-current.
 `evidence_revision` binds all fields to one acquisition result. Existing
 `fm5_semantic_mode` remains stable for current consumers but does not authorize a
@@ -1217,12 +1217,12 @@ Subscriptions deliver real-time updates over WebSocket or SSE.
 ```graphql
 type subscription {
   broadcast(primary: Int!, secondary: Int!): broadcast_event!
-  zonesUpdate: [zone!]!
+  zones_update: [zone!]!
   dhw_update: dhw
-  energyTotalsUpdate: energy_totals
+  energy_totals_update: energy_totals
   boiler_status_update: boiler_status
-  systemUpdate: system_status
-  circuitsUpdate: [circuit_status!]!
+  system_update: system_status
+  circuits_update: [circuit_status!]!
 }
 
 type broadcast_event {

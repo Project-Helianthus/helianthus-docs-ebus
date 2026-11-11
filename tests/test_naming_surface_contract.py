@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import copy
 import importlib.util
 from pathlib import Path
@@ -127,3 +128,51 @@ def test_operation_each_member_and_type_rejects_removed_spelling(old, adopted, i
     docs[index] = docs[index].replace(adopted, old)
     with pytest.raises(ValueError, match="operation"):
         CHECKER.validate_operation(*docs)
+
+
+@pytest.mark.parametrize("mutation", [None, "tool", "metric"])
+def test_offline_parity_branch(tmp_path, mutation):
+    # Independent, fixed synthetic candidate inventory; provenance is not published.
+    fixture = json.loads((ROOT / "tests/fixtures/naming_surface_inventory.json").read_text())
+    if mutation == "tool":
+        fixture["tools"][0]["name"] = "synthetic_changed_tool"
+    if mutation == "metric":
+        fixture["families"][0]["name"] = "synthetic_changed_metric"
+    docs = tmp_path / "docs"
+    docs.mkdir()
+    (docs / "mcp-tool-inventory.md").write_text(
+        "```json\n" + json.dumps({"schema_version": 1, "tools": fixture["tools"]}) + "\n```\n")
+    (docs / "metrics-inventory.json").write_text(json.dumps({"families": fixture["families"]}))
+    if mutation is None:
+        CHECKER.validate_root(ROOT, tmp_path)
+    else:
+        with pytest.raises(ValueError, match="parity"):
+            CHECKER.validate_root(ROOT, tmp_path)
+
+
+@pytest.mark.parametrize("adopted,removed", [
+    ('heating_mode', 'heatingMode'),
+    ('energy_category', 'EnergyCategory'),
+    ('energy_bucket', 'EnergyBucket'),
+    ('regulator', 'REGULATOR'),
+    ('function_module', 'FUNCTION_MODULE'),
+    ('zones_update', 'zonesUpdate'),
+    ('energy_totals_update', 'energyTotalsUpdate'),
+    ('system_update', 'systemUpdate'),
+    ('circuits_update', 'circuitsUpdate'),
+    ('interpreted', 'INTERPRETED'),
+    ('gpio_only', 'GPIO_ONLY'),
+    ('absent', 'ABSENT'),
+    ('controller_unreachable', 'CONTROLLER_UNREACHABLE'),
+    ('configuration_unavailable', 'CONFIGURATION_UNAVAILABLE'),
+    ('configuration_not_interpretable', 'CONFIGURATION_NOT_INTERPRETABLE'),
+    ('solar_acquisition_failed', 'SOLAR_ACQUISITION_FAILED'),
+    ('cylinder_acquisition_failed', 'CYLINDER_ACQUISITION_FAILED'),
+    ('evidence_stale', 'EVIDENCE_STALE'),
+    ('incoherent_acquisition', 'INCOHERENT_ACQUISITION'),
+])
+def test_remaining_owned_graphql_names(adopted, removed):
+    docs = documents()
+    assert adopted in docs[0]
+    with pytest.raises(ValueError, match="GraphQL"):
+        CHECKER.validate(docs[0].replace(adopted, removed), *docs[1:])

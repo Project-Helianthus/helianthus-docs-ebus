@@ -195,11 +195,11 @@ def test_mcp_graphql_and_ha_expose_one_fm5_verdict() -> None:
         "Status:** Pending gateway implementation",
         "fm5_interpretation: fm5_interpretation",
         "nullable until the first coherent structural classification",
-        "must not synthesize `GPIO_ONLY` or `ABSENT`",
+        "must not synthesize `gpio_only` or `absent`",
         "degraded_reason: fm5_semantic_degraded_reason",
         "evidence_revision: String!",
         "Once a verdict exists, only `mode` and `evidence_revision` are non-null",
-        "`degraded_reason` remains nullable and is null for healthy `INTERPRETED` and fresh coherent `ABSENT`",
+        "`degraded_reason` remains nullable and is null for healthy `interpreted` and fresh coherent `absent`",
         "Existing `fm5_semantic_mode` remains stable",
     ):
         assert required in graphql
