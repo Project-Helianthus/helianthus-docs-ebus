@@ -163,7 +163,7 @@ may change the structural mode.
 
 The post-M9 implementation sequence adds
 `ebus_v1_semantic_fm5_interpretation_get` first; GraphQL
-`fm5Interpretation`, Portal, and Home Assistant then consume that same tuple.
+`fm5_interpretation`, Portal, and Home Assistant then consume that same tuple.
 These additive surfaces are pending until their corresponding gateway and
 consumer PRs merge; this docs gate freezes the target contract, not current
 runtime availability. Consumers may format the reason but may not recalculate
