@@ -176,3 +176,9 @@ def test_remaining_owned_graphql_names(adopted, removed):
     assert adopted in docs[0]
     with pytest.raises(ValueError, match="GraphQL"):
         CHECKER.validate(docs[0].replace(adopted, removed), *docs[1:])
+
+
+def test_dynamic_builder_start_remains_exported():
+    page = documents()[0]
+    assert "`Start(ctx)` performs an initial build" in page
+    assert "`start(ctx)`" not in page

@@ -81,6 +81,13 @@ APPROVED_M8_TOOL_INVENTORY = [
     "ebus.v1.semantic.snapshot.get",
     *APPROVED_M8_EEBUS_TOOLS,
 ]
+APPROVED_M8_SNAKE_TOOLS = [
+    tool.replace(".", "_") for tool in APPROVED_M8_TOOL_INVENTORY
+]
+APPROVED_M8_TOOL_INVENTORIES = [
+    APPROVED_M8_TOOL_INVENTORY,
+    APPROVED_M8_SNAKE_TOOLS,
+]
 APPROVED_M8_EEBUS_CONTRACT_FIELDS = {
     "namespace",
     "public_v2",
@@ -1927,12 +1934,12 @@ def _source_project_views(
         if (
             len(by_name) != len(listed_tools)
             or [item["name"] for item in listed_tools]
-            != APPROVED_M8_TOOL_INVENTORY
+            not in APPROVED_M8_TOOL_INVENTORIES
         ):
             fail("provenance.source_capture")
         schemas = [
             {"name": name, "inputSchema": by_name[name]["inputSchema"]}
-            for name in APPROVED_M8_EEBUS_TOOLS
+            for name in [item["name"] for item in listed_tools][2:]
         ]
         _source_reject_unprojected_decimals(schemas)
         source_devices = devices_response["data"]
@@ -2004,7 +2011,7 @@ def _source_project_views(
                 "contract": "ebus.v1",
                 "responses": [
                     {
-                        "operation": "ebus.v1.registry.devices.list",
+                        "operation": listed_tools[0]["name"],
                         "result": {
                             "selection": {
                                 "criteria": "complete_identity_confirmed_devices_in_single_window",
@@ -2014,12 +2021,12 @@ def _source_project_views(
                         },
                     },
                     {
-                        "operation": "ebus.v1.semantic.snapshot.get",
+                        "operation": listed_tools[1]["name"],
                         "result": semantic,
                     },
                 ],
             },
-            "mcp.tool.inventory": {"tools": APPROVED_M8_TOOL_INVENTORY},
+            "mcp.tool.inventory": {"tools": [item["name"] for item in listed_tools]},
             "graphql.schema": _source_graphql_schema(graph_schema),
             "graphql.ebus.values": graph_values,
             "ha.graphql.values": ha_values,
@@ -3247,6 +3254,23 @@ def _contains_public_address_derived_identity(value: Any) -> bool:
     return isinstance(value, str) and value in PUBLIC_ADDRESS_DERIVED_IDENTITIES
 
 
+def _bundle_tool_inventory(evidence: dict[str, Any]) -> list[str]:
+    selected = None
+    for run in evidence["runs"]:
+        views = {view["view_id"]: view["payload"]["data"] for view in run["protected_views"]}
+        tools = views["mcp.tool.inventory"]["tools"]
+        if tools not in APPROVED_M8_TOOL_INVENTORIES:
+            fail("gate.scope")
+        if selected is None:
+            selected = tools
+        responses = views["mcp.ebus.v1.responses"]["responses"]
+        if tools != selected or any(
+            response["operation"] not in selected[:2] for response in responses
+        ):
+            fail("gate.scope")
+    return selected
+
+
 def _contains_enumerable_public_address(evidence: dict[str, Any]) -> bool:
     if _contains_public_address_derived_identity(evidence):
         return True
@@ -3301,7 +3325,7 @@ def _contains_enumerable_public_address(evidence: dict[str, Any]) -> bool:
         if any(
             not isinstance(response, dict)
             or set(response) != {"operation", "result"}
-            or response.get("operation") != operation
+            or response.get("operation") not in (operation, operation.replace(".", "_"))
             or not isinstance(response.get("result"), dict)
             for response, operation in zip(
                 responses, expected_operations, strict=True
@@ -4111,6 +4135,8 @@ def check_scope(evidence: dict[str, Any], registry: dict[str, Any]) -> None:
         or scope["public_version_policy"] != "V1_ONLY_NO_PUBLIC_V2"
     ):
         fail("gate.scope")
+    approved_tools = _bundle_tool_inventory(evidence)
+    prefix = "eebus_v1_" if approved_tools == APPROVED_M8_SNAKE_TOOLS else "eebus.v1."
     for run_index, run in enumerate(evidence["runs"]):
         rollback_run = run_index == len(evidence["runs"]) - 1
         if rollback_run:
@@ -4143,21 +4169,21 @@ def check_scope(evidence: dict[str, Any], registry: dict[str, Any]) -> None:
         eebus_tools = [
             tool
             for tool in tools
-            if isinstance(tool, str) and tool.startswith("eebus.v1.")
+            if isinstance(tool, str) and tool.startswith(prefix)
         ]
         if (
-            tools != APPROVED_M8_TOOL_INVENTORY
+            tools != approved_tools
             or set(contract_data) != APPROVED_M8_EEBUS_CONTRACT_FIELDS
             or any(
-                not isinstance(tool, str) or not TOOL_NAME_RE.fullmatch(tool)
+                not isinstance(tool, str) or not TOOL_NAME_RE.fullmatch(tool.replace("_", "."))
                 for tool in tools
             )
             or any(
-                tool.casefold().startswith("eebus.")
-                and not tool.startswith("eebus.v1.")
+                tool.casefold().startswith(("eebus.", "eebus_"))
+                and not tool.startswith(prefix)
                 for tool in tools
             )
-            or eebus_tools != APPROVED_M8_EEBUS_TOOLS
+            or eebus_tools != approved_tools[2:]
             or contract_data["namespace"] != "eebus.v1"
             or not _exact_version_one(contract_data["version"])
             or contract_data["public_v2"] is not False

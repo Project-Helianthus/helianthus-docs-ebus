@@ -28,7 +28,7 @@ def unpublishable_attribution(root: Path) -> list[str]:
     errors = []
     for path in root.rglob("*.md"):
         if any(
-            part in {".git", ".venv", ".pytest_cache", ".ruff_cache"}
+            part in {".git", ".venv", ".pytest_cache", ".ruff_cache", ".tmp"}
             for part in path.relative_to(root).parts
         ):
             continue
