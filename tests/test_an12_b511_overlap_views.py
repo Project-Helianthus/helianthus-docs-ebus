@@ -30,7 +30,7 @@ import unittest
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / 'architecture/an12_b511_overlap_views.md'
+PAGE = ROOT / 'architecture/an12-b511-overlap-views.md'
 FIXTURE = ROOT / 'architecture/fixtures/an12_b511_overlap_views.json'
 PREFIX = (0x11, 0x22, 0x33)
 QUALIFICATION = {

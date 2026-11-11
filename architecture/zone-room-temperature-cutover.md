@@ -17,7 +17,7 @@ driver repository.
 
 The public native contract comes first:
 
-- [B524 register catalog](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/vaillant/ebus-vaillant-B524-register-map.md):
+- [B524 register catalog](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/vaillant/ebus-vaillant-b524-register-map.md):
   Table Legend, GG=0x03 Zones, and `zmapping` distinguish observed values,
   candidate widths and family-dependent labels. Historic FLAGS access labels
   do not establish writability.

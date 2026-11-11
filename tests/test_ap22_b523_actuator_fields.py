@@ -77,7 +77,7 @@ def ab21ap21InvalidWitness(ab21ap21Text):
 class TestAb21Ap21Specification(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.ab21ap21Page = (ab21ap21Root / 'architecture/ap22_b523_actuator_fields.md').read_text()
+        cls.ab21ap21Page = (ab21ap21Root / 'architecture/ap22-b523-actuator-fields.md').read_text()
         cls.ab21ap21Fixture = ab21ap21Load((ab21ap21Root / 'architecture/fixtures/ap22_b523_actuator_fields.json').read_text())
         cls.ab21ap21Contract = ab21ap21Load(re.findall(r'```json\n(.*?)\n```', cls.ab21ap21Page, re.S)[0])
 

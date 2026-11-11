@@ -14,8 +14,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 VAILLANT = ROOT / "protocols" / "vaillant"
 CORRESPONDENCE = VAILLANT / "fixtures" / "b509-register-name-correspondence.csv"
-BOILER_MAP = VAILLANT / "ebus-vaillant-B509-boiler-register-map.md"
-HEAT_PUMP_MAP = VAILLANT / "ebus-vaillant-B509-heatpump-register-map.md"
+BOILER_MAP = VAILLANT / "ebus-vaillant-b509-boiler-register-map.md"
+HEAT_PUMP_MAP = VAILLANT / "ebus-vaillant-b509-heatpump-register-map.md"
 
 EXPECTED_COLUMNS = [
     "device_class",

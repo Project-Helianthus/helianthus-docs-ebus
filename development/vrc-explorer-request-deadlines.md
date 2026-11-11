@@ -37,7 +37,7 @@ or release acceptance evidence.
 All requirements below are **planned software behavior** until implemented and
 validated. Native facts remain governed by the public [ENH contract](../protocols/enh.md),
 [ebusd TCP contract](../protocols/ebusd-tcp.md), and
-[B524 contract](../protocols/vaillant/ebus-vaillant-B524.md).
+[B524 contract](../protocols/vaillant/ebus-vaillant-b524.md).
 These software budgets add no native timing promise. Evidence labels `Proven`,
 `Hypothesis` and `Unknown` remain independent of implementation status and
 qualification. No installed-device support, physical timing, completed

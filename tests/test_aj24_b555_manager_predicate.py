@@ -5,7 +5,7 @@ from pathlib import Path
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / 'architecture/aj24_b555_manager_predicate.md'
+PAGE = ROOT / 'architecture/aj24-b555-manager-predicate.md'
 FIXTURE = ROOT / 'architecture/fixtures/aj24_b555_manager_predicate.json'
 
 

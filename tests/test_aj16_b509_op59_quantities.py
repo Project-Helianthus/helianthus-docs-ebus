@@ -10,7 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 NATIVE = Path('protocols/vaillant/ebus-b509-op59-quantities.md')
 TUPLES = Path('protocols/vaillant/fixtures/aj16_b509_op59_quantities.json')
-API = Path('architecture/aj16_b509_op59_quantities_api.md')
+API = Path('architecture/aj16-b509-op59-quantities-api.md')
 FIELDS = [
     ['temperature', 'signedLE16', 16, 'Celsius', 'Hypothesis'],
     ['flow', 'unsignedLE16', 100, 'litres per minute', 'Hypothesis'],

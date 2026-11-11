@@ -8,7 +8,7 @@ import struct
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / 'architecture/am04_b524_dhw_ventilation_scalars.md'
+PAGE = ROOT / 'architecture/am04-b524-dhw-ventilation-scalars.md'
 FIXTURE = ROOT / 'architecture/fixtures/am04_b524_dhw_ventilation_scalars.json'
 # Independent finite oracle; never derived from the example's binding dictionary.
 EXPECTED = {

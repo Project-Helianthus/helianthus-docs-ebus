@@ -28,7 +28,7 @@ class DescriptorAxes(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.data = json.loads((ROOT / 'architecture/fixtures/al26_b531_descriptor_axes.json').read_text())
-        cls.page = (ROOT / 'architecture/al26_b531_descriptor_axes.md').read_text()
+        cls.page = (ROOT / 'architecture/al26-b531-descriptor-axes.md').read_text()
         cls.cases = {case['name']: case for case in cls.data['cases']}
 
     def test_finite_independent_expected_inputs(self):
@@ -98,7 +98,7 @@ class DescriptorAxes(unittest.TestCase):
 
     def test_native_boundary_and_scenario_explanation(self):
         for text in (
-            '../protocols/vaillant/ebus-vaillant-B531-hem-power-limit.md',
+            '../protocols/vaillant/ebus-vaillant-b531-hem-power-limit.md',
             '**Hypothesis:** a local descriptor uses source `F1`',
             'destination selected\nfrom its slot, and command-inclusive `NN`',
             'NN is 3, local R[0] count is 5, available buffer length is\n5, and physical wire extent is **Unknown**',

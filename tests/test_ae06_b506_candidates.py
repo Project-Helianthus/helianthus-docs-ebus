@@ -5,7 +5,7 @@ from pathlib import Path
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / 'protocols/vaillant/ebus-vaillant-B506.md'
+PAGE = ROOT / 'protocols/vaillant/ebus-vaillant-b506.md'
 FIXTURE = ROOT / 'protocols/vaillant/fixtures/ae06_b506_candidates.json'
 
 # Independent expected declarations: do not derive these from the fixture/page.
@@ -159,7 +159,7 @@ class B506Declarations(unittest.TestCase):
         self.assertEqual(len(eeprom_rows), 5)
         for row in eeprom_rows:
             self.assertEqual(row['candidate_variant'],
-                             'Superseded by ../ebus-vaillant-B506.md#scoped-parameter-and-checksum-declarations; '
+                             'Superseded by ../ebus-vaillant-b506.md#scoped-parameter-and-checksum-declarations; '
                              'algorithm, operation association and returned checksum width Unknown')
 
 

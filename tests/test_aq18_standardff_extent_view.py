@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / 'architecture' / 'aq18_standardff_extent_view.md'
+PAGE = ROOT / 'architecture' / 'aq18-standardff-extent-view.md'
 RESERVED = ('state', 'results', 'physical', 'qualified')
 
 

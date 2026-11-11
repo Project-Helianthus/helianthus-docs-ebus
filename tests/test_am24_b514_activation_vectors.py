@@ -5,7 +5,7 @@ import re
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / 'architecture/am24_b514_activation_vectors.md'
+PAGE = ROOT / 'architecture/am24-b514-activation-vectors.md'
 DATA = ROOT / 'architecture/fixtures/am24_b514_activation_vectors.json'
 IDENT = ('vaillant', 'B514', 3, 'positive')
 SIZES = {3: 10, 4: 12}

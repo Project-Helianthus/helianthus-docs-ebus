@@ -6,7 +6,7 @@ import re
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / 'architecture/al20_b555_extent_views.md'
+PAGE = ROOT / 'architecture/al20-b555-extent-views.md'
 FIXTURE = ROOT / 'architecture/fixtures/al20_b555_extent_views.json'
 
 

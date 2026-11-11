@@ -4,7 +4,7 @@ from pathlib import Path
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / 'architecture/al25_b514_typed_row_boundaries.md'
+PAGE = ROOT / 'architecture/al25-b514-typed-row-boundaries.md'
 DATA = ROOT / 'architecture/fixtures/al25_b514_typed_row_boundaries.json'
 
 

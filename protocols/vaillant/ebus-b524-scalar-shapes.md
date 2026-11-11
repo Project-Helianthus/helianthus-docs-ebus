@@ -2,8 +2,8 @@
 
 ## Native scope and evidence
 
-The [native B524 contract](ebus-vaillant-B524.md) comes first: OP02 and
-OP06 are independent namespaces. Its [register map](ebus-vaillant-B524-register-map.md)
+The [native B524 contract](ebus-vaillant-b524.md) comes first: OP02 and
+OP06 are independent namespaces. Its [register map](ebus-vaillant-b524-register-map.md)
 provides contextual names, not qualification for the candidates below.
 The [synthetic native tuples](fixtures/ai06_b524_scalar_shapes.json) are isolated
 field bytes, not captures or complete replies. Service is B5/24. Source and

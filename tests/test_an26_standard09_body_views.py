@@ -38,7 +38,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE_PATH = ROOT / "architecture" / "an26_standard09_body_views.md"
+PAGE_PATH = ROOT / "architecture" / "an26-standard09-body-views.md"
 FIXTURE_PATH = ROOT / "architecture" / "fixtures" / "an26_standard09_body_views.json"
 
 CONTRACT_ID = "an26-standard09-body-views"
@@ -1343,7 +1343,7 @@ class Standard09BodyViewContractTest(unittest.TestCase):
                 mutated_page, mutated_fixture = mutate(page, fixture)
                 self.assertNotEqual((mutated_page, mutated_fixture), (page, fixture))
                 with tempfile.TemporaryDirectory(dir=tmp_root) as directory:
-                    page_copy = Path(directory) / "an26_standard09_body_views.md"
+                    page_copy = Path(directory) / "an26-standard09-body-views.md"
                     fixture_copy = Path(directory) / "an26_standard09_body_views.json"
                     page_copy.write_text(mutated_page, encoding="utf-8")
                     fixture_copy.write_text(mutated_fixture, encoding="utf-8")

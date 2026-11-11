@@ -7,7 +7,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = ROOT / 'protocols/vaillant/fixtures/ae04_b505_candidates.json'
-PAGE = ROOT / 'protocols/vaillant/ebus-vaillant-B505.md'
+PAGE = ROOT / 'protocols/vaillant/ebus-vaillant-b505.md'
 
 
 class B505Candidates(unittest.TestCase):

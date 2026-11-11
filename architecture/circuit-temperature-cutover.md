@@ -12,7 +12,7 @@ work. Nothing described here is stable before the Helianthus 1.0 release.
 
 Read the native contract before considering the implementation or pack:
 
-- **N:** [B524 register catalog, circuit selectors](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/vaillant/ebus-vaillant-B524-register-map.md#gg0x02--heating-circuits-multi-instance).
+- **N:** [B524 register catalog, circuit selectors](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/vaillant/ebus-vaillant-b524-register-map.md#gg0x02--heating-circuits-multi-instance).
   Its Wire legend makes float byte order profile-dependent. Its circuit section
   supplies the selector scope, units and the one-byte RR0020 correction.
 - **L:** [legacy semantic mapping](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/b524-semantic-mapping.md).
@@ -87,7 +87,7 @@ semantic vocabulary):
    without inventing it. An address alone is not a profile or source identity.
    Retain `OT=0x00` for these read observations; `OT=0x01` write-attempt evidence
    belongs to a separate binding and cannot update or refresh retained reads
-   (see [B524 wire format](../protocols/vaillant/ebus-vaillant-B524.md#1-scope-and-framing)).
+   (see [B524 wire format](../protocols/vaillant/ebus-vaillant-b524.md#1-scope-and-framing)).
 2. Record original wall-clock receipt and monotonic receipt with its clock
    epoch. Evaluation time is separate. Cache retrieval, projection and another
    field's success must not replace receipt. Missing provenance or unknown

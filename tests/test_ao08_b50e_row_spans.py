@@ -197,7 +197,7 @@ for ab07ao07Axis in ("key", "value", "unmodelled"):
 
 
 def ab07ao07Read(ab07ao07RootPath):
-    ab07ao07Page = (ab07ao07RootPath / "architecture/ao08_b50e_row_spans.md").read_text()
+    ab07ao07Page = (ab07ao07RootPath / "architecture/ao08-b50e-row-spans.md").read_text()
     ab07ao07Blocks = re.findall(r"```json ab07ao07-contract\n(.*?)\n```", ab07ao07Page, re.S)
     if len(ab07ao07Blocks) != 1:
         raise AssertionError("exactly one finite contract block required")

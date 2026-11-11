@@ -6,7 +6,7 @@ from pathlib import Path
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / 'architecture/aj27_standard07_local_responder.md'
+PAGE = ROOT / 'architecture/aj27-standard07-local-responder.md'
 FIXTURE = ROOT / 'architecture/fixtures/aj27_standard07_local_responder.json'
 UNKNOWN = ('store_a_capacity', 'store_b_capacity', 'copy_ordering',
            'short_read_completion', 'identity_override_predicates',

@@ -1446,7 +1446,7 @@ F56b is a partial control-withdrawal and width-evidence boundary: `frostProtC` a
 
 ### Provisional system and zone setter names
 
-These accepted keys remain unchanged and provisional rather than receiving invented canonical value names. Their open question is which selector-qualified quantity and value role each key should express; syntax-only alternatives are not accepted. Native meaning remains governed by [the B524 register identities](../protocols/vaillant/ebus-vaillant-B524.md).
+These accepted keys remain unchanged and provisional rather than receiving invented canonical value names. Their open question is which selector-qualified quantity and value role each key should express; syntax-only alternatives are not accepted. Native meaning remains governed by [the B524 register identities](../protocols/vaillant/ebus-vaillant-b524.md).
 
 | Family | Accepted key | Opcode / group / instance / register |
 | --- | --- | --- |

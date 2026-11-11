@@ -11,7 +11,7 @@ import unittest
 ROOT = Path(os.environ.get('AK22_ROOT', Path(__file__).resolve().parents[1]))
 NATIVE = 'protocols/vaillant/ebus-b524-component-selectors.md'
 FIXTURE = 'protocols/vaillant/fixtures/ak22_b524_component_selectors.json'
-ARCH = 'architecture/ak22_b524_component_selectors_api.md'
+ARCH = 'architecture/ak22-b524-component-selectors-api.md'
 AXES = (
     ('Ab32Family', 'string'), ('Ab32Variant', 'string'),
     ('Ab32Primary', 'uint8'), ('Ab32Secondary', '*uint8'),
@@ -204,7 +204,7 @@ class ComponentSelectorsTests(unittest.TestCase):
     def test_native_application_separation(self):
         text = self.native + json.dumps(self.data)
         self.assertNotRegex(text, r'(?i)Ab32|GraphQL|\bMCP\b|last.known.good|freshness|fresh_on_merge|retain_siblings|missing_overwrites')
-        self.assertIn('ebus-vaillant-B524.md', self.native)
+        self.assertIn('ebus-vaillant-b524.md', self.native)
         self.assertNotIn('architecture/', self.native)
 
     def test_exact_api_and_eleven_axes(self):

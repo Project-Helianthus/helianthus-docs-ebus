@@ -8,7 +8,7 @@ import unittest as ab15ap15_unittest
 
 ab15ap15_root = Ab15Ap15Path(ab15ap15_os.environ.get(
     'ab15ap15_contract_root', str(Ab15Ap15Path(__file__).resolve().parents[1])))
-ab15ap15_page = ab15ap15_root / 'architecture/ap16_b512_emergency_flow.md'
+ab15ap15_page = ab15ap15_root / 'architecture/ap16-b512-emergency-flow.md'
 ab15ap15_fixture = ab15ap15_root / 'architecture/fixtures/ap16_b512_emergency_flow.json'
 # Independent finite expectations: never derive these from the page or fixture.
 ab15ap15_rows = (

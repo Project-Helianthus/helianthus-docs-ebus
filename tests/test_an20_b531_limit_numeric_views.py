@@ -15,7 +15,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / "architecture" / "an20_b531_limit_numeric_views.md"
+PAGE = ROOT / "architecture" / "an20-b531-limit-numeric-views.md"
 FIXTURE = ROOT / "architecture" / "fixtures" / "an20_b531_limit_numeric_views.json"
 
 POLICY = {

@@ -9,7 +9,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 NATIVE = Path('protocols/vaillant/ebus-b524-energy-roles.md')
 FIXTURE = Path('protocols/vaillant/fixtures/aj02_b524_energy_roles.json')
-API = Path('architecture/aj02_b524_energy_roles_api.md')
+API = Path('architecture/aj02-b524-energy-roles-api.md')
 
 # Literal expectations are independent of the fixture and both pages.
 TARGETS = [

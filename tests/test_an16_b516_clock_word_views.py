@@ -9,7 +9,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 PAGE = Path(os.environ['AN16_PAGE']) if os.environ.get('AN16_PAGE') else (
-    ROOT / 'architecture/an16_b516_clock_word_views.md')
+    ROOT / 'architecture/an16-b516-clock-word-views.md')
 FIXTURE = Path(os.environ['AN16_FIXTURE']) if os.environ.get('AN16_FIXTURE') else (
     ROOT / 'architecture/fixtures/an16_b516_clock_word_views.json')
 
@@ -152,7 +152,7 @@ SENTENCES = (
 
 def publication_root():
     for candidate in Path(__file__).resolve().parents:
-        native = candidate / 'protocols/vaillant/ebus-vaillant-B516-energy.md'
+        native = candidate / 'protocols/vaillant/ebus-vaillant-b516-energy.md'
         if native.is_file():
             return candidate
     raise AssertionError('local public B516 page is unavailable')

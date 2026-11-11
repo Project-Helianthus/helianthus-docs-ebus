@@ -9,7 +9,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 NATIVE = ROOT / 'protocols/ebus-services/ebus-standard07-residual-fields.md'
 DATA = ROOT / 'protocols/ebus-services/fixtures/ak18_standard07_residual_fields.json'
-API = ROOT / 'architecture/ak18_standard07_residual_fields_api.md'
+API = ROOT / 'architecture/ak18-standard07-residual-fields-api.md'
 
 # These expectations come from the finite issue contract, independently of the
 # production page/data. No executable registry implementation is modeled here.

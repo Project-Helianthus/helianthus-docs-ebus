@@ -8,7 +8,7 @@ import unittest
 
 
 AB23AP23_ROOT = Path(__file__).resolve().parents[1]
-AB23AP23_PAGE = AB23AP23_ROOT / 'architecture/ap24_b516_energy_type_fields.md'
+AB23AP23_PAGE = AB23AP23_ROOT / 'architecture/ap24-b516-energy-type-fields.md'
 AB23AP23_FIXTURE = AB23AP23_ROOT / 'architecture/fixtures/ap24_b516_energy_type_fields.json'
 AB23AP23_CONTRACT = {
     'package': 'vaillant',

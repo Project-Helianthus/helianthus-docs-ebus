@@ -6,7 +6,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 NATIVE = ROOT / 'protocols/vaillant/ebus-b523-config-mixer.md'
 FIXTURE = ROOT / 'protocols/vaillant/fixtures/aj10_b523_config_mixer.json'
-API = ROOT / 'architecture/aj10_b523_config_mixer_api.md'
+API = ROOT / 'architecture/aj10-b523-config-mixer-api.md'
 
 
 def ab99_tables(text):
@@ -39,7 +39,7 @@ class Ab99Contract(unittest.TestCase):
 
     def test_native_tables(self):
         self.assertEqual(ab99_tables(self.page), self.data['tables'])
-        self.assertIn('(ebus-vaillant-B523.md#candidate-layouts)', self.page)
+        self.assertIn('(ebus-vaillant-b523.md#candidate-layouts)', self.page)
         expected = [
             ['00','smaller','request','relay-groups134/256','3/4','0 output default; 1 mixer','Hypothesis'],
             ['00','smaller','request','S1..S6','5..10','0 kindA default; 1 kindB; 2 digital; other undefined-or-ignored','Hypothesis'],

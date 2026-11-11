@@ -38,8 +38,8 @@ ROOT = Path(__file__).resolve().parents[1]
 VOCABULARY = ROOT / "architecture" / "fixtures" / "register-name-vocabulary.csv"
 VAILLANT = ROOT / "protocols" / "vaillant"
 FIXTURES = VAILLANT / "fixtures"
-REGISTER_MAP = VAILLANT / "ebus-vaillant-B524-register-map.md"
-PROTOCOL = VAILLANT / "ebus-vaillant-B524.md"
+REGISTER_MAP = VAILLANT / "ebus-vaillant-b524-register-map.md"
+PROTOCOL = VAILLANT / "ebus-vaillant-b524.md"
 SEMANTIC_MAPPING = ROOT / "architecture" / "b524-semantic-mapping.md"
 
 VOCABULARY_COLUMNS = ["token", "roles", "definition", "forbidden_synonyms"]

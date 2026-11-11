@@ -8,7 +8,7 @@ import struct
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = Path('protocols/vaillant/ebus-vaillant-B509.md')
+PAGE = Path('protocols/vaillant/ebus-vaillant-b509.md')
 FIXTURE = Path('protocols/vaillant/fixtures/ae08_b509_candidates.json')
 
 

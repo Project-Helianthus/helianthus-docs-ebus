@@ -11,7 +11,7 @@ import unittest
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / "architecture/al04_b513_symbolic_dictionary.md"
+PAGE = ROOT / "architecture/al04-b513-symbolic-dictionary.md"
 FIXTURE = ROOT / "architecture/fixtures/al04_b513_symbolic_dictionary.json"
 CATALOG = ROOT / "protocols/vaillant/fixtures/hem-b513-symbolic-addresses.csv"
 AXES = ["family", "opcode", "dictionary_namespace", "raw_address",

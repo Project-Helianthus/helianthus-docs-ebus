@@ -18,7 +18,7 @@ from pathlib import Path
 import check_register_names as grammar
 
 ROOT = Path(__file__).resolve().parents[1]
-MAP = 'protocols/vaillant/ebus-vaillant-B524-register-map.md'
+MAP = 'protocols/vaillant/ebus-vaillant-b524-register-map.md'
 CONTRACT = 'architecture/naming.md'
 DATA = 'scripts/name-decomposition.json'
 ROLES = {'subject', 'predicate', 'object', 'attribute', 'circumstance', 'feature',
@@ -215,7 +215,7 @@ def check(root: Path = ROOT) -> tuple[int, int]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--check', action='store_true', required=True)
+    parser.add_argument('--check', action='store_true', help='check mode; the check also runs without it')
     parser.parse_args()
     try:
         count, debt = check()

@@ -6,7 +6,7 @@ import re
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / 'protocols/vaillant/ebus-vaillant-B522.md'
+PAGE = ROOT / 'protocols/vaillant/ebus-vaillant-b522.md'
 FIXTURE = ROOT / 'protocols/vaillant/fixtures/ac24_fan_demand.json'
 AXES = ('family', 'variant', 'direction', 'service', 'operation', 'alternative')
 IDENTITIES = [

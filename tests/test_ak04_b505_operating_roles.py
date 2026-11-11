@@ -7,7 +7,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / 'protocols/vaillant/fixtures/ak04_b505_operating_roles.json'
 PAGE = ROOT / 'protocols/vaillant/ebus-b505-operating-roles.md'
-API = ROOT / 'architecture/ak04_b505_operating_roles_api.md'
+API = ROOT / 'architecture/ak04-b505-operating-roles-api.md'
 
 # Literal acceptance expectations, independent of the declarations being checked.
 EXPECTED = '''5A|room_setpoint|room|explicit_replacement_before_numeric
@@ -310,7 +310,7 @@ class OperatingRoles(unittest.TestCase):
     def test_native_prose_boundaries(self):
         prose = ' '.join(self.page.split())
         for requirement in [
-            '[B505 family contract](ebus-vaillant-B505.md)',
+            '[B505 family contract](ebus-vaillant-b505.md)',
             'Qualification remains **Unknown**',
             'select an explicitly identified replacement branch before numeric conversion.',
             'The raw replacement code is **Unknown**',

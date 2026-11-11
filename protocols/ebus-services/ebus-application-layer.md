@@ -21,9 +21,9 @@ For wire-level framing (SRC/DST, CRC8, escaping, ACK/NACK, transaction flow), se
 | `0x07` | System Data | `0x00`–`0x05`, `0xFE`, `0xFF` | [`ebus-service-07h.md`](./ebus-service-07h.md) |
 | `0x08` | Controller-to-Controller | `0x00`–`0x04` | [`ebus-service-08h.md`](./ebus-service-08h.md) |
 | `0x09` | Memory Server | `0x00`–`0x03` | [`ebus-service-09h.md`](./ebus-service-09h.md) |
-| `0x0F` | Test Commands | `0x01`–`0x03` | [`ebus-service-0Fh.md`](./ebus-service-0Fh.md) |
-| `0xFE` | General Broadcast | `0x01` | [`ebus-service-FEh.md`](./ebus-service-FEh.md) |
-| `0xFF` | Network Management | `0x00`–`0x06` | [`ebus-service-FFh.md`](./ebus-service-FFh.md) |
+| `0x0F` | Test Commands | `0x01`–`0x03` | [`ebus-service-0fh.md`](./ebus-service-0fh.md) |
+| `0xFE` | General Broadcast | `0x01` | [`ebus-service-feh.md`](./ebus-service-feh.md) |
+| `0xFF` | Network Management | `0x00`–`0x06` | [`ebus-service-ffh.md`](./ebus-service-ffh.md) |
 
 ## Data Type Quick Reference
 
@@ -68,7 +68,7 @@ Each service page adds a "Vaillant variants" section with the Vaillant layouts f
 | Only PB/SB defined, no body (candidate) | `07 FE`, `07 FF`, `FE 01` |
 | No Vaillant definition known (implementation **Unknown**) | `03 07`, `03 08`, `03 10`, `05 00`, `05 02`–`05 0D`, `07 01`, the `07 04` broadcast form, `08 00`–`08 04`, `0F 01`–`0F 03`, `FF 00`–`FF 06` |
 
-Service `0F`: a Vaillant layout gives the primary byte `0x0F` with no known secondary byte and no body (candidate; the secondary byte of the request on the wire is unknown, see [`ebus-service-0Fh.md`](./ebus-service-0Fh.md#vaillant-variants)). That layout does not encode any of the three standard identities `0F 01`–`0F 03`, which are therefore counted under "No Vaillant definition known".
+Service `0F`: a Vaillant layout gives the primary byte `0x0F` with no known secondary byte and no body (candidate; the secondary byte of the request on the wire is unknown, see [`ebus-service-0fh.md`](./ebus-service-0fh.md#vaillant-variants)). That layout does not encode any of the three standard identities `0F 01`–`0F 03`, which are therefore counted under "No Vaillant definition known".
 
 A missing Vaillant definition is not proof that a device lacks the service.
 

@@ -300,7 +300,7 @@ ab19ao19ExpectedContract = {'api': 'Ab19Ao19Interpret(ab19ao19Input json.RawMess
 class TestAb19Ao19MenuViews(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.ab19ao19Page = (ab19ao19Root / 'architecture/ao20_b514_menu_views.md').read_text()
+        cls.ab19ao19Page = (ab19ao19Root / 'architecture/ao20-b514-menu-views.md').read_text()
         ab19ao19Blocks = re.findall(r'^```json\n(.*?)^```$', cls.ab19ao19Page,
                                     flags=re.M | re.S)
         if len(ab19ao19Blocks) != 1:

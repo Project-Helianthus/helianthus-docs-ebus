@@ -7,7 +7,7 @@ import unittest
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / "architecture/al12_b509_identity_shapes.md"
+PAGE = ROOT / "architecture/al12-b509-identity-shapes.md"
 FIXTURE = ROOT / "architecture/fixtures/al12_b509_identity_shapes.json"
 KEY = {
     "family": "vaillant", "variant": "B509", "primary": 181,

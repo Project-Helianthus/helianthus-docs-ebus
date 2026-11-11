@@ -505,7 +505,7 @@ type boiler_diagnostics {
 }
 ```
 
-Boiler field provenance is documented in [`protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md`](../protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md). The current contract is hybrid: direct BAI00 B509 is authoritative for most boiler fields, while a small set of controller-mirrored B524 values still feed `dhw_temperature_c`, `dhw_target_temperature_c`, `dhw_operating_mode`, and `heating_status_raw`.
+Boiler field provenance is documented in [`protocols/vaillant/ebus-vaillant-b509-boiler-register-map.md`](../protocols/vaillant/ebus-vaillant-b509-boiler-register-map.md). The current contract is hybrid: direct BAI00 B509 is authoritative for most boiler fields, while a small set of controller-mirrored B524 values still feed `dhw_temperature_c`, `dhw_target_temperature_c`, `dhw_operating_mode`, and `heating_status_raw`.
 
 ```graphql
 type system_status {
@@ -1129,7 +1129,7 @@ match (none is reachable until identities are acquired at discovery, gateway
   raw hardware value, API version and API revision. The API version and
   revision correspond to the OP=00h system-information identifiers
   `0006h` `interface_version` and `0007h` `interface_revision`
-  ([B524 system information](../protocols/vaillant/ebus-vaillant-B524.md)).
+  ([B524 system information](../protocols/vaillant/ebus-vaillant-b524.md)).
   The lookup uses only registry discovery/import metadata, including the
   device identifier (EID), raw software and raw hardware. Bound resolution
   performs no bus I/O or on-demand system-information identifier reads.

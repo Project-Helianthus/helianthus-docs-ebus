@@ -2,8 +2,8 @@
 
 > **License:** AGPL-3.0. This file documents Helianthus-specific semantic mapping, not protocol-level specifications.
 >
-> For the B524 wire protocol, see [`../protocols/vaillant/ebus-vaillant-B524.md`](../protocols/vaillant/ebus-vaillant-B524.md).
-> For the register catalog, see [`../protocols/vaillant/ebus-vaillant-B524-register-map.md`](../protocols/vaillant/ebus-vaillant-B524-register-map.md).
+> For the B524 wire protocol, see [`../protocols/vaillant/ebus-vaillant-b524.md`](../protocols/vaillant/ebus-vaillant-b524.md).
+> For the register catalog, see [`../protocols/vaillant/ebus-vaillant-b524-register-map.md`](../protocols/vaillant/ebus-vaillant-b524-register-map.md).
 
 This document maps B524 registers to Helianthus MCP semantic plane fields. Only registers actively read by the gateway's semantic poller are listed. The **S** prefix in the register map's Notes column marks these registers.
 
@@ -189,7 +189,7 @@ enumeration (raw 0 = STANDBY, 1 = HEATING, 2 = COOLING, 3 = DHW) is read from
 RR=0x001E (`circuit_state`) and the pump status from RR=0x001B
 (`circuit_pump_unknown_8`; the meaning of that register is a **candidate
 (Hypothesis)**, see the evidence status below), as assigned in the
-[B524 register map](../protocols/vaillant/ebus-vaillant-B524-register-map.md#circuit-state-enum).
+[B524 register map](../protocols/vaillant/ebus-vaillant-b524-register-map.md#circuit-state-enum).
 Earlier revisions of this table had the two selectors swapped.
 
 Evidence status: the `circuit_state` mapping at RR=0x001E is a **candidate**
@@ -253,7 +253,7 @@ Source: `refreshBoilerStatus()` in `semantic_vaillant.go`
 The current PASS-profile boiler status plane is no longer a B524-only composite. Helianthus now prefers direct boiler-family B509 reads for the boiler semantic surface and keeps only a small B524 fallback/mirror set in the controller path.
 
 Authoritative direct-boiler mapping:
-- see [`../protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md`](../protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md)
+- see [`../protocols/vaillant/ebus-vaillant-b509-boiler-register-map.md`](../protocols/vaillant/ebus-vaillant-b509-boiler-register-map.md)
 
 The B524 contribution that still feeds the current boiler semantic contract is:
 
@@ -285,7 +285,7 @@ state (`OP=0x02, GG=0x02, II=<circuit>, RR=0x001E`) and pump observations
 (`OP=0x02, GG=0x02, II=<circuit>, RR=0x001B`) are published only on the circuit
 surface. These controller observations are distinct from direct B509
 boiler-family data; their native meanings and evidence grades remain those of
-the [B524 register catalog](../protocols/vaillant/ebus-vaillant-B524-register-map.md#circuit-state-enum).
+the [B524 register catalog](../protocols/vaillant/ebus-vaillant-b524-register-map.md#circuit-state-enum).
 The circuit-zero mirror removal tracked by
 [helianthus-ebusgateway#1012](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1012)
 was delivered by
@@ -296,7 +296,7 @@ The controller-mediated candidates `OP=0x06, GG=0x01/0x02, RR=0x0015` and
 boiler semantic mapping**: the current `refreshBoilerStatus()` does not read
 these selectors, and no publishable correlated evidence qualifies either as
 `state.flow_temperature_c` or a raw `diagnostics.activeErrors` value. See the
-[B524 register map](../protocols/vaillant/ebus-vaillant-B524-register-map.md#op0x06--controller-mediated-device-parameters)
+[B524 register map](../protocols/vaillant/ebus-vaillant-b524-register-map.md#op0x06--controller-mediated-device-parameters)
 for the evidence boundary.
 
 Fields currently present in the schema but not populated from a validated source:
@@ -447,7 +447,7 @@ Contract of the registry method `get_ext_register` (B5/24, OP=0x02 and
 OP=0x06 requests) as changed by
 [helianthus-ebusreg#175](https://github.com/Project-Helianthus/helianthus-ebusreg/pull/175).
 The historical short-probe catalog it consults is the
-[Constraint Catalog](../protocols/vaillant/ebus-vaillant-B524-register-map.md#constraint-catalog).
+[Constraint Catalog](../protocols/vaillant/ebus-vaillant-b524-register-map.md#constraint-catalog).
 
 - **Keying.** Catalog entries are keyed by `(opcode, group, register)`, where
   `register` is the little-endian register number (`RRlo | RRhi<<8`), the same

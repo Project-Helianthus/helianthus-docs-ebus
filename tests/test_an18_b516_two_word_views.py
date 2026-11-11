@@ -25,7 +25,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 PAGE = Path(os.environ['AN18_PAGE']) if os.environ.get('AN18_PAGE') else (
-    ROOT / 'architecture/an18_b516_two_word_views.md')
+    ROOT / 'architecture/an18-b516-two-word-views.md')
 FIXTURE = Path(os.environ['AN18_FIXTURE']) if os.environ.get('AN18_FIXTURE') else (
     ROOT / 'architecture/fixtures/an18_b516_two_word_views.json')
 
@@ -152,7 +152,7 @@ FORBIDDEN = (
 
 def publication_root():
     for candidate in Path(__file__).resolve().parents:
-        native = candidate / 'protocols/vaillant/ebus-vaillant-B516-energy.md'
+        native = candidate / 'protocols/vaillant/ebus-vaillant-b516-energy.md'
         if native.is_file():
             return candidate
     raise AssertionError('local public B516 page is unavailable')

@@ -11,7 +11,7 @@ work; no current SemReg publication is claimed.
 
 The public native contract comes first:
 
-- [Native B524 register catalog](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/vaillant/ebus-vaillant-B524-register-map.md):
+- [Native B524 register catalog](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/vaillant/ebus-vaillant-b524-register-map.md):
   Table Legend, Group Topology and “GG=0x01 — Native Domestic Hot Water”
   establish the documented selector, representation, unit and presence rule.
   Float byte order remains profile-dependent. Historical range hints are not

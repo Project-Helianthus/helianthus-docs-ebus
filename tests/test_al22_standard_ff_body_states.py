@@ -8,7 +8,7 @@ import unittest
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / 'architecture/al22_standard_ff_body_states.md'
+PAGE = ROOT / 'architecture/al22-standard-ff-body-states.md'
 FIXTURE = ROOT / 'architecture/fixtures/al22_standard_ff_body_states.json'
 POLICY = {
     'identity_axes': ['PB', 'SB', 'direction'],
@@ -233,7 +233,7 @@ class StandardFFBodyStates(unittest.TestCase):
             with self.subTest(phrase=phrase):
                 self.assertIn(phrase, text)
         self.assertEqual(re.findall(r'\]\(([^)]+)\)', self.page), [
-            '../protocols/ebus-services/ebus-service-FFh.md',
+            '../protocols/ebus-services/ebus-service-ffh.md',
             'fixtures/al22_standard_ff_body_states.json',
             '../tests/test_al22_standard_ff_body_states.py',
         ])

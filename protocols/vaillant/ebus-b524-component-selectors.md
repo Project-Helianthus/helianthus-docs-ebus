@@ -2,7 +2,7 @@
 
 ## Native contract and evidence
 
-The [public native B524 contract](ebus-vaillant-B524.md) comes first: service
+The [public native B524 contract](ebus-vaillant-b524.md) comes first: service
 B5/24 retains opcode, group, instance and register as separate selector axes.
 OP02 and OP06 are independent namespaces. Its reply classification and matching
 group/register requirements apply before isolated component bytes are considered;

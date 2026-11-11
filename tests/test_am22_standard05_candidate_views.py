@@ -8,7 +8,7 @@ import struct
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / 'architecture/am22_standard05_candidate_views.md'
+PAGE = ROOT / 'architecture/am22-standard05-candidate-views.md'
 FIXTURE = ROOT / 'architecture/fixtures/am22_standard05_candidate_views.json'
 IDENTITY = dict(family='burner', variant='vaillant-candidate', operation='05/01',
                 direction='request', selector='burner-five-field')

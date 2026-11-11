@@ -8,7 +8,7 @@ import struct
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / 'architecture/am06_b524_circuit_scalars.md'
+PAGE = ROOT / 'architecture/am06-b524-circuit-scalars.md'
 FIXTURE = ROOT / 'architecture/fixtures/am06_b524_circuit_scalars.json'
 FIELDS = ('family', 'software', 'hardware', 'api_version', 'api_revision',
           'opcode', 'group', 'instance', 'register', 'reply_kind',

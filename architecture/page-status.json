@@ -1,0 +1,973 @@
+{
+  "table": "Status of the documentation pages renamed to lowercase kebab-case file names",
+  "scope": "Each row is one renamed page. The status keeps the page's own claim and the basis quotes the page sentence that carries it; a rename never changes a status. The earlier name is documentary only and is never read as a fallback. Pages outside this table keep their own status statements and are not graded here.",
+  "statuses": [
+    "implemented",
+    "accepted contract",
+    "candidate",
+    "historical",
+    "unknown"
+  ],
+  "control_files": [
+    "AGENTS.md",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "README.md",
+    "SECURITY.md"
+  ],
+  "tree_indexes": [
+    "api/index.md",
+    "architecture/index.md",
+    "deployment/index.md",
+    "development/index.md",
+    "protocols/index.md"
+  ],
+  "pages": [
+    {
+      "path": "architecture/ae24-b531-local-projection.md",
+      "previous_path": "architecture/ae24_b531_local_projection.md",
+      "status": "candidate",
+      "basis": "The [native B531 candidate contract](../protocols/vaillant/ebus-vaillant-b531-hem-power-limit.md)"
+    },
+    {
+      "path": "architecture/ae26-0704-local-parser.md",
+      "previous_path": "architecture/ae26_0704_local_parser.md",
+      "status": "candidate",
+      "basis": "The [native service contract](../protocols/ebus-services/ebus-service-07h.md#bounded-0704-candidate-declarations)"
+    },
+    {
+      "path": "architecture/aj02-b524-energy-roles-api.md",
+      "previous_path": "architecture/aj02_b524_energy_roles_api.md",
+      "status": "candidate",
+      "basis": "the five Hypothesis targets first. This page specifies only a finite metadata"
+    },
+    {
+      "path": "architecture/aj04-b503-text-categories-api.md",
+      "previous_path": "architecture/aj04_b503_text_categories_api.md",
+      "status": "candidate",
+      "basis": "is the source contract for the finite candidate fields. This page specifies a"
+    },
+    {
+      "path": "architecture/aj06-b512-dhw-stepper-api.md",
+      "previous_path": "architecture/aj06_b512_dhw_stepper_api.md",
+      "status": "candidate",
+      "basis": "[B512 candidate supplement](../protocols/vaillant/ebus-b512-dhw-stepper.md)."
+    },
+    {
+      "path": "architecture/aj08-b51a-diagnostic-variants-api.md",
+      "previous_path": "architecture/aj08_b51a_diagnostic_variants_api.md",
+      "status": "accepted contract",
+      "basis": "This page describes the bounded library interface; it introduces no runtime"
+    },
+    {
+      "path": "architecture/aj10-b523-config-mixer-api.md",
+      "previous_path": "architecture/aj10_b523_config_mixer_api.md",
+      "status": "candidate",
+      "basis": "candidate wire facts. This page specifies a finite pre-1.0 library contract;"
+    },
+    {
+      "path": "architecture/aj12-b50f-status-spans-api.md",
+      "previous_path": "architecture/aj12_b50f_status_spans_api.md",
+      "status": "candidate",
+      "basis": "candidate wire facts. This page specifies the bounded pre-1.0 library interface;"
+    },
+    {
+      "path": "architecture/aj14-b507-energy-candidates-api.md",
+      "previous_path": "architecture/aj14_b507_energy_candidates_api.md",
+      "status": "candidate",
+      "basis": "This bounded contract covers candidate B507 fields and the finite library"
+    },
+    {
+      "path": "architecture/aj16-b509-op59-quantities-api.md",
+      "previous_path": "architecture/aj16_b509_op59_quantities_api.md",
+      "status": "accepted contract",
+      "basis": "The companion finite library contract has exactly two functions:"
+    },
+    {
+      "path": "architecture/aj17-b516-projection.md",
+      "previous_path": "architecture/aj17_b516_projection.md",
+      "status": "candidate",
+      "basis": "The native B516 OP14 wire candidate remains unconfirmed; it does not establish"
+    },
+    {
+      "path": "architecture/aj18-b531-targets-status.md",
+      "previous_path": "architecture/aj18_b531_targets_status.md",
+      "status": "candidate",
+      "basis": "**Hypothesis**: this is a bounded local software candidate for issue #825,"
+    },
+    {
+      "path": "architecture/aj19-b531-distribution-consumers.md",
+      "previous_path": "architecture/aj19_b531_distribution_consumers.md",
+      "status": "candidate",
+      "basis": "This is a **Hypothesis**: a bounded local software candidate for the B531"
+    },
+    {
+      "path": "architecture/aj20-b531-pending-conversion.md",
+      "previous_path": "architecture/aj20_b531_pending_conversion.md",
+      "status": "candidate",
+      "basis": "Refs #827; partial child of #736. This is a bounded local software candidate,"
+    },
+    {
+      "path": "architecture/aj21-b531-getter.md",
+      "previous_path": "architecture/aj21_b531_getter.md",
+      "status": "candidate",
+      "basis": "This focused pre-1.0 software contract is a `Hypothesis` for the B531 family"
+    },
+    {
+      "path": "architecture/aj22-b555-week-refresh.md",
+      "previous_path": "architecture/aj22_b555_week_refresh.md",
+      "status": "candidate",
+      "basis": "Refs #829; partial child of #736. This is a bounded local software candidate,"
+    },
+    {
+      "path": "architecture/aj23-b555-narrow-refresh.md",
+      "previous_path": "architecture/aj23_b555_narrow_refresh.md",
+      "status": "candidate",
+      "basis": "Refs #830; partial child of #736. This is a bounded local software candidate,"
+    },
+    {
+      "path": "architecture/aj24-b555-manager-predicate.md",
+      "previous_path": "architecture/aj24_b555_manager_predicate.md",
+      "status": "candidate",
+      "basis": "This pre-1.0 architecture contract is **Hypothesis**, a bounded local software"
+    },
+    {
+      "path": "architecture/aj25-b517-local-tunnel.md",
+      "previous_path": "architecture/aj25_b517_local_tunnel.md",
+      "status": "candidate",
+      "basis": "This pre-1.0 contract is a bounded local software candidate, graded"
+    },
+    {
+      "path": "architecture/aj26-standard09-local-policy.md",
+      "previous_path": "architecture/aj26_standard09_local_policy.md",
+      "status": "candidate",
+      "basis": "This bounded pre-1.0 software candidate is **Hypothesis**. It defines separate"
+    },
+    {
+      "path": "architecture/aj27-standard07-local-responder.md",
+      "previous_path": "architecture/aj27_standard07_local_responder.md",
+      "status": "candidate",
+      "basis": "candidate is **Hypothesis**. Nothing here is a stable contract or physical"
+    },
+    {
+      "path": "architecture/aj28-ff-local-liveness.md",
+      "previous_path": "architecture/aj28_ff_local_liveness.md",
+      "status": "candidate",
+      "basis": "**Hypothesis:** this is a bounded local software candidate, not an implemented"
+    },
+    {
+      "path": "architecture/ak02-b504-circuit-roles-api.md",
+      "previous_path": "architecture/ak02_b504_circuit_roles_api.md",
+      "status": "candidate",
+      "basis": "defines the finite semantic candidates first. **Hypothesis:** Its twenty"
+    },
+    {
+      "path": "architecture/ak04-b505-operating-roles-api.md",
+      "previous_path": "architecture/ak04_b505_operating_roles_api.md",
+      "status": "candidate",
+      "basis": "remain Hypothesis; qualification is Unknown. The following is the **Proven local"
+    },
+    {
+      "path": "architecture/ak06-b506-rf-sequence-api.md",
+      "previous_path": "architecture/ak06_b506_rf_sequence_api.md",
+      "status": "candidate",
+      "basis": "defines the candidate wire boundary first. **Hypothesis:** count and sequence"
+    },
+    {
+      "path": "architecture/ak10-b512-heatpump-io-api.md",
+      "previous_path": "architecture/ak10_b512_heatpump_io_api.md",
+      "status": "candidate",
+      "basis": "is the protocol contract for this finite area. Native fields and candidate"
+    },
+    {
+      "path": "architecture/ak12-b516-directional-types-api.md",
+      "previous_path": "architecture/ak12_b516_directional_types_api.md",
+      "status": "candidate",
+      "basis": "contains implementation-neutral declarations. **Hypothesis:** the five rows"
+    },
+    {
+      "path": "architecture/ak14-b519-reply-policy-api.md",
+      "previous_path": "architecture/ak14_b519_reply_policy_api.md",
+      "status": "candidate",
+      "basis": "establish representation only. Native relationships remain **Hypothesis**;"
+    },
+    {
+      "path": "architecture/ak16-b555-additional-forms-api.md",
+      "previous_path": "architecture/ak16_b555_additional_forms_api.md",
+      "status": "candidate",
+      "basis": "come first. **Hypothesis:** candidate native relationships and coordinates."
+    },
+    {
+      "path": "architecture/ak18-standard07-residual-fields-api.md",
+      "previous_path": "architecture/ak18_standard07_residual_fields_api.md",
+      "status": "candidate",
+      "basis": "and its [finite candidate data](../protocols/ebus-services/fixtures/ak18_standard07_residual_fields.json)"
+    },
+    {
+      "path": "architecture/ak20-b524-family-codebooks.md",
+      "previous_path": "architecture/ak20_b524_family_codebooks.md",
+      "status": "candidate",
+      "basis": "Hypothesis: all seven codebooks use OP02 and the candidate family tokens"
+    },
+    {
+      "path": "architecture/ak22-b524-component-selectors-api.md",
+      "previous_path": "architecture/ak22_b524_component_selectors_api.md",
+      "status": "candidate",
+      "basis": "Hypothesis about native components; synthetic arithmetic is Proven only as"
+    },
+    {
+      "path": "architecture/ak24-b501-legacy-sequence-api.md",
+      "previous_path": "architecture/ak24_b501_legacy_sequence_api.md",
+      "status": "candidate",
+      "basis": "define the candidate relationships first. **Hypothesis:** sequencing metadata"
+    },
+    {
+      "path": "architecture/ak26-b506-local-ping-counter.md",
+      "previous_path": "architecture/ak26_b506_local_ping_counter.md",
+      "status": "candidate",
+      "basis": "This pre-1.0 contract is a bounded local software candidate, graded"
+    },
+    {
+      "path": "architecture/al02-b524-name-annotations.md",
+      "previous_path": "architecture/al02_b524_name_annotations.md",
+      "status": "candidate",
+      "basis": "**Hypothesis:** candidate native meaning remains a candidate even when a label"
+    },
+    {
+      "path": "architecture/al04-b513-symbolic-dictionary.md",
+      "previous_path": "architecture/al04_b513_symbolic_dictionary.md",
+      "status": "candidate",
+      "basis": "**Hypothesis:** one finite B513 OP04 dictionary contains 1263 distinct raw u16"
+    },
+    {
+      "path": "architecture/al06-b509-symbolic-annotations.md",
+      "previous_path": "architecture/al06_b509_symbolic_annotations.md",
+      "status": "accepted contract",
+      "basis": "This finite library contract is the residual B509 correspondence area for"
+    },
+    {
+      "path": "architecture/al08-b524-system-information.md",
+      "previous_path": "architecture/al08_b524_system_information.md",
+      "status": "candidate",
+      "basis": "**Hypothesis:** the normalized candidate layout applies to a particular physical"
+    },
+    {
+      "path": "architecture/al10-b524-description-spans.md",
+      "previous_path": "architecture/al10_b524_description_spans.md",
+      "status": "candidate",
+      "basis": "**Hypothesis — typed interpretations:** UCH is unsigned width1; UIN is"
+    },
+    {
+      "path": "architecture/al12-b509-identity-shapes.md",
+      "previous_path": "architecture/al12_b509_identity_shapes.md",
+      "status": "candidate",
+      "basis": "interpretations below remain **Hypothesis**; missing native details remain"
+    },
+    {
+      "path": "architecture/al14-b510-operating-defaults.md",
+      "previous_path": "architecture/al14_b510_operating_defaults.md",
+      "status": "candidate",
+      "basis": "first. Its OP00 layouts are candidate evidence. The finite defaults below are"
+    },
+    {
+      "path": "architecture/al16-b511-class-candidates.md",
+      "previous_path": "architecture/al16_b511_class_candidates.md",
+      "status": "candidate",
+      "basis": "Read the public [native B511 contract](../protocols/vaillant/ebus-vaillant-b511.md#operating-data-classes-candidate)"
+    },
+    {
+      "path": "architecture/al18-b516-residual-fields.md",
+      "previous_path": "architecture/al18_b516_residual_fields.md",
+      "status": "candidate",
+      "basis": "Read the public [native B516 candidate contract](../protocols/vaillant/ebus-vaillant-b516-energy.md#10-other-b516-sub-ids-candidate)"
+    },
+    {
+      "path": "architecture/al20-b555-extent-views.md",
+      "previous_path": "architecture/al20_b555_extent_views.md",
+      "status": "candidate",
+      "basis": "[A4 requester policy](../protocols/vaillant/ebus-vaillant-b555-timer-protocol.md#521-a4-reply-acceptance-by-a-requester-candidate),"
+    },
+    {
+      "path": "architecture/al22-standard-ff-body-states.md",
+      "previous_path": "architecture/al22_standard_ff_body_states.md",
+      "status": "candidate",
+      "basis": "Any candidate interpretation remains **Hypothesis**. Physical qualification,"
+    },
+    {
+      "path": "architecture/al24-b524-numeric-candidates.md",
+      "previous_path": "architecture/al24_b524_numeric_candidates.md",
+      "status": "candidate",
+      "basis": "runtime API. **Hypothesis:** all twenty range/step mappings below, including their"
+    },
+    {
+      "path": "architecture/al25-b514-typed-row-boundaries.md",
+      "previous_path": "architecture/al25_b514_typed_row_boundaries.md",
+      "status": "candidate",
+      "basis": "(Proven/Hypothesis/Unknown) are independent of physical qualification,"
+    },
+    {
+      "path": "architecture/al26-b531-descriptor-axes.md",
+      "previous_path": "architecture/al26_b531_descriptor_axes.md",
+      "status": "candidate",
+      "basis": "comes first: its candidate layouts are **Hypothesis**, unconfirmed on the wire;"
+    },
+    {
+      "path": "architecture/am02-b524-system-scalars.md",
+      "previous_path": "architecture/am02_b524_system_scalars.md",
+      "status": "candidate",
+      "basis": "The finite candidate types and units below are **Hypothesis**. The explicitly"
+    },
+    {
+      "path": "architecture/am04-b524-dhw-ventilation-scalars.md",
+      "previous_path": "architecture/am04_b524_dhw_ventilation_scalars.md",
+      "status": "candidate",
+      "basis": "provides candidate DHW and ventilation context. This page defines an application"
+    },
+    {
+      "path": "architecture/am06-b524-circuit-scalars.md",
+      "previous_path": "architecture/am06_b524_circuit_scalars.md",
+      "status": "candidate",
+      "basis": "candidate interpreter for AM06. It defines behavior for companion AM05 and has"
+    },
+    {
+      "path": "architecture/am08-b524-zone-scalars.md",
+      "previous_path": "architecture/am08_b524_zone_scalars.md",
+      "status": "candidate",
+      "basis": "Status: application API and synthetic-contract page. Candidate meaning is"
+    },
+    {
+      "path": "architecture/am10-b524-unscoped-hints.md",
+      "previous_path": "architecture/am10_b524_unscoped_hints.md",
+      "status": "candidate",
+      "basis": "**Hypothesis:** historic numeric ranges are candidate hints only; universal"
+    },
+    {
+      "path": "architecture/am12-b509-boiler-codec-dictionary.md",
+      "previous_path": "architecture/am12_b509_boiler_codec_dictionary.md",
+      "status": "candidate",
+      "basis": "and [boiler candidate map](../protocols/vaillant/ebus-vaillant-b509-boiler-register-map.md)."
+    },
+    {
+      "path": "architecture/am14-b509-heatpump-codec-dictionary.md",
+      "previous_path": "architecture/am14_b509_heatpump_codec_dictionary.md",
+      "status": "candidate",
+      "basis": "Those pages establish the public candidate context and wire-order spelling;"
+    },
+    {
+      "path": "architecture/am16-b516-statistics-directions.md",
+      "previous_path": "architecture/am16_b516_statistics_directions.md",
+      "status": "candidate",
+      "basis": "keeps its own scope. This candidate does not replace that contract, OP14, time"
+    },
+    {
+      "path": "architecture/am18-b50e-rule-value-rows.md",
+      "previous_path": "architecture/am18_b50e_rule_value_rows.md",
+      "status": "candidate",
+      "basis": "comes first. Its OP02 rule-read table supplies these **Hypothesis** candidates."
+    },
+    {
+      "path": "architecture/am20-standard03-candidate-views.md",
+      "previous_path": "architecture/am20_standard03_candidate_views.md",
+      "status": "candidate",
+      "basis": "is the protocol authority. Its standard response layouts and candidate request"
+    },
+    {
+      "path": "architecture/am22-standard05-candidate-views.md",
+      "previous_path": "architecture/am22_standard05_candidate_views.md",
+      "status": "candidate",
+      "basis": "first, especially its candidate-variant section. Its standard contract remains"
+    },
+    {
+      "path": "architecture/am24-b514-activation-vectors.md",
+      "previous_path": "architecture/am24_b514_activation_vectors.md",
+      "status": "candidate",
+      "basis": "**Hypothesis:** B514 OP03 is a logical positive vector of ten separate u8"
+    },
+    {
+      "path": "architecture/am26-b525-spectrum-blocks.md",
+      "previous_path": "architecture/am26_b525_spectrum_blocks.md",
+      "status": "candidate",
+      "basis": "comes first: it calls the layout candidate and unconfirmed on the wire. This"
+    },
+    {
+      "path": "architecture/an02-b524-calendar-views.md",
+      "previous_path": "architecture/an02_b524_calendar_views.md",
+      "status": "candidate",
+      "basis": "Its calendar sections describe unresolved codecs, including a candidate century"
+    },
+    {
+      "path": "architecture/an04-b524-codebook-views.md",
+      "previous_path": "architecture/an04_b524_codebook_views.md",
+      "status": "candidate",
+      "basis": "**Proven software contract; candidate meanings Hypothesis; native qualification"
+    },
+    {
+      "path": "architecture/an06-b503-history-branches.md",
+      "previous_path": "architecture/an06_b503_history_branches.md",
+      "status": "candidate",
+      "basis": "is a candidate, and its marker meanings remain unconfirmed. This page adds"
+    },
+    {
+      "path": "architecture/an08-b509-constraint-word-views.md",
+      "previous_path": "architecture/an08_b509_constraint_word_views.md",
+      "status": "candidate",
+      "basis": "Numeric word decoding is **Hypothesis**: signed little-endian 16-bit values"
+    },
+    {
+      "path": "architecture/an10-b509-quantity-views.md",
+      "previous_path": "architecture/an10_b509_quantity_views.md",
+      "status": "candidate",
+      "basis": "The call is a pure explicit B509 OP59 candidate-field view. `selection` carries family, variant, operation, and direction as independent values. `slices` carries temperature, flow, volume, minimum volume, and maximum volume as independent optional byte slices. The caller draws every boundary. The helper does not parse a packet. The helper does not detect a family from a byte offset or from a slice length."
+    },
+    {
+      "path": "architecture/an12-b511-overlap-views.md",
+      "previous_path": "architecture/an12_b511_overlap_views.md",
+      "status": "candidate",
+      "basis": "The public native contract comes first: [B511 operating-data classes](../protocols/vaillant/ebus-vaillant-b511.md#operating-data-classes-candidate). That section is **Hypothesis**, unconfirmed on the wire. This page does not repeat that family page and does not add native qualification. Native candidate codecs on that page are not imported."
+    },
+    {
+      "path": "architecture/an14-b512-dhw-views.md",
+      "previous_path": "architecture/an14_b512_dhw_views.md",
+      "status": "candidate",
+      "basis": "See the [public native B512 contract](../protocols/vaillant/ebus-vaillant-b512.md). The public native B512 contract comes first. Its OP06 rows are candidate layouts and are unconfirmed on the wire. This page does not add native qualification. The finite synthetic examples below do not upgrade that evidence."
+    },
+    {
+      "path": "architecture/an16-b516-clock-word-views.md",
+      "previous_path": "architecture/an16_b516_clock_word_views.md",
+      "status": "candidate",
+      "basis": "[other B516 sub-IDs](../protocols/vaillant/ebus-vaillant-b516-energy.md#10-other-b516-sub-ids-candidate)."
+    },
+    {
+      "path": "architecture/an18-b516-two-word-views.md",
+      "previous_path": "architecture/an18_b516_two_word_views.md",
+      "status": "candidate",
+      "basis": "a pure B516 OP14 candidate-body view. The hypothetical signature is the whole"
+    },
+    {
+      "path": "architecture/an20-b531-limit-numeric-views.md",
+      "previous_path": "architecture/an20_b531_limit_numeric_views.md",
+      "status": "candidate",
+      "basis": "The native candidate record stays on the"
+    },
+    {
+      "path": "architecture/an22-b555-numeric-narrowing.md",
+      "previous_path": "architecture/an22_b555_numeric_narrowing.md",
+      "status": "candidate",
+      "basis": "The public native contract is [the B555 timer protocol](../protocols/vaillant/ebus-vaillant-b555-timer-protocol.md). A candidate statement there says an A6 setpoint is multiplied by 10, truncated toward zero, and sent as its low 16 bits, with no clamp. This page does not restate that family and does not assert controller behavior."
+    },
+    {
+      "path": "architecture/an24-b51b-local-budget-crc.md",
+      "previous_path": "architecture/an24_b51b_local_budget_crc.md",
+      "status": "accepted contract",
+      "basis": "This page is a pre-1.0 software contract for offline helpers on the B51B family. It is the ordinary companion of AN23 for the same ab23an23 helper surface, and a partial child of issue 736. The parent stays open. The page does not qualify a device, repeat a native family page, or depend on an implementation change."
+    },
+    {
+      "path": "architecture/an26-standard09-body-views.md",
+      "previous_path": "architecture/an26_standard09_body_views.md",
+      "status": "accepted contract",
+      "basis": "> AGPL-3.0 architecture contract for the `ab25an25` pure helper. This page"
+    },
+    {
+      "path": "architecture/ao02-b505-sentinel-views.md",
+      "previous_path": "architecture/ao02_b505_sentinel_views.md",
+      "status": "candidate",
+      "basis": "contract](../protocols/vaillant/ebus-vaillant-b505.md#bounded-sentinel-and-override-candidates)."
+    },
+    {
+      "path": "architecture/ao04-b506-parameter-views.md",
+      "previous_path": "architecture/ao04_b506_parameter_views.md",
+      "status": "candidate",
+      "basis": "Hypothesis supplied to a pure library contract, not new native wire evidence."
+    },
+    {
+      "path": "architecture/ao06-b507-quantity-views.md",
+      "previous_path": "architecture/ao06_b507_quantity_views.md",
+      "status": "candidate",
+      "basis": "This bounded software API companion defines selected views for a candidate"
+    },
+    {
+      "path": "architecture/ao08-b50e-row-spans.md",
+      "previous_path": "architecture/ao08_b50e_row_spans.md",
+      "status": "candidate",
+      "basis": "Its nineteen candidate OP02 rows, opaque widths and raw inverse bytes provide"
+    },
+    {
+      "path": "architecture/ao10-b50f-field-views.md",
+      "previous_path": "architecture/ao10_b50f_field_views.md",
+      "status": "candidate",
+      "basis": "The public native starting point is [B50F candidate layouts](../protocols/vaillant/ebus-vaillant.md#b50f-safety-relevant-temperature-status-and-demand)."
+    },
+    {
+      "path": "architecture/ao12-b510-cache-transition.md",
+      "previous_path": "architecture/ao12_b510_cache_transition.md",
+      "status": "candidate",
+      "basis": "first. Its candidate feedback and bit interpretation remain **Hypothesis**. It"
+    },
+    {
+      "path": "architecture/ao14-b511-failure-transition.md",
+      "previous_path": "architecture/ao14_b511_failure_transition.md",
+      "status": "candidate",
+      "basis": "for `vaillant`. It references the [public native B511 contract](../protocols/vaillant/ebus-vaillant-b511.md#b5-11-01-failure-mode-read-candidate)"
+    },
+    {
+      "path": "architecture/ao18-b513-information-views.md",
+      "previous_path": "architecture/ao18_b513_information_views.md",
+      "status": "candidate",
+      "basis": "is the evidence boundary: candidate operations are Hypothesis and native physical"
+    },
+    {
+      "path": "architecture/ao20-b514-menu-views.md",
+      "previous_path": "architecture/ao20_b514_menu_views.md",
+      "status": "candidate",
+      "basis": "[public native B514 contract](../protocols/vaillant/ebus-vaillant-b514.md#candidate-sub-commands)"
+    },
+    {
+      "path": "architecture/ao22-b519-opaque-views.md",
+      "previous_path": "architecture/ao22_b519_opaque_views.md",
+      "status": "candidate",
+      "basis": "Read the public [B519 candidate contract](../protocols/vaillant/ebus-vaillant.md#b519-test-and-echo-services)"
+    },
+    {
+      "path": "architecture/ao24-b520-actuator-views.md",
+      "previous_path": "architecture/ao24_b520_actuator_views.md",
+      "status": "candidate",
+      "basis": "Status: software API companion. Native support, effects and persistence are Unknown. Family applicability is never qualified by this page; every semantic field is a Hypothesis"
+    },
+    {
+      "path": "architecture/ao26-b522-demand-views.md",
+      "previous_path": "architecture/ao26_b522_demand_views.md",
+      "status": "candidate",
+      "basis": "This software API companion defines isolated candidate field results for the"
+    },
+    {
+      "path": "architecture/ao28-b523-sensor-views.md",
+      "previous_path": "architecture/ao28_b523_sensor_views.md",
+      "status": "candidate",
+      "basis": "The [public B523 native contract](../protocols/vaillant/ebus-vaillant-b523.md#candidate-layouts)"
+    },
+    {
+      "path": "architecture/ap02-b531-capability-state.md",
+      "previous_path": "architecture/ap02_b531_capability_state.md",
+      "status": "candidate",
+      "basis": "is the native evidence boundary: its layouts remain candidate, unconfirmed on"
+    },
+    {
+      "path": "architecture/ap04-b531-ordinary-limit.md",
+      "previous_path": "architecture/ap04_b531_ordinary_limit.md",
+      "status": "accepted contract",
+      "basis": "This architecture page specifies a local software contract for the Vaillant"
+    },
+    {
+      "path": "architecture/ap06-b516-cycle-reducer.md",
+      "previous_path": "architecture/ap06_b516_cycle_reducer.md",
+      "status": "candidate",
+      "basis": "availability remain candidate/Unknown. This reducer takes already converted u32"
+    },
+    {
+      "path": "architecture/ap08-b555-weekly-refresh.md",
+      "previous_path": "architecture/ap08_b555_weekly_refresh.md",
+      "status": "candidate",
+      "basis": "The public [B555 native contract](../protocols/vaillant/ebus-vaillant-b555-timer-protocol.md#521-a4-reply-acceptance-by-a-requester-candidate) owns wire claims. Its candidate requester acceptance and write behavior do not establish this local reducer. In particular its whole-reply acceptance and zero-count write discussion are separate from the local incremental policy and zero-slot shape here. No native write, request encoder, read-back, retry, rollback or acceptance policy follows. No physical maximum follows from `slot_limit`."
+    },
+    {
+      "path": "architecture/ap10-b555-manager-gate.md",
+      "previous_path": "architecture/ap10_b555_manager_gate.md",
+      "status": "candidate",
+      "basis": "The public [native B555 contract](../protocols/vaillant/ebus-vaillant-b555-timer-protocol.md#31-sub-command-inventory-candidate)"
+    },
+    {
+      "path": "architecture/ap12-b512-fan-fields.md",
+      "previous_path": "architecture/ap12_b512_fan_fields.md",
+      "status": "candidate",
+      "basis": "runtime or native qualification. The public [B512 candidate contract](../protocols/vaillant/ebus-vaillant-b512.md#candidate-sub-commands-op)"
+    },
+    {
+      "path": "architecture/ap14-b512-heatpump-io.md",
+      "previous_path": "architecture/ap14_b512_heatpump_io.md",
+      "status": "candidate",
+      "basis": "makes no claim that the function is implemented here. Candidate family and"
+    },
+    {
+      "path": "architecture/ap16-b512-emergency-flow.md",
+      "previous_path": "architecture/ap16_b512_emergency_flow.md",
+      "status": "candidate",
+      "basis": "is [B512 candidate sub-commands](../protocols/vaillant/ebus-vaillant-b512.md#candidate-sub-commands-op)."
+    },
+    {
+      "path": "architecture/ap18-b509-diagnostic-fields.md",
+      "previous_path": "architecture/ap18_b509_diagnostic_fields.md",
+      "status": "candidate",
+      "basis": "layouts remain Unknown there. The named logical fields below are Hypothesis;"
+    },
+    {
+      "path": "architecture/ap20-b51a-mirror-fields.md",
+      "previous_path": "architecture/ap20_b51a_mirror_fields.md",
+      "status": "candidate",
+      "basis": "[Candidate mirror and diagnosis layouts](../protocols/vaillant/ebus-vaillant-b51a.md#candidate-mirror-and-diagnosis-layouts)."
+    },
+    {
+      "path": "architecture/ap22-b523-actuator-fields.md",
+      "previous_path": "architecture/ap22_b523_actuator_fields.md",
+      "status": "candidate",
+      "basis": "[B523 contract](../protocols/vaillant/ebus-vaillant-b523.md#candidate-layouts),"
+    },
+    {
+      "path": "architecture/ap24-b516-energy-type-fields.md",
+      "previous_path": "architecture/ap24_b516_energy_type_fields.md",
+      "status": "candidate",
+      "basis": "The [public B516 native reference](../protocols/vaillant/ebus-vaillant-b516-energy.md#10-other-b516-sub-ids-candidate)"
+    },
+    {
+      "path": "architecture/ap26-b525-quality-config.md",
+      "previous_path": "architecture/ap26_b525_quality_config.md",
+      "status": "candidate",
+      "basis": "This architecture contract defines a pure software representation for candidate"
+    },
+    {
+      "path": "architecture/aq02-b504-candidate-fields.md",
+      "previous_path": "architecture/aq02_b504_candidate_fields.md",
+      "status": "candidate",
+      "basis": "**Hypothesis**. All examples are synthetic. Native support, freshness, physical"
+    },
+    {
+      "path": "architecture/aq04-b505-override-fields.md",
+      "previous_path": "architecture/aq04_b505_override_fields.md",
+      "status": "candidate",
+      "basis": "claim. The [native B505 contract](../protocols/vaillant/ebus-vaillant-b505.md#bounded-sentinel-and-override-candidates)"
+    },
+    {
+      "path": "architecture/aq06-b505-conditional-roles.md",
+      "previous_path": "architecture/aq06_b505_conditional_roles.md",
+      "status": "candidate",
+      "basis": "Vaillant family candidates. Nothing is stable before Helianthus 1.0. It makes no"
+    },
+    {
+      "path": "architecture/aq08-b503-control-fields.md",
+      "previous_path": "architecture/aq08_b503_control_fields.md",
+      "status": "candidate",
+      "basis": "Vaillant family. Its API contract is **Proven** as a local definition; candidate"
+    },
+    {
+      "path": "architecture/aq10-b515-period-fields.md",
+      "previous_path": "architecture/aq10_b515_period_fields.md",
+      "status": "candidate",
+      "basis": "keeps the timer layout at **Hypothesis**, including unresolved equal-endpoint"
+    },
+    {
+      "path": "architecture/aq12-b517-local-guard.md",
+      "previous_path": "architecture/aq12_b517_local_guard.md",
+      "status": "candidate",
+      "basis": "package `vaillant`. The API contract is **Proven**; the adaptation-guard candidate"
+    },
+    {
+      "path": "architecture/aq14-b521-field-views.md",
+      "previous_path": "architecture/aq14_b521_field_views.md",
+      "status": "candidate",
+      "basis": "as `181.0` is not an integer. Identifiers select a local candidate view; they never"
+    },
+    {
+      "path": "architecture/aq16-standard07-field-views.md",
+      "previous_path": "architecture/aq16_standard07_field_views.md",
+      "status": "candidate",
+      "basis": "boundary. Its standard descriptions do not fill gaps in these candidate views."
+    },
+    {
+      "path": "architecture/aq18-standardff-extent-view.md",
+      "previous_path": "architecture/aq18_standardff_extent_view.md",
+      "status": "candidate",
+      "basis": "remain **Unknown**. Candidate meaning remains **Hypothesis** independently of"
+    },
+    {
+      "path": "architecture/aq20-b51a-handshake-fields.md",
+      "previous_path": "architecture/aq20_b51a_handshake_fields.md",
+      "status": "candidate",
+      "basis": "identifiers select a candidate local view and never qualify a family."
+    },
+    {
+      "path": "architecture/aq22-b51a-diagnostic-fields.md",
+      "previous_path": "architecture/aq22_b51a_diagnostic_fields.md",
+      "status": "candidate",
+      "basis": "API contract** for finite synthetic views; candidate meanings remain"
+    },
+    {
+      "path": "architecture/aq24-b512-valve-pump-fields.md",
+      "previous_path": "architecture/aq24_b512_valve_pump_fields.md",
+      "status": "candidate",
+      "basis": "provides the candidate service context first. It leaves native exchanges and"
+    },
+    {
+      "path": "architecture/aq26-b512-power-stepper-fields.md",
+      "previous_path": "architecture/aq26_b512_power_stepper_fields.md",
+      "status": "candidate",
+      "basis": "The public native [B512 candidate contract](../protocols/vaillant/ebus-vaillant-b512.md#candidate-sub-commands-op)"
+    },
+    {
+      "path": "architecture/b510-b511-local-cache.md",
+      "previous_path": "architecture/b510_b511_local_cache.md",
+      "status": "candidate",
+      "basis": "This page defines a bounded **Hypothesis** about local software behavior for"
+    },
+    {
+      "path": "architecture/b516-local-cycle.md",
+      "previous_path": "architecture/b516_local_cycle.md",
+      "status": "candidate",
+      "basis": "This page describes a **Hypothesis** about local software behavior for a"
+    },
+    {
+      "path": "architecture/b51b-local-transfer.md",
+      "previous_path": "architecture/b51b_local_transfer.md",
+      "status": "candidate",
+      "basis": "This is a bounded candidate software behavior contract for the Vaillant family."
+    },
+    {
+      "path": "architecture/b531-local-predicates.md",
+      "previous_path": "architecture/b531_local_predicates.md",
+      "status": "candidate",
+      "basis": "This is a bounded candidate oracle for local software behavior, supplied by"
+    },
+    {
+      "path": "architecture/ebus_standard/ai02-03-counter-bodies.md",
+      "previous_path": "architecture/ebus_standard/ai02_03_counter_bodies.md",
+      "status": "candidate",
+      "basis": "first. Its generic standard response tables and candidate alternatives remain"
+    },
+    {
+      "path": "architecture/ebus_standard/ai04-05-burner-bodies.md",
+      "previous_path": "architecture/ebus_standard/ai04_05_burner_bodies.md",
+      "status": "candidate",
+      "basis": "prior state with an invalid candidate. No new endpoint or envelope is defined."
+    },
+    {
+      "path": "protocols/ebus-services/ebus-service-0fh.md",
+      "previous_path": "protocols/ebus-services/ebus-service-0Fh.md",
+      "status": "accepted contract",
+      "basis": "> Source: eBUS Specification Application Layer (OSI 7) V1.6.1, §3.6"
+    },
+    {
+      "path": "protocols/ebus-services/ebus-service-feh.md",
+      "previous_path": "protocols/ebus-services/ebus-service-FEh.md",
+      "status": "accepted contract",
+      "basis": "> Source: eBUS Specification Application Layer (OSI 7) V1.6.1, §3.7"
+    },
+    {
+      "path": "protocols/ebus-services/ebus-service-ffh.md",
+      "previous_path": "protocols/ebus-services/ebus-service-FFh.md",
+      "status": "accepted contract",
+      "basis": "> Source: eBUS Specification Application Layer (OSI 7) V1.6.1, §3.8; eBUS Specification Network Management V1.0.1."
+    },
+    {
+      "path": "protocols/vaillant/ebus-vaillant-b503.md",
+      "previous_path": "protocols/vaillant/ebus-vaillant-B503.md",
+      "status": "accepted contract",
+      "basis": "This document specifies the publishable, implementation-neutral wire contract for the observed Vaillant `B503` selector family. It does not define client lifecycle, deployment policy, or consumer presentation."
+    },
+    {
+      "path": "protocols/vaillant/ebus-vaillant-b504.md",
+      "previous_path": "protocols/vaillant/ebus-vaillant-B504.md",
+      "status": "unknown",
+      "basis": "No page-level status statement in the opening section."
+    },
+    {
+      "path": "protocols/vaillant/ebus-vaillant-b505.md",
+      "previous_path": "protocols/vaillant/ebus-vaillant-B505.md",
+      "status": "unknown",
+      "basis": "No page-level status statement in the opening section."
+    },
+    {
+      "path": "protocols/vaillant/ebus-vaillant-b506.md",
+      "previous_path": "protocols/vaillant/ebus-vaillant-B506.md",
+      "status": "unknown",
+      "basis": "No page-level status statement in the opening section."
+    },
+    {
+      "path": "protocols/vaillant/ebus-vaillant-b507.md",
+      "previous_path": "protocols/vaillant/ebus-vaillant-B507.md",
+      "status": "candidate",
+      "basis": "**Enrichment research** -- not yet live-validated on a tested bus."
+    },
+    {
+      "path": "protocols/vaillant/ebus-vaillant-b508.md",
+      "previous_path": "protocols/vaillant/ebus-vaillant-B508.md",
+      "status": "candidate",
+      "basis": "**Hypothesis** -- not live-validated on a tested bus."
+    },
+    {
+      "path": "protocols/vaillant/ebus-vaillant-b509-boiler-register-map.md",
+      "previous_path": "protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md",
+      "status": "candidate",
+      "basis": "This document records candidate direct BAI00 register semantics for `PB=0xB5`, `SB=0x09`. Each mapping remains device-specific and requires target-qualified evidence."
+    },
+    {
+      "path": "protocols/vaillant/ebus-vaillant-b509-heatpump-register-map.md",
+      "previous_path": "protocols/vaillant/ebus-vaillant-B509-heatpump-register-map.md",
+      "status": "candidate",
+      "basis": "The `Legacy API path (candidate)` column keeps the earlier API path as"
+    },
+    {
+      "path": "protocols/vaillant/ebus-vaillant-b509.md",
+      "previous_path": "protocols/vaillant/ebus-vaillant-B509.md",
+      "status": "candidate",
+      "basis": "The same `PB`/`SB` header also carries candidate subcommand families"
+    },
+    {
+      "path": "protocols/vaillant/ebus-vaillant-b50b.md",
+      "previous_path": "protocols/vaillant/ebus-vaillant-B50B.md",
+      "status": "candidate",
+      "basis": "These Vaillant family declarations are **Hypothesis**. All defaults, bounds,"
+    },
+    {
+      "path": "protocols/vaillant/ebus-vaillant-b50e.md",
+      "previous_path": "protocols/vaillant/ebus-vaillant-B50E.md",
+      "status": "candidate",
+      "basis": "This document specifies the candidate wire contract for the Vaillant `B5 0E` data-logger service: a rule table that selects values to record, a log buffer, an information block and two control operations. It does not define client lifecycle, deployment policy, or consumer presentation."
+    },
+    {
+      "path": "protocols/vaillant/ebus-vaillant-b50f.md",
+      "previous_path": "protocols/vaillant/ebus-vaillant-B50F.md",
+      "status": "candidate",
+      "basis": "PB=B5 and SB=0F identify this bounded family candidate. Every declaration"
+    },
+    {
+      "path": "protocols/vaillant/ebus-vaillant-b510.md",
+      "previous_path": "protocols/vaillant/ebus-vaillant-B510.md",
+      "status": "candidate",
+      "basis": "- `CANDIDATE`: a layout or a request that is not confirmed on the wire."
+    },
+    {
+      "path": "protocols/vaillant/ebus-vaillant-b511.md",
+      "previous_path": "protocols/vaillant/ebus-vaillant-B511.md",
+      "status": "candidate",
+      "basis": "- `CANDIDATE`: a layout, a request or a reply that is not confirmed on the"
+    },
+    {
+      "path": "protocols/vaillant/ebus-vaillant-b512.md",
+      "previous_path": "protocols/vaillant/ebus-vaillant-B512.md",
+      "status": "candidate",
+      "basis": "The payload has been described as `Modulation/Fan`; public TypeSpec and historical notes provide a stronger, falsifiable hypothesis:"
+    },
+    {
+      "path": "protocols/vaillant/ebus-vaillant-b513.md",
+      "previous_path": "protocols/vaillant/ebus-vaillant-B513.md",
+      "status": "candidate",
+      "basis": "`CANDIDATE` statement is **Hypothesis**, unconfirmed on the wire."
+    },
+    {
+      "path": "protocols/vaillant/ebus-vaillant-b514.md",
+      "previous_path": "protocols/vaillant/ebus-vaillant-B514.md",
+      "status": "candidate",
+      "basis": "- `CANDIDATE`: a layout that is not confirmed on the wire. Every"
+    },
+    {
+      "path": "protocols/vaillant/ebus-vaillant-b515.md",
+      "previous_path": "protocols/vaillant/ebus-vaillant-B515.md",
+      "status": "candidate",
+      "basis": "- `CANDIDATE`: a layout that is not confirmed on the wire. Every"
+    },
+    {
+      "path": "protocols/vaillant/ebus-vaillant-b516-energy.md",
+      "previous_path": "protocols/vaillant/ebus-vaillant-B516-energy.md",
+      "status": "candidate",
+      "basis": "and the further candidate sub-IDs in section 10."
+    },
+    {
+      "path": "protocols/vaillant/ebus-vaillant-b517.md",
+      "previous_path": "protocols/vaillant/ebus-vaillant-B517.md",
+      "status": "candidate",
+      "basis": "Every row is **Hypothesis**. Coordinates are logical positions including"
+    },
+    {
+      "path": "protocols/vaillant/ebus-vaillant-b519.md",
+      "previous_path": "protocols/vaillant/ebus-vaillant-B519.md",
+      "status": "candidate",
+      "basis": "`B5 19 <selector>`. **Hypothesis** applies to all native layouts, field meanings"
+    },
+    {
+      "path": "protocols/vaillant/ebus-vaillant-b51a.md",
+      "previous_path": "protocols/vaillant/ebus-vaillant-B51A.md",
+      "status": "unknown",
+      "basis": "No page-level status statement in the opening section."
+    },
+    {
+      "path": "protocols/vaillant/ebus-vaillant-b51b.md",
+      "previous_path": "protocols/vaillant/ebus-vaillant-B51B.md",
+      "status": "candidate",
+      "basis": "The overview leaves B5 1B layouts unestablished; these declarations remain candidates."
+    },
+    {
+      "path": "protocols/vaillant/ebus-vaillant-b520.md",
+      "previous_path": "protocols/vaillant/ebus-vaillant-B520.md",
+      "status": "candidate",
+      "basis": "supplies the candidate service context. All field interpretations below are"
+    },
+    {
+      "path": "protocols/vaillant/ebus-vaillant-b521.md",
+      "previous_path": "protocols/vaillant/ebus-vaillant-B521.md",
+      "status": "unknown",
+      "basis": "No page-level status statement in the opening section."
+    },
+    {
+      "path": "protocols/vaillant/ebus-vaillant-b522.md",
+      "previous_path": "protocols/vaillant/ebus-vaillant-B522.md",
+      "status": "unknown",
+      "basis": "No page-level status statement in the opening section."
+    },
+    {
+      "path": "protocols/vaillant/ebus-vaillant-b523.md",
+      "previous_path": "protocols/vaillant/ebus-vaillant-B523.md",
+      "status": "unknown",
+      "basis": "No page-level status statement in the opening section."
+    },
+    {
+      "path": "protocols/vaillant/ebus-vaillant-b524-register-map.md",
+      "previous_path": "protocols/vaillant/ebus-vaillant-B524-register-map.md",
+      "status": "accepted contract",
+      "basis": "> **Status:** Authoritative reference. Single source of truth for B524 register semantics."
+    },
+    {
+      "path": "protocols/vaillant/ebus-vaillant-b524.md",
+      "previous_path": "protocols/vaillant/ebus-vaillant-B524.md",
+      "status": "accepted contract",
+      "basis": "This document is the canonical wire-protocol reference for Vaillant `GetExtendedRegisters` (`PB=0xB5`, `SB=0x24`)."
+    },
+    {
+      "path": "protocols/vaillant/ebus-vaillant-b525.md",
+      "previous_path": "protocols/vaillant/ebus-vaillant-B525.md",
+      "status": "candidate",
+      "basis": "This is a finite candidate contract for the Vaillant radio family, with variant"
+    },
+    {
+      "path": "protocols/vaillant/ebus-vaillant-b531-hem-power-limit.md",
+      "previous_path": "protocols/vaillant/ebus-vaillant-B531-hem-power-limit.md",
+      "status": "candidate",
+      "basis": "Candidate: `B531` carries the nominal-power and power-limitation exchange"
+    },
+    {
+      "path": "types/ak25-type-representation-axes.md",
+      "previous_path": "types/ak25_type_representation_axes.md",
+      "status": "candidate",
+      "basis": "**Hypothesis:** a family type contract states representation, signedness, bit"
+    }
+  ],
+  "inherited_unresolved_anchors": [
+    {
+      "source": "architecture/b524-structural-decisions.md",
+      "target": "protocols/vaillant/ebus-vaillant-b524-register-map.md",
+      "anchor": "ebusv1semanticcircuitsget"
+    },
+    {
+      "source": "architecture/b524-structural-decisions.md",
+      "target": "protocols/vaillant/ebus-vaillant-b524-register-map.md",
+      "anchor": "ebusv1semanticcylindersget"
+    },
+    {
+      "source": "architecture/b524-structural-decisions.md",
+      "target": "protocols/vaillant/ebus-vaillant-b524-register-map.md",
+      "anchor": "ebusv1semanticsolarget"
+    },
+    {
+      "source": "architecture/b524-structural-decisions.md",
+      "target": "protocols/vaillant/ebus-vaillant-b524-register-map.md",
+      "anchor": "gg0x00--systemregulator"
+    }
+  ]
+}

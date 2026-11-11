@@ -5,7 +5,7 @@ from pathlib import Path
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / 'protocols/vaillant/ebus-vaillant-B513.md'
+PAGE = ROOT / 'protocols/vaillant/ebus-vaillant-b513.md'
 FIXTURE = PAGE.parent / 'fixtures/ac10_appliance_info.json'
 
 

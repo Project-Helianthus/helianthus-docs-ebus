@@ -22,7 +22,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = ROOT / 'architecture/fixtures/aj22_b555_week_refresh.json'
-PAGE = ROOT / 'architecture/aj22_b555_week_refresh.md'
+PAGE = ROOT / 'architecture/aj22-b555-week-refresh.md'
 UNKNOWN = {'native_behavior', 'physical_schedule_effects', 'persistence',
            'atomicity', 'a6_dispatch_count', 'mid_slot_failure', 'retry_or_rollback'}
 

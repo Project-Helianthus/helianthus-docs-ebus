@@ -11,7 +11,7 @@ class Ab17Ap17Contract(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.ab17ap17_root = Path(os.environ.get('AB17AP17_ROOT', Path(__file__).resolve().parents[1]))
-        cls.ab17ap17_page = (cls.ab17ap17_root / 'architecture/ap18_b509_diagnostic_fields.md').read_text()
+        cls.ab17ap17_page = (cls.ab17ap17_root / 'architecture/ap18-b509-diagnostic-fields.md').read_text()
         cls.ab17ap17_fixture = json.loads((cls.ab17ap17_root / 'architecture/fixtures/ap18_b509_diagnostic_fields.json').read_text())
         cls.ab17ap17_table = json.loads(re.search(r'```json\n(.*?)\n```', cls.ab17ap17_page, re.S).group(1))
 

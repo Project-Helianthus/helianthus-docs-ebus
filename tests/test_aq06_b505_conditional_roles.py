@@ -4,7 +4,7 @@ import json
 import re
 import unittest
 
-Ab05Aq05Page = Path(__file__).resolve().parents[1] / 'architecture/aq06_b505_conditional_roles.md'
+Ab05Aq05Page = Path(__file__).resolve().parents[1] / 'architecture/aq06-b505-conditional-roles.md'
 
 # Independent constants for the finite view/operation matrix.
 Ab05Aq05Views = {

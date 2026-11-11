@@ -2,7 +2,7 @@
 
 ## Native scope and evidence
 
-The [native B506 contract](ebus-vaillant-B506.md) supplies the service context:
+The [native B506 contract](ebus-vaillant-b506.md) supplies the service context:
 PB=0xB5, SB=0x06, Vaillant RF family. OP12, OP13 and OP14 are hexadecimal
 operation labels in this page. The [synthetic declarations](fixtures/ak06_b506_rf_sequence.json)
 contain isolated candidate fields, not complete telegrams or observed exchanges.

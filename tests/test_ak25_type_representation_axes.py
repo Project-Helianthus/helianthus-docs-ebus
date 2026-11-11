@@ -42,7 +42,7 @@ class RepresentationAxes(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.data = json.loads((ROOT / 'types/fixtures/ak25_type_representation_axes.json').read_text())
-        cls.page = (ROOT / 'types/ak25_type_representation_axes.md').read_text()
+        cls.page = (ROOT / 'types/ak25-type-representation-axes.md').read_text()
 
     def test_finite_cases_and_independent_arithmetic(self):
         # Independent inputs/results pin both valid and invalid digit positions.

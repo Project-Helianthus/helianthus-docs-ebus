@@ -86,7 +86,7 @@ Reachable projected maxima under the documented query coverage (no solar registe
 
 ## Broadcast Date Mapping
 
-The B516 energy selector date is a packed absolute date; the packed-date layout and its worked decode are documented in [B516 energy statistics](../protocols/vaillant/ebus-vaillant-B516-energy.md) (§3, §4.3, §6.1), which is the native authority. The decoder publishes the date as absolute components; helianthus-ebusreg [#172](https://github.com/Project-Helianthus/helianthus-ebusreg/pull/172) is the decoder implementation evidence and corroborates, but does not establish, the wire contract:
+The B516 energy selector date is a packed absolute date; the packed-date layout and its worked decode are documented in [B516 energy statistics](../protocols/vaillant/ebus-vaillant-b516-energy.md) (§3, §4.3, §6.1), which is the native authority. The decoder publishes the date as absolute components; helianthus-ebusreg [#172](https://github.com/Project-Helianthus/helianthus-ebusreg/pull/172) is the decoder implementation evidence and corroborates, but does not establish, the wire contract:
 
 | Field | Validity |
 | --- | --- |
@@ -96,9 +96,9 @@ The B516 energy selector date is a packed absolute date; the packed-date layout 
 
 Wire conclusions behind this mapping. The B516 page states these without a Proven label, so they are labelled Hypothesis here:
 
-- **Hypothesis:** total requests ignore the packed date, so a total reply carries no date window and an echoed date in a total reply does not identify an energy window; the decoded date fields are therefore invalid for totals. Source: [§4.2](../protocols/vaillant/ebus-vaillant-B516-energy.md#42-system-totals-x0) and the total reply echoing `87 34` in [§6.1](../protocols/vaillant/ebus-vaillant-B516-energy.md#61-worked-evidence-read-only), observed on one installation of one controller family. A capture of total requests with differing date bytes returning identical values, on more than one installation, would settle it.
-- **Hypothesis:** the yearly selector carries an absolute year, not a relative qualifier ("current year" and "previous year" are not wire selectors). Source: [§4.3](../protocols/vaillant/ebus-vaillant-B516-energy.md#43-yearly-windows-x3), including the half-year disambiguation note, and the reproducible decode in §6.1. Yearly requests for adjacent and non-adjacent years on more than one installation, with replies that follow the absolute year, would settle it.
-- **Unknown:** which years a given regulator answers for ([§4.3](../protocols/vaillant/ebus-vaillant-B516-energy.md#43-yearly-windows-x3), [§11](../protocols/vaillant/ebus-vaillant-B516-energy.md#11-open-questions)).
+- **Hypothesis:** total requests ignore the packed date, so a total reply carries no date window and an echoed date in a total reply does not identify an energy window; the decoded date fields are therefore invalid for totals. Source: [§4.2](../protocols/vaillant/ebus-vaillant-b516-energy.md#42-system-totals-x0) and the total reply echoing `87 34` in [§6.1](../protocols/vaillant/ebus-vaillant-b516-energy.md#61-worked-evidence-read-only), observed on one installation of one controller family. A capture of total requests with differing date bytes returning identical values, on more than one installation, would settle it.
+- **Hypothesis:** the yearly selector carries an absolute year, not a relative qualifier ("current year" and "previous year" are not wire selectors). Source: [§4.3](../protocols/vaillant/ebus-vaillant-b516-energy.md#43-yearly-windows-x3), including the half-year disambiguation note, and the reproducible decode in §6.1. Yearly requests for adjacent and non-adjacent years on more than one installation, with replies that follow the absolute year, would settle it.
+- **Unknown:** which years a given regulator answers for ([§4.3](../protocols/vaillant/ebus-vaillant-b516-energy.md#43-yearly-windows-x3), [§11](../protocols/vaillant/ebus-vaillant-b516-energy.md#11-open-questions)).
 
 The decoder publishes only the absolute components above and no relative year qualifier.
 

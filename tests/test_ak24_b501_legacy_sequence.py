@@ -8,7 +8,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 NATIVE = ROOT / 'protocols/vaillant/ebus-b501-legacy-sequence.md'
 DATA = ROOT / 'protocols/vaillant/fixtures/ak24_b501_legacy_sequence.json'
-API = ROOT / 'architecture/ak24_b501_legacy_sequence_api.md'
+API = ROOT / 'architecture/ak24-b501-legacy-sequence-api.md'
 IDENTITY = {
     'family': 'legacy-interface', 'variant': 'computer-interface',
     'primary': 181, 'secondary': 1, 'operation': None,

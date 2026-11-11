@@ -7,7 +7,7 @@ import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = Path('architecture/an04_b524_codebook_views.md')
+PAGE = Path('architecture/an04-b524-codebook-views.md')
 FIXTURE = Path('architecture/fixtures/an04_b524_codebook_views.json')
 POLICY = {
     'cross_family_fallback': False,

@@ -112,7 +112,7 @@ spans are consistent with it.
 `public_exact_selector_schema` covers the 13 plain-byte calendar/clock records
 and one U32 record. The date and time spans read as day, month, year-offset and
 hour, minute, second bytes. These are candidate layouts:
-[ebus-vaillant-B524.md][source-3] says which codec applies to which date or time
+[ebus-vaillant-b524.md][source-3] says which codec applies to which date or time
 register is "not established" and notes BCD for some scalar date fields. The
 [b524-op02-calendar-clock-selectors.csv][source-4] list calls the selectors
 "candidate, unconfirmed on the wire".
@@ -229,9 +229,9 @@ controller. No BASV2 bytes, software or hardware identity, or raw description
 are retained here, so this is not a profile observation and cannot be falsified
 from this repository. It resembles the register map's historical short-probe
 range hint (`-20..50`; its legend in
-[ebus-vaillant-B524-register-map.md][source-6] says the hint "requires a
+[ebus-vaillant-b524-register-map.md][source-6] says the hint "requires a
 matching complete OP01/OP07 description before validating edits").
-[ebus-vaillant-B524.md][source-7] says the historical short probe "must not
+[ebus-vaillant-b524.md][source-7] says the historical short probe "must not
 provide input-validation authority". Neither the BASV2 figure nor the hint
 qualifies a range for BASV0 or any other profile.
 
@@ -284,12 +284,12 @@ repository README.
 [source-2]:
   fixtures/b524-basv0-register-observations-v1.json
 [source-3]:
-  ebus-vaillant-B524.md
+  ebus-vaillant-b524.md
 [source-4]:
   fixtures/b524-op02-calendar-clock-selectors.csv
 [source-5]:
   ../../types/ebusd-csv.md
 [source-6]:
-  ebus-vaillant-B524-register-map.md
+  ebus-vaillant-b524-register-map.md
 [source-7]:
-  ebus-vaillant-B524.md
+  ebus-vaillant-b524.md

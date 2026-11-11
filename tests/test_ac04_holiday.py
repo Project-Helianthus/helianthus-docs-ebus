@@ -7,7 +7,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = ROOT / 'protocols/vaillant/fixtures/ac04_holiday.json'
-PAGE = ROOT / 'protocols/vaillant/ebus-vaillant-B50B.md'
+PAGE = ROOT / 'protocols/vaillant/ebus-vaillant-b50b.md'
 AXES = ('family', 'variant', 'direction', 'service', 'operation', 'alternative')
 UNKNOWN = [
     'calendar century', 'timezone', 'valid-date rules', 'start-before-end rules',

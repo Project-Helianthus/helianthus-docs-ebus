@@ -4,10 +4,10 @@ Refs [#573](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/57
 partial child [#590](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/590).
 
 This is an evidence-gap view of the existing catalog, not another naming source.
-The [native B524 contract](../protocols/vaillant/ebus-vaillant-B524.md)
+The [native B524 contract](../protocols/vaillant/ebus-vaillant-b524.md)
 establishes the selector fields and the separation of local OP02 and mediated
 OP06. Read it before interpreting this index. The
-[register catalog](../protocols/vaillant/ebus-vaillant-B524-register-map.md)
+[register catalog](../protocols/vaillant/ebus-vaillant-b524-register-map.md)
 and its [naming policy](../architecture/naming.md#unknown-meaning) retain
 maker-derived terms while their open points await evidence. Canonical names and
 `previous_name` remain owned by those sources.

@@ -4,7 +4,7 @@ from pathlib import Path
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / 'protocols/vaillant/ebus-vaillant-B517.md'
+PAGE = ROOT / 'protocols/vaillant/ebus-vaillant-b517.md'
 FIXTURE = ROOT / 'protocols/vaillant/fixtures/ac14_tunnel.json'
 AXES = ('family', 'variant', 'direction', 'service', 'operation', 'alternative')
 UNKNOWN = ['physical relationship of B517/B518', 'destination roles', 'forwarder',

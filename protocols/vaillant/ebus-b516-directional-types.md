@@ -82,5 +82,5 @@ establishes only the declared representation, not native qualification.
 Unknown operation and position metadata is omitted rather than replaced with
 zero or an inferred offset. Candidate grade and qualification are separate.
 No capture, device observation or complete native enum table is established by
-the synthetic cases. The [existing B516 reference](ebus-vaillant-B516-energy.md)
+the synthetic cases. The [existing B516 reference](ebus-vaillant-b516-energy.md)
 supplies the public family framing; its other layouts do not fill these gaps.

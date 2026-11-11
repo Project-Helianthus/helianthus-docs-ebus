@@ -83,7 +83,7 @@ def ab09ap09_admission(ab09ap09_text):
 class TestAb09Ap09ManagerGate(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.ab09ap09_page = (ab09ap09_root / 'architecture/ap10_b555_manager_gate.md').read_text()
+        cls.ab09ap09_page = (ab09ap09_root / 'architecture/ap10-b555-manager-gate.md').read_text()
         cls.ab09ap09_fixture = json.loads((ab09ap09_root / 'architecture/fixtures/ap10_b555_manager_gate.json').read_text(), object_pairs_hook=ab09ap09_pairs)
 
     def test_ab09ap09_signature_and_selector_table(self):

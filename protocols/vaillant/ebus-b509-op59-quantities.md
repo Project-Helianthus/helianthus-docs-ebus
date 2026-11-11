@@ -2,7 +2,7 @@
 
 ## Scope and evidence
 
-This supplement narrows the [B509 family reference](ebus-vaillant-B509.md).
+This supplement narrows the [B509 family reference](ebus-vaillant-b509.md).
 The candidate selector is PB `0xB5`, SB `0x09`, operation `0x59` in the
 Vaillant family. The quantity interpretations below are **Hypothesis**, not
 native support claims. The supplied synthetic fragments illustrate arithmetic;

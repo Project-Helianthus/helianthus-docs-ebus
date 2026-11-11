@@ -10,7 +10,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 NATIVE = ROOT / 'protocols/vaillant/ebus-b555-additional-forms.md'
 DATA = ROOT / 'protocols/vaillant/fixtures/ak16_b555_additional_forms.json'
-API = ROOT / 'architecture/ak16_b555_additional_forms_api.md'
+API = ROOT / 'architecture/ak16-b555-additional-forms-api.md'
 GLOBALS = ('dhw', 'circulation', 'noise_reduction', 'ventilation', 'high_tariff')
 CHANNEL_FIELDS = ('zone_heating', 'zone_cooling', 'external_dhw', 'external_fixed_flow')
 # Literal independent coordinates: do not derive the oracle from fixture formulae.

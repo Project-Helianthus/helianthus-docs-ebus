@@ -10,7 +10,7 @@ import unittest
 _LEGACY_ROLE = re.compile(r"\b(?:" + "m" + "aster" + "|" + "sl" + "ave" + r")\b", re.IGNORECASE)
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / 'protocols/vaillant/ebus-vaillant-B519.md'
+PAGE = ROOT / 'protocols/vaillant/ebus-vaillant-b519.md'
 FIXTURE = ROOT / 'protocols/vaillant/fixtures/ac16_opaque_programming.json'
 # Explicit operation/request/positive expectations, independent of page and JSON.
 CASES = (

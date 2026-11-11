@@ -13,7 +13,7 @@ route or API. Every requirement described as proposed below is future work.
 
 ## Sources and authority
 
-- **N — native contract first:** [B524 register map](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/vaillant/ebus-vaillant-B524-register-map.md),
+- **N — native contract first:** [B524 register map](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/vaillant/ebus-vaillant-b524-register-map.md),
   table legend, Group Topology, GG=0x04 Solar Circuit and GG=0x05 Solar Loaded
   Cylinder. Its `†` rows are CSV value matches with false-positive risk, not
   independently confirmed semantics. Catalog ranges are historical probe hints.

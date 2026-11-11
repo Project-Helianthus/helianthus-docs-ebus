@@ -9,7 +9,7 @@ import struct
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / "architecture/al08_b524_system_information.md"
+PAGE = ROOT / "architecture/al08-b524-system-information.md"
 FIXTURE = ROOT / "architecture/fixtures/al08_b524_system_information.json"
 CONTEXT_FIELDS = [
     "ab42Family", "ab42Software", "ab42Hardware", "ab42APIVersion",

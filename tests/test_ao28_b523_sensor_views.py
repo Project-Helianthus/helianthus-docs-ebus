@@ -6,7 +6,7 @@ import re
 import unittest
 
 ab27ao27Root = Path(__file__).resolve().parents[1]
-ab27ao27Page = ab27ao27Root / "architecture/ao28_b523_sensor_views.md"
+ab27ao27Page = ab27ao27Root / "architecture/ao28-b523-sensor-views.md"
 ab27ao27Fixture = ab27ao27Root / "architecture/fixtures/ao28_b523_sensor_views.json"
 
 # Separate literal contract oracle, never derived from the page or fixture.

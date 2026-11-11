@@ -8,7 +8,7 @@ import unittest
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / "protocols/vaillant/ebus-vaillant-B515.md"
+PAGE = ROOT / "protocols/vaillant/ebus-vaillant-b515.md"
 FIXTURE = ROOT / "protocols/vaillant/fixtures/ac12_legacy_timer.json"
 AXES = ("family", "variant", "direction", "service", "operation", "alternative")
 EXCHANGES = (

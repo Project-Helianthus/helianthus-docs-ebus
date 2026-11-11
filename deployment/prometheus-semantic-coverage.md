@@ -302,7 +302,7 @@ evidence are separate acceptance work. Existing
 [bus-owner]: https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/bus_observability_store.go
 [thermal-owner]: https://github.com/Project-Helianthus/helianthus-semreg/blob/main/semreg/v1/packs/thermal/definitions.go
 [infrastructure-owner]: https://github.com/Project-Helianthus/helianthus-semreg/blob/main/semreg/v1/packs/infrastructure/definitions.go
-[native-b524]: ../protocols/vaillant/ebus-vaillant-B524.md
+[native-b524]: ../protocols/vaillant/ebus-vaillant-b524.md
 [thermal-map]: ../architecture/b524-semantic-mapping.md
 [thermal-fixture]: ../architecture/fixtures/vaillant-semreg-thermal-map-v1.json
 [qualification]: ../architecture/vaillant-controller-qualification-v1.md

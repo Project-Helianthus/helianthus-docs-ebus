@@ -8,7 +8,7 @@ from pathlib import Path
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / 'protocols/ebus-services/ebus-service-0Fh.md'
+PAGE = ROOT / 'protocols/ebus-services/ebus-service-0fh.md'
 FIXTURE = ROOT / 'protocols/ebus-services/fixtures/ae30_0f_candidates.json'
 
 # Independently specified cells, including grade and neighboring uncertainty.

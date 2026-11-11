@@ -7,7 +7,7 @@ import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = Path('architecture/aj21_b531_getter.md')
+PAGE = Path('architecture/aj21-b531-getter.md')
 FIXTURE = Path('architecture/fixtures/aj21_b531_getter.json')
 SELF = Path('tests/test_aj21_b531_getter.py')
 

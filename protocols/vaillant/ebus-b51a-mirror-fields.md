@@ -4,13 +4,13 @@
 
 **Hypothesis:** The Vaillant B51A mirror/diagnosis forms are separate from
 configured-register tables. The public native starting contract is
-[candidate mirror and diagnosis layouts](ebus-vaillant-B51A.md#candidate-mirror-and-diagnosis-layouts).
+[candidate mirror and diagnosis layouts](ebus-vaillant-b51a.md#candidate-mirror-and-diagnosis-layouts).
 That reference supplies the broad operation meanings, sequence fields and reset
 acknowledgement bit. It supplies no supplemental OP02, OP03 or OP06 field layout.
 No source artifact for those supplemental mappings is available here, so their
 positions, widths, encodings, defaults, bounds, bit assignments and status
 meanings are **Unknown**. Synthetic examples cannot supply that provenance.
-The [configured-register forms](ebus-vaillant-B51A.md#wire-shape) retain their
+The [configured-register forms](ebus-vaillant-b51a.md#wire-shape) retain their
 separate identity; a configured IDX is not established as a candidate sequence
 byte. The overlap with the backup-heater OP06 form remains unresolved.
 No address dictionary from another form is imported.
@@ -120,5 +120,5 @@ establish correlation or success.
 source before candidate decodings can be restored. The relationship to configured
 selectors, physical response adaptation, address bounds, storage durability and
 success semantics also need native evidence. The
-[family open questions](ebus-vaillant-B51A.md#open-questions) remain unresolved.
+[family open questions](ebus-vaillant-b51a.md#open-questions) remain unresolved.
 Synthetic tuples confer no installed support or authority to send any operation.

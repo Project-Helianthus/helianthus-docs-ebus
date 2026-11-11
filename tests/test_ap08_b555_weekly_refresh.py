@@ -128,7 +128,7 @@ def ab07ap07Weekly(ab07ap07Arguments):
 
 class Ab07Ap07Contract(ab07ap07Unittest.TestCase):
     def setUp(self):
-        self.ab07ap07Page = (ab07ap07Root / 'architecture/ap08_b555_weekly_refresh.md').read_text()
+        self.ab07ap07Page = (ab07ap07Root / 'architecture/ap08-b555-weekly-refresh.md').read_text()
         self.ab07ap07Fixture = ab07ap07Json.loads((ab07ap07Root /
             'architecture/fixtures/ap08_b555_weekly_refresh.json').read_text(), object_pairs_hook=ab07ap07Pairs)
         self.ab07ap07Cases = {ab07ap07Case['id']: ab07ap07Case

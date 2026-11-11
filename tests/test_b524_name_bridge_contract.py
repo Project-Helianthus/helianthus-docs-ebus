@@ -1,6 +1,6 @@
 """Consumer contract for the public naming CSVs, without an Explorer import.
 
-Key and column rules: protocols/vaillant/ebus-vaillant-B524-register-map.md,
+Key and column rules: protocols/vaillant/ebus-vaillant-b524-register-map.md,
 "OP=0x02 — Local Parameter Registers" / "Register name correspondence fixture".
 Naming rows use (opcode, group, register), not concrete instance identity:
 development/b524-provisional-name-evidence.md, "Evidence and missing-evidence key".

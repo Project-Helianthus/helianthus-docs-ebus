@@ -8,7 +8,7 @@ import unittest as ab25aq25_unittest
 
 ab25aq25_root = Ab25Aq25Path(ab25aq25_os.environ.get(
     'ab25aq25_contract_root', str(Ab25Aq25Path(__file__).resolve().parents[1])))
-ab25aq25_page = ab25aq25_root / 'architecture/aq26_b512_power_stepper_fields.md'
+ab25aq25_page = ab25aq25_root / 'architecture/aq26-b512-power-stepper-fields.md'
 ab25aq25_fixture = ab25aq25_root / 'architecture/fixtures/aq26_b512_power_stepper_fields.json'
 # Independent finite expectation: operation and direction to required field widths.
 ab25aq25_widths = {

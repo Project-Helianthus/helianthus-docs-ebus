@@ -12,9 +12,9 @@ stability promise before Helianthus 1.0.
 ## Source contract and evidence status
 
 Native interpretation starts with the public
-[B524 register map, GG=0x02 — Circuits](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/vaillant/ebus-vaillant-B524-register-map.md#gg0x02--circuits)
+[B524 register map, GG=0x02 — Circuits](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/vaillant/ebus-vaillant-b524-register-map.md#gg0x02--circuits)
 and its
-[Circuit State Enum evidence discussion](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/vaillant/ebus-vaillant-B524-register-map.md#circuit-state-enum).
+[Circuit State Enum evidence discussion](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/vaillant/ebus-vaillant-b524-register-map.md#circuit-state-enum).
 The public
 [semantic mapping, `ebus.v1.semantic.circuits.get`](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/b524-semantic-mapping.md)
 records the legacy paths and selector-assignment correction. These sources

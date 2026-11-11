@@ -7,7 +7,7 @@ import struct
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / 'architecture/am20_standard03_candidate_views.md'
+PAGE = ROOT / 'architecture/am20-standard03-candidate-views.md'
 PACKAGE = ROOT / 'architecture/fixtures/am20_standard03_candidate_views.json'
 DATA = json.loads(PACKAGE.read_text())
 CONTRACT = DATA['contract']

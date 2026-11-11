@@ -8,7 +8,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = ROOT / 'architecture/fixtures/am16_b516_statistics_directions.json'
-PAGE = ROOT / 'architecture/am16_b516_statistics_directions.md'
+PAGE = ROOT / 'architecture/am16-b516-statistics-directions.md'
 QUALIFICATIONS = ('physical_support', 'presence', 'freshness', 'execution',
                   'effects', 'persistence', 'delivery')
 NATIVE = ('https://github.com/Project-Helianthus/helianthus-docs-ebus/'

@@ -5,7 +5,7 @@ from pathlib import Path
 import unittest
 
 ab01ao01Root = Path(__file__).resolve().parents[1]
-ab01ao01Page = ab01ao01Root / 'architecture/ao02_b505_sentinel_views.md'
+ab01ao01Page = ab01ao01Root / 'architecture/ao02-b505-sentinel-views.md'
 ab01ao01Fixture = ab01ao01Root / 'architecture/fixtures/ao02_b505_sentinel_views.json'
 
 

@@ -5,7 +5,7 @@ from pathlib import Path
 import re
 import unittest
 
-PAGE = Path(__file__).resolve().parents[1] / 'architecture/aq14_b521_field_views.md'
+PAGE = Path(__file__).resolve().parents[1] / 'architecture/aq14-b521-field-views.md'
 RESERVED = ('state', 'results', 'physical', 'qualified')
 WIDTHS = {
     'request': {'flags': 1, 'appliance_bits': 1, 'noise_percent': 1, 'frost_temperature': 1},

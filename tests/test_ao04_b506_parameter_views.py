@@ -160,7 +160,7 @@ def ab03ao03Errors():
 
 class Ab03Ao03ContractTests(ab03ao03Unittest.TestCase):
     def ab03ao03Documents(self):
-        ab03ao03Page = (ab03ao03Root / 'architecture/ao04_b506_parameter_views.md').read_text()
+        ab03ao03Page = (ab03ao03Root / 'architecture/ao04-b506-parameter-views.md').read_text()
         self.assertEqual(ab03ao03Re.findall(r'```go\n(.*?)\n```', ab03ao03Page, ab03ao03Re.S),
                          ['package vaillant\n\nfunc ' + ab03ao03Contract['api']])
         ab03ao03Blocks = ab03ao03Re.findall(r'```json ab03ao03-contract\n(.*?)\n```', ab03ao03Page, ab03ao03Re.S)

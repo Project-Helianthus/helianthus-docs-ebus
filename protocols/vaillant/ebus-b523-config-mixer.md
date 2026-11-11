@@ -2,7 +2,7 @@
 
 ## Evidence and scope
 
-The public [B523 native contract](ebus-vaillant-B523.md#candidate-layouts)
+The public [B523 native contract](ebus-vaillant-b523.md#candidate-layouts)
 comes first: these layouts are unconfirmed on the wire. This focused supplement
 records only candidate configuration and mixer fields. The
 [synthetic tuples](fixtures/aj10_b523_config_mixer.json) are arithmetic examples,

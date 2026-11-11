@@ -11,14 +11,14 @@ before Helianthus 1.0 or adds an authorization gate.
 
 ## Public native evidence first
 
-The [B524 register catalog](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/vaillant/ebus-vaillant-B524-register-map.md)
+The [B524 register catalog](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/vaillant/ebus-vaillant-b524-register-map.md)
 is the native starting point: its VRC720-family singleton system group uses
 `OP=0x02, GG=0x00, II=0x00`. The `RR=0x0039` row names `water_pressure`,
 lists wire type `f32`, unit `bar`, and read-only behavior. Its legend identifies
 unannotated rows as corroborated by multiple sources. This page adds no native
 capture or target-qualified evidence.
 
-The [B524 wire contract](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/vaillant/ebus-vaillant-B524.md)
+The [B524 wire contract](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/vaillant/ebus-vaillant-b524.md)
 supplies service `PB=0xB5, SB=0x24`, read operation type `OT=0x00`, and
 four-byte IEEE-754 float representation. Float byte order is profile-dependent:
 the characterized VRC720 controller uses little-endian; destination alone
@@ -50,7 +50,7 @@ from acquisition success, freshness, admission, and binding qualification.
 | Layer | Current documented identity or evidence | Disposition of this contract |
 | --- | --- | --- |
 | Native system value | B524 `PB=0xB5, SB=0x24, OP=0x02, OT=0x00, GG=0x00, II=0x00, RR=0x0039`; request initiator to controller, reply controller to initiator; family/profile-qualified `f32` in bar. | Retain native bytes, selector, source identity and decode provenance. Preserve the existing system-field correspondence; no new native read or write is specified. |
-| Boiler-pressure consumer | The separate [B509 boiler catalog](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md) lists candidate `water_pressure`, selector bytes `02 00` (printed `0x0200`), `DATA2b`, legacy path `state.waterPressureBar`, under `PB=0xB5, SB=0x09`. Target qualification remains required. | Keep boiler ownership independent. Do not alias or fill it from B524 system pressure, even when both numbers or units agree. This slice does not qualify B509 or change its producer. |
+| Boiler-pressure consumer | The separate [B509 boiler catalog](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/vaillant/ebus-vaillant-b509-boiler-register-map.md) lists candidate `water_pressure`, selector bytes `02 00` (printed `0x0200`), `DATA2b`, legacy path `state.waterPressureBar`, under `PB=0xB5, SB=0x09`. Target qualification remains required. | Keep boiler ownership independent. Do not alias or fill it from B524 system pressure, even when both numbers or units agree. This slice does not qualify B509 or change its producer. |
 | Universal pressure fact | No pressure fact, quantity unit contract, role dimension, validation bounds or qualified pressure mapping is defined by the supplied Thermal map. | Leave these undefined. Invent no pack ID, fact name, dimension key/value, numeric bound, or conversion route. An existing temperature fact cannot carry pressure. |
 | Universal projection | No accepted pressure semantic definition plus qualified mapping is available in this slice. | Withhold the pressure fact and its universal consumer projection. Record the disposition independently of a retained native value; emit no fabricated zero, temperature fact, or boiler substitute. |
 

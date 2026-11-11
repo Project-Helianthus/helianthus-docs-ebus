@@ -5,7 +5,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / 'protocols/ebus-services/fixtures/ac26_fe01.json'
-PAGE = ROOT / 'protocols/ebus-services/ebus-service-FEh.md'
+PAGE = ROOT / 'protocols/ebus-services/ebus-service-feh.md'
 
 
 class FE01PartialForms(unittest.TestCase):

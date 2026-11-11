@@ -8,7 +8,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 NATIVE = ROOT / 'protocols/vaillant/ebus-b519-reply-policy.md'
 FIXTURE = ROOT / 'protocols/vaillant/fixtures/ak14_b519_reply_policy.json'
-API = ROOT / 'architecture/ak14_b519_reply_policy_api.md'
+API = ROOT / 'architecture/ak14-b519-reply-policy-api.md'
 
 # Hand-authored expectations from the finite task, independent of published data.
 POLICIES = [
@@ -135,7 +135,7 @@ class Ak14ReplyPolicy(unittest.TestCase):
             '**Proven (synthetic representation only):**',
             'not telegrams or wire captures',
             'Its separate coordinate and encoding are **Unknown**',
-            '[field and CRC catalog](ebus-vaillant-B519.md)',
+            '[field and CRC catalog](ebus-vaillant-b519.md)',
             '[Synthetic cases](fixtures/ak14_b519_reply_policy.json)',
         ]:
             with self.subTest(phrase=phrase):

@@ -3,7 +3,7 @@
 ## Evidence and scope
 
 This is a focused candidate contract for the Vaillant diagnostic family, read
-alongside the [B503 family reference](ebus-vaillant-B503.md). The
+alongside the [B503 family reference](ebus-vaillant-b503.md). The
 [synthetic field tuples](fixtures/ai08_b503_history_flags.json) preserve raw
 alternatives; they are not captured telegrams. Every native interpretation below
 is **Hypothesis**. **Proven** applies only to the declared synthetic representation

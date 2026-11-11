@@ -9,7 +9,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = ROOT / 'architecture/fixtures/aj23_b555_narrow_refresh.json'
-PAGE = ROOT / 'architecture/aj23_b555_narrow_refresh.md'
+PAGE = ROOT / 'architecture/aj23-b555-narrow-refresh.md'
 
 
 def expected():

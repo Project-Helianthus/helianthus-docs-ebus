@@ -240,7 +240,7 @@ This section adds the Vaillant variants of the services above. Each statement ke
 ### Clock setting
 
 - Candidate interpretation, unconfirmed on the wire: a Vaillant requester sends a `07 00`-shaped request (the same service identifier as the date/time broadcast) as a clock-setting command to a controller that advertises the `07 00` service. Whether that request is directed or broadcast is not established, and no Vaillant definition of `07 01` is known.
-- Candidate interpretation, unconfirmed on the wire: a Vaillant requester sets the clock of VRC700-family and VRC720-family controllers with two B524 register writes instead of `07 00` or `07 01`: first `OP=0x02, OT=0x01, GG=0x00, II=0x00, RR=0x0035` (time: hour, minute, second), then `RR=0x0034` (date: day, month, year minus 2000), three data bytes each. The register rows are `clock_time` and `date` in the [B524 register map](../vaillant/ebus-vaillant-B524-register-map.md). Write access to these two registers is not established on the wire; this is not a qualified write procedure, and these writes are not documented as safe to send.
+- Candidate interpretation, unconfirmed on the wire: a Vaillant requester sets the clock of VRC700-family and VRC720-family controllers with two B524 register writes instead of `07 00` or `07 01`: first `OP=0x02, OT=0x01, GG=0x00, II=0x00, RR=0x0035` (time: hour, minute, second), then `RR=0x0034` (date: day, month, year minus 2000), three data bytes each. The register rows are `clock_time` and `date` in the [B524 register map](../vaillant/ebus-vaillant-b524-register-map.md). Write access to these two registers is not established on the wire; this is not a qualified write procedure, and these writes are not documented as safe to send.
 
 ### Capability queries
 
@@ -260,7 +260,7 @@ This section adds the Vaillant variants of the services above. Each statement ke
 - The controller clock write by B524 registers `0x0035` and `0x0034` has not been observed on the wire, and write access to these registers is not established.
 - No Vaillant broadcast (self-identification) form of `07 04` is known; whether a Vaillant device emits one is not established.
 - The bounded 0704 candidate table records the unresolved product-number alternative, control overlap and unknown native lengths. Family override predicates and physical extra bytes remain Unknown; control value 99 has no established okay meaning.
-- The cadence, bandwidth and conformance of any Vaillant `07 FF` sign-of-life behaviour, and the network-management conformance of Vaillant bus participants (see [`ebus-service-FFh.md`](./ebus-service-FFh.md)), are undetermined.
+- The cadence, bandwidth and conformance of any Vaillant `07 FF` sign-of-life behaviour, and the network-management conformance of Vaillant bus participants (see [`ebus-service-ffh.md`](./ebus-service-ffh.md)), are undetermined.
 - A `07 03`/`07 05` bit-selection rule and the `0` = permanent override duration of `07 02` are not encoded in the Vaillant layouts; their behaviour at a Vaillant target was not observed.
 
 ## Communication Flow

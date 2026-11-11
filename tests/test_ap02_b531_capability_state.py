@@ -7,7 +7,7 @@ import unittest
 
 
 ab01ap01Root = Path(__file__).resolve().parents[1]
-ab01ap01Page = ab01ap01Root / 'architecture/ap02_b531_capability_state.md'
+ab01ap01Page = ab01ap01Root / 'architecture/ap02-b531-capability-state.md'
 ab01ap01Fixture = ab01ap01Root / 'architecture/fixtures/ap02_b531_capability_state.json'
 ab01ap01Contract = {
     'signature': 'Ab01Ap01Evaluate(ab01ap01Input json.RawMessage) (json.RawMessage, error)',

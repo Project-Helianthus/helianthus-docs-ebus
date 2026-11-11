@@ -6,7 +6,7 @@ import re
 import unittest
 
 ab11ap11Root = Path(__file__).resolve().parents[1]
-ab11ap11PagePath = ab11ap11Root / 'architecture/ap12_b512_fan_fields.md'
+ab11ap11PagePath = ab11ap11Root / 'architecture/ap12-b512-fan-fields.md'
 ab11ap11FixturePath = ab11ap11Root / 'architecture/fixtures/ap12_b512_fan_fields.json'
 
 

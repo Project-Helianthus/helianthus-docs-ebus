@@ -2,7 +2,7 @@
 from pathlib import Path
 import unittest
 
-Ab19Aq19Page = Path(__file__).resolve().parents[1] / 'architecture/aq20_b51a_handshake_fields.md'
+Ab19Aq19Page = Path(__file__).resolve().parents[1] / 'architecture/aq20-b51a-handshake-fields.md'
 
 
 class TestAb19Aq19Page(unittest.TestCase):

@@ -125,7 +125,7 @@ class CandidateTransitions(unittest.TestCase):
         self.assertEqual(set(self.fixture), {'scope', 'tables'})
         self.assertEqual(self.fixture['scope'], 'synthetic local candidate oracle; no installed qualification')
         self.assertEqual(list(self.tables), list(EXPECTED))
-        parsed = page_tables((ROOT / 'architecture/b510_b511_local_cache.md').read_text())
+        parsed = page_tables((ROOT / 'architecture/b510-b511-local-cache.md').read_text())
         self.assertEqual(list(parsed), list(EXPECTED))
         for name, rows in EXPECTED.items():
             with self.subTest(table=name):

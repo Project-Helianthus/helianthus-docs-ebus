@@ -6,7 +6,7 @@ import re
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / 'protocols/vaillant/ebus-vaillant-B521.md'
+PAGE = ROOT / 'protocols/vaillant/ebus-vaillant-b521.md'
 FIXTURE = ROOT / 'protocols/vaillant/fixtures/ac22_outdoor_module.json'
 
 # Independent finite expectations, not values loaded from the declaration.

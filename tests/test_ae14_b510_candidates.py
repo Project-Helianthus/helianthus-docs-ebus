@@ -5,7 +5,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = ROOT / 'protocols/vaillant/fixtures/ae14_b510_candidates.json'
-PAGE = ROOT / 'protocols/vaillant/ebus-vaillant-B510.md'
+PAGE = ROOT / 'protocols/vaillant/ebus-vaillant-b510.md'
 
 # Independent expected native tuples: OP, field, domain, divisor, unit, values.
 EXPECTED = [

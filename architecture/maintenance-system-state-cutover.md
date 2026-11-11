@@ -11,7 +11,7 @@ credential or permission gate; existing trust and admission checks remain in for
 ## Evidence and current behavior
 
 The public native contract comes first:
-[B524 register map](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/vaillant/ebus-vaillant-B524-register-map.md),
+[B524 register map](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/vaillant/ebus-vaillant-b524-register-map.md),
 sections **Table Legend**, **Group Topology**, and **GG=0x00 — System**.
 The system table documents the VRC720-family singleton OP=0x02, II=0x00;
 this scope does not transfer to the VRC700-family ventilation selectors.

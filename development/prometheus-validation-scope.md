@@ -51,7 +51,7 @@ names, expressions, durations and severity labels retain their structured
 checks; static validation does not evaluate PromQL or certify runtime behavior.
 The [local gate](../scripts/ci_local.sh) runs the checker and its mutation tests.
 
-For protocol facts, the public [native B524 contract](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/vaillant/ebus-vaillant-B524.md)
+For protocol facts, the public [native B524 contract](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/vaillant/ebus-vaillant-b524.md)
 must precede the [semantic mapping](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/b524-semantic-mapping.md)
 and fixture interpretation. An `exact` disposition is not `Proven` native
 behavior, qualification, acquisition, admission or exporter acceptance.

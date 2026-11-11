@@ -8,7 +8,7 @@ import unittest
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / 'architecture/ao24_b520_actuator_views.md'
+PAGE = ROOT / 'architecture/ao24-b520-actuator-views.md'
 FIXTURE = ROOT / 'architecture/fixtures/ao24_b520_actuator_views.json'
 P = 'ab23ao23_'
 SIGNATURE = ('func Ab23Ao23Interpret(ab23ao23Input json.RawMessage) '

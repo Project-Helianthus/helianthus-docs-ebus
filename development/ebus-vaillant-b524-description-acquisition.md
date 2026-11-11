@@ -28,4 +28,4 @@ for every edit, including non-enum numeric values. A contradicted value is rejec
 When no qualified description is available, VRC Explorer warns that the edit is
 unvalidated and permits its existing explicit confirmation. Offline editing does
 not send a device write. Historical static ranges remain hints, not validation
-authority. See the [historical constraint catalog](../protocols/vaillant/ebus-vaillant-B524-register-map.md#constraint-catalog).
+authority. See the [historical constraint catalog](../protocols/vaillant/ebus-vaillant-b524-register-map.md#constraint-catalog).

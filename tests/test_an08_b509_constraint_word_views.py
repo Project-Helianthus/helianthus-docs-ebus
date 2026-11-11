@@ -16,7 +16,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE_PATH = ROOT / "architecture" / "an08_b509_constraint_word_views.md"
+PAGE_PATH = ROOT / "architecture" / "an08-b509-constraint-word-views.md"
 FIXTURE_PATH = ROOT / "architecture" / "fixtures" / "an08_b509_constraint_word_views.json"
 
 WORD_FIELDS = ("minimum", "maximum", "default", "step", "factor")

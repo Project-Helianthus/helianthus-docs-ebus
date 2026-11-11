@@ -13,7 +13,7 @@ contract. Nothing here establishes stability before Helianthus 1.0.
 
 The public native contract comes first:
 
-- [B524 register map, Table Legend and GG=0x04 Solar Circuit](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/vaillant/ebus-vaillant-B524-register-map.md)
+- [B524 register map, Table Legend and GG=0x04 Solar Circuit](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/vaillant/ebus-vaillant-b524-register-map.md)
   records status at RR=0x0008 (`u8`, `0=off 1=on`) and cumulative runtime at
   RR=0x000B (`u32`, `hrs`). Both have the `fm5_config <= 2` condition and the
   dagger annotation: CSV value-matched only, without independent confirmation,

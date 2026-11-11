@@ -6,7 +6,7 @@ import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = Path('architecture/aj19_b531_distribution_consumers.md')
+PAGE = Path('architecture/aj19-b531-distribution-consumers.md')
 FIXTURE = Path('architecture/fixtures/aj19_b531_distribution_consumers.json')
 FIELDS = ('cap', 'sequence', 'limited', 'changed', 'current_integral',
           'aggregate_integral', 'sequence_count', 'energy_flag', 'counter', 'gates')

@@ -2,7 +2,7 @@
 
 ## Evidence and limits
 
-Read the public native [B505 family contract](ebus-vaillant-B505.md) first.
+Read the public native [B505 family contract](ebus-vaillant-b505.md) first.
 This finite supplement describes **Hypothesis** relationships for the B505
 family (`PB=B5`, `SB=05`), rather than observed device behavior. The older
 catalogue's conversions, ranges, offsets and durations do not resolve this

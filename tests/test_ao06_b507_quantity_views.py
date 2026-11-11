@@ -153,7 +153,7 @@ class TestAb05Ao05QuantityViews(unittest.TestCase):
 
     @classmethod
     def setUpClass(ab05ao05Cls):
-        ab05ao05Page = (ab05ao05Root / 'architecture/ao06_b507_quantity_views.md').read_text()
+        ab05ao05Page = (ab05ao05Root / 'architecture/ao06-b507-quantity-views.md').read_text()
         ab05ao05Match = re.findall(
             r'<!-- ab05ao05-contract:start -->\s*```json\n(.*?)\n```\s*'
             r'<!-- ab05ao05-contract:end -->', ab05ao05Page, re.S)

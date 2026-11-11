@@ -52,7 +52,7 @@ class TargetsStatusContract(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.data = json.loads((ROOT / 'architecture/fixtures/aj18_b531_targets_status.json').read_text())
-        cls.page = (ROOT / 'architecture/aj18_b531_targets_status.md').read_text()
+        cls.page = (ROOT / 'architecture/aj18-b531-targets-status.md').read_text()
 
     def test_grades_and_unknowns(self):
         self.assertEqual(self.data['grade'], 'Hypothesis')
@@ -60,7 +60,7 @@ class TargetsStatusContract(unittest.TestCase):
         self.assertEqual(self.data['unknowns'], dict(family_prefix=None, record_matcher=None,
                          native_behavior=None, status_encoding=None, physical_unit=None))
         for text in ('**Hypothesis**', '**Unknown**', 'unconfirmed on the wire',
-                     '../protocols/vaillant/ebus-vaillant-B531-hem-power-limit.md',
+                     '../protocols/vaillant/ebus-vaillant-b531-hem-power-limit.md',
                      'exact family prefix', 'record matcher are Unknown',
                      'no authorization gate is introduced before 0.9', 'roadmap wording is 0.11',
                      'no new major or experimental namespace', 'GraphQL parity',

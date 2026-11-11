@@ -5,7 +5,7 @@ from pathlib import Path
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / 'architecture/ak20_b524_family_codebooks.md'
+PAGE = ROOT / 'architecture/ak20-b524-family-codebooks.md'
 DATA = ROOT / 'architecture/fixtures/ak20_b524_family_codebooks.json'
 AXES = ('family', 'variant', 'primary', 'secondary', 'operation', 'direction',
         'field', 'alternative', 'group', 'instance_scope', 'register')
@@ -160,7 +160,7 @@ class FamilyCodebooks(unittest.TestCase):
             self.assertIn(phrase, normalized)
         for name in UNKNOWN:
             self.assertIn(name, normalized)
-        for target in ('ebus-vaillant-B524.md', 'ebus-vaillant-B524-register-map.md',
+        for target in ('ebus-vaillant-b524.md', 'ebus-vaillant-b524-register-map.md',
                        'ebus-b524-scalar-shapes.md'):
             self.assertIn('../protocols/vaillant/'+target, self.page)
             self.assertTrue((ROOT/'protocols/vaillant'/target).is_file())

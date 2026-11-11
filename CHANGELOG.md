@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Breaking documentation URL change: 154 page file names under `architecture/`,
+  `protocols/` and `types/` use lowercase kebab-case. Directories, headings,
+  anchors and page text are unchanged apart from the renamed file names in
+  links and path mentions, every inbound link in this repository follows the
+  new names, and no redirect page remains.
+  Links from other repositories to the earlier file names need the same update.
+  Tree indexes for `api/`, `architecture/`, `deployment/`, `development/` and
+  `protocols/` list every page, and `architecture/page-status.json` keeps the
+  status each renamed page states for itself from a closed set; a rename never
+  changes a status. Repository control files keep their conventional names.
 - Breaking API naming change: owned GraphQL names and registered MCP names use
   the adopted snake_case spellings. Zone values use `zone_room_temperature` and
   `zone_room_humidity`; unresolved value names remain expressly provisional.

@@ -47,9 +47,9 @@ standard-service protocol documents:
 - [`../../protocols/ebus-services/ebus-service-07h.md`](../../protocols/ebus-services/ebus-service-07h.md)
 - [`../../protocols/ebus-services/ebus-service-08h.md`](../../protocols/ebus-services/ebus-service-08h.md)
 - [`../../protocols/ebus-services/ebus-service-09h.md`](../../protocols/ebus-services/ebus-service-09h.md)
-- [`../../protocols/ebus-services/ebus-service-0Fh.md`](../../protocols/ebus-services/ebus-service-0Fh.md)
-- [`../../protocols/ebus-services/ebus-service-FEh.md`](../../protocols/ebus-services/ebus-service-FEh.md)
-- [`../../protocols/ebus-services/ebus-service-FFh.md`](../../protocols/ebus-services/ebus-service-FFh.md)
+- [`../../protocols/ebus-services/ebus-service-0fh.md`](../../protocols/ebus-services/ebus-service-0fh.md)
+- [`../../protocols/ebus-services/ebus-service-feh.md`](../../protocols/ebus-services/ebus-service-feh.md)
+- [`../../protocols/ebus-services/ebus-service-ffh.md`](../../protocols/ebus-services/ebus-service-ffh.md)
 
 ## Service `0x03` - Service Data
 
@@ -196,9 +196,9 @@ interpretations, unconfirmed on the wire.
 | `0x07` | `0x07 0x04` differs (candidate: bytes 8-9 are a software product number for Vaillant regulators; for every other Vaillant device class their meaning is **Unknown**, see [`03-identification.md`](./03-identification.md)); `0x07 0x00` differs (candidate: weekday enumeration); `0x07 0x02`, `0x07 0x03` and `0x07 0x05` follow the standard layout (candidate); no Vaillant definition of `0x07 0x01` or of the `0x07 0x04` broadcast form is known; no Vaillant emission of `0x07 0xFE` or `0x07 0xFF` is known | [`ebus-service-07h.md`](../../protocols/ebus-services/ebus-service-07h.md#vaillant-variants) |
 | `0x08` | No Vaillant definition of `0x08 0x00`-`0x08 0x04` is known (implementation **Unknown**) | [`ebus-service-08h.md`](../../protocols/ebus-services/ebus-service-08h.md#vaillant-variants) |
 | `0x09` | `0x09 0x00`-`0x09 0x02` and the `0x09 0x03` request follow the standard layout (candidate); whether the `0x09 0x03` reply is always empty is unresolved; a Vaillant requester issues `0x09 0x02` and `0x09 0x03` with no service-mode step before them (candidate, unconfirmed on the wire) | [`ebus-service-09h.md`](../../protocols/ebus-services/ebus-service-09h.md#vaillant-variants) |
-| `0x0F` | A layout with the primary byte `0x0F`, no known secondary byte and no body (candidate; the request's secondary byte on the wire is unknown); no Vaillant definition of `0x0F 0x01`-`0x0F 0x03` is known | [`ebus-service-0Fh.md`](../../protocols/ebus-services/ebus-service-0Fh.md#vaillant-variants) |
-| `0xFE` | `0xFE 0x01` is defined as PB/SB only, with no error text field (candidate) | [`ebus-service-FEh.md`](../../protocols/ebus-services/ebus-service-FEh.md#vaillant-variants) |
-| `0xFF` | No Vaillant definition of `0xFF 0x00`-`0xFF 0x06` is known (implementation **Unknown**) | [`ebus-service-FFh.md`](../../protocols/ebus-services/ebus-service-FFh.md#vaillant-variants) |
+| `0x0F` | A layout with the primary byte `0x0F`, no known secondary byte and no body (candidate; the request's secondary byte on the wire is unknown); no Vaillant definition of `0x0F 0x01`-`0x0F 0x03` is known | [`ebus-service-0fh.md`](../../protocols/ebus-services/ebus-service-0fh.md#vaillant-variants) |
+| `0xFE` | `0xFE 0x01` is defined as PB/SB only, with no error text field (candidate) | [`ebus-service-feh.md`](../../protocols/ebus-services/ebus-service-feh.md#vaillant-variants) |
+| `0xFF` | No Vaillant definition of `0xFF 0x00`-`0xFF 0x06` is known (implementation **Unknown**) | [`ebus-service-ffh.md`](../../protocols/ebus-services/ebus-service-ffh.md#vaillant-variants) |
 
 No standard service of this catalog is known to be available only on PeBUS (candidate;
 see
