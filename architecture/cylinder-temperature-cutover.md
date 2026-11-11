@@ -54,7 +54,7 @@ license to admit all instances. Do not substitute OP=0x06.
 | `0x0002` | `solar_cylinder_start_temperature_difference_limit`; `f32`, candidate K, hint 2..25 | `cylinders[].chargeHysteresisC` | Context only; retain native identity and unit uncertainty, do not silently reinterpret as Celsius |
 | `0x0003` | `solar_cylinder_stop_temperature_difference_limit`; `f32`, candidate K, hint 1..20 | `cylinders[].chargeOffsetC` | Context only; legacy name differs from catalog meaning; no new semantic mapping |
 
-These legacy paths feed `ebus.v1.semantic.cylinders.get` and the gateway's
+These legacy paths feed `ebus_v1_semantic_cylinders_get` and the gateway's
 `graphql.CylinderStatus` objects through `publishFM5Semantic()`. Publication
 sorts instances by native II. `refreshFM5Semantic()` supplies the FM5 verdict;
 `applyFM5Acquisition()` and `mergeCylinderSnapshotNonDestructive()` retain

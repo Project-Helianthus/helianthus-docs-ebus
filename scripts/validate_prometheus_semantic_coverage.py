@@ -15,15 +15,15 @@ DOCUMENT = Path("deployment/prometheus-semantic-coverage.md")
 SEMANTIC_ROWS = """
 thermal.action.state | helianthus_thermal_action_state | enum: idle=0, heating=1, cooling=2, dhw=3, ventilating=4
 thermal.demand.level | helianthus_thermal_demand_ratio | ratio; percent / 100
-thermal.measurement.air_temperature | helianthus_thermal_air_temperature_celsius | Celsius; identity
+thermal.measurement.air_temperature | helianthus_thermal_air_temperature | Celsius; identity
 thermal.measurement.flow_rate | helianthus_thermal_flow_cubic_meters_per_second | m³/s; litre/minute / 60,000
-thermal.measurement.humidity_relative | helianthus_thermal_relative_humidity_ratio | ratio; percent / 100
+thermal.measurement.humidity | helianthus_thermal_relative_humidity_ratio | ratio; percent / 100
 thermal.measurement.power | helianthus_thermal_power_watts | watts; preserve sign
 thermal.measurement.water_temperature | helianthus_thermal_water_temperature_celsius | Celsius; identity
 thermal.mode.system | helianthus_thermal_system_mode | enum: off=0, auto=1, heat=2, cool=3
 thermal.mode.zone | helianthus_thermal_zone_mode | enum: off=0, auto=1, comfort=2, eco=3
-thermal.setpoint.dhw_temperature | helianthus_thermal_dhw_setpoint_celsius | Celsius; identity; read-only observation
-thermal.setpoint.temperature | helianthus_thermal_setpoint_celsius | Celsius; identity; read-only observation
+thermal.setpoint.dhw_temperature_setpoint | helianthus_thermal_dhw_setpoint_celsius | Celsius; identity; read-only observation
+thermal.setpoint.temperature_setpoint | helianthus_thermal_temperature_setpoint | Celsius; identity; read-only observation
 thermal.status.fault | helianthus_thermal_fault_present | boolean: clear=0, present=1
 thermal.status.operation | helianthus_thermal_operation_active | boolean: idle=0, active=1
 infrastructure.ac.active_power | helianthus_infrastructure_ac_active_power_watts | watts; preserve sign
@@ -66,6 +66,116 @@ semantic_values | slot | 0..15
 helianthus_semantic_field_available | slot | 0..15
 helianthus_semantic_field_available | domain | thermal, infrastructure
 helianthus_semantic_field_available | field | domain_field_table
+"""
+
+# Closed emitted name/type/label/unit associations.
+RENDERER_ROWS = """
+active_read_saved_seconds | gauge | family, freshness_profile | none
+active_reads_avoided_total | counter | family, freshness_profile | none
+ambiguous_total | counter | family, reason | none
+direct_apply_total | counter | family, freshness_profile | none
+ebus_active_echo_mismatch_subclass_total | counter | subclass | none
+ebus_adaptermux_escape_pair_verify_failures_total | counter | step | none
+ebus_adaptermux_foreign_initiator_releases_total | counter | none | none
+ebus_adaptermux_inter_write_drained_bytes_total | counter | none | none
+ebus_adaptermux_stale_active_bytes_discarded_total | counter | none | none
+ebus_adaptermux_syn_seen_after_transport_window_expired_total | counter | none | none
+ebus_adaptermux_syn_seen_during_grant_window_total | counter | none | none
+ebus_adaptermux_syn_seen_while_inter_write_empty_total | counter | none | none
+ebus_adaptermux_syn_suppressed_between_writes_total | counter | none | none
+ebus_adaptermux_syn_suppressed_pre_echo_total | counter | none | none
+ebus_adaptermux_transaction_endings_total | counter | reason | none
+ebus_baud_observation_available | gauge | none | none
+ebus_bus_busy_ratio | gauge | window | none
+ebus_bus_busy_seconds_total | counter | none | none
+ebus_dedup_degraded_state | gauge | none | none
+ebus_dedup_degraded_total | counter | reason | none
+ebus_dedup_epoch_resets_total | counter | none | none
+ebus_dedup_local_participant_inbound_total | counter | none | none
+ebus_dedup_pending_flush_total | counter | reason | none
+ebus_errors_total | counter | class, phase, scope | none
+ebus_frame_bytes_total | counter | family, frame_type, part, scope | none
+ebus_frames_observed_total | counter | dst, family, frame_type, scope, src | none
+ebus_observability_recent_messages | gauge | none | none
+ebus_observability_series_budget_overflow_total | counter | none | none
+ebus_observability_transport_info | gauge | scope, timing_quality, transport_class | none
+ebus_passive_capability_probe_attempts_total | counter | none | none
+ebus_passive_capability_probe_outcomes_total | counter | outcome | none
+ebus_passive_capability_transitions_total | counter | from, to | none
+ebus_passive_capability_unavailable_reason | gauge | reason | none
+ebus_passive_completed_transactions_total | counter | none | none
+ebus_passive_direct_apply_candidates_evaluated_total | counter | none | none
+ebus_passive_fanout_overflow_total | counter | consumer, criticality | none
+ebus_passive_reconstructor_abandons_total | counter | reason | none
+ebus_passive_reconstructor_invalid_src_class_skipped_total | counter | none | none
+ebus_passive_reconstructor_prefix_resync_skipped_total | counter | none | none
+ebus_passive_reconstructor_recoveries_total | counter | reason | none
+ebus_passive_tap_connected | gauge | none | none
+ebus_passive_tap_reconnect_attempts_total | counter | none | none
+ebus_passive_tap_reconnect_failures_total | counter | none | none
+ebus_passive_tap_reconnect_successes_total | counter | none | none
+ebus_passive_warmup_blocker_reason | gauge | reason | none
+ebus_passive_warmup_completed_transactions | gauge | none | none
+ebus_passive_warmup_completion_mode | gauge | mode | none
+ebus_passive_warmup_elapsed_seconds | gauge | none | none
+ebus_passive_warmup_required_transactions | gauge | none | none
+ebus_passive_warmup_state | gauge | state | none
+ebus_periodicity_tuple_budget_overflow_total | counter | none | none
+energy_broadcast_freshness_transitions_total | counter | from, to | none
+energy_broadcast_selectors | gauge | state | none
+external_write_policy_state | gauge | policy | none
+feature_flag_enabled | gauge | flag | none
+feature_flag_normalizations_total | counter | reason | none
+helianthus_huawei_transport_events_total | counter | family, function, outcome | none
+helianthus_infrastructure_ac_active_power_watts | gauge | slot | none
+helianthus_infrastructure_ac_apparent_power_volt_amperes | gauge | slot | none
+helianthus_infrastructure_ac_current_amperes | gauge | slot | none
+helianthus_infrastructure_ac_frequency_hertz | gauge | slot | none
+helianthus_infrastructure_ac_power_factor_ratio | gauge | slot | none
+helianthus_infrastructure_ac_reactive_power_vars | gauge | slot | none
+helianthus_infrastructure_ac_voltage_volts | gauge | slot | none
+helianthus_infrastructure_apparent_power_volt_amperes | gauge | slot | none
+helianthus_infrastructure_breaker_open | gauge | slot | none
+helianthus_infrastructure_connection_connected | gauge | slot | none
+helianthus_infrastructure_energy_export_joules | gauge | slot | none
+helianthus_infrastructure_energy_import_joules | gauge | slot | none
+helianthus_infrastructure_export_active_power_watts | gauge | slot | none
+helianthus_infrastructure_export_reactive_power_vars | gauge | slot | none
+helianthus_infrastructure_fault_present | gauge | slot | none
+helianthus_infrastructure_import_active_power_watts | gauge | slot | none
+helianthus_infrastructure_import_reactive_power_vars | gauge | slot | none
+helianthus_infrastructure_interlock_active | gauge | slot | none
+helianthus_infrastructure_ready | gauge | slot | none
+helianthus_payload_aa_auto_syn_absorbed_total | counter | none | none
+helianthus_payload_aa_auto_syn_drain_exhausted_total | counter | none | none
+helianthus_payload_aa_auto_syn_recovered_total | counter | none | none
+helianthus_round9_absorb_entered_total | counter | none | none
+helianthus_semantic_evidence_age | gauge | connector, dimension, domain, fact_id, pack, unit | seconds
+helianthus_semantic_fact_state | gauge | availability, connector, dimension, domain, fact_id, freshness, pack, promotion, qualification, quality | none
+helianthus_semantic_fact_value | gauge | connector, dimension, domain, fact_id, pack, unit | none
+helianthus_semantic_field_available | gauge | domain, field, slot | none
+helianthus_semantic_open_conflicts | gauge | connector, dimension, domain, fact_id, pack | none
+helianthus_semantic_projection_available | gauge | domain | none
+helianthus_semantic_projection_item | gauge | domain, item, outcome | none
+helianthus_semantic_projection_loss | gauge | domain, item, loss_kind | none
+helianthus_semantic_render_overflow | gauge | none | none
+helianthus_thermal_action_state | gauge | slot | none
+helianthus_thermal_air_temperature | gauge | slot, unit | celsius
+helianthus_thermal_demand_ratio | gauge | slot | none
+helianthus_thermal_dhw_setpoint_celsius | gauge | slot | none
+helianthus_thermal_fault_present | gauge | slot | none
+helianthus_thermal_flow_cubic_meters_per_second | gauge | slot | none
+helianthus_thermal_operation_active | gauge | slot | none
+helianthus_thermal_power_watts | gauge | slot | none
+helianthus_thermal_relative_humidity_ratio | gauge | slot | none
+helianthus_thermal_temperature_setpoint | gauge | slot, unit | celsius
+helianthus_thermal_system_mode | gauge | slot | none
+helianthus_thermal_water_temperature_celsius | gauge | slot | none
+helianthus_thermal_zone_mode | gauge | slot | none
+helianthus_transport_runtime_status | gauge | outcome, protocol, reason, state | none
+helianthus_v8_shadow_would_have_dropped_total | counter | none | none
+missed_due_to_transport_limitations_total | counter | family, freshness_profile, limitation | none
+passive_hits_total | counter | family, freshness_profile | none
 """
 
 
@@ -129,7 +239,34 @@ def expected_rules() -> dict:
     ]}]}
 
 
+def _validate_thermal_dispositions(text: str, thermal_fixture: Path) -> None:
+    dispositions = section(text, "## Thermal mapping dispositions\n", "## Offline alert examples\n")
+    try:
+        mappings = json.loads(thermal_fixture.read_text(encoding="utf-8"))["mappings"]
+        exact = {(row["semreg_fact"],) for row in mappings if row["disposition"] == "exact"}
+        withheld = [(row["legacy_system_field"], row["loss"])
+                    for row in mappings if row["disposition"] == "withheld"]
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        raise CheckError(f"invalid thermal mapping fixture: {exc}") from exc
+    exact_claims = section(dispositions, "### Exact fact IDs\n", "### Withheld associations\n")
+    withheld_claims = dispositions.split("### Withheld associations\n", 1)[1]
+    if Counter(rows(exact_claims)) != Counter(list(exact) + [("semreg_fact",), ("---",)]):
+        raise CheckError("exact fact IDs differ from the source fixture")
+    if Counter(rows(withheld_claims)) != Counter(withheld + [
+            ("legacy_system_field", "loss"), ("---", "---")]):
+        raise CheckError("withheld associations differ from the source fixture")
+
+
 def validate(text: str, *, thermal_fixture: Path = THERMAL_FIXTURE) -> None:
+    emitted = section(text, "## Emitted metric names\n", "## Provisional metric exceptions\n")
+    expected_emitted = rows("\n".join("| " + line for line in RENDERER_ROWS.strip().splitlines()))
+    actual_emitted = rows(emitted)
+    if Counter(actual_emitted) != Counter(expected_emitted + [
+            ("Series", "Type", "Labels", "Constant unit"), ("---", "---", "---", "---")]):
+        raise CheckError("emitted metric name/type/labels/constant unit differ")
+    names = [row[0] for row in expected_emitted]
+    if len(names) != len(set(names)):
+        raise CheckError("emitted metric name collision")
     semantic = section(text, "## Semantic coverage and units\n", "## Thermal mapping dispositions\n")
     actual = rows(semantic)
     header = ("Pack field", "Target series", "Unit / conversion")
@@ -165,21 +302,7 @@ def validate(text: str, *, thermal_fixture: Path = THERMAL_FIXTURE) -> None:
     if Counter(rows(admission)) != Counter(expected_labels + [
             ("Series group", "Label", "Allowed domain"), ("---", "---", "---")]):
         raise CheckError("structured label domains differ from the contract")
-    dispositions = section(text, "## Thermal mapping dispositions\n", "## Offline alert examples\n")
-    try:
-        mappings = json.loads(thermal_fixture.read_text(encoding="utf-8"))["mappings"]
-        exact = {(row["semreg_fact"],) for row in mappings if row["disposition"] == "exact"}
-        withheld = [(row["legacy_system_field"], row["loss"])
-                    for row in mappings if row["disposition"] == "withheld"]
-    except (OSError, ValueError, KeyError, TypeError) as exc:
-        raise CheckError(f"invalid thermal mapping fixture: {exc}") from exc
-    exact_claims = section(dispositions, "### Exact fact IDs\n", "### Withheld associations\n")
-    withheld_claims = dispositions.split("### Withheld associations\n", 1)[1]
-    if Counter(rows(exact_claims)) != Counter(list(exact) + [("semreg_fact",), ("---",)]):
-        raise CheckError("exact fact IDs differ from the source fixture")
-    if Counter(rows(withheld_claims)) != Counter(withheld + [
-            ("legacy_system_field", "loss"), ("---", "---")]):
-        raise CheckError("withheld associations differ from the source fixture")
+    _validate_thermal_dispositions(text, thermal_fixture)
     blocks = re.findall(r"^```yaml\n(.*?)^```$", text, re.MULTILINE | re.DOTALL)
     if len(blocks) != 1:
         raise CheckError("expected one alert YAML block")
@@ -201,7 +324,7 @@ def main() -> int:
     except (CheckError, OSError) as exc:
         print(f"Prometheus semantic coverage: {exc}")
         return 1
-    print("Prometheus semantic coverage passed: 32 fields, 1024 semantic series + 2 baud series per target.")
+    print("Prometheus semantic coverage passed: 32 bounded fields and 106 emitted metric families.")
     return 0
 
 

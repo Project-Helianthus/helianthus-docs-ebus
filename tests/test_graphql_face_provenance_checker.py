@@ -45,10 +45,10 @@ def test_accepts_current_independent_label_contract() -> None:
 @pytest.mark.parametrize(
     ("old", "new"),
     (
-        (CHECKER.HEADING, "### Device Face Discovery Provenance"),
-        ("  discoverySource: String", "  discovery_source: String"),
-        ("  verificationState: String", "  verification_state: String"),
-        ("  discoverySource: String", "  discoverySource: String!"),
+        (CHECKER.HEADING, "### device Face Discovery Provenance"),
+        ("  discovery_source: String", "  discoverySource: String"),
+        ("  verification_state: String", "  verificationState: String"),
+        ("  discovery_source: String", "  discovery_source: String!"),
         ("| `static_seed` |\n", "| `manual` |\n"),
         ("| `identity_confirmed` |\n", "| `verified` |\n"),
         ("| `passive_observed` | `corroborated_pending` |", "| `passive_observed` | `candidate` |"),
@@ -79,15 +79,15 @@ def test_rejects_document_contract_mutations(old: str, new: str) -> None:
 
 
 def test_rejects_missing_or_non_nullable_current_fields() -> None:
-    rejects(doc_old="  discoverySource: String\n")
-    rejects(doc_old="  verificationState: String\n", doc_new="  verificationState: String!\n")
+    rejects(doc_old="  discovery_source: String\n")
+    rejects(doc_old="  verification_state: String\n", doc_new="  verification_state: String!\n")
 
 
 @pytest.mark.parametrize(
     ("old", "new"),
     (
-        ("  discoverySource: String\n", "  discoverySource:\n    String\n"),
-        ("  verificationState: String\n", "  verificationState: # ignored token\n    String\n"),
+        ("  discovery_source: String\n", "  discovery_source:\n    String\n"),
+        ("  verification_state: String\n", "  verification_state: # ignored token\n    String\n"),
     ),
 )
 def test_accepts_nullable_fields_across_ignored_tokens(old: str, new: str) -> None:
@@ -99,9 +99,9 @@ def test_accepts_nullable_fields_across_ignored_tokens(old: str, new: str) -> No
 @pytest.mark.parametrize(
     ("old", "new"),
     (
-        ("  discoverySource: String\n", "  discoverySource:\n    String!\n"),
-        ("  verificationState: String\n", "  verificationState:\n    Boolean\n"),
-        ("  verificationState: String\n", "  verificationState:\n    [String]\n"),
+        ("  discovery_source: String\n", "  discovery_source:\n    String!\n"),
+        ("  verification_state: String\n", "  verification_state:\n    Boolean\n"),
+        ("  verification_state: String\n", "  verification_state:\n    [String]\n"),
     ),
 )
 def test_rejects_non_nullable_or_non_string_tokenized_fields(old: str, new: str) -> None:
@@ -110,10 +110,10 @@ def test_rejects_non_nullable_or_non_string_tokenized_fields(old: str, new: str)
 
 def test_rejects_nullable_spelling_hidden_in_description() -> None:
     replacement = (
-        '  """Example:  discoverySource: String"""\n'
-        "  discoverySource: String!\n"
+        '  """Example:  discovery_source: String"""\n'
+        "  discovery_source: String!\n"
     )
-    rejects(doc_old="  discoverySource: String\n", doc_new=replacement)
+    rejects(doc_old="  discovery_source: String\n", doc_new=replacement)
 
 
 def hide_pin_paragraph(text: str) -> str:
@@ -188,11 +188,11 @@ def test_rejects_current_schema_hidden_in_html_comment(scope: str) -> None:
     doc, atr = texts()
     if scope == "block":
         current = CHECKER._current_types_section(doc)
-        match = re.search(r"^type Device \{\n.*?^\}\n", current, re.M | re.S)
+        match = re.search(r"^type device \{\n.*?^\}\n", current, re.M | re.S)
         assert match is not None
         hidden = match.group(0)
     else:
-        hidden = "  discoverySource: String\n  verificationState: String\n"
+        hidden = "  discovery_source: String\n  verification_state: String\n"
         assert hidden in doc
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_text(
@@ -205,15 +205,15 @@ def test_rejects_appended_stale_pending_section() -> None:
     doc, atr = texts()
     stale = """
 
-### Pending gateway #939/#940 implementation: Device Face Discovery Provenance
+### Pending gateway #939/#940 implementation: device Face Discovery Provenance
 
 This extension is pending gateway #939/#940 implementation and is not present
 in the current gateway schema. The future camel-case fields are exactly:
 
 ```graphql
-extend type Device {
-  discoverySource: String
-  verificationState: String
+extend type device {
+  discovery_source: String
+  verification_state: String
 }
 ```
 """
@@ -286,13 +286,13 @@ def test_rejects_stale_gateway_sentence_after_whitespace_reflow(stale: str) -> N
 
 def test_accepts_unrelated_device_extension() -> None:
     doc, atr = texts()
-    CHECKER.validate_text(doc + "\nextend type Device { firmwareLabel: String }\n", atr)
+    CHECKER.validate_text(doc + "\nextend type device { firmwareLabel: String }\n", atr)
 
 
 def test_accepts_directive_only_device_extension_before_other_definition() -> None:
     doc, atr = texts()
     CHECKER.validate_text(
-        doc + "\nextend type Device @tag\ntype Other { discoverySource: String }\n",
+        doc + "\nextend type device @tag\ntype Other { discovery_source: String }\n",
         atr,
     )
 
@@ -300,7 +300,7 @@ def test_accepts_directive_only_device_extension_before_other_definition() -> No
 def test_accepts_directive_only_device_extension_before_query_definition() -> None:
     doc, atr = texts()
     CHECKER.validate_text(
-        doc + "\nextend type Device @tag\nquery Q { discoverySource(format: true) }\n",
+        doc + "\nextend type device @tag\nquery Q { discovery_source(format: true) }\n",
         atr,
     )
 
@@ -308,29 +308,29 @@ def test_accepts_directive_only_device_extension_before_query_definition() -> No
 @pytest.mark.parametrize(
     "following",
     (
-        "type Other { discoverySource: String }",
-        "interface Other { discoverySource: String }",
-        "enum Other { discoverySource }",
-        "input Other { discoverySource: String }",
+        "type Other { discovery_source: String }",
+        "interface Other { discovery_source: String }",
+        "enum Other { discovery_source }",
+        "input Other { discovery_source: String }",
     ),
 )
 def test_directive_only_device_extension_stops_at_any_following_definition(following: str) -> None:
     doc, atr = texts()
-    CHECKER.validate_text(doc + "\nextend type Device @tag " + following + "\n", atr)
+    CHECKER.validate_text(doc + "\nextend type device @tag " + following + "\n", atr)
 
 
 def test_accepts_same_field_name_on_unrelated_type() -> None:
     doc, atr = texts()
-    CHECKER.validate_text(doc + "\ntype Other { discoverySource: String }\n", atr)
+    CHECKER.validate_text(doc + "\ntype Other { discovery_source: String }\n", atr)
 
 
 def test_rejects_device_definition_moved_out_of_current_types() -> None:
     doc, atr = texts()
     current = CHECKER._current_types_section(doc)
-    match = re.search(r"^type Device \{\n.*?^\}\n", current, re.M | re.S)
+    match = re.search(r"^type device \{\n.*?^\}\n", current, re.M | re.S)
     assert match is not None
     device = match.group(0)
-    moved = doc.replace(device, "", 1) + "\n### Historical Device example\n\n```graphql\n" + device + "```\n"
+    moved = doc.replace(device, "", 1) + "\n### Historical device example\n\n```graphql\n" + device + "```\n"
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_text(moved, atr)
 
@@ -339,7 +339,7 @@ def test_rejects_duplicate_device_definition_in_current_types() -> None:
     doc, atr = texts()
     fence = doc.index("```graphql\n", doc.index("### Types (Current)"))
     close = doc.index("```\n", fence + len("```graphql\n"))
-    duplicate = "\ntype Device {\n  discoverySource: String!\n}\n"
+    duplicate = "\ntype device {\n  discovery_source: String!\n}\n"
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_text(doc[:close] + duplicate + doc[close:], atr)
 
@@ -347,12 +347,12 @@ def test_rejects_duplicate_device_definition_in_current_types() -> None:
 @pytest.mark.parametrize(
     "declaration",
     (
-        "type Device implements Node { discoverySource: String! }",
-        "type Device @key(fields: \"address\") { verificationState: String! }",
-        "type\n  Device { firmwareLabel: String }",
-        "type # ignored GraphQL comment\n Device { firmwareLabel: String }",
-        "type, Device { firmwareLabel: String }",
-        "type\ufeffDevice { firmwareLabel: String }",
+        "type device implements Node { discovery_source: String! }",
+        "type device @key(fields: \"address\") { verification_state: String! }",
+        "type\n  device { firmwareLabel: String }",
+        "type # ignored GraphQL comment\n device { firmwareLabel: String }",
+        "type, device { firmwareLabel: String }",
+        "type\ufeffdevice { firmwareLabel: String }",
     ),
 )
 def test_rejects_decorated_duplicate_device_definition(declaration: str) -> None:
@@ -372,7 +372,7 @@ def test_rejects_duplicate_current_types_heading() -> None:
 def test_rejects_device_moved_below_higher_level_heading() -> None:
     doc, atr = texts()
     current = CHECKER._current_types_section(doc)
-    match = re.search(r"^type Device \{\n.*?^\}\n", current, re.M | re.S)
+    match = re.search(r"^type device \{\n.*?^\}\n", current, re.M | re.S)
     assert match is not None
     device = match.group(0)
     moved = doc.replace(device, "", 1)
@@ -385,11 +385,11 @@ def test_rejects_device_moved_below_higher_level_heading() -> None:
 @pytest.mark.parametrize(
     "duplicate",
     (
-        "discoverySource:String!",
-        "\tverificationState:String!",
-        "  discoverySource(format: Boolean): String!",
-        '  discoverySource(format: String = ")"): String!',
-        "  discoverySource # ignored GraphQL comment\n  : String!",
+        "discovery_source:String!",
+        "\tverification_state:String!",
+        "  discovery_source(format: Boolean): String!",
+        '  discovery_source(format: String = ")"): String!',
+        "  discovery_source # ignored GraphQL comment\n  : String!",
     ),
 )
 def test_rejects_whitespace_equivalent_duplicate_fields(duplicate: str) -> None:
@@ -403,12 +403,12 @@ def test_rejects_whitespace_equivalent_duplicate_fields(duplicate: str) -> None:
 @pytest.mark.parametrize(
     "extension",
     (
-        "extend type Device { discoverySource(format: Boolean): String! }",
-        "extend type Device implements Node { discoverySource(format: Boolean): String! }",
-        "extend type Device @key(fields: \"address\") { verificationState: String! }",
-        "extend type # ignored GraphQL comment\n Device { discoverySource # ignored\n : String! }",
-        "extend, type, Device { discoverySource: String! }",
-        "extend\ufefftype\ufeffDevice { discoverySource: String! }",
+        "extend type device { discovery_source(format: Boolean): String! }",
+        "extend type device implements Node { discovery_source(format: Boolean): String! }",
+        "extend type device @key(fields: \"address\") { verification_state: String! }",
+        "extend type # ignored GraphQL comment\n device { discovery_source # ignored\n : String! }",
+        "extend, type, device { discovery_source: String! }",
+        "extend\ufefftype\ufeffdevice { discovery_source: String! }",
     ),
 )
 def test_rejects_argument_bearing_provenance_extension(extension: str) -> None:
@@ -420,14 +420,14 @@ def test_rejects_argument_bearing_provenance_extension(extension: str) -> None:
 @pytest.mark.parametrize(
     "entry",
     (
-        "  - `ebus.v1.registry.devices.get`",
-        "   - `ebus.v1.registry.devices.get`",
-        "  * `ebus.v1.registry.devices.get`",
-        "  - `ebus.v1.registry.devices.get` (duplicate)",
+        "  - `ebus_v1_registry_devices_get`",
+        "   - `ebus_v1_registry_devices_get`",
+        "  * `ebus_v1_registry_devices_get`",
+        "  - `ebus_v1_registry_devices_get` (duplicate)",
     ),
 )
 def test_rejects_duplicate_mcp_devices_get_entry(entry: str) -> None:
-    marker = "  - `ebus.v1.registry.devices.get`\n"
+    marker = "  - `ebus_v1_registry_devices_get`\n"
     text = mcp_text().replace(marker, marker + entry + "\n", 1)
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_mcp_text(text)
@@ -435,18 +435,18 @@ def test_rejects_duplicate_mcp_devices_get_entry(entry: str) -> None:
 
 @pytest.mark.parametrize("replacement", ("", "  - `ebus.v1.registry.devices.scan`\n"))
 def test_requires_exactly_one_mcp_devices_list_entry(replacement: str) -> None:
-    marker = "  - `ebus.v1.registry.devices.list`\n"
+    marker = "  - `ebus_v1_registry_devices_list`\n"
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_mcp_text(mcp_text().replace(marker, replacement, 1))
 
 
 def test_accepts_non_inventory_mcp_tool_reference() -> None:
-    CHECKER.validate_mcp_text(mcp_text() + "\nSee `ebus.v1.registry.devices.get` for the current tool.\n")
+    CHECKER.validate_mcp_text(mcp_text() + "\nSee `ebus_v1_registry_devices_get` for the current tool.\n")
 
 
 def test_accepts_fenced_non_inventory_mcp_example() -> None:
     CHECKER.validate_mcp_text(
-        mcp_text() + "\n```text\n- `ebus.v1.registry.devices.get`\n```\n"
+        mcp_text() + "\n```text\n- `ebus_v1_registry_devices_get`\n```\n"
     )
 
 
@@ -455,7 +455,7 @@ def test_accepts_indented_non_inventory_mcp_example() -> None:
     CHECKER.validate_mcp_text(
         mcp_text().replace(
             heading,
-            heading + "\n    - `ebus.v1.registry.devices.get`\n",
+            heading + "\n    - `ebus_v1_registry_devices_get`\n",
             1,
         )
     )
@@ -463,13 +463,13 @@ def test_accepts_indented_non_inventory_mcp_example() -> None:
 
 @pytest.mark.parametrize("marker", ("*", "+", "1."))
 def test_mcp_section_stops_at_supported_sibling_markers(marker: str) -> None:
-    sibling = "  - `ebus.v1.registry.planes.list`"
+    sibling = "  - `ebus_v1_registry_planes_list`"
     text = mcp_text().replace(
         sibling,
-        f"  {marker} `ebus.v1.registry.planes.list`",
+        f"  {marker} `ebus_v1_registry_planes_list`",
         1,
     )
-    assert "ebus.v1.registry.planes.list" not in CHECKER._mcp_device_section(text)
+    assert "ebus_v1_registry_planes_list" not in CHECKER._mcp_device_section(text)
 
 
 def test_rejects_obsolete_atr_spelling() -> None:
@@ -523,7 +523,7 @@ def test_rejects_wrong_mcp_runtime_or_dependency_pin(pin: str, alternative: str)
 
 def test_ignores_historical_device_outside_current_sdl_fence() -> None:
     doc, atr = texts()
-    historical = '\n## Historical SDL\n\n```graphql\ntype Device { discoverySource: String! verificationState: String! }\n```\n'
+    historical = '\n## Historical SDL\n\n```graphql\ntype device { discovery_source: String! verification_state: String! }\n```\n'
     CHECKER.validate_text(doc + historical, atr)
 
 
@@ -536,7 +536,7 @@ def test_rejects_four_space_fence_closer() -> None:
 
 def test_mcp_section_stops_at_column_zero_parent() -> None:
     text = mcp_text()
-    marker = '  - `ebus.v1.registry.devices.get`\n'
+    marker = '  - `ebus_v1_registry_devices_get`\n'
     text = text.replace(marker, marker + '- unrelated parent\n', 1)
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_mcp_text(text)
@@ -544,7 +544,7 @@ def test_mcp_section_stops_at_column_zero_parent() -> None:
 
 def test_mcp_section_stops_at_three_space_sibling() -> None:
     text = mcp_text()
-    marker = '  - `ebus.v1.registry.devices.get`\n'
+    marker = '  - `ebus_v1_registry_devices_get`\n'
     text = text.replace(marker, marker + '   - unrelated sibling\n', 1)
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_mcp_text(text)
@@ -558,7 +558,7 @@ def test_rejects_mixed_fence_delimiter_closer() -> None:
 
 def test_ignores_illustrative_fenced_device_schema_outside_current_schema() -> None:
     doc, atr = texts()
-    illustrative = '\n## Example\n\n```graphql\nextend type Device { discoverySource: String! verificationState: String! }\n```\n'
+    illustrative = '\n## Example\n\n```graphql\nextend type device { discovery_source: String! verification_state: String! }\n```\n'
     CHECKER.validate_text(doc + illustrative, atr)
 
 def test_rejects_device_outside_current_graphql_fence() -> None:
@@ -566,7 +566,7 @@ def test_rejects_device_outside_current_graphql_fence() -> None:
     marker = '```graphql\n'
     start = doc.index(marker, doc.index('### Types (Current)'))
     close = doc.index('```\n', start + len(marker))
-    device_start = doc.index('type Device', start)
+    device_start = doc.index('type device', start)
     moved = doc[:device_start] + '```\n' + doc[device_start:close] + '```graphql\n' + doc[close:]
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_text(moved, atr)
@@ -580,7 +580,7 @@ def test_accepts_homogeneous_fence_with_info_string() -> None:
 def test_ignores_non_graphql_fence_inside_current_types() -> None:
     doc, atr = texts()
     boundary = '\n### Current Device Face Discovery Provenance'
-    example = '\n```text\ntype Device { discoverySource: String! }\n```\n'
+    example = '\n```text\ntype device { discovery_source: String! }\n```\n'
     CHECKER.validate_text(doc.replace(boundary, example + boundary, 1), atr)
 
 
@@ -588,18 +588,18 @@ def test_ignores_non_graphql_fence_inside_current_types() -> None:
 def test_rejects_non_graphql_device_token_separator(separator: str) -> None:
     doc, atr = texts()
     with pytest.raises(CHECKER.CheckError):
-        CHECKER.validate_text(doc.replace("type Device {", "type" + separator + "Device {", 1), atr)
+        CHECKER.validate_text(doc.replace("type device {", "type" + separator + "device {", 1), atr)
 
 
 def test_rejects_html_comment_syntax_inside_current_sdl() -> None:
     doc, atr = texts()
     with pytest.raises(CHECKER.CheckError):
-        CHECKER.validate_text(doc.replace("discoverySource: String", "discoverySource: <!-- --> String", 1), atr)
+        CHECKER.validate_text(doc.replace("discovery_source: String", "discovery_source: <!-- --> String", 1), atr)
 
 
 def test_accepts_html_comment_text_inside_graphql_description() -> None:
     doc, atr = texts()
-    CHECKER.validate_text(doc.replace("  discoverySource: String", '  """literal <!-- --> text"""\n  discoverySource: String', 1), atr)
+    CHECKER.validate_text(doc.replace("  discovery_source: String", '  """literal <!-- --> text"""\n  discovery_source: String', 1), atr)
 
 
 def test_rejects_backtick_in_backtick_fence_info_string() -> None:
@@ -612,7 +612,7 @@ def test_rejects_backtick_in_backtick_fence_info_string() -> None:
 
 def test_fenced_literal_comment_opener_does_not_hide_later_markdown_comment() -> None:
     doc, atr = texts()
-    doc = doc.replace("  discoverySource: String", '  """literal <!-- text"""\n  discoverySource: String', 1)
+    doc = doc.replace("  discovery_source: String", '  """literal <!-- text"""\n  discovery_source: String', 1)
     section = CHECKER._section(doc)
     hidden = doc.replace(section, "<!--\n" + section + "\n-->\n", 1)
     with pytest.raises(CHECKER.CheckError):
@@ -632,7 +632,7 @@ def test_rejects_invalid_trailing_tokens_after_nullable_field(suffix: str) -> No
     doc, atr = texts()
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_text(
-            doc.replace("  discoverySource: String", "  discoverySource: String" + suffix, 1),
+            doc.replace("  discovery_source: String", "  discovery_source: String" + suffix, 1),
             atr,
         )
 
@@ -641,8 +641,8 @@ def test_accepts_legal_trailing_directive_after_nullable_field() -> None:
     doc, atr = texts()
     CHECKER.validate_text(
         doc.replace(
-            "  discoverySource: String",
-            '  discoverySource: String @deprecated(reason: "legacy")',
+            "  discovery_source: String",
+            '  discovery_source: String @deprecated(reason: "legacy")',
             1,
         ),
         atr,
@@ -652,22 +652,22 @@ def test_accepts_legal_trailing_directive_after_nullable_field() -> None:
 @pytest.mark.parametrize(
     "header",
     (
-        "type Device garbage {",
-        "type Device implements {",
+        "type device garbage {",
+        "type device implements {",
     ),
 )
 def test_rejects_malformed_current_device_header(header: str) -> None:
     doc, atr = texts()
     with pytest.raises(CHECKER.CheckError):
-        CHECKER.validate_text(doc.replace("type Device {", header, 1), atr)
+        CHECKER.validate_text(doc.replace("type device {", header, 1), atr)
 
 
 def test_accepts_legal_current_device_header_modifiers() -> None:
     doc, atr = texts()
     CHECKER.validate_text(
         doc.replace(
-            "type Device {",
-            'type Device implements Node @key(fields: "address") {',
+            "type device {",
+            'type device implements Node @key(fields: "address") {',
             1,
         ),
         atr,
@@ -677,8 +677,8 @@ def test_accepts_legal_current_device_header_modifiers() -> None:
 def test_rejects_device_definition_split_across_graphql_fences() -> None:
     doc, atr = texts()
     split = doc.replace(
-        "  discoverySource: String",
-        "```\nprose between invalid SDL fragments\n```graphql\n  discoverySource: String",
+        "  discovery_source: String",
+        "```\nprose between invalid SDL fragments\n```graphql\n  discovery_source: String",
         1,
     )
     with pytest.raises(CHECKER.CheckError):
@@ -704,13 +704,13 @@ def test_rejects_indented_duplicate_atx_headings(indent: str) -> None:
 def test_rejects_invalid_tokens_after_current_device_definition() -> None:
     doc, atr = texts()
     with pytest.raises(CHECKER.CheckError):
-        CHECKER.validate_text(doc.replace("}\n\ntype Plane", "}\ngarbage\n\ntype Plane", 1), atr)
+        CHECKER.validate_text(doc.replace("}\n\ntype plane", "}\ngarbage\n\ntype plane", 1), atr)
 
 
 def test_setext_heading_ends_current_types_section() -> None:
     doc, atr = texts()
     current = CHECKER._current_types_section(doc)
-    match = re.search(r"^type Device \{\n.*?^\}\n", current, re.M | re.S)
+    match = re.search(r"^type device \{\n.*?^\}\n", current, re.M | re.S)
     assert match is not None
     moved = doc.replace(match.group(0), "Historical schema\n---\n" + match.group(0), 1)
     with pytest.raises(CHECKER.CheckError):
@@ -732,7 +732,7 @@ def test_setext_heading_ends_provenance_section() -> None:
 def test_ignores_indented_historical_device_examples(indent: str) -> None:
     doc, atr = texts()
     CHECKER.validate_text(
-        doc + "\n" + indent + "extend type Device { discoverySource: String }\n",
+        doc + "\n" + indent + "extend type device { discovery_source: String }\n",
         atr,
     )
 
@@ -748,8 +748,8 @@ def test_rejects_provenance_section_hidden_in_raw_html_block() -> None:
 @pytest.mark.parametrize(
     "visible_html",
     (
-        "<div>extend type Device { discovery&#83;ource: String! }</div>",
-        "<div>extend type Device { discoverySource&colon; String! }</div>",
+        "<div>extend type device { discovery&#83;ource: String! }</div>",
+        "<div>extend type device { discovery_source&colon; String! }</div>",
         "<div>Pending gateway #939/#940 implementation</div>",
     ),
 )
@@ -769,14 +769,14 @@ def test_rejects_raw_html_stale_mcp_rule_anywhere() -> None:
 def test_ignores_inline_code_device_example() -> None:
     doc, atr = texts()
     CHECKER.validate_text(
-        doc + "\n`extend type Device { discoverySource: String }`\n",
+        doc + "\n`extend type device { discovery_source: String }`\n",
         atr,
     )
 
 
 def test_rejects_device_extension_in_image_alt_text() -> None:
     doc, atr = texts()
-    alt_declaration = "![extend type Device { discoverySource: String! }](missing.png)"
+    alt_declaration = "![extend type device { discovery_source: String! }](missing.png)"
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_text(doc + "\n" + alt_declaration + "\n", atr)
 
@@ -820,7 +820,7 @@ def test_rejects_devices_get_moved_under_legacy_aliases() -> None:
 
 def test_rejects_devices_get_duplicated_under_legacy_aliases() -> None:
     text = mcp_text()
-    duplicate = "  - `ebus.v1.registry.devices.get`\n"
+    duplicate = "  - `ebus_v1_registry_devices_get`\n"
     mutated = text.replace("- Legacy aliases\n", "- Legacy aliases\n" + duplicate, 1)
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_mcp_text(mutated)
@@ -835,10 +835,10 @@ def test_rejects_duplicate_contract_heading_after_inline_comment_literal() -> No
 
 def test_rejects_four_space_core_devices_get_duplicate() -> None:
     text = mcp_text()
-    duplicate = "    - `ebus.v1.registry.devices.get`\n"
+    duplicate = "    - `ebus_v1_registry_devices_get`\n"
     mutated = text.replace(
-        "- Core stable (`ebus.v1.*`)\n",
-        "- Core stable (`ebus.v1.*`)\n" + duplicate,
+        "- Core stable (`ebus_v1_*`)\n",
+        "- Core stable (`ebus_v1_*`)\n" + duplicate,
         1,
     )
     with pytest.raises(CHECKER.CheckError):
@@ -847,10 +847,10 @@ def test_rejects_four_space_core_devices_get_duplicate() -> None:
 
 def test_rejects_annotated_core_devices_get_duplicate() -> None:
     text = mcp_text()
-    duplicate = "  - `ebus.v1.registry.devices.get` (deprecated)\n"
+    duplicate = "  - `ebus_v1_registry_devices_get` (deprecated)\n"
     mutated = text.replace(
-        "  - `ebus.v1.registry.planes.list`\n",
-        "  - `ebus.v1.registry.planes.list`\n" + duplicate,
+        "  - `ebus_v1_registry_planes_list`\n",
+        "  - `ebus_v1_registry_planes_list`\n" + duplicate,
         1,
     )
     with pytest.raises(CHECKER.CheckError):
@@ -859,7 +859,7 @@ def test_rejects_annotated_core_devices_get_duplicate() -> None:
 
 def test_rejects_formatted_devices_get_duplicate_under_legacy_aliases() -> None:
     text = mcp_text()
-    duplicate = "  - **`ebus.v1.registry.devices.get`**\n"
+    duplicate = "  - **`ebus_v1_registry_devices_get`**\n"
     mutated = text.replace("- Legacy aliases\n", "- Legacy aliases\n" + duplicate, 1)
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_mcp_text(mutated)
@@ -868,8 +868,8 @@ def test_rejects_formatted_devices_get_duplicate_under_legacy_aliases() -> None:
 @pytest.mark.parametrize(
     "tool",
     (
-        "ebus.v1.registry.devices.get",
-        "ebus.v1.registry.devices.list",
+        "ebus_v1_registry_devices_get",
+        "ebus_v1_registry_devices_list",
     ),
 )
 def test_rejects_prefixed_device_tool_duplicate_under_legacy_aliases(tool: str) -> None:
@@ -883,8 +883,8 @@ def test_rejects_prefixed_device_tool_duplicate_under_legacy_aliases(tool: str) 
 @pytest.mark.parametrize(
     "tool",
     (
-        "ebus.v1.registry.devices.get",
-        "ebus.v1.registry.devices.list",
+        "ebus_v1_registry_devices_get",
+        "ebus_v1_registry_devices_list",
     ),
 )
 def test_rejects_plain_device_tool_duplicate_under_legacy_aliases(tool: str) -> None:
@@ -898,8 +898,8 @@ def test_rejects_plain_device_tool_duplicate_under_legacy_aliases(tool: str) -> 
 @pytest.mark.parametrize(
     "tool",
     (
-        "ebus.v1.registry.devices.get",
-        "ebus.v1.registry.devices.list",
+        "ebus_v1_registry_devices_get",
+        "ebus_v1_registry_devices_list",
     ),
 )
 def test_rejects_html_code_device_tool_duplicate_under_legacy_aliases(tool: str) -> None:
@@ -910,7 +910,7 @@ def test_rejects_html_code_device_tool_duplicate_under_legacy_aliases(tool: str)
         CHECKER.validate_mcp_text(mutated)
 
 
-@pytest.mark.parametrize("title", ("discoverySource", "verificationState"))
+@pytest.mark.parametrize("title", ("discovery_source", "verification_state"))
 def test_rejects_label_table_inside_lazy_blockquote(title: str) -> None:
     doc, atr = texts()
     prompt = f"Allowed `{title}` labels:"
@@ -922,11 +922,11 @@ def test_rejects_label_table_inside_lazy_blockquote(title: str) -> None:
 def test_rejects_initial_pair_table_inside_lazy_blockquote() -> None:
     doc, atr = texts()
     prompt = "Typical initial combinations are examples, not an exhaustive pairing rule:"
-    mutation = f"> {prompt}\n| `discoverySource` | `verificationState` |"
+    mutation = f"> {prompt}\n| `discovery_source` | `verification_state` |"
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_text(
             doc.replace(
-                prompt + "\n\n| `discoverySource` | `verificationState` |",
+                prompt + "\n\n| `discovery_source` | `verification_state` |",
                 mutation,
                 1,
             ),
@@ -969,7 +969,7 @@ def test_rejects_nested_current_graphql_fence(prefix: str) -> None:
 def test_rejects_visible_device_extension_beside_current_sdl() -> None:
     doc, atr = texts()
     current = CHECKER._current_types_section(doc)
-    contradictory = "\nextend type Device { discoverySource: String! }\n"
+    contradictory = "\nextend type device { discovery_source: String! }\n"
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_text(doc.replace(current, current + contradictory, 1), atr)
 
@@ -977,7 +977,7 @@ def test_rejects_visible_device_extension_beside_current_sdl() -> None:
 @pytest.mark.parametrize("interface_name", ("type", "extend", "schema"))
 def test_rejects_visible_device_extension_with_keyword_named_interface(interface_name: str) -> None:
     doc, atr = texts()
-    contradictory = f"\nextend type Device implements {interface_name} {{ discoverySource: String! }}\n"
+    contradictory = f"\nextend type device implements {interface_name} {{ discovery_source: String! }}\n"
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_text(doc + contradictory, atr)
 
@@ -986,7 +986,7 @@ def test_rejects_visible_device_extension_after_fenced_copy_of_current_types() -
     doc, atr = texts()
     current = CHECKER._current_types_section(doc)
     example = "````markdown\n" + current + "````\n\n"
-    contradictory = "extend type Device { discoverySource: String! }\n\n"
+    contradictory = "extend type device { discovery_source: String! }\n\n"
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_text(doc.replace(current, example + contradictory + current, 1), atr)
 
@@ -1011,33 +1011,33 @@ def test_rejects_contradictory_graphql_and_mcp_conclusion_labels() -> None:
 
 def test_rejects_device_extension_after_unmatched_quote_in_prior_prose() -> None:
     doc, atr = texts()
-    appended = '\n"\n\nextend type Device { discoverySource: String! }\n'
+    appended = '\n"\n\nextend type device { discovery_source: String! }\n'
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_text(doc + appended, atr)
 
 
 def test_rejects_device_extension_after_markdown_hash_in_same_prose_span() -> None:
     doc, atr = texts()
-    appended = "\nVariant #1: extend type Device { discoverySource: String! }\n"
+    appended = "\nVariant #1: extend type device { discovery_source: String! }\n"
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_text(doc + appended, atr)
 
 
 def test_rejects_visible_device_declaration_with_bounded_graphql_comment() -> None:
     doc, atr = texts()
-    appended = "\ntype # note\nDevice { discoverySource: String! }\n"
+    appended = "\ntype # note\ndevice { discovery_source: String! }\n"
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_text(doc + appended, atr)
 
 
 def test_rejects_visible_device_extension_inside_raw_html_block() -> None:
     doc, atr = texts()
-    appended = "\n<div>\nextend type Device { verificationState: String! }\n</div>\n"
+    appended = "\n<div>\nextend type device { verification_state: String! }\n</div>\n"
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_text(doc + appended, atr)
 
 
-@pytest.mark.parametrize("title", ("discoverySource", "verificationState"))
+@pytest.mark.parametrize("title", ("discovery_source", "verification_state"))
 def test_rejects_escaped_pipe_label_paragraph(title: str) -> None:
     doc, atr = texts()
     start = doc.index(f"Allowed `{title}` labels:")

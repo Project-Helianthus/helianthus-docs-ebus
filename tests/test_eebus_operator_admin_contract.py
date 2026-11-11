@@ -26,7 +26,7 @@ def test_shared_operator_boundary_has_no_eebus_specific_authentication() -> None
         "post-m9-operator-admin-v1.md",
         "follows the linked canonical docs-eebus contracts",
         "Those documents alone own protocol routes",
-        "`eebus.v1.*` remains the only eeBUS MCP namespace",
+        "`eebus_v1_*` remains the only eeBUS MCP namespace",
         "introduces no eeBUS-specific login, session, cookie, CSRF token, owner credential, Home Assistant credential, or eeBUS reauthentication",
         "Generic Portal and Home Assistant authentication remain out of scope",
         "Pairing actions remain functional in both Portal and Home Assistant",
@@ -176,7 +176,7 @@ def test_mcp_graphql_and_ha_expose_one_fm5_verdict() -> None:
     graphql = _normalized(GRAPHQL)
     ha = _normalized(HA)
     for required in (
-        "`ebus.v1.semantic.fm5_interpretation.get`",
+        "`ebus_v1_semantic_fm5_interpretation_get`",
         "`mode`, `degraded_reason`, and `evidence_revision`",
         "no v2 tool or legacy alias is introduced",
         "Its availability is stated only by the checked registration inventory above",
@@ -190,17 +190,17 @@ def test_mcp_graphql_and_ha_expose_one_fm5_verdict() -> None:
     inventory_start = implemented_mcp.index("### Checked registration inventory")
     inventory_end = implemented_mcp.index("mcp-inventory:end")
     narrative_mcp = implemented_mcp[:inventory_start] + implemented_mcp[inventory_end:]
-    assert "ebus.v1.semantic.fm5_interpretation.get" not in narrative_mcp
+    assert "ebus_v1_semantic_fm5_interpretation_get" not in narrative_mcp
     for required in (
         "Status:** Pending gateway implementation",
-        "fm5Interpretation: Fm5Interpretation",
+        "fm5_interpretation: fm5_interpretation",
         "nullable until the first coherent structural classification",
         "must not synthesize `GPIO_ONLY` or `ABSENT`",
-        "degradedReason: Fm5SemanticDegradedReason",
-        "evidenceRevision: String!",
-        "Once a verdict exists, only `mode` and `evidenceRevision` are non-null",
-        "`degradedReason` remains nullable and is null for healthy `INTERPRETED` and fresh coherent `ABSENT`",
-        "Existing `fm5SemanticMode` remains stable",
+        "degraded_reason: fm5_semantic_degraded_reason",
+        "evidence_revision: String!",
+        "Once a verdict exists, only `mode` and `evidence_revision` are non-null",
+        "`degraded_reason` remains nullable and is null for healthy `INTERPRETED` and fresh coherent `ABSENT`",
+        "Existing `fm5_semantic_mode` remains stable",
     ):
         assert required in graphql
     assert "its object fields remain non-null as shown above" not in graphql
@@ -214,14 +214,14 @@ def test_mcp_graphql_and_ha_expose_one_fm5_verdict() -> None:
         "trust-store access, operator-socket access, or transport ownership",
         "pending GraphQL contract",
         "target contract, not current integration availability",
-        "fm5Interpretation { mode degradedReason evidenceRevision }",
+        "fm5_interpretation { mode degraded_reason evidence_revision }",
         "does not derive a reason",
         "treats a null verdict as acquisition unavailable",
         "`GPIO_ONLY` with any reason other than `CONFIGURATION_NOT_INTERPRETABLE` is an invalid response",
     ):
         assert required in ha
     assert "never receives raw protocol payload" not in ha
-    assert "fm5Interpretation: Fm5Interpretation!" not in graphql
+    assert "fm5_interpretation: fm5_interpretation!" not in graphql
 
 
 def test_portal_and_mcp_keep_pairing_and_cold_start_fail_closed() -> None:

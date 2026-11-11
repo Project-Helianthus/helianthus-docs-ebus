@@ -18,7 +18,7 @@ route or API. Every requirement described as proposed below is future work.
   Cylinder. Its `†` rows are CSV value matches with false-positive risk, not
   independently confirmed semantics. Catalog ranges are historical probe hints.
 - **L — legacy public contract:** [B524 semantic mapping](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/b524-semantic-mapping.md),
-  `ebus.v1.semantic.solar.get` and `ebus.v1.semantic.cylinders.get`.
+  `ebus_v1_semantic_solar_get` and `ebus_v1_semantic_cylinders_get`.
 - **G — corroborating implementation:** [gateway semantic reader](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/cmd/gateway/semantic_vaillant.go),
   solar selector constants, `readSolarSnapshot`, `readCylinderSnapshots`,
   `decodeB524Float32FromRaw`, `readB524ValueWithMaxAge`, `commitFM5Acquisition`,
@@ -43,7 +43,7 @@ not qualify II=0x01; no automatic instance expansion is proposed.
 
 | Observation | Native selector (OP/GG/II/RR) | N row / interpretation status | Current G/L consumer | Proposed disposition |
 |---|---|---|---|---|
-| Collector candidate | `02/04/00/0003` | `solar_collector_temperature`, f32, °C, hint -40..155; **Hypothesis** (`†`) | `CollectorTemperatureC` in `readSolarSnapshot` → GraphQL `SolarStatus`; legacy MCP solar family in L | Keep exact native observation; canonical fact withheld pending medium, sensor and profile evidence |
+| Collector candidate | `02/04/00/0003` | `solar_collector_temperature`, f32, °C, hint -40..155; **Hypothesis** (`†`) | `CollectorTemperatureC` in `readSolarSnapshot` → GraphQL `solar_status`; legacy MCP solar family in L | Keep exact native observation; canonical fact withheld pending medium, sensor and profile evidence |
 | Return candidate | `02/04/00/0007` | `solar_yield_temperature`, f32, °C; no range hint; **Hypothesis** (`†`); physical return location **Unknown** | `solar_return_temp` → `ReturnTemperatureC` through same solar reader/publication | Preserve naming conflict; withhold canonical return projection rather than equating yield and return |
 | Separate cylinder boundary, not a GG=0x04 field | `02/05/00/0004` and `02/05/01/0004` | `solar_cylinder_bottom_temperature`, f32, °C, hint -10..110; **Hypothesis** (`†`) | `readCylinderSnapshots` → indexed `CylinderStatus.TemperatureC`; legacy MCP cylinders family in L | No cylinder migration here; never fill collector/return from these observations or create a cylinder from config alone |
 

@@ -24,10 +24,10 @@ extension under `v1.minor` is permitted by §6 without amendment.
 This lock covers, exactly and exhaustively:
 
 1. The MCP envelope shape across the 4 first-delivery surfaces:
-   `ebus.v1.ebus_standard.services.list`,
-   `ebus.v1.ebus_standard.commands.list`,
-   `ebus.v1.ebus_standard.command.get`,
-   `ebus.v1.ebus_standard.decode`.
+   `ebus_v1_ebus_standard_services_list`,
+   `ebus_v1_ebus_standard_commands_list`,
+   `ebus_v1_ebus_standard_command_get`,
+   `ebus_v1_ebus_standard_decode`.
 2. The `safety_class` enum and its emission locations.
 3. The error schema (wrap-chain, sentinel contract, boundary
    domain translation).
@@ -39,7 +39,7 @@ This lock covers, exactly and exhaustively:
 Out of scope (deferred to later lock artifacts):
 
 - Responder lane (M4b2 / M4c1 / M4c2 / M4D) — covered by follow-up Q2.
-- Live invocation surfaces (`ebus.v1.rpc.invoke`) — already locked by
+- Live invocation surfaces (`ebus_v1_rpc_invoke`) — already locked by
   `10-rpc-source-113.md` (source=113 invariant) and by the execution
   policy module in `05-execution-safety.md`.
 

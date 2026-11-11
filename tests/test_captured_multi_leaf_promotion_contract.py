@@ -6,6 +6,7 @@ import importlib.util
 import json
 import os
 import pathlib
+import shlex
 import subprocess
 import sys
 import time
@@ -1638,7 +1639,7 @@ def test_reproducible_build_rejects_absolute_local_module_replacement(
         "module github.com/Project-Helianthus/helianthus-ebusgateway\n\n"
         "go 1.22\n\n"
         "require example.invalid/ignored v0.0.0\n\n"
-        f"replace example.invalid/ignored => {ignored_module}\n",
+        f"replace example.invalid/ignored => {json.dumps(str(ignored_module))}\n",
         encoding="utf-8",
     )
     (source_tree / "cmd/gateway/main.go").write_text(
@@ -1779,8 +1780,8 @@ def test_reproducible_build_rejects_global_smudge_source_injection(
         "ignored-filter-source/\n", encoding="utf-8"
     )
     for key, value in (
-        ("filter.external.clean", f"/bin/cat {committed_go}"),
-        ("filter.external.smudge", f"/bin/cat {external_go}"),
+        ("filter.external.clean", f"/bin/cat {shlex.quote(str(committed_go))}"),
+        ("filter.external.smudge", f"/bin/cat {shlex.quote(str(external_go))}"),
         ("filter.external.required", "true"),
     ):
         subprocess.run(

@@ -20,7 +20,7 @@ This document describes naming patterns used in the current implementation.
 
 ## Schemas and Fields
 
-- Schema field names are snake_case and describe semantic values (`flow_temperature`, `room_temperature_setpoint`, `pump_active`). Canonical register names and the names of decoded value fields follow [Register and field names](#register-and-field-names); structural fields do not.
+- GraphQL object, input, enum and type names, enum tokens, roots, arguments and payload field names are snake_case and describe semantic values (`zone_room_temperature`, `zone_room_humidity`, `pump_active`). Canonical register names and the names of decoded value fields follow [Register and field names](#register-and-field-names); structural fields do not.
 - Conditional schemas are described by `target` and optional hardware version bounds; the schema key `target` is outside the naming rules.
 
 ## Protocol Constants
@@ -224,7 +224,9 @@ translation without suffixes wherever possible. Library-owned spellings and
 prefixes are documented exceptions, but the decomposition guard inventories only
 `helianthus`-prefixed metrics; library-prefixed names such as `process_*` and
 `go_*` are not checked by it until an enforcement child covers them. Counter `_total` and the predicate `_ratio`
-remain. Actual metric renames and coverage are separate work, including the
+remain. The [emitted metric contract](../deployment/prometheus-semantic-coverage.md)
+records constant units, preserved numeric scales and measured library exceptions.
+Incomplete naming coverage remains tracked in the
 [metric follow-up](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/1153).
 
 ### Checked examples
@@ -254,3 +256,5 @@ Provisional register questions remain tracked in the non-compliance follow-up
 above. The shared vocabulary home and all-surface enforcement remain open;
 this bounded gate establishes neither whole-ecosystem compliance nor closure of
 F52. Native row changes and per-repository gates require separate children.
+
+GraphQL built-in scalars and protocol introspection identifiers retain their protocol spelling. Reflected SemReg envelopes recursively retain their snake_case JSON tags. Historical correspondence is documentary only and supplies no runtime fallback. Provisional value names retain an explicit open question; syntax compliance alone establishes no native meaning or qualification.

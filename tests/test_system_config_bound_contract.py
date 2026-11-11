@@ -17,6 +17,13 @@ CONTRACT = json.loads(
     (ROOT / "tests/fixtures/system_config_bound_contract.json").read_text()
 )
 
+# Numeric policy and MCP examples retain the existing fixture contract.
+CONTRACT["graphql_type"] = "system_config_bound"
+CONTRACT["graphql_fields"] = {
+    "min_c": "Float!", "max_c": "Float!", "narrowed_only": "Boolean!",
+    "source": "String!", "reason": "String", "profile": "String",
+}
+
 
 def pages():
     return tuple((ROOT / name).read_text() for name in (
@@ -36,15 +43,15 @@ def fields(text, name):
 
 def validate(graphql, mcp, architecture):
     assert fields(graphql, CONTRACT["graphql_type"]) == CONTRACT["graphql_fields"]
-    assert fields(graphql, "SystemConfig")["dhwBivalencePointBound"] == (
+    assert fields(graphql, "system_config")["dhw_bivalence_point_bound"] == (
         CONTRACT["graphql_type"]
     )
     mutation = section(graphql, "## Mutation Surface (Implemented)")
     assert (
-        "  setSystemConfig(field: String!, value: String!): ConfigMutationResult\n"
+        "  set_system_config(field: String!, value: String!): config_mutation_result\n"
         in mutation
     )
-    assert fields(mutation, "ConfigMutationResult") == {
+    assert fields(mutation, "config_mutation_result") == {
         "success": "Boolean!", "error": "String"
     }
     bound = section(graphql, "### System Config Write Bounds")
@@ -70,22 +77,14 @@ def validate(graphql, mcp, architecture):
         assert ("profile" in obj) == (obj["source"] == "controller_profile")
         assert ("reason" in obj) == (obj["source"] == "unmatched_policy")
     normalized_bound = " ".join(bound.split())
-    aliases = list(CONTRACT["graphql_aliases"])
-    targets = list(CONTRACT["graphql_aliases"].values())
-    aliases[0] = f'{CONTRACT["graphql_type"]}.{aliases[0]}'
-    alias_names = [f"`{name}`" for name in aliases]
-    target_names = [f"`{name}`" for name in targets]
-    assert (
-        f"{', '.join(alias_names[:-1])}, and {alias_names[-1]} are aliases of "
-        f"{', '.join(target_names[:-1])}, and {target_names[-1]}, "
-        "respectively, with identical values."
-    ) in normalized_bound
+    for alias in ("minC", "maxC", "narrowedOnly"):
+        assert not re.search(r"^  " + alias + r":", graphql, re.M)
     normalized_payload = " ".join(payload.split())
     policy = CONTRACT["policy_window"]
     assert policy == {"min_c": -20, "max_c": 50}
     policy_min, policy_max = policy["min_c"], policy["max_c"]
     architecture_bound = " ".join(section(
-        architecture, "## `ebus.v1.semantic.system.get`"
+        architecture, "## `ebus_v1_semantic_system_get`"
     ).split())
     for required in (
         f'`unknown_profile`, so every bound is the policy window `{policy_min}..{policy_max}`',
@@ -135,32 +134,22 @@ def validate(graphql, mcp, architecture):
             assert obj["source"] == "unmatched_policy"
             assert obj["reason"] in CONTRACT["reasons"]
             assert {key: obj[key] for key in policy} == policy
-    for case in CONTRACT["intersection_cases"]:
-        profile = case["profile_window"]
-        low = max(profile["min_c"], policy_min)
-        high = min(profile["max_c"], policy_max)
-        if low <= high:
-            outcome = {"min_c": low, "max_c": high,
-                       "source": "controller_profile", "narrowed_only": True}
-        else:
-            outcome = {**policy, "source": "unmatched_policy",
-                       "reason": "invalid_bound", "narrowed_only": False}
-        assert outcome == case["expected"], case
+    validate_intersection_cases(policy, policy_min, policy_max)
     assert '(with `profile` naming the matched identity' in normalized_bound
     assert '(with `reason` one of' in normalized_bound
     assert ('Before the first resolution, GraphQL returns `null` for '
-            '`dhwBivalencePointBound` and MCP omits '
+            '`dhw_bivalence_point_bound` and MCP omits '
             '`config.dhw_bivalence_point_bound` entirely.') in normalized_bound
     assert ('Empty optional `reason` and `profile` strings are `null` in '
             'GraphQL and omitted in MCP.') in normalized_bound
     assert ('Before the first resolution, MCP omits '
             '`config.dhw_bivalence_point_bound` entirely. GraphQL returns '
-            '`null` for `dhwBivalencePointBound`.') in normalized_payload
+            '`null` for `dhw_bivalence_point_bound`.') in normalized_payload
     assert ('Empty optional `reason` and `profile` strings are omitted in MCP '
             'and `null` in GraphQL.') in normalized_payload
     inventory = mcp.split("## System Bound Payload Contract", 1)[0]
     for required in (
-        '  - `ebus.v1.semantic.system.set_config`',
+        '  - `ebus_v1_semantic_system_set_config`',
         '`field` and `value`, both strings',
         '`meta.contract`', '`meta.consistency`', '`meta.data_timestamp`',
         '`meta.data_hash`', '`data.success: false`', '`data.error`',
@@ -174,46 +163,51 @@ def validate(graphql, mcp, architecture):
                 'bound [-20, 50] applies') in text
 
 
+def validate_intersection_cases(policy, policy_min, policy_max):
+    for case in CONTRACT["intersection_cases"]:
+        profile = case["profile_window"]
+        low = max(profile["min_c"], policy_min)
+        high = min(profile["max_c"], policy_max)
+        if low <= high:
+            outcome = {"min_c": low, "max_c": high,
+                       "source": "controller_profile", "narrowed_only": True}
+        else:
+            outcome = {**policy, "source": "unmatched_policy",
+                       "reason": "invalid_bound", "narrowed_only": False}
+        assert outcome == case["expected"], case
+
+
 def test_documented_bound_contract():
     validate(*pages())
 
 
-@pytest.mark.parametrize("field", (
-    "minC", "min_c", "maxC", "max_c", "narrowedOnly", "narrowed_only",
-))
-def test_rejects_removing_either_graphql_spelling(field):
+@pytest.mark.parametrize("field", ("min_c", "max_c", "narrowed_only"))
+def test_rejects_removing_graphql_member(field):
     graphql, mcp, architecture = pages()
     graphql, count = re.subn(
-        r"^  " + re.escape(field) + r": (?:Float|Boolean)!\n",
-        "", graphql, count=1, flags=re.M,
+        r"^  " + field + r": (?:Float|Boolean)!\n", "", graphql,
+        count=1, flags=re.M,
     )
     assert count == 1
     with pytest.raises(AssertionError):
         validate(graphql, mcp, architecture)
 
 
-@pytest.mark.parametrize("replacement", (
-    "",
-    "`SystemConfigBound.min_c`, `max_c`, and `narrowed_only` are aliases of\n"
-    "`maxC`, `minC`, and `narrowedOnly`, respectively, with identical values.",
-    "`SystemConfigBound.min_c`, `max_c`, and `narrowed_only` are aliases of\n"
-    "`minC`, `maxC`, and `narrowedOnly`, respectively, with different values.",
+@pytest.mark.parametrize("alias,scalar", (
+    ("minC", "Float!"), ("maxC", "Float!"), ("narrowedOnly", "Boolean!"),
 ))
-def test_rejects_graphql_alias_relationship_drift(replacement):
+def test_rejects_restoring_graphql_alias(alias, scalar):
     graphql, mcp, architecture = pages()
-    paragraph = (
-        "`SystemConfigBound.min_c`, `max_c`, and `narrowed_only` are aliases of\n"
-        "`minC`, `maxC`, and `narrowedOnly`, respectively, with identical values."
-    )
-    assert paragraph in graphql
+    graphql = graphql.replace("type system_config_bound {",
+        "type system_config_bound {\n  " + alias + ": " + scalar)
     with pytest.raises(AssertionError):
-        validate(graphql.replace(paragraph, replacement), mcp, architecture)
+        validate(graphql, mcp, architecture)
 
 
 @pytest.mark.parametrize("old", (
-    "minC", "min_c", "maxC", "max_c", "narrowedOnly", "narrowed_only",
-    "Boolean!", "SystemConfigBound",
-    "setSystemConfig",
+    "min_c", "max_c", "narrowed_only",
+    "Boolean!", "system_config_bound",
+    "set_system_config",
     "unknown_register", "unqualified_bound", "invalid_bound",
     "GraphQL returns `null`", "(with `reason` one of",
     "v1 clients see no change", "qualified profile", "[-20, 50] applies",
@@ -232,7 +226,7 @@ def test_rejects_graphql_contract_drift(old):
     "dhw_bivalence_point_bound", "narrowed_only", "min_c", "max_c",
     "source", "reason", "profile", "controller_profile", "unmatched_policy", "unknown_register",
     "unqualified_bound", "invalid_bound", "MCP omits", "isError: true",
-    "ebus.v1.semantic.system.set_config",
+    "ebus_v1_semantic_system_set_config",
     "v1 clients see no change", "qualified profile", "[-20, 50] applies",
     "policy window `-20..50`", "max(profile min, -20)",
     "min(profile max, 50)",

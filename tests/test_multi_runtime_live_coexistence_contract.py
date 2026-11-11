@@ -180,6 +180,91 @@ def test_msp08_inventory_matches_the_complete_stable_v1_contract() -> None:
     ]
 
 
+def use_snake_tools(evidence: dict[str, object]) -> None:
+    for run in evidence["runs"]:
+        views = {view["view_id"]: view["payload"]["data"] for view in run["protected_views"]}
+        tools = views["mcp.tool.inventory"]["tools"]
+        tools[:] = [tool.replace(".", "_") for tool in tools]
+        for response in views["mcp.ebus.v1.responses"]["responses"]:
+            response["operation"] = response["operation"].replace(".", "_")
+
+
+@pytest.mark.parametrize("snake", [False, True])
+def test_msp08_tool_projection_preserves_spelling(snake: bool) -> None:
+    validator = validator_module()
+    payloads = source_payloads(validator, "before", "2026-08-12T08:00:00Z")
+    tools = json.loads(payloads["tools.list"])
+    expected = validator.APPROVED_M8_TOOL_INVENTORY
+    if snake:
+        expected = validator.APPROVED_M8_SNAKE_TOOLS
+        for tool, name in zip(tools["result"]["tools"], expected, strict=True):
+            tool["name"] = name
+    payloads["tools.list"] = validator.canonical(tools)
+    views = validator._source_project_views(payloads)["views"]
+    assert views["mcp.tool.inventory"]["tools"] == expected
+    assert [item["operation"] for item in views["mcp.ebus.v1.responses"]["responses"]] == expected[:2]
+
+
+@pytest.mark.parametrize("snake", [False, True])
+def test_msp08_synthetic_tool_spellings(tmp_path: pathlib.Path, snake: bool) -> None:
+    validator = validator_module()
+    evidence = load(SYNTHETIC_EVIDENCE)
+    if snake:
+        use_snake_tools(evidence)
+    refresh_protected_views(validator, evidence)
+    result = subprocess.run(
+        [
+            sys.executable, str(VALIDATOR), "verify-public",
+            "--evidence", str(write_evidence(tmp_path, evidence)),
+            "--registry", str(REGISTRY),
+            "--m7-graph", str(M7_SYNTHETIC_GRAPH),
+            "--m7-replay", str(M7_SYNTHETIC_REPLAY),
+            "--m7-registry", str(M7_REGISTRY),
+            "--m7-source-bundle", str(M7_SYNTHETIC_SOURCE_BUNDLE),
+            "--m7-source-replay", str(M7_SYNTHETIC_SOURCE_REPLAY),
+        ],
+        cwd=REPO_ROOT, capture_output=True, text=True,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert result.stdout == "public-only-ok\n"
+
+
+@pytest.mark.parametrize("snake", [False, True])
+@pytest.mark.parametrize("mixed", ["inventory", "operation", "responses", "run", "rollback"])
+def test_msp08_mixed_tool_spellings_fail_closed(
+    tmp_path: pathlib.Path, snake: bool, mixed: str,
+) -> None:
+    validator = validator_module()
+    evidence = build_live_evidence(validator)
+    if snake:
+        use_snake_tools(evidence)
+    other = deepcopy(evidence)
+    for run in other["runs"]:
+        views = {view["view_id"]: view["payload"]["data"] for view in run["protected_views"]}
+        tools = views["mcp.tool.inventory"]["tools"]
+        tools[:] = [tool.replace("_", ".") if snake else tool.replace(".", "_") for tool in tools]
+        for response in views["mcp.ebus.v1.responses"]["responses"]:
+            name = response["operation"]
+            response["operation"] = name.replace("_", ".") if snake else name.replace(".", "_")
+    index = -1 if mixed == "rollback" else 0
+    views = {view["view_id"]: view["payload"]["data"] for view in evidence["runs"][index]["protected_views"]}
+    alternatives = {view["view_id"]: view["payload"]["data"] for view in other["runs"][index]["protected_views"]}
+    if mixed in {"run", "rollback"}:
+        evidence["runs"][index] = other["runs"][index]
+    elif mixed == "inventory":
+        views["mcp.tool.inventory"]["tools"][-1] = alternatives["mcp.tool.inventory"]["tools"][-1]
+    elif mixed == "operation":
+        views["mcp.ebus.v1.responses"]["responses"][0] = alternatives["mcp.ebus.v1.responses"]["responses"][0]
+    else:
+        views["mcp.ebus.v1.responses"]["responses"] = alternatives["mcp.ebus.v1.responses"]["responses"]
+    refresh_protected_views(validator, evidence)
+    result = subprocess.run(
+        validator_command("verify", write_evidence(tmp_path, evidence)),
+        cwd=REPO_ROOT, capture_output=True, text=True,
+    )
+    assert (result.returncode, result.stdout, result.stderr) == (1, "gate.scope\n", "")
+
+
 def test_msp08_synthetic_public_rejects_opaque_address_as_auth_identity(
     tmp_path: pathlib.Path,
 ) -> None:
@@ -228,8 +313,8 @@ def test_msp08_read_only_scope_separates_inventory_from_call_authority() -> None
     for phrase in (
         "Inventory visibility does not grant call authority.",
         "seven eeBUS observation tools",
-        "`eebus.v1.snapshot.capture`",
-        "`eebus.v1.snapshot.drop`",
+        "`eebus_v1_snapshot_capture`",
+        "`eebus_v1_snapshot_drop`",
         "must fail before snapshot-store creation, lookup, or deletion",
     ):
         assert phrase in page
@@ -1001,11 +1086,16 @@ def rebind_source_manifest(
     refresh_evidence_hash(validator, evidence)
 
 
+@pytest.mark.parametrize("snake", [False, True])
 def test_msp08_live_profile_validates_bound_m7_and_restart(
-    tmp_path: pathlib.Path,
+    tmp_path: pathlib.Path, snake: bool,
 ) -> None:
     validator = validator_module()
-    evidence_path = write_evidence(tmp_path, build_live_evidence(validator))
+    evidence = build_live_evidence(validator)
+    if snake:
+        use_snake_tools(evidence)
+    refresh_protected_views(validator, evidence)
+    evidence_path = write_evidence(tmp_path, evidence)
     result = subprocess.run(
         validator_command("verify", evidence_path),
         cwd=REPO_ROOT,

@@ -242,7 +242,7 @@ slice order.
 
 `ReferenceV1.Matches` compares all six fields for exact equality. The stable
 reference deliberately has no `ToolID`, no draft `Scope`, and no final
-`eebus.v1.*` dependency. Later MCP design may bind a tool independently, but it
+`eebus_v1_*` dependency. Later MCP design may bind a tool independently, but it
 cannot retroactively alter this frozen raw capture reference.
 
 ## Evidence Ordering And Hashing
@@ -386,7 +386,7 @@ Exported names containing registry, projection, semantic, Enbility, SHIP,
 SPINE, GraphQL, Portal, Home Assistant, command-routing, trust-store, or trust
 mutation authority terms are rejected. Production public API strings beginning
 with `ebus.v1.` are also rejected. These checks prevent raw eeBUS evidence from
-leaking into `ebus.v1.*` or from exposing implementation-library types.
+leaking into `ebus_v1_*` or from exposing implementation-library types.
 
 ## Non-Authority And Deferred Surfaces
 
@@ -395,14 +395,14 @@ This freeze does not define, authorize, or promise:
 - pairing, trust, certificate administration, or any administrative mutation;
 - lifecycle start, shutdown, reconnect, readiness, or authority state;
 - availability, liveness, freshness, persistence, or retention guarantees;
-- final `eebus.v1.*` MCP tool identifiers, schemas, or dereference behavior;
+- final `eebus_v1_*` MCP tool identifiers, schemas, or dereference behavior;
 - semantic identities, promoted leaves, projections, GraphQL, Portal, Home
   Assistant, Matter, or other consumer contracts;
 - commands, command routing, raw writes, or semantic writes;
 - Enbility, SHIP, or SPINE types as public API.
 
 This contract supplies no route from raw eeBUS fields or evidence into
-`ebus.v1.*`, the eBUS registry, semantic outputs, consumer outputs, command
+`ebus_v1_*`, the eBUS registry, semantic outputs, consumer outputs, command
 paths, or write paths. Later milestones remain subject to separate
 semantic-promotion, coexistence, documentation, consumer, and write-authority
 gates.

@@ -17,7 +17,7 @@ the existing SunSpec status tool, and defines no other tool or field.
 
 ## Current Status
 
-Until the Helianthus 1.0 release, all MCP namespaces, including `ebus.v1.*`,
+Until the Helianthus 1.0 release, all MCP namespaces, including `ebus_v1_*`,
 are pre-stable; the namespace version alone is not a stability promise. A
 contract version declared by an individual surface, such as `1.0`, does not
 end this period. Schema or behaviour
@@ -29,7 +29,7 @@ and documentation-gate requirements remain in force.
 The MCP server is implemented and served by `cmd/gateway` at `/mcp`.
 
 The target additive Vaillant-only
-`ebus.v1.runtime.status.get.data.vaillant_regulator_capability` member is
+`ebus_v1_runtime_status_get.data.vaillant_regulator_capability` member is
 specified in [`vaillant-regulator-capability-v1.md`](./vaillant-regulator-capability-v1.md).
 It remains absent from the implemented-surface inventory until open gateway #947
 merges after the documentation gate; an older or missing
@@ -55,7 +55,7 @@ owns durable decisions, refusal order and CTL/LIFE semantics.
 
 ### Ordinary discovery and dispatch
 
-The exact tool family is `helianthus.runtime.{list,get,start,stop,restart}`.
+The exact tool family is `helianthus_runtime_{list,get,start,stop,restart}`.
 All five tools must appear in ordinary `tools/list` and dispatch through
 every ordinary MCP transport the gateway offers (HTTP today), including with
 eeBUS disabled or absent.
@@ -68,7 +68,7 @@ authorization before 0.9. No owner-only kernel socket, separate listener,
 operator-boundary-only registration or eeBUS dependency is introduced. Existing
 native-write checks and unrelated eeBUS security boundaries keep their current
 owners. Driver contribution hooks remain unimplemented; these are host tools.
-Every namespace, including `ebus.v1.*`, remains pre-stable until 1.0. Intentional
+Every namespace, including `ebus_v1_*`, remains pre-stable until 1.0. Intentional
 changes require documentation, deterministic envelopes, schema/output goldens
 and PR explanation; neither a compatibility veto nor promotion to a new major
 or experimental namespace applies before 1.0.
@@ -81,11 +81,11 @@ to the landed internal `Service` methods as follows:
 
 | Wire tool | Complete arguments object | Internal service call |
 |---|---|---|
-| `helianthus.runtime.list` | `{}` | `List()` |
-| `helianthus.runtime.get` | `{"DriverID":"ebus.primary"}` | `Get(DriverID)` |
-| `helianthus.runtime.start` | `{"DriverID":"ebus.primary","ExpectedRevision":"7"}` | `Decide(ctx, MethodStart, request)` |
-| `helianthus.runtime.stop` | `{"DriverID":"ebus.primary","ExpectedRevision":"7"}` | `Decide(ctx, MethodStop, request)` |
-| `helianthus.runtime.restart` | `{"DriverID":"ebus.primary","ExpectedRevision":"7"}` | `Decide(ctx, MethodRestart, request)` |
+| `helianthus_runtime_list` | `{}` | `List()` |
+| `helianthus_runtime_get` | `{"DriverID":"ebus.primary"}` | `Get(DriverID)` |
+| `helianthus_runtime_start` | `{"DriverID":"ebus.primary","ExpectedRevision":"7"}` | `Decide(ctx, MethodStart, request)` |
+| `helianthus_runtime_stop` | `{"DriverID":"ebus.primary","ExpectedRevision":"7"}` | `Decide(ctx, MethodStop, request)` |
+| `helianthus_runtime_restart` | `{"DriverID":"ebus.primary","ExpectedRevision":"7"}` | `Decide(ctx, MethodRestart, request)` |
 
 These are closed, case-sensitive objects: reject missing, additional or duplicate
 members, non-object inputs and non-string values with
@@ -201,8 +201,8 @@ fixed placeholder drivers or invented observations in PR 2.
 The list/get data shapes above describe successful reads with validated durable
 revision bounds. If either the issued-revision high-water mark or durable catalog
 revision is missing with existing control material, malformed, unreadable,
-unsupported or overflowing, both `helianthus.runtime.list` and
-`helianthus.runtime.get` refuse with `UNAVAILABLE` and `data: null`. Return no
+unsupported or overflowing, both `helianthus_runtime_list` and
+`helianthus_runtime_get` refuse with `UNAVAILABLE` and `data: null`. Return no
 driver snapshot, success catalog or usable revision; never substitute zero,
 a sentinel, stale cached state or corrupt values, even if the other bound is
 valid. With both counters valid and coherent cached records, one or all drivers
@@ -455,19 +455,19 @@ transport execution, smoke tests and hardware qualification remain unverified.
 This `DOC-06` section freezes only the narrow M2 MCP slice shipped by
 `ISSUE-GW-04`:
 
-- `ebus.v1.bus.summary.get`
-- `ebus.v1.bus.messages.list`
-- `ebus.v1.bus.periodicity.list`
+- `ebus_v1_bus_summary_get`
+- `ebus_v1_bus_messages_list`
+- `ebus_v1_bus_periodicity_list`
 
-This `DOC-06` freeze covers the M2 `ebus.v1.bus.*` tools only. Shared
+This `DOC-06` freeze covers the M2 `ebus_v1_bus_*` tools only. Shared
 watch-summary MCP behavior is frozen separately in `DOC-09`.
 
 ### Invariants
 
-- `ebus.v1.bus.*` stays separate from semantic MCP tools because it exposes
+- `ebus_v1_bus_*` stays separate from semantic MCP tools because it exposes
   bus-observability and transport-capability data rather than protocol-agnostic
   semantic state.
-- The `ebus.v1.bus.*` tools are bounded summary/list surfaces. They do not
+- The `ebus_v1_bus_*` tools are bounded summary/list surfaces. They do not
   construct or expose unbounded traffic history on demand.
 - All three tools accept the standard optional `consistency` argument. The two
   list tools also accept an optional positive integer `limit`.
@@ -507,14 +507,14 @@ All three tools return the standard Helianthus MCP envelope:
 
 ### Tool Inventory
 
-- `ebus.v1.bus.summary.get`
+- `ebus_v1_bus_summary_get`
   - arguments: optional `consistency`
-- `ebus.v1.bus.messages.list`
+- `ebus_v1_bus_messages_list`
   - arguments: optional positive integer `limit`, optional `consistency`
-- `ebus.v1.bus.periodicity.list`
+- `ebus_v1_bus_periodicity_list`
   - arguments: optional positive integer `limit`, optional `consistency`
 
-### `ebus.v1.bus.summary.get`
+### `ebus_v1_bus_summary_get`
 
 Returns the current bus-observability summary snapshot.
 
@@ -568,7 +568,7 @@ Current timing-quality values evidenced on the merged `GW-04` runtime are
 | `active` | `true` when degraded reasons are present. |
 | `reasons` | Bounded degraded-reason list. Current MCP output includes passive unavailability reasons and `dedup_degraded`. |
 
-### `ebus.v1.bus.messages.list`
+### `ebus_v1_bus_messages_list`
 
 Returns a bounded slice of recent bus-message records from the observe-first
 store.
@@ -602,7 +602,7 @@ Ordering and bounds:
   records.
 - Returned records preserve retained order within that newest suffix.
 
-### `ebus.v1.bus.periodicity.list`
+### `ebus_v1_bus_periodicity_list`
 
 Returns a bounded slice of periodicity summaries from the observe-first store.
 
@@ -647,7 +647,7 @@ This section captures the MCP-specific surface only.
 
 Tool inventory:
 
-- `ebus.v1.watch.summary.get`
+- `ebus_v1_watch_summary_get`
   - arguments: optional `consistency`
 
 MCP-specific invariants:
@@ -661,7 +661,7 @@ MCP-specific invariants:
 
 ### Unsupported or Unproven Cases
 
-- No GraphQL `busSummary`, `busMessages`, or `busPeriodicity` freeze exists in
+- No GraphQL `bus_summary`, `bus_messages`, or `bus_periodicity` freeze exists in
   this lane.
 - No Portal-specific watch-summary surface is frozen here.
 - No unbounded traffic dump or timeline stream is part of this M2 bus contract.
@@ -690,7 +690,7 @@ MCP-specific invariants:
 
 This contract is wrong if later review proves any of the following:
 
-- `ebus.v1.bus.*` appears in `tools/list` without a real bus observability
+- `ebus_v1_bus_*` appears in `tools/list` without a real bus observability
   provider being wired
 - either list tool fabricates unbounded history when `limit` is omitted
 - passive unavailability or warmup becomes implicit instead of remaining visible
@@ -770,12 +770,12 @@ before 1.0; all listed namespaces remain pre-stable.
 The machine-readable tables below are the complete scoped registration inventory.
 The subsequent bullets retain selected payload notes; they are not a second
 registration inventory. In particular, the adapter information tool is
-`ebus.v1.semantic.adapter_info.get`.
+`ebus_v1_semantic_adapter_info_get`.
 
-- Core stable (`ebus.v1.*`)
-  - `ebus.v1.runtime.status.get`
-  - `ebus.v1.registry.devices.list`
-  - `ebus.v1.registry.devices.get`
+- Core stable (`ebus_v1_*`)
+  - `ebus_v1_runtime_status_get`
+  - `ebus_v1_registry_devices_list`
+  - `ebus_v1_registry_devices_get`
     - **Conclusion: Proven.**
     - JSON response items carry `discovery_source` and
       `verification_state` fields (P3.5). `discovery_source` is one of
@@ -807,16 +807,15 @@ registration inventory. In particular, the adapter information tool is
       initially surface as `static_seed/candidate`. Passive or active
       verification changes only `verification_state`; it MUST NOT rewrite
       the face's `static_seed` discovery source.
-  - `ebus.v1.registry.planes.list`
-  - `ebus.v1.registry.methods.list`
-  - `ebus.v1.semantic.zones.get`
-  - `ebus.v1.semantic.dhw.get`
-  - `ebus.v1.semantic.energy_totals.get`
-  - `ebus.v1.semantic.boiler_status.get`
-  - `ebus.v1.semantic.system.get`
-  - `ebus.v1.semantic.system.set_config`
-    - Required arguments: `field` and `value`, both strings; `field` uses
-      camelCase names such as `dhwBivalencePointC`.
+  - `ebus_v1_registry_planes_list`
+  - `ebus_v1_registry_methods_list`
+  - `ebus_v1_semantic_zones_get`
+  - `ebus_v1_semantic_dhw_get`
+  - `ebus_v1_semantic_energy_totals_get`
+  - `ebus_v1_semantic_boiler_status_get`
+  - `ebus_v1_semantic_system_get`
+  - `ebus_v1_semantic_system_set_config`
+    - Required arguments: `field` and `value`, both strings; `field` accepts emitted provisional keys such as `dhwBivalencePointC`; its selector-qualified value name remains unresolved.
     - Returns the standard `meta`, `data`, `error` envelope, with
       `meta.contract`, `meta.consistency`, `meta.data_timestamp` and
       `meta.data_hash`. The setter uses `LIVE` consistency.
@@ -827,33 +826,31 @@ registration inventory. In particular, the adapter information tool is
       `controller profile <identity> allows [min, max]` or
       `controller identity unmatched (<reason>): conservative policy bound
       [-20, 50] applies`.
-  - `ebus.v1.semantic.circuits.get`
-  - `ebus.v1.semantic.radio_devices.get`
+  - `ebus_v1_semantic_circuits_get`
+  - `ebus_v1_semantic_radio_devices_get`
     - `data: []` means the startup radio inventory probe completed without
       publishable radio slots. `data: null` means the plane has not been
       published yet.
-  - `ebus.v1.semantic.fm5_mode.get`
+  - `ebus_v1_semantic_fm5_mode_get`
     - stable scalar mode retained for existing consumers
-  - `ebus.v1.semantic.solar.get`
-  - `ebus.v1.semantic.cylinders.get`
-  - `ebus.v1.semantic.schedules.get`
-  - `ebus.v1.semantic.schedules.set_zone_time_program`
-  - `ebus.v1.semantic.schedules.set_dhw_time_program`
-  - `ebus.v1.semantic.snapshot.get`
-  - `ebus.v1.snapshot.capture`
-  - `ebus.v1.snapshot.drop`
-  - `ebus.v1.rpc.invoke`
+  - `ebus_v1_semantic_solar_get`
+  - `ebus_v1_semantic_cylinders_get`
+  - `ebus_v1_semantic_schedules_get`
+  - `ebus_v1_semantic_schedules_set_zone_time_program`
+  - `ebus_v1_semantic_schedules_set_dhw_time_program`
+  - `ebus_v1_semantic_snapshot_get`
+  - `ebus_v1_snapshot_capture`
+  - `ebus_v1_snapshot_drop`
+  - `ebus_v1_rpc_invoke`
 - Observe-first bus surface (registered only when the runtime wires bus
   observability)
-  - `ebus.v1.bus.summary.get`
-  - `ebus.v1.bus.messages.list`
-  - `ebus.v1.bus.periodicity.list`
+  - `ebus_v1_bus_summary_get`
+  - `ebus_v1_bus_messages_list`
+  - `ebus_v1_bus_periodicity_list`
 - Observe-first watch-summary surface (registered only when the runtime wires
   watch-summary provider)
-  - `ebus.v1.watch.summary.get`
+  - `ebus_v1_watch_summary_get`
 - Legacy aliases
-  - `ebus.devices`
-  - `ebus.invoke`
 
 
 ### Checked registration inventory
@@ -930,314 +927,308 @@ mcp-inventory:start
 
 | Tool | Surface | Profiles | Availability condition | Implementation source | Classification |
 |---|---|---|---|---|---|
-| ebus.devices | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.devices | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.devices | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
-| ebus.invoke | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.invoke | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.invoke | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
-| ebus.v1.bus.identification_evidence.list | operator | operator_composed | all composed ordinary and operator providers present | mcp/identification_evidence.go | implemented |
-| ebus.v1.bus.identification_evidence.list | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/identification_evidence.go | implemented |
-| ebus.v1.bus.identification_evidence.list | ordinary | identification_enabled | bus provider retains identification evidence | mcp/identification_evidence.go | implemented |
-| ebus.v1.bus.messages.list | operator | operator_composed | all composed ordinary and operator providers present | mcp/server.go | implemented |
-| ebus.v1.bus.messages.list | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/server.go | implemented |
-| ebus.v1.bus.messages.list | ordinary | bus_enabled | bus observability provider present | mcp/server.go | implemented |
-| ebus.v1.bus.messages.list | ordinary | identification_enabled | bus provider retains identification evidence | mcp/server.go | implemented |
-| ebus.v1.bus.periodicity.list | operator | operator_composed | all composed ordinary and operator providers present | mcp/server.go | implemented |
-| ebus.v1.bus.periodicity.list | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/server.go | implemented |
-| ebus.v1.bus.periodicity.list | ordinary | bus_enabled | bus observability provider present | mcp/server.go | implemented |
-| ebus.v1.bus.periodicity.list | ordinary | identification_enabled | bus provider retains identification evidence | mcp/server.go | implemented |
-| ebus.v1.bus.protocol_specimens.list | operator | operator_composed | all composed ordinary and operator providers present | mcp/server.go | implemented |
-| ebus.v1.bus.protocol_specimens.list | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/server.go | implemented |
-| ebus.v1.bus.protocol_specimens.list | ordinary | bus_enabled | bus observability provider present | mcp/server.go | implemented |
-| ebus.v1.bus.protocol_specimens.list | ordinary | identification_enabled | bus provider retains identification evidence | mcp/server.go | implemented |
-| ebus.v1.bus.summary.get | operator | operator_composed | all composed ordinary and operator providers present | mcp/server.go | implemented |
-| ebus.v1.bus.summary.get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/server.go | implemented |
-| ebus.v1.bus.summary.get | ordinary | bus_enabled | bus observability provider present | mcp/server.go | implemented |
-| ebus.v1.bus.summary.get | ordinary | identification_enabled | bus provider retains identification evidence | mcp/server.go | implemented |
-| ebus.v1.ebus_standard.command.get | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/ebus_standard_wiring.go | implemented |
-| ebus.v1.ebus_standard.command.get | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/ebus_standard_wiring.go | implemented |
-| ebus.v1.ebus_standard.command.get | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/ebus_standard_wiring.go | target |
-| ebus.v1.ebus_standard.commands.list | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/ebus_standard_wiring.go | implemented |
-| ebus.v1.ebus_standard.commands.list | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/ebus_standard_wiring.go | implemented |
-| ebus.v1.ebus_standard.commands.list | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/ebus_standard_wiring.go | target |
-| ebus.v1.ebus_standard.decode | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/ebus_standard_wiring.go | implemented |
-| ebus.v1.ebus_standard.decode | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/ebus_standard_wiring.go | implemented |
-| ebus.v1.ebus_standard.decode | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/ebus_standard_wiring.go | target |
-| ebus.v1.ebus_standard.services.list | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/ebus_standard_wiring.go | implemented |
-| ebus.v1.ebus_standard.services.list | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/ebus_standard_wiring.go | implemented |
-| ebus.v1.ebus_standard.services.list | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/ebus_standard_wiring.go | target |
-| ebus.v1.registry.devices.get | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.registry.devices.get | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.registry.devices.get | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
-| ebus.v1.registry.devices.list | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.registry.devices.list | operator_source | operator_source_disabled, operator_source_enabled | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.registry.devices.list | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.registry.devices.list | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
-| ebus.v1.registry.methods.list | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.registry.methods.list | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.registry.methods.list | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
-| ebus.v1.registry.planes.list | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.registry.planes.list | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.registry.planes.list | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
-| ebus.v1.rpc.invoke | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.rpc.invoke | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.rpc.invoke | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
-| ebus.v1.runtime.status.get | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.runtime.status.get | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.runtime.status.get | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
-| ebus.v1.semantic.adapter_info.get | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.semantic.adapter_info.get | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.semantic.adapter_info.get | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
-| ebus.v1.semantic.boiler_status.get | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.semantic.boiler_status.get | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.semantic.boiler_status.get | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
-| ebus.v1.semantic.boiler_status.set_config | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.semantic.boiler_status.set_config | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.semantic.boiler_status.set_config | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
-| ebus.v1.semantic.circuits.get | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.semantic.circuits.get | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.semantic.circuits.get | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
-| ebus.v1.semantic.cylinders.get | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.semantic.cylinders.get | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.semantic.cylinders.get | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
-| ebus.v1.semantic.dhw.get | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.semantic.dhw.get | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.semantic.dhw.get | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
-| ebus.v1.semantic.energy_totals.get | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.semantic.energy_totals.get | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.semantic.energy_totals.get | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
-| ebus.v1.semantic.fm5_interpretation.get | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.semantic.fm5_interpretation.get | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.semantic.fm5_interpretation.get | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
-| ebus.v1.semantic.fm5_mode.get | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.semantic.fm5_mode.get | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.semantic.fm5_mode.get | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
-| ebus.v1.semantic.radio_devices.get | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.semantic.radio_devices.get | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.semantic.radio_devices.get | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
-| ebus.v1.semantic.schedules.get | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.semantic.schedules.get | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.semantic.schedules.get | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
-| ebus.v1.semantic.schedules.set_dhw_time_program | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.semantic.schedules.set_dhw_time_program | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.semantic.schedules.set_dhw_time_program | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
-| ebus.v1.semantic.schedules.set_zone_time_program | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.semantic.schedules.set_zone_time_program | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.semantic.schedules.set_zone_time_program | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
-| ebus.v1.semantic.snapshot.get | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.semantic.snapshot.get | operator_source | operator_source_disabled, operator_source_enabled | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.semantic.snapshot.get | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.semantic.snapshot.get | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
-| ebus.v1.semantic.solar.get | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.semantic.solar.get | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.semantic.solar.get | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
-| ebus.v1.semantic.system.get | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.semantic.system.get | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.semantic.system.get | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
-| ebus.v1.semantic.system.set_config | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.semantic.system.set_config | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.semantic.system.set_config | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
-| ebus.v1.semantic.zones.get | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.semantic.zones.get | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.semantic.zones.get | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
-| ebus.v1.snapshot.capture | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.snapshot.capture | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.snapshot.capture | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
-| ebus.v1.snapshot.drop | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.snapshot.drop | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
-| ebus.v1.snapshot.drop | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
-| ebus.v1.vaillant.errors.get | operator | operator_composed | all composed ordinary and operator providers present | mcp/vaillant_b503.go | implemented |
-| ebus.v1.vaillant.errors.get | ordinary | b503_enabled | B503 dispatcher and session manager present | mcp/vaillant_b503.go | implemented |
-| ebus.v1.vaillant.errors.get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/vaillant_b503.go | implemented |
-| ebus.v1.vaillant.errors.history.get | operator | operator_composed | all composed ordinary and operator providers present | mcp/vaillant_b503.go | implemented |
-| ebus.v1.vaillant.errors.history.get | ordinary | b503_enabled | B503 dispatcher and session manager present | mcp/vaillant_b503.go | implemented |
-| ebus.v1.vaillant.errors.history.get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/vaillant_b503.go | implemented |
-| ebus.v1.vaillant.errors.history.list | operator | operator_composed | all composed ordinary and operator providers present | mcp/vaillant_b503.go | implemented |
-| ebus.v1.vaillant.errors.history.list | ordinary | b503_enabled | B503 dispatcher and session manager present | mcp/vaillant_b503.go | implemented |
-| ebus.v1.vaillant.errors.history.list | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/vaillant_b503.go | implemented |
-| ebus.v1.vaillant.live_monitor.get | operator | operator_composed | all composed ordinary and operator providers present | mcp/vaillant_b503.go | implemented |
-| ebus.v1.vaillant.live_monitor.get | ordinary | b503_enabled | B503 dispatcher and session manager present | mcp/vaillant_b503.go | implemented |
-| ebus.v1.vaillant.live_monitor.get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/vaillant_b503.go | implemented |
-| ebus.v1.vaillant.live_monitor.session.get | operator | operator_composed | all composed ordinary and operator providers present | mcp/vaillant_b503.go | implemented |
-| ebus.v1.vaillant.live_monitor.session.get | ordinary | b503_enabled | B503 dispatcher and session manager present | mcp/vaillant_b503.go | implemented |
-| ebus.v1.vaillant.live_monitor.session.get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/vaillant_b503.go | implemented |
-| ebus.v1.vaillant.service.current.get | operator | operator_composed | all composed ordinary and operator providers present | mcp/vaillant_b503.go | implemented |
-| ebus.v1.vaillant.service.current.get | ordinary | b503_enabled | B503 dispatcher and session manager present | mcp/vaillant_b503.go | implemented |
-| ebus.v1.vaillant.service.current.get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/vaillant_b503.go | implemented |
-| ebus.v1.vaillant.service.history.get | operator | operator_composed | all composed ordinary and operator providers present | mcp/vaillant_b503.go | implemented |
-| ebus.v1.vaillant.service.history.get | ordinary | b503_enabled | B503 dispatcher and session manager present | mcp/vaillant_b503.go | implemented |
-| ebus.v1.vaillant.service.history.get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/vaillant_b503.go | implemented |
-| ebus.v1.watch.summary.get | operator | operator_composed | all composed ordinary and operator providers present | mcp/server.go | implemented |
-| ebus.v1.watch.summary.get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/server.go | implemented |
-| ebus.v1.watch.summary.get | ordinary | watch_enabled | watch summary provider present | mcp/server.go | implemented |
-| eebus.v1.features.data.get | operator | operator_composed | all composed ordinary and operator providers present | mcp/eebus_v1_commands.go | implemented |
-| eebus.v1.features.data.get | operator | operator_commands_only | command router present; eeBUS provider absent | mcp/eebus_v1_commands.go | implemented |
-| eebus.v1.features.data.get | operator | operator_enabled | eeBUS provider, command router and capture providers present | mcp/eebus_v1_commands.go | implemented |
-| eebus.v1.features.data.set | operator | operator_composed | all composed ordinary and operator providers present | mcp/eebus_v1_commands.go | implemented |
-| eebus.v1.features.data.set | operator | operator_commands_only | command router present; eeBUS provider absent | mcp/eebus_v1_commands.go | implemented |
-| eebus.v1.features.data.set | operator | operator_enabled | eeBUS provider, command router and capture providers present | mcp/eebus_v1_commands.go | implemented |
-| eebus.v1.features.get | operator | operator_composed | all composed ordinary and operator providers present | mcp/eebus_v1_commands.go | implemented |
-| eebus.v1.features.get | operator | operator_commands_only | command router present; eeBUS provider absent | mcp/eebus_v1_commands.go | implemented |
-| eebus.v1.features.get | operator | operator_enabled | eeBUS provider, command router and capture providers present | mcp/eebus_v1_commands.go | implemented |
-| eebus.v1.mutations.get | operator | operator_composed | all composed ordinary and operator providers present | mcp/eebus_v1_commands.go | implemented |
-| eebus.v1.mutations.get | operator | operator_commands_only | command router present; eeBUS provider absent | mcp/eebus_v1_commands.go | implemented |
-| eebus.v1.mutations.get | operator | operator_enabled | eeBUS provider, command router and capture providers present | mcp/eebus_v1_commands.go | implemented |
-| eebus.v1.mutations.rollback | operator | operator_composed | all composed ordinary and operator providers present | mcp/eebus_v1_commands.go | implemented |
-| eebus.v1.mutations.rollback | operator | operator_commands_only | command router present; eeBUS provider absent | mcp/eebus_v1_commands.go | implemented |
-| eebus.v1.mutations.rollback | operator | operator_enabled | eeBUS provider, command router and capture providers present | mcp/eebus_v1_commands.go | implemented |
-| eebus.v1.pairing.status.get | operator | operator_composed | all composed ordinary and operator providers present | mcp/eebus_v1.go | implemented |
-| eebus.v1.pairing.status.get | operator | operator_eebus_only | eeBUS provider present; command and capture providers absent | mcp/eebus_v1.go | implemented |
-| eebus.v1.pairing.status.get | operator | operator_enabled | eeBUS provider, command router and capture providers present | mcp/eebus_v1.go | implemented |
-| eebus.v1.pairing.status.get | operator_source | operator_source_enabled | operator source scope; eeBUS provider present | mcp/eebus_v1.go | implemented |
-| eebus.v1.pairing.status.get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/eebus_v1.go | implemented |
-| eebus.v1.pairing.status.get | ordinary | eebus_enabled | eeBUS provider present | mcp/eebus_v1.go | implemented |
-| eebus.v1.runtime.status.get | operator | operator_composed | all composed ordinary and operator providers present | mcp/eebus_v1.go | implemented |
-| eebus.v1.runtime.status.get | operator | operator_eebus_only | eeBUS provider present; command and capture providers absent | mcp/eebus_v1.go | implemented |
-| eebus.v1.runtime.status.get | operator | operator_enabled | eeBUS provider, command router and capture providers present | mcp/eebus_v1.go | implemented |
-| eebus.v1.runtime.status.get | operator_source | operator_source_enabled | operator source scope; eeBUS provider present | mcp/eebus_v1.go | implemented |
-| eebus.v1.runtime.status.get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/eebus_v1.go | implemented |
-| eebus.v1.runtime.status.get | ordinary | eebus_enabled | eeBUS provider present | mcp/eebus_v1.go | implemented |
-| eebus.v1.services.get | operator | operator_composed | all composed ordinary and operator providers present | mcp/eebus_v1.go | implemented |
-| eebus.v1.services.get | operator | operator_eebus_only | eeBUS provider present; command and capture providers absent | mcp/eebus_v1.go | implemented |
-| eebus.v1.services.get | operator | operator_enabled | eeBUS provider, command router and capture providers present | mcp/eebus_v1.go | implemented |
-| eebus.v1.services.get | operator_source | operator_source_enabled | operator source scope; eeBUS provider present | mcp/eebus_v1.go | implemented |
-| eebus.v1.services.get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/eebus_v1.go | implemented |
-| eebus.v1.services.get | ordinary | eebus_enabled | eeBUS provider present | mcp/eebus_v1.go | implemented |
-| eebus.v1.services.list | operator | operator_composed | all composed ordinary and operator providers present | mcp/eebus_v1.go | implemented |
-| eebus.v1.services.list | operator | operator_eebus_only | eeBUS provider present; command and capture providers absent | mcp/eebus_v1.go | implemented |
-| eebus.v1.services.list | operator | operator_enabled | eeBUS provider, command router and capture providers present | mcp/eebus_v1.go | implemented |
-| eebus.v1.services.list | operator_source | operator_source_enabled | operator source scope; eeBUS provider present | mcp/eebus_v1.go | implemented |
-| eebus.v1.services.list | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/eebus_v1.go | implemented |
-| eebus.v1.services.list | ordinary | eebus_enabled | eeBUS provider present | mcp/eebus_v1.go | implemented |
-| eebus.v1.sessions.get | operator | operator_composed | all composed ordinary and operator providers present | mcp/eebus_v1.go | implemented |
-| eebus.v1.sessions.get | operator | operator_eebus_only | eeBUS provider present; command and capture providers absent | mcp/eebus_v1.go | implemented |
-| eebus.v1.sessions.get | operator | operator_enabled | eeBUS provider, command router and capture providers present | mcp/eebus_v1.go | implemented |
-| eebus.v1.sessions.get | operator_source | operator_source_enabled | operator source scope; eeBUS provider present | mcp/eebus_v1.go | implemented |
-| eebus.v1.sessions.get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/eebus_v1.go | implemented |
-| eebus.v1.sessions.get | ordinary | eebus_enabled | eeBUS provider present | mcp/eebus_v1.go | implemented |
-| eebus.v1.sessions.list | operator | operator_composed | all composed ordinary and operator providers present | mcp/eebus_v1.go | implemented |
-| eebus.v1.sessions.list | operator | operator_eebus_only | eeBUS provider present; command and capture providers absent | mcp/eebus_v1.go | implemented |
-| eebus.v1.sessions.list | operator | operator_enabled | eeBUS provider, command router and capture providers present | mcp/eebus_v1.go | implemented |
-| eebus.v1.sessions.list | operator_source | operator_source_enabled | operator source scope; eeBUS provider present | mcp/eebus_v1.go | implemented |
-| eebus.v1.sessions.list | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/eebus_v1.go | implemented |
-| eebus.v1.sessions.list | ordinary | eebus_enabled | eeBUS provider present | mcp/eebus_v1.go | implemented |
-| eebus.v1.snapshot.capture | operator | operator_composed | all composed ordinary and operator providers present | mcp/eebus_v1.go | implemented |
-| eebus.v1.snapshot.capture | operator | operator_eebus_only | eeBUS provider present; command and capture providers absent | mcp/eebus_v1.go | implemented |
-| eebus.v1.snapshot.capture | operator | operator_enabled | eeBUS provider, command router and capture providers present | mcp/eebus_v1.go | implemented |
-| eebus.v1.snapshot.capture | operator_source | operator_source_enabled | operator source scope; eeBUS provider present | mcp/eebus_v1.go | implemented |
-| eebus.v1.snapshot.capture | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/eebus_v1.go | implemented |
-| eebus.v1.snapshot.capture | ordinary | eebus_enabled | eeBUS provider present | mcp/eebus_v1.go | implemented |
-| eebus.v1.snapshot.drop | operator | operator_composed | all composed ordinary and operator providers present | mcp/eebus_v1.go | implemented |
-| eebus.v1.snapshot.drop | operator | operator_eebus_only | eeBUS provider present; command and capture providers absent | mcp/eebus_v1.go | implemented |
-| eebus.v1.snapshot.drop | operator | operator_enabled | eeBUS provider, command router and capture providers present | mcp/eebus_v1.go | implemented |
-| eebus.v1.snapshot.drop | operator_source | operator_source_enabled | operator source scope; eeBUS provider present | mcp/eebus_v1.go | implemented |
-| eebus.v1.snapshot.drop | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/eebus_v1.go | implemented |
-| eebus.v1.snapshot.drop | ordinary | eebus_enabled | eeBUS provider present | mcp/eebus_v1.go | implemented |
-| eebus.v1.topology.get | operator | operator_composed | all composed ordinary and operator providers present | mcp/eebus_v1.go | implemented |
-| eebus.v1.topology.get | operator | operator_eebus_only | eeBUS provider present; command and capture providers absent | mcp/eebus_v1.go | implemented |
-| eebus.v1.topology.get | operator | operator_enabled | eeBUS provider, command router and capture providers present | mcp/eebus_v1.go | implemented |
-| eebus.v1.topology.get | operator_source | operator_source_enabled | operator source scope; eeBUS provider present | mcp/eebus_v1.go | implemented |
-| eebus.v1.topology.get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/eebus_v1.go | implemented |
-| eebus.v1.topology.get | ordinary | eebus_enabled | eeBUS provider present | mcp/eebus_v1.go | implemented |
-| helianthus.experimental.leaf_promotion.capture | operator | operator_composed | all composed ordinary and operator providers present | mcp/leaf_promotion_capture.go | implemented |
-| helianthus.experimental.leaf_promotion.capture | operator | operator_enabled | eeBUS provider, command router and capture providers present | mcp/leaf_promotion_capture.go | implemented |
-| helianthus.experimental.leaf_promotion.capture | operator | operator_promotion_only | leaf promotion capture provider present; eeBUS provider absent | mcp/leaf_promotion_capture.go | implemented |
-| helianthus.experimental.m8_source_state.get | operator | operator_composed | all composed ordinary and operator providers present | mcp/m8_source_state.go | implemented |
-| helianthus.experimental.m8_source_state.get | operator | operator_eebus_only | eeBUS provider present; command and capture providers absent | mcp/m8_source_state.go | implemented |
-| helianthus.experimental.m8_source_state.get | operator | operator_enabled | eeBUS provider, command router and capture providers present | mcp/m8_source_state.go | implemented |
-| helianthus.runtime.get | operator | operator_composed | all composed ordinary and operator providers present | mcp/runtime_control.go | implemented |
-| helianthus.runtime.get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/runtime_control.go | implemented |
-| helianthus.runtime.get | ordinary | runtime_disabled | runtime service absent; eeBUS absent | mcp/runtime_control.go | implemented |
-| helianthus.runtime.get | ordinary | runtime_enabled | runtime service present; eeBUS absent | mcp/runtime_control.go | implemented |
-| helianthus.runtime.list | operator | operator_composed | all composed ordinary and operator providers present | mcp/runtime_control.go | implemented |
-| helianthus.runtime.list | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/runtime_control.go | implemented |
-| helianthus.runtime.list | ordinary | runtime_disabled | runtime service absent; eeBUS absent | mcp/runtime_control.go | implemented |
-| helianthus.runtime.list | ordinary | runtime_enabled | runtime service present; eeBUS absent | mcp/runtime_control.go | implemented |
-| helianthus.runtime.restart | operator | operator_composed | all composed ordinary and operator providers present | mcp/runtime_control.go | implemented |
-| helianthus.runtime.restart | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/runtime_control.go | implemented |
-| helianthus.runtime.restart | ordinary | runtime_disabled | runtime service absent; eeBUS absent | mcp/runtime_control.go | implemented |
-| helianthus.runtime.restart | ordinary | runtime_enabled | runtime service present; eeBUS absent | mcp/runtime_control.go | implemented |
-| helianthus.runtime.start | operator | operator_composed | all composed ordinary and operator providers present | mcp/runtime_control.go | implemented |
-| helianthus.runtime.start | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/runtime_control.go | implemented |
-| helianthus.runtime.start | ordinary | runtime_disabled | runtime service absent; eeBUS absent | mcp/runtime_control.go | implemented |
-| helianthus.runtime.start | ordinary | runtime_enabled | runtime service present; eeBUS absent | mcp/runtime_control.go | implemented |
-| helianthus.runtime.stop | operator | operator_composed | all composed ordinary and operator providers present | mcp/runtime_control.go | implemented |
-| helianthus.runtime.stop | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/runtime_control.go | implemented |
-| helianthus.runtime.stop | ordinary | runtime_disabled | runtime service absent; eeBUS absent | mcp/runtime_control.go | implemented |
-| helianthus.runtime.stop | ordinary | runtime_enabled | runtime service present; eeBUS absent | mcp/runtime_control.go | implemented |
-| helianthus.v1.synchronized_evidence.capture | operator | operator_composed | all composed ordinary and operator providers present | mcp/synchronized_evidence.go | implemented |
-| helianthus.v1.synchronized_evidence.capture | operator | operator_enabled | eeBUS provider, command router and capture providers present | mcp/synchronized_evidence.go | implemented |
-| helianthus.v1.synchronized_evidence.capture | operator | operator_capture_only | synchronized capture provider present; eeBUS provider absent | mcp/synchronized_evidence.go | implemented |
-| modbus.v1.fronius.sunspec.status.get | ordinary | target_fronius | target/uncomposed structural provider; not a production enablement claim | mcp/fronius_sunspec_v1.go | target |
-| modbus.v1.growatt.bms.rs485.status.get | operator | operator_composed | all composed ordinary and operator providers present | mcp/growatt_bms_rs485_v202.go | implemented |
-| modbus.v1.growatt.bms.rs485.status.get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/growatt_bms_rs485_v202.go | implemented |
-| modbus.v1.growatt.bms.rs485.status.get | ordinary | modbus_production_2 | owner mask 2: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/growatt_bms_rs485_v202.go | implemented |
-| modbus.v1.growatt.bms.rs485.status.get | ordinary | modbus_production_3 | owner mask 3: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/growatt_bms_rs485_v202.go | implemented |
-| modbus.v1.growatt.bms.rs485.status.get | ordinary | modbus_production_6 | owner mask 6: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/growatt_bms_rs485_v202.go | implemented |
-| modbus.v1.growatt.bms.rs485.status.get | ordinary | modbus_production_7 | owner mask 7: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/growatt_bms_rs485_v202.go | implemented |
-| modbus.v1.growatt.protocol_ii.identity.get | ordinary | target_growatt_protocol | target/uncomposed structural provider; not a production enablement claim | mcp/growatt_protocol_ii_v1.go | target |
-| modbus.v1.huawei.emma.identity.get | ordinary | target_huawei_emma | target/uncomposed structural provider; not a production enablement claim | mcp/huawei_emma_v1.go | target |
-| modbus.v1.huawei.emma.status.get | ordinary | target_huawei_instances, target_huawei_instances_coreless | target/uncomposed structural provider; not a production enablement claim | mcp/huawei_smartlogger_v1.go | target |
-| modbus.v1.huawei.sdongle.status.get | ordinary | target_huawei_dongle | target/uncomposed structural provider; not a production enablement claim | mcp/huawei_sdongle_v1.go | target |
-| modbus.v1.huawei.sdongle.status.get | ordinary | target_huawei_instances, target_huawei_instances_coreless | target/uncomposed structural provider; not a production enablement claim | mcp/huawei_smartlogger_v1.go | target |
-| modbus.v1.huawei.smartlogger.status.get | ordinary | target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger | target/uncomposed structural provider; not a production enablement claim | mcp/huawei_smartlogger_v1.go | target |
-| modbus.v1.outback.axs.status.get | ordinary | target_outback | target/uncomposed structural provider; not a production enablement claim | mcp/outback_axs_v1.go | target |
-| modbus.v1.profile.observation.get | operator | operator_composed | all composed ordinary and operator providers present | mcp/modbus_v1.go | implemented |
-| modbus.v1.profile.observation.get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/modbus_v1.go | implemented |
-| modbus.v1.profile.observation.get | ordinary | modbus_production_1 | owner mask 1: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/modbus_v1.go | implemented |
-| modbus.v1.profile.observation.get | ordinary | modbus_production_3 | owner mask 3: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/modbus_v1.go | implemented |
-| modbus.v1.profile.observation.get | ordinary | modbus_production_5 | owner mask 5: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/modbus_v1.go | implemented |
-| modbus.v1.profile.observation.get | ordinary | modbus_production_7 | owner mask 7: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/modbus_v1.go | implemented |
-| modbus.v1.profile.observation.get | ordinary | target_modbus_core, target_tesla_hsc | structural helper profile; production owner availability checked separately | mcp/modbus_v1.go | target |
-| modbus.v1.profile.observation.get | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_logger, target_outback, target_tesla_summary, target_tesla_vitals | target/uncomposed structural provider; not a production enablement claim | mcp/modbus_v1.go | target |
-| modbus.v1.raw.read | operator | operator_composed | all composed ordinary and operator providers present | mcp/modbus_v1.go | implemented |
-| modbus.v1.raw.read | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/modbus_v1.go | implemented |
-| modbus.v1.raw.read | ordinary | modbus_production_1 | owner mask 1: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/modbus_v1.go | implemented |
-| modbus.v1.raw.read | ordinary | modbus_production_3 | owner mask 3: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/modbus_v1.go | implemented |
-| modbus.v1.raw.read | ordinary | modbus_production_5 | owner mask 5: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/modbus_v1.go | implemented |
-| modbus.v1.raw.read | ordinary | modbus_production_7 | owner mask 7: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/modbus_v1.go | implemented |
-| modbus.v1.raw.read | ordinary | target_modbus_core, target_tesla_hsc | structural helper profile; production owner availability checked separately | mcp/modbus_v1.go | target |
-| modbus.v1.raw.read | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_logger, target_outback, target_tesla_summary, target_tesla_vitals | target/uncomposed structural provider; not a production enablement claim | mcp/modbus_v1.go | target |
-| modbus.v1.tesla.fc100.summary.get | ordinary | target_tesla_summary | target/uncomposed structural provider; not a production enablement claim | mcp/tesla_fc100_summary_v1.go | target |
-| modbus.v1.tesla.gen3.evse.current_limit.get | operator | operator_composed | all composed ordinary and operator providers present | mcp/tesla_gen3_evse_current_limit_v1.go | implemented |
-| modbus.v1.tesla.gen3.evse.current_limit.get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/tesla_gen3_evse_current_limit_v1.go | implemented |
-| modbus.v1.tesla.gen3.evse.current_limit.get | ordinary | modbus_production_4 | owner mask 4: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/tesla_gen3_evse_current_limit_v1.go | implemented |
-| modbus.v1.tesla.gen3.evse.current_limit.get | ordinary | modbus_production_5 | owner mask 5: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/tesla_gen3_evse_current_limit_v1.go | implemented |
-| modbus.v1.tesla.gen3.evse.current_limit.get | ordinary | modbus_production_6 | owner mask 6: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/tesla_gen3_evse_current_limit_v1.go | implemented |
-| modbus.v1.tesla.gen3.evse.current_limit.get | ordinary | modbus_production_7 | owner mask 7: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/tesla_gen3_evse_current_limit_v1.go | implemented |
-| modbus.v1.tesla.hsc.status.get | operator | operator_composed | all composed ordinary and operator providers present | mcp/tesla_hsc_v1.go | implemented |
-| modbus.v1.tesla.hsc.status.get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/tesla_hsc_v1.go | implemented |
-| modbus.v1.tesla.hsc.status.get | ordinary | modbus_production_1 | owner mask 1: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/tesla_hsc_v1.go | implemented |
-| modbus.v1.tesla.hsc.status.get | ordinary | modbus_production_3 | owner mask 3: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/tesla_hsc_v1.go | implemented |
-| modbus.v1.tesla.hsc.status.get | ordinary | modbus_production_5 | owner mask 5: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/tesla_hsc_v1.go | implemented |
-| modbus.v1.tesla.hsc.status.get | ordinary | modbus_production_7 | owner mask 7: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/tesla_hsc_v1.go | implemented |
-| modbus.v1.tesla.hsc.status.get | ordinary | target_tesla_hsc | structural helper profile; production owner availability checked separately | mcp/tesla_hsc_v1.go | target |
-| modbus.v1.tesla.wcapi.get_vitals.replay.get | ordinary | target_tesla_vitals | target/uncomposed structural provider; not a production enablement claim | mcp/tesla_wcapi_get_vitals_v1.go | target |
-| semantic.v1.evse.current.get | operator | operator_composed | all composed ordinary and operator providers present | mcp/tesla_gen3_evse_semantic.go | implemented |
-| semantic.v1.evse.current.get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/tesla_gen3_evse_semantic.go | implemented |
-| semantic.v1.evse.current.get | ordinary | modbus_production_4 | owner mask 4: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/tesla_gen3_evse_semantic.go | implemented |
-| semantic.v1.evse.current.get | ordinary | modbus_production_5 | owner mask 5: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/tesla_gen3_evse_semantic.go | implemented |
-| semantic.v1.evse.current.get | ordinary | modbus_production_6 | owner mask 6: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/tesla_gen3_evse_semantic.go | implemented |
-| semantic.v1.evse.current.get | ordinary | modbus_production_7 | owner mask 7: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/tesla_gen3_evse_semantic.go | implemented |
-| semantic.v1.pv.current.get | operator | operator_composed | all composed ordinary and operator providers present | mcp/modbus_v1.go | implemented |
-| semantic.v1.pv.current.get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/modbus_v1.go | implemented |
-| semantic.v1.pv.current.get | ordinary | modbus_production_1 | owner mask 1: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/modbus_v1.go | implemented |
-| semantic.v1.pv.current.get | ordinary | modbus_production_3 | owner mask 3: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/modbus_v1.go | implemented |
-| semantic.v1.pv.current.get | ordinary | modbus_production_5 | owner mask 5: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/modbus_v1.go | implemented |
-| semantic.v1.pv.current.get | ordinary | modbus_production_7 | owner mask 7: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/modbus_v1.go | implemented |
-| semantic.v1.pv.current.get | ordinary | target_modbus_core, target_tesla_hsc | structural helper profile; production owner availability checked separately | mcp/modbus_v1.go | target |
-| semantic.v1.pv.current.get | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_logger, target_outback, target_tesla_summary, target_tesla_vitals | target/uncomposed structural provider; not a production enablement claim | mcp/modbus_v1.go | target |
-| semantic.v1.snapshot.get | operator | operator_composed | all composed ordinary and operator providers present | mcp/semantic_snapshot.go | implemented |
-| semantic.v1.snapshot.get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/semantic_snapshot.go | implemented |
-| semantic.v1.snapshot.get | ordinary | semantic_disabled | shared semantic provider absent; discovery remains configured | mcp/semantic_snapshot.go | implemented |
-| semantic.v1.snapshot.get | ordinary | semantic_enabled | shared semantic provider present | mcp/semantic_snapshot.go | implemented |
-| semantic.v1.storage.growatt.current.get | operator | operator_composed | all composed ordinary and operator providers present | mcp/growatt_storage_semantic.go | implemented |
-| semantic.v1.storage.growatt.current.get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/growatt_storage_semantic.go | implemented |
-| semantic.v1.storage.growatt.current.get | ordinary | modbus_production_2 | owner mask 2: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/growatt_storage_semantic.go | implemented |
-| semantic.v1.storage.growatt.current.get | ordinary | modbus_production_3 | owner mask 3: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/growatt_storage_semantic.go | implemented |
-| semantic.v1.storage.growatt.current.get | ordinary | modbus_production_6 | owner mask 6: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/growatt_storage_semantic.go | implemented |
-| semantic.v1.storage.growatt.current.get | ordinary | modbus_production_7 | owner mask 7: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/growatt_storage_semantic.go | implemented |
+| ebus_v1_bus_identification_evidence_list | operator | operator_composed | all composed ordinary and operator providers present | mcp/identification_evidence.go | implemented |
+| ebus_v1_bus_identification_evidence_list | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/identification_evidence.go | implemented |
+| ebus_v1_bus_identification_evidence_list | ordinary | identification_enabled | bus provider retains identification evidence | mcp/identification_evidence.go | implemented |
+| ebus_v1_bus_messages_list | operator | operator_composed | all composed ordinary and operator providers present | mcp/server.go | implemented |
+| ebus_v1_bus_messages_list | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/server.go | implemented |
+| ebus_v1_bus_messages_list | ordinary | bus_enabled | bus observability provider present | mcp/server.go | implemented |
+| ebus_v1_bus_messages_list | ordinary | identification_enabled | bus provider retains identification evidence | mcp/server.go | implemented |
+| ebus_v1_bus_periodicity_list | operator | operator_composed | all composed ordinary and operator providers present | mcp/server.go | implemented |
+| ebus_v1_bus_periodicity_list | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/server.go | implemented |
+| ebus_v1_bus_periodicity_list | ordinary | bus_enabled | bus observability provider present | mcp/server.go | implemented |
+| ebus_v1_bus_periodicity_list | ordinary | identification_enabled | bus provider retains identification evidence | mcp/server.go | implemented |
+| ebus_v1_bus_protocol_specimens_list | operator | operator_composed | all composed ordinary and operator providers present | mcp/server.go | implemented |
+| ebus_v1_bus_protocol_specimens_list | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/server.go | implemented |
+| ebus_v1_bus_protocol_specimens_list | ordinary | bus_enabled | bus observability provider present | mcp/server.go | implemented |
+| ebus_v1_bus_protocol_specimens_list | ordinary | identification_enabled | bus provider retains identification evidence | mcp/server.go | implemented |
+| ebus_v1_bus_summary_get | operator | operator_composed | all composed ordinary and operator providers present | mcp/server.go | implemented |
+| ebus_v1_bus_summary_get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/server.go | implemented |
+| ebus_v1_bus_summary_get | ordinary | bus_enabled | bus observability provider present | mcp/server.go | implemented |
+| ebus_v1_bus_summary_get | ordinary | identification_enabled | bus provider retains identification evidence | mcp/server.go | implemented |
+| ebus_v1_ebus_standard_command_get | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/ebus_standard_wiring.go | implemented |
+| ebus_v1_ebus_standard_command_get | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/ebus_standard_wiring.go | implemented |
+| ebus_v1_ebus_standard_command_get | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/ebus_standard_wiring.go | target |
+| ebus_v1_ebus_standard_commands_list | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/ebus_standard_wiring.go | implemented |
+| ebus_v1_ebus_standard_commands_list | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/ebus_standard_wiring.go | implemented |
+| ebus_v1_ebus_standard_commands_list | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/ebus_standard_wiring.go | target |
+| ebus_v1_ebus_standard_decode | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/ebus_standard_wiring.go | implemented |
+| ebus_v1_ebus_standard_decode | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/ebus_standard_wiring.go | implemented |
+| ebus_v1_ebus_standard_decode | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/ebus_standard_wiring.go | target |
+| ebus_v1_ebus_standard_services_list | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/ebus_standard_wiring.go | implemented |
+| ebus_v1_ebus_standard_services_list | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/ebus_standard_wiring.go | implemented |
+| ebus_v1_ebus_standard_services_list | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/ebus_standard_wiring.go | target |
+| ebus_v1_registry_devices_get | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_registry_devices_get | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_registry_devices_get | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
+| ebus_v1_registry_devices_list | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_registry_devices_list | operator_source | operator_source_disabled, operator_source_enabled | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_registry_devices_list | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_registry_devices_list | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
+| ebus_v1_registry_methods_list | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_registry_methods_list | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_registry_methods_list | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
+| ebus_v1_registry_planes_list | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_registry_planes_list | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_registry_planes_list | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
+| ebus_v1_rpc_invoke | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_rpc_invoke | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_rpc_invoke | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
+| ebus_v1_runtime_status_get | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_runtime_status_get | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_runtime_status_get | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
+| ebus_v1_semantic_adapter_info_get | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_semantic_adapter_info_get | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_semantic_adapter_info_get | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
+| ebus_v1_semantic_boiler_status_get | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_semantic_boiler_status_get | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_semantic_boiler_status_get | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
+| ebus_v1_semantic_boiler_status_set_config | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_semantic_boiler_status_set_config | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_semantic_boiler_status_set_config | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
+| ebus_v1_semantic_circuits_get | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_semantic_circuits_get | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_semantic_circuits_get | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
+| ebus_v1_semantic_cylinders_get | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_semantic_cylinders_get | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_semantic_cylinders_get | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
+| ebus_v1_semantic_dhw_get | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_semantic_dhw_get | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_semantic_dhw_get | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
+| ebus_v1_semantic_energy_totals_get | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_semantic_energy_totals_get | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_semantic_energy_totals_get | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
+| ebus_v1_semantic_fm5_interpretation_get | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_semantic_fm5_interpretation_get | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_semantic_fm5_interpretation_get | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
+| ebus_v1_semantic_fm5_mode_get | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_semantic_fm5_mode_get | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_semantic_fm5_mode_get | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
+| ebus_v1_semantic_radio_devices_get | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_semantic_radio_devices_get | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_semantic_radio_devices_get | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
+| ebus_v1_semantic_schedules_get | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_semantic_schedules_get | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_semantic_schedules_get | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
+| ebus_v1_semantic_schedules_set_dhw_time_program | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_semantic_schedules_set_dhw_time_program | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_semantic_schedules_set_dhw_time_program | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
+| ebus_v1_semantic_schedules_set_zone_time_program | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_semantic_schedules_set_zone_time_program | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_semantic_schedules_set_zone_time_program | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
+| ebus_v1_semantic_snapshot_get | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_semantic_snapshot_get | operator_source | operator_source_disabled, operator_source_enabled | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_semantic_snapshot_get | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_semantic_snapshot_get | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
+| ebus_v1_semantic_solar_get | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_semantic_solar_get | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_semantic_solar_get | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
+| ebus_v1_semantic_system_get | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_semantic_system_get | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_semantic_system_get | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
+| ebus_v1_semantic_system_set_config | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_semantic_system_set_config | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_semantic_system_set_config | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
+| ebus_v1_semantic_zones_get | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_semantic_zones_get | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_semantic_zones_get | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
+| ebus_v1_snapshot_capture | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_snapshot_capture | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_snapshot_capture | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
+| ebus_v1_snapshot_drop | operator | operator_capture_only, operator_commands_only, operator_composed, operator_disabled, operator_eebus_only, operator_enabled, operator_promotion_only | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_snapshot_drop | ordinary | b503_disabled, b503_enabled, bus_enabled, constructor, eebus_enabled, identification_enabled, modbus_production_0, modbus_production_1, modbus_production_2, modbus_production_3, modbus_production_4, modbus_production_5, modbus_production_6, modbus_production_7, ordinary_composed, runtime_disabled, runtime_enabled, semantic_disabled, semantic_enabled, watch_enabled | always: NewServer | mcp/server_tools.go | implemented |
+| ebus_v1_snapshot_drop | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger, target_modbus_core, target_outback, target_tesla_hsc, target_tesla_summary, target_tesla_vitals | always: NewServer | mcp/server_tools.go | target |
+| ebus_v1_vaillant_errors_get | operator | operator_composed | all composed ordinary and operator providers present | mcp/vaillant_b503.go | implemented |
+| ebus_v1_vaillant_errors_get | ordinary | b503_enabled | B503 dispatcher and session manager present | mcp/vaillant_b503.go | implemented |
+| ebus_v1_vaillant_errors_get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/vaillant_b503.go | implemented |
+| ebus_v1_vaillant_errors_history_get | operator | operator_composed | all composed ordinary and operator providers present | mcp/vaillant_b503.go | implemented |
+| ebus_v1_vaillant_errors_history_get | ordinary | b503_enabled | B503 dispatcher and session manager present | mcp/vaillant_b503.go | implemented |
+| ebus_v1_vaillant_errors_history_get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/vaillant_b503.go | implemented |
+| ebus_v1_vaillant_errors_history_list | operator | operator_composed | all composed ordinary and operator providers present | mcp/vaillant_b503.go | implemented |
+| ebus_v1_vaillant_errors_history_list | ordinary | b503_enabled | B503 dispatcher and session manager present | mcp/vaillant_b503.go | implemented |
+| ebus_v1_vaillant_errors_history_list | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/vaillant_b503.go | implemented |
+| ebus_v1_vaillant_live_monitor_get | operator | operator_composed | all composed ordinary and operator providers present | mcp/vaillant_b503.go | implemented |
+| ebus_v1_vaillant_live_monitor_get | ordinary | b503_enabled | B503 dispatcher and session manager present | mcp/vaillant_b503.go | implemented |
+| ebus_v1_vaillant_live_monitor_get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/vaillant_b503.go | implemented |
+| ebus_v1_vaillant_live_monitor_session_get | operator | operator_composed | all composed ordinary and operator providers present | mcp/vaillant_b503.go | implemented |
+| ebus_v1_vaillant_live_monitor_session_get | ordinary | b503_enabled | B503 dispatcher and session manager present | mcp/vaillant_b503.go | implemented |
+| ebus_v1_vaillant_live_monitor_session_get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/vaillant_b503.go | implemented |
+| ebus_v1_vaillant_service_current_get | operator | operator_composed | all composed ordinary and operator providers present | mcp/vaillant_b503.go | implemented |
+| ebus_v1_vaillant_service_current_get | ordinary | b503_enabled | B503 dispatcher and session manager present | mcp/vaillant_b503.go | implemented |
+| ebus_v1_vaillant_service_current_get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/vaillant_b503.go | implemented |
+| ebus_v1_vaillant_service_history_get | operator | operator_composed | all composed ordinary and operator providers present | mcp/vaillant_b503.go | implemented |
+| ebus_v1_vaillant_service_history_get | ordinary | b503_enabled | B503 dispatcher and session manager present | mcp/vaillant_b503.go | implemented |
+| ebus_v1_vaillant_service_history_get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/vaillant_b503.go | implemented |
+| ebus_v1_watch_summary_get | operator | operator_composed | all composed ordinary and operator providers present | mcp/server.go | implemented |
+| ebus_v1_watch_summary_get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/server.go | implemented |
+| ebus_v1_watch_summary_get | ordinary | watch_enabled | watch summary provider present | mcp/server.go | implemented |
+| eebus_v1_features_data_get | operator | operator_composed | all composed ordinary and operator providers present | mcp/eebus_v1_commands.go | implemented |
+| eebus_v1_features_data_get | operator | operator_commands_only | command router present; eeBUS provider absent | mcp/eebus_v1_commands.go | implemented |
+| eebus_v1_features_data_get | operator | operator_enabled | eeBUS provider, command router and capture providers present | mcp/eebus_v1_commands.go | implemented |
+| eebus_v1_features_data_set | operator | operator_composed | all composed ordinary and operator providers present | mcp/eebus_v1_commands.go | implemented |
+| eebus_v1_features_data_set | operator | operator_commands_only | command router present; eeBUS provider absent | mcp/eebus_v1_commands.go | implemented |
+| eebus_v1_features_data_set | operator | operator_enabled | eeBUS provider, command router and capture providers present | mcp/eebus_v1_commands.go | implemented |
+| eebus_v1_features_get | operator | operator_composed | all composed ordinary and operator providers present | mcp/eebus_v1_commands.go | implemented |
+| eebus_v1_features_get | operator | operator_commands_only | command router present; eeBUS provider absent | mcp/eebus_v1_commands.go | implemented |
+| eebus_v1_features_get | operator | operator_enabled | eeBUS provider, command router and capture providers present | mcp/eebus_v1_commands.go | implemented |
+| eebus_v1_mutations_get | operator | operator_composed | all composed ordinary and operator providers present | mcp/eebus_v1_commands.go | implemented |
+| eebus_v1_mutations_get | operator | operator_commands_only | command router present; eeBUS provider absent | mcp/eebus_v1_commands.go | implemented |
+| eebus_v1_mutations_get | operator | operator_enabled | eeBUS provider, command router and capture providers present | mcp/eebus_v1_commands.go | implemented |
+| eebus_v1_mutations_rollback | operator | operator_composed | all composed ordinary and operator providers present | mcp/eebus_v1_commands.go | implemented |
+| eebus_v1_mutations_rollback | operator | operator_commands_only | command router present; eeBUS provider absent | mcp/eebus_v1_commands.go | implemented |
+| eebus_v1_mutations_rollback | operator | operator_enabled | eeBUS provider, command router and capture providers present | mcp/eebus_v1_commands.go | implemented |
+| eebus_v1_pairing_status_get | operator | operator_composed | all composed ordinary and operator providers present | mcp/eebus_v1.go | implemented |
+| eebus_v1_pairing_status_get | operator | operator_eebus_only | eeBUS provider present; command and capture providers absent | mcp/eebus_v1.go | implemented |
+| eebus_v1_pairing_status_get | operator | operator_enabled | eeBUS provider, command router and capture providers present | mcp/eebus_v1.go | implemented |
+| eebus_v1_pairing_status_get | operator_source | operator_source_enabled | operator source scope; eeBUS provider present | mcp/eebus_v1.go | implemented |
+| eebus_v1_pairing_status_get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/eebus_v1.go | implemented |
+| eebus_v1_pairing_status_get | ordinary | eebus_enabled | eeBUS provider present | mcp/eebus_v1.go | implemented |
+| eebus_v1_runtime_status_get | operator | operator_composed | all composed ordinary and operator providers present | mcp/eebus_v1.go | implemented |
+| eebus_v1_runtime_status_get | operator | operator_eebus_only | eeBUS provider present; command and capture providers absent | mcp/eebus_v1.go | implemented |
+| eebus_v1_runtime_status_get | operator | operator_enabled | eeBUS provider, command router and capture providers present | mcp/eebus_v1.go | implemented |
+| eebus_v1_runtime_status_get | operator_source | operator_source_enabled | operator source scope; eeBUS provider present | mcp/eebus_v1.go | implemented |
+| eebus_v1_runtime_status_get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/eebus_v1.go | implemented |
+| eebus_v1_runtime_status_get | ordinary | eebus_enabled | eeBUS provider present | mcp/eebus_v1.go | implemented |
+| eebus_v1_services_get | operator | operator_composed | all composed ordinary and operator providers present | mcp/eebus_v1.go | implemented |
+| eebus_v1_services_get | operator | operator_eebus_only | eeBUS provider present; command and capture providers absent | mcp/eebus_v1.go | implemented |
+| eebus_v1_services_get | operator | operator_enabled | eeBUS provider, command router and capture providers present | mcp/eebus_v1.go | implemented |
+| eebus_v1_services_get | operator_source | operator_source_enabled | operator source scope; eeBUS provider present | mcp/eebus_v1.go | implemented |
+| eebus_v1_services_get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/eebus_v1.go | implemented |
+| eebus_v1_services_get | ordinary | eebus_enabled | eeBUS provider present | mcp/eebus_v1.go | implemented |
+| eebus_v1_services_list | operator | operator_composed | all composed ordinary and operator providers present | mcp/eebus_v1.go | implemented |
+| eebus_v1_services_list | operator | operator_eebus_only | eeBUS provider present; command and capture providers absent | mcp/eebus_v1.go | implemented |
+| eebus_v1_services_list | operator | operator_enabled | eeBUS provider, command router and capture providers present | mcp/eebus_v1.go | implemented |
+| eebus_v1_services_list | operator_source | operator_source_enabled | operator source scope; eeBUS provider present | mcp/eebus_v1.go | implemented |
+| eebus_v1_services_list | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/eebus_v1.go | implemented |
+| eebus_v1_services_list | ordinary | eebus_enabled | eeBUS provider present | mcp/eebus_v1.go | implemented |
+| eebus_v1_sessions_get | operator | operator_composed | all composed ordinary and operator providers present | mcp/eebus_v1.go | implemented |
+| eebus_v1_sessions_get | operator | operator_eebus_only | eeBUS provider present; command and capture providers absent | mcp/eebus_v1.go | implemented |
+| eebus_v1_sessions_get | operator | operator_enabled | eeBUS provider, command router and capture providers present | mcp/eebus_v1.go | implemented |
+| eebus_v1_sessions_get | operator_source | operator_source_enabled | operator source scope; eeBUS provider present | mcp/eebus_v1.go | implemented |
+| eebus_v1_sessions_get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/eebus_v1.go | implemented |
+| eebus_v1_sessions_get | ordinary | eebus_enabled | eeBUS provider present | mcp/eebus_v1.go | implemented |
+| eebus_v1_sessions_list | operator | operator_composed | all composed ordinary and operator providers present | mcp/eebus_v1.go | implemented |
+| eebus_v1_sessions_list | operator | operator_eebus_only | eeBUS provider present; command and capture providers absent | mcp/eebus_v1.go | implemented |
+| eebus_v1_sessions_list | operator | operator_enabled | eeBUS provider, command router and capture providers present | mcp/eebus_v1.go | implemented |
+| eebus_v1_sessions_list | operator_source | operator_source_enabled | operator source scope; eeBUS provider present | mcp/eebus_v1.go | implemented |
+| eebus_v1_sessions_list | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/eebus_v1.go | implemented |
+| eebus_v1_sessions_list | ordinary | eebus_enabled | eeBUS provider present | mcp/eebus_v1.go | implemented |
+| eebus_v1_snapshot_capture | operator | operator_composed | all composed ordinary and operator providers present | mcp/eebus_v1.go | implemented |
+| eebus_v1_snapshot_capture | operator | operator_eebus_only | eeBUS provider present; command and capture providers absent | mcp/eebus_v1.go | implemented |
+| eebus_v1_snapshot_capture | operator | operator_enabled | eeBUS provider, command router and capture providers present | mcp/eebus_v1.go | implemented |
+| eebus_v1_snapshot_capture | operator_source | operator_source_enabled | operator source scope; eeBUS provider present | mcp/eebus_v1.go | implemented |
+| eebus_v1_snapshot_capture | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/eebus_v1.go | implemented |
+| eebus_v1_snapshot_capture | ordinary | eebus_enabled | eeBUS provider present | mcp/eebus_v1.go | implemented |
+| eebus_v1_snapshot_drop | operator | operator_composed | all composed ordinary and operator providers present | mcp/eebus_v1.go | implemented |
+| eebus_v1_snapshot_drop | operator | operator_eebus_only | eeBUS provider present; command and capture providers absent | mcp/eebus_v1.go | implemented |
+| eebus_v1_snapshot_drop | operator | operator_enabled | eeBUS provider, command router and capture providers present | mcp/eebus_v1.go | implemented |
+| eebus_v1_snapshot_drop | operator_source | operator_source_enabled | operator source scope; eeBUS provider present | mcp/eebus_v1.go | implemented |
+| eebus_v1_snapshot_drop | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/eebus_v1.go | implemented |
+| eebus_v1_snapshot_drop | ordinary | eebus_enabled | eeBUS provider present | mcp/eebus_v1.go | implemented |
+| eebus_v1_topology_get | operator | operator_composed | all composed ordinary and operator providers present | mcp/eebus_v1.go | implemented |
+| eebus_v1_topology_get | operator | operator_eebus_only | eeBUS provider present; command and capture providers absent | mcp/eebus_v1.go | implemented |
+| eebus_v1_topology_get | operator | operator_enabled | eeBUS provider, command router and capture providers present | mcp/eebus_v1.go | implemented |
+| eebus_v1_topology_get | operator_source | operator_source_enabled | operator source scope; eeBUS provider present | mcp/eebus_v1.go | implemented |
+| eebus_v1_topology_get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/eebus_v1.go | implemented |
+| eebus_v1_topology_get | ordinary | eebus_enabled | eeBUS provider present | mcp/eebus_v1.go | implemented |
+| helianthus_experimental_leaf_promotion_capture | operator | operator_composed | all composed ordinary and operator providers present | mcp/leaf_promotion_capture.go | implemented |
+| helianthus_experimental_leaf_promotion_capture | operator | operator_enabled | eeBUS provider, command router and capture providers present | mcp/leaf_promotion_capture.go | implemented |
+| helianthus_experimental_leaf_promotion_capture | operator | operator_promotion_only | leaf promotion capture provider present; eeBUS provider absent | mcp/leaf_promotion_capture.go | implemented |
+| helianthus_experimental_m8_source_state_get | operator | operator_composed | all composed ordinary and operator providers present | mcp/m8_source_state.go | implemented |
+| helianthus_experimental_m8_source_state_get | operator | operator_eebus_only | eeBUS provider present; command and capture providers absent | mcp/m8_source_state.go | implemented |
+| helianthus_experimental_m8_source_state_get | operator | operator_enabled | eeBUS provider, command router and capture providers present | mcp/m8_source_state.go | implemented |
+| helianthus_runtime_get | operator | operator_composed | all composed ordinary and operator providers present | mcp/runtime_control.go | implemented |
+| helianthus_runtime_get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/runtime_control.go | implemented |
+| helianthus_runtime_get | ordinary | runtime_disabled | runtime service absent; eeBUS absent | mcp/runtime_control.go | implemented |
+| helianthus_runtime_get | ordinary | runtime_enabled | runtime service present; eeBUS absent | mcp/runtime_control.go | implemented |
+| helianthus_runtime_list | operator | operator_composed | all composed ordinary and operator providers present | mcp/runtime_control.go | implemented |
+| helianthus_runtime_list | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/runtime_control.go | implemented |
+| helianthus_runtime_list | ordinary | runtime_disabled | runtime service absent; eeBUS absent | mcp/runtime_control.go | implemented |
+| helianthus_runtime_list | ordinary | runtime_enabled | runtime service present; eeBUS absent | mcp/runtime_control.go | implemented |
+| helianthus_runtime_restart | operator | operator_composed | all composed ordinary and operator providers present | mcp/runtime_control.go | implemented |
+| helianthus_runtime_restart | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/runtime_control.go | implemented |
+| helianthus_runtime_restart | ordinary | runtime_disabled | runtime service absent; eeBUS absent | mcp/runtime_control.go | implemented |
+| helianthus_runtime_restart | ordinary | runtime_enabled | runtime service present; eeBUS absent | mcp/runtime_control.go | implemented |
+| helianthus_runtime_start | operator | operator_composed | all composed ordinary and operator providers present | mcp/runtime_control.go | implemented |
+| helianthus_runtime_start | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/runtime_control.go | implemented |
+| helianthus_runtime_start | ordinary | runtime_disabled | runtime service absent; eeBUS absent | mcp/runtime_control.go | implemented |
+| helianthus_runtime_start | ordinary | runtime_enabled | runtime service present; eeBUS absent | mcp/runtime_control.go | implemented |
+| helianthus_runtime_stop | operator | operator_composed | all composed ordinary and operator providers present | mcp/runtime_control.go | implemented |
+| helianthus_runtime_stop | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/runtime_control.go | implemented |
+| helianthus_runtime_stop | ordinary | runtime_disabled | runtime service absent; eeBUS absent | mcp/runtime_control.go | implemented |
+| helianthus_runtime_stop | ordinary | runtime_enabled | runtime service present; eeBUS absent | mcp/runtime_control.go | implemented |
+| helianthus_v1_synchronized_evidence_capture | operator | operator_composed | all composed ordinary and operator providers present | mcp/synchronized_evidence.go | implemented |
+| helianthus_v1_synchronized_evidence_capture | operator | operator_enabled | eeBUS provider, command router and capture providers present | mcp/synchronized_evidence.go | implemented |
+| helianthus_v1_synchronized_evidence_capture | operator | operator_capture_only | synchronized capture provider present; eeBUS provider absent | mcp/synchronized_evidence.go | implemented |
+| modbus_v1_fronius_sunspec_status_get | ordinary | target_fronius | target/uncomposed structural provider; not a production enablement claim | mcp/fronius_sunspec_v1.go | target |
+| modbus_v1_growatt_bms_rs485_status_get | operator | operator_composed | all composed ordinary and operator providers present | mcp/growatt_bms_rs485_v202.go | implemented |
+| modbus_v1_growatt_bms_rs485_status_get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/growatt_bms_rs485_v202.go | implemented |
+| modbus_v1_growatt_bms_rs485_status_get | ordinary | modbus_production_2 | owner mask 2: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/growatt_bms_rs485_v202.go | implemented |
+| modbus_v1_growatt_bms_rs485_status_get | ordinary | modbus_production_3 | owner mask 3: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/growatt_bms_rs485_v202.go | implemented |
+| modbus_v1_growatt_bms_rs485_status_get | ordinary | modbus_production_6 | owner mask 6: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/growatt_bms_rs485_v202.go | implemented |
+| modbus_v1_growatt_bms_rs485_status_get | ordinary | modbus_production_7 | owner mask 7: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/growatt_bms_rs485_v202.go | implemented |
+| modbus_v1_growatt_protocol_ii_identity_get | ordinary | target_growatt_protocol | target/uncomposed structural provider; not a production enablement claim | mcp/growatt_protocol_ii_v1.go | target |
+| modbus_v1_huawei_emma_identity_get | ordinary | target_huawei_emma | target/uncomposed structural provider; not a production enablement claim | mcp/huawei_emma_v1.go | target |
+| modbus_v1_huawei_emma_status_get | ordinary | target_huawei_instances, target_huawei_instances_coreless | target/uncomposed structural provider; not a production enablement claim | mcp/huawei_smartlogger_v1.go | target |
+| modbus_v1_huawei_sdongle_status_get | ordinary | target_huawei_dongle | target/uncomposed structural provider; not a production enablement claim | mcp/huawei_sdongle_v1.go | target |
+| modbus_v1_huawei_sdongle_status_get | ordinary | target_huawei_instances, target_huawei_instances_coreless | target/uncomposed structural provider; not a production enablement claim | mcp/huawei_smartlogger_v1.go | target |
+| modbus_v1_huawei_smartlogger_status_get | ordinary | target_huawei_instances, target_huawei_instances_coreless, target_huawei_logger | target/uncomposed structural provider; not a production enablement claim | mcp/huawei_smartlogger_v1.go | target |
+| modbus_v1_outback_axs_status_get | ordinary | target_outback | target/uncomposed structural provider; not a production enablement claim | mcp/outback_axs_v1.go | target |
+| modbus_v1_profile_observation_get | operator | operator_composed | all composed ordinary and operator providers present | mcp/modbus_v1.go | implemented |
+| modbus_v1_profile_observation_get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/modbus_v1.go | implemented |
+| modbus_v1_profile_observation_get | ordinary | modbus_production_1 | owner mask 1: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/modbus_v1.go | implemented |
+| modbus_v1_profile_observation_get | ordinary | modbus_production_3 | owner mask 3: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/modbus_v1.go | implemented |
+| modbus_v1_profile_observation_get | ordinary | modbus_production_5 | owner mask 5: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/modbus_v1.go | implemented |
+| modbus_v1_profile_observation_get | ordinary | modbus_production_7 | owner mask 7: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/modbus_v1.go | implemented |
+| modbus_v1_profile_observation_get | ordinary | target_modbus_core, target_tesla_hsc | structural helper profile; production owner availability checked separately | mcp/modbus_v1.go | target |
+| modbus_v1_profile_observation_get | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_logger, target_outback, target_tesla_summary, target_tesla_vitals | target/uncomposed structural provider; not a production enablement claim | mcp/modbus_v1.go | target |
+| modbus_v1_raw_read | operator | operator_composed | all composed ordinary and operator providers present | mcp/modbus_v1.go | implemented |
+| modbus_v1_raw_read | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/modbus_v1.go | implemented |
+| modbus_v1_raw_read | ordinary | modbus_production_1 | owner mask 1: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/modbus_v1.go | implemented |
+| modbus_v1_raw_read | ordinary | modbus_production_3 | owner mask 3: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/modbus_v1.go | implemented |
+| modbus_v1_raw_read | ordinary | modbus_production_5 | owner mask 5: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/modbus_v1.go | implemented |
+| modbus_v1_raw_read | ordinary | modbus_production_7 | owner mask 7: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/modbus_v1.go | implemented |
+| modbus_v1_raw_read | ordinary | target_modbus_core, target_tesla_hsc | structural helper profile; production owner availability checked separately | mcp/modbus_v1.go | target |
+| modbus_v1_raw_read | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_logger, target_outback, target_tesla_summary, target_tesla_vitals | target/uncomposed structural provider; not a production enablement claim | mcp/modbus_v1.go | target |
+| modbus_v1_tesla_fc100_summary_get | ordinary | target_tesla_summary | target/uncomposed structural provider; not a production enablement claim | mcp/tesla_fc100_summary_v1.go | target |
+| modbus_v1_tesla_gen3_evse_current_limit_get | operator | operator_composed | all composed ordinary and operator providers present | mcp/tesla_gen3_evse_current_limit_v1.go | implemented |
+| modbus_v1_tesla_gen3_evse_current_limit_get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/tesla_gen3_evse_current_limit_v1.go | implemented |
+| modbus_v1_tesla_gen3_evse_current_limit_get | ordinary | modbus_production_4 | owner mask 4: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/tesla_gen3_evse_current_limit_v1.go | implemented |
+| modbus_v1_tesla_gen3_evse_current_limit_get | ordinary | modbus_production_5 | owner mask 5: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/tesla_gen3_evse_current_limit_v1.go | implemented |
+| modbus_v1_tesla_gen3_evse_current_limit_get | ordinary | modbus_production_6 | owner mask 6: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/tesla_gen3_evse_current_limit_v1.go | implemented |
+| modbus_v1_tesla_gen3_evse_current_limit_get | ordinary | modbus_production_7 | owner mask 7: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/tesla_gen3_evse_current_limit_v1.go | implemented |
+| modbus_v1_tesla_hsc_status_get | operator | operator_composed | all composed ordinary and operator providers present | mcp/tesla_hsc_v1.go | implemented |
+| modbus_v1_tesla_hsc_status_get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/tesla_hsc_v1.go | implemented |
+| modbus_v1_tesla_hsc_status_get | ordinary | modbus_production_1 | owner mask 1: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/tesla_hsc_v1.go | implemented |
+| modbus_v1_tesla_hsc_status_get | ordinary | modbus_production_3 | owner mask 3: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/tesla_hsc_v1.go | implemented |
+| modbus_v1_tesla_hsc_status_get | ordinary | modbus_production_5 | owner mask 5: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/tesla_hsc_v1.go | implemented |
+| modbus_v1_tesla_hsc_status_get | ordinary | modbus_production_7 | owner mask 7: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/tesla_hsc_v1.go | implemented |
+| modbus_v1_tesla_hsc_status_get | ordinary | target_tesla_hsc | structural helper profile; production owner availability checked separately | mcp/tesla_hsc_v1.go | target |
+| modbus_v1_tesla_wcapi_get_vitals_replay_get | ordinary | target_tesla_vitals | target/uncomposed structural provider; not a production enablement claim | mcp/tesla_wcapi_get_vitals_v1.go | target |
+| semantic_v1_evse_current_get | operator | operator_composed | all composed ordinary and operator providers present | mcp/tesla_gen3_evse_semantic.go | implemented |
+| semantic_v1_evse_current_get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/tesla_gen3_evse_semantic.go | implemented |
+| semantic_v1_evse_current_get | ordinary | modbus_production_4 | owner mask 4: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/tesla_gen3_evse_semantic.go | implemented |
+| semantic_v1_evse_current_get | ordinary | modbus_production_5 | owner mask 5: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/tesla_gen3_evse_semantic.go | implemented |
+| semantic_v1_evse_current_get | ordinary | modbus_production_6 | owner mask 6: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/tesla_gen3_evse_semantic.go | implemented |
+| semantic_v1_evse_current_get | ordinary | modbus_production_7 | owner mask 7: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/tesla_gen3_evse_semantic.go | implemented |
+| semantic_v1_pv_current_get | operator | operator_composed | all composed ordinary and operator providers present | mcp/modbus_v1.go | implemented |
+| semantic_v1_pv_current_get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/modbus_v1.go | implemented |
+| semantic_v1_pv_current_get | ordinary | modbus_production_1 | owner mask 1: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/modbus_v1.go | implemented |
+| semantic_v1_pv_current_get | ordinary | modbus_production_3 | owner mask 3: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/modbus_v1.go | implemented |
+| semantic_v1_pv_current_get | ordinary | modbus_production_5 | owner mask 5: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/modbus_v1.go | implemented |
+| semantic_v1_pv_current_get | ordinary | modbus_production_7 | owner mask 7: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/modbus_v1.go | implemented |
+| semantic_v1_pv_current_get | ordinary | target_modbus_core, target_tesla_hsc | structural helper profile; production owner availability checked separately | mcp/modbus_v1.go | target |
+| semantic_v1_pv_current_get | ordinary | target_fronius, target_growatt_protocol, target_huawei_dongle, target_huawei_emma, target_huawei_instances, target_huawei_logger, target_outback, target_tesla_summary, target_tesla_vitals | target/uncomposed structural provider; not a production enablement claim | mcp/modbus_v1.go | target |
+| semantic_v1_snapshot_get | operator | operator_composed | all composed ordinary and operator providers present | mcp/semantic_snapshot.go | implemented |
+| semantic_v1_snapshot_get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/semantic_snapshot.go | implemented |
+| semantic_v1_snapshot_get | ordinary | semantic_disabled | shared semantic provider absent; discovery remains configured | mcp/semantic_snapshot.go | implemented |
+| semantic_v1_snapshot_get | ordinary | semantic_enabled | shared semantic provider present | mcp/semantic_snapshot.go | implemented |
+| semantic_v1_storage_growatt_current_get | operator | operator_composed | all composed ordinary and operator providers present | mcp/growatt_storage_semantic.go | implemented |
+| semantic_v1_storage_growatt_current_get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/growatt_storage_semantic.go | implemented |
+| semantic_v1_storage_growatt_current_get | ordinary | modbus_production_2 | owner mask 2: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/growatt_storage_semantic.go | implemented |
+| semantic_v1_storage_growatt_current_get | ordinary | modbus_production_3 | owner mask 3: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/growatt_storage_semantic.go | implemented |
+| semantic_v1_storage_growatt_current_get | ordinary | modbus_production_6 | owner mask 6: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/growatt_storage_semantic.go | implemented |
+| semantic_v1_storage_growatt_current_get | ordinary | modbus_production_7 | owner mask 7: SunSpec=1, Growatt storage=2, Tesla retained=4 | mcp/growatt_storage_semantic.go | implemented |
 
 mcp-inventory:end
 
@@ -1246,21 +1237,21 @@ End of the registration inventory.
 ## System Bound Payload Contract
 
 This contract is implemented by the gateway's GraphQL system-bounds resolver
-(`graphql/system_bounds.go`), the `setSystemConfig` mutation path
-(`graphql/mutations.go`), and the MCP tool `ebus.v1.semantic.system.set_config`
+(`graphql/system_bounds.go`), the `set_system_config` mutation path
+(`graphql/mutations.go`), and the MCP tool `ebus_v1_semantic_system_set_config`
 handler in companion gateway [pull request #1033](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/1033),
 which is merged after this page per the documentation gate; this page describes
 the behaviour of that change, the reviewed source artifact.
 The contract test [`tests/test_system_config_bound_contract.py`](../tests/test_system_config_bound_contract.py)
 in this repository pins the documented members and examples.
 
-`ebus.v1.semantic.system.get` publishes `config.dhw_bivalence_point_bound`.
+`ebus_v1_semantic_system_get` publishes `config.dhw_bivalence_point_bound`.
 Its `source` is `controller_profile` with `profile`, or `unmatched_policy`
 with `reason`. The reason values are `unknown_profile`, `unknown_register`,
 `unqualified_bound` and `invalid_bound`. Empty optional `reason` and `profile`
 strings are omitted in MCP and `null` in GraphQL. The required boolean
 `narrowed_only` is true for every `controller_profile` bound and false for
-`unmatched_policy` (GraphQL: `narrowedOnly: Boolean!`). A profile identifies
+`unmatched_policy` (GraphQL: `narrowed_only: Boolean!`). A profile identifies
 an observation context, not an installation. Its bound is a **Hypothesis**
 for the target installation and can only narrow the policy window `-20..50`:
 `min = max(profile min, -20)`, `max = min(profile max, 50)`. An empty
@@ -1313,13 +1304,13 @@ still uses the unmatched policy as described below.
 ```
 
 Before the first resolution, MCP omits `config.dhw_bivalence_point_bound`
-entirely. GraphQL returns `null` for `dhwBivalencePointBound`.
+entirely. GraphQL returns `null` for `dhw_bivalence_point_bound`.
 
 ## Semantic Payload Notes
 
 ### Post-M9 FM5 Contract
 
-`ebus.v1.semantic.fm5_interpretation.get` is the MCP-first post-M9
+`ebus_v1_semantic_fm5_interpretation_get` is the MCP-first post-M9
 behavioral remediation. Its availability is stated only by the checked
 registration inventory above; this section freezes its response contract. The method returns `null` until the
 first coherent structural classification; it never fabricates `GPIO_ONLY` or
@@ -1333,16 +1324,16 @@ accompany the unchanged retained structural mode. `evidence_revision` binds
 the tuple to one acquisition result. Consumers must not infer the reason from empty
 solar/cylinder payloads. The closed mode/reason semantics are frozen in
 [`eebus-operator-admin.md`](./eebus-operator-admin.md). It is additive within
-the single `ebus.v1.*` namespace; no v2 tool or legacy alias is introduced.
-The older `ebus.v1.semantic.fm5_mode.get` scalar retains its frozen response
+the single `ebus_v1_*` namespace; no v2 tool or legacy alias is introduced.
+The older `ebus_v1_semantic_fm5_mode_get` scalar retains its frozen response
 shape and is not a substitute for the degradation verdict.
 
-- `ebus.v1.semantic.circuits.get` exposes explicit per-circuit ownership as `managing_device`.
+- `ebus_v1_semantic_circuits_get` exposes explicit per-circuit ownership as `managing_device`.
 - `managing_device.role` is always present and is one of `REGULATOR`, `FUNCTION_MODULE`, or `UNKNOWN`.
 - `managing_device.device_id` and `managing_device.address` are populated only when the gateway has ownership evidence for the current topology.
-- `ebus.v1.semantic.system.get` exposes `config.dhw_bivalence_point_bound`
+- `ebus_v1_semantic_system_get` exposes `config.dhw_bivalence_point_bound`
   (`min_c`, `max_c`, `source`, optional `reason` and `profile`): the range
-  `ebus.v1.semantic.system.set_config` accepts for `dhwBivalencePointC`.
+  `ebus_v1_semantic_system_set_config` accepts for `dhwBivalencePointC`.
   A value outside it is rejected before any bus write. Before the first
   resolution, MCP omits the bound entirely; GraphQL returns `null`.
   Empty optional `reason` and `profile` strings are omitted in MCP and
@@ -1359,19 +1350,19 @@ shape and is not a substitute for the degradation verdict.
   update on the next system publication. A controller swap at the same
   address retains the registry identity until that metadata changes, so the
   identity can be stale. Registry/invoker writes through
-  `ebus.v1.rpc.invoke` have no API qualifier and always apply the unmatched
+  `ebus_v1_rpc_invoke` have no API qualifier and always apply the unmatched
   policy. Every numeric configuration write rejects `NaN` and positive or
   negative infinity before encoding, with `success: false` and no bus request.
   See [`graphql.md`](./graphql.md) "System Config Write Bounds" for the
   profile and unmatched-policy rules.
-- `ebus.v1.semantic.system.get` no longer exposes `vr71_circuit_start_index`; that threshold was a gateway heuristic and is not part of the canonical contract.
+- `ebus_v1_semantic_system_get` no longer exposes `vr71_circuit_start_index`; that threshold was a gateway heuristic and is not part of the canonical contract.
 
 [gateway-bound-discovery]:
   https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1034
 
 ## RPC Method Reference - Vaillant System Plane
 
-Methods available via `ebus.v1.rpc.invoke` on the `system` plane for
+Methods available via `ebus_v1_rpc_invoke` on the `system` plane for
 Vaillant/Saunier/AWB controllers.
 
 ### `read_timer`
@@ -1426,7 +1417,7 @@ write). The gateway enforces `allow_dangerous` and idempotency gates.
 Helianthus uses MCP as the first integration surface for new capabilities. The
 development order is:
 
-1. MCP prototype and stabilization (`ebus.v1.*` contract)
+1. MCP prototype and stabilization (`ebus_v1_*` contract)
 2. GraphQL parity after MCP determinism/contract gates are green
 3. Consumer rollout (HA and others) after GraphQL parity
 
@@ -1435,3 +1426,59 @@ The architecture model and gates are documented in:
 - [architecture/mcp-first-development.md](../architecture/mcp-first-development.md)
 - [architecture/bus-observability-v2.md](../architecture/bus-observability-v2.md)
 - [api/watch-summary.md](./watch-summary.md)
+
+## Naming and writable boundary
+
+Only the registered underscore namespace spelling is accepted. The removed `ebus.devices` and `ebus.invoke` names have no replacement aliases. The versioned invoke capability retains its safety, permission, idempotency and replay checks. Pairing status remains registered as `eebus_v1_pairing_status_get`; the dangling-name removal count is zero.
+
+The circuit configuration setter accepts these selector-qualified fields under group `0x02`; existing routes, types and bounds are unchanged.
+
+| Field | Register | Type and bound |
+| --- | --- | --- |
+| `circuit_heating_curve_factor` | `0x000F` | float32, 0.1–4.0 |
+| `heating_circuit_flow_temperature_setpoint_maximum` | `0x0010` | float32, 15–80 |
+| `circuit_flow_temperature_setpoint_minimum` | `0x0012` | float32, 5–30 |
+| `heating_circuit_outdoor_temperature_limit_maximum` | `0x0014` | float32, 15–30 |
+| `circuit_room_temperature_influence_mode` | `0x0015` | enum_u16, unchanged accepted values |
+| `circuit_cooling_enabled` | `0x0006` | bool_u8 |
+
+F56b is a partial control-withdrawal and width-evidence boundary: `frostProtC` and `frost_prot_c` are rejected without dispatch. No enum writer is defined. The raw provisional read representation and width evidence remain unchanged.
+
+### Provisional system and zone setter names
+
+These accepted keys remain unchanged and provisional rather than receiving invented canonical value names. Their open question is which selector-qualified quantity and value role each key should express; syntax-only alternatives are not accepted. Native meaning remains governed by [the B524 register identities](../protocols/vaillant/ebus-vaillant-B524.md).
+
+| Family | Accepted key | Opcode / group / instance / register |
+| --- | --- | --- |
+| system | `dhwBivalencePointC` | `0x02 / 0x00 / 0x00 / 0x0001` |
+| system | `maxRoomHumidityPct` | `0x02 / 0x00 / 0x00 / 0x000E` |
+| system | `adaptiveHeatingCurve` | `0x02 / 0x00 / 0x00 / 0x0014` |
+| system | `hcBivalencePointC` | `0x02 / 0x00 / 0x00 / 0x0023` |
+| system | `hcEmergencyTempC` | `0x02 / 0x00 / 0x00 / 0x0026` |
+| system | `hwcMaxFlowTempC` | `0x02 / 0x00 / 0x00 / 0x0046` |
+| system | `maintenanceDate` | `0x02 / 0x00 / 0x00 / 0x002C` |
+| system | `installerName` | `0x02 / 0x00 / 0x00 / 0x006C` |
+| system | `installerPhone` | `0x02 / 0x00 / 0x00 / 0x006F` |
+| system | `installerMenuCode` | `0x02 / 0x00 / 0x00 / 0x0076` |
+| zone | `operatingMode` | `0x02 / 0x03 / selected zone / 0x0006` |
+| zone | `quickVetoTemperature` | `0x02 / 0x03 / selected zone / 0x0008` |
+| zone | `quickVetoDuration` | `0x02 / 0x03 / selected zone / 0x0026` |
+| zone | `desiredSetpoint` | `0x02 / 0x03 / selected zone / 0x0022` |
+| zone | `holidaySetpoint` | `0x02 / 0x03 / selected zone / 0x0005` |
+
+Runtime input keys `DriverID` and `ExpectedRevision` remain emitted provisional exceptions: which structural spellings can express their existing identity and optimistic revision without changing the closed request shape?
+
+### Provisional boiler setter names
+
+The boiler setter accepts `field` and `value` strings. Its accepted value keys remain provisional; the open questions are the selector-qualified value roles, the partial-load unit and the meaning of the access-code candidate. No syntax-only alternatives are accepted. These routes are implementation behavior; the [native B509 correspondence](../protocols/vaillant/fixtures/b509-register-name-correspondence.csv) governs interpretation.
+
+| Accepted key | B509 register selector | Existing encoding and bound |
+| --- | --- | --- |
+| `flowsetHcMaxC` | `0x0E04`; existing alternate `0xA500` | DATA2c, 20–80 |
+| `flowsetHwcMaxC` | `0x0F04` | DATA2c, 30–65 |
+| `partloadHcKW` | `0x0704` | UCH, whole number 0–40 |
+| `partloadHwcKW` | `0x0804` | UCH, whole number 0–40 |
+| `phoneNumber` | `0x8104` | Existing BCD validation |
+| `installerMenuCode` | `0x4904` | Existing integer validation; native meaning unresolved |
+
+The selector columns identify registers, not new writable native semantics; no value or unit conversion follows from naming.

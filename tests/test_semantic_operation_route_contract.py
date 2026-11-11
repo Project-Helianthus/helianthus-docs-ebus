@@ -58,7 +58,7 @@ def validate_contract(text: str) -> None:
                 if token.info == "json" else " ".join(token.content.split()),
             })
     # Ordered blocks also guard section placement, input/result tables, bounds,
-    # every no-send rule, causal readback requirements and the rule trace.
+    # every no-send rule, causal readback requirements and the rule mapping.
     assert blocks == CONTRACT["visible_blocks"], "Visible contract blocks changed"
     assert examples == CONTRACT["examples"], "Operation examples changed"
     # Type, HTML tag, nesting and list starts preserve containers and numbering.
@@ -76,9 +76,9 @@ def test_semantic_operation_route_contract() -> None:
 
 
 @pytest.mark.parametrize("before,after", (
-    ("When at least one `semanticOperation` selection reaches its resolver,",
-     "Whenever the parsed operation selects `semanticOperation`,"),
-    ("If every `semanticOperation` selection is skipped by `@skip(if: true)` or\n"
+    ("When at least one `semantic_operation` selection reaches its resolver,",
+     "Whenever the parsed operation selects `semantic_operation`,"),
+    ("If every `semantic_operation` selection is skipped by `@skip(if: true)` or\n"
      "`@include(if: false)`, the stock GraphQL executor never invokes the resolver;\n"
      "only resolver-owned checks are bypassed, and a second skipped selection does not\n"
      "produce `INVALID_ARGUMENT`.",
@@ -151,12 +151,12 @@ def test_rejects_relocated_rule(token) -> None:
 
 @pytest.mark.parametrize("index", range(len(CONTRACT["examples"][2]["body"])))
 @pytest.mark.parametrize("member", (
-    "status", "kernelOutcome", "delivery", "acknowledgement", "readbackRelation", "reason",
+    "status", "kernel_outcome", "delivery", "acknowledgement", "readback_relation", "reason",
 ))
 @pytest.mark.parametrize("mutation", ("remove", "change", "extra"))
 def test_rejects_result_mapping_drift(index: int, member: str, mutation: str) -> None:
     responses = copy.deepcopy(CONTRACT["examples"][2]["body"])
-    result = responses[index]["data"]["semanticOperation"]
+    result = responses[index]["data"]["semantic_operation"]
     if mutation == "remove":
         del result[member]
     elif mutation == "change":
@@ -177,7 +177,7 @@ def test_rejects_request_example_drift(member: str) -> None:
 
 def test_rejects_duplicate_json_members() -> None:
     with pytest.raises(AssertionError, match="Duplicate JSON member"):
-        validate_contract(TEXT.replace('"timeoutMs": 1000', '"timeoutMs": 1000, "timeoutMs": 1000'))
+        validate_contract(TEXT.replace('"timeout_ms": 1000', '"timeout_ms": 1000, "timeout_ms": 1000'))
 
 
 @pytest.mark.parametrize("wrapper", (
@@ -187,15 +187,15 @@ def test_rejects_duplicate_json_members() -> None:
     '{{"variables": {{"input": {{"operation": {{"pack": {}}}}}}}}}',
     '{{"variables": {{"input": {{"arguments": [{}]}}}}}}',
 ))
-@pytest.mark.parametrize("second_name", ('bindingId', r'\u0062indingId'))
+@pytest.mark.parametrize("second_name", ('binding_id', r'\u0062inding_id'))
 @pytest.mark.parametrize("second_value", ('binding:synthetic', 'binding:other'))
 def test_rejects_duplicate_members_at_every_object_level(
     wrapper: str, second_name: str, second_value: str,
 ) -> None:
-    members = ('{"bindingId": "binding:synthetic", '
+    members = ('{"binding_id": "binding:synthetic", '
                f'"{second_name}": "{second_value}"}}')
     body = wrapper.format(members)
-    with pytest.raises(AssertionError, match="Duplicate JSON member: bindingId"):
+    with pytest.raises(AssertionError, match="Duplicate JSON member: binding_id"):
         validate_contract(replace_token(FENCES[1], "```json\n" + body + "\n```\n"))
 
 
@@ -203,8 +203,8 @@ def test_rejects_duplicate_members_at_every_object_level(
     ("all mean **no-send**", "may use a fallback executor"),
     ("A concurrent retirement or change causes\n   no-send.", "A concurrent retirement permits dispatch."),
     ("A generic route\n   adds no retry, replay, reroute or write/read sequence.", "A generic route retries on timeout."),
-    ("`kernelOutcome=acknowledged_unverified`", "`kernelOutcome=applied`"),
-    ("`kernelOutcome=indeterminate`", "`kernelOutcome=failed_no_contact`"),
+    ("`kernel_outcome=acknowledged_unverified`", "`kernel_outcome=applied`"),
+    ("`kernel_outcome=indeterminate`", "`kernel_outcome=failed_no_contact`"),
     ("Validated terminal outcomes take precedence over ACK-only classification.",
      "ACK-only classification takes precedence over validated terminal outcomes."),
     ("Validated `no_effect` or `conflict` remains `failed`",
@@ -224,8 +224,8 @@ def test_rejects_duplicate_members_at_every_object_level(
     ("is handled exactly as by the\nstock GraphQL handler", "is first checked by a stricter route guard"),
     ("The route scans no request body as bytes", "The route scans every request body as bytes"),
     ("rejects no duplicate JSON member name of its own", "rejects duplicate JSON member names"),
-    ("`readbackRelation` is `inconclusive` when evidenced, otherwise null",
-     "`readbackRelation` is null"),
+    ("`readback_relation` is `inconclusive` when evidenced, otherwise null",
+     "`readback_relation` is null"),
     ("complete capability collection revision", "optional capability collection revision"),
 ))
 def test_rejects_semantic_weakening(before: str, after: str) -> None:
@@ -329,15 +329,15 @@ def test_rejects_untracked_rendered_blocks(addition: str, position: str) -> None
     ("ordinary GraphQL request errors without a promised\n`errors[].extensions.code`",
      "GraphQL request errors carrying `INVALID_ARGUMENT` on `errors[].extensions.code`"),
     ("they do not promise `INVALID_ARGUMENT`", "they promise `INVALID_ARGUMENT`"),
-    ("they do not establish a `data.semanticOperation` field result",
-     "they establish a null `data.semanticOperation` field result"),
+    ("they do not establish a `data.semantic_operation` field result",
+     "they establish a null `data.semantic_operation` field result"),
     ("Resolver-owned structural refusals carry `INVALID_ARGUMENT`",
      "Resolver-owned structural refusals carry no code"),
     ("resolver-owned size\nrefusals carry `RESOURCE_EXHAUSTED`",
      "resolver-owned size refusals carry `INVALID_ARGUMENT`"),
     ("an unwired operation provider carries\n`UNAVAILABLE`",
      "an unwired operation provider carries `INVALID_ARGUMENT`"),
-    ("A resolver refusal nulls only\n`data.semanticOperation` (or its response alias)",
+    ("A resolver refusal nulls only\n`data.semantic_operation` (or its response alias)",
      "A resolver refusal nulls the entire `data` object"),
     ("preserving unrelated selections\nin the `data` object",
      "discarding unrelated selections in the `data` object"),
@@ -359,7 +359,7 @@ def test_O04_rejects_error_boundary_weakening(tmp_path: Path, before: str, after
 
 @pytest.mark.parametrize("bound", (
     "1–5000 milliseconds",
-    "Allow at most one `semanticOperation`\nselection in the executing operation",
+    "Allow at most one `semantic_operation`\nselection in the executing operation",
     "Limit the total input to 65,536 bytes (64 KiB)",
     "Limit each opaque ID to 256 UTF-8 bytes",
     "arguments and\npreconditions to 64 entries each",

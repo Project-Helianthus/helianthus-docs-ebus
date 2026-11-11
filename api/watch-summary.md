@@ -22,8 +22,8 @@ Freeze anchors:
 
 | Surface | Name | Runtime lane | Freeze lane | State on `main` |
 | --- | --- | --- | --- | --- |
-| MCP | `ebus.v1.watch.summary.get` | `ISSUE-GW-11` | `ISSUE-DOC-09` | frozen |
-| GraphQL | `watchSummary` | `ISSUE-GW-11` | `ISSUE-DOC-09` | frozen |
+| MCP | `ebus_v1_watch_summary_get` | `ISSUE-GW-11` | `ISSUE-DOC-09` | frozen |
+| GraphQL | `watch_summary` | `ISSUE-GW-11` | `ISSUE-DOC-09` | frozen |
 | Portal | see [`portal.md`](./portal.md) | `ISSUE-GW-14` | `ISSUE-DOC-10` | frozen in `portal.md` |
 
 ## Shared v1 Shape
@@ -32,15 +32,15 @@ When the runtime watch provider is wired, both surfaces expose the same logical
 watch-summary shape/categories derived from `ShadowCache.WatchSummary()`.
 Cross-surface reads are not guaranteed to share one snapshot instance: GraphQL
 has request-level snapshot guarantees, while MCP uses its own `LIVE`/`SNAPSHOT`
-consistency path. In unwired mode, GraphQL returns zero-value `watchSummary`
-data while MCP omits `ebus.v1.watch.summary.get`.
+consistency path. In unwired mode, GraphQL returns zero-value `watch_summary`
+data while MCP omits `ebus_v1_watch_summary_get`.
 
 Top-level sections:
 
 - `inventory`
-- `activation_counts` / `activationCounts`
-- `freshness_classes` / `freshnessClasses`
-- `direct_apply_eligibility_classes` / `directApplyEligibilityClasses`
+- `activation_counts`
+- `freshness_classes`
+- `direct_apply_eligibility_classes`
 - `degraded`
 
 Class labels are stable v1 strings:
@@ -60,7 +60,7 @@ Class labels are stable v1 strings:
 
 Tool:
 
-- `ebus.v1.watch.summary.get`
+- `ebus_v1_watch_summary_get`
   - arguments: optional `consistency` (`LIVE` default, or `SNAPSHOT` with
     required `snapshot_id`)
 
@@ -78,48 +78,48 @@ MCP field names are snake_case (`activation_counts`, `freshness_classes`,
 GraphQL query root:
 
 ```graphql
-type Query {
-  watchSummary: WatchSummary!
+type query {
+  watch_summary: watch_summary!
 }
 ```
 
 GraphQL watch-summary types:
 
 ```graphql
-type WatchSummary {
-  inventory: WatchSummaryInventory!
-  activationCounts: WatchSummaryActivationCounts!
-  freshnessClasses: [WatchSummaryClassCount!]!
-  directApplyEligibilityClasses: [WatchSummaryClassCount!]!
-  degraded: WatchSummaryDegraded!
+type watch_summary {
+  inventory: watch_summary_inventory!
+  activation_counts: watch_summary_activation_counts!
+  freshness_classes: [watch_summary_class_count!]!
+  direct_apply_eligibility_classes: [watch_summary_class_count!]!
+  degraded: watch_summary_degraded!
 }
 
-type WatchSummaryClassCount {
+type watch_summary_class_count {
   class: String!
   count: Int!
 }
 
-type WatchSummaryInventory {
-  totalEntries: Int!
-  pinnedEntries: Int!
-  evictableEntries: Int!
-  staticPinnedFootprint: Int!
-  writeConfirmPinnedActive: Int!
-  stateClasses: [WatchSummaryClassCount!]!
-  pinClasses: [WatchSummaryClassCount!]!
+type watch_summary_inventory {
+  total_entries: Int!
+  pinned_entries: Int!
+  evictable_entries: Int!
+  static_pinned_footprint: Int!
+  write_confirm_pinned_active: Int!
+  state_classes: [watch_summary_class_count!]!
+  pin_classes: [watch_summary_class_count!]!
 }
 
-type WatchSummaryActivationCounts {
-  catalogDescriptors: Int!
-  activeKeys: Int!
-  sourceClasses: [WatchSummaryClassCount!]!
+type watch_summary_activation_counts {
+  catalog_descriptors: Int!
+  active_keys: Int!
+  source_classes: [watch_summary_class_count!]!
 }
 
-type WatchSummaryDegraded {
+type watch_summary_degraded {
   active: Boolean!
-  shadowingEnabled: Boolean!
-  pinnedBudgetDegraded: Boolean!
-  compactorDegraded: Boolean!
+  shadowing_enabled: Boolean!
+  pinned_budget_degraded: Boolean!
+  compactor_degraded: Boolean!
   reasons: [String!]!
 }
 ```
@@ -183,7 +183,7 @@ value/error is returned.
 
 ## Explicit Scheduler/Shadow Semantics
 
-- Snapshot-skew: GraphQL resolves multiple `watchSummary` fields in one
+- Snapshot-skew: GraphQL resolves multiple `watch_summary` fields in one
   operation from one shared snapshot. MCP `SNAPSHOT` mode pins watch-summary to
   the captured snapshot id. Cross-request `LIVE` reads are not guaranteed to be
   synchronized with each other.
@@ -203,8 +203,8 @@ value/error is returned.
   usage (`master_off_clamp`, `config_requires_state`,
   `config_requires_invalidation`), and direct-apply classes reflect the
   normalized state.
-- Cold-start: GraphQL `watchSummary` remains available and returns zero-value
-  data when unwired; MCP omits `ebus.v1.watch.summary.get` until the watch
+- Cold-start: GraphQL `watch_summary` remains available and returns zero-value
+  data when unwired; MCP omits `ebus_v1_watch_summary_get` until the watch
   provider is wired
   ([graphql/watch_summary.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576c9203bf5a02a45494e935041961044600/graphql/watch_summary.go),
   [mcp/server.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576c9203bf5a02a45494e935041961044600/mcp/server.go),

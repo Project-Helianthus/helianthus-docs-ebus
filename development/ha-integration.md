@@ -59,10 +59,10 @@ The config entry `unique_id` is the verified `instanceGuid`, not `host:port`.
 
 The integration reads semantic zone data from GraphQL and exposes:
 
-- `current_temperature` from `zones[].state.currentTempC`
-- `target_temperature` from `zones[].config.targetTempC`
-- `current_humidity` from `zones[].state.currentHumidityPct` (when available)
-- `hvac_mode` from `zones[].config.operatingMode`
+- `current_temperature` from `zones[].state.zone_room_temperature`
+- `target_temperature` from `zones[].config.target_temp_c`
+- `current_humidity` from `zones[].state.zone_room_humidity` (when available)
+- `hvac_mode` from `zones[].config.operating_mode`
 - `preset_mode` normalized to canonical tokens:
   - `schedule`
   - `manual`
@@ -82,9 +82,9 @@ Raw semantic fields are also kept as extra attributes for diagnostics:
 
 The DHW entity reads semantic data from `dhw` and exposes:
 
-- `current_temperature` from `dhw.currentTempC`
-- `target_temperature` from `dhw.targetTempC`
-- `operation_mode` from `dhw.operatingMode` (`off` / `auto` / `manual`)
+- `current_temperature` from `dhw.current_temp_c`
+- `target_temperature` from `dhw.target_temp_c`
+- `operation_mode` from `dhw.operating_mode` (`off` / `auto` / `manual`)
 - canonical preset in attributes (`schedule` / `manual` / `quickveto` / `away`)
 
 Raw DHW fields are also exposed as attributes:
@@ -153,8 +153,8 @@ machine. Protocol-specific action and identity semantics remain in the canonical
 `helianthus-docs-eebus` documents linked by that boundary.
 
 After the pending GraphQL contract and the corresponding HA PR are implemented,
-FM5 diagnostics read `fm5Interpretation { mode degradedReason
-evidenceRevision }`. This is a target contract, not current integration
+FM5 diagnostics read `fm5_interpretation { mode degraded_reason
+evidence_revision }`. This is a target contract, not current integration
 availability. The diagnostic entity exposes the gateway-supplied mode and
 sanitized reason and uses the revision only to keep one coherent update; it does
 not derive a reason from missing solar/cylinder values or from the legacy mode
@@ -247,3 +247,5 @@ Entity platforms consume these nested sub-objects directly from the coordinator 
   phase progression can continue when direct B524 reads are unavailable.
 - In `ebusd-tcp` fallback parsing, both B524 selector opcode families (`0x02` and `0x06`) are accepted from `grab result all` lines.
 - If `allowedModes` is absent, zone climate falls back to `off/auto/heat`.
+
+DHW `current_temp_c` and `target_temp_c` remain provisional and non-compliant with the value grammar: which exact measured and selected setpoint meanings should each name express? Zone `target_temp_c` is likewise provisional because manual and effective heating or cooling selection is unresolved.

@@ -12,17 +12,17 @@ This chapter defines the envelope contract for the first-delivery
 
 The canonical plan requires the following first-delivery MCP surfaces:
 
-> `ebus.v1.ebus_standard.services.list`
-> `ebus.v1.ebus_standard.commands.list`
-> `ebus.v1.ebus_standard.command.get`
-> `ebus.v1.ebus_standard.decode`
+> `ebus_v1_ebus_standard_services_list`
+> `ebus_v1_ebus_standard_commands_list`
+> `ebus_v1_ebus_standard_command_get`
+> `ebus_v1_ebus_standard_decode`
 
 Attribution: canonical plan
 `ebus-standard-l7-services-w16-26.implementing/00-canonical.md`,
 SHA-256 `9e0a29bb76d99f551904b05749e322aafd3972621858aa6d1acbe49b9ef37305`.
 
 Live invocation remains outside these read/decode surfaces and routes
-through `ebus.v1.rpc.invoke`; see
+through `ebus_v1_rpc_invoke`; see
 [`05-execution-safety.md`](./05-execution-safety.md) and
 [`10-rpc-source-113.md`](./10-rpc-source-113.md).
 
@@ -77,10 +77,10 @@ covered by golden fixtures.
 `data` is the response body for the MCP method. Its shape is typed by
 method:
 
-- `ebus.v1.ebus_standard.services.list`
-- `ebus.v1.ebus_standard.commands.list`
-- `ebus.v1.ebus_standard.command.get`
-- `ebus.v1.ebus_standard.decode`
+- `ebus_v1_ebus_standard_services_list`
+- `ebus_v1_ebus_standard_commands_list`
+- `ebus_v1_ebus_standard_command_get`
+- `ebus_v1_ebus_standard_decode`
 
 The method-specific `data` schema MUST NOT be inferred from object
 iteration order. Ordering rules are explicit and are defined in
@@ -172,10 +172,10 @@ A rationale-free golden regeneration is a contract violation.
 follow-up milestone `M4B_read_decode_lock` freezes the public envelope
 shape for:
 
-- `ebus.v1.ebus_standard.services.list`
-- `ebus.v1.ebus_standard.commands.list`
-- `ebus.v1.ebus_standard.command.get`
-- `ebus.v1.ebus_standard.decode`
+- `ebus_v1_ebus_standard_services_list`
+- `ebus_v1_ebus_standard_commands_list`
+- `ebus_v1_ebus_standard_command_get`
+- `ebus_v1_ebus_standard_decode`
 
 After `M4B_read_decode_lock` merges, these envelope shapes are frozen.
 Changes are schema-additive only unless a later locked-plan decision

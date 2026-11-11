@@ -132,7 +132,7 @@ def test_msp065_privacy_persistence_and_anti_leak_rules_are_explicit() -> None:
         "quota",
         "retention",
         "disabled by default",
-        "ebus.v1.*",
+        "ebus_v1_*",
         "GraphQL",
         "Portal",
         "Home Assistant",

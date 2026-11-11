@@ -25,7 +25,7 @@ per-leaf promotion gates.
 7. Black-box fake-peer and live VR940f interop smoke.
 8. Production trust and first-trust hardening.
 9. Disabled-by-default gateway sidecar.
-10. Read-only `eebus.v1.*` MCP.
+10. Read-only `eebus_v1_*` MCP.
 11. Evidence recorder and draft candidate facts.
 12. Coexistence proof and per-leaf promotion lock.
 13. GraphQL, Portal, and HA only for promoted leaves.

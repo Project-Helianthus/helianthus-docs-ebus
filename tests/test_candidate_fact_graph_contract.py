@@ -59,7 +59,7 @@ def test_contract_is_closed_candidate_only_and_has_no_promotion_language() -> No
         "stable sitemap",
         "versioned documentation bundle",
         "release documentation bundle",
-        "`ebus.v1.*`",
+        "`ebus_v1_*`",
         "GraphQL",
         "Portal",
         "Home Assistant",

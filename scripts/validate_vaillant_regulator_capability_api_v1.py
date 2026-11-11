@@ -194,7 +194,7 @@ def validate(manifest: dict, cases: dict) -> list[str]:
     graphql = manifest.get("graphql")
     if graphql != {"root_field": "vaillant_regulator_capability", "type": "VaillantRegulatorCapability!", "enum": ["UNKNOWN", "NONE", "PRESENT"]}:
         errors.append("graphql")
-    if manifest.get("mcp") != {"tool": "ebus.v1.runtime.status.get", "data_field": "vaillant_regulator_capability"}:
+    if manifest.get("mcp") != {"tool": "ebus_v1_runtime_status_get", "data_field": "vaillant_regulator_capability"}:
         errors.append("mcp")
     if manifest.get("semantic_snapshot") != {"object": "runtime_status", "field": "vaillant_regulator_capability"}:
         errors.append("semantic_snapshot")

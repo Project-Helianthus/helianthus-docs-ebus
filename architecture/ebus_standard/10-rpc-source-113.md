@@ -29,12 +29,12 @@ fixed-source contract.
 ## Purpose
 
 This chapter freezes the gateway source-byte invariant for live
-`ebus.v1.rpc.invoke` traffic produced by `helianthus-ebusgateway` during
+`ebus_v1_rpc_invoke` traffic produced by `helianthus-ebusgateway` during
 `M4_GATEWAY_MCP`.
 
 The canonical plan states:
 
-> Live invocation routes through the existing `ebus.v1.rpc.invoke`. No
+> Live invocation routes through the existing `ebus_v1_rpc_invoke`. No
 > new execution path is introduced.
 
 Attribution: canonical plan
@@ -43,7 +43,7 @@ SHA-256 `9e0a29bb76d99f551904b05749e322aafd3972621858aa6d1acbe49b9ef37305`.
 
 ## Invariant
 
-Every gateway-originated `ebus.v1.rpc.invoke` frame MUST use source byte
+Every gateway-originated `ebus_v1_rpc_invoke` frame MUST use source byte
 `113` (`0x71`).
 
 ### Scope: gateway-internal invocation only
@@ -52,25 +52,25 @@ This invariant is a **gateway-internal** constraint. It does not change
 the public `rpc.invoke` wire shape documented in
 [`api/mcp.md`](../../api/mcp.md) ("RPC Method Reference"), where
 `source` is defined as a caller-provided required parameter of
-`ebus.v1.rpc.invoke`. The `source` parameter continues to exist in the
+`ebus_v1_rpc_invoke`. The `source` parameter continues to exist in the
 API exactly as documented.
 
 The invariant narrows caller behaviour along two axes:
 
 1. **Gateway as caller.** When `helianthus-ebusgateway` itself invokes
-   `ebus.v1.rpc.invoke` from its own code paths (for example NM
+   `ebus_v1_rpc_invoke` from its own code paths (for example NM
    broadcasts, provider dispatch, internal semantic probes, or any
    other gateway-originated live traffic), the gateway's code MUST set
    `source = 113` (`0x71`). Gateway-internal call sites MUST NOT
    construct, forward, or propagate any other source byte into
    `rpc.invoke` frames.
 2. **External callers.** External MCP clients invoking
-   `ebus.v1.rpc.invoke` pass `source` per the API contract. The gateway
+   `ebus_v1_rpc_invoke` pass `source` per the API contract. The gateway
    verifies and authorizes such calls per its own policy (safety class,
    allow_dangerous, idempotency_key, etc.) and MUST NOT rewrite the
    caller-provided `source`. External callers MUST supply
    `source = 113` (`0x71`); the gateway MUST reject any external
-   `ebus.v1.rpc.invoke` request whose `source` is not `0x71` with an
+   `ebus_v1_rpc_invoke` request whose `source` is not `0x71` with an
    explicit error before any frame reaches the bus. Silent re-labelling
    of non-`0x71` traffic as `0x71` is forbidden, and silent forwarding
    of non-`0x71` traffic to the bus is equally forbidden.
@@ -79,7 +79,7 @@ The effect is that every `rpc.invoke` frame that reaches the bus —
 whether constructed internally by the gateway or relayed from an
 external MCP caller — carries `0x71` in the source byte. Non-`0x71`
 external requests are rejected, not forwarded. The public API wire
-shape of `ebus.v1.rpc.invoke` is unchanged; the `source` parameter
+shape of `ebus_v1_rpc_invoke` is unchanged; the `source` parameter
 remains caller-provided, but its only accepted value is `0x71`.
 
 ## Rationale
@@ -115,7 +115,7 @@ Enforcement is mandatory on two construction paths:
      construction in the gateway invoke path
 
 2. **External caller admission.** The gateway MUST reject any external
-   `ebus.v1.rpc.invoke` request whose caller-supplied `source` is not
+   `ebus_v1_rpc_invoke` request whose caller-supplied `source` is not
    `0x71`. Rejection MUST happen at request admission, before the
    request reaches any bus-facing construction path, and MUST surface
    as an explicit typed error to the caller. The gateway MUST NOT
@@ -126,7 +126,7 @@ The enforcement mechanism on path 1 is implementation-owned, but the
 outcome on both paths is normative: every `rpc.invoke` frame reaching
 the bus uses `0x71`, gateway-internal non-`0x71` construction is
 rejected before it reaches the bus, and external non-`0x71`
-`ebus.v1.rpc.invoke` requests are rejected at admission.
+`ebus_v1_rpc_invoke` requests are rejected at admission.
 
 ## Test Requirement
 

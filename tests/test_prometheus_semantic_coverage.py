@@ -179,3 +179,47 @@ def test_prometheus_semantic_coverage_accepts_source_order_and_shared_exact_fact
     source = tmp_path / "thermal.json"
     source.write_text(json.dumps(fixture))
     CHECKER.validate(document(), thermal_fixture=source)
+
+
+@pytest.mark.parametrize("row", CHECKER.rows("\n".join(
+    "| " + line for line in CHECKER.RENDERER_ROWS.strip().splitlines())))
+@pytest.mark.parametrize("field", range(4), ids=["name", "type", "labels", "constant_unit"])
+def test_emitted_metric_tuple_rejects_each_changed_field(row, field):
+    # Name catches renaming/collision; type catches counter/gauge changes;
+    # labels catch cardinality expansion; constant_unit catches unit drift.
+    text = document()
+    original = "| " + " | ".join("`" + value + "`" for value in row) + " |"
+    changed = list(row)
+    changed[field] = {0: "unauthorized_series", 1: "untyped",
+                      2: "unbounded_identity", 3: "kelvin"}[field]
+    replacement = "| " + " | ".join("`" + value + "`" for value in changed) + " |"
+    assert text.count(original) == 1
+    with pytest.raises(CHECKER.CheckError, match="emitted metric"):
+        CHECKER.validate(text.replace(original, replacement))
+
+
+@pytest.mark.parametrize("operation", ["missing", "extra", "duplicate", "collision"])
+def test_emitted_metric_membership_rejects_drift(operation):
+    text = document()
+    row = "| `helianthus_semantic_evidence_age` | `gauge` | `connector, dimension, domain, fact_id, pack, unit` | `seconds` |"
+    assert row in text
+    replacement = {"missing": "", "extra": row + "\n" + row.replace(
+        "helianthus_semantic_evidence_age", "unregistered_series"),
+        "duplicate": row + "\n" + row,
+        "collision": row.replace("helianthus_semantic_evidence_age",
+                                  "helianthus_thermal_air_temperature")}[operation]
+    with pytest.raises(CHECKER.CheckError, match="emitted metric"):
+        CHECKER.validate(text.replace(row, replacement))
+
+
+@pytest.mark.parametrize(("canonical", "removed"), [
+    ("helianthus_semantic_evidence_age", "helianthus_semantic_evidence_age_seconds"),
+    ("helianthus_thermal_air_temperature", "helianthus_thermal_air_temperature_celsius"),
+    ("helianthus_thermal_temperature_setpoint", "helianthus_thermal_setpoint_celsius"),
+])
+def test_emitted_metric_rejects_removed_spelling(canonical, removed):
+    text = document()
+    row = next(line for line in text.splitlines()
+               if line.startswith("| `" + canonical + "` | `gauge`"))
+    with pytest.raises(CHECKER.CheckError, match="emitted metric"):
+        CHECKER.validate(text.replace(row, row + "\n" + row.replace(canonical, removed)))

@@ -62,10 +62,10 @@ Out of scope (unchanged by this lock):
 `meta.capabilities.responder` is emitted on every MCP envelope returned by
 the four M4B-locked surfaces:
 
-- `ebus.v1.ebus_standard.services.list`
-- `ebus.v1.ebus_standard.commands.list`
-- `ebus.v1.ebus_standard.command.get`
-- `ebus.v1.ebus_standard.decode`
+- `ebus_v1_ebus_standard_services_list`
+- `ebus_v1_ebus_standard_commands_list`
+- `ebus_v1_ebus_standard_command_get`
+- `ebus_v1_ebus_standard_decode`
 
 Lock clauses:
 
@@ -78,7 +78,7 @@ Lock clauses:
   equivalent to `active.scope = none` per §4 rule 1 (fail-closed).
   Emitting an empty or placeholder object is **forbidden** because it
   would falsely promise a shape consumers are entitled to interpret.
-- Future runtime-status surfaces (e.g. `ebus.v1.runtime.status.get`) that
+- Future runtime-status surfaces (e.g. `ebus_v1_runtime_status_get`) that
   land under a later `contract.minor` MUST mirror this same key under
   the same shape; divergence is a v2 breaking change.
 

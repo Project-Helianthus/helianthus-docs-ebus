@@ -38,7 +38,7 @@ separate concern.
 
 | Surface | What an integrator may rely on | What it must not infer or obtain |
 | --- | --- | --- |
-| Read-only MCP (`eebus.v1.*`) | Bounded protocol-native runtime and raw inspection data exposed by the gateway's read-only MCP boundary. | Pairing mutation, a second eeBUS namespace, a transport write, or automatic semantic promotion of unknown native fields. |
+| Read-only MCP (`eebus_v1_*`) | Bounded protocol-native runtime and raw inspection data exposed by the gateway's read-only MCP boundary. | Pairing mutation, a second eeBUS namespace, a transport write, or automatic semantic promotion of unknown native fields. |
 | GraphQL | Only stable, promoted semantic facts suitable for the shared consumer contract. | Raw SHIP/SPINE topology, candidate detail, unknown native fields, or an assertion that every raw observation has a semantic counterpart. |
 | Portal | Rendering and operator interaction through the gateway-owned typed boundary, including truthful unavailable or disconnected state. | Direct filesystem, trust-store, private-key, or operator-socket access; a second SHIP/SPINE model; semantic inference from raw data. |
 | Home Assistant | Sanitized status and the same gateway-owned typed boundary as Portal. | Transport ownership, direct trust-store or operator-socket access, automatic trust, durable raw retention, or a parallel protocol state machine. |

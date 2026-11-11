@@ -1236,9 +1236,9 @@ tests and payload goldens must independently meet the vectors above.
 ## S2/D4: ordinary MCP external control
 
 [The exact wire contract](../api/mcp.md#g5-runtime-lifecycle-mcp-contract-d4)
-selects `helianthus.runtime.list`, `helianthus.runtime.get`,
-`helianthus.runtime.start`, `helianthus.runtime.stop` and
-`helianthus.runtime.restart` for PR 2. It replaces revision 9's S2 kernel
+selects `helianthus_runtime_list`, `helianthus_runtime_get`,
+`helianthus_runtime_start`, `helianthus_runtime_stop` and
+`helianthus_runtime_restart` for PR 2. It replaces revision 9's S2 kernel
 operator boundary and experimental-tool proposal. The five tools delegate to
 one ControlService: cached List/Get and Decide with the exact START/STOP/RESTART
 method. They never bypass durable decisions through DriverManager.

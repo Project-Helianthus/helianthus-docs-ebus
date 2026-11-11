@@ -85,7 +85,7 @@ CLAUSES = (
     nullable; `kind` determines the one present arm. Required record members and
     arrays stay non-null. Optional MCP fields are nullable in GraphQL. Enum/code
     string values, contract identifiers and units are unchanged.""",
-    """Convert snake_case member names recursively to camelCase on GraphQL, leaving
+    """GraphQL uses the existing snake_case JSON member names recursively, leaving
     already single-word members unchanged.""",
     """`meta.contract` is `{name: "helianthus-ebus-mcp", major: 1, minor: 0}`;
     `meta.consistency.mode` is `EVALUATED_SEMREG_PUBLICATION`, as on the existing
@@ -100,15 +100,15 @@ CLAUSES = (
 )
 
 MAPPINGS = {
-    "asset_ids, asset_id, binding_id, snapshot_id": "assetIds, assetId, bindingId, snapshotId",
-    "unavailable_reason, identity_links": "unavailableReason, identityLinks",
-    "candidate_id, candidate_revision, source_epoch_id": "candidateId, candidateRevision, sourceEpochId",
-    "driver_generation, retained_observations": "driverGeneration, retainedObservations",
-    "evaluated_at, evaluate_monotonic, freshness_policy": "evaluatedAt, evaluateMonotonic, freshnessPolicy",
-    "unix_nanoseconds, clock_id, uncertainty_ns": "unixNanoseconds, clockId, uncertaintyNs",
-    "effective_availability, evaluation_digest": "effectiveAvailability, evaluationDigest",
-    "pack_id, pack_version, fact_id, item_id": "packId, packVersion, factId, itemId",
-    "source_keys, source_items, presentation_only": "sourceKeys, sourceItems, presentationOnly",
+    "asset_ids, asset_id, binding_id, snapshot_id": "asset_ids, asset_id, binding_id, snapshot_id",
+    "unavailable_reason, identity_links": "unavailable_reason, identity_links",
+    "candidate_id, candidate_revision, source_epoch_id": "candidate_id, candidate_revision, source_epoch_id",
+    "driver_generation, retained_observations": "driver_generation, retained_observations",
+    "evaluated_at, evaluate_monotonic, freshness_policy": "evaluated_at, evaluate_monotonic, freshness_policy",
+    "unix_nanoseconds, clock_id, uncertainty_ns": "unix_nanoseconds, clock_id, uncertainty_ns",
+    "effective_availability, evaluation_digest": "effective_availability, evaluation_digest",
+    "pack_id, pack_version, fact_id, item_id": "pack_id, pack_version, fact_id, item_id",
+    "source_keys, source_items, presentation_only": "source_keys, source_items, presentation_only",
     "exponent10, known, revisions.semantic": "exponent10, known, revisions.semantic",
 }
 
@@ -134,11 +134,18 @@ def validate_contract(text: str) -> None:
     rows = re.findall(r"^\| (`.*?) \| (.*?) \|$", table[1], re.M)
     assert len(rows) == len(MAPPINGS)
     assert {left.replace("`", ""): right.replace("`", "") for left, right in rows} == MAPPINGS
+    queries = [token.content for token in tokens
+               if token.type == "fence" and token.info == "graphql"]
+    assert len(queries) == 1
+    # The root and caller-chosen variable retain their existing spelling;
+    # every selected record member must preserve its JSON spelling.
+    members = re.findall(r"[A-Za-z_][A-Za-z_0-9]*", queries[0].split("assets {", 1)[1])
+    assert all(member == member.lower() for member in members), "GraphQL member spelling drift"
     examples = [json.loads(token.content) for token in tokens
                 if token.type == "fence" and token.info == "json"]
     ids = [f"asset:{pack}" for pack in ("evse", "infrastructure", "pv", "storage", "thermal")]
-    assert examples[0] == {"name": "semantic.v1.snapshot.get", "arguments": {"asset_ids": ids}}
-    assert examples[1] == {"assetIds": ids}
+    assert examples[0] == {"name": "semantic_v1_snapshot_get", "arguments": {"asset_ids": ids}}
+    assert examples[1] == {"asset_ids": ids}
     assert examples[2] == dict(zip(
         ("semantic", "identity", "facts", "services", "capabilities"),
         ("7", "2", "5", "1", "1"), strict=True,
@@ -233,7 +240,8 @@ def test_semantic_snapshot_read_rejects_mapping_drift(source: str, target: str) 
 
 
 @pytest.mark.parametrize("old,new", (
-    ('"assetIds": ["asset:evse"', '"assetIds": ["asset:other"'),
+    ('"asset_ids": ["asset:evse"', '"asset_ids": ["asset:other"'),
+    ('"asset_ids": ["asset:evse"', '"assetIds": ["asset:evse"'),
     ('"semantic":"7"', '"semantic":7'),
     ('"outcome": "unknown"', '"outcome": "exact"'),
     ('"selections": []', '"selections": null'),
@@ -308,3 +316,19 @@ def test_semantic_snapshot_read_rejects_published_digest(example_index: int, esc
     mutated = text[:fence.start(1)] + body + text[fence.end(1):]
     with pytest.raises(AssertionError):
         validate_contract(mutated)
+
+
+@pytest.mark.parametrize("member", ("asset_id", "snapshot_id", "pack_id", "candidate_revision", "source_items"))
+def test_semantic_snapshot_read_rejects_graphql_member_renaming(member: str) -> None:
+    text = DOCUMENT.read_text(encoding="utf-8")
+    query = re.search(r"```graphql\n(.*?)```", text, re.S)
+    assert query is not None and member in query[1]
+    camel = member.split("_")[0] + "".join(part.title() for part in member.split("_")[1:])
+    changed = re.sub(r"\b" + member + r"\b", camel, query[1], count=1)
+    with pytest.raises(AssertionError, match="GraphQL member spelling drift"):
+        validate_contract(text[:query.start(1)] + changed + text[query.end(1):])
+
+
+def test_expiry_availability_spelling_is_preserved() -> None:
+    text = DOCUMENT.read_text(encoding="utf-8")
+    assert "availability is respectively `available`, `degraded`, `degraded`, `unavailable`" in text

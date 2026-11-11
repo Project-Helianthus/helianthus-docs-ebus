@@ -414,7 +414,7 @@ must remain absent from every stable surface:
 - stable sitemap;
 - versioned documentation bundle;
 - release documentation bundle;
-- `ebus.v1.*` MCP outputs;
+- `ebus_v1_*` MCP outputs;
 - GraphQL;
 - Portal;
 - Home Assistant;

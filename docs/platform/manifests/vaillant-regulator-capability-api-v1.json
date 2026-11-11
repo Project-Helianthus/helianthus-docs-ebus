@@ -7,7 +7,7 @@
     "enum": ["UNKNOWN", "NONE", "PRESENT"]
   },
   "mcp": {
-    "tool": "ebus.v1.runtime.status.get",
+    "tool": "ebus_v1_runtime_status_get",
     "data_field": "vaillant_regulator_capability"
   },
   "semantic_snapshot": {

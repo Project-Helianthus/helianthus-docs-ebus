@@ -10,7 +10,7 @@ The GraphQL API is implemented and served by `cmd/gateway`. The gateway exposes:
 **Current gateway status: Proven.** The gateway implements `/graphql/m2m/v1`
 on a dedicated TLS 1.3 listener. Its current SemReg queries are
 `semanticPVCurrent`, `semanticStorageCurrent`, and `semanticEVSECurrent`.
-The older canonical-PV `m2mCurrentSnapshot` schema is an unimplemented target;
+The separate canonical-PV `m2mCurrentSnapshot` schema is an unimplemented target;
 the implemented route does not establish that target contract.
 
 The listener is off by default. Gateway configuration is disabled exactly when
@@ -35,32 +35,30 @@ Sources: [handler](https://github.com/Project-Helianthus/helianthus-ebusgateway/
 [flag bindings](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/cmd/gateway/m2m_graphql_config.go),
 [listener](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/cmd/gateway/m2m_graphql_runtime.go).
 
-The archived target is described in
+The separate target is described in
 [`docs/platform/public-graphql-m2m-v1.md`](../docs/platform/public-graphql-m2m-v1.md).
 
 The additive Vaillant-only regulator capability root is specified in
 [`vaillant-regulator-capability-v1.md`](./vaillant-regulator-capability-v1.md).
 It is a target contract for open gateway #947, not evidence that this root is
-already deployed or a gateway-wide/cross-protocol regulator aggregate. The
-documentation gate is accepted before #947 merges.
+already deployed or a gateway-wide/cross-protocol regulator aggregate. The interface shape is retained as a separate contract.
 
 ## Observe-First Contract Ownership
 
 This page owns the GraphQL-specific observe-first parity contract that is
 currently merged on `main`.
 
-- The merged M3 bus-observability fields `busSummary`, `busMessages`, and
-  `busPeriodicity` are frozen below against gateway `main` at mainline commit
-  `83e9c7b1ba927a282d87599269e91be817ff3582`
+- The merged M3 bus-observability fields `bus_summary`, `bus_messages`, and
+  `bus_periodicity` use the published interface below
   ([Project-Helianthus/helianthus-ebusgateway#379](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/379)).
-- The merged M5 watch-summary root field `watchSummary` is frozen below against
-  gateway `main` at mainline commit `92b3576c9203bf5a02a45494e935041961044600`
+- The merged M5 watch-summary root field `watch_summary` is frozen below against
+  the published interface
   ([Project-Helianthus/helianthus-ebusgateway#393](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/393)).
 - `ISSUE-GW-05` / [Project-Helianthus/helianthus-ebusgateway#378](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/378)
   is the runtime-owning lane for the M3 bus-observability GraphQL parity
-  surface (`busSummary`, `busMessages`, `busPeriodicity`).
+  surface (`bus_summary`, `bus_messages`, `bus_periodicity`).
 - `ISSUE-GW-11` is the runtime-owning lane for the M5 watch-summary GraphQL
-  parity surface (`watchSummary`).
+  parity surface (`watch_summary`).
 - [`watch-summary.md`](./watch-summary.md) owns the shared watch-summary
   contract.
 - `ISSUE-DOC-07` freezes the current bus-observability GraphQL contract, and
@@ -71,7 +69,7 @@ currently merged on `main`.
 The builder assembles a GraphQL-oriented schema model directly from the registry:
 
 - **Registry-driven types**: devices, planes, and methods are enumerated from the registry; each method includes frame primary/secondary bytes and a **response schema** (fields + data types) selected via the schema selector for the device’s address/hardware version.
-- **Projections in snapshots**: projection graphs are included in each schema snapshot (`Device.projections`) alongside planes and methods.
+- **Projections in snapshots**: projection graphs are included in each schema snapshot (`device.projections`) alongside planes and methods.
 - **Projection validation**: projections are validated during schema build; invalid projection graphs fail the build and surface a schema error.
 - **Rebuild on registry change**: `Start(ctx)` performs an initial build and listens on a `changes` channel; each signal triggers a rebuild. If no channel is provided, callers can trigger rebuilds via `Rebuild()`.
 - **Graceful channel close**: if the `changes` channel is closed, the builder stops listening instead of spinning rebuilds.
@@ -80,15 +78,15 @@ The builder assembles a GraphQL-oriented schema model directly from the registry
 ## Observe-First Query Roots (Implemented)
 
 This excerpt freezes the `ISSUE-DOC-07` + `ISSUE-DOC-09` observe-first subset
-of the current merged `Query` surface. It is not a complete `Query`
+of the current merged `query` surface. It is not a complete `query`
 definition.
 
 ```graphql
-type Query {
-  busSummary: BusSummary
-  busMessages(limit: Int): BusMessagesList
-  busPeriodicity(limit: Int): BusPeriodicityList
-  watchSummary: WatchSummary!
+type query {
+  bus_summary: bus_summary
+  bus_messages(limit: Int): bus_messages_list
+  bus_periodicity(limit: Int): bus_periodicity_list
+  watch_summary: watch_summary!
 }
 ```
 
@@ -97,9 +95,9 @@ type Query {
 This `DOC-07` section freezes only the narrow M3 GraphQL slice shipped by the
 merged gateway runtime:
 
-- `busSummary`
-- `busMessages(limit: Int)`
-- `busPeriodicity(limit: Int)`
+- `bus_summary`
+- `bus_messages(limit: Int)`
+- `bus_periodicity(limit: Int)`
 
 Behavioral invariants:
 
@@ -113,11 +111,11 @@ Behavioral invariants:
   message/periodicity history does not imply current passive health.
 - When no real bus-observability provider is wired, the current runtime still
   returns zero-value wrapper objects for all three roots; `status` is `null`,
-  `count`/`capacity` stay `0`, `items` is `[]`, and `busSummary.counters`
+  `count`/`capacity` stay `0`, `items` is `[]`, and `bus_summary.counters`
   remains `"0"` / `"0"`.
 - Within one GraphQL operation, all three roots resolve from one shared
-  bus-observability snapshot, so `busSummary`, `busMessages`, and
-  `busPeriodicity` stay internally consistent for that request.
+  bus-observability snapshot, so `bus_summary`, `bus_messages`, and
+  `bus_periodicity` stay internally consistent for that request.
 - GraphQL preserves the same timing-quality semantics as the real
   bus-observability store and MCP adapter. The merged runtime proves
   `estimated` and `unavailable`; these fields must not imply exact wire-time
@@ -125,86 +123,86 @@ Behavioral invariants:
 
 Current value/encoding rules:
 
-- `status.capability.passiveState` and `status.warmup.state` use the bounded
+- `status.capability.passive_state` and `status.warmup.state` use the bounded
   state set `unavailable | warming_up | available`.
 - Current passive-unavailability reasons match the MCP freeze:
   `startup_timeout`, `reconnect_timeout`, `socket_loss`, `flap_dampened`,
   `unsupported_or_misconfigured`, and `capability_withdrawn`.
 - `status.degraded.reasons` may include those passive-unavailability reasons and
   `dedup_degraded`.
-- `seriesBudgetOverflowTotal` and `periodicityBudgetOverflowTotal` are decimal
+- `series_budget_overflow_total` and `periodicity_budget_overflow_total` are decimal
   strings, not GraphQL integers.
-- `observedAt` and `lastSeen` are UTC RFC3339 strings; the runtime uses
+- `observed_at` and `last_seen` are UTC RFC3339 strings; the runtime uses
   RFC3339Nano formatting, so fractional seconds appear only when present.
-- `lastInterval`, `meanInterval`, `minInterval`, and `maxInterval` are duration
+- `last_interval`, `mean_interval`, `min_interval`, and `max_interval` are duration
   strings (for example `5s`) and remain omitted until the runtime has a value.
 
 ### Watch Summary Query (`DOC-09`)
 
 This `DOC-09` section freezes the merged M5 GraphQL watch-summary root:
 
-- `watchSummary`
+- `watch_summary`
 
 Behavioral invariants:
 
-- `watchSummary` is always present as a non-null GraphQL root field.
-- If the runtime watch provider is unwired, `watchSummary` resolves to zero
+- `watch_summary` is always present as a non-null GraphQL root field.
+- If the runtime watch provider is unwired, `watch_summary` resolves to zero
   values and empty lists (not `null`).
-- Within one GraphQL operation, multiple `watchSummary` selections resolve from
+- Within one GraphQL operation, multiple `watch_summary` selections resolve from
   one shared snapshot; duplicated aliases do not observe intra-operation skew.
 - Portal-specific query cadence/bootstrap behavior is out of scope in this
   file and remains owned by `DOC-10`.
 
 Current value/encoding rules:
 
-- GraphQL names are camelCase (`activationCounts`, `freshnessClasses`,
-  `directApplyEligibilityClasses`, `shadowingEnabled`).
-- Source-selection admission status is the explicit SAS M4 exception frozen by
-  the gateway schema: consumers query `busSummary.status.bus_admission` and
-  `bus_admission.source_selection`. The old `busAdmission` compatibility alias
+- GraphQL names are snake_case (`activation_counts`, `freshness_classes`,
+  `direct_apply_eligibility_classes`, `shadowing_enabled`).
+- Source-selection admission status follows the naming contract in
+  the gateway schema: consumers query `bus_summary.status.bus_admission` and
+  `bus_admission.source_selection`. The removed `busAdmission` compatibility alias
   is intentionally absent.
-- `freshnessClasses`, `directApplyEligibilityClasses`, `inventory.stateClasses`,
-  `inventory.pinClasses`, `activationCounts.sourceClasses`, and
+- `freshness_classes`, `direct_apply_eligibility_classes`, `inventory.state_classes`,
+  `inventory.pin_classes`, `activation_counts.source_classes`, and
   `degraded.reasons` are non-null lists.
 - Class labels and semantics are frozen in [`watch-summary.md`](./watch-summary.md).
 
 ### Watch Summary Types (`DOC-09`)
 
 ```graphql
-type WatchSummary {
-  inventory: WatchSummaryInventory!
-  activationCounts: WatchSummaryActivationCounts!
-  freshnessClasses: [WatchSummaryClassCount!]!
-  directApplyEligibilityClasses: [WatchSummaryClassCount!]!
-  degraded: WatchSummaryDegraded!
+type watch_summary {
+  inventory: watch_summary_inventory!
+  activation_counts: watch_summary_activation_counts!
+  freshness_classes: [watch_summary_class_count!]!
+  direct_apply_eligibility_classes: [watch_summary_class_count!]!
+  degraded: watch_summary_degraded!
 }
 
-type WatchSummaryClassCount {
+type watch_summary_class_count {
   class: String!
   count: Int!
 }
 
-type WatchSummaryInventory {
-  totalEntries: Int!
-  pinnedEntries: Int!
-  evictableEntries: Int!
-  staticPinnedFootprint: Int!
-  writeConfirmPinnedActive: Int!
-  stateClasses: [WatchSummaryClassCount!]!
-  pinClasses: [WatchSummaryClassCount!]!
+type watch_summary_inventory {
+  total_entries: Int!
+  pinned_entries: Int!
+  evictable_entries: Int!
+  static_pinned_footprint: Int!
+  write_confirm_pinned_active: Int!
+  state_classes: [watch_summary_class_count!]!
+  pin_classes: [watch_summary_class_count!]!
 }
 
-type WatchSummaryActivationCounts {
-  catalogDescriptors: Int!
-  activeKeys: Int!
-  sourceClasses: [WatchSummaryClassCount!]!
+type watch_summary_activation_counts {
+  catalog_descriptors: Int!
+  active_keys: Int!
+  source_classes: [watch_summary_class_count!]!
 }
 
-type WatchSummaryDegraded {
+type watch_summary_degraded {
   active: Boolean!
-  shadowingEnabled: Boolean!
-  pinnedBudgetDegraded: Boolean!
-  compactorDegraded: Boolean!
+  shadowing_enabled: Boolean!
+  pinned_budget_degraded: Boolean!
+  compactor_degraded: Boolean!
   reasons: [String!]!
 }
 ```
@@ -212,384 +210,381 @@ type WatchSummaryDegraded {
 ### Observe-First Bus Types (`DOC-07`)
 
 ```graphql
-type BusSummary {
-  status: BusObservabilityStatus
-  messages: BusBoundedListSummary!
-  periodicity: BusBoundedListSummary!
-  counters: BusObservabilityCounters!
+type bus_summary {
+  status: bus_observability_status
+  messages: bus_bounded_list_summary!
+  periodicity: bus_bounded_list_summary!
+  counters: bus_observability_counters!
 }
 
-type BusObservabilityStatus {
-  transportClass: String!
-  capability: BusObservabilityCapability!
-  bus_admission: BusAdmission
-  warmup: BusObservabilityWarmup!
-  timingQuality: BusObservabilityTimingQuality!
-  degraded: BusObservabilityDegraded!
+type bus_observability_status {
+  transport_class: String!
+  capability: bus_observability_capability!
+  bus_admission: bus_admission
+  warmup: bus_observability_warmup!
+  timing_quality: bus_observability_timing_quality!
+  degraded: bus_observability_degraded!
 }
 
-type BusAdmission {
-  source_selection: BusAdmissionSourceSelection
+type bus_admission {
+  source_selection: bus_admission_source_selection
 }
 
-type BusAdmissionSourceSelection {
+type bus_admission_source_selection {
   state: String!
   outcome: String!
   selected_source: Int
   companion_target: Int
   reason: String
-  active_probe: BusAdmissionActiveProbe
+  active_probe: bus_admission_active_probe
   retryable: Boolean!
   automatic_retry_scheduled: Boolean!
   next_action: String
   last_successful_source: Int
-  rejected_candidates: [BusAdmissionRejectedCandidate!]!
+  rejected_candidates: [bus_admission_rejected_candidate!]!
 }
 
-type BusAdmissionActiveProbe {
+type bus_admission_active_probe {
   target: Int
   status: String!
 }
 
-type BusAdmissionRejectedCandidate {
+type bus_admission_rejected_candidate {
   source: Int!
   companion_target: Int
   reason: String!
   retryable: Boolean!
 }
 
-type BusObservabilityCapability {
-  activeSupported: Boolean!
-  passiveSupported: Boolean!
-  broadcastSupported: Boolean!
-  passiveAvailable: Boolean!
-  passiveState: String!
-  passiveReason: String
-  endpointState: String!
-  tapConnected: Boolean!
+type bus_observability_capability {
+  active_supported: Boolean!
+  passive_supported: Boolean!
+  broadcast_supported: Boolean!
+  passive_available: Boolean!
+  passive_state: String!
+  passive_reason: String
+  endpoint_state: String!
+  tap_connected: Boolean!
 }
 
-type BusObservabilityWarmup {
+type bus_observability_warmup {
   state: String!
   blocker: String
-  elapsedSeconds: Float
-  completedTransactions: Int!
-  requiredTransactions: Int!
-  completionMode: String
+  elapsed_seconds: Float
+  completed_transactions: Int!
+  required_transactions: Int!
+  completion_mode: String
 }
 
-type BusObservabilityTimingQuality {
+type bus_observability_timing_quality {
   active: String!
   passive: String!
   busy: String!
   periodicity: String!
 }
 
-type BusObservabilityDegraded {
+type bus_observability_degraded {
   active: Boolean!
   reasons: [String!]!
 }
 
-type BusBoundedListSummary {
+type bus_bounded_list_summary {
   count: Int!
   capacity: Int!
 }
 
-type BusObservabilityCounters {
-  seriesBudgetOverflowTotal: String!
-  periodicityBudgetOverflowTotal: String!
+type bus_observability_counters {
+  series_budget_overflow_total: String!
+  periodicity_budget_overflow_total: String!
 }
 
-type BusMessagesList {
-  status: BusObservabilityStatus
+type bus_messages_list {
+  status: bus_observability_status
   count: Int!
   capacity: Int!
-  items: [BusMessage!]!
+  items: [bus_message!]!
 }
 
-type BusMessage {
+type bus_message {
   scope: String!
   family: String!
-  frameType: String!
+  frame_type: String!
   outcome: String!
-  observedAt: String
-  sourceAddress: Int!
-  targetAddress: Int!
-  requestLen: Int!
-  responseLen: Int!
+  observed_at: String
+  source_address: Int!
+  target_address: Int!
+  request_len: Int!
+  response_len: Int!
 }
 
-type BusPeriodicityList {
-  status: BusObservabilityStatus
+type bus_periodicity_list {
+  status: bus_observability_status
   count: Int!
   capacity: Int!
-  items: [BusPeriodicityEntry!]!
+  items: [bus_periodicity_entry!]!
 }
 
-type BusPeriodicityEntry {
-  sourceBucket: String!
-  targetBucket: String!
+type bus_periodicity_entry {
+  source_bucket: String!
+  target_bucket: String!
   primary: Int!
   secondary: Int!
   family: String!
   state: String!
-  lastSeen: String
-  sampleCount: Int!
-  lastInterval: String
-  meanInterval: String
-  minInterval: String
-  maxInterval: String
+  last_seen: String
+  sample_count: Int!
+  last_interval: String
+  mean_interval: String
+  min_interval: String
+  max_interval: String
 }
 ```
 
 ### Types (Current)
 
 ```graphql
-type Device {
+type device {
   address: Int!
   addresses: [Int!]!
-  discoverySource: String
-  verificationState: String
+  discovery_source: String
+  verification_state: String
   manufacturer: String!
-  deviceId: String!
-  serialNumber: String
-  macAddress: String
-  softwareVersion: String!
-  hardwareVersion: String!
-  displayName: String
-  productFamily: String
-  productModel: String
-  partNumber: String
+  device_id: String!
+  serial_number: String
+  mac_address: String
+  software_version: String!
+  hardware_version: String!
+  display_name: String
+  product_family: String
+  product_model: String
+  part_number: String
   role: String
-  planes: [Plane!]!
-  projections: [Projection!]!
+  planes: [plane!]!
+  projections: [projection!]!
 }
 
-type Plane {
+type plane {
   name: String!
-  methods: [Method!]!
+  methods: [method!]!
 }
 
-type Method {
+type method {
   name: String!
-  readOnly: Boolean!
+  read_only: Boolean!
   primary: Int!
   secondary: Int!
-  response: ResponseSchema!
+  response: response_schema!
 }
 
-type ResponseSchema {
-  fields: [Field!]!
+type response_schema {
+  fields: [field!]!
 }
 
-type Field {
+type field {
   name: String!
   type: String!
   size: Int!
 }
 
-type ServiceStatus {
+type service_status {
   status: String!
-  firmwareVersion: String
-  updatesAvailable: Boolean!
-  initiatorAddress: String
+  firmware_version: String
+  updates_available: Boolean!
+  initiator_address: String
 }
 
-type Projection {
+type projection {
   plane: String!
-  nodes: [ProjectionNode!]!
-  edges: [ProjectionEdge!]!
+  nodes: [projection_node!]!
+  edges: [projection_edge!]!
 }
 
-type ProjectionNode {
+type projection_node {
   id: String!
   path: String!
-  canonicalPath: String!
+  canonical_path: String!
 }
 
-type ProjectionEdge {
+type projection_edge {
   id: String!
   from: String!
   to: String!
 }
 
-type Zone {
+type zone {
   id: String!
   name: String!
   instance: Int!
-  state: ZoneState
-  config: ZoneConfig
+  state: zone_state
+  config: zone_config
 }
-type ZoneState {
-  currentTempC: Float
-  currentHumidityPct: Float
+type zone_state {
+  zone_room_temperature: Float
+  zone_room_humidity: Float
 }
-type ZoneConfig {
-  operatingMode: String
-  targetTempC: Float
-  heatingMode: String
-  quickVeto: Boolean
-  quickVetoSetpoint: Float
-  quickVetoExpiry: String
+type zone_config {
+  operating_mode: String
+  target_temp_c: Float
+  heating_mode: String
+  quick_veto: Boolean
+  quick_veto_setpoint: Float
+  quick_veto_expiry: String
 }
 
-type Dhw {
-  operatingMode: String
-  currentTempC: Float
-  targetTempC: Float
+type dhw {
+  operating_mode: String
+  current_temp_c: Float
+  target_temp_c: Float
   state: String
   config: String
 }
 
-type EnergyTotals {
-  gas: EnergyCategory
-  electric: EnergyCategory
-  solar: EnergyCategory
+type energy_totals {
+  gas: energy_category
+  electric: energy_category
+  solar: energy_category
 }
-type EnergyCategory {
-  dhw: EnergyBucket
-  climate: EnergyBucket
+type energy_category {
+  dhw: energy_bucket
+  climate: energy_bucket
 }
-type EnergyBucket {
+type energy_bucket {
   today: Float
   yearly: [Float!]!
   monthly: [Float!]!
 }
 
-type BoilerStatus {
-  state: BoilerState
-  config: BoilerConfig
-  diagnostics: BoilerDiagnostics
+type boiler_status {
+  state: boiler_state
+  config: boiler_config
+  diagnostics: boiler_diagnostics
 }
-type BoilerState {
-  flowTemperatureC: Float
-  returnTemperatureC: Float
-  centralHeatingPumpActive: Boolean
-  waterPressureBar: Float
-  externalPumpActive: Boolean
-  circulationPumpActive: Boolean
-  gasValveActive: Boolean
-  flameActive: Boolean
-  diverterValvePositionPct: Float
-  fanSpeedRpm: Int
-  targetFanSpeedRpm: Int
-  ionisationVoltageUa: Float
-  dhwWaterFlowLpm: Float
-  dhwDemandActive: Boolean
-  heatingSwitchActive: Boolean
-  storageLoadPumpPct: Float
-  modulationPct: Float
-  primaryCircuitFlowLpm: Float
-  flowTempDesiredC: Float
-  dhwTempDesiredC: Float
-  stateNumber: Int
-  dhwTemperatureC: Float
-  dhwTargetTemperatureC: Float
+type boiler_state {
+  flow_temperature_c: Float
+  return_temperature_c: Float
+  central_heating_pump_active: Boolean
+  water_pressure_bar: Float
+  external_pump_active: Boolean
+  circulation_pump_active: Boolean
+  gas_valve_active: Boolean
+  flame_active: Boolean
+  diverter_valve_position_pct: Float
+  fan_speed_rpm: Int
+  target_fan_speed_rpm: Int
+  ionisation_voltage_ua: Float
+  dhw_water_flow_lpm: Float
+  dhw_demand_active: Boolean
+  heating_switch_active: Boolean
+  storage_load_pump_pct: Float
+  modulation_pct: Float
+  primary_circuit_flow_lpm: Float
+  flow_temp_desired_c: Float
+  dhw_temp_desired_c: Float
+  state_number: Int
+  dhw_temperature_c: Float
+  dhw_target_temperature_c: Float
 }
-type BoilerConfig {
-  dhwOperatingMode: String
-  flowsetHcMaxC: Float
-  flowsetHwcMaxC: Float
-  partloadHcKW: Float
-  partloadHwcKW: Float
+type boiler_config {
+  dhw_operating_mode: String
+  flowset_hc_max_c: Float
+  flowset_hwc_max_c: Float
+  partload_hc_kw: Float
+  partload_hwc_kw: Float
 }
-type BoilerDiagnostics {
-  heatingStatusRaw: Int
-  dhwStatusRaw: Int
-  centralHeatingHours: Float
-  dhwHours: Float
-  centralHeatingStarts: Int
-  dhwStarts: Int
-  pumpHours: Float
-  fanHours: Float
-  deactivationsIFC: Int
-  deactivationsTemplimiter: Int
+type boiler_diagnostics {
+  heating_status_raw: Int
+  dhw_status_raw: Int
+  central_heating_hours: Float
+  dhw_hours: Float
+  central_heating_starts: Int
+  dhw_starts: Int
+  pump_hours: Float
+  fan_hours: Float
+  deactivations_ifc: Int
+  deactivations_templimiter: Int
 }
 ```
 
-Boiler field provenance is documented in [`protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md`](../protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md). The current contract is hybrid: direct BAI00 B509 is authoritative for most boiler fields, while a small set of controller-mirrored B524 values still feed `dhwTemperatureC`, `dhwTargetTemperatureC`, `dhwOperatingMode`, and `heatingStatusRaw`.
+Boiler field provenance is documented in [`protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md`](../protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md). The current contract is hybrid: direct BAI00 B509 is authoritative for most boiler fields, while a small set of controller-mirrored B524 values still feed `dhw_temperature_c`, `dhw_target_temperature_c`, `dhw_operating_mode`, and `heating_status_raw`.
 
 ```graphql
-type SystemStatus {
-  state: SystemState
-  config: SystemConfig
-  properties: SystemProperties
+type system_status {
+  state: system_state
+  config: system_config
+  properties: system_properties
 }
-type SystemState {
-  systemOff: Boolean
-  systemWaterPressure: Float
-  systemFlowTemperature: Float
-  outdoorTemperature: Float
-  outdoorTemperatureAvg24h: Float
-  maintenanceDue: Boolean
-  hwcCylinderTemperatureTop: Float
-  hwcCylinderTemperatureBottom: Float
+type system_state {
+  system_off: Boolean
+  system_water_pressure: Float
+  system_flow_temperature: Float
+  outdoor_temperature: Float
+  outdoor_temperature_avg24h: Float
+  maintenance_due: Boolean
+  hwc_cylinder_temperature_top: Float
+  hwc_cylinder_temperature_bottom: Float
 }
-type SystemConfig {
-  adaptiveHeatingCurve: Boolean
-  alternativePoint: Float
-  heatingCircuitBivalencePoint: Float
-  dhwBivalencePoint: Float
-  dhwBivalencePointBound: SystemConfigBound
-  hcEmergencyTemperature: Float
-  hwcMaxFlowTempDesired: Float
-  maxRoomHumidity: Int
+type system_config {
+  adaptive_heating_curve: Boolean
+  alternative_point: Float
+  heating_circuit_bivalence_point: Float
+  dhw_bivalence_point: Float
+  dhw_bivalence_point_bound: system_config_bound
+  hc_emergency_temperature: Float
+  hwc_max_flow_temp_desired: Float
+  max_room_humidity: Int
 }
-# Active write bound of dhwBivalencePointC (see "System Config Write Bounds").
-type SystemConfigBound {
-  minC: Float!
+# active write bound of dhwBivalencePointC (see "system config Write Bounds").
+type system_config_bound {
   min_c: Float!
-  maxC: Float!
   max_c: Float!
-  narrowedOnly: Boolean!
   narrowed_only: Boolean!
   source: String!   # "controller_profile" | "unmatched_policy"
   reason: String    # set only for "unmatched_policy"
   profile: String   # set only for "controller_profile"
 }
-type SystemProperties {
-  systemScheme: Int
-  moduleConfigurationVR71: Int
+type system_properties {
+  system_scheme: Int
+  module_configuration_vr71: Int
 }
 
-type CircuitStatus {
+type circuit_status {
   index: Int!
-  circuitType: String!
-  hasMixer: Boolean!
-  state: CircuitState!
-  config: CircuitConfig!
-  managingDevice: CircuitManagingDevice!
+  circuit_type: String!
+  has_mixer: Boolean!
+  state: circuit_state!
+  config: circuit_config!
+  managing_device: circuit_managing_device!
 }
-type CircuitManagingDevice {
-  role: ManagingDeviceRole!
-  deviceId: String
+type circuit_managing_device {
+  role: managing_device_role!
+  device_id: String
   address: Int
 }
-enum ManagingDeviceRole {
+enum managing_device_role {
   REGULATOR
   FUNCTION_MODULE
   UNKNOWN
 }
-type CircuitState {
-  pumpActive: Boolean
-  mixerPositionPct: Float
-  flowTemperatureC: Float
-  flowSetpointC: Float
-  calcFlowTempC: Float
-  circuitState: String
+type circuit_state {
+  pump_active: Boolean
+  mixer_position_pct: Float
+  flow_temperature_c: Float
+  flow_setpoint_c: Float
+  calc_flow_temp_c: Float
+  circuit_state: String
   humidity: Float
-  dewPoint: Float
-  pumpHours: Float
-  pumpStarts: Int
+  dew_point: Float
+  pump_hours: Float
+  pump_starts: Int
 }
-type CircuitConfig {
-  heatingCurve: Float
-  flowTempMaxC: Float
-  flowTempMinC: Float
-  summerLimitC: Float
-  frostProtC: Float
-  coolingEnabled: Boolean
-  roomTempControl: String
+type circuit_config {
+  heating_curve: Float
+  flow_temp_max_c: Float
+  flow_temp_min_c: Float
+  summer_limit_c: Float
+  frost_prot_c: Float
+  cooling_enabled: Boolean
+  room_temp_control: String
 }
 ```
 
@@ -597,8 +592,8 @@ type CircuitConfig {
 
 **Conclusion: Proven.**
 
-The current gateway schema exposes the nullable camel-case fields
-`Device.discoverySource` and `Device.verificationState`. They are independent
+The current gateway schema exposes the nullable snake_case fields
+`device.discovery_source` and `device.verification_state`. They are independent
 label dimensions. Valid non-null values are the Cartesian product of the
 separately allowed source and state sets; no source label determines or
 restricts the state label.
@@ -609,7 +604,7 @@ identical at `bb8f59fed4be68104d8ab206f55f7f32ea33e031`; the accepted squash
 merge on gateway `main` is `f5cd9c51c60bdf422e8fc1b5690fbde52a393be3`; and the
 accepted registry dependency is `e24532a50caa00c113751b98b88239e045d731e8`.
 
-Allowed `discoverySource` labels:
+Allowed `discovery_source` labels:
 
 | label |
 |---|
@@ -617,7 +612,7 @@ Allowed `discoverySource` labels:
 | `passive_observed` |
 | `active_confirmed` |
 
-Allowed `verificationState` labels:
+Allowed `verification_state` labels:
 
 | label |
 |---|
@@ -634,13 +629,13 @@ snake-case provenance members for the same slotless condition.
 
 Typical initial combinations are examples, not an exhaustive pairing rule:
 
-| `discoverySource` | `verificationState` |
+| `discovery_source` | `verification_state` |
 |---|---|
 | `static_seed` | `candidate` |
 | `passive_observed` | `corroborated_pending` |
 | `active_confirmed` | `identity_confirmed` |
 
-The accepted registry rule requires `discoverySource` to preserve the original
+The accepted registry rule requires `discovery_source` to preserve the original
 native discovery source. Verification advancement MUST NOT rewrite
 `static_seed` or `passive_observed` to `active_confirmed`. Retained
 `static_seed` / `identity_confirmed` and `passive_observed` / `identity_confirmed`
@@ -654,9 +649,9 @@ returned device identity remains canonical and `address` remains the canonical
 primary address. `device(address:)` returns `null` for an unknown address.
 
 ```graphql
-type Query {
-  devices: [Device!]!
-  device(address: Int!): Device
+type query {
+  devices: [device!]!
+  device(address: Int!): device
 }
 ```
 
@@ -667,34 +662,34 @@ cross-address identity. A discovery source or verification state does not prove
 a supported device, current qualification, stable cross-address identity, or
 live behavior.
 
-`vr71CircuitStartIndex` is intentionally absent from the canonical GraphQL contract. Circuit ownership is modeled explicitly on each `circuits[]` item via `managingDevice`, not through a global FM5 threshold.
+`vr71CircuitStartIndex` is intentionally absent from the canonical GraphQL contract. Circuit ownership is modeled explicitly on each `circuits[]` item via `managing_device`, not through a global FM5 threshold.
 
 ### FM5 Interpretation Verdict
 
 **Status:** Pending gateway implementation.
 
-After the additive MCP `ebus.v1.semantic.fm5_interpretation.get` contract is
+After the additive MCP `ebus_v1_semantic_fm5_interpretation_get` contract is
 implemented, GraphQL exposes the same provider-owned result without
 recalculation:
 
 ```graphql
-type Query {
-  fm5Interpretation: Fm5Interpretation
+type query {
+  fm5_interpretation: fm5_interpretation
 }
 
-type Fm5Interpretation {
-  mode: Fm5SemanticMode!
-  degradedReason: Fm5SemanticDegradedReason
-  evidenceRevision: String!
+type fm5_interpretation {
+  mode: fm5_semantic_mode!
+  degraded_reason: fm5_semantic_degraded_reason
+  evidence_revision: String!
 }
 
-enum Fm5SemanticMode {
+enum fm5_semantic_mode {
   INTERPRETED
   GPIO_ONLY
   ABSENT
 }
 
-enum Fm5SemanticDegradedReason {
+enum fm5_semantic_degraded_reason {
   CONTROLLER_UNREACHABLE
   CONFIGURATION_UNAVAILABLE
   CONFIGURATION_NOT_INTERPRETABLE
@@ -705,10 +700,10 @@ enum Fm5SemanticDegradedReason {
 }
 ```
 
-`fm5Interpretation` is nullable until the first coherent structural
+`fm5_interpretation` is nullable until the first coherent structural
 classification. A null value is the only bootstrap/unavailable
 representation and must not synthesize `GPIO_ONLY` or `ABSENT`. Once a verdict
-exists, only `mode` and `evidenceRevision` are non-null. `degradedReason`
+exists, only `mode` and `evidence_revision` are non-null. `degraded_reason`
 remains nullable and is null for healthy `INTERPRETED` and fresh coherent
 `ABSENT`. A degraded verdict carries one closed reason; `GPIO_ONLY` requires
 fresh coherent structural evidence and carries only
@@ -716,10 +711,10 @@ fresh coherent structural evidence and carries only
 
 `mode` is the last coherent structural classification and does not change on a
 transient acquisition failure. A healthy current `INTERPRETED` result and a
-fresh coherent `ABSENT` result have null `degradedReason`; a transient reason
+fresh coherent `ABSENT` result have null `degraded_reason`; a transient reason
 may accompany the unchanged retained mode and marks retained values non-current.
-`evidenceRevision` binds all fields to one acquisition result. Existing
-`fm5SemanticMode` remains stable for current consumers but does not authorize a
+`evidence_revision` binds all fields to one acquisition result. Existing
+`fm5_semantic_mode` remains stable for current consumers but does not authorize a
 client to infer degradation. The canonical shared behavior and reason
 precedence are defined in
 [`eebus-operator-admin.md`](./eebus-operator-admin.md).
@@ -729,15 +724,15 @@ The architectural rationale and the full B524 evidence trail for structure/owner
 - [`../architecture/semantic-structure-discovery.md`](../architecture/semantic-structure-discovery.md)
 - [`../architecture/b524-structural-decisions.md`](../architecture/b524-structural-decisions.md)
 
-### `energyTotals` Root Query
+### `energy_totals` Root Query
 
-`energyTotals` is available directly on `Query` and returns the same canonical energy aggregate exposed to MCP.
+`energy_totals` is available directly on `query` and returns the same canonical energy aggregate exposed to MCP.
 
 Example:
 
 ```graphql
 query {
-  energyTotals {
+  energy_totals {
     gas {
       dhw { today yearly monthly }
       climate { today yearly monthly }
@@ -762,11 +757,11 @@ Address semantics:
 - Explicit topology alias evidence (source/target or canonical-companion) MAY group
   faces, but it does not create or prove a cross-address stable identity.
   A cross-address identity merge is permitted only when the exact normalized
-  `(Manufacturer, DeviceID, SerialNumber)` triple matches. A shared manufacturer
+  `(manufacturer, device_id, serial_number)` triple matches. A shared manufacturer
   + serial number or manufacturer + MAC address MUST NOT merge independent faces,
-  and a differing `deviceId` cannot satisfy that exact triple. `deviceId` remains
+  and a differing `device_id` cannot satisfy that exact triple. `device_id` remains
   exported as model/provider metadata for the canonical entry. Before that exact
-  comparison, fixed-width native `DeviceID` decoding removes only terminal NUL
+  comparison, fixed-width native `device_id` decoding removes only terminal NUL
   (`0x00`) and ASCII-space (`0x20`) padding; the registry separately trims outer
   Unicode whitespace and folds case for all three members while preserving
   internal punctuation. `VR_71` and `VR71` therefore remain distinct; a GraphQL
@@ -777,7 +772,7 @@ Address semantics:
 
 ### Service Status Notes
 
-- `daemonStatus.initiatorAddress` reports the configured eBUS initiator source used by gateway reads/scans.
+- `daemon_status.initiator_address` reports the configured eBUS initiator source used by gateway reads/scans.
 - Value format is `0xNN` when resolved from runtime configuration.
 - In auto-leased proxy mode where the initiator is negotiated downstream, the field may return `auto`.
 
@@ -785,7 +780,7 @@ Address semantics:
 
 The semantic runtime distinguishes cache bootstrap from live updates during startup.
 
-- `busSummary.status.startup { phase cacheEpoch liveEpoch }` exposes the
+- `bus_summary.status.startup { phase cache_epoch live_epoch }` exposes the
   machine-readable startup readiness surface used by proof-mode orchestration
   and Portal parity.
 - Cache-backed semantic payload may be published first and treated as stale bootstrap data.
@@ -812,12 +807,12 @@ Example startup-readiness query:
 
 ```graphql
 query {
-  busSummary {
+  bus_summary {
     status {
       startup {
         phase
-        cacheEpoch
-        liveEpoch
+        cache_epoch
+        live_epoch
       }
     }
   }
@@ -831,18 +826,18 @@ Structural family/instance discovery rules are documented in [`../architecture/s
 
 ### Projection Notes
 
-- **ProjectionNode.id** derives from the canonical Service path for the node (stable across projections).
-- **ProjectionEdge.from/to** refer to node IDs within the same projection.
-- **path / canonicalPath format**: `Plane:/segment@value/segment@value/...` where `Plane` is the projection plane name and each segment may include an `@`-qualified locator. `canonicalPath` always uses `Service` as the plane.
+- **projection_node.id** derives from the canonical Service path for the node (stable across projections).
+- **projection_edge.from/to** refer to node IDs within the same projection.
+- **path / canonical_path format**: `Plane:/segment@value/segment@value/...` where `plane` is the projection plane name and each segment may include an `@`-qualified locator. `canonical_path` always uses `Service` as the plane.
 
 ### Projections API
 
 Projections are plane-scoped graphs attached to each device. The API exposes:
 
-- **planes**: `Projection.plane` identifies the view (e.g., `Service`, `Observability`, `Debug`).
-- **nodes**: `Projection.nodes` is the list of graph nodes; `path` is plane-local for display, while `canonicalPath` anchors identity in the `Service` plane.
-- **edges**: `Projection.edges` connects nodes within the same plane; `from` and `to` are node IDs.
-- **canonical paths**: `ProjectionNode.id` is derived from the `canonicalPath`, so the same node ID appears across planes when they represent the same canonical entity in a snapshot.
+- **planes**: `projection.plane` identifies the view (e.g., `Service`, `Observability`, `Debug`).
+- **nodes**: `projection.nodes` is the list of graph nodes; `path` is plane-local for display, while `canonical_path` anchors identity in the `Service` plane.
+- **edges**: `projection.edges` connects nodes within the same plane; `from` and `to` are node IDs.
+- **canonical paths**: `projection_node.id` is derived from the `canonical_path`, so the same node ID appears across planes when they represent the same canonical entity in a snapshot.
 
 #### Example query
 
@@ -852,13 +847,13 @@ query ProjectionBrowserProjections($address: Int!) {
     address
     addresses
     manufacturer
-    deviceId
+    device_id
     projections {
       plane
       nodes {
         id
         path
-        canonicalPath
+        canonical_path
       }
       edges {
         id
@@ -879,27 +874,27 @@ query ProjectionBrowserProjections($address: Int!) {
       "address": 50,
       "addresses": [50, 236],
       "manufacturer": "Vaillant",
-      "deviceId": "BASV2",
+      "device_id": "synthetic-family",
       "projections": [
         {
           "plane": "Service",
           "nodes": [
             {
-              "id": "Service:/ebus/addr@50/device@BASV2",
-              "path": "Service:/ebus/addr@50/device@BASV2",
-              "canonicalPath": "Service:/ebus/addr@50/device@BASV2"
+              "id": "Service:/ebus/addr@50/device@synthetic-family",
+              "path": "Service:/ebus/addr@50/device@synthetic-family",
+              "canonical_path": "Service:/ebus/addr@50/device@synthetic-family"
             },
             {
-              "id": "Service:/ebus/addr@50/device@BASV2/method@get_operational_data",
-              "path": "Service:/ebus/addr@50/device@BASV2/method@get_operational_data",
-              "canonicalPath": "Service:/ebus/addr@50/device@BASV2/method@get_operational_data"
+              "id": "Service:/ebus/addr@50/device@synthetic-family/method@get_operational_data",
+              "path": "Service:/ebus/addr@50/device@synthetic-family/method@get_operational_data",
+              "canonical_path": "Service:/ebus/addr@50/device@synthetic-family/method@get_operational_data"
             }
           ],
           "edges": [
             {
-              "id": "Service:Service:/ebus/addr@50/device@BASV2->Service:/ebus/addr@50/device@BASV2/method@get_operational_data",
-              "from": "Service:/ebus/addr@50/device@BASV2",
-              "to": "Service:/ebus/addr@50/device@BASV2/method@get_operational_data"
+              "id": "Service:Service:/ebus/addr@50/device@synthetic-family->Service:/ebus/addr@50/device@synthetic-family/method@get_operational_data",
+              "from": "Service:/ebus/addr@50/device@synthetic-family",
+              "to": "Service:/ebus/addr@50/device@synthetic-family/method@get_operational_data"
             }
           ]
         },
@@ -907,21 +902,21 @@ query ProjectionBrowserProjections($address: Int!) {
           "plane": "Observability",
           "nodes": [
             {
-              "id": "Service:/ebus/addr@50/device@BASV2",
-              "path": "Observability:/ebus/addr@50/device@BASV2",
-              "canonicalPath": "Service:/ebus/addr@50/device@BASV2"
+              "id": "Service:/ebus/addr@50/device@synthetic-family",
+              "path": "Observability:/ebus/addr@50/device@synthetic-family",
+              "canonical_path": "Service:/ebus/addr@50/device@synthetic-family"
             },
             {
-              "id": "Service:/ebus/addr@50/device@BASV2/method@get_operational_data",
-              "path": "Observability:/ebus/addr@50/device@BASV2/method@get_operational_data",
-              "canonicalPath": "Service:/ebus/addr@50/device@BASV2/method@get_operational_data"
+              "id": "Service:/ebus/addr@50/device@synthetic-family/method@get_operational_data",
+              "path": "Observability:/ebus/addr@50/device@synthetic-family/method@get_operational_data",
+              "canonical_path": "Service:/ebus/addr@50/device@synthetic-family/method@get_operational_data"
             }
           ],
           "edges": [
             {
-              "id": "Observability:Service:/ebus/addr@50/device@BASV2->Service:/ebus/addr@50/device@BASV2/method@get_operational_data",
-              "from": "Service:/ebus/addr@50/device@BASV2",
-              "to": "Service:/ebus/addr@50/device@BASV2/method@get_operational_data"
+              "id": "Observability:Service:/ebus/addr@50/device@synthetic-family->Service:/ebus/addr@50/device@synthetic-family/method@get_operational_data",
+              "from": "Service:/ebus/addr@50/device@synthetic-family",
+              "to": "Service:/ebus/addr@50/device@synthetic-family/method@get_operational_data"
             }
           ]
         }
@@ -957,21 +952,21 @@ Accept: application/json
   "plane": "Observability",
   "nodes": [
     {
-      "id": "Service:/ebus/addr@16/device@BASV2",
-      "path": "Observability:/ebus/addr@16/device@BASV2",
-      "canonicalPath": "Service:/ebus/addr@16/device@BASV2"
+      "id": "Service:/ebus/addr@16/device@synthetic-family",
+      "path": "Observability:/ebus/addr@16/device@synthetic-family",
+      "canonical_path": "Service:/ebus/addr@16/device@synthetic-family"
     },
     {
-      "id": "Service:/ebus/addr@16/device@BASV2/method@get_operational_data",
-      "path": "Observability:/ebus/addr@16/device@BASV2/method@get_operational_data",
-      "canonicalPath": "Service:/ebus/addr@16/device@BASV2/method@get_operational_data"
+      "id": "Service:/ebus/addr@16/device@synthetic-family/method@get_operational_data",
+      "path": "Observability:/ebus/addr@16/device@synthetic-family/method@get_operational_data",
+      "canonical_path": "Service:/ebus/addr@16/device@synthetic-family/method@get_operational_data"
     }
   ],
   "edges": [
     {
-      "id": "Observability:Service:/ebus/addr@16/device@BASV2->Service:/ebus/addr@16/device@BASV2/method@get_operational_data",
-      "from": "Service:/ebus/addr@16/device@BASV2",
-      "to": "Service:/ebus/addr@16/device@BASV2/method@get_operational_data"
+      "id": "Observability:Service:/ebus/addr@16/device@synthetic-family->Service:/ebus/addr@16/device@synthetic-family/method@get_operational_data",
+      "from": "Service:/ebus/addr@16/device@synthetic-family",
+      "to": "Service:/ebus/addr@16/device@synthetic-family/method@get_operational_data"
     }
   ]
 }
@@ -989,10 +984,10 @@ query ProjectionBrowserProjections {
     address
     addresses
     manufacturer
-    deviceId
+    device_id
     projections {
       plane
-      nodes { id path canonicalPath }
+      nodes { id path canonical_path }
       edges { id from to }
     }
   }
@@ -1001,10 +996,10 @@ query ProjectionBrowserProjections {
 
 **Notes**
 
-- `Projection.plane` is the plane label shown in the projection browser plane picker (ordered with defaults `Service`, `Observability`, `Debug`, `Virtual`, then any device-specific planes).
-- `ProjectionNode.id` is the canonical Service path for the node, so it is stable across planes within a snapshot.
-- `ProjectionNode.path` is the plane-specific path shown in the projection browser.
-- `ProjectionNode.canonicalPath` is the Service-plane path used to correlate nodes across planes.
+- `projection.plane` is the plane label shown in the projection browser plane picker (ordered with defaults `Service`, `Observability`, `Debug`, `Virtual`, then any device-specific planes).
+- `projection_node.id` is the canonical Service path for the node, so it is stable across planes within a snapshot.
+- `projection_node.path` is the plane-specific path shown in the projection browser.
+- `projection_node.canonical_path` is the Service-plane path used to correlate nodes across planes.
 
 ### Projection snapshot endpoint
 
@@ -1032,21 +1027,21 @@ Accept: application/json
   "plane": "Observability",
   "nodes": [
     {
-      "id": "Service:/ebus/addr@16/device@BASV2",
-      "path": "Observability:/ebus/addr@16/device@BASV2",
-      "canonicalPath": "Service:/ebus/addr@16/device@BASV2"
+      "id": "Service:/ebus/addr@16/device@synthetic-family",
+      "path": "Observability:/ebus/addr@16/device@synthetic-family",
+      "canonical_path": "Service:/ebus/addr@16/device@synthetic-family"
     },
     {
-      "id": "Service:/ebus/addr@16/device@BASV2/method@get_operational_data",
-      "path": "Observability:/ebus/addr@16/device@BASV2/method@get_operational_data",
-      "canonicalPath": "Service:/ebus/addr@16/device@BASV2/method@get_operational_data"
+      "id": "Service:/ebus/addr@16/device@synthetic-family/method@get_operational_data",
+      "path": "Observability:/ebus/addr@16/device@synthetic-family/method@get_operational_data",
+      "canonical_path": "Service:/ebus/addr@16/device@synthetic-family/method@get_operational_data"
     }
   ],
   "edges": [
     {
-      "id": "Observability:Service:/ebus/addr@16/device@BASV2->Service:/ebus/addr@16/device@BASV2/method@get_operational_data",
-      "from": "Service:/ebus/addr@16/device@BASV2",
-      "to": "Service:/ebus/addr@16/device@BASV2/method@get_operational_data"
+      "id": "Observability:Service:/ebus/addr@16/device@synthetic-family->Service:/ebus/addr@16/device@synthetic-family/method@get_operational_data",
+      "from": "Service:/ebus/addr@16/device@synthetic-family",
+      "to": "Service:/ebus/addr@16/device@synthetic-family/method@get_operational_data"
     }
   ]
 }
@@ -1067,30 +1062,30 @@ Accept: application/json
 The `invoke` mutation validates parameters against the method signature and routes the request through the Router/Bus stack.
 
 ```graphql
-type Mutation {
-  invoke(address: Int!, plane: String!, method: String!, params: JSON): InvokeResult!
-  setBoilerConfig(field: String!, value: String!): BoilerConfigMutationResult!
-  setSystemConfig(field: String!, value: String!): ConfigMutationResult
+type mutation {
+  invoke(address: Int!, plane: String!, method: String!, params: json): invoke_result!
+  set_boiler_config(field: String!, value: String!): boiler_config_mutation_result!
+  set_system_config(field: String!, value: String!): config_mutation_result
 }
 
-type InvokeResult {
+type invoke_result {
   ok: Boolean!
-  error: InvokeError
-  result: JSON
+  error: invoke_error
+  result: json
 }
 
-type InvokeError {
+type invoke_error {
   message: String!
   code: String!
   category: String!
 }
 
-type BoilerConfigMutationResult {
+type boiler_config_mutation_result {
   success: Boolean!
   error: String
 }
 
-type ConfigMutationResult {
+type config_mutation_result {
   success: Boolean!
   error: String
 }
@@ -1103,22 +1098,21 @@ type ConfigMutationResult {
   - Fractional values for integer fields are rejected (`INVALID_PAYLOAD`).
 - **Error mapping**: typed errors are mapped to `code`/`category` (e.g., `TIMEOUT` → `TRANSIENT`, `NO_SUCH_DEVICE` → `DEFINITIVE`).
 - **Result normalization**: `types.Value{Valid:false}` fields are returned as `null` in the JSON result map.
-- **Boiler writes**: `setBoilerConfig` supports `flowsetHcMaxC`, `flowsetHwcMaxC`, `partloadHcKW`, and `partloadHwcKW`. The mutation accepts the value as a string, rejects non-finite input, enforces server-side ranges, and only reports success after B509 ack + read-back confirmation.
+- **Boiler writes**: `set_boiler_config` accepts the provisional keys `flowsetHcMaxC`, `flowsetHwcMaxC`, `partloadHcKW`, `partloadHwcKW`, `phoneNumber` and `installerMenuCode`; selector-qualified meanings and value roles remain unresolved. The mutation accepts the value as a string, rejects non-finite input, enforces server-side ranges, and only reports success after B509 ack + read-back confirmation.
 - **Boiler write normalization**: `DATA2c` boiler temperature writes publish the normalized wire value, not the raw input string. `UCH` power-limit writes require whole-number kW.
 
 ### System Config Write Bounds
 
 This contract is implemented by the gateway's GraphQL system-bounds resolver
-(`graphql/system_bounds.go`), the `setSystemConfig` mutation path
-(`graphql/mutations.go`), and the MCP tool `ebus.v1.semantic.system.set_config`
+(`graphql/system_bounds.go`), the `set_system_config` mutation path
+(`graphql/mutations.go`), and the MCP tool `ebus_v1_semantic_system_set_config`
 handler in companion gateway [pull request #1033](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/1033),
-which is merged after this page per the documentation gate; this page describes
-the behaviour of that change, the reviewed source artifact.
+which defines the system-bounds behaviour described here.
 The contract test [`tests/test_system_config_bound_contract.py`](../tests/test_system_config_bound_contract.py)
 in this repository pins the documented members and examples.
 
-The `setSystemConfig(field, value)` mutation, the MCP tool
-`ebus.v1.semantic.system.set_config`, and the registry/invoker mutation path
+The `set_system_config(field, value)` mutation, the MCP tool
+`ebus_v1_semantic_system_set_config`, and the registry/invoker mutation path
 share one validation rule for the `dhwBivalencePointC` field (register
 `GG=0x00`, `RR=0x0001`): the accepted range is not fixed, it is resolved per
 controller.
@@ -1158,14 +1152,14 @@ match (none is reachable until identities are acquired at discovery, gateway
   retains `source: controller_profile` and the matched profile identity.
   The empty-intersection fallback bound is the policy window `-20..50`.
   Widening beyond the window requires installation-qualified evidence, such
-  as a description of the target installation's own selector (future work);
+  as a description of the target installation's own selector;
   no seeded profile provides it. The BASV0 profile bound `-20..20` narrows
   the window on a qualified match. The register map's
   `-20..50` is an unqualified historical observation that names no controller
   identity, so it is not used as a profile bound. Today even the seeded
   BASV0 identity resolves to `unknown_profile`: every bound is the policy window `-20..50` with
   `source: unmatched_policy`. The `controller_profile` source can appear
-  only after gateway issue
+  when gateway issue
   [#1034][gateway-bound-discovery]
   acquires both identifiers in the discovery path.
 - **Unmatched policy.** When no profile matches (unknown identity, a controller
@@ -1174,7 +1168,7 @@ match (none is reachable until identities are acquired at discovery, gateway
   profile bound), the range `-20..50` applies. A controller family whose
   profile is not seeded therefore falls under this policy until a profile is added, even when other documentation
   lists a wider catalog range for it. The registry/invoker write path
-  (`ebus.v1.rpc.invoke`-style writes through the registry) has no API qualifier
+  (`ebus_v1_rpc_invoke`-style writes through the registry) has no API qualifier
   and therefore always applies the unmatched policy.
 - **Before any bus write.** A value outside the active bound is rejected
   before the first bus frame of the write is sent, with `success: false`. The
@@ -1189,11 +1183,9 @@ match (none is reachable until identities are acquired at discovery, gateway
   `hcEmergencyTempC`, `hwcMaxFlowTempC` and `installerMenuCode` keep their fixed
   ranges and carry no bound.
 
-`SystemConfigBound.min_c`, `max_c`, and `narrowed_only` are aliases of
-`minC`, `maxC`, and `narrowedOnly`, respectively, with identical values.
+`system_config_bound` publishes `min_c`, `max_c`, and `narrowed_only`.
 
-`SystemConfig.dhwBivalencePointBound` (snake_case alias
-`dhw_bivalence_point_bound`) publishes the resolved bound so a consumer can
+`system_config.dhw_bivalence_point_bound` publishes the resolved bound so a consumer can
 limit its input control to it. The bound is resolved from current registry
 metadata at validation and at publication; published bounds update on the
 next system publication. A controller swap at the same address keeps the
@@ -1202,15 +1194,15 @@ be stale. `source` is `controller_profile`
 (with `profile` naming the matched identity as
 `<EID>/SW<sw>/HW<hw>/API<v>.<r>`) or `unmatched_policy`
 (with `reason` one of `unknown_profile`, `unknown_register`,
-`unqualified_bound`, `invalid_bound`). `narrowedOnly: Boolean!` is true for
+`unqualified_bound`, `invalid_bound`). `narrowed_only: Boolean!` is true for
 every profile-sourced bound and false for `unmatched_policy`; it describes
 the restriction even when the numeric bound equals the policy window. The
 MCP tool
-`ebus.v1.semantic.system.get` returns the same value as
+`ebus_v1_semantic_system_get` returns the same value as
 `config.dhw_bivalence_point_bound` with `min_c`, `max_c`, `source`, `reason`,
-`profile` and boolean `narrowed_only` (the same value as `narrowedOnly`).
+`profile` and boolean `narrowed_only` .
 Before the first resolution, GraphQL returns `null` for
-`dhwBivalencePointBound` and MCP omits `config.dhw_bivalence_point_bound`
+`dhw_bivalence_point_bound` and MCP omits `config.dhw_bivalence_point_bound`
 entirely. Empty optional `reason` and `profile` strings are `null` in GraphQL
 and omitted in MCP.
 
@@ -1223,17 +1215,17 @@ and omitted in MCP.
 Subscriptions deliver real-time updates over WebSocket or SSE.
 
 ```graphql
-type Subscription {
-  broadcast(primary: Int!, secondary: Int!): BroadcastEvent!
-  zonesUpdate: [Zone!]!
-  dhwUpdate: Dhw
-  energyTotalsUpdate: EnergyTotals
-  boilerStatusUpdate: BoilerStatus
-  systemUpdate: SystemStatus
-  circuitsUpdate: [CircuitStatus!]!
+type subscription {
+  broadcast(primary: Int!, secondary: Int!): broadcast_event!
+  zones_update: [zone!]!
+  dhw_update: dhw
+  energy_totals_update: energy_totals
+  boiler_status_update: boiler_status
+  system_update: system_status
+  circuits_update: [circuit_status!]!
 }
 
-type BroadcastEvent {
+type broadcast_event {
   source: Int!
   target: Int!
   primary: Int!
@@ -1250,3 +1242,15 @@ type BroadcastEvent {
 ### Handler Construction
 
 `NewSubscriptionHandler(builder, registry, invoker, hub)` returns an `http.Handler` that serves both WebSocket and SSE.
+
+## Naming limitations
+
+The six M2M contract artifacts are excluded because their shape differs from the emitted interface; docs-ebus#1166 tracks that unit.
+
+Zone `target_temp_c` is provisional: which manual, effective heating or cooling selection determines its value?
+
+DHW `dhw_state.current_temp_c` and `dhw_config.target_temp_c` are provisional: which selector-qualified meanings should their value names express?
+
+Owned GraphQL object, input, enum and type names use snake_case; built-in scalars and protocol introspection names retain their protocol spelling. Enum tokens follow the owned schema; native string values retain their identity.
+
+The subscription excerpt retains members whose shape differs from the emitted interface; those members are outside this bounded spelling update.

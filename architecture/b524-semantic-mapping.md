@@ -14,7 +14,7 @@ Related architecture:
 
 ---
 
-## `ebus.v1.semantic.system.get`
+## `ebus_v1_semantic_system_get`
 
 Source: `refreshSystem()` in `semantic_vaillant.go`
 
@@ -41,7 +41,7 @@ Source: `refreshSystem()` in `semantic_vaillant.go`
 | `properties.module_configuration_vr71` | GG=0x00, RR=0x002F | u16 |
 
 `config.dhw_bivalence_point_bound` is the active write bound of
-`dhwBivalencePointC`, not a register value. It is resolved from the exact
+`dhw_bivalence_point`, not a register value. It is resolved from the exact
 controller identity (device identifier, raw software, raw hardware, API
 version and revision) in registry discovery/import metadata. The API fields
 correspond to OP=00h `0006h` `interface_version` and `0007h`
@@ -63,7 +63,7 @@ The empty-intersection fallback bound is the policy window `-20..50`.
 The policy window equals the range the gateway accepted before profiles
 existed, so v1 clients see no change; narrowing applies only on a qualified
 profile match. The required boolean
-`narrowed_only` (GraphQL `narrowedOnly: Boolean!`) is true for every
+`narrowed_only` (GraphQL `narrowed_only: Boolean!`) is true for every
 profile-sourced bound and false for `unmatched_policy`, including when the
 profile equals the window. Widening requires installation-qualified evidence
 (for example, a description of the target installation's own selector,
@@ -76,7 +76,7 @@ the same address retains the registry identity until the metadata changes,
 so the identity can be stale. Before the first resolution, MCP omits the
 bound entirely and GraphQL returns `null`. Empty optional `reason` and
 `profile` strings are omitted in MCP and `null` in GraphQL. Registry/invoker
-writes through `ebus.v1.rpc.invoke` have no API qualifier and always apply the
+writes through `ebus_v1_rpc_invoke` have no API qualifier and always apply the
 unmatched policy. Every numeric configuration write rejects `NaN` and
 positive or negative infinity before encoding, with `success: false` and no
 bus request. The rules are in [`../api/graphql.md`](../api/graphql.md) under
@@ -150,7 +150,7 @@ controller values and `0x0095` as a rounded three-hour-updated average. That
 evidence supports only the exact rows above. It does not widen this mapping to
 other B524 groups, instances, opcodes, or device families.
 
-## `ebus.v1.semantic.circuits.get`
+## `ebus_v1_semantic_circuits_get`
 
 Source: `refreshCircuits()` in `semantic_vaillant.go`
 
@@ -216,7 +216,7 @@ Consumer note:
 - `[].config.cooling_enabled` remains a gateway-level raw semantic field derived from `GG=0x02 RR=0x0006`.
 - It is **not** yet a validated Home Assistant-facing configuration contract.
 
-## `ebus.v1.semantic.zones.get`
+## `ebus_v1_semantic_zones_get`
 
 Source: `refreshState()` / `refreshDiscovery()` in `semantic_vaillant.go`
 
@@ -235,7 +235,7 @@ The `operating_mode` and `preset` exposed in the zones semantic plane are derive
 - `current_special_function` (0x000E): sfmode enum (2=quickveto, 3/4=away)
 - Associated circuit's `cooling_enabled` (GG=0x02 RR=0x0006): determines heat vs cool capability for the zone
 
-## `ebus.v1.semantic.dhw.get`
+## `ebus_v1_semantic_dhw_get`
 
 Source: `refreshDHW()` in `semantic_vaillant.go`
 
@@ -246,7 +246,7 @@ Source: `refreshDHW()` in `semantic_vaillant.go`
 | `target_temp_c` | GG=0x01, RR=0x0004 | f32 |
 | `state` | GG=0x01, RR=0x000D | u16 (special function) |
 
-## `ebus.v1.semantic.boiler_status.get`
+## `ebus_v1_semantic_boiler_status_get`
 
 Source: `refreshBoilerStatus()` in `semantic_vaillant.go`
 
@@ -259,10 +259,10 @@ The B524 contribution that still feeds the current boiler semantic contract is:
 
 | Semantic Path | B524 | Type | Notes |
 |---------------|------|------|-------|
-| `state.flowTemperatureC` | OP=0x02, GG=0x00, II=0x00, RR=0x004B | f32 | Age-bounded system-flow mirror from the same controller; a successful direct B509 flow read wins within the tick. This is implementation behavior, not native source equivalence. |
-| `state.dhwTemperatureC` | GG=0x01, RR=0x0005 | f32 | Controller mirror from DHW group |
-| `state.dhwTargetTemperatureC` | GG=0x01, RR=0x0004 | f32 | Controller mirror from DHW group |
-| `config.dhwOperatingMode` | GG=0x01, RR=0x0003 | u16 | Decoded into the public enum string |
+| `state.flow_temperature_c` | OP=0x02, GG=0x00, II=0x00, RR=0x004B | f32 | Age-bounded system-flow mirror from the same controller; a successful direct B509 flow read wins within the tick. This is implementation behavior, not native source equivalence. |
+| `state.dhw_temperature_c` | GG=0x01, RR=0x0005 | f32 | Controller mirror from DHW group |
+| `state.dhw_target_temperature_c` | GG=0x01, RR=0x0004 | f32 | Controller mirror from DHW group |
+| `config.dhw_operating_mode` | GG=0x01, RR=0x0003 | u16 | Decoded into the public enum string |
 
 The [boiler temperature SemReg cutover slice](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/boiler-temperature-semreg-mapping.md)
 defines the proposed two-field equivalence and withholding contract. Excluding
@@ -275,11 +275,11 @@ disposition is added. Flow and return share
 `(kind,item_id)`; absent return cannot make that item `withheld` when flow is
 projected. Return qualification remains `unknown`, and its missing-source reason
 describes legacy-field absence outside projection accounting; no return source
-is established by this mirror. Existing MCP field names and GraphQL aliases
+is established by this mirror. Existing MCP field names and GraphQL members
 remain the compatibility boundary.
 
 **Proven (implementation behavior):** the gateway leaves
-`diagnostics.heatingStatusRaw` unset when the boiler read is unavailable;
+`diagnostics.heating_status_raw` unset when the boiler read is unavailable;
 neither circuit 0 nor the semantic cache supplies that diagnostic. Circuit
 state (`OP=0x02, GG=0x02, II=<circuit>, RR=0x001E`) and pump observations
 (`OP=0x02, GG=0x02, II=<circuit>, RR=0x001B`) are published only on the circuit
@@ -295,20 +295,20 @@ The controller-mediated candidates `OP=0x06, GG=0x01/0x02, RR=0x0015` and
 `RR=0x0012` have unknown native reply layouts. They are **withheld from this
 boiler semantic mapping**: the current `refreshBoilerStatus()` does not read
 these selectors, and no publishable correlated evidence qualifies either as
-`state.flowTemperatureC` or a raw `diagnostics.activeErrors` value. See the
+`state.flow_temperature_c` or a raw `diagnostics.activeErrors` value. See the
 [B524 register map](../protocols/vaillant/ebus-vaillant-B524-register-map.md#op0x06--controller-mediated-device-parameters)
 for the evidence boundary.
 
 Fields currently present in the schema but not populated from a validated source:
-- `state.returnTemperatureC`
-- `diagnostics.dhwStatusRaw`
+- `state.return_temperature_c`
+- `diagnostics.dhw_status_raw`
 
-## `ebus.v1.semantic.energy_totals.get`
+## `ebus_v1_semantic_energy_totals_get`
 
 Source: `refreshEnergy()` in `semantic_vaillant.go`
 
 Semantics:
-- After the first valid sample, Helianthus keeps the last known `energyTotals` snapshot across temporary B524 read gaps.
+- After the first valid sample, Helianthus keeps the last known `energy_totals` snapshot across temporary B524 read gaps.
 - A refresh cycle with no accepted energy points does **not** clear the semantic snapshot and does **not** reset any series to `0` or `null`.
 
 | Semantic Path | B524 | Type | Period |
@@ -326,7 +326,7 @@ Semantics:
 | `electric.dhw.monthly[0]` | GG=0x00, RR=0x0054 | u32 (kWh) | last month |
 | `gas.dhw.monthly[0]` | GG=0x00, RR=0x0055 | u32 (kWh) | last month |
 
-## `ebus.v1.semantic.solar.get`
+## `ebus_v1_semantic_solar_get`
 
 Gated by `fm5_config<=2`. Source registers come from GG=0x04 (solar circuit).
 When FM5 evidence exists but the runtime cannot safely interpret FM5-backed
@@ -338,7 +338,7 @@ the last coherent structural mode. Fresh coherent `ABSENT` or a known
 non-interpretable configuration withdraws prior structural data. Consumers
 must never treat an empty or retained object as a zero-valued solar measurement.
 
-## `ebus.v1.semantic.cylinders.get`
+## `ebus_v1_semantic_cylinders_get`
 
 Source: `readCylinderSnapshots()` / `publishFM5Semantic()` in `semantic_vaillant.go`
 

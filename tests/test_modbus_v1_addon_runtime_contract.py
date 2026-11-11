@@ -696,7 +696,7 @@ class ModbusMultiEndpointRuntimeContractTest(unittest.TestCase):
 
     def test_sunspec_instances_have_a_selectable_cached_status_surface(self) -> None:
         rows = table_with(self.sections["Observability"], "Surface")
-        sunspec = [row for row in rows if "modbus.v1.fronius.sunspec.status.get" in row[0]]
+        sunspec = [row for row in rows if "modbus_v1_fronius_sunspec_status_get" in row[0]]
         self.assertEqual(len(sunspec), 1)
         self.assertIn("existing SunSpec status tool", sunspec[0][0])
         for required in (
@@ -706,18 +706,18 @@ class ModbusMultiEndpointRuntimeContractTest(unittest.TestCase):
             "asset IDs",
             "cached",
             "withheld ones included",
-            "`helianthus.runtime.list`",
+            "`helianthus_runtime_list`",
             "The lifecycle projection stays unchanged",
         ):
             self.assertIn(required, sunspec[0][1])
         self.assertNotIn("modbus.v1.sunspec.status.get", self.text)
         baseline = table_with(self.sections["Baseline: configuration v1"], "Statement")
-        existing = [row for row in baseline if "modbus.v1.fronius.sunspec.status.get" in row[0]]
+        existing = [row for row in baseline if "modbus_v1_fronius_sunspec_status_get" in row[0]]
         self.assertEqual(len(existing), 1)
         self.assertTrue(existing[0][1].startswith("Proven"))
         observability = " ".join(self.sections["Observability"].split())
         self.assertIn(
-            "applies to the three vendor status tools and to `modbus.v1.fronius.sunspec.status.get`",
+            "applies to the three vendor status tools and to `modbus_v1_fronius_sunspec_status_get`",
             observability,
         )
         self.assertIn("in the second phase of [gateway issue #1362]", observability)

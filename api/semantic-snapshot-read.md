@@ -13,19 +13,19 @@ or operation dispatch. These additive entry points use the same detached view:
 
 | Surface | Target entry point | Selection |
 | --- | --- | --- |
-| Ordinary GraphQL | `semanticSnapshot(assetIds: [ID!]!): SemanticSnapshotRead` | Required opaque asset IDs. |
-| MCP | `semantic.v1.snapshot.get` | Required `asset_ids` array. |
+| Ordinary GraphQL | `semantic_snapshot(asset_ids: [ID!]!): semantic_snapshot_read` | Required opaque asset IDs. |
+| MCP | `semantic_v1_snapshot_get` | Required `asset_ids` array. |
 
 `semantic.v1.*` already contains the SemReg-backed
-`semantic.v1.pv.current.get`. The new cross-pack tool belongs there rather than
-reusing the legacy `ebus.v1.semantic.snapshot.get`. No new namespace is needed.
-The ordinary GraphQL root is camelCase and additive to the schema described in
+`semantic_v1_pv_current_get`. The new cross-pack tool belongs there rather than
+reusing the legacy `ebus_v1_semantic_snapshot_get`. No new namespace is needed.
+The ordinary GraphQL root is snake_case and additive to the schema described in
 [graphql.md](graphql.md). It does not broaden the separate
 [machine-to-machine contract](../docs/platform/public-graphql-m2m-v1.md).
 Neither new entry point is implemented merely by publishing this page.
 
-The existing SemReg-backed tools are `semantic.v1.pv.current.get`,
-`semantic.v1.evse.current.get` and `semantic.v1.storage.growatt.current.get`
+The existing SemReg-backed tools are `semantic_v1_pv_current_get`,
+`semantic_v1_evse_current_get` and `semantic_v1_storage_growatt_current_get`
 (PV/inverter, EVSE and Growatt storage/BMS families). Their names are established
 by the gateway's [PV registration](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/mcp/modbus_v1.go),
 [EVSE registration](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/mcp/tesla_gen3_evse_semantic.go)
@@ -179,7 +179,7 @@ publish new evidence nor change partial last-known-good retention or admission.
 ## Shared view records
 
 The transport-neutral view has one required member, `assets`, an array of
-`AssetSnapshotRead`. The following are API wrapper members; they are not new
+`asset_snapshot_read`. The following are API wrapper members; they are not new
 members of SemReg `Snapshot`:
 
 | Member | Type and presence | Meaning |
@@ -395,38 +395,38 @@ used to recompute its digest. Full reconstruction first restores all fields
 and SemReg member names; source IDs/digests are never recomputed from a
 GraphQL selection or a transport envelope.
 
-Convert snake_case member names recursively to camelCase on GraphQL, leaving
+GraphQL uses the existing snake_case JSON member names recursively, leaving
 already single-word members unchanged. Representative normative mappings:
 
 | MCP / SemReg | GraphQL |
 | --- | --- |
-| `asset_ids`, `asset_id`, `binding_id`, `snapshot_id` | `assetIds`, `assetId`, `bindingId`, `snapshotId` |
-| `unavailable_reason`, `identity_links` | `unavailableReason`, `identityLinks` |
-| `candidate_id`, `candidate_revision`, `source_epoch_id` | `candidateId`, `candidateRevision`, `sourceEpochId` |
-| `driver_generation`, `retained_observations` | `driverGeneration`, `retainedObservations` |
-| `evaluated_at`, `evaluate_monotonic`, `freshness_policy` | `evaluatedAt`, `evaluateMonotonic`, `freshnessPolicy` |
-| `unix_nanoseconds`, `clock_id`, `uncertainty_ns` | `unixNanoseconds`, `clockId`, `uncertaintyNs` |
-| `effective_availability`, `evaluation_digest` | `effectiveAvailability`, `evaluationDigest` |
-| `pack_id`, `pack_version`, `fact_id`, `item_id` | `packId`, `packVersion`, `factId`, `itemId` |
-| `source_keys`, `source_items`, `presentation_only` | `sourceKeys`, `sourceItems`, `presentationOnly` |
+| `asset_ids`, `asset_id`, `binding_id`, `snapshot_id` | `asset_ids`, `asset_id`, `binding_id`, `snapshot_id` |
+| `unavailable_reason`, `identity_links` | `unavailable_reason`, `identity_links` |
+| `candidate_id`, `candidate_revision`, `source_epoch_id` | `candidate_id`, `candidate_revision`, `source_epoch_id` |
+| `driver_generation`, `retained_observations` | `driver_generation`, `retained_observations` |
+| `evaluated_at`, `evaluate_monotonic`, `freshness_policy` | `evaluated_at`, `evaluate_monotonic`, `freshness_policy` |
+| `unix_nanoseconds`, `clock_id`, `uncertainty_ns` | `unix_nanoseconds`, `clock_id`, `uncertainty_ns` |
+| `effective_availability`, `evaluation_digest` | `effective_availability`, `evaluation_digest` |
+| `pack_id`, `pack_version`, `fact_id`, `item_id` | `pack_id`, `pack_version`, `fact_id`, `item_id` |
+| `source_keys`, `source_items`, `presentation_only` | `source_keys`, `source_items`, `presentation_only` |
 | `exponent10`, `known`, `revisions.semantic` | `exponent10`, `known`, `revisions.semantic` |
 
 The supplied [GraphQL adapter](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/graphql/semantic_snapshot.go)
-constructs object names as `Semantic` plus the concrete Go struct name, with
+constructs object names as `semantic_` plus the snake_case concrete Go struct name, with
 two wrapper exceptions. This is the source-derived type-name mapping for schema
 selection and fragments; it does not establish current public root wiring:
 
 | Go record | GraphQL object name |
 | --- | --- |
-| `semanticview.View`, `semanticview.Asset` | `SemanticSnapshotRead`, `AssetSnapshotRead` |
-| `Snapshot`, `RevisionVector` | `SemanticSnapshot`, `SemanticRevisionVector` |
-| `EvaluationView`, `EvaluationContext`, `EvaluatedFact` | `SemanticEvaluationView`, `SemanticEvaluationContext`, `SemanticEvaluatedFact` |
-| `FactEnvelope`, `FactKey`, `FactCandidate`, `Conflict` | `SemanticFactEnvelope`, `SemanticFactKey`, `SemanticFactCandidate`, `SemanticConflict` |
-| `Value`, `Quantity`, `Decimal`, `Symbol`, `Dimension` | `SemanticValue`, `SemanticQuantity`, `SemanticDecimal`, `SemanticSymbol`, `SemanticDimension` |
-| `Quality`, `Times`, `TimePoint`, `MonotonicPoint`, `FreshnessPolicy` | `SemanticQuality`, `SemanticTimes`, `SemanticTimePoint`, `SemanticMonotonicPoint`, `SemanticFreshnessPolicy` |
-| `RetainedObservationRecord`, `EvaluatedRetainedObservation` | `SemanticRetainedObservationRecord`, `SemanticEvaluatedRetainedObservation` |
-| `ProjectionReport`, `ProjectionManifest`, `RequestedItem`, `ProjectionDisposition`, `LossDetail` | `SemanticProjectionReport`, `SemanticProjectionManifest`, `SemanticRequestedItem`, `SemanticProjectionDisposition`, `SemanticLossDetail` |
-| `Selection` | `SemanticSelection` |
+| `semanticview.View`, `semanticview.Asset` | `semantic_snapshot_read`, `asset_snapshot_read` |
+| `Snapshot`, `RevisionVector` | `semantic_snapshot`, `semantic_revision_vector` |
+| `EvaluationView`, `EvaluationContext`, `EvaluatedFact` | `semantic_evaluation_view`, `semantic_evaluation_context`, `semantic_evaluated_fact` |
+| `FactEnvelope`, `FactKey`, `FactCandidate`, `Conflict` | `semantic_fact_envelope`, `semantic_fact_key`, `semantic_fact_candidate`, `semantic_conflict` |
+| `Value`, `Quantity`, `Decimal`, `Symbol`, `Dimension` | `semantic_value`, `semantic_quantity`, `semantic_decimal`, `semantic_symbol`, `semantic_dimension` |
+| `Quality`, `Times`, `TimePoint`, `MonotonicPoint`, `FreshnessPolicy` | `semantic_quality`, `semantic_times`, `semantic_time_point`, `semantic_monotonic_point`, `semantic_freshness_policy` |
+| `RetainedObservationRecord`, `EvaluatedRetainedObservation` | `semantic_retained_observation_record`, `semantic_evaluated_retained_observation` |
+| `ProjectionReport`, `ProjectionManifest`, `RequestedItem`, `ProjectionDisposition`, `LossDetail` | `semantic_projection_report`, `semantic_projection_manifest`, `semantic_requested_item`, `semantic_projection_disposition`, `semantic_loss_detail` |
+| `Selection` | `semantic_selection` |
 
 Other reachable struct records follow the same prefix rule; ID, digest,
 revision and code aliases are string scalars, not object types.
@@ -466,7 +466,7 @@ native locator request or the full JSON-RPC message:
 
 ```json
 {
-  "name": "semantic.v1.snapshot.get",
+  "name": "semantic_v1_snapshot_get",
   "arguments": {
     "asset_ids": ["asset:evse", "asset:infrastructure", "asset:pv", "asset:storage", "asset:thermal"]
   }
@@ -477,20 +477,20 @@ An ordinary GraphQL operation can request both identity and accounting without
 a domain-specific root. Other typed snapshot members remain selectable:
 
 ```graphql
-query SharedSemanticRead($assetIds: [ID!]!) {
-  semanticSnapshot(assetIds: $assetIds) {
+query SharedSemanticRead($asset_ids: [ID!]!) {
+  semantic_snapshot(asset_ids: $asset_ids) {
     assets {
-      assetId unavailableReason
+      asset_id unavailable_reason
       snapshot {
-        snapshotId
+        snapshot_id
         revisions { semantic identity facts services capabilities }
         facts {
           key {
-            packId packVersion factId
+            pack_id pack_version fact_id
             dimensions { id value { kind text } }
           }
           candidates {
-            candidateId revision
+            candidate_id revision
             value {
               kind
               quantity { number { coefficient exponent10 } unit }
@@ -503,20 +503,20 @@ query SharedSemanticRead($assetIds: [ID!]!) {
         }
       }
       evaluation {
-        snapshotId
+        snapshot_id
         revisions { semantic identity facts services capabilities }
-        facts { candidateId candidateRevision freshness effectiveAvailability }
+        facts { candidate_id candidate_revision freshness effective_availability }
       }
       projection {
-        snapshotId
+        snapshot_id
         revisions { semantic identity facts services capabilities }
         dispositions {
-          kind itemId outcome reason
-          sourceKeys {
-            packId packVersion factId
+          kind item_id outcome reason
+          source_keys {
+            pack_id pack_version fact_id
             dimensions { id value { kind text } }
           }
-          loss { kind sourceItems description reversible }
+          loss { kind source_items description reversible }
         }
       }
     }
@@ -528,7 +528,7 @@ Its variables select exactly the same assets:
 
 ```json
 {
-  "assetIds": ["asset:evse", "asset:infrastructure", "asset:pv", "asset:storage", "asset:thermal"]
+  "asset_ids": ["asset:evse", "asset:infrastructure", "asset:pv", "asset:storage", "asset:thermal"]
 }
 ```
 
