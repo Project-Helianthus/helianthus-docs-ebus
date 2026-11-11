@@ -874,27 +874,27 @@ query ProjectionBrowserProjections($address: Int!) {
       "address": 50,
       "addresses": [50, 236],
       "manufacturer": "Vaillant",
-      "device_id": "BASV2",
+      "device_id": "synthetic-family",
       "projections": [
         {
           "plane": "Service",
           "nodes": [
             {
-              "id": "Service:/ebus/addr@50/device@BASV2",
-              "path": "Service:/ebus/addr@50/device@BASV2",
-              "canonical_path": "Service:/ebus/addr@50/device@BASV2"
+              "id": "Service:/ebus/addr@50/device@synthetic-family",
+              "path": "Service:/ebus/addr@50/device@synthetic-family",
+              "canonical_path": "Service:/ebus/addr@50/device@synthetic-family"
             },
             {
-              "id": "Service:/ebus/addr@50/device@BASV2/method@get_operational_data",
-              "path": "Service:/ebus/addr@50/device@BASV2/method@get_operational_data",
-              "canonical_path": "Service:/ebus/addr@50/device@BASV2/method@get_operational_data"
+              "id": "Service:/ebus/addr@50/device@synthetic-family/method@get_operational_data",
+              "path": "Service:/ebus/addr@50/device@synthetic-family/method@get_operational_data",
+              "canonical_path": "Service:/ebus/addr@50/device@synthetic-family/method@get_operational_data"
             }
           ],
           "edges": [
             {
-              "id": "Service:Service:/ebus/addr@50/device@BASV2->Service:/ebus/addr@50/device@BASV2/method@get_operational_data",
-              "from": "Service:/ebus/addr@50/device@BASV2",
-              "to": "Service:/ebus/addr@50/device@BASV2/method@get_operational_data"
+              "id": "Service:Service:/ebus/addr@50/device@synthetic-family->Service:/ebus/addr@50/device@synthetic-family/method@get_operational_data",
+              "from": "Service:/ebus/addr@50/device@synthetic-family",
+              "to": "Service:/ebus/addr@50/device@synthetic-family/method@get_operational_data"
             }
           ]
         },
@@ -902,21 +902,21 @@ query ProjectionBrowserProjections($address: Int!) {
           "plane": "Observability",
           "nodes": [
             {
-              "id": "Service:/ebus/addr@50/device@BASV2",
-              "path": "Observability:/ebus/addr@50/device@BASV2",
-              "canonical_path": "Service:/ebus/addr@50/device@BASV2"
+              "id": "Service:/ebus/addr@50/device@synthetic-family",
+              "path": "Observability:/ebus/addr@50/device@synthetic-family",
+              "canonical_path": "Service:/ebus/addr@50/device@synthetic-family"
             },
             {
-              "id": "Service:/ebus/addr@50/device@BASV2/method@get_operational_data",
-              "path": "Observability:/ebus/addr@50/device@BASV2/method@get_operational_data",
-              "canonical_path": "Service:/ebus/addr@50/device@BASV2/method@get_operational_data"
+              "id": "Service:/ebus/addr@50/device@synthetic-family/method@get_operational_data",
+              "path": "Observability:/ebus/addr@50/device@synthetic-family/method@get_operational_data",
+              "canonical_path": "Service:/ebus/addr@50/device@synthetic-family/method@get_operational_data"
             }
           ],
           "edges": [
             {
-              "id": "Observability:Service:/ebus/addr@50/device@BASV2->Service:/ebus/addr@50/device@BASV2/method@get_operational_data",
-              "from": "Service:/ebus/addr@50/device@BASV2",
-              "to": "Service:/ebus/addr@50/device@BASV2/method@get_operational_data"
+              "id": "Observability:Service:/ebus/addr@50/device@synthetic-family->Service:/ebus/addr@50/device@synthetic-family/method@get_operational_data",
+              "from": "Service:/ebus/addr@50/device@synthetic-family",
+              "to": "Service:/ebus/addr@50/device@synthetic-family/method@get_operational_data"
             }
           ]
         }
@@ -952,21 +952,21 @@ Accept: application/json
   "plane": "Observability",
   "nodes": [
     {
-      "id": "Service:/ebus/addr@16/device@BASV2",
-      "path": "Observability:/ebus/addr@16/device@BASV2",
-      "canonical_path": "Service:/ebus/addr@16/device@BASV2"
+      "id": "Service:/ebus/addr@16/device@synthetic-family",
+      "path": "Observability:/ebus/addr@16/device@synthetic-family",
+      "canonical_path": "Service:/ebus/addr@16/device@synthetic-family"
     },
     {
-      "id": "Service:/ebus/addr@16/device@BASV2/method@get_operational_data",
-      "path": "Observability:/ebus/addr@16/device@BASV2/method@get_operational_data",
-      "canonical_path": "Service:/ebus/addr@16/device@BASV2/method@get_operational_data"
+      "id": "Service:/ebus/addr@16/device@synthetic-family/method@get_operational_data",
+      "path": "Observability:/ebus/addr@16/device@synthetic-family/method@get_operational_data",
+      "canonical_path": "Service:/ebus/addr@16/device@synthetic-family/method@get_operational_data"
     }
   ],
   "edges": [
     {
-      "id": "Observability:Service:/ebus/addr@16/device@BASV2->Service:/ebus/addr@16/device@BASV2/method@get_operational_data",
-      "from": "Service:/ebus/addr@16/device@BASV2",
-      "to": "Service:/ebus/addr@16/device@BASV2/method@get_operational_data"
+      "id": "Observability:Service:/ebus/addr@16/device@synthetic-family->Service:/ebus/addr@16/device@synthetic-family/method@get_operational_data",
+      "from": "Service:/ebus/addr@16/device@synthetic-family",
+      "to": "Service:/ebus/addr@16/device@synthetic-family/method@get_operational_data"
     }
   ]
 }
@@ -1027,21 +1027,21 @@ Accept: application/json
   "plane": "Observability",
   "nodes": [
     {
-      "id": "Service:/ebus/addr@16/device@BASV2",
-      "path": "Observability:/ebus/addr@16/device@BASV2",
-      "canonical_path": "Service:/ebus/addr@16/device@BASV2"
+      "id": "Service:/ebus/addr@16/device@synthetic-family",
+      "path": "Observability:/ebus/addr@16/device@synthetic-family",
+      "canonical_path": "Service:/ebus/addr@16/device@synthetic-family"
     },
     {
-      "id": "Service:/ebus/addr@16/device@BASV2/method@get_operational_data",
-      "path": "Observability:/ebus/addr@16/device@BASV2/method@get_operational_data",
-      "canonical_path": "Service:/ebus/addr@16/device@BASV2/method@get_operational_data"
+      "id": "Service:/ebus/addr@16/device@synthetic-family/method@get_operational_data",
+      "path": "Observability:/ebus/addr@16/device@synthetic-family/method@get_operational_data",
+      "canonical_path": "Service:/ebus/addr@16/device@synthetic-family/method@get_operational_data"
     }
   ],
   "edges": [
     {
-      "id": "Observability:Service:/ebus/addr@16/device@BASV2->Service:/ebus/addr@16/device@BASV2/method@get_operational_data",
-      "from": "Service:/ebus/addr@16/device@BASV2",
-      "to": "Service:/ebus/addr@16/device@BASV2/method@get_operational_data"
+      "id": "Observability:Service:/ebus/addr@16/device@synthetic-family->Service:/ebus/addr@16/device@synthetic-family/method@get_operational_data",
+      "from": "Service:/ebus/addr@16/device@synthetic-family",
+      "to": "Service:/ebus/addr@16/device@synthetic-family/method@get_operational_data"
     }
   ]
 }

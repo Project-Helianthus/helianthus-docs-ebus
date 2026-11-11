@@ -28,7 +28,7 @@ or promote facts.
 This page owns only the language-neutral bundle, clock, state, hashing,
 privacy, persistence, and replay rules. All eeBUS-native protocol, runtime, and
 API facts are canonical in `helianthus-docs-eebus`. This page does not restate
-SHIP/SPINE behavior, an `eebus_v1_*` schema, VR940f behavior, or eeBUS
+SHIP/SPINE behavior, an `eebus_v1_*` schema, internet-gateway behavior, or eeBUS
 lifecycle rules. A source-owned payload is accepted only through the frozen
 `source_contract` and `source_schema_version` named by an artifact.
 
