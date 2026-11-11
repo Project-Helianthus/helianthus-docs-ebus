@@ -395,20 +395,20 @@ used to recompute its digest. Full reconstruction first restores all fields
 and SemReg member names; source IDs/digests are never recomputed from a
 GraphQL selection or a transport envelope.
 
-Convert snake_case member names recursively to camelCase on GraphQL, leaving
+GraphQL uses the existing snake_case JSON member names recursively, leaving
 already single-word members unchanged. Representative normative mappings:
 
 | MCP / SemReg | GraphQL |
 | --- | --- |
-| `asset_ids`, `asset_id`, `binding_id`, `snapshot_id` | `assetIds`, `assetId`, `bindingId`, `snapshotId` |
-| `unavailable_reason`, `identity_links` | `unavailableReason`, `identityLinks` |
-| `candidate_id`, `candidate_revision`, `source_epoch_id` | `candidateId`, `candidateRevision`, `sourceEpochId` |
-| `driver_generation`, `retained_observations` | `driverGeneration`, `retainedObservations` |
-| `evaluated_at`, `evaluate_monotonic`, `freshness_policy` | `evaluatedAt`, `evaluateMonotonic`, `freshnessPolicy` |
-| `unix_nanoseconds`, `clock_id`, `uncertainty_ns` | `unixNanoseconds`, `clockId`, `uncertaintyNs` |
-| `effective_availability`, `evaluation_digest` | `effectiveAvailability`, `evaluationDigest` |
-| `pack_id`, `pack_version`, `fact_id`, `item_id` | `packId`, `packVersion`, `factId`, `itemId` |
-| `source_keys`, `source_items`, `presentation_only` | `sourceKeys`, `sourceItems`, `presentationOnly` |
+| `asset_ids`, `asset_id`, `binding_id`, `snapshot_id` | `asset_ids`, `asset_id`, `binding_id`, `snapshot_id` |
+| `unavailable_reason`, `identity_links` | `unavailable_reason`, `identity_links` |
+| `candidate_id`, `candidate_revision`, `source_epoch_id` | `candidate_id`, `candidate_revision`, `source_epoch_id` |
+| `driver_generation`, `retained_observations` | `driver_generation`, `retained_observations` |
+| `evaluated_at`, `evaluate_monotonic`, `freshness_policy` | `evaluated_at`, `evaluate_monotonic`, `freshness_policy` |
+| `unix_nanoseconds`, `clock_id`, `uncertainty_ns` | `unix_nanoseconds`, `clock_id`, `uncertainty_ns` |
+| `effective_availability`, `evaluation_digest` | `effective_availability`, `evaluation_digest` |
+| `pack_id`, `pack_version`, `fact_id`, `item_id` | `pack_id`, `pack_version`, `fact_id`, `item_id` |
+| `source_keys`, `source_items`, `presentation_only` | `source_keys`, `source_items`, `presentation_only` |
 | `exponent10`, `known`, `revisions.semantic` | `exponent10`, `known`, `revisions.semantic` |
 
 The supplied [GraphQL adapter](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/graphql/semantic_snapshot.go)
@@ -477,20 +477,20 @@ An ordinary GraphQL operation can request both identity and accounting without
 a domain-specific root. Other typed snapshot members remain selectable:
 
 ```graphql
-query SharedSemanticRead($assetIds: [ID!]!) {
-  semanticSnapshot(assetIds: $assetIds) {
+query SharedSemanticRead($asset_ids: [ID!]!) {
+  semanticSnapshot(asset_ids: $asset_ids) {
     assets {
-      assetId unavailableReason
+      asset_id unavailable_reason
       snapshot {
-        snapshotId
+        snapshot_id
         revisions { semantic identity facts services capabilities }
         facts {
           key {
-            packId packVersion factId
+            pack_id pack_version fact_id
             dimensions { id value { kind text } }
           }
           candidates {
-            candidateId revision
+            candidate_id revision
             value {
               kind
               quantity { number { coefficient exponent10 } unit }
@@ -503,20 +503,20 @@ query SharedSemanticRead($assetIds: [ID!]!) {
         }
       }
       evaluation {
-        snapshotId
+        snapshot_id
         revisions { semantic identity facts services capabilities }
-        facts { candidateId candidateRevision freshness effectiveAvailability }
+        facts { candidate_id candidate_revision freshness effective_availability }
       }
       projection {
-        snapshotId
+        snapshot_id
         revisions { semantic identity facts services capabilities }
         dispositions {
-          kind itemId outcome reason
-          sourceKeys {
-            packId packVersion factId
+          kind item_id outcome reason
+          source_keys {
+            pack_id pack_version fact_id
             dimensions { id value { kind text } }
           }
-          loss { kind sourceItems description reversible }
+          loss { kind source_items description reversible }
         }
       }
     }
