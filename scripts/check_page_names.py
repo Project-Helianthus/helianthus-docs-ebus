@@ -23,8 +23,9 @@ name was normalized to lowercase kebab-case. For each row the checker requires:
 - unchanged anchor targets: every Markdown link into a listed page resolves to
   the exact file and to a heading or explicit anchor of that page; the finite
   list of anchors that already failed before the rename must match exactly;
-- the tree indexes: each is linked from README.md and links every page of its
-  tree; a listed page outside every indexed tree is linked from README.md.
+- the tree indexes: each is linked from README.md and links every publishable
+  page of its tree, excluding methodology pages; a listed page outside every
+  indexed tree is linked from README.md.
 
 The earlier names are documentary only. Nothing reads them as a fallback.
 """
@@ -464,11 +465,19 @@ def check_indexes(root: Path, rows: list[dict], indexes: list[str]) -> list[str]
         if index not in readme_links:
             errors.append(f"README.md: does not link the tree index {index}")
         links = linked_paths(root, index)
+        errors.extend(
+            f"{index}: must not link methodology page {page}"
+            for page in sorted(links)
+            if "methodology" in Path(page).stem.split("-")
+        )
         for rel, _ in repository_files(root / tree):
             page = posixpath.join(tree, rel)
             if not page.endswith(".md") or page == index:
                 continue
-            if posixpath.basename(page) in CONTROL_FILES:
+            if (
+                posixpath.basename(page) in CONTROL_FILES
+                or "methodology" in Path(page).stem.split("-")
+            ):
                 continue
             if page not in links:
                 errors.append(f"{index}: does not link {page}")

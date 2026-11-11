@@ -62,7 +62,9 @@ link text on an existing References line, where only the link target follows
 the rename. Each tree index ([api](../api/index.md),
 [architecture](index.md), [deployment](../deployment/index.md),
 [development](../development/index.md), [protocols](../protocols/index.md)) is
-linked from `README.md` and lists every page of its tree.
+linked from `README.md` and lists every publishable page of its tree.
+Methodology pages are excluded from these publication indexes; the checker
+rejects links to them.
 
 Names outside this bounded set are not converted yet: the remaining snake_case
 pages under `architecture/`, the `ebus_standard` directory name, the

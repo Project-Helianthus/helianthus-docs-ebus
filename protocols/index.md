@@ -1,7 +1,7 @@
 # Protocol pages
 
-This index lists every page under `protocols/`: implementation-neutral wire
-references, grouped by directory.
+This index lists implementation-neutral wire references under `protocols/`,
+grouped by directory.
 
 A page that was renamed to a lowercase kebab-case file name shows its status
 from the closed set implemented, accepted contract, candidate, historical and
@@ -110,7 +110,6 @@ Other pages keep the status statements in their own text.
 - [vaillant/ebus-vaillant-b524-basv0-profile-v1.md](vaillant/ebus-vaillant-b524-basv0-profile-v1.md)
 - [vaillant/ebus-vaillant-b524-profile-discovery-and-descriptions.md](vaillant/ebus-vaillant-b524-profile-discovery-and-descriptions.md)
 - [vaillant/ebus-vaillant-b524-register-map.md](vaillant/ebus-vaillant-b524-register-map.md) (status: accepted contract)
-- [vaillant/ebus-vaillant-b524-survey-methodology.md](vaillant/ebus-vaillant-b524-survey-methodology.md)
 - [vaillant/ebus-vaillant-b524.md](vaillant/ebus-vaillant-b524.md) (status: accepted contract)
 - [vaillant/ebus-vaillant-b525.md](vaillant/ebus-vaillant-b525.md) (status: candidate)
 - [vaillant/ebus-vaillant-b531-hem-power-limit.md](vaillant/ebus-vaillant-b531-hem-power-limit.md) (status: candidate)

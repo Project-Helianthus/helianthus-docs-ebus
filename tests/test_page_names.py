@@ -363,6 +363,16 @@ def test_index_must_link_every_page_of_its_tree(repo: Path) -> None:
     assert_fails(repo, "guide/index.md: does not link guide/other.md")
 
 
+def test_publication_indexes_exclude_methodology_pages(repo: Path) -> None:
+    write(repo, "guide/survey-methodology.md", "# Internal survey procedure\n")
+    assert errors(repo) == []
+    with (repo / "guide/index.md").open("a") as index:
+        index.write("\n- [Survey procedure](survey-methodology.md)\n")
+    assert_fails(
+        repo, "guide/index.md: must not link methodology page guide/survey-methodology.md"
+    )
+
+
 def test_readme_must_link_every_tree_index(repo: Path) -> None:
     write(repo, "README.md", "# Synthetic\n")
     assert_fails(repo, "README.md: does not link the tree index guide/index.md")
