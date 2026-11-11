@@ -528,7 +528,7 @@ Its variables select exactly the same assets:
 
 ```json
 {
-  "assetIds": ["asset:evse", "asset:infrastructure", "asset:pv", "asset:storage", "asset:thermal"]
+  "asset_ids": ["asset:evse", "asset:infrastructure", "asset:pv", "asset:storage", "asset:thermal"]
 }
 ```
 

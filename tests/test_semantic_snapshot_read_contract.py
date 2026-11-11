@@ -145,7 +145,7 @@ def validate_contract(text: str) -> None:
                 if token.type == "fence" and token.info == "json"]
     ids = [f"asset:{pack}" for pack in ("evse", "infrastructure", "pv", "storage", "thermal")]
     assert examples[0] == {"name": "semantic_v1_snapshot_get", "arguments": {"asset_ids": ids}}
-    assert examples[1] == {"assetIds": ids}
+    assert examples[1] == {"asset_ids": ids}
     assert examples[2] == dict(zip(
         ("semantic", "identity", "facts", "services", "capabilities"),
         ("7", "2", "5", "1", "1"), strict=True,
@@ -240,7 +240,8 @@ def test_semantic_snapshot_read_rejects_mapping_drift(source: str, target: str) 
 
 
 @pytest.mark.parametrize("old,new", (
-    ('"assetIds": ["asset:evse"', '"assetIds": ["asset:other"'),
+    ('"asset_ids": ["asset:evse"', '"asset_ids": ["asset:other"'),
+    ('"asset_ids": ["asset:evse"', '"assetIds": ["asset:evse"'),
     ('"semantic":"7"', '"semantic":7'),
     ('"outcome": "unknown"', '"outcome": "exact"'),
     ('"selections": []', '"selections": null'),
