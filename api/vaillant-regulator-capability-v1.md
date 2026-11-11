@@ -33,7 +33,7 @@ enum VaillantRegulatorCapability {
 ```
 
 The matching MCP response member is
-`ebus.v1.runtime.status.get.data.vaillant_regulator_capability`. The semantic snapshot
+`ebus_v1_runtime_status_get.data.vaillant_regulator_capability`. The semantic snapshot
 uses the same value at `runtime_status.vaillant_regulator_capability`. All three surfaces
 are one provider-owned result; GraphQL, MCP, and snapshot consumers must not
 recalculate it.

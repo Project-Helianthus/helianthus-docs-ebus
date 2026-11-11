@@ -22,7 +22,7 @@ The public native contract comes first:
   candidate widths and family-dependent labels. Historic FLAGS access labels
   do not establish writability.
 - [B524 semantic mapping](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/b524-semantic-mapping.md):
-  `ebus.v1.semantic.zones.get` names `[].state.current_temp_c`; the existing
+  `ebus_v1_semantic_zones_get` names `[].state.zone_room_temperature`; the existing
   SemReg thermal mapping section covers system observations, not this zone
   cutover. Its receipt/evaluation separation is useful lifecycle precedent.
 - [Gateway semantic poller](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/cmd/gateway/semantic_vaillant.go):
@@ -48,7 +48,7 @@ instance `II`; there is no wildcard observation or cross-instance join.
 
 | Field or association | Native selector | Native evidence and decoding | Current consumer / proposed disposition |
 | --- | --- | --- | --- |
-| Current room temperature | `(0x02, 0x03, II, 0x000F)` | Catalog: `zone_room_temperature`, `f32`, °C, `Zone{z}RoomTemp`, from room sensor. **Proven** catalog correspondence; little-endian only within characterized VRC720-family context. No catalog numeric range. Other profile byte order **Unknown** until qualified. | `zone_current_temp` → `refreshState` → `CurrentTempC`; mapping names MCP `[].state.current_temp_c`, `publishZones` fills GraphQL `Zone.State.CurrentTempC`. Proposed Thermal candidate below is **Hypothesis**, withheld pending binding evidence. |
+| Current room temperature | `(0x02, 0x03, II, 0x000F)` | Catalog: `zone_room_temperature`, `f32`, °C, `Zone{z}RoomTemp`, from room sensor. **Proven** catalog correspondence; little-endian only within characterized VRC720-family context. No catalog numeric range. Other profile byte order **Unknown** until qualified. | `zone_current_temp` → `refreshState` → `CurrentTempC`; mapping names MCP `[].state.zone_room_temperature`, `publishZones` fills GraphQL `zone.state.zone_room_temperature`. Proposed Thermal candidate below is **Hypothesis**, withheld pending binding evidence. |
 | Sensor-binding observation, separate from temperature | `(0x02, 0x03, II, 0x0013)` | Catalog: `zone_room_sensor_binding_mode`, raw integer authoritative; `u16` enum catalog entry, exact two-byte little-endian reply is a **Hypothesis** explicitly unconfirmed on wire. Family labels conflict/extend beyond the alias table. Preserve bytes and raw value; no new enum meaning or physical identity. | `zone_room_temperature_zone_mapping_raw` → configuration snapshot → `RoomTemperatureZoneMapping`; radio fallback can infer mapping. Proposed: evidence metadata only, no Thermal measurement, mode or remote-control identity. |
 | Zone/circuit association context only | `(0x02, 0x03, II, 0x001C)` | Catalog: `zone_circuit_assignment`, raw bytes. Profile-scoped VRC720-family observations II00=`00`, II01=`01`, II02+=`FF`; no +1 remap. Signed interpretation and universal topology **Unknown**. | `zone_index` feeds discovery. Proposed: retain exact evidence for zone presence/association; neither a temperature nor sensor binding. No new projection. |
 

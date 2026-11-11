@@ -60,9 +60,9 @@ software decoding alone does not prove widths or semantics across families.
 
 | Native register / read suffix | Catalog representation | Retained snapshot | Legacy presentation |
 | --- | --- | --- | --- |
-| RR=0x001B / `1B 00` | `circuit_pump_unknown_8`, u16 raw | `PumpStatusRaw`, `PumpStatusLiveAt` | Mapping path `[].state.pump_status`; `publishCircuits` sets GraphQL `CircuitState.PumpActive` using `decodeUint16Bool` |
-| RR=0x0024 / `24 00` | `circuit_pump_operating_time_total`, u32, hrs | `PumpHoursRaw` | Mapping path `[].state.pump_operating_hours`; GraphQL `CircuitState.PumpHours`, via `decodeUint32Float64` |
-| RR=0x0025 / `25 00` | `circuit_pump_start_count_total`, u32, count | `PumpStartsRaw` | Mapping path `[].state.pump_starts_count`; GraphQL `CircuitState.PumpStarts`, via `decodeUint32Int` |
+| RR=0x001B / `1B 00` | `circuit_pump_unknown_8`, u16 raw | `PumpStatusRaw`, `PumpStatusLiveAt` | Mapping path `[].state.pump_status`; `publishCircuits` sets GraphQL `circuit_state.pump_active` using `decodeUint16Bool` |
+| RR=0x0024 / `24 00` | `circuit_pump_operating_time_total`, u32, hrs | `PumpHoursRaw` | Mapping path `[].state.pump_operating_hours`; GraphQL `circuit_state.pump_hours`, via `decodeUint32Float64` |
+| RR=0x0025 / `25 00` | `circuit_pump_start_count_total`, u32, count | `PumpStartsRaw` | Mapping path `[].state.pump_starts_count`; GraphQL `circuit_state.pump_starts`, via `decodeUint32Int` |
 
 **Proven — software:** `readB524Uint16` accepts a nonempty decoded value;
 `decodeB524Uint16` accepts one byte, or decodes the first two little-endian
@@ -197,7 +197,7 @@ are reproducible software conversions only. A and B, RR=0x001B and RR=0x001E,
 OP=0x02 and OP=0x06, status and counters, or circuit and boiler sources are not
 interchangeable. Equal values do not prove identity or physical equivalence.
 
-MCP `ebus.v1.semantic.circuits.get` field names and GraphQL aliases remain the
+MCP `ebus_v1_semantic_circuits_get` field names and GraphQL members remain the
 compatibility boundary: retain the existing surfaces and clearly label their
 interpretation while exposing native evidence through their supported
 provenance/envelope mechanisms. Do not promise lossless reconstruction from a

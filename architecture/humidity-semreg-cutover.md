@@ -19,8 +19,8 @@ Zone room temperature sensor mapping**. Its category C means configuration
 candidate; FLAGS and historical access labels do not prove writable support.
 Family-dependent codecs, presence and mapping remain independently qualified.
 
-The [semantic mapping][mapping], sections `ebus.v1.semantic.system.get`,
-`ebus.v1.semantic.circuits.get` and `ebus.v1.semantic.zones.get`, documents legacy
+The [semantic mapping][mapping], sections `ebus_v1_semantic_system_get`,
+`ebus_v1_semantic_circuits_get` and `ebus_v1_semantic_zones_get`, documents legacy
 field associations. The [gateway source][gateway] proves implementation behavior
 only. The [Thermal definitions][thermal], tables `fields`, `services`,
 `capabilities` and function `Metadata`, establish available definitions, not a
@@ -49,9 +49,9 @@ zone, circuit and remote instances, not interchangeable indices.
 
 | Observation | Exact selector and native interpretation | Current legacy implementation |
 |---|---|---|
-| Controller-zone relative humidity | `(0x02,0x03,z,0x0028)`, f32 percent; catalog says from room sensor | `refreshZoneSlowConfigFields` reads `zone_current_humidity` into `HumidityPct`; `publishZones` exposes `Zone.State.CurrentHumidityPct`, the semantic mapping's `zones[].state.current_humidity_pct`. A controller-mediated zone field does not establish a physical sensor inside the controller. |
+| Controller-zone relative humidity | `(0x02,0x03,z,0x0028)`, f32 percent; catalog says from room sensor | `refreshZoneSlowConfigFields` reads `zone_current_humidity` into `HumidityPct`; `publishZones` exposes `zone.state.zone_room_humidity`, the semantic mapping's `zones[].state.zone_room_humidity`. A controller-mediated zone field does not establish a physical sensor inside the controller. |
 | Remote-room relative humidity | `(0x06,0x09,r,0x0007)` or `(0x06,0x0A,r,0x0007)`, f32 percent; remote-family catalog describes installed humidity sensor and NaN when absent | `refreshRadioDevices` reads `device_slot_room_humidity` for connected slots with `readB524F32`; `publishRadioDevices` exposes `RoomHumidityPct`. `mappedRadioRoomStateForZoneLocked` may supply a zone fallback. GG09 and GG0A remain different native sources. |
-| Circuit room relative humidity | `(0x02,0x02,c,0x0022)`, f32 percent; catalog says from room sensor | `refreshCircuits` populates `HumidityPct`; `publishCircuits` exposes `Circuit.State.Humidity`. The semantic mapping names this `circuits[].state.current_humidity_pct`; spelling does not imply identical serialized field names in every API. |
+| Circuit room relative humidity | `(0x02,0x02,c,0x0022)`, f32 percent; catalog says from room sensor | `refreshCircuits` populates `HumidityPct`; `publishCircuits` exposes `circuit.state.humidity`. The semantic mapping names this `circuits[].state.current_humidity_pct`; spelling does not imply identical serialized field names in every API. |
 | Maximum-room-humidity configuration threshold | `(0x02,0x00,0x00,0x000E)`, u16 percent, configuration candidate | `refreshSystem` reads `system_max_room_humidity`; `publishSystem` exposes `Config.MaxRoomHumidity`, corresponding to `system.config.max_room_humidity`. This is not an observed humidity sample. |
 
 `readB524Float32LE` requires at least four value bytes, decodes the first four

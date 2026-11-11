@@ -66,7 +66,7 @@ document, or maintain an independent lifecycle FSM.
 
 Process readiness is not driver readiness. The process is ready after its
 mandatory control plane is serving, the driver catalog exists, configuration
-classification has completed, and `helianthus.runtime.list` can return a coherent
+classification has completed, and `helianthus_runtime_list` can return a coherent
 snapshot. At least one failed driver does not make process readiness fail.
 
 A protocol-local startup failure never terminates the shared gateway. HTTP,
@@ -302,7 +302,7 @@ certificate identity, or device identity.
 The implementation follows the platform delivery pipeline:
 
 1. **MCP prototype**: implement and stabilize exactly
-   `helianthus.runtime.{list,get,start,stop,restart}` under the
+   `helianthus_runtime_{list,get,start,stop,restart}` under the
    [G5 contract](../../api/mcp.md#g5-runtime-lifecycle-mcp-contract-d4).
    The historical `drivers.v1.*` tools are not delivery requirements.
 2. **Status parity**: preserve existing MCP/GraphQL daemon and adapter status

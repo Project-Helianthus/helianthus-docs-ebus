@@ -291,8 +291,8 @@ def test_public_mcp_authority_supersedes_historical_inventory() -> None:
         assert required in api
     for required in (
         "../../api/mcp.md#g5-runtime-lifecycle-mcp-contract-d4",
-        "`helianthus.runtime.list` can return a coherent snapshot",
-        "`helianthus.runtime.{list,get,start,stop,restart}`",
+        "`helianthus_runtime_list` can return a coherent snapshot",
+        "`helianthus_runtime_{list,get,start,stop,restart}`",
         "historical `drivers.v1.*` tools are not delivery requirements",
         "There is no lifecycle GraphQL API, resolver, mutation or subscription.",
     ):

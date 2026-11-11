@@ -1,5 +1,7 @@
 # Public GraphQL M2M V1
 
+The six M2M contract artifacts are excluded from this naming update because their shape differs from the emitted interface; docs-ebus#1166 tracks that limitation.
+
 **Current gateway status: Proven.** The gateway implements `/graphql/m2m/v1`
 on a dedicated TLS 1.3 listener. Its current SemReg queries are
 `semanticPVCurrent`, `semanticStorageCurrent`, and `semanticEVSECurrent`.

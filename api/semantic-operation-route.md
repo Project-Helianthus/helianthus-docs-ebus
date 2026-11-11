@@ -36,27 +36,27 @@ namespace. No new native operation, range, bypass or live-write recipe is define
 ## One request
 
 Use one additive ordinary GraphQL mutation:
-`semanticOperation(input: SemanticOperationInput!): SemanticOperationResult`.
+`semantic_operation(input: semantic_operation_input!): semantic_operation_result`.
 It serves every pack through the same adapter. It does not extend the separate
 machine-to-machine schema. The following is the closed input member set:
 
 | Member | Type and meaning |
 | --- | --- |
-| `assetId` | `String!`; exact existing SemReg `AssetID`. |
-| `bindingId` | `String!`; expected existing `NativeBindingID`, checked against the admitted route. It is a match constraint, never a native locator or route override. |
-| `capabilityInstanceId` | `String!`; exact existing capability instance, mapped to `Intent.RequiredCapability.InstanceID`. |
-| `operation` | `SemanticDefinitionRefInput!`; existing pack-owned operation definition, including `pack { id version }`, `id` and `version`. Maps to `Intent.Kind`. |
-| `arguments` | `[SemanticTypedFieldInput!]!`; existing `TypedField` records with `id` and tagged `value`. No free-form native payload. |
-| `expectedSemanticRevision` | `String!`; maps to the intent's semantic revision. |
-| `expectedCapabilityRevision` | `String!`; complete capability collection revision. |
-| `expectedCapabilityInstanceRevision` | `String!`; revision of the one instance, distinct from the collection revision. |
-| `expectedSourceEpochId` | `String!`; exact expected source epoch. |
-| `expectedDriverGeneration` | `String!`; exact expected driver generation. |
-| `preconditions` | `[SemanticPreconditionInput!]!`; existing `Precondition` records: full fact key, candidate ID/revision, operator and expected typed value. Empty only when the pack permits it. |
-| `timeoutMs` | `Int!`; request budget, 1–5000 milliseconds, capped by the server's remaining budget. Never extends an owner deadline. |
+| `asset_id` | `String!`; exact existing SemReg `AssetID`. |
+| `binding_id` | `String!`; expected existing `NativeBindingID`, checked against the admitted route. It is a match constraint, never a native locator or route override. |
+| `capability_instance_id` | `String!`; exact existing capability instance, mapped to `Intent.RequiredCapability.InstanceID`. |
+| `operation` | `semantic_definition_ref_input!`; existing pack-owned operation definition, including `pack { id version }`, `id` and `version`. Maps to `Intent.Kind`. |
+| `arguments` | `[semantic_typed_field_input!]!`; existing `TypedField` records with `id` and tagged `value`. No free-form native payload. |
+| `expected_semantic_revision` | `String!`; maps to the intent's semantic revision. |
+| `expected_capability_revision` | `String!`; complete capability collection revision. |
+| `expected_capability_instance_revision` | `String!`; revision of the one instance, distinct from the collection revision. |
+| `expected_source_epoch_id` | `String!`; exact expected source epoch. |
+| `expected_driver_generation` | `String!`; exact expected driver generation. |
+| `preconditions` | `[semantic_precondition_input!]!`; existing `Precondition` records: full fact key, candidate ID/revision, operator and expected typed value. Empty only when the pack permits it. |
+| `timeout_ms` | `Int!`; request budget, 1–5000 milliseconds, capped by the server's remaining budget. Never extends an owner deadline. |
 
 Referenced input records mirror the existing SemReg records using the recursive
-snake_case to camelCase mapping in the shared read contract. Every opaque ID,
+snake_case member mapping in the shared read contract. Every opaque ID,
 including IDs in nested input records, uses string-only GraphQL `String` input
 with the existing nullability; numeric inputs are rejected. IDs compare
 byte-for-byte, without trimming, case folding, decoding or reconstruction.
@@ -65,15 +65,15 @@ existing 64-bit type, never GraphQL `Int` or floating-point numbers. Values reta
 their one matching tagged arm, exact decimal coefficient/exponent and unit.
 
 Bound this target API on the parsed operation, before admission.
-When at least one `semanticOperation` selection reaches its resolver,
+When at least one `semantic_operation` selection reaches its resolver,
 the resolver enforces the resolver-owned limits in this paragraph on the
 operation the stock GraphQL handler has already parsed, so a refused request
-captures, admits and sends nothing. Allow at most one `semanticOperation`
+captures, admits and sends nothing. Allow at most one `semantic_operation`
 selection in the executing operation, counted on the parsed document through
 aliases, inline fragments and fragment spreads, including a selection that a
 directive would skip; a second selection is `INVALID_ARGUMENT`, and there are no
 batched operation requests.
-If every `semanticOperation` selection is skipped by `@skip(if: true)` or
+If every `semantic_operation` selection is skipped by `@skip(if: true)` or
 `@include(if: false)`, the stock GraphQL executor never invokes the resolver;
 only resolver-owned checks are bypassed, and a second skipped selection does not
 produce `INVALID_ARGUMENT`.
@@ -108,7 +108,7 @@ tuple. Reject duplicate arguments and unsupported value arms. Overflow and
 invalid input fail before any executor invocation; do not truncate or coerce.
 These are API resource bounds, not native control ranges.
 
-A request that does not select `semanticOperation` is handled exactly as by the
+A request that does not select `semantic_operation` is handled exactly as by the
 stock GraphQL handler, whatever its size or content: no limit above applies to
 it. The route scans no request body as bytes, adds no byte limit on the whole
 body and rejects no duplicate JSON member name of its own; the operation is what
@@ -159,21 +159,21 @@ no-send. Resolving that integration is required before runtime acceptance.
 
 ## Distinct results
 
-`SemanticOperationResult` has the following closed fields: `status: String!`,
-`kernelOutcome: String`, `delivery: String`, `acknowledgement: String`,
-`readbackRelation: String`, and `reason: String`. Nullable fields are JSON null
+`semantic_operation_result` has the following closed fields: `status: String!`,
+`kernel_outcome: String`, `delivery: String`, `acknowledgement: String`,
+`readback_relation: String`, and `reason: String`. Nullable fields are JSON null
 when not evidenced. `reason` preserves a sanitized owner code, with no raw
-transport errors. `kernelOutcome` preserves the original SemReg outcome rather
+transport errors. `kernel_outcome` preserves the original SemReg outcome rather
 than collapsing conflict or no-effect into success. These are projections, not
 new SemReg outcome enum values:
 
 | API `status` | Existing evidence and meaning |
 | --- | --- |
-| `accepted` | SemReg admission and executor match succeeded. `kernelOutcome`, `delivery`, `acknowledgement` and `readbackRelation` are null. This reports admission only: it never means executed, sent, protocol ACK or readback-confirmed. `Admission` is not a terminal `ExecutionRecord`. |
-| `protocol_ack` | `kernelOutcome=acknowledged_unverified`, `delivery=sent`, and native `Acknowledgement.state=accepted` or `provisional`. No confirming readback; `readbackRelation` is `inconclusive` when evidenced, otherwise null. The protocol's accepted ACK is distinct from API admission. |
-| `readback_confirmed` | `kernelOutcome=applied`, `delivery=sent`, `readbackRelation=confirms`. A native ACK is retained if supplied, but never invented for a protocol without one. |
-| `failed` | Preserve `rejected`, `failed_no_contact`, `no_effect` or `conflict` separately in `kernelOutcome`. Admission rejection has `delivery=not_sent` as an API no-send statement, and no ACK/readback; its kernel record has no route/dispatch. `failed_no_contact` requires dispatch evidence of not-sent and no possible side effect. `no_effect` and `conflict` require their existing post-dispatch evidence, so failed does not generally imply no-send. |
-| `unknown` | `kernelOutcome=indeterminate`; dispatch may have occurred and evidence cannot establish effect. Preserve evidenced delivery (`sent` or `unknown`) and ACK/readback relation if present. A timeout or lost response cannot establish not-sent or failure without effect. No blind retry or fallback route is allowed. |
+| `accepted` | SemReg admission and executor match succeeded. `kernel_outcome`, `delivery`, `acknowledgement` and `readback_relation` are null. This reports admission only: it never means executed, sent, protocol ACK or readback-confirmed. `Admission` is not a terminal `ExecutionRecord`. |
+| `protocol_ack` | `kernel_outcome=acknowledged_unverified`, `delivery=sent`, and native `Acknowledgement.state=accepted` or `provisional`. No confirming readback; `readback_relation` is `inconclusive` when evidenced, otherwise null. The protocol's accepted ACK is distinct from API admission. |
+| `readback_confirmed` | `kernel_outcome=applied`, `delivery=sent`, `readback_relation=confirms`. A native ACK is retained if supplied, but never invented for a protocol without one. |
+| `failed` | Preserve `rejected`, `failed_no_contact`, `no_effect` or `conflict` separately in `kernel_outcome`. Admission rejection has `delivery=not_sent` as an API no-send statement, and no ACK/readback; its kernel record has no route/dispatch. `failed_no_contact` requires dispatch evidence of not-sent and no possible side effect. `no_effect` and `conflict` require their existing post-dispatch evidence, so failed does not generally imply no-send. |
+| `unknown` | `kernel_outcome=indeterminate`; dispatch may have occurred and evidence cannot establish effect. Preserve evidenced delivery (`sent` or `unknown`) and ACK/readback relation if present. A timeout or lost response cannot establish not-sent or failure without effect. No blind retry or fallback route is allowed. |
 
 Validated terminal outcomes take precedence over ACK-only classification.
 Validated `no_effect` or `conflict` remains `failed` even with an accepted or
@@ -216,11 +216,11 @@ members, null required members and missing non-null variables before any resolve
 runs. These are ordinary GraphQL request errors without a promised
 `errors[].extensions.code`; in particular, they do not promise `INVALID_ARGUMENT`.
 The stock-error fixtures require request errors before resolver execution;
-they do not establish a `data.semanticOperation` field result.
+they do not establish a `data.semantic_operation` field result.
 Resolver-owned structural refusals carry `INVALID_ARGUMENT`, resolver-owned size
 refusals carry `RESOURCE_EXHAUSTED`, and an unwired operation provider carries
 `UNAVAILABLE` on `errors[].extensions.code`. A resolver refusal nulls only
-`data.semanticOperation` (or its response alias), preserving unrelated selections
+`data.semantic_operation` (or its response alias), preserving unrelated selections
 in the `data` object; it does not null the entire `data` object.
 Stock request errors and these resolver refusals all mean no-send.
 Domain admission failures use the `failed` result and preserve the owning reason,
@@ -246,9 +246,9 @@ Assume an offline fake pack owner and executor only when checking result shapes.
 No sample provides native addressing, control values or capture context.
 
 ```graphql
-mutation SemanticOperation($input: SemanticOperationInput!) {
-  semanticOperation(input: $input) {
-    status kernelOutcome delivery acknowledgement readbackRelation reason
+mutation SemanticOperation($input: semantic_operation_input!) {
+  semantic_operation(input: $input) {
+    status kernel_outcome delivery acknowledgement readback_relation reason
   }
 }
 ```
@@ -258,21 +258,21 @@ Variables (synthetic):
 ```json
 {
   "input": {
-    "assetId": "asset:synthetic",
-    "bindingId": "binding:synthetic",
-    "capabilityInstanceId": "capability:synthetic",
+    "asset_id": "asset:synthetic",
+    "binding_id": "binding:synthetic",
+    "capability_instance_id": "capability:synthetic",
     "operation": {
       "pack": {"id": "fixture.pack.synthetic", "version": "1.0.0"},
       "id": "fixture.operation.synthetic", "version": "1.0.0"
     },
     "arguments": [],
-    "expectedSemanticRevision": "7",
-    "expectedCapabilityRevision": "3",
-    "expectedCapabilityInstanceRevision": "2",
-    "expectedSourceEpochId": "epoch:synthetic",
-    "expectedDriverGeneration": "4",
+    "expected_semantic_revision": "7",
+    "expected_capability_revision": "3",
+    "expected_capability_instance_revision": "2",
+    "expected_source_epoch_id": "epoch:synthetic",
+    "expected_driver_generation": "4",
     "preconditions": [],
-    "timeoutMs": 1000
+    "timeout_ms": 1000
   }
 }
 ```
@@ -286,14 +286,14 @@ The `fixture.reason.*` codes are synthetic owner reasons only.
 
 ```json
 [
-  {"data":{"semanticOperation":{"status":"accepted","kernelOutcome":null,"delivery":null,"acknowledgement":null,"readbackRelation":null,"reason":null}}},
-  {"data":{"semanticOperation":{"status":"protocol_ack","kernelOutcome":"acknowledged_unverified","delivery":"sent","acknowledgement":"accepted","readbackRelation":null,"reason":null}}},
-  {"data":{"semanticOperation":{"status":"readback_confirmed","kernelOutcome":"applied","delivery":"sent","acknowledgement":null,"readbackRelation":"confirms","reason":null}}},
-  {"data":{"semanticOperation":{"status":"failed","kernelOutcome":"rejected","delivery":"not_sent","acknowledgement":null,"readbackRelation":null,"reason":"fixture.reason.executor_missing"}}},
-  {"data":{"semanticOperation":{"status":"failed","kernelOutcome":"rejected","delivery":"not_sent","acknowledgement":null,"readbackRelation":null,"reason":"stale_source_epoch"}}},
-  {"data":{"semanticOperation":{"status":"failed","kernelOutcome":"rejected","delivery":"not_sent","acknowledgement":null,"readbackRelation":null,"reason":"fixture.reason.capability_unsupported"}}},
-  {"data":{"semanticOperation":{"status":"unknown","kernelOutcome":"indeterminate","delivery":"unknown","acknowledgement":null,"readbackRelation":null,"reason":"fixture.reason.delivery_uncertain"}}},
-  {"data":{"semanticOperation":{"status":"protocol_ack","kernelOutcome":"acknowledged_unverified","delivery":"sent","acknowledgement":"provisional","readbackRelation":"inconclusive","reason":null}}}
+  {"data":{"semantic_operation":{"status":"accepted","kernel_outcome":null,"delivery":null,"acknowledgement":null,"readback_relation":null,"reason":null}}},
+  {"data":{"semantic_operation":{"status":"protocol_ack","kernel_outcome":"acknowledged_unverified","delivery":"sent","acknowledgement":"accepted","readback_relation":null,"reason":null}}},
+  {"data":{"semantic_operation":{"status":"readback_confirmed","kernel_outcome":"applied","delivery":"sent","acknowledgement":null,"readback_relation":"confirms","reason":null}}},
+  {"data":{"semantic_operation":{"status":"failed","kernel_outcome":"rejected","delivery":"not_sent","acknowledgement":null,"readback_relation":null,"reason":"fixture.reason.executor_missing"}}},
+  {"data":{"semantic_operation":{"status":"failed","kernel_outcome":"rejected","delivery":"not_sent","acknowledgement":null,"readback_relation":null,"reason":"stale_source_epoch"}}},
+  {"data":{"semantic_operation":{"status":"failed","kernel_outcome":"rejected","delivery":"not_sent","acknowledgement":null,"readback_relation":null,"reason":"fixture.reason.capability_unsupported"}}},
+  {"data":{"semantic_operation":{"status":"unknown","kernel_outcome":"indeterminate","delivery":"unknown","acknowledgement":null,"readback_relation":null,"reason":"fixture.reason.delivery_uncertain"}}},
+  {"data":{"semantic_operation":{"status":"protocol_ack","kernel_outcome":"acknowledged_unverified","delivery":"sent","acknowledgement":"provisional","readback_relation":"inconclusive","reason":null}}}
 ]
 ```
 

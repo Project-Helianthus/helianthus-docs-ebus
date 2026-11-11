@@ -126,7 +126,7 @@ requested definition, report the existing withheld/unavailable disposition
 with its loss evidence. A request for an undefined item follows existing
 unknown-item handling; do not register a placeholder to make it requestable.
 
-MCP `ebus.v1.semantic.solar.get` and GraphQL must preserve the same legacy
+MCP `ebus_v1_semantic_solar_get` and GraphQL must preserve the same legacy
 source meaning, false/zero/null distinction, partial retention and FM5
 degradation/withdrawal semantics. The code shows common `SolarStatus`
 publication; complete serialization parity is downstream acceptance, not

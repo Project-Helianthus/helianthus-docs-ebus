@@ -145,22 +145,22 @@ baseline**, not a claim that current MCP payload member spelling has been
 verified. MCP tools are current inventory names; their precise member paths
 must be bound from the current surface before executable acceptance. An
 unbound path blocks that field; it is never treated as absent data. The
-GraphQL prefixes `zones`, `dhw` and `boilerStatus` below are proposed selection
-bindings to the documented `Zone`, `Dhw` and `BoilerStatus` types. The current
+GraphQL prefixes `zones`, `dhw` and `boiler_status` below are proposed selection
+bindings to the documented `zone`, `dhw_status` and `boiler_status` types. The current
 API page does not enumerate these query roots in its partial Query excerpt;
 confirm the executable selection and schema before using them as actual paths.
 
 | Fixture field | MCP expectation for both routes | GraphQL expectation for both routes |
 |---|---|---|
-| One zone's identity / instance | `ebus.v1.semantic.zones.get`: fixture zone identity and instance `1`, exact member paths required. | `zones`: selected `id` matches that fixture zone, `instance = 1`; match entities before values. |
-| Zone temperature | Same tool: temperature `21.5`, degrees Celsius, correct zone receipt. | `zones.state.currentTempC = 21.5` on the matched zone. |
-| DHW temperature | `ebus.v1.semantic.dhw.get`: temperature `48`, degrees Celsius, DHW receipt. | `dhw.currentTempC = 48`. |
-| Boiler flow temperature | `ebus.v1.semantic.boiler_status.get`: flow temperature `52`, degrees Celsius, boiler receipt. | `boilerStatus.state.flowTemperatureC = 52`. |
+| One zone's identity / instance | `ebus_v1_semantic_zones_get`: fixture zone identity and instance `1`, exact member paths required. | `zones`: selected `id` matches that fixture zone, `instance = 1`; match entities before values. |
+| Zone temperature | Same tool: temperature `21.5`, degrees Celsius, correct zone receipt. | `zones.state.zone_room_temperature = 21.5` on the matched zone. |
+| DHW temperature | `ebus_v1_semantic_dhw_get`: temperature `48`, degrees Celsius, DHW receipt. | `dhw.currentTempC = 48`. |
+| Boiler flow temperature | `ebus_v1_semantic_boiler_status_get`: flow temperature `52`, degrees Celsius, boiler receipt. | `boiler_status.state.flow_temperature_c = 52`. |
 | Known zero / false | Respective semantic tool: present numeric `0` or boolean `false` with successful native lineage. | Selected nullable numeric/boolean field contains `0` / `false`, not `null`. |
 | No known value / missing field | Preserve the surface's independently specified absent/null/error representation; no zero or false substitution. Exact MCP representation remains a baseline gap. | Requested nullable field is `null`; unselected field is outside comparison, not a missing-value observation. Record any GraphQL error separately. |
-| Discovery origin / verification | Registry tools retain each face's `discovery_source` and independent `verification_state`; omitted for no slot. | Queried face's `discoverySource` / `verificationState` agree; no-slot nullable fields are `null`. Origin cannot be rewritten by verification. |
+| Discovery origin / verification | Registry tools retain each face's `discovery_source` and independent `verification_state`; omitted for no slot. | Queried face's `discovery_source` / `verification_state` agree; no-slot nullable fields are `null`. Origin cannot be rewritten by verification. |
 | Freshness / retained lineage | Compare sidecar age/receipt and any documented exposed metadata independently of the value. | Merged value plus startup state where available; do not assert a per-field freshness member exists. Require sidecar proof. |
-| Deliberate route metadata | Route identity and correlation follow the declared baseline/direct side, not equality across routes. | `daemonStatus.initiatorAddress` may be `auto` for an auto-leased proxy and the configured synthetic source for direct; declare this condition in advance. |
+| Deliberate route metadata | Route identity and correlation follow the declared baseline/direct side, not equality across routes. | `daemon_status.initiator_address` may be `auto` for an auto-leased proxy and the configured synthetic source for direct; declare this condition in advance. |
 
 These numbers are semantic fixture inputs, not register mappings or device
 observations. No native encoding or writable behavior is inferred from them.
@@ -225,3 +225,5 @@ authorized AD10 hardware acceptance. The generic index, transport matrix and
 consolidated handoff are unchanged. No full CI, transport execution, passive
 capture, hardware smoke, profile qualification or parent acceptance is supplied
 by document readability or manual source review.
+
+The flattened DHW example has a different object shape and is outside this bounded spelling update.

@@ -49,7 +49,7 @@ domain heading in the semantic tables; it does not form a cross product.
 - The new baud series have no exporter labels: one observation source per
   gateway collector. Never choose one of several physical buses implicitly;
   ambiguous source selection makes observation unavailable.
-- Semantic quantity and status series have only `slot`, from the fixed set
+- Semantic quantity and status series have `slot` and, where specified below, a constant `unit` label. The slot is from the fixed set
   `0` through `15`. Each domain admits at most 16 concrete
   resource/service/dimension tuples. Assignment is explicit, collision-free
   and durably persisted before publication for the lifetime of the scrape
@@ -73,8 +73,7 @@ domain heading in the semantic tables; it does not form a cross product.
   `T × 1024`, where `T` counts distinct retained target-label combinations,
   including `job`, `instance` and any other relabeled target labels. Multiple
   collectors and changes to those combinations multiply the budget; capacity
-  acceptance must bound `T` over the retention period. The two baud series
-  add two per target. Existing bus series retain their own bounded
+  acceptance must bound `T` over the retention period. The baud target budget reserves two per target; only availability is emitted. Existing bus series retain their own bounded
   source-owner budgets.
 - Do not export raw asset IDs, addresses, locators, request bytes, serials,
   network endpoints, contributor identities, capture times or fingerprints
@@ -155,8 +154,7 @@ names remain unimplemented in the inspected bus store.
 ## Semantic coverage and units
 
 Every row below is **Target / exact-candidate revalidation required**, owned
-by the named SemReg pack for meaning and the gateway for export. No row is
-claimed implemented. The field identifiers are a closed allowlist, not
+by the named SemReg pack for meaning and the gateway for export. Renderer support is Proven for the names in the emitted table below; qualification remains separate. The field identifiers are a closed allowlist, not
 free-form labels. All rows use the gauge lifecycle and `slot` bound above.
 
 ### Thermal/HVAC
@@ -165,15 +163,15 @@ free-form labels. All rows use the gauge lifecycle and `slot` bound above.
 |---|---|---|
 | `thermal.action.state` | `helianthus_thermal_action_state` | enum: idle=0, heating=1, cooling=2, dhw=3, ventilating=4 |
 | `thermal.demand.level` | `helianthus_thermal_demand_ratio` | ratio; percent / 100 |
-| `thermal.measurement.air_temperature` | `helianthus_thermal_air_temperature_celsius` | Celsius; identity |
+| `thermal.measurement.air_temperature` | `helianthus_thermal_air_temperature` | Celsius; identity |
 | `thermal.measurement.flow_rate` | `helianthus_thermal_flow_cubic_meters_per_second` | m³/s; litre/minute / 60,000 |
-| `thermal.measurement.humidity_relative` | `helianthus_thermal_relative_humidity_ratio` | ratio; percent / 100 |
+| `thermal.measurement.humidity` | `helianthus_thermal_relative_humidity_ratio` | ratio; percent / 100 |
 | `thermal.measurement.power` | `helianthus_thermal_power_watts` | watts; preserve sign |
 | `thermal.measurement.water_temperature` | `helianthus_thermal_water_temperature_celsius` | Celsius; identity |
 | `thermal.mode.system` | `helianthus_thermal_system_mode` | enum: off=0, auto=1, heat=2, cool=3 |
 | `thermal.mode.zone` | `helianthus_thermal_zone_mode` | enum: off=0, auto=1, comfort=2, eco=3 |
-| `thermal.setpoint.dhw_temperature` | `helianthus_thermal_dhw_setpoint_celsius` | Celsius; identity; read-only observation |
-| `thermal.setpoint.temperature` | `helianthus_thermal_setpoint_celsius` | Celsius; identity; read-only observation |
+| `thermal.setpoint.dhw_temperature_setpoint` | `helianthus_thermal_dhw_setpoint_celsius` | Celsius; identity; read-only observation |
+| `thermal.setpoint.temperature_setpoint` | `helianthus_thermal_temperature_setpoint` | Celsius; identity; read-only observation |
 | `thermal.status.fault` | `helianthus_thermal_fault_present` | boolean: clear=0, present=1 |
 | `thermal.status.operation` | `helianthus_thermal_operation_active` | boolean: idle=0, active=1 |
 
@@ -308,3 +306,154 @@ evidence are separate acceptance work. Existing
 [thermal-map]: ../architecture/b524-semantic-mapping.md
 [thermal-fixture]: ../architecture/fixtures/vaillant-semreg-thermal-map-v1.json
 [qualification]: ../architecture/vaillant-controller-qualification-v1.md
+
+## Emitted metric names
+
+Proven means renderer support, independently of qualification. This table covers
+all 106 custom families; enablement and omission conditions still apply. Expvar-only
+values are outside Prometheus exposition. No library-emitted exception is established
+for these custom families. The bounded naming map changes only the three series
+with a constant unit below. Numeric scales, signs and conversions remain unchanged,
+including seconds, Celsius, percent divided by 100, litre/minute divided by 60,000
+and kWh multiplied by 3,600,000. Counter names retain `_total`.
+
+A constant unit admits exactly one value per family, adds no series multiplier,
+and cannot carry arbitrary dimensions. Removing a suffix must preserve unique
+series names; collisions fail admission. Existing bounded labels and partial
+last-known-good state remain required.
+
+| Series | Type | Labels | Constant unit |
+| --- | --- | --- | --- |
+| `active_read_saved_seconds` | `gauge` | `family, freshness_profile` | `none` |
+| `active_reads_avoided_total` | `counter` | `family, freshness_profile` | `none` |
+| `ambiguous_total` | `counter` | `family, reason` | `none` |
+| `direct_apply_total` | `counter` | `family, freshness_profile` | `none` |
+| `ebus_active_echo_mismatch_subclass_total` | `counter` | `subclass` | `none` |
+| `ebus_adaptermux_escape_pair_verify_failures_total` | `counter` | `step` | `none` |
+| `ebus_adaptermux_foreign_initiator_releases_total` | `counter` | `none` | `none` |
+| `ebus_adaptermux_inter_write_drained_bytes_total` | `counter` | `none` | `none` |
+| `ebus_adaptermux_stale_active_bytes_discarded_total` | `counter` | `none` | `none` |
+| `ebus_adaptermux_syn_seen_after_transport_window_expired_total` | `counter` | `none` | `none` |
+| `ebus_adaptermux_syn_seen_during_grant_window_total` | `counter` | `none` | `none` |
+| `ebus_adaptermux_syn_seen_while_inter_write_empty_total` | `counter` | `none` | `none` |
+| `ebus_adaptermux_syn_suppressed_between_writes_total` | `counter` | `none` | `none` |
+| `ebus_adaptermux_syn_suppressed_pre_echo_total` | `counter` | `none` | `none` |
+| `ebus_adaptermux_transaction_endings_total` | `counter` | `reason` | `none` |
+| `ebus_baud_observation_available` | `gauge` | `none` | `none` |
+| `ebus_bus_busy_ratio` | `gauge` | `window` | `none` |
+| `ebus_bus_busy_seconds_total` | `counter` | `none` | `none` |
+| `ebus_dedup_degraded_state` | `gauge` | `none` | `none` |
+| `ebus_dedup_degraded_total` | `counter` | `reason` | `none` |
+| `ebus_dedup_epoch_resets_total` | `counter` | `none` | `none` |
+| `ebus_dedup_local_participant_inbound_total` | `counter` | `none` | `none` |
+| `ebus_dedup_pending_flush_total` | `counter` | `reason` | `none` |
+| `ebus_errors_total` | `counter` | `class, phase, scope` | `none` |
+| `ebus_frame_bytes_total` | `counter` | `family, frame_type, part, scope` | `none` |
+| `ebus_frames_observed_total` | `counter` | `dst, family, frame_type, scope, src` | `none` |
+| `ebus_observability_recent_messages` | `gauge` | `none` | `none` |
+| `ebus_observability_series_budget_overflow_total` | `counter` | `none` | `none` |
+| `ebus_observability_transport_info` | `gauge` | `scope, timing_quality, transport_class` | `none` |
+| `ebus_passive_capability_probe_attempts_total` | `counter` | `none` | `none` |
+| `ebus_passive_capability_probe_outcomes_total` | `counter` | `outcome` | `none` |
+| `ebus_passive_capability_transitions_total` | `counter` | `from, to` | `none` |
+| `ebus_passive_capability_unavailable_reason` | `gauge` | `reason` | `none` |
+| `ebus_passive_completed_transactions_total` | `counter` | `none` | `none` |
+| `ebus_passive_direct_apply_candidates_evaluated_total` | `counter` | `none` | `none` |
+| `ebus_passive_fanout_overflow_total` | `counter` | `consumer, criticality` | `none` |
+| `ebus_passive_reconstructor_abandons_total` | `counter` | `reason` | `none` |
+| `ebus_passive_reconstructor_invalid_src_class_skipped_total` | `counter` | `none` | `none` |
+| `ebus_passive_reconstructor_prefix_resync_skipped_total` | `counter` | `none` | `none` |
+| `ebus_passive_reconstructor_recoveries_total` | `counter` | `reason` | `none` |
+| `ebus_passive_tap_connected` | `gauge` | `none` | `none` |
+| `ebus_passive_tap_reconnect_attempts_total` | `counter` | `none` | `none` |
+| `ebus_passive_tap_reconnect_failures_total` | `counter` | `none` | `none` |
+| `ebus_passive_tap_reconnect_successes_total` | `counter` | `none` | `none` |
+| `ebus_passive_warmup_blocker_reason` | `gauge` | `reason` | `none` |
+| `ebus_passive_warmup_completed_transactions` | `gauge` | `none` | `none` |
+| `ebus_passive_warmup_completion_mode` | `gauge` | `mode` | `none` |
+| `ebus_passive_warmup_elapsed_seconds` | `gauge` | `none` | `none` |
+| `ebus_passive_warmup_required_transactions` | `gauge` | `none` | `none` |
+| `ebus_passive_warmup_state` | `gauge` | `state` | `none` |
+| `ebus_periodicity_tuple_budget_overflow_total` | `counter` | `none` | `none` |
+| `energy_broadcast_freshness_transitions_total` | `counter` | `from, to` | `none` |
+| `energy_broadcast_selectors` | `gauge` | `state` | `none` |
+| `external_write_policy_state` | `gauge` | `policy` | `none` |
+| `feature_flag_enabled` | `gauge` | `flag` | `none` |
+| `feature_flag_normalizations_total` | `counter` | `reason` | `none` |
+| `helianthus_huawei_transport_events_total` | `counter` | `family, function, outcome` | `none` |
+| `helianthus_infrastructure_ac_active_power_watts` | `gauge` | `slot` | `none` |
+| `helianthus_infrastructure_ac_apparent_power_volt_amperes` | `gauge` | `slot` | `none` |
+| `helianthus_infrastructure_ac_current_amperes` | `gauge` | `slot` | `none` |
+| `helianthus_infrastructure_ac_frequency_hertz` | `gauge` | `slot` | `none` |
+| `helianthus_infrastructure_ac_power_factor_ratio` | `gauge` | `slot` | `none` |
+| `helianthus_infrastructure_ac_reactive_power_vars` | `gauge` | `slot` | `none` |
+| `helianthus_infrastructure_ac_voltage_volts` | `gauge` | `slot` | `none` |
+| `helianthus_infrastructure_apparent_power_volt_amperes` | `gauge` | `slot` | `none` |
+| `helianthus_infrastructure_breaker_open` | `gauge` | `slot` | `none` |
+| `helianthus_infrastructure_connection_connected` | `gauge` | `slot` | `none` |
+| `helianthus_infrastructure_energy_export_joules` | `gauge` | `slot` | `none` |
+| `helianthus_infrastructure_energy_import_joules` | `gauge` | `slot` | `none` |
+| `helianthus_infrastructure_export_active_power_watts` | `gauge` | `slot` | `none` |
+| `helianthus_infrastructure_export_reactive_power_vars` | `gauge` | `slot` | `none` |
+| `helianthus_infrastructure_fault_present` | `gauge` | `slot` | `none` |
+| `helianthus_infrastructure_import_active_power_watts` | `gauge` | `slot` | `none` |
+| `helianthus_infrastructure_import_reactive_power_vars` | `gauge` | `slot` | `none` |
+| `helianthus_infrastructure_interlock_active` | `gauge` | `slot` | `none` |
+| `helianthus_infrastructure_ready` | `gauge` | `slot` | `none` |
+| `helianthus_payload_aa_auto_syn_absorbed_total` | `counter` | `none` | `none` |
+| `helianthus_payload_aa_auto_syn_drain_exhausted_total` | `counter` | `none` | `none` |
+| `helianthus_payload_aa_auto_syn_recovered_total` | `counter` | `none` | `none` |
+| `helianthus_round9_absorb_entered_total` | `counter` | `none` | `none` |
+| `helianthus_semantic_evidence_age` | `gauge` | `connector, dimension, domain, fact_id, pack, unit` | `seconds` |
+| `helianthus_semantic_fact_state` | `gauge` | `availability, connector, dimension, domain, fact_id, freshness, pack, promotion, qualification, quality` | `none` |
+| `helianthus_semantic_fact_value` | `gauge` | `connector, dimension, domain, fact_id, pack, unit` | `none` |
+| `helianthus_semantic_field_available` | `gauge` | `domain, field, slot` | `none` |
+| `helianthus_semantic_open_conflicts` | `gauge` | `connector, dimension, domain, fact_id, pack` | `none` |
+| `helianthus_semantic_projection_available` | `gauge` | `domain` | `none` |
+| `helianthus_semantic_projection_item` | `gauge` | `domain, item, outcome` | `none` |
+| `helianthus_semantic_projection_loss` | `gauge` | `domain, item, loss_kind` | `none` |
+| `helianthus_semantic_render_overflow` | `gauge` | `none` | `none` |
+| `helianthus_thermal_action_state` | `gauge` | `slot` | `none` |
+| `helianthus_thermal_air_temperature` | `gauge` | `slot, unit` | `celsius` |
+| `helianthus_thermal_demand_ratio` | `gauge` | `slot` | `none` |
+| `helianthus_thermal_dhw_setpoint_celsius` | `gauge` | `slot` | `none` |
+| `helianthus_thermal_fault_present` | `gauge` | `slot` | `none` |
+| `helianthus_thermal_flow_cubic_meters_per_second` | `gauge` | `slot` | `none` |
+| `helianthus_thermal_operation_active` | `gauge` | `slot` | `none` |
+| `helianthus_thermal_power_watts` | `gauge` | `slot` | `none` |
+| `helianthus_thermal_relative_humidity_ratio` | `gauge` | `slot` | `none` |
+| `helianthus_thermal_temperature_setpoint` | `gauge` | `slot, unit` | `celsius` |
+| `helianthus_thermal_system_mode` | `gauge` | `slot` | `none` |
+| `helianthus_thermal_water_temperature_celsius` | `gauge` | `slot` | `none` |
+| `helianthus_thermal_zone_mode` | `gauge` | `slot` | `none` |
+| `helianthus_transport_runtime_status` | `gauge` | `outcome, protocol, reason, state` | `none` |
+| `helianthus_v8_shadow_would_have_dropped_total` | `counter` | `none` | `none` |
+| `missed_due_to_transport_limitations_total` | `counter` | `family, freshness_profile, limitation` | `none` |
+| `passive_hits_total` | `counter` | `family, freshness_profile` | `none` |
+
+## Provisional metric exceptions
+
+Each name below remains emitted and provisional, outside the unit-label rule.
+For each, the open question is which bounded unit-label change preserves its
+quantity and every consumer? These are custom exceptions, not proven library
+constraints. Other unchanged names retain their recorded meaning.
+
+- `active_read_saved_seconds`: provisional; unit-label adoption is unresolved.
+- `ebus_passive_warmup_elapsed_seconds`: provisional; unit-label adoption is unresolved.
+- `helianthus_infrastructure_ac_active_power_watts`: provisional; unit-label adoption is unresolved.
+- `helianthus_infrastructure_ac_apparent_power_volt_amperes`: provisional; unit-label adoption is unresolved.
+- `helianthus_infrastructure_ac_current_amperes`: provisional; unit-label adoption is unresolved.
+- `helianthus_infrastructure_ac_frequency_hertz`: provisional; unit-label adoption is unresolved.
+- `helianthus_infrastructure_ac_reactive_power_vars`: provisional; unit-label adoption is unresolved.
+- `helianthus_infrastructure_ac_voltage_volts`: provisional; unit-label adoption is unresolved.
+- `helianthus_infrastructure_apparent_power_volt_amperes`: provisional; unit-label adoption is unresolved.
+- `helianthus_infrastructure_energy_export_joules`: provisional; unit-label adoption is unresolved.
+- `helianthus_infrastructure_energy_import_joules`: provisional; unit-label adoption is unresolved.
+- `helianthus_infrastructure_export_active_power_watts`: provisional; unit-label adoption is unresolved.
+- `helianthus_infrastructure_export_reactive_power_vars`: provisional; unit-label adoption is unresolved.
+- `helianthus_infrastructure_import_active_power_watts`: provisional; unit-label adoption is unresolved.
+- `helianthus_infrastructure_import_reactive_power_vars`: provisional; unit-label adoption is unresolved.
+- `helianthus_thermal_dhw_setpoint_celsius`: provisional; unit-label adoption is unresolved.
+- `helianthus_thermal_flow_cubic_meters_per_second`: provisional; unit-label adoption is unresolved.
+- `helianthus_thermal_power_watts`: provisional; unit-label adoption is unresolved.
+- `helianthus_thermal_water_temperature_celsius`: provisional; unit-label adoption is unresolved.

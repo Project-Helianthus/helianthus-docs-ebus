@@ -45,7 +45,7 @@ address. OP02 and OP06 namespaces remain separate.
 
 | Tuple | Documented meaning and representation | Current consumer / disposition |
 | --- | --- | --- |
-| `(0x02, 0x01, 0x00, 0x0005)` | `dhw_temperature`, f32, °C; community name `HwcStorageTemp`; gated by RR0001 | `dhw_current_temp` → `CurrentTempC` → GraphQL [`Dhw.currentTempC`](../api/graphql.md) (queried as `dhw.currentTempC`); documented MCP `ebus.v1.semantic.dhw.get` `current_temp_c`; controller mirror in boiler status `state.dhwTemperatureC`. Sole measured input in this contract. |
+| `(0x02, 0x01, 0x00, 0x0005)` | `dhw_temperature`, f32, °C; community name `HwcStorageTemp`; gated by RR0001 | `dhw_current_temp` → `CurrentTempC` → GraphQL [`dhw.current_temp_c`](../api/graphql.md) (queried as `dhw.current_temp_c`); documented MCP `ebus_v1_semantic_dhw_get` `current_temp_c`; controller mirror in boiler status `state.dhw_temperature_c`. Sole measured input in this contract. |
 | `(0x02, 0x01, 0x00, 0x0001)` | Exact two-byte UIN nonzero establishes family-qualified presence; zero means not present; malformed/unmatched means unknown | Admission evidence only. The candidate circuit-type enum is not established by the presence test. No temperature fact. |
 | `(0x02, 0x01, 0x00, 0x0004)` | `dhw_temperature_setpoint`, f32, °C | Legacy `target_temp_c` / boiler `dhwTargetTemperatureC`; excluded target, never a replacement for missing measured temperature. |
 | `(0x02, 0x01, 0x00, 0x0008)` | `dhw_flow_temperature_setpoint`, f32, °C | Excluded flow target; no new read or projection proposed. |
@@ -224,3 +224,5 @@ namespace is introduced. Review and document readability are contract evidence
 only, not semantic validation, transport conformance, passive/live smoke,
 hardware acceptance or profile admission. Parent #952's remaining north-south
 implementation and acceptance stay open.
+
+DHW `current_temp_c` remains provisional: which selector-qualified quantity and value role should its name express?

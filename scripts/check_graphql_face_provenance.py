@@ -50,7 +50,7 @@ NON_PROOF = (
     "live behavior."
 )
 SOURCE_RETENTION = (
-    "The accepted registry rule requires `discoverySource` to preserve the original\n"
+    "The accepted registry rule requires `discovery_source` to preserve the original\n"
     "native discovery source. Verification advancement MUST NOT rewrite\n"
     "`static_seed` or `passive_observed` to `active_confirmed`. Retained\n"
     "`static_seed` / `identity_confirmed` and `passive_observed` / `identity_confirmed`\n"
@@ -187,10 +187,10 @@ def _current_graphql_blocks(types_current: str) -> tuple[str, ...]:
 
 
 def _device_blocks(text: str, *, graphql_literals: bool = True) -> list[tuple[bool, str, str, str]]:
-    """Return full Device declarations and bodies with GraphQL nesting honored."""
+    """Return full device declarations and bodies with GraphQL nesting honored."""
     masked = _mask_graphql_literals(text) if graphql_literals else text
     ignored = r"[ \t\r\n]+"
-    pattern = re.compile(rf"(?<![`A-Za-z0-9_])(?:(extend){ignored})?type{ignored}Device\b(?!`)")
+    pattern = re.compile(rf"(?<![`A-Za-z0-9_])(?:(extend){ignored})?type{ignored}device\b(?!`)")
     blocks: list[tuple[bool, str, str, str]] = []
     for match in pattern.finditer(masked):
         parens = brackets = 0
@@ -387,14 +387,14 @@ def _mcp_device_section(text: str) -> str:
     # Raw HTML has no stable Markdown token identity. Reject it in the tool
     # inventory so code-styled aliases cannot evade whole-inventory uniqueness.
     _visible_markdown_text(inventory, reject_html=True)
-    core = _list_item(inventory, "Core stable (`ebus.v1.*`)", level=1)
-    list_label = "`ebus.v1.registry.devices.list`"
+    core = _list_item(inventory, "Core stable (`ebus_v1_*`)", level=1)
+    list_label = "`ebus_v1_registry_devices_list`"
     if len(_list_items(inventory, list_label, level=None)) != 1:
         raise CheckError("MCP registry devices.list must appear once in Implemented Surface")
     list_entries = _list_items(core, list_label, level=3)
     if len(list_entries) != 1 or _first_list_label(list_entries[0]) != list_label:
         raise CheckError("MCP registry devices.list must appear once under Core stable")
-    get_label = "`ebus.v1.registry.devices.get`"
+    get_label = "`ebus_v1_registry_devices_get`"
     if len(_list_items(inventory, get_label, level=None)) != 1:
         raise CheckError("MCP registry devices.get must appear once in Implemented Surface")
     entries = _list_items(core, get_label, level=3)
@@ -487,7 +487,7 @@ def _initial_pairs(section: str) -> tuple[tuple[str, str], ...]:
     rows = _top_level_table_after(
         section,
         "Typical initial combinations are examples, not an exhaustive pairing rule:",
-        ("`discoverySource`", "`verificationState`"),
+        ("`discovery_source`", "`verification_state`"),
         "initial combination",
     )
     return tuple((row[0], row[1]) for row in rows)
@@ -577,7 +577,7 @@ def validate_text(text: str, atr: str) -> None:
         if not block[0]
     ]
     if len(current_blocks) != 1:
-        raise CheckError("current types must contain exactly one Device definition")
+        raise CheckError("current types must contain exactly one device definition")
     documents = []
     for graphql_block in current_graphql_blocks:
         try:
@@ -588,10 +588,10 @@ def validate_text(text: str, atr: str) -> None:
         definition
         for document in documents
         for definition in document.definitions
-        if definition.kind == "object_type_definition" and definition.name.value == "Device"
+        if definition.kind == "object_type_definition" and definition.name.value == "device"
     ]
     if len(device_definitions) != 1:
-        raise CheckError("current types must contain exactly one Device definition")
+        raise CheckError("current types must contain exactly one device definition")
     prose_spans = (
         _visible_markdown_spans(visible_text[:current_start], include_html_blocks=True)
         + _visible_markdown_spans(types_current, include_html_blocks=True)
@@ -614,10 +614,10 @@ def validate_text(text: str, atr: str) -> None:
         for document in documents
         for definition in document.definitions
         if definition.kind in ("object_type_definition", "object_type_extension")
-        and definition.name.value == "Device"
+        and definition.name.value == "device"
         for field in (definition.fields or ())
     ]
-    for name in ("discoverySource", "verificationState"):
+    for name in ("discovery_source", "verification_state"):
         declarations = [field for field in device_fields if field.name.value == name]
         if (
             all_fields.count(name) != 1
@@ -626,7 +626,7 @@ def validate_text(text: str, atr: str) -> None:
             or declarations[0].type.kind != "named_type"
             or declarations[0].type.name.value != "String"
         ):
-            raise CheckError("current Device must declare exact nullable camel-case fields")
+            raise CheckError("current device must declare exact nullable snake_case fields")
 
     section = _visible_markdown_text(
         _section(visible_text),
@@ -647,15 +647,15 @@ def validate_text(text: str, atr: str) -> None:
     )
     if any(re.sub(r"\s+", " ", fragment) in normalized_visible for fragment in stale):
         raise CheckError("stale pending provenance status remains")
-    if not _contains_fragment(section, "The current gateway schema exposes the nullable camel-case fields"):
+    if not _contains_fragment(section, "The current gateway schema exposes the nullable snake_case fields"):
         raise CheckError("current provenance status missing")
     _validate_proven_conclusion(section, surface="GraphQL")
     _validate_pins(section, surface="GraphQL")
     source_section = _mask_markdown_fences(_section(visible_text))
-    if _single_column(source_section, "discoverySource") != SOURCES:
-        raise CheckError("discoverySource label set differs")
-    if _single_column(source_section, "verificationState") != STATES:
-        raise CheckError("verificationState label set differs")
+    if _single_column(source_section, "discovery_source") != SOURCES:
+        raise CheckError("discovery_source label set differs")
+    if _single_column(source_section, "verification_state") != STATES:
+        raise CheckError("verification_state label set differs")
     if _initial_pairs(source_section) != INITIAL:
         raise CheckError("initial combination examples differ")
     if not _contains_fragment(section, INDEPENDENCE):

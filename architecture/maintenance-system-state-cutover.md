@@ -25,7 +25,7 @@ Readable data and printed FLAGS establish no writable support here.
 
 **Proven (source inspection only):** the
 [legacy mapping](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/b524-semantic-mapping.md),
-section `ebus.v1.semantic.system.get`, names `state.system_off` and
+section `ebus_v1_semantic_system_get`, names `state.system_off` and
 `state.maintenance_due`. In the
 [gateway implementation](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/cmd/gateway/semantic_vaillant.go),
 `localRegulator`, `regulatorInstance`, `system_off`, `system_maintenance_due`,
@@ -144,7 +144,7 @@ separate downstream cutover implements and reviews their retention/removal.
 For the [shared semantic-snapshot records](../api/semantic-snapshot-read.md),
 MCP and GraphQL must express the same values, absence, provenance, freshness,
 qualification and loss decisions through the defined field-name mapping.
-The legacy GraphQL `SystemState.systemOff` and `SystemState.maintenanceDue`
+The legacy GraphQL `system_state.system_off` and `system_state.maintenance_due`
 fields are nullable Booleans: they carry true, false or absence, but lose
 per-field provenance, freshness, qualification and loss metadata. Preserve their
 existing scalar shape; consumers needing those distinctions require the shared

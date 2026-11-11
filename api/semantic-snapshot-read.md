@@ -13,19 +13,19 @@ or operation dispatch. These additive entry points use the same detached view:
 
 | Surface | Target entry point | Selection |
 | --- | --- | --- |
-| Ordinary GraphQL | `semanticSnapshot(assetIds: [ID!]!): SemanticSnapshotRead` | Required opaque asset IDs. |
-| MCP | `semantic.v1.snapshot.get` | Required `asset_ids` array. |
+| Ordinary GraphQL | `semantic_snapshot(asset_ids: [ID!]!): semantic_snapshot_read` | Required opaque asset IDs. |
+| MCP | `semantic_v1_snapshot_get` | Required `asset_ids` array. |
 
 `semantic.v1.*` already contains the SemReg-backed
-`semantic.v1.pv.current.get`. The new cross-pack tool belongs there rather than
-reusing the legacy `ebus.v1.semantic.snapshot.get`. No new namespace is needed.
-The ordinary GraphQL root is camelCase and additive to the schema described in
+`semantic_v1_pv_current_get`. The new cross-pack tool belongs there rather than
+reusing the legacy `ebus_v1_semantic_snapshot_get`. No new namespace is needed.
+The ordinary GraphQL root is snake_case and additive to the schema described in
 [graphql.md](graphql.md). It does not broaden the separate
 [machine-to-machine contract](../docs/platform/public-graphql-m2m-v1.md).
 Neither new entry point is implemented merely by publishing this page.
 
-The existing SemReg-backed tools are `semantic.v1.pv.current.get`,
-`semantic.v1.evse.current.get` and `semantic.v1.storage.growatt.current.get`
+The existing SemReg-backed tools are `semantic_v1_pv_current_get`,
+`semantic_v1_evse_current_get` and `semantic_v1_storage_growatt_current_get`
 (PV/inverter, EVSE and Growatt storage/BMS families). Their names are established
 by the gateway's [PV registration](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/mcp/modbus_v1.go),
 [EVSE registration](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/mcp/tesla_gen3_evse_semantic.go)
@@ -165,7 +165,7 @@ context and digest even when same-epoch freshness stays fixed.
 | Synthetic input variation | Required exact-route result |
 | --- | --- |
 | Tick fixed at `105`; wall moves forward or backward, including before the snapshot wall point | Same-epoch freshness stays `fresh` and availability `available`; no tick is inferred from wall elapsed time. SemReg's same-epoch ordering uses ticks. Cross-epoch candidates still follow its own policy. |
-| Tick advances through `109`, `110`, `119`, `120` with wall fixed | Respectively `fresh`, `stale`, `stale`, `expired`; availability is respectively `available`, `degraded`, `degraded`, `unavailable`. A same-epoch retained observation is omitted from the evaluation at expiry, without deleting its stored evidence. |
+| Tick advances through `109`, `110`, `119`, `120` with wall fixed | Respectively `fresh`, `stale`, `stale`, `expired`; availability is respectively `available`, `degraded`, `degraded`, `UNAVAILABLE`. A same-epoch retained observation is omitted from the evaluation at expiry, without deleting its stored evidence. |
 | Required coordinate absent; malformed tick; coordinate labeled `epoch:b` for an `epoch:a` snapshot | Refuse each case; no guessed tick or silent approximate fallback. A well-formed wrong epoch is an exact-route input failure, not a new restriction on SemReg's cross-epoch candidate policy. |
 | Same-epoch coordinate below snapshot or receipt tick | Refuse according to SemReg's monotonic ordering checks; preserve stored state. |
 | Two assets both in `epoch:a`, with different recorded ticks | Use the single sampled `epoch:a` coordinate and shared wall point for both; compare each to its own direct evaluation. Do not advance each recorded tick independently by wall delta. |
@@ -179,12 +179,12 @@ publish new evidence nor change partial last-known-good retention or admission.
 ## Shared view records
 
 The transport-neutral view has one required member, `assets`, an array of
-`AssetSnapshotRead`. The following are API wrapper members; they are not new
+`asset_snapshot_read`. The following are API wrapper members; they are not new
 members of SemReg `Snapshot`:
 
 | Member | Type and presence | Meaning |
 | --- | --- | --- |
-| `asset_id` | `AssetID`, required | The selected opaque asset identity, including on failure. |
+| `asset_id` | `asset_id`, required | The selected opaque asset identity, including on failure. |
 | `snapshot` | `Snapshot`, optional | Complete, unchanged public-safe source snapshot. Never a filtered object labeled as a kernel snapshot. |
 | `evaluation` | `EvaluationView`, optional | Complete pure time evaluation of that snapshot. |
 | `projection` | `ProjectionReport`, optional | Explicit per-item accounting for this read target. |
@@ -206,7 +206,7 @@ surface-owned codes are exactly: `asset_unknown`, `snapshot_unavailable`,
 `value_unknown`; any other reason is the owning contract's code, preserved
 verbatim.
 
-Opaque `AssetID`, `NativeBindingID`, `SnapshotID`, candidate, source, epoch and
+Opaque `asset_id`, `NativeBindingID`, `SnapshotID`, candidate, source, epoch and
 instance IDs are references, not addresses or routing instructions. The view
 preserves `snapshot.bindings`, `identity_links`, `sources`, `facts`, `services`,
 `capabilities`, `fences` and `cursors` using the SemReg types verbatim.
@@ -239,7 +239,7 @@ otherwise withheld projection. It adds no consumer authorization mechanism.
 
 ## Scalars, presence and quality
 
-Use `Value.kind` as the discriminator. Exactly its matching member is present:
+Use `value.kind` as the discriminator. Exactly its matching member is present:
 `quantity`, `boolean`, `text`, `symbol`, `symbols` or `time`. Pack validators
 still determine which kind is legal for a particular fact. Status symbols must
 not be relabeled as booleans for convenience.
@@ -412,21 +412,21 @@ already single-word members unchanged. Representative normative mappings:
 | `exponent10`, `known`, `revisions.semantic` | `exponent10`, `known`, `revisions.semantic` |
 
 The supplied [GraphQL adapter](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/graphql/semantic_snapshot.go)
-constructs object names as `Semantic` plus the concrete Go struct name, with
+constructs object names as `semantic_` plus the snake_case concrete Go struct name, with
 two wrapper exceptions. This is the source-derived type-name mapping for schema
 selection and fragments; it does not establish current public root wiring:
 
 | Go record | GraphQL object name |
 | --- | --- |
-| `semanticview.View`, `semanticview.Asset` | `SemanticSnapshotRead`, `AssetSnapshotRead` |
-| `Snapshot`, `RevisionVector` | `SemanticSnapshot`, `SemanticRevisionVector` |
-| `EvaluationView`, `EvaluationContext`, `EvaluatedFact` | `SemanticEvaluationView`, `SemanticEvaluationContext`, `SemanticEvaluatedFact` |
-| `FactEnvelope`, `FactKey`, `FactCandidate`, `Conflict` | `SemanticFactEnvelope`, `SemanticFactKey`, `SemanticFactCandidate`, `SemanticConflict` |
-| `Value`, `Quantity`, `Decimal`, `Symbol`, `Dimension` | `SemanticValue`, `SemanticQuantity`, `SemanticDecimal`, `SemanticSymbol`, `SemanticDimension` |
-| `Quality`, `Times`, `TimePoint`, `MonotonicPoint`, `FreshnessPolicy` | `SemanticQuality`, `SemanticTimes`, `SemanticTimePoint`, `SemanticMonotonicPoint`, `SemanticFreshnessPolicy` |
-| `RetainedObservationRecord`, `EvaluatedRetainedObservation` | `SemanticRetainedObservationRecord`, `SemanticEvaluatedRetainedObservation` |
-| `ProjectionReport`, `ProjectionManifest`, `RequestedItem`, `ProjectionDisposition`, `LossDetail` | `SemanticProjectionReport`, `SemanticProjectionManifest`, `SemanticRequestedItem`, `SemanticProjectionDisposition`, `SemanticLossDetail` |
-| `Selection` | `SemanticSelection` |
+| `semanticview.View`, `semanticview.Asset` | `semantic_snapshot_read`, `asset_snapshot_read` |
+| `Snapshot`, `RevisionVector` | `semantic_snapshot`, `semantic_revision_vector` |
+| `EvaluationView`, `EvaluationContext`, `EvaluatedFact` | `semantic_evaluation_view`, `semantic_evaluation_context`, `semantic_evaluated_fact` |
+| `FactEnvelope`, `FactKey`, `FactCandidate`, `Conflict` | `semantic_fact_envelope`, `semantic_fact_key`, `semantic_fact_candidate`, `semantic_conflict` |
+| `Value`, `Quantity`, `Decimal`, `Symbol`, `Dimension` | `semantic_value`, `semantic_quantity`, `semantic_decimal`, `semantic_symbol`, `semantic_dimension` |
+| `Quality`, `Times`, `TimePoint`, `MonotonicPoint`, `FreshnessPolicy` | `semantic_quality`, `semantic_times`, `semantic_time_point`, `semantic_monotonic_point`, `semantic_freshness_policy` |
+| `RetainedObservationRecord`, `EvaluatedRetainedObservation` | `semantic_retained_observation_record`, `semantic_evaluated_retained_observation` |
+| `ProjectionReport`, `ProjectionManifest`, `RequestedItem`, `ProjectionDisposition`, `LossDetail` | `semantic_projection_report`, `semantic_projection_manifest`, `semantic_requested_item`, `semantic_projection_disposition`, `semantic_loss_detail` |
+| `Selection` | `semantic_selection` |
 
 Other reachable struct records follow the same prefix rule; ID, digest,
 revision and code aliases are string scalars, not object types.
@@ -466,7 +466,7 @@ native locator request or the full JSON-RPC message:
 
 ```json
 {
-  "name": "semantic.v1.snapshot.get",
+  "name": "semantic_v1_snapshot_get",
   "arguments": {
     "asset_ids": ["asset:evse", "asset:infrastructure", "asset:pv", "asset:storage", "asset:thermal"]
   }
@@ -478,7 +478,7 @@ a domain-specific root. Other typed snapshot members remain selectable:
 
 ```graphql
 query SharedSemanticRead($asset_ids: [ID!]!) {
-  semanticSnapshot(asset_ids: $asset_ids) {
+  semantic_snapshot(asset_ids: $asset_ids) {
     assets {
       asset_id unavailable_reason
       snapshot {

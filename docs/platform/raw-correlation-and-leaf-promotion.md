@@ -42,7 +42,7 @@ locks individual leaves through a completed dossier.
 
 Correlation input may include only publishable evidence:
 
-- redacted eeBUS evidence refs from `eebus.v1.*` or replay bundles;
+- redacted eeBUS evidence refs from `eebus_v1_*` or replay bundles;
 - existing read-only eBUS evidence, including B509/B524/B555 source-family
   identity;
 - user-visible myVaillant observations recorded as publishable evidence IDs;
@@ -55,10 +55,10 @@ only publishable evidence IDs.
 
 ### Anti-Leak Rule
 
-No raw `eebus.v1.*` field, label, entity, service, feature, path, evidence ref,
+No raw `eebus_v1_*` field, label, entity, service, feature, path, evidence ref,
 or candidate fact may be merged into:
 
-- `ebus.v1.*` MCP outputs;
+- `ebus_v1_*` MCP outputs;
 - GraphQL outputs;
 - Portal outputs;
 - Home Assistant outputs;

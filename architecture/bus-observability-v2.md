@@ -28,7 +28,7 @@ This document now freezes:
   - retained-active fallback wording constrained to policy/watch evidence
 - M5 shared watch-summary public semantics needed by merged `ISSUE-GW-10` and
   `ISSUE-GW-11`, including:
-  - `ebus.v1.watch.summary.get` / GraphQL `watchSummary` parity ownership
+  - `ebus_v1_watch_summary_get` / GraphQL `watch_summary` parity ownership
   - query-on-gap runtime outcome classes
   - freshness-profile/max-age scheduler contract
   - generation/invalidation and degraded-shadow behavior
@@ -41,7 +41,7 @@ contract lives in [`../api/watch-summary.md`](../api/watch-summary.md).
 
 ## Invariants
 
-- `ebus.v1.bus.*` remains a bus-observability namespace, not a semantic
+- `ebus_v1_bus_*` remains a bus-observability namespace, not a semantic
   namespace.
 - M2 MCP and M3 GraphQL both expose bounded summaries and bounded retained lists
   only.
@@ -112,8 +112,8 @@ implementation status.
 
 - When passive support is unavailable or still warming up, MCP surfaces keep
   publishing explicit capability, warmup, degraded, and timing-quality state.
-- The same explicit-state rule applies to GraphQL `busSummary`, `busMessages`,
-  and `busPeriodicity`; retained list items do not imply current passive
+- The same explicit-state rule applies to GraphQL `bus_summary`, `bus_messages`,
+  and `bus_periodicity`; retained list items do not imply current passive
   availability.
 - Busy-time and periodicity are unavailable, not synthetic zeroes, when passive
   timing is unavailable.
@@ -126,9 +126,9 @@ implementation status.
 The observe-first MCP public surface is intentionally split from the semantic
 MCP surface:
 
-- `ebus.v1.bus.summary.get`
-- `ebus.v1.bus.messages.list`
-- `ebus.v1.bus.periodicity.list`
+- `ebus_v1_bus_summary_get`
+- `ebus_v1_bus_messages_list`
+- `ebus_v1_bus_periodicity_list`
 
 Reasons for the split:
 
@@ -143,16 +143,16 @@ Current registration rule:
 
 - the bus tools are advertised only when the runtime wires a real bus
   observability provider into the MCP server
-- a semantic-only MCP server does not list `ebus.v1.bus.*`
+- a semantic-only MCP server does not list `ebus_v1_bus_*`
 
 ## GraphQL Public Surface
 
 The merged M3 GraphQL parity surface mirrors the same bounded store model
 through:
 
-- `busSummary`
-- `busMessages(limit: Int)`
-- `busPeriodicity(limit: Int)`
+- `bus_summary`
+- `bus_messages(limit: Int)`
+- `bus_periodicity(limit: Int)`
 
 GraphQL-specific invariants:
 
@@ -170,8 +170,8 @@ GraphQL-specific invariants:
 
 Shared M5 surfaces are now part of the frozen architecture stack:
 
-- MCP: `ebus.v1.watch.summary.get`
-- GraphQL: `watchSummary`
+- MCP: `ebus_v1_watch_summary_get`
+- GraphQL: `watch_summary`
 
 Shared architecture invariants:
 

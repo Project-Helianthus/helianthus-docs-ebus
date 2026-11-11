@@ -29,7 +29,7 @@ The authoritative rule-by-rule source remains the decision catalog:
 | Precondition gate | Determines whether B524 structure discovery can run at all |
 | Family gate | Determines whether a semantic family may be published |
 | Instance gate | Determines whether an individual instance exists and may be published |
-| Structural output gate | Determines whether a published structure-bearing field is emitted, meaningful, or `UNKNOWN` |
+| Structural output gate | Determines whether a published structure-bearing field is emitted, meaningful, or `unknown` |
 
 ## Gate Summary Matrix
 
@@ -38,16 +38,16 @@ The authoritative rule-by-rule source remains the decision catalog:
 | B524 semantic root precondition | `SD-01` | B524 capability probes on candidate target addresses | Enables or suppresses B524 structure discovery families | `PROTOCOL` for capability; `GATEWAY_POLICY` for candidate ordering |
 | Zone instance gate | `SD-02`, `SD-03` | `GG=0x03 RR=0x001C` + zone presence FSM | Zone instance becomes present/absent | `PROTOCOL` for direct probe path; `GATEWAY_POLICY` for hysteresis/fallback |
 | Zone naming gate | `SD-04` | `GG=0x03 RR=0x0016/0x0017/0x0018` | Zone name becomes explicit or falls back | Mixed `PROTOCOL` + `GATEWAY_POLICY` |
-| Zone room-sensor mapping gate | `SD-05` | `GG=0x03 RR=0x0013` | `roomTemperatureZoneMapping` becomes available | `PROTOCOL` |
-| Zone-to-circuit derivation gate | `SD-06` | `GG=0x03 RR=0x0013` + current lab-backed `value - 1` derivation | `associatedCircuit` becomes explicit from raw mapping value | `LAB` |
-| Zone-to-circuit fallback gate | `SD-07` | outcome of `SD-06` | `associatedCircuit` remains populated via fallback-to-zone-instance | `GATEWAY_POLICY` |
+| Zone room-sensor mapping gate | `SD-05` | `GG=0x03 RR=0x0013` | `room_temperature_zone_mapping` becomes available | `PROTOCOL` |
+| Zone-to-circuit derivation gate | `SD-06` | `GG=0x03 RR=0x0013` + current lab-backed `value - 1` derivation | `associated_circuit` becomes explicit from raw mapping value | `LAB` |
+| Zone-to-circuit fallback gate | `SD-07` | outcome of `SD-06` | `associated_circuit` remains populated via fallback-to-zone-instance | `GATEWAY_POLICY` |
 | Circuit instance gate | `SD-08` | `GG=0x02 RR=0x0002` | Circuit active/inactive | `PROTOCOL` |
-| Circuit ownership gate | `SD-09` | `systemScheme`, `moduleConfigurationVR71`, `fm5SemanticMode` | `managingDevice` explicit or `UNKNOWN` | Mixed `LAB` / `PROFILE` / `UNKNOWN` |
+| Circuit ownership gate | `SD-09` | `system_scheme`, `module_configuration_vr71`, `fm5_semantic_mode` | `managing_device` explicit or `unknown` | Mixed `LAB` / `profile` / `unknown` |
 | Device slot inclusion gate | `SD-10` | `GG=0x09/0x0A/0x0C/0x0E/0x0F` OP=0x06 `device_connected` (RR=0x0001); GG=0x0C also admits `slot_mode=inventory` when identity evidence exists | Remote device slot published | Mixed `PROTOCOL` + `GATEWAY_POLICY` |
-| FM5 interpretation gate | `SD-11` | VR71 config + radio/FM5 evidence + solar/cylinder readability | `fm5SemanticMode` | Mixed `GATEWAY_POLICY` + `PROFILE` |
-| Solar family gate | `SD-12` | FM5 mode/reason/revision verdict + `GG=0x04` readability | `solar` created/updated, retained unchanged on transient degradation, or structurally withdrawn | Mixed `GATEWAY_POLICY` + `PROFILE` |
-| Cylinder family gate | `SD-13` | FM5 mode/reason/revision verdict + `GG=0x05` readability | `cylinders[]` created/updated, retained unchanged on transient degradation, or structurally withdrawn | Mixed `GATEWAY_POLICY` + `PROFILE` |
-| Individual cylinder gate | `SD-14` | `GG=0x05 RR=0x0004` (`temperatureC`) | Individual cylinder instance published/omitted | `GATEWAY_POLICY` |
+| FM5 interpretation gate | `SD-11` | VR71 config + radio/FM5 evidence + solar/cylinder readability | `fm5_semantic_mode` | Mixed `GATEWAY_POLICY` + `profile` |
+| Solar family gate | `SD-12` | FM5 mode/reason/revision verdict + `GG=0x04` readability | `solar` created/updated, retained unchanged on transient degradation, or structurally withdrawn | Mixed `GATEWAY_POLICY` + `profile` |
+| Cylinder family gate | `SD-13` | FM5 mode/reason/revision verdict + `GG=0x05` readability | `cylinders[]` created/updated, retained unchanged on transient degradation, or structurally withdrawn | Mixed `GATEWAY_POLICY` + `profile` |
+| Individual cylinder gate | `SD-14` | `GG=0x05 RR=0x0004` (`temperature_c`) | Individual cylinder instance published/omitted | `GATEWAY_POLICY` |
 
 ## B524 Semantic Root Gate
 
@@ -72,15 +72,15 @@ This page does not restate the root-discovery or identity-enrichment rationale. 
 
 - Primary evidence: `GG=0x03 RR=0x0016/0x0017/0x0018`
 - Structural effect: every published zone has a stable display name
-- Note: the `Zone N` fallback is a publication convenience, not protocol evidence
+- Note: the `zone N` fallback is a publication convenience, not protocol evidence
 
 ### Zone room-sensor mapping gate
 
 - Primary evidence: `GG=0x03 RR=0x0013`
-- Structural effect: publishes `roomTemperatureZoneMapping`
+- Structural effect: publishes `room_temperature_zone_mapping`
 - Cross-check path: remote-side `zone_assignment` from `GG=0x09/0x0A RR=0x0025`
 - Projection fallback: when direct zone room-state registers are absent, the
-  gateway may fill `zones[].state.currentTempC` and
+  gateway may fill `zones[].state.current_temp_c` and
   `zones[].state.currentHumidityPct` from the mapped radio-device snapshot:
   mapping `1` uses the regulator sensor (`GG=0x09`), while mapping values
   `>=2` use thermostat instance `mapping - 1` (`GG=0x0A`). Direct zone-state
@@ -91,14 +91,14 @@ This page does not restate the root-discovery or identity-enrichment rationale. 
 ### Zone-to-circuit derivation gate
 
 - Primary evidence: `GG=0x03 RR=0x0013`
-- Structural effect: publishes `associatedCircuit` from the current lab-backed `value - 1` derivation
+- Structural effect: publishes `associated_circuit` from the current lab-backed `value - 1` derivation
 - Scope: `LAB`
 - Important: the derivation is intentionally documented as a lab-validated formula rather than protocol truth
 
 ### Zone-to-circuit fallback gate
 
 - Primary evidence: none independent; this gate consumes the outcome of the derivation gate
-- Structural effect: keeps `associatedCircuit` populated through fallback-to-zone-instance
+- Structural effect: keeps `associated_circuit` populated through fallback-to-zone-instance
 - Scope: `GATEWAY_POLICY`
 - Important: the existence of the resolved field is part of the semantic contract, but fallback behavior remains gateway policy rather than protocol truth
 
@@ -112,18 +112,18 @@ This page does not restate the root-discovery or identity-enrichment rationale. 
 
 ### Circuit ownership gate
 
-- Primary inputs: `systemScheme`, `moduleConfigurationVR71`, `fm5SemanticMode`
-- Structural effect: publishes `circuits[].managingDevice`
+- Primary inputs: `system_scheme`, `module_configuration_vr71`, `fm5_semantic_mode`
+- Structural effect: publishes `circuits[].managing_device`
 - Output rule:
   - explicit managing device when current tuple is supported
-  - `UNKNOWN` when ownership is not proven
+  - `unknown` when ownership is not proven
 
 ## Radio Inventory Gate
 
 ### Connected-slot gate
 
 - Primary evidence: `GG=0x09/0x0A/0x0C` slot data such as `device_connected`, `device_class_address`, firmware, temperature, humidity
-- Structural effect: connected remote/radio devices appear in `radioDevices[]`
+- Structural effect: connected remote/radio devices appear in `radio_devices[]`
 
 ### Inventory-style inclusion gate
 
@@ -138,7 +138,7 @@ This page does not restate the root-discovery or identity-enrichment rationale. 
   - solar readability
   - cylinder readability
 - Structural effect:
-  - publishes `fm5SemanticMode`
+  - publishes `fm5_semantic_mode`
   - controls whether FM5-backed families are interpreted or withheld
 
 This is the bridge gate between raw controller/module evidence and higher-level family publication.
@@ -184,7 +184,7 @@ See:
 ### Individual cylinder gate
 
 - Primary evidence:
-  - `GG=0x05 RR=0x0004` (`temperatureC`)
+  - `GG=0x05 RR=0x0004` (`temperature_c`)
 - Structural effect:
   - a new or updated instance requires live temperature evidence
   - transient family degradation may retain only a previously coherent
@@ -196,11 +196,11 @@ See:
 
 These do not create families by themselves, but they are the outputs consumers must use instead of inventing local thresholds:
 
-- `roomTemperatureZoneMapping`
-- `associatedCircuit`
-- `radioDevices[]`
-- `fm5SemanticMode`
-- `circuits[].managingDevice`
+- `room_temperature_zone_mapping`
+- `associated_circuit`
+- `radio_devices[]`
+- `fm5_semantic_mode`
+- `circuits[].managing_device`
 
 ## Cross-Links
 

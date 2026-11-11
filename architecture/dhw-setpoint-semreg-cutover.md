@@ -26,8 +26,8 @@ source equivalence by itself.
   operating domain; matching complete OP01/OP07 descriptions are required
   before using such hints to validate edits. Byte order is profile-qualified.
 - [Legacy mapping](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/b524-semantic-mapping.md):
-  `ebus.v1.semantic.dhw.get`, `ebus.v1.semantic.boiler_status.get`,
-  `ebus.v1.semantic.cylinders.get`, and the system mapping.
+  `ebus_v1_semantic_dhw_get`, `ebus_v1_semantic_boiler_status_get`,
+  `ebus_v1_semantic_cylinders_get`, and the system mapping.
 - [Gateway implementation](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/cmd/gateway/semantic_vaillant.go):
   `refreshDHWSlowConfig`, `readDhwFloat`, `readB524Float32LE`,
   `expireDHWIfStaleLocked`, `publishDHW`, `refreshBoilerStatusTier`,

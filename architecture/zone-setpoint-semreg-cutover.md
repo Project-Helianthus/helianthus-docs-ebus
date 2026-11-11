@@ -19,7 +19,7 @@ move after review.
   native documentation contract first; naming and catalog constraints do not
   constitute installation qualification or prove a write route.
 - [B524 semantic mapping](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/b524-semantic-mapping.md):
-  `ebus.v1.semantic.zones.get` and “SemReg thermal v1 read-only Vaillant mapping”.
+  `ebus_v1_semantic_zones_get` and “SemReg thermal v1 read-only Vaillant mapping”.
 - [Existing typed thermal mapping](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/fixtures/vaillant-semreg-thermal-map-v1.json):
   `qualification`, `mappings`, `lifecycle`, `nonclaims`. It covers system
   outdoor/flow temperatures, not zones; its qualification is Unknown and
@@ -45,8 +45,8 @@ success alone does not prove a new acquisition.
 
 **Proven (source inspection only):** quick-veto temperature/duration/end fields
 and holiday setpoint/date/time fields are read separately and copied to the
-zone snapshot. `publishZones` exposes `TargetTempC`, `QuickVetoSetpointC`,
-`QuickVetoDurationH`, `QuickVetoExpiry`, `HolidaySetpointC` and holiday interval
+zone snapshot. `publishZones` exposes `target_temp_c`, `quick_veto_setpoint_c`,
+`quick_veto_duration_h`, `quick_veto_expiry`, `holiday_setpoint_c` and holiday interval
 fields in GraphQL zone config. Its quick-veto Boolean is derived from
 `Preset == "quickveto"`; expiry is assembled only when that preset and both
 end components are present. This assembly does not perform an expiry check.
@@ -220,3 +220,5 @@ before cutover; RR=0x0014 remains a read-only effective value, and this contract
 qualifies neither selector for writes. This prose introduces no fixture, schema
 or validator, no new transport behavior and no writable support.
 Independent review, committed-head gates and hardware acceptance remain separate.
+
+The emitted `target_temp_c` is provisional and non-compliant with the value grammar: which manual or effective heating or cooling role does the selected value represent?

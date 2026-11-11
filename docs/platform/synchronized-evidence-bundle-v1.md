@@ -28,19 +28,19 @@ or promote facts.
 This page owns only the language-neutral bundle, clock, state, hashing,
 privacy, persistence, and replay rules. All eeBUS-native protocol, runtime, and
 API facts are canonical in `helianthus-docs-eebus`. This page does not restate
-SHIP/SPINE behavior, an `eebus.v1.*` schema, VR940f behavior, or eeBUS
+SHIP/SPINE behavior, an `eebus_v1_*` schema, VR940f behavior, or eeBUS
 lifecycle rules. A source-owned payload is accepted only through the frozen
 `source_contract` and `source_schema_version` named by an artifact.
 
 M6.5 may consume only:
 
 - existing read-only eBUS debug, MCP, or log surfaces;
-- existing read-only `eebus.v1.*` snapshots; and
+- existing read-only `eebus_v1_*` snapshots; and
 - cloud/app observations supplied through the bounded pre-captured input seam
   defined below.
 
 M6.5 adds no eBUS transport, sniffing, or write path. There is no new eBUS capture path.
-It makes no change to `ebus.v1.*`, GraphQL, Portal, Home Assistant,
+It makes no change to `ebus_v1_*`, GraphQL, Portal, Home Assistant,
 command routing, the semantic registry, or promoted semantics. An `action`
 marker is externally supplied evidence only. The recorder must not initiate a
 write or state transition in any runtime, bus, cloud service, application, or
@@ -299,7 +299,7 @@ time, runtime state, degradation, and error bindings outside the source hash.
 
 For the M6.25 eeBUS tuple, replay instead validates the closed source-owned
 payload at its root. The operation is exactly
-`eebus.v1.features.data.get`; each observation binds
+`eebus_v1_features_data_get`; each observation binds
 `/observations/{index}/value` and `/observations/{index}/unit`, while
 `path_index` selects one complete pseudonymous service/entity/feature/field
 path. One `observation_ref` may repeat only for repeated observations selecting

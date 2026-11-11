@@ -228,8 +228,8 @@ def test_msp08_read_only_scope_separates_inventory_from_call_authority() -> None
     for phrase in (
         "Inventory visibility does not grant call authority.",
         "seven eeBUS observation tools",
-        "`eebus.v1.snapshot.capture`",
-        "`eebus.v1.snapshot.drop`",
+        "`eebus_v1_snapshot_capture`",
+        "`eebus_v1_snapshot_drop`",
         "must fail before snapshot-store creation, lookup, or deletion",
     ):
         assert phrase in page

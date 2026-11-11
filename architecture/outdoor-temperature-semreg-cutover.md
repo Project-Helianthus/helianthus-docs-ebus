@@ -23,8 +23,8 @@ and [typed Thermal map](https://github.com/Project-Helianthus/helianthus-docs-eb
 define the candidate mapping below, including the aggregate loss disposition.
 They document the current legacy MCP system fields, but describe the SemReg
 binding as future and qualified. The public [GraphQL contract](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/api/graphql.md)
-separately declares `SystemState.outdoorTemperature` and
-`SystemState.outdoorTemperatureAvg24h` as nullable floats.
+separately declares `system_state.outdoor_temperature` and
+`system_state.outdoor_temperatureAvg24h` as nullable floats.
 
 **Proven — document agreement:** these public contracts distinguish the two
 selectors and exclude the aggregate from the instantaneous fact.
@@ -110,10 +110,10 @@ introduces no cache schema, persistence guarantee or recovery mechanism.
 
 ## MCP and GraphQL equivalence or withholding
 
-The existing names remain MCP `ebus.v1.semantic.system.get`
-`state.outdoor_temperature` and GraphQL `SystemState.outdoorTemperature`.
+The existing names remain MCP `ebus_v1_semantic_system_get`
+`state.outdoor_temperature` and GraphQL `system_state.outdoor_temperature`.
 The separate average names remain `state.outdoor_temperature_avg24h` and
-`SystemState.outdoorTemperatureAvg24h`. Their legacy presence is not SemReg
+`system_state.outdoor_temperatureAvg24h`. Their legacy presence is not SemReg
 admission, and this contract does not remove or reinterpret the average field.
 
 For cutover acceptance, both instantaneous projections must select the same

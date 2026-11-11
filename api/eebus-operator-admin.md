@@ -21,7 +21,7 @@ see [eeBUS Northbound External-Integrator Boundary](./eebus-northbound-integrato
 It does not promote the protocol repository's candidate documents or define
 pairing actions.
 
-`eebus.v1.*` remains the only eeBUS MCP namespace. It stays read-only. There is
+`eebus_v1_*` remains the only eeBUS MCP namespace. It stays read-only. There is
 no v2 namespace, compatibility alias, public pairing tool, GraphQL mutation, or
 Portal-private copy of raw protocol truth. Operator mutations use the
 gateway-owned typed API defined by the canonical protocol contract.
@@ -162,12 +162,12 @@ solar or cylinder values. Only a later fresh coherent structural observation
 may change the structural mode.
 
 The post-M9 implementation sequence adds
-`ebus.v1.semantic.fm5_interpretation.get` first; GraphQL
+`ebus_v1_semantic_fm5_interpretation_get` first; GraphQL
 `fm5Interpretation`, Portal, and Home Assistant then consume that same tuple.
 These additive surfaces are pending until their corresponding gateway and
 consumer PRs merge; this docs gate freezes the target contract, not current
 runtime availability. Consumers may format the reason but may not recalculate
-it. The pre-existing `ebus.v1.semantic.fm5_mode.get` scalar stays stable but is
+it. The pre-existing `ebus_v1_semantic_fm5_mode_get` scalar stays stable but is
 not sufficient to diagnose degradation. A failed refresh does not publish zero
 solar/cylinder values or silently erase last-known data; freshness and the
 degraded reason remain explicit. Repair is behavioral at the acquisition/

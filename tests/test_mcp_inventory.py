@@ -15,11 +15,11 @@ ROOT = Path(__file__).resolve().parents[1]
 SYNTHETIC = {
     "schema_version": 1,
     "tools": [
-        {"name": "helianthus.runtime.list", "surface": "ordinary",
+        {"name": "helianthus_runtime_list", "surface": "ordinary",
          "registration_profile": "runtime_disabled",
          "availability_condition": "runtime service absent; eeBUS absent",
          "implementation_source": "mcp/runtime_control.go"},
-        {"name": "synthetic.target", "surface": "ordinary",
+        {"name": "synthetic_target", "surface": "ordinary",
          "registration_profile": "target_modbus_core",
          "availability_condition": "target/uncomposed structural provider; not a production enablement claim",
          "implementation_source": "mcp/synthetic.go"},
@@ -41,8 +41,8 @@ mcp-profiles:end
 mcp-inventory:start
 | Tool | Surface | Profiles | Availability condition | Implementation source | Classification |
 |---|---|---|---|---|---|
-| helianthus.runtime.list | ordinary | runtime_disabled | runtime service absent; eeBUS absent | mcp/runtime_control.go | implemented |
-| synthetic.target | ordinary | target_modbus_core | target/uncomposed structural provider; not a production enablement claim | mcp/synthetic.go | target |
+| helianthus_runtime_list | ordinary | runtime_disabled | runtime service absent; eeBUS absent | mcp/runtime_control.go | implemented |
+| synthetic_target | ordinary | target_modbus_core | target/uncomposed structural provider; not a production enablement claim | mcp/synthetic.go | target |
 mcp-inventory:end
 """
 CASES = [(SYNTHETIC, DOCUMENT)]
@@ -62,7 +62,7 @@ def test_accept_complete_inventory(pair):
 
 
 @pytest.mark.parametrize(("field", "replacement"), [
-    ("name", "synthetic.renamed"),
+    ("name", "synthetic_renamed"),
     ("surface", "operator"),
     ("registration_profile", "runtime_enabled"),
     ("availability_condition", "provider always present"),
@@ -85,7 +85,7 @@ def test_inventory_membership_mutation_rejected(pair, mutation):
     if mutation == "remove":
         inventory["tools"].pop()
     elif mutation == "add":
-        row = dict(inventory["tools"][0], name="synthetic.added")
+        row = dict(inventory["tools"][0], name="synthetic_added")
         inventory["tools"].append(row)
     elif mutation == "duplicate":
         inventory["tools"].append(inventory["tools"][0])
@@ -167,7 +167,7 @@ def test_document_inventory_row_mutations(pair, mutation):
         replacement = ""
     elif mutation == "add":
         added = list(cells)
-        added[1] = " synthetic.added "
+        added[1] = " synthetic_added "
         replacement = row + "\n" + "|".join(added)
     elif mutation == "duplicate":
         replacement = row + "\n" + row

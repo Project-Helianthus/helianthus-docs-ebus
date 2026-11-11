@@ -48,9 +48,9 @@ extend the documented scope. No public zone ID establishes circuit identity.
 
 | RR | Native contract (N) | Current legacy consumers (L; G) | Proposed semantic disposition (T) |
 | --- | --- | --- | --- |
-| `0x0008` | `circuit_flow_temperature`; read-only VF[x] circuit flow sensor; `f32`, °C; byte order qualified by profile. Catalog-supported measured quantity; broader applicability Unknown. | MCP `ebus.v1.semantic.circuits.get`: `[].state.current_circuit_flow_temperature`; G reads `FlowTemperatureC`, publishes `CircuitState.FlowTemperatureC` (GraphQL `flowTemperatureC`). | Hypothesis: `thermal.measurement.water_temperature`, `unit.celsius`, field dimension `thermal.dimension.temperature`, service `thermal.service.circuit`. Withhold until exact temperature-role FactKey value and runtime circuit binding are qualified. Never reuse `temperature:system_flow`. |
-| `0x0007` | `circuit_flow_temperature_setpoint`; `f32`, °C; installer-field candidate; physical menu correspondence requires corroboration. Requested and measured flow are distinct. | MCP `[].state.heating_circuit_flow_setpoint`; G `FlowSetpointC`, GraphQL `flowSetpointC`. | Withheld. `thermal.setpoint.temperature` exists, but no cited definition establishes it as the circuit's read-only requested-flow observation. Its set-temperature capability is zone-scoped. No operation or write capability follows from this value. |
-| `0x0020` | `circuit_unknown_10`; observed UCH one-byte raw `00`. N explicitly says it is not a temperature; enum/status meaning Unknown. | MCP `[].state.calculated_flow_temperature` is documented as `f32`; G reads `CalcFlowTempC`, GraphQL `calcFlowTempC`. This conflicts with N. | Withheld, including numerically plausible four-byte values. No matching computed-flow definition exists in T. Preserve raw evidence; assign neither °C nor an enum interpretation. |
+| `0x0008` | `circuit_flow_temperature`; read-only VF[x] circuit flow sensor; `f32`, °C; byte order qualified by profile. Catalog-supported measured quantity; broader applicability Unknown. | MCP `ebus_v1_semantic_circuits_get`: `[].state.current_circuit_flow_temperature`; G reads `FlowTemperatureC`, publishes `CircuitState.FlowTemperatureC` (GraphQL `flow_temperature_c`). | Hypothesis: `thermal.measurement.water_temperature`, `unit.celsius`, field dimension `thermal.dimension.temperature`, service `thermal.service.circuit`. Withhold until exact temperature-role FactKey value and runtime circuit binding are qualified. Never reuse `temperature:system_flow`. |
+| `0x0007` | `circuit_flow_temperature_setpoint`; `f32`, °C; installer-field candidate; physical menu correspondence requires corroboration. Requested and measured flow are distinct. | MCP `[].state.heating_circuit_flow_setpoint`; G `FlowSetpointC`, GraphQL `flow_setpoint_c`. | Withheld. `thermal.setpoint.temperature` exists, but no cited definition establishes it as the circuit's read-only requested-flow observation. Its set-temperature capability is zone-scoped. No operation or write capability follows from this value. |
+| `0x0020` | `circuit_unknown_10`; observed UCH one-byte raw `00`. N explicitly says it is not a temperature; enum/status meaning Unknown. | MCP `[].state.calculated_flow_temperature` is documented as `f32`; G reads `CalcFlowTempC`, GraphQL `calc_flow_temp_c`. This conflicts with N. | Withheld, including numerically plausible four-byte values. No matching computed-flow definition exists in T. Preserve raw evidence; assign neither °C nor an enum interpretation. |
 
 The table inventories direct consumers visible in L and G. G publishes sorted
 instance-indexed circuit snapshots through its provider and update hub; it does
@@ -180,7 +180,7 @@ not authorization to modify them in this slice. Removing the RR0020 float
 assumption and the pseudo-circuit temperature presence heuristic needs a
 separate compatibility implementation and review against N.
 
-Preserve `ebus.v1.semantic.circuits.get` compatibility and the corresponding
+Preserve `ebus_v1_semantic_circuits_get` compatibility and the corresponding
 GraphQL circuit fields. A later migration must explicitly document any change
 to legacy nullable/omitted values, especially retained CalcFlowTempC data;
 this contract does not silently redefine those responses. On any proposed

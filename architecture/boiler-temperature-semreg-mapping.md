@@ -68,10 +68,9 @@ In the gateway repository, trace `cmd/gateway/semantic_vaillant.go` by function:
    evidence.
 
 The legacy identities are boiler `BoilerState.FlowTemperatureC` and
-`BoilerState.ReturnTemperatureC`: MCP `ebus.v1.semantic.boiler_status.get`
+`BoilerState.ReturnTemperatureC`: MCP `ebus_v1_semantic_boiler_status_get`
 state members `flow_temperature_c` / `return_temperature_c`, and GraphQL
-`BoilerState.flowTemperatureC` / `returnTemperatureC` (including existing
-snake-case aliases). In gateway `mcp/server.go` nil pointers are omitted;
+`boiler_state.flow_temperature_c` / `return_temperature_c`. In gateway `mcp/server.go` nil pointers are omitted;
 `graphql/schema_types.go` resolves them as null. The boiler projection in
 `cmd/gateway/gateway_portal_projection.go` copies the same pointers. HA
 `custom_components/helianthus/sensor_descriptors.py` lists these two names in
@@ -277,7 +276,7 @@ boundaries. They are implementation evidence, not hardware qualification.
 Cutover requires matching admitted values and explicit accounting for every
 withheld or withdrawn case above across existing MCP and GraphQL boiler fields;
 Portal and HA must preserve the same value/absence meaning. Keep existing MCP
-names and GraphQL aliases: all MCP namespaces remain pre-stable until Helianthus
+names and GraphQL members: all MCP namespaces remain pre-stable until Helianthus
 1.0, and this slice grants no stability promise.
 
 ## Remaining groups pending

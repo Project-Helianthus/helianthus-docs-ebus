@@ -144,7 +144,7 @@ def validate_contract(text: str) -> None:
     examples = [json.loads(token.content) for token in tokens
                 if token.type == "fence" and token.info == "json"]
     ids = [f"asset:{pack}" for pack in ("evse", "infrastructure", "pv", "storage", "thermal")]
-    assert examples[0] == {"name": "semantic.v1.snapshot.get", "arguments": {"asset_ids": ids}}
+    assert examples[0] == {"name": "semantic_v1_snapshot_get", "arguments": {"asset_ids": ids}}
     assert examples[1] == {"assetIds": ids}
     assert examples[2] == dict(zip(
         ("semantic", "identity", "facts", "services", "capabilities"),

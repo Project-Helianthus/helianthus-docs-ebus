@@ -461,7 +461,7 @@ def test_runtime_control_contract_registered_in_local_gate() -> None:
 
 
 @pytest.mark.parametrize(("before", "after"), [
-    ("helianthus.runtime.list` |", "helianthus.runtime.enumerate` |"),
+    ("helianthus_runtime_list` |", "helianthus.runtime.enumerate` |"),
     ("`List()`", "`ListDrivers()`"),
     ('`{"DriverID":"ebus.primary"}`', '`{"driver_id":"ebus.primary"}`'),
     ("Detect duplicates before decoding can discard them.", "Ignore duplicates."),
@@ -503,7 +503,7 @@ def test_runtime_control_contract_mcp_rejects_wire_drift(before, after) -> None:
 
 def test_runtime_control_contract_mcp_rejects_extra_tool() -> None:
     documents = dict(DOCUMENTS)
-    row = '| `helianthus.runtime.list` | `{}` | `List()` |'
+    row = '| `helianthus_runtime_list` | `{}` | `List()` |'
     documents[checker.MCP] = documents[checker.MCP].replace(
         row, row + '\n| `helianthus.runtime.delete` | `{}` | `Delete()` |')
     assert any("unexpected contract content" in error for error in checker.validate(documents))
@@ -601,7 +601,7 @@ def test_runtime_control_contract_lifecycle_offered_transports() -> None:
 @pytest.mark.parametrize(("path", "before", "after"), [
     (checker.API, "It is not an implementation or acceptance target.",
      "It is the implementation and acceptance target."),
-    (checker.MANAGER, "`helianthus.runtime.{list,get,start,stop,restart}`",
+    (checker.MANAGER, "`helianthus_runtime_{list,get,start,stop,restart}`",
      "`drivers.v1.{list,start,stop,restart}`"),
     (checker.MANAGER, "The historical `drivers.v1.*` tools are not delivery requirements.",
      "The `drivers.v1.*` tools are delivery requirements."),

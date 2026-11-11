@@ -42,20 +42,20 @@ The protected MCP inventory is the exact stable read-only inventory exercised
 by coexistence capture. It contains the current eBUS registry and semantic
 snapshot reads:
 
-- `ebus.v1.registry.devices.list`;
-- `ebus.v1.semantic.snapshot.get`.
+- `ebus_v1_registry_devices_list`;
+- `ebus_v1_semantic_snapshot_get`.
 
 It also contains all nine stable raw eeBUS V1 tools, in canonical order:
 
-- `eebus.v1.runtime.status.get`;
-- `eebus.v1.services.list`;
-- `eebus.v1.services.get`;
-- `eebus.v1.sessions.list`;
-- `eebus.v1.sessions.get`;
-- `eebus.v1.topology.get`;
-- `eebus.v1.snapshot.capture`;
-- `eebus.v1.snapshot.drop`;
-- `eebus.v1.pairing.status.get`.
+- `eebus_v1_runtime_status_get`;
+- `eebus_v1_services_list`;
+- `eebus_v1_services_get`;
+- `eebus_v1_sessions_list`;
+- `eebus_v1_sessions_get`;
+- `eebus_v1_topology_get`;
+- `eebus_v1_snapshot_capture`;
+- `eebus_v1_snapshot_drop`;
+- `eebus_v1_pairing_status_get`.
 
 This is an exact V1 contract assertion, not a compatibility alias set. Missing,
 additional, stale, reordered, write-capable, legacy, or V2 entries fail closed.
@@ -161,8 +161,8 @@ continuation fails closed. The capture is valid only when `tools/list` proves
 the complete effective-scope inventory in one terminal response.
 Inventory visibility does not grant call authority. The M8 scope may call only
 the two eBUS observation tools and the seven eeBUS observation tools. The
-stable lifecycle tools `eebus.v1.snapshot.capture` and
-`eebus.v1.snapshot.drop` remain visible so contract drift is detectable, but a
+stable lifecycle tools `eebus_v1_snapshot_capture` and
+`eebus_v1_snapshot_drop` remain visible so contract drift is detectable, but a
 `tools/call` request for either must fail before snapshot-store creation,
 lookup, or deletion. In particular, `snapshot.drop` cannot destroy evidence
 through the read-only scope.
@@ -674,3 +674,5 @@ substitution. Its G18 artifact is the input evidence plus exact report bytes.
 A gateway test must not replace the verifier with a caller comparison, drop
 fields before capture, extend masking, infer a state from missing data, or
 claim G17/G19 from this contract. Passing M8 does not authorize M8.5 or M9.
+
+The protected evidence views retain their distinct shape and original operation identities; this bounded spelling update applies to the registered API method names listed above.

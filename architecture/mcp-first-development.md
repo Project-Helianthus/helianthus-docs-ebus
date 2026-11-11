@@ -15,7 +15,7 @@ New capability rollout order is mandatory:
 
 ## MCP Contract Baseline
 
-Until the Helianthus 1.0 release, all MCP namespaces, including `ebus.v1.*`,
+Until the Helianthus 1.0 release, all MCP namespaces, including `ebus_v1_*`,
 are pre-stable; the namespace version alone is not a stability promise. A
 contract version declared by an individual surface, such as `1.0`, does not
 end this period. Schema or behaviour
@@ -24,7 +24,7 @@ There is no experimental namespace or core-stable graduation before 1.0;
 both will be discussed after 1.0. Existing envelope, determinism, golden-test,
 and documentation-gate requirements remain in force.
 
-MCP tools (`ebus.v1.*`) use the required envelope:
+MCP tools (`ebus_v1_*`) use the required envelope:
 
 - `meta`:
   - `contract`
@@ -40,7 +40,7 @@ new major namespace such as `ebus.v2.*`, will be decided after 1.0.
 ## Determinism Rules
 
 - Stable ordering for list-like outputs
-- Stable schema and field naming for `ebus.v1.*`
+- Stable schema and field naming for `ebus_v1_*`
 - Snapshot mode must produce stable `data_hash` for identical input
 - Golden snapshots are required for schemas and representative outputs
 
@@ -48,7 +48,7 @@ Low-level deterministic helpers are implemented first in shared libraries (`heli
 
 ## Invoke Safety Model
 
-`ebus.v1.rpc.invoke` must enforce explicit intent and guardrails:
+`ebus_v1_rpc_invoke` must enforce explicit intent and guardrails:
 
 - `intent`: `READ_ONLY` or `MUTATE`
 - `allow_dangerous=true` for mutating or unknown methods
@@ -60,7 +60,7 @@ Unknown mutability defaults to safe denial unless explicitly allowed.
 
 A capability may graduate to GraphQL only when:
 
-1. It is implemented in MCP (`ebus.v1.*`); no core-stable graduation is required before 1.0
+1. It is implemented in MCP (`ebus_v1_*`); no core-stable graduation is required before 1.0
 2. Determinism + contract + golden tests are green
 3. MCP <-> GraphQL parity tests are green
 4. The documentation gate is satisfied

@@ -136,7 +136,7 @@ remains driver-owned. No new major or experimental namespace is introduced.
    native consumer loss outside projection accounting.
 6. Preserve deterministic envelopes and the same semantic result, provenance,
    losses and unavailable distinctions across eBUS MCP and GraphQL. Existing
-   field names, aliases and absence/null conventions remain the compatibility
+   adopted field names and absence/null conventions remain the compatibility
    boundary. Do not silently change legacy decoder behavior during cutover or
    fabricate replacement values to fill a schema. Consumers requiring the old
    mode/preset retain the native/legacy path until they explicitly accept loss;
