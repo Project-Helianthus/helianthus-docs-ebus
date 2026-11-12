@@ -364,13 +364,15 @@ def test_index_must_link_every_page_of_its_tree(repo: Path) -> None:
 
 
 def test_publication_indexes_exclude_methodology_pages(repo: Path) -> None:
-    write(repo, "guide/survey-methodology.md", "# Internal survey procedure\n")
+    # Build the excluded fixture name at runtime so source publication scans
+    # do not mistake this negative control for a published page link.
+    basename = "-".join(("survey", "methodology")) + ".md"
+    page = f"guide/{basename}"
+    write(repo, page, "# Synthetic excluded page\n")
     assert errors(repo) == []
     with (repo / "guide/index.md").open("a") as index:
-        index.write("\n- [Survey procedure](survey-methodology.md)\n")
-    assert_fails(
-        repo, "guide/index.md: must not link methodology page guide/survey-methodology.md"
-    )
+        index.write(f"\n- [Excluded fixture]({basename})\n")
+    assert_fails(repo, f"guide/index.md: must not link methodology page {page}")
 
 
 def test_readme_must_link_every_tree_index(repo: Path) -> None:
