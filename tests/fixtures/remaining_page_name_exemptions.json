@@ -2775,7 +2775,7 @@
     "file": "scripts/check_naming_surface_contract.py",
     "token": "current_temp_c",
     "context": "current_temp_c",
-    "count": 1,
+    "count": 2,
     "reason": "Guard rejected-token literal or synthetic negative control."
   },
   {

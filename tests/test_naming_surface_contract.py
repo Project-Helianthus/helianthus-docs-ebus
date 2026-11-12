@@ -201,6 +201,17 @@ def test_remaining_page_injection_rejected(tmp_path, text):
         CHECKER.validate_remaining_pages(tmp_path)
 
 
+@pytest.mark.parametrize("name", ["current_temp_c_source", "current_temp_cSource"])
+def test_adopted_graphql_name_extension_allowed(tmp_path, name):
+    fixture = tmp_path / "tests/fixtures"
+    fixture.mkdir(parents=True)
+    (fixture / "remaining_page_name_exemptions.json").write_text("[]")
+    (tmp_path / "api").mkdir()
+    (tmp_path / "api/portal.md").write_text(
+        "```graphql\ntype Query { " + name + ": String }\n```\n")
+    CHECKER.validate_remaining_pages(tmp_path)
+
+
 def test_remaining_exemptions_exist():
     CHECKER.validate_remaining_pages(ROOT)
 
