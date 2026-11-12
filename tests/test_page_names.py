@@ -58,6 +58,8 @@ def table(**overrides) -> dict:
             }
         ],
         "inherited_unresolved_anchors": [],
+        "pinned_provenance": [],
+        "known_unresolved_links": [],
     }
     value.update(overrides)
     return value
@@ -305,6 +307,9 @@ def test_remaining_reference_to_earlier_name_fails(repo: Path, text: str) -> Non
 def test_pinned_provenance_keeps_the_earlier_path(repo: Path) -> None:
     pinned = {"owner_commit": COMMIT, "owner_path": "guide/Old_Page.md"}
     write(repo, "data/registry.json", json.dumps(pinned) + "\n")
+    save_table(repo, table(pinned_provenance=[{
+        "file": "data/registry.json", "path": "guide/Old_Page.md", "count": 1,
+    }]))
     assert errors(repo) == []
 
 
@@ -357,35 +362,56 @@ def test_duplicate_and_explicit_anchors_resolve(repo: Path) -> None:
     assert errors(repo) == []
 
 
-def test_index_leaves_more_pages_unlinked_than_declared(repo: Path) -> None:
+def test_index_swap_fails(repo: Path) -> None:
     write(repo, "guide/quiet-page.md", "# Quiet page\n")
-    write(repo, "guide/spare-page.md", "# Spare page\n")
-    save_table(repo, table(unlinked_pages={"guide/index.md": 1}))
-    assert_fails(repo, "guide/index.md: declared 1 unlinked pages, actual 2")
-    assert_fails(repo, "guide/quiet-page.md")
-    assert_fails(repo, "guide/spare-page.md")
-
-
-def test_index_links_page_still_declared_unlinked(repo: Path) -> None:
-    write(repo, "guide/quiet-page.md", "# Quiet page\n")
-    save_table(repo, table(unlinked_pages={"guide/index.md": 1}))
+    save_table(repo, table(unlinked_pages={
+        "guide/index.md": [checker.page_identifier("guide/quiet-page.md")],
+    }))
     assert errors(repo) == []
-    with (repo / "guide/index.md").open("a") as index:
-        index.write("\n- [Quiet page](quiet-page.md)\n")
-    assert_fails(repo, "guide/index.md: declared 1 unlinked pages, actual 0")
+    write(repo, "guide/index.md", "# Guide\n[a](new-page.md) [b](quiet-page.md)\n")
+    assert_fails(repo, "guide/index.md: unlinked page identifiers differ")
+    assert_fails(repo, "guide/other.md")
 
 
-def test_index_missing_declaration_defaults_to_zero(repo: Path) -> None:
-    write(repo, "guide/quiet-page.md", "# Quiet page\n")
-    assert_fails(repo, "guide/index.md: declared 0 unlinked pages, actual 1")
-
-
-@pytest.mark.parametrize("value", [[], None, {"guide/index.md": -1},
-    {"guide/index.md": True}, {"guide/index.md": "1"},
-    {"guide/index.md": 1.5}, {"other/index.md": 0}])
+@pytest.mark.parametrize("value", [[], None, {"guide/index.md": 1},
+    {"guide/index.md": ["INVALID"]}, {"other/index.md": []},
+    {"guide/index.md": ["abcdef0123456789", "abcdef0123456789"]}])
 def test_malformed_unlinked_pages_fails(repo: Path, value) -> None:
     save_table(repo, table(unlinked_pages=value))
-    assert_fails(repo, "unlinked_pages must map listed tree indexes to non-negative integers")
+    assert_fails(repo, "unlinked_pages must map listed tree indexes to identifier lists")
+
+
+def test_unrelated_commit_does_not_hide_stale_name(repo: Path) -> None:
+    write(repo, "data/registry.json", json.dumps({
+        "owner_commit": COMMIT, "owner_path": "guide/other.md",
+        "note": "guide/Old_Page.md",
+    }))
+    assert_fails(repo, "still names the earlier page Old_Page.md")
+
+
+def test_pinned_count_must_match(repo: Path) -> None:
+    write(repo, "data/registry.json", json.dumps({
+        "owner_commit": COMMIT, "owner_path": "guide/Old_Page.md",
+    }))
+    save_table(repo, table(pinned_provenance=[{
+        "file": "data/registry.json", "path": "guide/Old_Page.md", "count": 2,
+    }]))
+    assert_fails(repo, "occurrence count differs")
+
+
+def test_missing_link_fails(repo: Path) -> None:
+    write(repo, "guide/other.md", "# Other\n[page](absent-page.md)\n")
+    assert_fails(repo, "missing link target absent-page.md")
+
+
+def test_known_missing_link_must_remain_unresolved(repo: Path) -> None:
+    write(repo, "guide/other.md", "# Other\n[page](absent-page.md)\n")
+    save_table(repo, table(known_unresolved_links=[{
+        "source": "guide/other.md", "target": "absent-page.md",
+    }]))
+    assert errors(repo) == []
+    write(repo, "guide/absent-page.md", "# Page\n")
+    assert_fails(repo, "no longer occurs unresolved")
 
 
 def test_readme_must_link_every_tree_index(repo: Path) -> None:

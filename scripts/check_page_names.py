@@ -24,7 +24,7 @@ name was normalized to lowercase kebab-case. For each row the checker requires:
   the exact file and to a heading or explicit anchor of that page; the finite
   list of anchors that already failed before the rename must match exactly;
 - the tree indexes: each is linked from README.md and links every publishable
-  page of its tree except the declared number kept out of navigation; a listed
+  page of its tree except the identified pages kept out of navigation; a listed
   page outside every indexed tree is linked from README.md.
 
 The earlier names are documentary only. Nothing reads them as a fallback.
@@ -33,6 +33,7 @@ The earlier names are documentary only. Nothing reads them as a fallback.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import posixpath
@@ -53,14 +54,14 @@ TOP_KEYS = {
     "tree_indexes",
     "unlinked_pages",
     "pages",
+    "pinned_provenance",
+    "known_unresolved_links",
     "inherited_unresolved_anchors",
 }
 ROW_KEYS = {"path", "previous_path", "status", "basis"}
 ANCHOR_KEYS = {"source", "target", "anchor"}
 KEBAB = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*\.md")
 BRANCH_URL = "https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/"
-PINNED_COMMIT = re.compile(r"owner_commit[\"']\]?\s*(?::|==)\s*[\"'][0-9a-f]{40}[\"']")
-PINNED_WINDOW = 800
 SKIP_DIRS = {"__pycache__", "node_modules"}
 INLINE_LINK = re.compile(r"\]\(\s*<?([^\s)>]+)>?(?:\s+\"[^\"]*\")?\s*\)")
 DEFINITION = re.compile(r"^\s{0,3}\[[^\]]+\]:\s*<?(\S+?)>?(?:\s|$)", re.M)
@@ -147,6 +148,52 @@ def read_text(path: Path) -> str | None:
         return None
 
 
+def valid_identifiers(value) -> bool:
+    if not isinstance(value, list):
+        return False
+    if not all(isinstance(item, str) and re.fullmatch(r"[0-9a-f]{16}", item) for item in value):
+        return False
+    return len(value) == len(set(value))
+
+
+def page_identifier(path: str) -> str:
+    return hashlib.sha256(path.encode("utf-8")).hexdigest()[:16]
+
+
+def pinned_pairs(root: Path, entries: list) -> tuple[dict, list[str]]:
+    pairs = {}
+    errors = []
+    if not isinstance(entries, list):
+        return pairs, [f"{TABLE}: pinned_provenance must be a list"]
+    for item in entries:
+        if not valid_pin(item):
+            errors.append(f"{TABLE}: malformed pinned pair")
+            continue
+        key = (item["file"], item["path"])
+        text = read_text(root / key[0]) or ""
+        if key in pairs or text.count(key[1]) != item["count"]:
+            errors.append(f"{TABLE}: pinned pair {key} occurrence count differs or is duplicated")
+        pairs[key] = item["count"]
+    return pairs, errors
+
+
+def valid_pin(item) -> bool:
+    if not isinstance(item, dict) or set(item) != {"file", "path", "count"}:
+        return False
+    return (all(isinstance(item[k], str) and item[k] for k in ("file", "path"))
+            and type(item["count"]) is int and item["count"] > 0)
+
+
+def pinned_occurrence(rel: str, text: str, start: int, end: int, pairs: dict) -> bool:
+    for file, path in pairs:
+        if file != rel:
+            continue
+        offset = text.rfind(path, 0, end)
+        if offset >= 0 and offset <= start and offset + len(path) >= end:
+            return True
+    return False
+
+
 def table_navigation_errors(table: dict) -> list[str]:
     errors: list[str] = []
     indexes = table["tree_indexes"]
@@ -157,11 +204,11 @@ def table_navigation_errors(table: dict) -> list[str]:
         table["tree_indexes"] = []
     unlinked = table["unlinked_pages"]
     if not isinstance(unlinked, dict) or any(
-        key not in table["tree_indexes"] or type(value) is not int or value < 0
+        key not in table["tree_indexes"] or not valid_identifiers(value)
         for key, value in unlinked.items()
     ):
         errors.append(
-            f"{TABLE}: unlinked_pages must map listed tree indexes to non-negative integers"
+            f"{TABLE}: unlinked_pages must map listed tree indexes to identifier lists"
         )
         table["unlinked_pages"] = {}
     return errors
@@ -331,7 +378,7 @@ def kept_link_text(rel: str, line: str, column: int, destination: str) -> bool:
     return False
 
 
-def check_closure(root: Path, rows: list[dict]) -> list[str]:
+def check_closure(root: Path, rows: list[dict], pairs: dict) -> list[str]:
     destination = {posixpath.basename(row["previous_path"]): row["path"] for row in rows}
     if not destination:
         return []
@@ -347,9 +394,8 @@ def check_closure(root: Path, rows: list[dict]) -> list[str]:
             continue
         references = reference_lines(text) if rel.endswith(".md") else set()
         for match in pattern.finditer(text):
-            window = text[max(0, match.start() - PINNED_WINDOW): match.end() + PINNED_WINDOW]
-            if PINNED_COMMIT.search(window):
-                continue  # pinned provenance: the earlier path at a fixed owner commit
+            if pinned_occurrence(rel, text, match.start(), match.end(), pairs):
+                continue
             line = text.count("\n", 0, match.start()) + 1
             start = text.rfind("\n", 0, match.start()) + 1
             end = text.find("\n", match.start())
@@ -459,6 +505,51 @@ def check_links(root: Path, rows: list[dict], inherited: list) -> list[str]:
     return errors + links.errors + links.stale()
 
 
+def exact_target(root: Path, path: str) -> bool:
+    current = root
+    for part in Path(path).parts:
+        if part != ".." and part not in entry_names(current):
+            return False
+        current = current / part
+    return current.exists()
+
+
+def unresolved_links(root: Path) -> set[tuple[str, str]]:
+    missing = set()
+    for rel, path in repository_files(root):
+        if not rel.endswith(".md"):
+            continue
+        for _, target in link_targets(read_text(path) or ""):
+            resolved = resolve(rel, target)
+            if resolved is not None and not exact_target(root, resolved[0]):
+                missing.add((rel, target))
+    return missing
+
+
+def known_links(entries) -> tuple[set, list[str]]:
+    expected = set()
+    errors = []
+    if not isinstance(entries, list):
+        return expected, [f"{TABLE}: known_unresolved_links must be a list"]
+    for item in entries:
+        if not isinstance(item, dict) or set(item) != {"source", "target"}:
+            errors.append(f"{TABLE}: malformed unresolved link")
+        elif not all(isinstance(v, str) and v for v in item.values()):
+            errors.append(f"{TABLE}: malformed unresolved link")
+        else:
+            expected.add((item["source"], item["target"]))
+    return expected, errors
+
+
+def check_missing_links(root: Path, entries) -> list[str]:
+    expected, errors = known_links(entries)
+    actual = unresolved_links(root)
+    errors += [f"{source}: missing link target {target}" for source, target in sorted(actual - expected)]
+    errors += [f"{TABLE}: {source} -> {target} no longer occurs unresolved; remove it from the list"
+               for source, target in sorted(expected - actual)]
+    return errors
+
+
 def linked_paths(root: Path, source: str) -> set[str]:
     text = read_text(root / source) or ""
     out = set()
@@ -483,7 +574,7 @@ def unlinked_tree_pages(root: Path, tree: str, index: str, links: set[str]) -> l
 
 
 def check_indexes(
-    root: Path, rows: list[dict], indexes: list[str], unlinked_pages: dict[str, int]
+    root: Path, rows: list[dict], indexes: list[str], unlinked_pages: dict[str, list[str]]
 ) -> list[str]:
     errors: list[str] = []
     readme_links = linked_paths(root, "README.md")
@@ -497,11 +588,11 @@ def check_indexes(
             errors.append(f"README.md: does not link the tree index {index}")
         links = linked_paths(root, index)
         unlinked = unlinked_tree_pages(root, tree, index, links)
-        declared = unlinked_pages.get(index, 0)
-        if len(unlinked) != declared:
+        declared = set(unlinked_pages.get(index, []))
+        if {page_identifier(page) for page in unlinked} != declared:
             errors.append(
-                f"{index}: declared {declared} unlinked pages, actual {len(unlinked)}; "
-                f"unlinked pages: {sorted(unlinked)}"
+                f"{index}: unlinked page identifiers differ; "
+                f"unlinked pages: {[(page, page_identifier(page)) for page in sorted(unlinked)]}"
             )
         covered.update(
             row["path"] for row in rows if row["path"].startswith(tree + "/")
@@ -518,7 +609,9 @@ def check(root: Path) -> list[str]:
         return errors
     rows, row_errors = check_rows(root, table["pages"])
     errors += row_errors
-    errors += check_closure(root, rows)
+    pairs, pin_errors = pinned_pairs(root, table["pinned_provenance"])
+    errors += pin_errors + check_closure(root, rows, pairs)
+    errors += check_missing_links(root, table["known_unresolved_links"])
     errors += check_links(root, rows, table["inherited_unresolved_anchors"])
     errors += check_indexes(root, rows, table["tree_indexes"], table["unlinked_pages"])
     return errors

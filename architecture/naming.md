@@ -63,7 +63,7 @@ the rename. Each tree index ([api](../api/index.md),
 [architecture](index.md), [deployment](../deployment/index.md),
 [development](../development/index.md), [protocols](../protocols/index.md)) is
 linked from `README.md` and lists every publishable page of its tree.
-Each tree index links every page of its tree except a declared number of pages that publication policy keeps out of navigation, and the status table declares that number per tree.
+Each tree index links every page of its tree except pages that publication policy keeps out of navigation, which the status table identifies by a digest prefix of their path.
 
 Names outside this bounded set are not converted yet: the remaining snake_case
 pages under `architecture/`, the `ebus_standard` directory name, the
