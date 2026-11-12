@@ -65,7 +65,7 @@ The caller `recordEpochUpdateLocked` increments `liveEpoch` on a live update and
 
 - Persistent semantic snapshot preload (`semantic_cache.json`) is cache-backed and only advances `cache_epoch`.
 - In `ebusd-tcp` fallback mode, successful `grab result all` hydration for zones/DHW is classified as **live** and can advance `live_epoch`.
-- Energy broadcast ingestion updates `energyTotals` but does **not** advance startup `live_epoch` and does not trigger startup phase transitions.
+- Energy broadcast ingestion updates `energy_totals` but does **not** advance startup `live_epoch` and does not trigger startup phase transitions.
 
 ## M4 L1 Startup Priming
 

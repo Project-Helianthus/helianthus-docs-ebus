@@ -47,7 +47,7 @@ address. OP02 and OP06 namespaces remain separate.
 | --- | --- | --- |
 | `(0x02, 0x01, 0x00, 0x0005)` | `dhw_temperature`, f32, °C; community name `HwcStorageTemp`; gated by RR0001 | `dhw_current_temp` → `CurrentTempC` → GraphQL [`dhw.current_temp_c`](../api/graphql.md) (queried as `dhw.current_temp_c`); documented MCP `ebus_v1_semantic_dhw_get` `current_temp_c`; controller mirror in boiler status `state.dhw_temperature_c`. Sole measured input in this contract. |
 | `(0x02, 0x01, 0x00, 0x0001)` | Exact two-byte UIN nonzero establishes family-qualified presence; zero means not present; malformed/unmatched means unknown | Admission evidence only. The candidate circuit-type enum is not established by the presence test. No temperature fact. |
-| `(0x02, 0x01, 0x00, 0x0004)` | `dhw_temperature_setpoint`, f32, °C | Legacy `target_temp_c` / boiler `dhwTargetTemperatureC`; excluded target, never a replacement for missing measured temperature. |
+| `(0x02, 0x01, 0x00, 0x0004)` | `dhw_temperature_setpoint`, f32, °C | Legacy `target_temp_c` / boiler `dhw_target_temperature_c`; excluded target, never a replacement for missing measured temperature. |
 | `(0x02, 0x01, 0x00, 0x0008)` | `dhw_flow_temperature_setpoint`, f32, °C | Excluded flow target; no new read or projection proposed. |
 | `(0x02, 0x01, 0x00, 0x0003)` | Operating mode, u16 | Legacy operating-mode derivation; excluded enum. |
 | `(0x02, 0x01, 0x00, 0x000D)` | Native catalog says special-function mode, u8; gateway reads it through `readDhwUint16` | Legacy `state`/special-function derivation; width discrepancy remains unresolved and cannot establish charging state from temperature. |

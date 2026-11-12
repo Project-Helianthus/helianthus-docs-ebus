@@ -69,7 +69,7 @@ B503_FRONTEND_EPOCH_ROLLOVER = (
     "epoch; a completion may mutate presentation only when both its target address\n"
     "and captured epoch still match, otherwise it is discarded."
 )
-B503_SESSION_STATE_CONTRACT = "The strip states are `Idle`, `Enabling`, `Active`, and\n`Refreshing`, and `Disabled`. `Refreshing` means an epoch refresh holds the\nownership gate; the already-admitted triggering request remains pending and\nnew bus-facing live-monitor reads/actions are busy. Status-only\n`vaillantCapabilities(targetAddress:)` and\n`vaillantLiveMonitorSession(targetAddress:)` queries remain available to observe\navailability and session completion. Refresh success returns `Active` and\ncompletes a triggering read with exactly one native operation result, or\ndispatches a triggering current-owner disable exactly once after its frame\nreaches emission. A terminal disconnect before disable-frame emission emits no\ndisable, returns exact `TRANSPORT_DOWN`, releases ownership, retains Gateway's\nprocess-local cleanup obligation, presents session `Idle` with `owned:false`,\npublishes capability `UNKNOWN`, admits no Enable, and is never retried on\nreconnect. Every emitted disable outcome is recorded and returned exactly and\nfollows the same fail-closed public state because ACK/NAK alone do not prove\nnative settlement. Refresh failure also follows that public state and completes\nthe triggering request with the exact unavailable failure without dispatching\nits native operation.\n`Disabled` is never reported with `owned:true`."
+B503_SESSION_STATE_CONTRACT = "The strip states are `Idle`, `Enabling`, `Active`, and\n`Refreshing`, and `Disabled`. `Refreshing` means an epoch refresh holds the\nownership gate; the already-admitted triggering request remains pending and\nnew bus-facing live-monitor reads/actions are busy. Status-only\n`vaillantCapabilities(target_address:)` and\n`vaillantLiveMonitorSession(target_address:)` queries remain available to observe\navailability and session completion. Refresh success returns `Active` and\ncompletes a triggering read with exactly one native operation result, or\ndispatches a triggering current-owner disable exactly once after its frame\nreaches emission. A terminal disconnect before disable-frame emission emits no\ndisable, returns exact `TRANSPORT_DOWN`, releases ownership, retains Gateway's\nprocess-local cleanup obligation, presents session `Idle` with `owned:false`,\npublishes capability `UNKNOWN`, admits no Enable, and is never retried on\nreconnect. Every emitted disable outcome is recorded and returned exactly and\nfollows the same fail-closed public state because ACK/NAK alone do not prove\nnative settlement. Refresh failure also follows that public state and completes\nthe triggering request with the exact unavailable failure without dispatching\nits native operation.\n`Disabled` is never reported with `owned:true`."
 B503_DISABLED_PUBLIC_MAPPING = (
     "`Disabled` with `owned:false`\n"
     "maps only an out-of-band administrative/configuration-disabled condition\n"
@@ -110,8 +110,8 @@ B503_REFRESHING_UNKNOWN_STRIP = (
     "the session strip remains observable alongside temporarily `UNKNOWN` capability.\n"
     "It is status-only: the section-projection card, B503 tabs, and every new\n"
     "bus-facing B503 read/action remain unavailable while Gateway reports\n"
-    "`Refreshing`. Only the status-only `vaillantCapabilities(targetAddress:)` and\n"
-    "`vaillantLiveMonitorSession(targetAddress:)` queries remain available during\n"
+    "`Refreshing`. Only the status-only `vaillantCapabilities(target_address:)` and\n"
+    "`vaillantLiveMonitorSession(target_address:)` queries remain available during\n"
     "that state. If the triggering READ succeeds and rebinds the same target and\n"
     "issuer token into `Active` with `owned:true`, the bounded current-owner\n"
     "READ/DISABLE exception above resumes immediately under `UNKNOWN`; it does not\n"
@@ -148,14 +148,14 @@ B503_SESSION_STATE_CONTRADICTION_PATTERNS = (
     ),
 )
 B503_MAIN_ROUTE_OPERATIONS = (
-    "- `vaillantCapabilities(targetAddress:)`\n"
-    "- `vaillantErrors(targetAddress:)`\n"
-    "- `vaillantServiceCurrent(targetAddress:)`\n"
-    "- `vaillantErrorHistory(targetAddress:index:)`\n"
-    "- `vaillantErrorsHistory(targetAddress:limit:)`\n"
-    "- `vaillantServiceHistory(targetAddress:index:)`\n"
-    "- `vaillantLiveMonitor(action:issuerToken:targetAddress:)`\n"
-    "- `vaillantLiveMonitorSession(targetAddress:)`"
+    "- `vaillantCapabilities(target_address:)`\n"
+    "- `vaillantErrors(target_address:)`\n"
+    "- `vaillantServiceCurrent(target_address:)`\n"
+    "- `vaillantErrorHistory(target_address:index:)`\n"
+    "- `vaillantErrorsHistory(target_address:limit:)`\n"
+    "- `vaillantServiceHistory(target_address:index:)`\n"
+    "- `vaillantLiveMonitor(action:issuerToken:target_address:)`\n"
+    "- `vaillantLiveMonitorSession(target_address:)`"
 )
 B503_NO_EXPIRED_STATE = (
     "`B503Availability` has exactly these five public reasons. `Refreshing` remains\n"
@@ -183,14 +183,14 @@ REQUIRED = (
     "Discovery\npermission controls visibility",
     "revalidates the request-bound caller,\ncatalog revision/digest claim, contribution identity/digest, resource and\ncapability, semantic snapshot/revision, binding, source epoch/generation,\ntyped preconditions, route, deadline, and idempotency key.",
     B503_MAIN_ROUTE_OPERATIONS,
-    "`vaillantCapabilities(targetAddress:)`",
-    "`vaillantErrors(targetAddress:)`",
-    "`vaillantServiceCurrent(targetAddress:)`",
-    "`vaillantErrorHistory(targetAddress:index:)`",
-    "`vaillantErrorsHistory(targetAddress:limit:)`",
-    "`vaillantServiceHistory(targetAddress:index:)`",
-    "`vaillantLiveMonitor(action:issuerToken:targetAddress:)`",
-    "`vaillantLiveMonitorSession(targetAddress:)`",
+    "`vaillantCapabilities(target_address:)`",
+    "`vaillantErrors(target_address:)`",
+    "`vaillantServiceCurrent(target_address:)`",
+    "`vaillantErrorHistory(target_address:index:)`",
+    "`vaillantErrorsHistory(target_address:limit:)`",
+    "`vaillantServiceHistory(target_address:index:)`",
+    "`vaillantLiveMonitor(action:issuerToken:target_address:)`",
+    "`vaillantLiveMonitorSession(target_address:)`",
     "`POST /graphql` endpoint. That endpoint is protected by the stable eBUS MCP\ngraduation/parity contract.",
     "exclusive operation-to-route\nsplit, not a fallback or compatibility shim.",
     "does not expand the\naccepted #974 catalog/action endpoint.",

@@ -189,7 +189,7 @@ gateway and external sessions alike, as described in
 **Projection browser query expectations:**
 
 - GraphQL consumers (projection browser at `/ui`) query projection graphs via:
-  `devices { projections { plane nodes { id path canonicalPath } edges { id from to } } }`
+  `devices { projections { plane nodes { id path canonical_path } edges { id from to } } }`
 - `ProjectionNode.id` is derived from the canonical Service path so nodes can be correlated across planes; `path` is used for plane-local display.
 
 **Consequences:** Planes become explicit projections of the canonical Service graph (Helianthus-specific), enabling deterministic identity across planes within a snapshot, consistent path validation, and safe graph composition for higher-level APIs.
@@ -204,7 +204,7 @@ gateway and external sessions alike, as described in
 
 - Treat projection payloads as a strict mapping of `plane -> {nodes, edges}`.
 - Render only the currently selected plane graph; do not merge edges across planes.
-- Preserve selected node identity via canonical `Service` path (`canonicalPath`) when switching planes.
+- Preserve selected node identity via canonical `Service` path (`canonical_path`) when switching planes.
 - Resolve selection in the target plane by canonical path (or clear selection if no mapped node exists).
 - Keep node IDs canonical-path-derived so the same canonical entity can be joined across planes in one snapshot.
 
@@ -216,7 +216,7 @@ gateway and external sessions alike, as described in
 
 **Projection browser query expectation:**
 
-- `devices { projections { plane nodes { id path canonicalPath } edges { id from to } } }`
+- `devices { projections { plane nodes { id path canonical_path } edges { id from to } } }`
 
 **Consequences:** API and UI consumers get a stable, IORegistry-style multi-plane browsing model with canonical identity joins, explicit plane-local edges, and predictable plane-switch behavior.
 

@@ -472,10 +472,20 @@ def test_mcp_section_stops_at_supported_sibling_markers(marker: str) -> None:
     assert "ebus_v1_registry_planes_list" not in CHECKER._mcp_device_section(text)
 
 
-def test_rejects_obsolete_atr_spelling() -> None:
+@pytest.mark.parametrize(
+    "replacement",
+    (
+        "verification_state=corroborated`",
+        "verificationState=corroborated_pending`",
+        "",
+        "verification_state=corroborated_pending` verification_state=corroborated_pending`",
+        "verification_state=corroborated_pending` verification_state=corroborated`",
+    ),
+)
+def test_rejects_obsolete_atr_spelling(replacement: str) -> None:
     rejects(
-        atr_old="verificationState=corroborated_pending`",
-        atr_new="verificationState=corroborated`",
+        atr_old="verification_state=corroborated_pending`",
+        atr_new=replacement,
     )
 
 

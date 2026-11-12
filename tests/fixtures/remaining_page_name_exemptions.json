@@ -1,0 +1,3061 @@
+[
+  {
+    "file": "api/graphql.md",
+    "token": "flowsetHwcMaxC",
+    "context": "flowsetHwcMaxC",
+    "count": 1,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "api/graphql.md",
+    "token": "flowsetHcMaxC",
+    "context": "flowsetHcMaxC",
+    "count": 1,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "api/graphql.md",
+    "token": "busAdmission",
+    "context": "busAdmission",
+    "count": 1,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "api/graphql.md",
+    "token": "current_temp_c",
+    "context": "current_temp_c",
+    "count": 1,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "api/graphql.md",
+    "token": "current_temp_c",
+    "context": "graphql:current_temp_c",
+    "count": 1,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "api/mcp.md",
+    "token": "flowsetHwcMaxC",
+    "context": "flowsetHwcMaxC",
+    "count": 1,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "api/mcp.md",
+    "token": "adaptiveHeatingCurve",
+    "context": "adaptiveHeatingCurve",
+    "count": 1,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "api/mcp.md",
+    "token": "flowsetHcMaxC",
+    "context": "flowsetHcMaxC",
+    "count": 1,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "api/mcp.md",
+    "token": "readOnly",
+    "context": "readOnly",
+    "count": 1,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "api/mcp.md",
+    "token": "operatingMode",
+    "context": "operatingMode",
+    "count": 1,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "api/mcp.md",
+    "token": "frostProtC",
+    "context": "frostProtC",
+    "count": 1,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "api/portal.md",
+    "token": "targetAddress",
+    "context": "targetAddress",
+    "count": 1,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "api/portal.md",
+    "token": "current_temp_c",
+    "context": "json:current_temp_c",
+    "count": 1,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "api/source-selection-migration.md",
+    "token": "busAdmission",
+    "context": "busAdmission",
+    "count": 1,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "architecture/b524-semantic-mapping.md",
+    "token": "circuitState",
+    "context": "circuitState",
+    "count": 2,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "architecture/b524-semantic-mapping.md",
+    "token": "current_temp_c",
+    "context": "current_temp_c",
+    "count": 2,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "architecture/b524-structural-decisions.md",
+    "token": "fm5SemanticMode",
+    "context": "fm5SemanticMode",
+    "count": 1,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "architecture/b524-structural-decisions.md",
+    "token": "systemScheme",
+    "context": "systemScheme",
+    "count": 1,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "architecture/b524-structural-decisions.md",
+    "token": "fm5SemanticDegradedReason",
+    "context": "fm5SemanticDegradedReason",
+    "count": 1,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "architecture/dhw-measured-temperature-cutover.md",
+    "token": "current_temp_c",
+    "context": "current_temp_c",
+    "count": 4,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "architecture/dhw-setpoint-semreg-cutover.md",
+    "token": "flowsetHwcMaxC",
+    "context": "flowsetHwcMaxC",
+    "count": 1,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "architecture/dhw-setpoint-semreg-cutover.md",
+    "token": "dhwTempDesiredC",
+    "context": "dhwTempDesiredC",
+    "count": 1,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "architecture/dhw-setpoint-semreg-cutover.md",
+    "token": "dhwTargetTemperatureC",
+    "context": "dhwTargetTemperatureC",
+    "count": 1,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "architecture/protocol-routing-vaillant-b503.md",
+    "token": "targetAddress",
+    "context": "targetAddress",
+    "count": 9,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "architecture/regulator-identity-enrichment.md",
+    "token": "observedAt",
+    "context": "observedAt",
+    "count": 1,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "architecture/startup-semantic-fsm.md",
+    "token": "liveEpoch",
+    "context": "liveEpoch",
+    "count": 1,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "architecture/system-pressure-semreg-disposition.md",
+    "token": "waterPressureBar",
+    "context": "waterPressureBar",
+    "count": 1,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "architecture/zone-room-temperature-cutover.md",
+    "token": "current_temp_c",
+    "context": "current_temp_c",
+    "count": 2,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "architecture/zone-valve-action-cutover.md",
+    "token": "circuitType",
+    "context": "circuitType",
+    "count": 4,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "architecture/atr/01-address-table-model.md",
+    "token": "observedAt",
+    "context": "observedAt",
+    "count": 1,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "architecture/atr/03-ack-nack-insertion-rules.md",
+    "token": "observedAt",
+    "context": "observedAt",
+    "count": 1,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "architecture/atr/07-live-validation-acceptance.md",
+    "token": "observedAt",
+    "context": "observedAt",
+    "count": 3,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "architecture/ebus_standard/12-address-table.md",
+    "token": "frameType",
+    "context": "frameType",
+    "count": 2,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "development/ad10-migration-equivalence.md",
+    "token": "current_temp_c",
+    "context": "current_temp_c",
+    "count": 1,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "development/ha-integration.md",
+    "token": "current_temp_c",
+    "context": "current_temp_c",
+    "count": 2,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "development/ha-integration.md",
+    "token": "deviceId",
+    "context": "deviceId",
+    "count": 2,
+    "reason": "Selection label in the integration's naming list; the list stays as published so the documented name and model mapping is preserved."
+  },
+  {
+    "file": "docs/platform/fixtures/coexistence-no-drift/v1/positive/evidence.json",
+    "token": "targetTempC",
+    "context": "targetTempC",
+    "count": 6,
+    "reason": "Original evidence or coupled schema/generator/validator; bytes unchanged."
+  },
+  {
+    "file": "docs/platform/fixtures/coexistence-no-drift/v1/positive/evidence.json",
+    "token": "currentTempC",
+    "context": "currentTempC",
+    "count": 6,
+    "reason": "Original evidence or coupled schema/generator/validator; bytes unchanged."
+  },
+  {
+    "file": "docs/platform/fixtures/coexistence-no-drift/v1/positive/evidence.json",
+    "token": "energyTotals",
+    "context": "energyTotals",
+    "count": 6,
+    "reason": "Original evidence or coupled schema/generator/validator; bytes unchanged."
+  },
+  {
+    "file": "docs/platform/live/msp-085-0.6.38/m8-evidence.json",
+    "token": "fm5SemanticMode",
+    "context": "fm5SemanticMode",
+    "count": 4,
+    "reason": "Original evidence or coupled schema/generator/validator; bytes unchanged."
+  },
+  {
+    "file": "docs/platform/live/msp-085-0.6.38/m8-evidence.json",
+    "token": "busPeriodicity",
+    "context": "busPeriodicity",
+    "count": 4,
+    "reason": "Original evidence or coupled schema/generator/validator; bytes unchanged."
+  },
+  {
+    "file": "docs/platform/live/msp-085-0.6.38/m8-evidence.json",
+    "token": "setSystemConfig",
+    "context": "setSystemConfig",
+    "count": 4,
+    "reason": "Original evidence or coupled schema/generator/validator; bytes unchanged."
+  },
+  {
+    "file": "docs/platform/live/msp-085-0.6.38/m8-evidence.json",
+    "token": "busMessages",
+    "context": "busMessages",
+    "count": 4,
+    "reason": "Original evidence or coupled schema/generator/validator; bytes unchanged."
+  },
+  {
+    "file": "docs/platform/live/msp-085-0.6.38/m8-evidence.json",
+    "token": "busSummary",
+    "context": "busSummary",
+    "count": 4,
+    "reason": "Original evidence or coupled schema/generator/validator; bytes unchanged."
+  },
+  {
+    "file": "docs/platform/live/msp-085-0.6.38/m8-evidence.json",
+    "token": "boilerStatus",
+    "context": "boilerStatus",
+    "count": 4,
+    "reason": "Original evidence or coupled schema/generator/validator; bytes unchanged."
+  },
+  {
+    "file": "docs/platform/live/msp-085-0.6.38/m8-evidence.json",
+    "token": "daemonStatus",
+    "context": "daemonStatus",
+    "count": 4,
+    "reason": "Original evidence or coupled schema/generator/validator; bytes unchanged."
+  },
+  {
+    "file": "docs/platform/live/msp-085-0.6.38/m8-evidence.json",
+    "token": "setBoilerConfig",
+    "context": "setBoilerConfig",
+    "count": 4,
+    "reason": "Original evidence or coupled schema/generator/validator; bytes unchanged."
+  },
+  {
+    "file": "docs/platform/live/msp-085-0.6.38/m8-evidence.json",
+    "token": "watchSummary",
+    "context": "watchSummary",
+    "count": 4,
+    "reason": "Original evidence or coupled schema/generator/validator; bytes unchanged."
+  },
+  {
+    "file": "docs/platform/live/msp-085-0.6.38/m8-evidence.json",
+    "token": "energyTotals",
+    "context": "energyTotals",
+    "count": 4,
+    "reason": "Original evidence or coupled schema/generator/validator; bytes unchanged."
+  },
+  {
+    "file": "docs/platform/live/msp-085-0.6.40/m8-evidence.json",
+    "token": "fm5SemanticMode",
+    "context": "fm5SemanticMode",
+    "count": 4,
+    "reason": "Original evidence or coupled schema/generator/validator; bytes unchanged."
+  },
+  {
+    "file": "docs/platform/live/msp-085-0.6.40/m8-evidence.json",
+    "token": "busPeriodicity",
+    "context": "busPeriodicity",
+    "count": 4,
+    "reason": "Original evidence or coupled schema/generator/validator; bytes unchanged."
+  },
+  {
+    "file": "docs/platform/live/msp-085-0.6.40/m8-evidence.json",
+    "token": "setSystemConfig",
+    "context": "setSystemConfig",
+    "count": 4,
+    "reason": "Original evidence or coupled schema/generator/validator; bytes unchanged."
+  },
+  {
+    "file": "docs/platform/live/msp-085-0.6.40/m8-evidence.json",
+    "token": "busMessages",
+    "context": "busMessages",
+    "count": 4,
+    "reason": "Original evidence or coupled schema/generator/validator; bytes unchanged."
+  },
+  {
+    "file": "docs/platform/live/msp-085-0.6.40/m8-evidence.json",
+    "token": "busSummary",
+    "context": "busSummary",
+    "count": 4,
+    "reason": "Original evidence or coupled schema/generator/validator; bytes unchanged."
+  },
+  {
+    "file": "docs/platform/live/msp-085-0.6.40/m8-evidence.json",
+    "token": "boilerStatus",
+    "context": "boilerStatus",
+    "count": 4,
+    "reason": "Original evidence or coupled schema/generator/validator; bytes unchanged."
+  },
+  {
+    "file": "docs/platform/live/msp-085-0.6.40/m8-evidence.json",
+    "token": "daemonStatus",
+    "context": "daemonStatus",
+    "count": 4,
+    "reason": "Original evidence or coupled schema/generator/validator; bytes unchanged."
+  },
+  {
+    "file": "docs/platform/live/msp-085-0.6.40/m8-evidence.json",
+    "token": "setBoilerConfig",
+    "context": "setBoilerConfig",
+    "count": 4,
+    "reason": "Original evidence or coupled schema/generator/validator; bytes unchanged."
+  },
+  {
+    "file": "docs/platform/live/msp-085-0.6.40/m8-evidence.json",
+    "token": "watchSummary",
+    "context": "watchSummary",
+    "count": 4,
+    "reason": "Original evidence or coupled schema/generator/validator; bytes unchanged."
+  },
+  {
+    "file": "docs/platform/live/msp-085-0.6.40/m8-evidence.json",
+    "token": "energyTotals",
+    "context": "energyTotals",
+    "count": 4,
+    "reason": "Original evidence or coupled schema/generator/validator; bytes unchanged."
+  },
+  {
+    "file": "docs/platform/manifests/promoted-semantic-consumers-v1.json",
+    "token": "current_temp_c",
+    "context": "current_temp_c",
+    "count": 3,
+    "reason": "Original evidence or coupled schema/generator/validator; bytes unchanged."
+  },
+  {
+    "file": "protocols/vaillant/ebus-vaillant-b509-boiler-register-map.md",
+    "token": "dhwStarts",
+    "context": "dhwStarts",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/ebus-vaillant-b509-boiler-register-map.md",
+    "token": "dhwDemandActive",
+    "context": "dhwDemandActive",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/ebus-vaillant-b509-boiler-register-map.md",
+    "token": "flowsetHwcMaxC",
+    "context": "flowsetHwcMaxC",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/ebus-vaillant-b509-boiler-register-map.md",
+    "token": "fanHours",
+    "context": "fanHours",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/ebus-vaillant-b509-boiler-register-map.md",
+    "token": "pumpHours",
+    "context": "pumpHours",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/ebus-vaillant-b509-boiler-register-map.md",
+    "token": "storageLoadPumpPct",
+    "context": "storageLoadPumpPct",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/ebus-vaillant-b509-boiler-register-map.md",
+    "token": "dhwWaterFlowLpm",
+    "context": "dhwWaterFlowLpm",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/ebus-vaillant-b509-boiler-register-map.md",
+    "token": "heatingSwitchActive",
+    "context": "heatingSwitchActive",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/ebus-vaillant-b509-boiler-register-map.md",
+    "token": "flowTemperatureC",
+    "context": "flowTemperatureC",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/ebus-vaillant-b509-boiler-register-map.md",
+    "token": "diverterValvePositionPct",
+    "context": "diverterValvePositionPct",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/ebus-vaillant-b509-boiler-register-map.md",
+    "token": "flowsetHcMaxC",
+    "context": "flowsetHcMaxC",
+    "count": 2,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/ebus-vaillant-b509-boiler-register-map.md",
+    "token": "centralHeatingHours",
+    "context": "centralHeatingHours",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/ebus-vaillant-b509-boiler-register-map.md",
+    "token": "circulationPumpActive",
+    "context": "circulationPumpActive",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/ebus-vaillant-b509-boiler-register-map.md",
+    "token": "modulationPct",
+    "context": "modulationPct",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/ebus-vaillant-b509-boiler-register-map.md",
+    "token": "centralHeatingStarts",
+    "context": "centralHeatingStarts",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/ebus-vaillant-b509-boiler-register-map.md",
+    "token": "dhwHours",
+    "context": "dhwHours",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/ebus-vaillant-b509-boiler-register-map.md",
+    "token": "flowTempDesiredC",
+    "context": "flowTempDesiredC",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/ebus-vaillant-b509-boiler-register-map.md",
+    "token": "waterPressureBar",
+    "context": "waterPressureBar",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/ebus-vaillant-b509-boiler-register-map.md",
+    "token": "dhwTempDesiredC",
+    "context": "dhwTempDesiredC",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/ebus-vaillant-b509-boiler-register-map.md",
+    "token": "fanSpeedRpm",
+    "context": "fanSpeedRpm",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/ebus-vaillant-b509-boiler-register-map.md",
+    "token": "primaryCircuitFlowLpm",
+    "context": "primaryCircuitFlowLpm",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/ebus-vaillant-b509-boiler-register-map.md",
+    "token": "deactivationsTemplimiter",
+    "context": "deactivationsTemplimiter",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/ebus-vaillant-b509-boiler-register-map.md",
+    "token": "centralHeatingPumpActive",
+    "context": "centralHeatingPumpActive",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/ebus-vaillant-b509-boiler-register-map.md",
+    "token": "targetFanSpeedRpm",
+    "context": "targetFanSpeedRpm",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/ebus-vaillant-b509-boiler-register-map.md",
+    "token": "gasValveActive",
+    "context": "gasValveActive",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/ebus-vaillant-b509-boiler-register-map.md",
+    "token": "flameActive",
+    "context": "flameActive",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/ebus-vaillant-b509-boiler-register-map.md",
+    "token": "ionisationVoltageUa",
+    "context": "ionisationVoltageUa",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/ebus-vaillant-b509-boiler-register-map.md",
+    "token": "externalPumpActive",
+    "context": "externalPumpActive",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/ebus-vaillant-b509-boiler-register-map.md",
+    "token": "stateNumber",
+    "context": "stateNumber",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/ebus-vaillant-b509-heatpump-register-map.md",
+    "token": "pumpHours",
+    "context": "pumpHours",
+    "count": 2,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/ebus-vaillant-b509-heatpump-register-map.md",
+    "token": "gasValveActive",
+    "context": "gasValveActive",
+    "count": 2,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/ebus-vaillant-b509-heatpump-register-map.md",
+    "token": "externalPumpActive",
+    "context": "externalPumpActive",
+    "count": 2,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/ebus-vaillant-b509.md",
+    "token": "pumpHours",
+    "context": "pumpHours",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/ebus-vaillant-b509.md",
+    "token": "gasValveActive",
+    "context": "gasValveActive",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/ebus-vaillant-b509.md",
+    "token": "externalPumpActive",
+    "context": "externalPumpActive",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/ebus-vaillant-b524-register-map.md",
+    "token": "circuitState",
+    "context": "circuitState",
+    "count": 6,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/ebus-vaillant.md",
+    "token": "gasValveActive",
+    "context": "gasValveActive",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/fixtures/b509-register-name-correspondence.csv",
+    "token": "dhwStarts",
+    "context": "dhwStarts",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/fixtures/b509-register-name-correspondence.csv",
+    "token": "dhwDemandActive",
+    "context": "dhwDemandActive",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/fixtures/b509-register-name-correspondence.csv",
+    "token": "flowsetHwcMaxC",
+    "context": "flowsetHwcMaxC",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/fixtures/b509-register-name-correspondence.csv",
+    "token": "fanHours",
+    "context": "fanHours",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/fixtures/b509-register-name-correspondence.csv",
+    "token": "pumpHours",
+    "context": "pumpHours",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/fixtures/b509-register-name-correspondence.csv",
+    "token": "storageLoadPumpPct",
+    "context": "storageLoadPumpPct",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/fixtures/b509-register-name-correspondence.csv",
+    "token": "dhwWaterFlowLpm",
+    "context": "dhwWaterFlowLpm",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/fixtures/b509-register-name-correspondence.csv",
+    "token": "heatingSwitchActive",
+    "context": "heatingSwitchActive",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/fixtures/b509-register-name-correspondence.csv",
+    "token": "flowTemperatureC",
+    "context": "flowTemperatureC",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/fixtures/b509-register-name-correspondence.csv",
+    "token": "diverterValvePositionPct",
+    "context": "diverterValvePositionPct",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/fixtures/b509-register-name-correspondence.csv",
+    "token": "flowsetHcMaxC",
+    "context": "flowsetHcMaxC",
+    "count": 2,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/fixtures/b509-register-name-correspondence.csv",
+    "token": "centralHeatingHours",
+    "context": "centralHeatingHours",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/fixtures/b509-register-name-correspondence.csv",
+    "token": "circulationPumpActive",
+    "context": "circulationPumpActive",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/fixtures/b509-register-name-correspondence.csv",
+    "token": "modulationPct",
+    "context": "modulationPct",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/fixtures/b509-register-name-correspondence.csv",
+    "token": "centralHeatingStarts",
+    "context": "centralHeatingStarts",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/fixtures/b509-register-name-correspondence.csv",
+    "token": "dhwHours",
+    "context": "dhwHours",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/fixtures/b509-register-name-correspondence.csv",
+    "token": "flowTempDesiredC",
+    "context": "flowTempDesiredC",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/fixtures/b509-register-name-correspondence.csv",
+    "token": "waterPressureBar",
+    "context": "waterPressureBar",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/fixtures/b509-register-name-correspondence.csv",
+    "token": "dhwTempDesiredC",
+    "context": "dhwTempDesiredC",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/fixtures/b509-register-name-correspondence.csv",
+    "token": "fanSpeedRpm",
+    "context": "fanSpeedRpm",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/fixtures/b509-register-name-correspondence.csv",
+    "token": "primaryCircuitFlowLpm",
+    "context": "primaryCircuitFlowLpm",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/fixtures/b509-register-name-correspondence.csv",
+    "token": "deactivationsTemplimiter",
+    "context": "deactivationsTemplimiter",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/fixtures/b509-register-name-correspondence.csv",
+    "token": "centralHeatingPumpActive",
+    "context": "centralHeatingPumpActive",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/fixtures/b509-register-name-correspondence.csv",
+    "token": "targetFanSpeedRpm",
+    "context": "targetFanSpeedRpm",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/fixtures/b509-register-name-correspondence.csv",
+    "token": "gasValveActive",
+    "context": "gasValveActive",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/fixtures/b509-register-name-correspondence.csv",
+    "token": "flameActive",
+    "context": "flameActive",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/fixtures/b509-register-name-correspondence.csv",
+    "token": "ionisationVoltageUa",
+    "context": "ionisationVoltageUa",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/fixtures/b509-register-name-correspondence.csv",
+    "token": "externalPumpActive",
+    "context": "externalPumpActive",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/fixtures/b509-register-name-correspondence.csv",
+    "token": "stateNumber",
+    "context": "stateNumber",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/fixtures/b524-register-name-correspondence.csv",
+    "token": "systemScheme",
+    "context": "systemScheme",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/fixtures/b524-register-name-correspondence.csv",
+    "token": "systemOff",
+    "context": "systemOff",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/fixtures/b524-register-name-correspondence.csv",
+    "token": "systemWaterPressure",
+    "context": "systemWaterPressure",
+    "count": 2,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/fixtures/b524-register-name-correspondence.csv",
+    "token": "dhwBivalencePoint",
+    "context": "dhwBivalencePoint",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/fixtures/b524-register-name-correspondence.csv",
+    "token": "circuitState",
+    "context": "circuitState",
+    "count": 2,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/fixtures/b524-register-name-correspondence.csv",
+    "token": "alternativePoint",
+    "context": "alternativePoint",
+    "count": 2,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/fixtures/b524-register-name-correspondence.csv",
+    "token": "systemFlowTemperature",
+    "context": "systemFlowTemperature",
+    "count": 2,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/fixtures/b524-register-name-correspondence.csv",
+    "token": "outdoorTemperature",
+    "context": "outdoorTemperature",
+    "count": 1,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "protocols/vaillant/fixtures/b524-register-name-correspondence.csv",
+    "token": "heatingCircuitBivalencePoint",
+    "context": "heatingCircuitBivalencePoint",
+    "count": 2,
+    "reason": "Native or external vocabulary; not a GraphQL invocation."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "maintenanceDue",
+    "context": "maintenanceDue",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "heatingMode",
+    "context": "heatingMode",
+    "count": 2,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "calcFlowTempC",
+    "context": "calcFlowTempC",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "corroboratedPending",
+    "context": "corroboratedPending",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "macAddress",
+    "context": "macAddress",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "activeKeys",
+    "context": "activeKeys",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "boilerConfig",
+    "context": "boilerConfig",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "deviceId",
+    "context": "deviceId",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "maxInterval",
+    "context": "maxInterval",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "targetBucket",
+    "context": "targetBucket",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "dhwStarts",
+    "context": "dhwStarts",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "m2mGraphqlConfig",
+    "context": "m2mGraphqlConfig",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "systemStatus",
+    "context": "systemStatus",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "fm5SemanticMode",
+    "context": "fm5SemanticMode",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "activationCounts",
+    "context": "activationCounts",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "busAdmissionRejectedCandidate",
+    "context": "busAdmissionRejectedCandidate",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "completionMode",
+    "context": "completionMode",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "staticPinnedFootprint",
+    "context": "staticPinnedFootprint",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "unqualifiedBound",
+    "context": "unqualifiedBound",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "unsupportedOrMisconfigured",
+    "context": "unsupportedOrMisconfigured",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "systemUpdate",
+    "context": "systemUpdate",
+    "count": 2,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "dhwDemandActive",
+    "context": "dhwDemandActive",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "snakeCase",
+    "context": "snakeCase",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "invokeError",
+    "context": "invokeError",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "deactivationsIfc",
+    "context": "deactivationsIfc",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "automaticRetryScheduled",
+    "context": "automaticRetryScheduled",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "circuitManagingDevice",
+    "context": "circuitManagingDevice",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "minC",
+    "context": "minC",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "passiveObserved",
+    "context": "passiveObserved",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "coolingEnabled",
+    "context": "coolingEnabled",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "flowsetHwcMaxC",
+    "context": "flowsetHwcMaxC",
+    "count": 2,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "dedupDegraded",
+    "context": "dedupDegraded",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "systemScheme",
+    "context": "systemScheme",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "staticSeed",
+    "context": "staticSeed",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "systemOff",
+    "context": "systemOff",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "pumpActive",
+    "context": "pumpActive",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "requestLen",
+    "context": "requestLen",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "freshnessClasses",
+    "context": "freshnessClasses",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "systemWaterPressure",
+    "context": "systemWaterPressure",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "compactorDegraded",
+    "context": "compactorDegraded",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "unknownProfile",
+    "context": "unknownProfile",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "targetTempC",
+    "context": "targetTempC",
+    "count": 2,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "meanInterval",
+    "context": "meanInterval",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "fanHours",
+    "context": "fanHours",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "dhwBivalencePoint",
+    "context": "dhwBivalencePoint",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "discoverySource",
+    "context": "discoverySource",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "pumpHours",
+    "context": "pumpHours",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "storageLoadPumpPct",
+    "context": "storageLoadPumpPct",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "dhwWaterFlowLpm",
+    "context": "dhwWaterFlowLpm",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "pinnedBudgetDegraded",
+    "context": "pinnedBudgetDegraded",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "busBoundedListSummary",
+    "context": "busBoundedListSummary",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "updatesAvailable",
+    "context": "updatesAvailable",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "maxC",
+    "context": "maxC",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "seriesBudgetOverflowTotal",
+    "context": "seriesBudgetOverflowTotal",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "interfaceVersion",
+    "context": "interfaceVersion",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "busPeriodicity",
+    "context": "busPeriodicity",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "boilerDiagnostics",
+    "context": "boilerDiagnostics",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "m2mGraphqlRuntime",
+    "context": "m2mGraphqlRuntime",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "selectedSource",
+    "context": "selectedSource",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "heatingSwitchActive",
+    "context": "heatingSwitchActive",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "outdoorTemperatureAvg24H",
+    "context": "outdoorTemperatureAvg24H",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "quickVetoExpiry",
+    "context": "quickVetoExpiry",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "writeConfirmPinnedActive",
+    "context": "writeConfirmPinnedActive",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "circuitConfig",
+    "context": "circuitConfig",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "watchSummaryDegraded",
+    "context": "watchSummaryDegraded",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "lastSeen",
+    "context": "lastSeen",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "elapsedSeconds",
+    "context": "elapsedSeconds",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "responseSchema",
+    "context": "responseSchema",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "projectionNode",
+    "context": "projectionNode",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "dhwState",
+    "context": "dhwState",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "flowTemperatureC",
+    "context": "flowTemperatureC",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "hcEmergencyTemperature",
+    "context": "hcEmergencyTemperature",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "adaptiveHeatingCurve",
+    "context": "adaptiveHeatingCurve",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "sourceSelection",
+    "context": "sourceSelection",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "partNumber",
+    "context": "partNumber",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "companionTarget",
+    "context": "companionTarget",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "zoneRoomHumidity",
+    "context": "zoneRoomHumidity",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "requiredTransactions",
+    "context": "requiredTransactions",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "circuitState",
+    "context": "circuitState",
+    "count": 4,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "evidenceRevision",
+    "context": "evidenceRevision",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "setSystemConfig",
+    "context": "setSystemConfig",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "dhwConfig",
+    "context": "dhwConfig",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "busMessages",
+    "context": "busMessages",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "busSummary",
+    "context": "busSummary",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "startupTimeout",
+    "context": "startupTimeout",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "boilerStatus",
+    "context": "boilerStatus",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "daemonStatus",
+    "context": "daemonStatus",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "diverterValvePositionPct",
+    "context": "diverterValvePositionPct",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "hwcCylinderTemperatureTop",
+    "context": "hwcCylinderTemperatureTop",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "flowsetHcMaxC",
+    "context": "flowsetHcMaxC",
+    "count": 2,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "catalogDescriptors",
+    "context": "catalogDescriptors",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "centralHeatingHours",
+    "context": "centralHeatingHours",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "directApplyEligibilityClasses",
+    "context": "directApplyEligibilityClasses",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "returnTemperatureC",
+    "context": "returnTemperatureC",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "busAdmissionSourceSelection",
+    "context": "busAdmissionSourceSelection",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "shadowingEnabled",
+    "context": "shadowingEnabled",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "firmwareVersion",
+    "context": "firmwareVersion",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "dhwBivalencePointBound",
+    "context": "dhwBivalencePointBound",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "energyTotalsUpdate",
+    "context": "energyTotalsUpdate",
+    "count": 2,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "dhwTemperatureC",
+    "context": "dhwTemperatureC",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "productFamily",
+    "context": "productFamily",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "circulationPumpActive",
+    "context": "circulationPumpActive",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "degradedReason",
+    "context": "degradedReason",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "summerLimitC",
+    "context": "summerLimitC",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "ebusV1SemanticSystemSetConfig",
+    "context": "ebusV1SemanticSystemSetConfig",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "activeProbe",
+    "context": "activeProbe",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "boilerConfigMutationResult",
+    "context": "boilerConfigMutationResult",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "modulationPct",
+    "context": "modulationPct",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "currentTempC",
+    "context": "currentTempC",
+    "count": 2,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "dewPoint",
+    "context": "dewPoint",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "energyBucket",
+    "context": "energyBucket",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "dhwOperatingMode",
+    "context": "dhwOperatingMode",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "dhwUpdate",
+    "context": "dhwUpdate",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "alternativePoint",
+    "context": "alternativePoint",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "activeConfirmed",
+    "context": "activeConfirmed",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "controllerProfile",
+    "context": "controllerProfile",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "reconnectTimeout",
+    "context": "reconnectTimeout",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "verificationState",
+    "context": "verificationState",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "partloadHwcKw",
+    "context": "partloadHwcKw",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "centralHeatingStarts",
+    "context": "centralHeatingStarts",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "sourceBucket",
+    "context": "sourceBucket",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "dhwHours",
+    "context": "dhwHours",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "liveEpoch",
+    "context": "liveEpoch",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "boilerState",
+    "context": "boilerState",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "unmatchedPolicy",
+    "context": "unmatchedPolicy",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "cacheEpoch",
+    "context": "cacheEpoch",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "nextAction",
+    "context": "nextAction",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "flowTempMaxC",
+    "context": "flowTempMaxC",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "circuitType",
+    "context": "circuitType",
+    "count": 4,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "warmingUp",
+    "context": "warmingUp",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "narrowedOnly",
+    "context": "narrowedOnly",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "circuitsUpdate",
+    "context": "circuitsUpdate",
+    "count": 2,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "readOnly",
+    "context": "readOnly",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "flowTempDesiredC",
+    "context": "flowTempDesiredC",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "moduleConfigurationVr71",
+    "context": "moduleConfigurationVr71",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "pumpStarts",
+    "context": "pumpStarts",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "ebusV1RpcInvoke",
+    "context": "ebusV1RpcInvoke",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "capabilityWithdrawn",
+    "context": "capabilityWithdrawn",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "zoneConfig",
+    "context": "zoneConfig",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "stateClasses",
+    "context": "stateClasses",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "dhwOutdoorBivalenceTemperatureLimit",
+    "context": "dhwOutdoorBivalenceTemperatureLimit",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "interfaceRevision",
+    "context": "interfaceRevision",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "systemConfig",
+    "context": "systemConfig",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "activeSupported",
+    "context": "activeSupported",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "waterPressureBar",
+    "context": "waterPressureBar",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "maxRoomHumidity",
+    "context": "maxRoomHumidity",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "managingDeviceRole",
+    "context": "managingDeviceRole",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "projectionEdge",
+    "context": "projectionEdge",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "dhwTempDesiredC",
+    "context": "dhwTempDesiredC",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "timingQuality",
+    "context": "timingQuality",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "broadcastSupported",
+    "context": "broadcastSupported",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "mixerPositionPct",
+    "context": "mixerPositionPct",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "managingDevice",
+    "context": "managingDevice",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "sourceAddress",
+    "context": "sourceAddress",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "dhwStatusRaw",
+    "context": "dhwStatusRaw",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "fanSpeedRpm",
+    "context": "fanSpeedRpm",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "busPeriodicityEntry",
+    "context": "busPeriodicityEntry",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "systemFlowTemperature",
+    "context": "systemFlowTemperature",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "primaryCircuitFlowLpm",
+    "context": "primaryCircuitFlowLpm",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "busPeriodicityList",
+    "context": "busPeriodicityList",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "serviceStatus",
+    "context": "serviceStatus",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "busObservabilityStatus",
+    "context": "busObservabilityStatus",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "roomTempControl",
+    "context": "roomTempControl",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "hwcCylinderTemperatureBottom",
+    "context": "hwcCylinderTemperatureBottom",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "flowSetpointC",
+    "context": "flowSetpointC",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "systemProperties",
+    "context": "systemProperties",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "observedAt",
+    "context": "observedAt",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "lastInterval",
+    "context": "lastInterval",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "responseLen",
+    "context": "responseLen",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "productModel",
+    "context": "productModel",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "initiatorAddress",
+    "context": "initiatorAddress",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "configMutationResult",
+    "context": "configMutationResult",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "broadcastEvent",
+    "context": "broadcastEvent",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "deactivationsTemplimiter",
+    "context": "deactivationsTemplimiter",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "sourceClasses",
+    "context": "sourceClasses",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "pinClasses",
+    "context": "pinClasses",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "outdoorTemperature",
+    "context": "outdoorTemperature",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "energyCategory",
+    "context": "energyCategory",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "unknownRegister",
+    "context": "unknownRegister",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "setBoilerConfig",
+    "context": "setBoilerConfig",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "softwareVersion",
+    "context": "softwareVersion",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "tapConnected",
+    "context": "tapConnected",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "rejectedCandidates",
+    "context": "rejectedCandidates",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "frameType",
+    "context": "frameType",
+    "count": 4,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "hardwareVersion",
+    "context": "hardwareVersion",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "getOperationalData",
+    "context": "getOperationalData",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "circuitStatus",
+    "context": "circuitStatus",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "busMessage",
+    "context": "busMessage",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "centralHeatingPumpActive",
+    "context": "centralHeatingPumpActive",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "lastSuccessfulSource",
+    "context": "lastSuccessfulSource",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "busObservabilityWarmup",
+    "context": "busObservabilityWarmup",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "pinnedEntries",
+    "context": "pinnedEntries",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "displayName",
+    "context": "displayName",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "zoneState",
+    "context": "zoneState",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "systemState",
+    "context": "systemState",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "watchSummaryClassCount",
+    "context": "watchSummaryClassCount",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "quickVetoSetpoint",
+    "context": "quickVetoSetpoint",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "hasMixer",
+    "context": "hasMixer",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "heatingCircuitBivalencePoint",
+    "context": "heatingCircuitBivalencePoint",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "boilerStatusUpdate",
+    "context": "boilerStatusUpdate",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "endpointState",
+    "context": "endpointState",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "dhwTargetTemperatureC",
+    "context": "dhwTargetTemperatureC",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "busObservabilityCounters",
+    "context": "busObservabilityCounters",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "systemBounds",
+    "context": "systemBounds",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "zoneRoomTemperature",
+    "context": "zoneRoomTemperature",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "heatingStatusRaw",
+    "context": "heatingStatusRaw",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "flowTempMinC",
+    "context": "flowTempMinC",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "systemConfigBound",
+    "context": "systemConfigBound",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "targetAddress",
+    "context": "targetAddress",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "targetFanSpeedRpm",
+    "context": "targetFanSpeedRpm",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "invalidBound",
+    "context": "invalidBound",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "ebusV1SemanticFm5InterpretationGet",
+    "context": "ebusV1SemanticFm5InterpretationGet",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "busMessagesList",
+    "context": "busMessagesList",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "socketLoss",
+    "context": "socketLoss",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "evictableEntries",
+    "context": "evictableEntries",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "zonesUpdate",
+    "context": "zonesUpdate",
+    "count": 2,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "busObservabilityCapability",
+    "context": "busObservabilityCapability",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "busObservabilityDegraded",
+    "context": "busObservabilityDegraded",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "invokeResult",
+    "context": "invokeResult",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "m2mGraphqlEnabled",
+    "context": "m2mGraphqlEnabled",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "quickVeto",
+    "context": "quickVeto",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "watchSummaryInventory",
+    "context": "watchSummaryInventory",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "minInterval",
+    "context": "minInterval",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "busAdmissionActiveProbe",
+    "context": "busAdmissionActiveProbe",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "operatingMode",
+    "context": "operatingMode",
+    "count": 3,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "watchSummary",
+    "context": "watchSummary",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "identityConfirmed",
+    "context": "identityConfirmed",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "heatingCurve",
+    "context": "heatingCurve",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "periodicityBudgetOverflowTotal",
+    "context": "periodicityBudgetOverflowTotal",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "passiveState",
+    "context": "passiveState",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "totalEntries",
+    "context": "totalEntries",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "completedTransactions",
+    "context": "completedTransactions",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "sampleCount",
+    "context": "sampleCount",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "frostProtC",
+    "context": "frostProtC",
+    "count": 2,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "testSystemConfigBoundContract",
+    "context": "testSystemConfigBoundContract",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "passiveReason",
+    "context": "passiveReason",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "serialNumber",
+    "context": "serialNumber",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "passiveSupported",
+    "context": "passiveSupported",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "hwcMaxFlowTempDesired",
+    "context": "hwcMaxFlowTempDesired",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "flapDampened",
+    "context": "flapDampened",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "partloadHcKw",
+    "context": "partloadHcKw",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "gasValveActive",
+    "context": "gasValveActive",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "ebusV1SemanticSystemGet",
+    "context": "ebusV1SemanticSystemGet",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "flameActive",
+    "context": "flameActive",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "energyTotals",
+    "context": "energyTotals",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "ionisationVoltageUa",
+    "context": "ionisationVoltageUa",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "busObservabilityTimingQuality",
+    "context": "busObservabilityTimingQuality",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "busAdmission",
+    "context": "busAdmission",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "watchSummaryActivationCounts",
+    "context": "watchSummaryActivationCounts",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "canonicalPath",
+    "context": "canonicalPath",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "fm5Interpretation",
+    "context": "fm5Interpretation",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "fm5SemanticDegradedReason",
+    "context": "fm5SemanticDegradedReason",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "passiveAvailable",
+    "context": "passiveAvailable",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "transportClass",
+    "context": "transportClass",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "externalPumpActive",
+    "context": "externalPumpActive",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "stateNumber",
+    "context": "stateNumber",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "modbus.v1.profile.observation.get",
+    "context": "modbus.v1.profile.observation.get",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "modbus.v1.raw.read",
+    "context": "modbus.v1.raw.read",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "ebus.v1.semantic.boiler_status.get",
+    "context": "ebus.v1.semantic.boiler_status.get",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "ebus.v1.semantic.dhw.get",
+    "context": "ebus.v1.semantic.dhw.get",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "ebus.v1.semantic.circuits.get",
+    "context": "ebus.v1.semantic.circuits.get",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "ebus.v1.semantic.solar.get",
+    "context": "ebus.v1.semantic.solar.get",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "current_temp_c",
+    "context": "current_temp_c",
+    "count": 2,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_naming_surface_contract.py",
+    "token": "assetIds",
+    "context": "assetIds",
+    "count": 3,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "scripts/check_portal_ux_contract.py",
+    "token": "targetAddress",
+    "context": "targetAddress",
+    "count": 1,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "scripts/check_regulator_identity_contract.py",
+    "token": "observedAt",
+    "context": "observedAt",
+    "count": 3,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "scripts/check_vaillant_b503_milestones.py",
+    "token": "targetAddress",
+    "context": "targetAddress",
+    "count": 9,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "scripts/generate_multi_runtime_coexistence_fixture.py",
+    "token": "targetTempC",
+    "context": "targetTempC",
+    "count": 1,
+    "reason": "Original evidence or coupled schema/generator/validator; bytes unchanged."
+  },
+  {
+    "file": "scripts/generate_multi_runtime_coexistence_fixture.py",
+    "token": "currentTempC",
+    "context": "currentTempC",
+    "count": 1,
+    "reason": "Original evidence or coupled schema/generator/validator; bytes unchanged."
+  },
+  {
+    "file": "scripts/generate_multi_runtime_coexistence_fixture.py",
+    "token": "energyTotals",
+    "context": "energyTotals",
+    "count": 1,
+    "reason": "Original evidence or coupled schema/generator/validator; bytes unchanged."
+  },
+  {
+    "file": "scripts/validate_multi_runtime_coexistence.py",
+    "token": "targetTempC",
+    "context": "targetTempC",
+    "count": 1,
+    "reason": "Original evidence or coupled schema/generator/validator; bytes unchanged."
+  },
+  {
+    "file": "scripts/validate_multi_runtime_coexistence.py",
+    "token": "operatingMode",
+    "context": "operatingMode",
+    "count": 2,
+    "reason": "Original evidence or coupled schema/generator/validator; bytes unchanged."
+  },
+  {
+    "file": "tests/test_eebus_operator_admin_contract.py",
+    "token": "fm5SemanticDegradedReason",
+    "context": "fm5SemanticDegradedReason",
+    "count": 1,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "tests/test_graphql_face_provenance_checker.py",
+    "token": "discoverySource",
+    "context": "discoverySource",
+    "count": 1,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "tests/test_graphql_face_provenance_checker.py",
+    "token": "verificationState",
+    "context": "verificationState",
+    "count": 2,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "tests/test_msp085_live_completion.py",
+    "token": "lastSuccessfulSource",
+    "context": "lastSuccessfulSource",
+    "count": 1,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "tests/test_multi_runtime_live_coexistence_contract.py",
+    "token": "targetTempC",
+    "context": "targetTempC",
+    "count": 2,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "tests/test_multi_runtime_live_coexistence_contract.py",
+    "token": "targetAddress",
+    "context": "targetAddress",
+    "count": 1,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "tests/test_multi_runtime_live_coexistence_contract.py",
+    "token": "operatingMode",
+    "context": "operatingMode",
+    "count": 4,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "tests/test_naming_surface_contract.py",
+    "token": "heatingMode",
+    "context": "heatingMode",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "tests/test_naming_surface_contract.py",
+    "token": "systemUpdate",
+    "context": "systemUpdate",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "tests/test_naming_surface_contract.py",
+    "token": "targetTempC",
+    "context": "targetTempC",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "tests/test_naming_surface_contract.py",
+    "token": "busSummary",
+    "context": "busSummary",
+    "count": 8,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "tests/test_naming_surface_contract.py",
+    "token": "energyTotalsUpdate",
+    "context": "energyTotalsUpdate",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "tests/test_naming_surface_contract.py",
+    "token": "currentTempC",
+    "context": "currentTempC",
+    "count": 2,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "tests/test_naming_surface_contract.py",
+    "token": "circuitsUpdate",
+    "context": "circuitsUpdate",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "tests/test_naming_surface_contract.py",
+    "token": "zonesUpdate",
+    "context": "zonesUpdate",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "tests/test_naming_surface_contract.py",
+    "token": "operatingMode",
+    "context": "operatingMode",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "tests/test_naming_surface_contract.py",
+    "token": "modbus.v1.raw.read",
+    "context": "modbus.v1.raw.read",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "tests/test_naming_surface_contract.py",
+    "token": "current_temp_c",
+    "context": "current_temp_c",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "tests/test_naming_surface_contract.py",
+    "token": "assetIds",
+    "context": "assetIds",
+    "count": 1,
+    "reason": "Guard rejected-token literal or synthetic negative control."
+  },
+  {
+    "file": "tests/test_portal_ux_contract_checker.py",
+    "token": "targetAddress",
+    "context": "targetAddress",
+    "count": 1,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "tests/test_regulator_identity_contract_checker.py",
+    "token": "observedAt",
+    "context": "observedAt",
+    "count": 3,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "tests/test_semantic_snapshot_read_contract.py",
+    "token": "assetIds",
+    "context": "assetIds",
+    "count": 1,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "tests/test_system_config_bound_contract.py",
+    "token": "minC",
+    "context": "minC",
+    "count": 2,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "tests/test_system_config_bound_contract.py",
+    "token": "maxC",
+    "context": "maxC",
+    "count": 2,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "tests/test_system_config_bound_contract.py",
+    "token": "narrowedOnly",
+    "context": "narrowedOnly",
+    "count": 2,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "tests/test_vaillant_b503_milestone_checker.py",
+    "token": "targetAddress",
+    "context": "targetAddress",
+    "count": 1,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "tests/fixtures/system_config_bound_contract.json",
+    "token": "minC",
+    "context": "minC",
+    "count": 2,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "tests/fixtures/system_config_bound_contract.json",
+    "token": "maxC",
+    "context": "maxC",
+    "count": 2,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "tests/fixtures/system_config_bound_contract.json",
+    "token": "narrowedOnly",
+    "context": "narrowedOnly",
+    "count": 2,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "tests/test_naming_surface_contract.py",
+    "token": "flowsetHcMaxC",
+    "context": "flowsetHcMaxC",
+    "count": 6,
+    "reason": "Synthetic regression test for documentary exemption relocation."
+  }
+]
