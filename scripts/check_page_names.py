@@ -57,6 +57,7 @@ TOP_KEYS = {
     "pages",
     "pinned_provenance",
     "known_unresolved_links",
+    "reference_link_texts",
     "inherited_unresolved_anchors",
 }
 ROW_KEYS = {"path", "previous_path", "status", "basis"}
@@ -186,7 +187,9 @@ def pinned_pairs(root: Path, entries: list) -> tuple[dict, list[str]]:
             errors.append(f"{TABLE}: malformed pinned pair")
             continue
         key = (item["file"], item["path"])
-        text = read_text(root / resolve_file_key(root, key[0])) or ""
+        path = root / resolve_file_key(root, key[0])
+        text = read_text(path) or ""
+        errors += pin_content_errors(path, item)
         if key in pairs or text.count(key[1]) != item["count"]:
             errors.append(f"{TABLE}: pinned pair {key} occurrence count differs or is duplicated")
         pairs[key] = item["count"]
@@ -194,10 +197,22 @@ def pinned_pairs(root: Path, entries: list) -> tuple[dict, list[str]]:
 
 
 def valid_pin(item) -> bool:
-    if not isinstance(item, dict) or set(item) != {"file", "path", "count"}:
+    if not isinstance(item, dict) or set(item) != {"file", "path", "count", "content"}:
         return False
     return (all(isinstance(item[k], str) and item[k] for k in ("file", "path"))
-            and type(item["count"]) is int and item["count"] > 0)
+            and type(item["count"]) is int and item["count"] > 0
+            and isinstance(item["content"], str)
+            and re.fullmatch(r"[0-9a-f]{16}", item["content"]) is not None)
+
+
+def pin_content_errors(path: Path, item: dict) -> list[str]:
+    try:
+        content = hashlib.sha256(path.read_bytes()).hexdigest()[:16]
+    except OSError:
+        content = None
+    if content != item["content"]:
+        return [f"{item['file']}: the file changed, review the pinned pair and refresh the table"]
+    return []
 
 
 def pinned_occurrence(rel: str, text: str, start: int, end: int, pairs: dict) -> bool:
@@ -385,16 +400,48 @@ def reference_lines(text: str) -> set[int]:
     return lines
 
 
-def kept_link_text(rel: str, line: str, column: int, destination: str) -> bool:
+def kept_link_text(rel: str, line: str, column: int, destination: str, allowed: dict) -> bool:
     """True when the column lies in the text of a link whose target is the destination."""
     for link in LINK_WITH_TEXT.finditer(line):
         if link.start(1) <= column < link.end(1):
             resolved = resolve(rel, link.group(2))
-            return resolved is not None and resolved[0] == destination
+            return (resolved is not None and resolved[0] == destination
+                    and (rel, link.group(1)) in allowed)
     return False
 
 
-def check_closure(root: Path, rows: list[dict], pairs: dict) -> list[str]:
+def valid_reference(item) -> bool:
+    if not isinstance(item, dict) or set(item) != {"file", "text", "count"}:
+        return False
+    return (all(isinstance(item[k], str) and item[k] for k in ("file", "text"))
+            and type(item["count"]) is int and item["count"] > 0)
+
+
+def reference_counts(root: Path, rel: str) -> Counter:
+    text = read_text(root / rel) or ""
+    lines = reference_lines(text) if rel.endswith(".md") else set()
+    return Counter(link.group(1)
+                   for number, line in enumerate(text.splitlines(), 1) if number in lines
+                   for link in LINK_WITH_TEXT.finditer(line))
+
+
+def reference_pairs(root: Path, entries) -> tuple[dict, list[str]]:
+    pairs = {}
+    errors = []
+    if not isinstance(entries, list):
+        return pairs, [f"{TABLE}: reference_link_texts must be a list"]
+    for item in entries:
+        if not valid_reference(item):
+            errors.append(f"{TABLE}: malformed reference link text")
+            continue
+        key = (item["file"], item["text"])
+        if key in pairs or reference_counts(root, key[0])[key[1]] != item["count"]:
+            errors.append(f"{TABLE}: reference link text {key} occurrence count differs or is duplicated")
+        pairs[key] = item["count"]
+    return pairs, errors
+
+
+def check_closure(root: Path, rows: list[dict], pairs: dict, allowed: dict) -> list[str]:
     destination = {posixpath.basename(row["previous_path"]): row["path"] for row in rows}
     if not destination:
         return []
@@ -417,7 +464,7 @@ def check_closure(root: Path, rows: list[dict], pairs: dict) -> list[str]:
             end = text.find("\n", match.start())
             content = text[start:] if end < 0 else text[start:end]
             if line in references and kept_link_text(
-                rel, content, match.start() - start, destination[match.group(1)]
+                rel, content, match.start() - start, destination[match.group(1)], allowed
             ):
                 continue  # link text kept on a References line; its target is renamed
             errors.append(f"{rel}:{line}: still names the earlier page {match.group(1)}")
@@ -626,7 +673,8 @@ def check(root: Path) -> list[str]:
     rows, row_errors = check_rows(root, table["pages"])
     errors += row_errors
     pairs, pin_errors = pinned_pairs(root, table["pinned_provenance"])
-    errors += pin_errors + check_closure(root, rows, pairs)
+    allowed, reference_errors = reference_pairs(root, table["reference_link_texts"])
+    errors += pin_errors + reference_errors + check_closure(root, rows, pairs, allowed)
     errors += check_missing_links(root, table["known_unresolved_links"])
     errors += check_links(root, rows, table["inherited_unresolved_anchors"])
     errors += check_indexes(root, rows, table["tree_indexes"], table["unlinked_pages"])

@@ -60,6 +60,7 @@ def table(**overrides) -> dict:
         "inherited_unresolved_anchors": [],
         "pinned_provenance": [],
         "known_unresolved_links": [],
+        "reference_link_texts": [],
     }
     value.update(overrides)
     return value
@@ -317,6 +318,7 @@ def test_pinned_provenance_keeps_the_earlier_path(repo: Path) -> None:
     write(repo, "data/registry.json", json.dumps(pinned) + "\n")
     save_table(repo, table(pinned_provenance=[{
         "file": "data/registry.json", "path": "guide/Old_Page.md", "count": 1,
+        "content": file_content(repo, "data/registry.json"),
     }]))
     assert errors(repo) == []
 
@@ -403,6 +405,7 @@ def test_pinned_count_must_match(repo: Path) -> None:
     }))
     save_table(repo, table(pinned_provenance=[{
         "file": "data/registry.json", "path": "guide/Old_Page.md", "count": 2,
+        "content": file_content(repo, "data/registry.json"),
     }]))
     assert_fails(repo, "occurrence count differs")
 
@@ -479,6 +482,10 @@ def test_unreadable_table_fails(repo: Path) -> None:
 )
 def test_references_line_keeps_link_text_with_renamed_target(repo: Path, text: str) -> None:
     write(repo, "notes/refs.md", text)
+    link = next(checker.LINK_WITH_TEXT.finditer(text))
+    save_table(repo, table(reference_link_texts=[{
+        "file": "notes/refs.md", "text": link.group(1), "count": 1,
+    }]))
     assert errors(repo) == []
 
 
@@ -498,3 +505,57 @@ def test_references_line_keeps_link_text_with_renamed_target(repo: Path, text: s
 def test_earlier_name_outside_kept_link_text_fails(repo: Path, text: str) -> None:
     write(repo, "notes/refs.md", text)
     assert_fails(repo, "still names the earlier page Old_Page.md")
+
+
+def file_content(root: Path, rel: str) -> str:
+    return checker.hashlib.sha256((root / rel).read_bytes()).hexdigest()[:16]
+
+
+@pytest.fixture
+def listed_repo(repo: Path) -> Path:
+    write(repo, "data/registry.json", json.dumps({
+        "owner_commit": COMMIT, "owner_path": "guide/Old_Page.md",
+    }) + "\n")
+    write(repo, "notes/refs.md", "# Notes\n\n## References\n[Old_Page.md](../guide/new-page.md)\n")
+    value = table()
+    value["pinned_provenance"] = [{
+        "file": "data/registry.json", "path": "guide/Old_Page.md", "count": 1,
+        "content": file_content(repo, "data/registry.json"),
+    }]
+    value["reference_link_texts"] = [{
+        "file": "notes/refs.md", "text": "Old_Page.md", "count": 1,
+    }]
+    save_table(repo, value)
+    assert errors(repo) == []
+    return repo
+
+
+@pytest.mark.parametrize("change", ["branch", "byte"])
+def test_listed_file_change_fails(listed_repo: Path, change: str) -> None:
+    path = listed_repo / "data/registry.json"
+    text = path.read_text()
+    text = text.replace(COMMIT, "main") if change == "branch" else text + " "
+    path.write_text(text)
+    assert_fails(listed_repo, "the file changed, review the pinned pair and refresh the table")
+
+
+def test_unlisted_reference_text_fails(listed_repo: Path) -> None:
+    value = json.loads((listed_repo / checker.TABLE).read_text())
+    value["pages"].append(dict(value["pages"][0],
+        path="guide/extra-page.md", previous_path="guide/Extra_Page.md"))
+    write(listed_repo, "guide/extra-page.md", f"# Extra\n\n{BASIS}\n")
+    path = listed_repo / "guide/index.md"
+    path.write_text(path.read_text() + "[Extra](extra-page.md)\n")
+    save_table(listed_repo, value)
+    assert errors(listed_repo) == []
+    write(listed_repo, "notes/extra.md",
+          "# Extra\n\n## References\n[Extra_Page.md](../guide/extra-page.md)\n")
+    assert_fails(listed_repo, "still names the earlier page Extra_Page.md")
+
+
+@pytest.mark.parametrize("copies", [0, 2])
+def test_listed_reference_count_change_fails(listed_repo: Path, copies: int) -> None:
+    write(listed_repo, "notes/refs.md", "# Notes\n\n## References\n" +
+          "[Old_Page.md](../guide/new-page.md)\n" * copies)
+    assert_fails(listed_repo, "reference link text")
+    assert_fails(listed_repo, "occurrence count differs")

@@ -985,172 +985,206 @@
     {
       "file": "docs/platform/fixtures/candidate-fact-graph/v1/positive/source-terminal-bundle.json",
       "path": "protocols/vaillant/ebus-vaillant-B509.md",
-      "count": 1
+      "count": 1,
+      "content": "b7269e608dfc004f"
     },
     {
       "file": "docs/platform/fixtures/candidate-fact-graph/v1/positive/source-terminal-bundle.json",
       "path": "protocols/vaillant/ebus-vaillant-B524.md",
-      "count": 1
+      "count": 1,
+      "content": "b7269e608dfc004f"
     },
     {
       "file": "docs/platform/fixtures/synchronized-evidence/v1/m625/positive/bundle.json",
       "path": "protocols/vaillant/ebus-vaillant-B509.md",
-      "count": 2
+      "count": 2,
+      "content": "fa54da5f3e2c0480"
     },
     {
       "file": "docs/platform/fixtures/synchronized-evidence/v1/m625/positive/bundle.json",
       "path": "protocols/vaillant/ebus-vaillant-B524.md",
-      "count": 2
+      "count": 2,
+      "content": "fa54da5f3e2c0480"
     },
     {
       "file": "docs/platform/fixtures/synchronized-evidence/v1/m625/positive/replay-result.json",
       "path": "protocols/vaillant/ebus-vaillant-B509.md",
-      "count": 2
+      "count": 2,
+      "content": "c6dcd896e307c7ab"
     },
     {
       "file": "docs/platform/fixtures/synchronized-evidence/v1/m625/positive/replay-result.json",
       "path": "protocols/vaillant/ebus-vaillant-B524.md",
-      "count": 2
+      "count": 2,
+      "content": "c6dcd896e307c7ab"
     },
     {
       "file": "docs/platform/fixtures/synchronized-evidence/v1/negative/bundle-hash-mismatch.json",
       "path": "protocols/vaillant/ebus-vaillant-B509.md",
-      "count": 2
+      "count": 2,
+      "content": "0bb8c2cac1a4e34a"
     },
     {
       "file": "docs/platform/fixtures/synchronized-evidence/v1/negative/bundle-hash-mismatch.json",
       "path": "protocols/vaillant/ebus-vaillant-B524.md",
-      "count": 2
+      "count": 2,
+      "content": "0bb8c2cac1a4e34a"
     },
     {
       "file": "docs/platform/fixtures/synchronized-evidence/v1/negative/duplicate-source-binding.json",
       "path": "protocols/vaillant/ebus-vaillant-B509.md",
-      "count": 3
+      "count": 3,
+      "content": "fc26f9b53adf2e02"
     },
     {
       "file": "docs/platform/fixtures/synchronized-evidence/v1/negative/duplicate-source-binding.json",
       "path": "protocols/vaillant/ebus-vaillant-B524.md",
-      "count": 2
+      "count": 2,
+      "content": "fc26f9b53adf2e02"
     },
     {
       "file": "docs/platform/fixtures/synchronized-evidence/v1/negative/incomplete-b509-identity.json",
       "path": "protocols/vaillant/ebus-vaillant-B509.md",
-      "count": 2
+      "count": 2,
+      "content": "8cc1587eed29d2f1"
     },
     {
       "file": "docs/platform/fixtures/synchronized-evidence/v1/negative/incomplete-b509-identity.json",
       "path": "protocols/vaillant/ebus-vaillant-B524.md",
-      "count": 2
+      "count": 2,
+      "content": "8cc1587eed29d2f1"
     },
     {
       "file": "docs/platform/fixtures/synchronized-evidence/v1/negative/incomplete-b524-identity.json",
       "path": "protocols/vaillant/ebus-vaillant-B509.md",
-      "count": 2
+      "count": 2,
+      "content": "c4c53739542f322e"
     },
     {
       "file": "docs/platform/fixtures/synchronized-evidence/v1/negative/incomplete-b524-identity.json",
       "path": "protocols/vaillant/ebus-vaillant-B524.md",
-      "count": 2
+      "count": 2,
+      "content": "c4c53739542f322e"
     },
     {
       "file": "docs/platform/fixtures/synchronized-evidence/v1/negative/incomplete-b555-identity.json",
       "path": "protocols/vaillant/ebus-vaillant-B509.md",
-      "count": 2
+      "count": 2,
+      "content": "e788426ccd96953e"
     },
     {
       "file": "docs/platform/fixtures/synchronized-evidence/v1/negative/incomplete-b555-identity.json",
       "path": "protocols/vaillant/ebus-vaillant-B524.md",
-      "count": 2
+      "count": 2,
+      "content": "e788426ccd96953e"
     },
     {
       "file": "docs/platform/fixtures/synchronized-evidence/v1/negative/invalid-clock-skew.json",
       "path": "protocols/vaillant/ebus-vaillant-B509.md",
-      "count": 2
+      "count": 2,
+      "content": "891769a11f521ac6"
     },
     {
       "file": "docs/platform/fixtures/synchronized-evidence/v1/negative/invalid-clock-skew.json",
       "path": "protocols/vaillant/ebus-vaillant-B524.md",
-      "count": 2
+      "count": 2,
+      "content": "891769a11f521ac6"
     },
     {
       "file": "docs/platform/fixtures/synchronized-evidence/v1/negative/privacy-ip-address.json",
       "path": "protocols/vaillant/ebus-vaillant-B509.md",
-      "count": 2
+      "count": 2,
+      "content": "5abfa2f1b69d862b"
     },
     {
       "file": "docs/platform/fixtures/synchronized-evidence/v1/negative/privacy-ip-address.json",
       "path": "protocols/vaillant/ebus-vaillant-B524.md",
-      "count": 2
+      "count": 2,
+      "content": "5abfa2f1b69d862b"
     },
     {
       "file": "docs/platform/fixtures/synchronized-evidence/v1/negative/runtime-pseudonym-not-remasked.json",
       "path": "protocols/vaillant/ebus-vaillant-B509.md",
-      "count": 2
+      "count": 2,
+      "content": "98311ba82156eee4"
     },
     {
       "file": "docs/platform/fixtures/synchronized-evidence/v1/negative/runtime-pseudonym-not-remasked.json",
       "path": "protocols/vaillant/ebus-vaillant-B524.md",
-      "count": 2
+      "count": 2,
+      "content": "98311ba82156eee4"
     },
     {
       "file": "docs/platform/fixtures/synchronized-evidence/v1/negative/unknown-field.json",
       "path": "protocols/vaillant/ebus-vaillant-B509.md",
-      "count": 2
+      "count": 2,
+      "content": "b3981cf903ac0b55"
     },
     {
       "file": "docs/platform/fixtures/synchronized-evidence/v1/negative/unknown-field.json",
       "path": "protocols/vaillant/ebus-vaillant-B524.md",
-      "count": 2
+      "count": 2,
+      "content": "b3981cf903ac0b55"
     },
     {
       "file": "docs/platform/fixtures/synchronized-evidence/v1/positive/bundle.json",
       "path": "protocols/vaillant/ebus-vaillant-B509.md",
-      "count": 2
+      "count": 2,
+      "content": "e6db2862f9001148"
     },
     {
       "file": "docs/platform/fixtures/synchronized-evidence/v1/positive/bundle.json",
       "path": "protocols/vaillant/ebus-vaillant-B524.md",
-      "count": 2
+      "count": 2,
+      "content": "e6db2862f9001148"
     },
     {
       "file": "docs/platform/fixtures/synchronized-evidence/v1/positive/replay-result.json",
       "path": "protocols/vaillant/ebus-vaillant-B509.md",
-      "count": 2
+      "count": 2,
+      "content": "3061c507677f1f41"
     },
     {
       "file": "docs/platform/fixtures/synchronized-evidence/v1/positive/replay-result.json",
       "path": "protocols/vaillant/ebus-vaillant-B524.md",
-      "count": 2
+      "count": 2,
+      "content": "3061c507677f1f41"
     },
     {
       "file": "docs/platform/schemas/history/a91b2106076c3ef0/synchronized-evidence-source-registry-v1.json",
       "path": "protocols/vaillant/ebus-vaillant-B509.md",
-      "count": 1
+      "count": 1,
+      "content": "a91b2106076c3ef0"
     },
     {
       "file": "docs/platform/schemas/history/a91b2106076c3ef0/synchronized-evidence-source-registry-v1.json",
       "path": "protocols/vaillant/ebus-vaillant-B524.md",
-      "count": 1
+      "count": 1,
+      "content": "a91b2106076c3ef0"
     },
     {
       "file": "docs/platform/schemas/synchronized-evidence-source-registry-v1.json",
       "path": "protocols/vaillant/ebus-vaillant-B509.md",
-      "count": 1
+      "count": 1,
+      "content": "bfc105545bcbe96b"
     },
     {
       "file": "docs/platform/schemas/synchronized-evidence-source-registry-v1.json",
       "path": "protocols/vaillant/ebus-vaillant-B524.md",
-      "count": 1
+      "count": 1,
+      "content": "bfc105545bcbe96b"
     },
     {
       "file": "tests/test_synchronized_evidence_executable_contract.py",
       "path": "protocols/vaillant/ebus-vaillant-B509.md",
-      "count": 1
+      "count": 1,
+      "content": "1870620b5748e9da"
     },
     {
       "file": "tests/test_synchronized_evidence_executable_contract.py",
       "path": "protocols/vaillant/ebus-vaillant-B524.md",
-      "count": 1
+      "count": 1,
+      "content": "1870620b5748e9da"
     }
   ],
   "known_unresolved_links": [
@@ -1189,6 +1223,113 @@
     {
       "source": "architecture/atr/README.md",
       "target": "../ebus_standard/12-source-address-table.md"
+    }
+  ],
+  "reference_link_texts": [
+    {
+      "file": "architecture/b524-structural-decisions.md",
+      "text": "`ebus-vaillant-B524-register-map.md#ebusv1semanticcircuitsget`",
+      "count": 1
+    },
+    {
+      "file": "architecture/b524-structural-decisions.md",
+      "text": "`ebus-vaillant-B524-register-map.md#ebusv1semanticcylindersget`",
+      "count": 2
+    },
+    {
+      "file": "architecture/b524-structural-decisions.md",
+      "text": "`ebus-vaillant-B524-register-map.md#ebusv1semanticsolarget`",
+      "count": 1
+    },
+    {
+      "file": "architecture/b524-structural-decisions.md",
+      "text": "`ebus-vaillant-B524-register-map.md#gg0x00--systemregulator`",
+      "count": 2
+    },
+    {
+      "file": "architecture/b524-structural-decisions.md",
+      "text": "`ebus-vaillant-B524-register-map.md#gg0x02--heating-circuits-multi-instance`",
+      "count": 1
+    },
+    {
+      "file": "architecture/b524-structural-decisions.md",
+      "text": "`ebus-vaillant-B524-register-map.md#gg0x03--zones-multi-instance`",
+      "count": 6
+    },
+    {
+      "file": "architecture/b524-structural-decisions.md",
+      "text": "`ebus-vaillant-B524-register-map.md#gg0x04--solar-circuit`",
+      "count": 2
+    },
+    {
+      "file": "architecture/b524-structural-decisions.md",
+      "text": "`ebus-vaillant-B524-register-map.md#gg0x05--cylinders-multi-instance`",
+      "count": 3
+    },
+    {
+      "file": "architecture/b524-structural-decisions.md",
+      "text": "`ebus-vaillant-B524-register-map.md#gg0x09--radio-sensors-\u0076rc7xx-multi-instance-dual-opcode`",
+      "count": 1
+    },
+    {
+      "file": "architecture/b524-structural-decisions.md",
+      "text": "`ebus-vaillant-B524-register-map.md#gg0x0a--radio-sensors-\u0076r92-multi-instance-dual-opcode`",
+      "count": 1
+    },
+    {
+      "file": "architecture/b524-structural-decisions.md",
+      "text": "`ebus-vaillant-B524-register-map.md#gg0x0c--remote-accessories-\u0076r71fm5-multi-instance-remote-only`",
+      "count": 1
+    },
+    {
+      "file": "architecture/b524-structural-decisions.md",
+      "text": "`ebus-vaillant-B524-register-map.md#mctype--circuit-type`",
+      "count": 1
+    },
+    {
+      "file": "architecture/b524-structural-decisions.md",
+      "text": "`ebus-vaillant-B524-register-map.md#zmapping--zone-room-temperature-sensor-mapping`",
+      "count": 1
+    },
+    {
+      "file": "architecture/b524-structural-decisions.md",
+      "text": "`ebus-vaillant-B524-register-map.md`",
+      "count": 1
+    },
+    {
+      "file": "protocols/vaillant/ebus-vaillant-b508.md",
+      "text": "`ebus-vaillant-B524.md`",
+      "count": 1
+    },
+    {
+      "file": "protocols/vaillant/ebus-vaillant-b509-heatpump-register-map.md",
+      "text": "`ebus-vaillant-B509-boiler-register-map.md`",
+      "count": 1
+    },
+    {
+      "file": "protocols/vaillant/ebus-vaillant-b509-heatpump-register-map.md",
+      "text": "`ebus-vaillant-B509.md`",
+      "count": 1
+    },
+    {
+      "file": "protocols/vaillant/ebus-vaillant-b509.md",
+      "text": "`ebus-vaillant-B503.md`",
+      "count": 1
+    },
+    {
+      "file": "protocols/vaillant/ebus-vaillant-b509.md",
+      "text": "`ebus-vaillant-B509-boiler-register-map.md`",
+      "count": 1
+    },
+    {
+      "file": "protocols/vaillant/ebus-vaillant-b509.md",
+      "text": "`ebus-vaillant-B509-heatpump-register-map.md`",
+      "count": 1
+    },
+    {
+      "file": "protocols/vaillant/ebus-vaillant-b523.md",
+      "text": "`ebus-vaillant-B524-register-map.md`",
+      "count": 1
     }
   ]
 }
