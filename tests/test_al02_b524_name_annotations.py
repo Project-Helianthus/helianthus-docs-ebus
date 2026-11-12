@@ -292,7 +292,7 @@ OP02_TUPLES = """00|0001|dhw_outdoor_bivalence_temperature_limit|system_dhw_biva
 02|001A|circuit_mixer_movement|circuit_status_heating_circuit_mixer|false
 02|001B|circuit_pump_unknown_8|circuit_pump_status|true
 02|001C|circuit_adaptive_heating_curve_offset|circuit_adaptive_heating_curve_offset|false
-02|001D|circuit_unknown_9|circuit_dhw_quick_mode|true
+02|001D|circuit_special_function_mode|circuit_dhw_quick_mode|false
 02|001E|circuit_state|circuit_status_circuit|true
 02|001F|cooling_circuit_outdoor_temperature_limit_minimum|circuit_minimum_outside_temperature_cooling|false
 02|0020|circuit_unknown_10|circuit_status_automatic_heating_cooling|true
