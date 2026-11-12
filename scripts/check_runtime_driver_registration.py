@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Guard the S0 registration documentation; does not execute gateway behavior.
+"""Guard the S0 registration and S5 lifecycle documentation; does not execute gateway behavior.
 
 Normative rows/paragraphs are intentionally checked in full so weakening a clause
 cannot pass by retaining isolated keywords. Whitespace wrapping is immaterial;
@@ -85,6 +85,26 @@ production composition registers only `ebus.primary`. These are gateway test
 obligations, not executed tests or wire-evidence claims in this prose slice.""",
 }
 
+S5_REQUIREMENTS = {
+    'S5 atomic ownership handoff': """Later managed sidecars must use this same validated registration path with their
+own direction, native contract and exclusively owned sources. Each migration
+owns durable intent/recovery, exact lifecycle correlation, pre-open barrier and
+admission, activation proof, write-ahead publication/index, read-gated
+reprojection, independent native-close proof, restart non-overlap, one native
+retry owner and truthful status. Remove direct start/close ownership atomically
+when its managed adapter takes over; never create a dual-owner window or register
+a placeholder accepting controls it cannot execute. No family mutates another
+family's state. Synthetic isolation fixtures use separate assets under the
+current one-source-per-asset constraint.""",
+    'S5 epoch-aware Portal key': """The existing Portal contribution key is `{DriverID, Generation}` with no source
+epoch, while driver generation restarts in each epoch. DM-HOOKS must supply a
+per-DriverID monotonic contribution generation or an epoch-aware key before
+contributions can safely span epoch succession. G5 registration does not solve
+that limitation or implement Portal, MCP, setup, semantic or evidence hooks.
+S5 sidecar migrations, shared-asset source isolation/LIFE-22 and the universal
+public SPI remain deferred; this slice closes none of them.""",
+}
+
 
 def normalize(text: str) -> str:
     return " ".join(text.split())
@@ -140,6 +160,8 @@ def visible_units(text: str) -> list[tuple[str, str]]:
             opening = tokens[index - 1]
             if opening.type == "heading_open" and opening.tag == "h2" and opening.level == 0:
                 units.append(("heading", token.content))
+            elif opening.type == "heading_open" and opening.level == 0:
+                units.append(("subheading", token.content))
             elif opening.type == "paragraph_open" and opening.level == 0 and not html:
                 units.append(("paragraph", token.content))
     return units
@@ -159,8 +181,26 @@ def validate(text: str) -> list[str]:
             or titles[index + 1] != END[3:]):
         return ["expected S5 immediately after S0 registration section"]
     section = rendered[headings[index][0] + 1 : headings[index + 1][0]]
+    errors = missing_obligations(section, REQUIREMENTS)
+    end = headings[index + 2][0] if index + 2 < len(headings) else len(rendered)
+    errors.extend(missing_obligations(rendered[headings[index + 1][0] + 1:end], S5_REQUIREMENTS))
+    return errors
+
+
+def missing_obligations(section: list[tuple[str, str]], requirements: dict[str, str]) -> list[str]:
+    """Require normative top-level units, outside subordinate example sections."""
     units = set()
+    normative = True
     for kind, block in section:
+        if kind == "subheading":
+            normative = requirements is REQUIREMENTS and block in {
+                "Validate and freeze before effects",
+                "First production registration and historical dispatch evidence",
+                "S0/CTL-01 synthetic acceptance obligations",
+            }
+            continue
+        if not normative:
+            continue
         if kind != "paragraph":
             continue
         if block.lstrip().startswith("|"):
@@ -169,7 +209,7 @@ def validate(text: str) -> list[str]:
             units.add(normalize(block))
     return [
         name
-        for name, required in REQUIREMENTS.items()
+        for name, required in requirements.items()
         if normalize(required) not in units
     ]
 

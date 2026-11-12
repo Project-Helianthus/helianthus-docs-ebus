@@ -139,3 +139,50 @@ def test_inline_html_container_spans_paragraphs() -> None:
 def test_code_inline_tags_do_not_open_containers() -> None:
     changed = TEXT.replace(checker.START, "`<details>`\n\n" + checker.START)
     assert checker.validate(changed) == []
+
+
+@pytest.mark.parametrize("name", checker.S5_REQUIREMENTS)
+def test_s5_visible_normative_obligation(name: str) -> None:
+    required = checker.S5_REQUIREMENTS[name]
+    assert TEXT.count(required) == 1
+    assert checker.validate(TEXT) == []
+    wrapped = textwrap.fill(" ".join(required.split()), 61,
+                            break_long_words=False, break_on_hyphens=False)
+    assert checker.validate(TEXT.replace(required, wrapped)) == []
+
+
+@pytest.mark.parametrize("name", checker.S5_REQUIREMENTS)
+@pytest.mark.parametrize("wrapper", [
+    "", "{} Optional.", "<!--\n\n{}\n\n-->",
+    "<details>\n\n{}\n\n</details>",
+    "```text\n{}\n```", "### Example\n\n{}",
+    "#### Example ####\n\n{}",
+])
+def test_s5_missing_hidden_weakened_or_example_only(name: str, wrapper: str) -> None:
+    required = checker.S5_REQUIREMENTS[name]
+    assert name in checker.validate(TEXT.replace(required, wrapper.format(required)))
+
+
+@pytest.mark.parametrize("name", checker.S5_REQUIREMENTS)
+@pytest.mark.parametrize("location", ["s0", "after"])
+def test_s5_obligation_cannot_move_sections(name: str, location: str) -> None:
+    required = checker.S5_REQUIREMENTS[name]
+    changed = TEXT.replace(required, "")
+    if location == "s0":
+        changed = changed.replace(checker.END, required + "\n\n" + checker.END)
+    else:
+        changed += "\n\n" + required
+    assert name in checker.validate(changed)
+
+
+@pytest.mark.parametrize("before,after", [
+    ("Remove direct start/close ownership atomically", "Remove direct start/close ownership eventually"),
+    ("never create a dual-owner window", "allow a dual-owner window"),
+    ("per-DriverID monotonic contribution generation or an epoch-aware key",
+     "per-DriverID contribution generation"),
+    ("`{DriverID, Generation}`", "`{Generation}`"),
+    ("driver generation restarts in each epoch", "driver generation never restarts"),
+])
+def test_s5_contract_mutations(before: str, after: str) -> None:
+    assert before in TEXT
+    assert checker.validate(TEXT.replace(before, after))
