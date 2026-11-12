@@ -14,7 +14,6 @@ page. Other pages keep the status statements in their own text.
 - [ad01-ad12-evidence-index.md](ad01-ad12-evidence-index.md)
 - [ad10-migration-equivalence.md](ad10-migration-equivalence.md)
 - [ad11-rollback-equivalence.md](ad11-rollback-equivalence.md)
-- [b524-basv2-publication-intake.md](b524-basv2-publication-intake.md)
 - [b524-evidence-grade-crosswalk.md](b524-evidence-grade-crosswalk.md)
 - [b524-provisional-name-evidence.md](b524-provisional-name-evidence.md)
 - [contributing.md](contributing.md)

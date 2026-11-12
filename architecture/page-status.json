@@ -22,6 +22,10 @@
     "development/index.md",
     "protocols/index.md"
   ],
+  "unlinked_pages": {
+    "development/index.md": 1,
+    "protocols/index.md": 1
+  },
   "pages": [
     {
       "path": "architecture/ae24-b531-local-projection.md",

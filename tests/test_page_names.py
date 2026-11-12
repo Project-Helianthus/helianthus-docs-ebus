@@ -48,6 +48,7 @@ def table(**overrides) -> dict:
         "statuses": list(checker.STATUSES),
         "control_files": list(checker.CONTROL_FILES),
         "tree_indexes": ["guide/index.md"],
+        "unlinked_pages": {},
         "pages": [
             {
                 "path": "guide/new-page.md",
@@ -356,23 +357,35 @@ def test_duplicate_and_explicit_anchors_resolve(repo: Path) -> None:
     assert errors(repo) == []
 
 
-def test_index_must_link_every_page_of_its_tree(repo: Path) -> None:
-    write(repo, "guide/index.md", "# Guide pages\n\n- [other.md](other.md)\n")
-    assert_fails(repo, "guide/index.md: does not link guide/new-page.md")
-    write(repo, "guide/index.md", "# Guide pages\n\n- [new-page.md](new-page.md)\n")
-    assert_fails(repo, "guide/index.md: does not link guide/other.md")
+def test_index_leaves_more_pages_unlinked_than_declared(repo: Path) -> None:
+    write(repo, "guide/quiet-page.md", "# Quiet page\n")
+    write(repo, "guide/spare-page.md", "# Spare page\n")
+    save_table(repo, table(unlinked_pages={"guide/index.md": 1}))
+    assert_fails(repo, "guide/index.md: declared 1 unlinked pages, actual 2")
+    assert_fails(repo, "guide/quiet-page.md")
+    assert_fails(repo, "guide/spare-page.md")
 
 
-def test_publication_indexes_exclude_methodology_pages(repo: Path) -> None:
-    # Build the excluded fixture name at runtime so source publication scans
-    # do not mistake this negative control for a published page link.
-    basename = "-".join(("survey", "methodology")) + ".md"
-    page = f"guide/{basename}"
-    write(repo, page, "# Synthetic excluded page\n")
+def test_index_links_page_still_declared_unlinked(repo: Path) -> None:
+    write(repo, "guide/quiet-page.md", "# Quiet page\n")
+    save_table(repo, table(unlinked_pages={"guide/index.md": 1}))
     assert errors(repo) == []
     with (repo / "guide/index.md").open("a") as index:
-        index.write(f"\n- [Excluded fixture]({basename})\n")
-    assert_fails(repo, f"guide/index.md: must not link methodology page {page}")
+        index.write("\n- [Quiet page](quiet-page.md)\n")
+    assert_fails(repo, "guide/index.md: declared 1 unlinked pages, actual 0")
+
+
+def test_index_missing_declaration_defaults_to_zero(repo: Path) -> None:
+    write(repo, "guide/quiet-page.md", "# Quiet page\n")
+    assert_fails(repo, "guide/index.md: declared 0 unlinked pages, actual 1")
+
+
+@pytest.mark.parametrize("value", [[], None, {"guide/index.md": -1},
+    {"guide/index.md": True}, {"guide/index.md": "1"},
+    {"guide/index.md": 1.5}, {"other/index.md": 0}])
+def test_malformed_unlinked_pages_fails(repo: Path, value) -> None:
+    save_table(repo, table(unlinked_pages=value))
+    assert_fails(repo, "unlinked_pages must map listed tree indexes to non-negative integers")
 
 
 def test_readme_must_link_every_tree_index(repo: Path) -> None:

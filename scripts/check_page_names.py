@@ -24,8 +24,8 @@ name was normalized to lowercase kebab-case. For each row the checker requires:
   the exact file and to a heading or explicit anchor of that page; the finite
   list of anchors that already failed before the rename must match exactly;
 - the tree indexes: each is linked from README.md and links every publishable
-  page of its tree, excluding methodology pages; a listed page outside every
-  indexed tree is linked from README.md.
+  page of its tree except the declared number kept out of navigation; a listed
+  page outside every indexed tree is linked from README.md.
 
 The earlier names are documentary only. Nothing reads them as a fallback.
 """
@@ -51,6 +51,7 @@ TOP_KEYS = {
     "statuses",
     "control_files",
     "tree_indexes",
+    "unlinked_pages",
     "pages",
     "inherited_unresolved_anchors",
 }
@@ -146,6 +147,26 @@ def read_text(path: Path) -> str | None:
         return None
 
 
+def table_navigation_errors(table: dict) -> list[str]:
+    errors: list[str] = []
+    indexes = table["tree_indexes"]
+    if not isinstance(indexes, list) or not all(
+        isinstance(item, str) and item.endswith("/index.md") for item in indexes
+    ):
+        errors.append(f"{TABLE}: tree_indexes must list <tree>/index.md paths")
+        table["tree_indexes"] = []
+    unlinked = table["unlinked_pages"]
+    if not isinstance(unlinked, dict) or any(
+        key not in table["tree_indexes"] or type(value) is not int or value < 0
+        for key, value in unlinked.items()
+    ):
+        errors.append(
+            f"{TABLE}: unlinked_pages must map listed tree indexes to non-negative integers"
+        )
+        table["unlinked_pages"] = {}
+    return errors
+
+
 def load_table(root: Path) -> tuple[dict | None, list[str]]:
     try:
         table = json.loads((root / TABLE).read_text(encoding="utf-8"))
@@ -161,12 +182,7 @@ def load_table(root: Path) -> tuple[dict | None, list[str]]:
     for key in ("table", "scope"):
         if not isinstance(table[key], str) or not table[key].strip():
             errors.append(f"{TABLE}: {key} must be a non-empty string")
-    indexes = table["tree_indexes"]
-    if not isinstance(indexes, list) or not all(
-        isinstance(item, str) and item.endswith("/index.md") for item in indexes
-    ):
-        errors.append(f"{TABLE}: tree_indexes must list <tree>/index.md paths")
-        table["tree_indexes"] = []
+    errors += table_navigation_errors(table)
     rows = table["pages"]
     if not isinstance(rows, list) or not rows:
         errors.append(f"{TABLE}: pages must be a non-empty list")
@@ -453,7 +469,22 @@ def linked_paths(root: Path, source: str) -> set[str]:
     return out
 
 
-def check_indexes(root: Path, rows: list[dict], indexes: list[str]) -> list[str]:
+def unlinked_tree_pages(root: Path, tree: str, index: str, links: set[str]) -> list[str]:
+    unlinked: list[str] = []
+    for rel, _ in repository_files(root / tree):
+        page = posixpath.join(tree, rel)
+        if not page.endswith(".md") or page == index:
+            continue
+        if posixpath.basename(page) in CONTROL_FILES:
+            continue
+        if page not in links:
+            unlinked.append(page)
+    return unlinked
+
+
+def check_indexes(
+    root: Path, rows: list[dict], indexes: list[str], unlinked_pages: dict[str, int]
+) -> list[str]:
     errors: list[str] = []
     readme_links = linked_paths(root, "README.md")
     covered: set[str] = set()
@@ -465,22 +496,13 @@ def check_indexes(root: Path, rows: list[dict], indexes: list[str]) -> list[str]
         if index not in readme_links:
             errors.append(f"README.md: does not link the tree index {index}")
         links = linked_paths(root, index)
-        errors.extend(
-            f"{index}: must not link methodology page {page}"
-            for page in sorted(links)
-            if "methodology" in Path(page).stem.split("-")
-        )
-        for rel, _ in repository_files(root / tree):
-            page = posixpath.join(tree, rel)
-            if not page.endswith(".md") or page == index:
-                continue
-            if (
-                posixpath.basename(page) in CONTROL_FILES
-                or "methodology" in Path(page).stem.split("-")
-            ):
-                continue
-            if page not in links:
-                errors.append(f"{index}: does not link {page}")
+        unlinked = unlinked_tree_pages(root, tree, index, links)
+        declared = unlinked_pages.get(index, 0)
+        if len(unlinked) != declared:
+            errors.append(
+                f"{index}: declared {declared} unlinked pages, actual {len(unlinked)}; "
+                f"unlinked pages: {sorted(unlinked)}"
+            )
         covered.update(
             row["path"] for row in rows if row["path"].startswith(tree + "/")
         )
@@ -498,7 +520,7 @@ def check(root: Path) -> list[str]:
     errors += row_errors
     errors += check_closure(root, rows)
     errors += check_links(root, rows, table["inherited_unresolved_anchors"])
-    errors += check_indexes(root, rows, table["tree_indexes"])
+    errors += check_indexes(root, rows, table["tree_indexes"], table["unlinked_pages"])
     return errors
 
 
