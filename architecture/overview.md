@@ -153,8 +153,14 @@ This split is intentional:
 
 The registry layer treats each physical eBUS device as a **DeviceEntry** discovered via a 0x07/0x04 identification scan. A single physical device may be observed on multiple eBUS addresses (alias faces). The registry resolves these to one canonical DeviceEntry with:
 
-- a deterministic primary `Address()` (first/canonical address used in projection paths),
-- an alias list `Addresses()` (all observed addresses for that same physical identity).
+- role-based addressing `AddressByRole(role SlotRole) (byte, bool)`: the first bus-face address whose role matches the requested slot role, or `false` when no face matches; routing code uses it to address the correct byte for the intended frame type,
+- a display address `PrimaryDisplayAddress() byte`: a representative address for logs and display only, which may be the initiator or the target face of an aliased pair and is never used for wire routing,
+- an alias list `Addresses() []byte` (all observed addresses for that same physical identity).
+
+`AddressByRole` replaced the earlier, ambiguous single-address accessor. The
+interface is declared as `DeviceEntry` in
+[`registry/registry.go`](https://github.com/Project-Helianthus/helianthus-ebusreg/blob/main/registry/registry.go)
+in `helianthus-ebusreg`.
 
 During scan, Helianthus treats the response source as canonical when available, but still retains the queried target as an alias face when source and target differ. This avoids losing valid faces (for example, a SOL00-style `0xEC` target) when multiple targets answer with the same source identity.
 
