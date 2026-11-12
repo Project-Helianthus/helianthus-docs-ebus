@@ -282,6 +282,21 @@ def test_exact_stale_graphql_data_ignored_but_names_checked(tmp_path, body):
         CHECKER.validate_remaining_pages(tmp_path)
 
 
+@pytest.mark.parametrize("opening, name", [
+    ("```graphql", "busSummaryextra"),
+    ("```GraphQL", "busSummaryExtra"),
+    ("```GRAPHQL schema-example", "busSummary2"),
+])
+def test_stale_prefix_rejected_for_any_continuation_and_fence_case(tmp_path, opening, name):
+    fixture = tmp_path / "tests/fixtures"
+    fixture.mkdir(parents=True)
+    (fixture / "remaining_page_name_exemptions.json").write_text("[]")
+    page = tmp_path / "example.md"
+    page.write_text(opening + "\n{ " + name + " }\n```\n")
+    with pytest.raises(ValueError, match="partial stale"):
+        CHECKER.validate_remaining_pages(tmp_path)
+
+
 def test_exact_stale_prose_still_checked_beside_graphql_data(tmp_path):
     fixture = tmp_path / "tests/fixtures"
     fixture.mkdir(parents=True)

@@ -240,11 +240,11 @@ def remaining_occurrences(root: Path):
             continue
         examples = list(markdown_fence_spans(text))
         fences = [(start, end) for start, end, language in examples
-                  if language == "graphql"]
+                  if (language or "").lower() == "graphql"]
         occurrence_text = masked_graphql_text(text, fences)
         blocks = "\n".join(occurrence_text[start:end] for start, end in fences)
         for identifier in re.findall(r"\b[A-Za-z_]\w*\b", blocks):
-            if any(re.match(re.escape(token) + r"[_A-Z0-9]", identifier)
+            if any(re.match(re.escape(token) + r"\w", identifier)
                    for token in STALE_GRAPHQL_TOKENS):
                 raise ValueError("partial stale GraphQL identifier")
         for token in REMAINING_TOKENS:
