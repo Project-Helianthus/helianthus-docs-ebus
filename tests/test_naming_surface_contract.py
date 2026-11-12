@@ -216,7 +216,13 @@ def test_remaining_exemptions_exist():
     CHECKER.validate_remaining_pages(ROOT)
 
 
-def test_documentary_exemption_cannot_move_into_graphql(tmp_path):
+@pytest.mark.parametrize("opening,closing", [
+    ("```graphql", "```"),
+    ("```graphql schema-example", "```"),
+    ("~~~~graphql schema-example", "~~~~"),
+    ("  ````graphql schema-example", "  `````"),
+])
+def test_documentary_exemption_cannot_move_into_graphql(tmp_path, opening, closing):
     fixture = tmp_path / "tests/fixtures"
     fixture.mkdir(parents=True)
     (fixture / "remaining_page_name_exemptions.json").write_text(json.dumps([{
@@ -228,7 +234,7 @@ def test_documentary_exemption_cannot_move_into_graphql(tmp_path):
     page = tmp_path / "api/graphql.md"
     page.write_text("Documentary correspondence: `flowsetHcMaxC`.\n")
     CHECKER.validate_remaining_pages(tmp_path)
-    page.write_text("```graphql\ntype Query { flowsetHcMaxC: Float }\n```\n")
+    page.write_text(opening + "\ntype Query { flowsetHcMaxC: Float }\n" + closing + "\n")
     with pytest.raises(ValueError, match="remaining API spelling or stale naming exemption"):
         CHECKER.validate_remaining_pages(tmp_path)
 
@@ -239,3 +245,20 @@ def test_ha_controller_family_label_preserves_selection_and_display_mapping():
     assert "- eBUS functional-module family (selected by the module's `device_id` prefix)" in page
     assert page.count("  - Name: the family's marketing name") == 2
     assert page.count("  - Model: the product model followed by `(eBUS: <device_id>)` (when product model is available)") == 2
+
+
+@pytest.mark.parametrize("value", [
+    '"busSummaryExtra"',
+    '"escaped \\" busSummaryExtra # still string"',
+    '"""block busSummaryExtra\nmore data"""',
+])
+def test_stale_prefix_in_graphql_strings_allowed(tmp_path, value):
+    fixture = tmp_path / "tests/fixtures"
+    fixture.mkdir(parents=True)
+    (fixture / "remaining_page_name_exemptions.json").write_text("[]")
+    page = tmp_path / "example.md"
+    page.write_text('```graphql schema-example\n{ search(value: ' + value + ') }\n```\n')
+    CHECKER.validate_remaining_pages(tmp_path)
+    page.write_text('```graphql schema-example\n{ busSummaryExtra(value: ' + value + ') }\n```\n')
+    with pytest.raises(ValueError, match="partial stale"):
+        CHECKER.validate_remaining_pages(tmp_path)

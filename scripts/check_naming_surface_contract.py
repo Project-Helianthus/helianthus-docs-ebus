@@ -168,6 +168,35 @@ ADOPTED_GRAPHQL_TOKENS = {"current_temp_c"}
 STALE_GRAPHQL_TOKENS = set(REMAINING_TOKENS) - ADOPTED_GRAPHQL_TOKENS
 
 
+def graphql_fence_spans(text: str):
+    """Yield body offsets for GraphQL fences, including extended info strings."""
+    opening = None
+    offset = 0
+    for line in text.splitlines(keepends=True):
+        if opening is None:
+            match = re.match(r"^ {0,3}(`{3,}|~{3,})([^\r\n]*)", line)
+            if match and not (match[1][0] == "`" and "`" in match[2]):
+                info = match[2].split()
+                opening = (match[1], bool(info and info[0] == "graphql"),
+                           offset + len(line))
+        else:
+            marker, is_graphql, start = opening
+            if re.fullmatch(r" {0,3}" + re.escape(marker[0]) +
+                            r"{" + str(len(marker)) + r",}[ \t]*(?:\r?\n)?", line):
+                if is_graphql:
+                    yield start, offset
+                opening = None
+        offset += len(line)
+    if opening is not None and opening[1]:
+        yield opening[2], len(text)
+
+
+def graphql_name_text(body: str) -> str:
+    """Mask comments and regular/block strings before scanning GraphQL names."""
+    lexical_data = r'"""(?:\\"""|(?!""")[\s\S])*"""|"(?:\\[\s\S]|[^"\\])*"|#[^\r\n]*'
+    return re.sub(lexical_data, lambda match: " " * len(match[0]), body)
+
+
 def remaining_occurrences(root: Path):
     result = {}
     paths = []
@@ -184,8 +213,8 @@ def remaining_occurrences(root: Path):
             text = path.read_text()
         except (UnicodeError, OSError):
             continue
-        fences = list(re.finditer(r"```graphql\n(.*?)\n```", text, re.S))
-        blocks = "\n".join(re.sub(r"#[^\n]*", "", fence[1]) for fence in fences)
+        fences = list(graphql_fence_spans(text))
+        blocks = "\n".join(graphql_name_text(text[start:end]) for start, end in fences)
         for identifier in re.findall(r"\b[A-Za-z_]\w*\b", blocks):
             if any(re.match(re.escape(token) + r"[_A-Z]", identifier)
                    for token in STALE_GRAPHQL_TOKENS):
@@ -195,7 +224,7 @@ def remaining_occurrences(root: Path):
                 continue
             for match in re.finditer(r"(?<![\w])" + re.escape(token) + r"(?![\w])", text):
                 # Bind exemptions to prose or GraphQL context as well as counts.
-                in_graphql = any(f.start(1) <= match.start() < f.end(1) for f in fences)
+                in_graphql = any(start <= match.start() < end for start, end in fences)
                 context = "graphql:" + token if in_graphql else token
                 key = (str(relative), token, context)
                 result[key] = result.get(key, 0) + 1
