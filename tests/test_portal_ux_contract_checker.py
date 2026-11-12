@@ -1076,3 +1076,14 @@ def test_rejects_int10_safety_fragment_moved_beyond_target_section() -> None:
     text = contract().replace(fragment, "", 1)
     text = text.replace(CHECKER.TARGET_END, f"{CHECKER.TARGET_END}\n\n{fragment}", 1)
     rejects_text(text)
+
+
+@pytest.mark.parametrize("kind", ["str", "tuple", "dict"])
+def test_data_rule_kinds_require_reasons(kind, monkeypatch):
+    value = {"str": "synthetic", "tuple": ["synthetic"], "dict": {"field": "synthetic"}}[kind]
+    monkeypatch.setitem(CHECKER.RULES, "synthetic", {"kind": kind, "value": value, "reason": "Required contract"})
+    expected = tuple(value) if kind == "tuple" else value
+    assert CHECKER._rule("synthetic") == expected
+    CHECKER.RULES["synthetic"]["reason"] = ""
+    with pytest.raises(ValueError):
+        CHECKER._rule("synthetic")

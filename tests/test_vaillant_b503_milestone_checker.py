@@ -1318,3 +1318,14 @@ def test_rejects_required_m3_cells_moved_to_the_wrong_milestone_row() -> None:
     text = contract().replace(table_row(CHECKER.M3_PORTAL), table_row(wrong_row), 1)
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_text(text)
+
+
+@pytest.mark.parametrize("kind", ["str", "tuple", "dict"])
+def test_data_rule_kinds_require_reasons(kind, monkeypatch):
+    value = {"str": "synthetic", "tuple": ["synthetic"], "dict": {"field": "synthetic"}}[kind]
+    monkeypatch.setitem(CHECKER.RULES, "synthetic", {"kind": kind, "value": value, "reason": "Required contract"})
+    expected = tuple(value) if kind == "tuple" else value
+    assert CHECKER._rule("synthetic") == expected
+    CHECKER.RULES["synthetic"]["reason"] = ""
+    with pytest.raises(ValueError):
+        CHECKER._rule("synthetic")

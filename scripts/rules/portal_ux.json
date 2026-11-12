@@ -1,0 +1,212 @@
+{
+  "TARGET_START": {
+    "kind": "str",
+    "reason": "Preserve the existing target start contract obligation.",
+    "value": "## Contribution-Driven Portal Contract V1 (INT-10 Target)"
+  },
+  "TARGET_END": {
+    "kind": "str",
+    "reason": "Preserve the existing target end contract obligation.",
+    "value": "## Observe-First Contract Ownership"
+  },
+  "AVAILABILITY_ROWS": {
+    "kind": "dict",
+    "reason": "Preserve the existing availability rows contract obligation.",
+    "value": {
+      "AVAILABLE": "| `AVAILABLE` | `data-testid=\"b503-state-available\"` | Render admitted B503 tabs and the session strip for the selected target. |",
+      "NOT_SUPPORTED": "| `NOT_SUPPORTED` | `data-testid=\"b503-state-not-supported\"` | State that the selected target does not support the B503 surface; do not infer a value. |",
+      "TRANSPORT_DOWN": "| `TRANSPORT_DOWN` | `data-testid=\"b503-state-transport-down\"` | State that transport is unavailable and offer only a retry/reconnect hint. |",
+      "SESSION_BUSY": "| `SESSION_BUSY` | `data-testid=\"b503-state-session-busy\"` | State neutrally that bounded ownership-or-lifecycle contention makes the session busy; do not infer a foreign owner. |",
+      "UNKNOWN": "| `UNKNOWN` | `data-testid=\"b503-state-unknown\"` | State that capability is undetermined; do not equate it with unsupported. Only the same-browser token-owning `Active` exception below retains its bounded session controls. |"
+    }
+  },
+  "AVAILABILITY_TABLE_HEADER": {
+    "kind": "str",
+    "reason": "Preserve the existing availability table header contract obligation.",
+    "value": "| Reason | Stable selector | Required presentation truth |"
+  },
+  "AVAILABILITY_TABLE_SEPARATOR": {
+    "kind": "str",
+    "reason": "Preserve the existing availability table separator contract obligation.",
+    "value": "|---|---|---|"
+  },
+  "PROJECTION_CARD_ADMISSION": {
+    "kind": "str",
+    "reason": "Preserve the existing projection card admission contract obligation.",
+    "value": "The `Vaillant B503` card is a contribution-driven section-projection card. It\nadmits a new perspective only for an admitted selected resource whose B503\ncapability state is `AVAILABLE`; it identifies the selected target and enters\nthe B503 perspective without creating another B503 data model. After a locally\ninitiated successful Enable ACK, the same target perspective remains mounted\nwhile session is `Active` with `owned:true`, capability is `UNKNOWN`, and the\nbrowser still holds that exact target's current issuer token. Only the session\nstrip and current-owner live-monitor READ/DISABLE controls remain admitted;\nthe browser admits no second Enable and no other `UNKNOWN` presentation gains\nB503 tabs or actions. Target selection is resource-scoped."
+  },
+  "SELECTED_TARGET_TYPED_HISTORY": {
+    "kind": "str",
+    "reason": "Preserve the existing selected target typed history contract obligation.",
+    "value": "The History tab uses the typed B503 history GraphQL records for the selected\ntarget and has `data-role=\"vaillant-b503-tab-history\"`; it does not infer\nhistory from labels or retained aggregate data."
+  },
+  "B503_KEYBOARD_ACCESSIBILITY": {
+    "kind": "str",
+    "reason": "Preserve the existing b503 keyboard accessibility contract obligation.",
+    "value": "The selected-target B503 tabs expose a `role=\"tablist\"` with one named\n`role=\"tab\"` and matching `role=\"tabpanel\"` for Errors, Service, History, and\nLive-Monitor. Each tab exposes `aria-selected`; ArrowLeft, ArrowRight, Home,\nand End move tab focus, while Enter and Space select the focused tab. The\nsession strip is a named `role=\"status\"` for the selected target."
+  },
+  "B503_CAPABILITY_RECONNECT": {
+    "kind": "str",
+    "reason": "Preserve the existing b503 capability reconnect contract obligation.",
+    "value": "On a Gateway capability transition or transport reconnect, the browser renders\nonly the Gateway-supplied availability state. It neither preserves\n`AVAILABLE`, replays a session enable/disable action, nor changes route; it\nmay re-query only the selected target after Gateway publishes a new state."
+  },
+  "B503_FIELD_OPERATION_ERRORS": {
+    "kind": "str",
+    "reason": "Preserve the existing b503 field operation errors contract obligation.",
+    "value": "On a selected-target context cancellation before bus turnaround, the browser\nrenders the Gateway-supplied structured `UPSTREAM_TIMEOUT` alongside the\nunchanged last-known B503 availability. On a selected-target bus/arbitration\ntimeout, NAK, or CRC failure, it renders structured `UPSTREAM_RPC_FAILED`\nalongside that same availability. Neither field-operation error becomes\n`TRANSPORT_DOWN` or invalidates capability."
+  },
+  "B503_FRONTEND_EPOCH_ROLLOVER": {
+    "kind": "str",
+    "reason": "Preserve the existing b503 frontend epoch rollover contract obligation.",
+    "value": "Each target-bound asynchronous request captures a frontend presentation epoch\nat dispatch. Target switch, B503 navigation-away, and reconnect advance that\nepoch; a completion may mutate presentation only when both its target address\nand captured epoch still match, otherwise it is discarded."
+  },
+  "B503_SESSION_STATE_CONTRACT": {
+    "kind": "str",
+    "reason": "Preserve the existing b503 session state contract contract obligation.",
+    "value": "The strip states are `Idle`, `Enabling`, `Active`, and\n`Refreshing`, and `Disabled`. `Refreshing` means an epoch refresh holds the\nownership gate; the already-admitted triggering request remains pending and\nnew bus-facing live-monitor reads/actions are busy. Status-only\n`vaillantCapabilities(targetAddress:)` and\n`vaillantLiveMonitorSession(targetAddress:)` queries remain available to observe\navailability and session completion. Refresh success returns `Active` and\ncompletes a triggering read with exactly one native operation result, or\ndispatches a triggering current-owner disable exactly once after its frame\nreaches emission. A terminal disconnect before disable-frame emission emits no\ndisable, returns exact `TRANSPORT_DOWN`, releases ownership, retains Gateway's\nprocess-local cleanup obligation, presents session `Idle` with `owned:false`,\npublishes capability `UNKNOWN`, admits no Enable, and is never retried on\nreconnect. Every emitted disable outcome is recorded and returned exactly and\nfollows the same fail-closed public state because ACK/NAK alone do not prove\nnative settlement. Refresh failure also follows that public state and completes\nthe triggering request with the exact unavailable failure without dispatching\nits native operation.\n`Disabled` is never reported with `owned:true`."
+  },
+  "B503_DISABLED_PUBLIC_MAPPING": {
+    "kind": "str",
+    "reason": "Preserve the existing b503 disabled public mapping contract obligation.",
+    "value": "`Disabled` with `owned:false`\nmaps only an out-of-band administrative/configuration-disabled condition\nsupplied by Gateway. It is never the result of a current-owner live-monitor\nsession DISABLE action; every terminal outcome of that action presents `Idle`\nwith `owned:false`, retains cleanup, and publishes `UNKNOWN`. A still-effective\nout-of-band disabled condition takes precedence across Gateway\nrestart and remains `Disabled` with `owned:false`; enable failure, the 30-second\nidle timeout, transport disconnect, and every other restart-derived cleanup\nstate map to `Idle` with `owned:false`. While cleanup is pending, capability\nremains unavailable and `Idle` does not admit Enable."
+  },
+  "B503_REFRESHING_CLEANUP": {
+    "kind": "str",
+    "reason": "Preserve the existing b503 refreshing cleanup contract obligation.",
+    "value": "For a `REFRESHING` prior target, the browser queues that\nsame token-bound disable without invoking an operation while Refreshing is busy;\nafter refresh succeeds to `Active`, it dispatches the queued disable unless a\nterminal disconnect occurs before frame emission. That path emits no disable\nand returns exact `TRANSPORT_DOWN`. After refresh failure presents `Idle`,\nGateway retains the process-local cleanup obligation. The browser clears the\nqueued pair without a client disable. If the triggering request was already the\ncurrent-owner disable, that admitted request is the only client dispatch.\nGateway records and returns its emitted native outcome, or its pre-emission\n`TRANSPORT_DOWN`, releases ownership, and retains process-local fail-closed\ncleanup. The browser clears the queued pair without issuing a second disable."
+  },
+  "B503_ENABLING_CLEANUP": {
+    "kind": "str",
+    "reason": "Preserve the existing b503 enabling cleanup contract obligation.",
+    "value": "For an\n`ENABLING` prior target, the browser registers cleanup at switch time under the\nexact `(targetAddress, localEnableAttemptID, presentationEpoch)` tuple and\nuses a fresh browser-local opaque `localEnableAttemptID` allocated before\ndispatch and never reused. It\ndispatches a target-specific disable immediately only when that same attempt\ncompletes successfully with its issuer token. If that attempt does not complete\nsuccessfully with an issuer token—including cancellation before bus turnaround,\nACK timeout, NAK, CRC mismatch, bus-arbitration timeout, epoch-advance discard,\ntransport disconnect, gateway restart, or any other terminal failure—the\nbrowser clears the registration without issuing a client disable before it may\nadmit any later enable; the registration never transfers to a later attempt or\nsession."
+  },
+  "B503_TARGET_CLEANUP_SCOPE": {
+    "kind": "str",
+    "reason": "Preserve the existing b503 target cleanup scope contract obligation.",
+    "value": "On every target switch, before\nadmitting the new target presentation, the browser begins targeted cleanup for\neach prior target whose session is `ACTIVE` or `REFRESHING` and for which it\nholds a local issuer token, plus each `ENABLING` prior target for which it owns\nthe locally initiated pending enable attempt."
+  },
+  "B503_REFRESHING_UNKNOWN_STRIP": {
+    "kind": "str",
+    "reason": "Preserve the existing b503 refreshing unknown strip contract obligation.",
+    "value": "When a selected target has Gateway session state `Refreshing` with `owned:true`,\nthe session strip remains observable alongside temporarily `UNKNOWN` capability.\nIt is status-only: the section-projection card, B503 tabs, and every new\nbus-facing B503 read/action remain unavailable while Gateway reports\n`Refreshing`. Only the status-only `vaillantCapabilities(targetAddress:)` and\n`vaillantLiveMonitorSession(targetAddress:)` queries remain available during\nthat state. If the triggering READ succeeds and rebinds the same target and\nissuer token into `Active` with `owned:true`, the bounded current-owner\nREAD/DISABLE exception above resumes immediately under `UNKNOWN`; it does not\nwait for `AVAILABLE` and does not extend to a different target, token, or\ngeneral `UNKNOWN` presentation."
+  },
+  "B503_ACTIVE_UNKNOWN_OWNER": {
+    "kind": "str",
+    "reason": "Preserve the existing b503 active unknown owner contract obligation.",
+    "value": "After a successful Enable ACK, session is `Active` with `owned:true` while\ncapability remains `UNKNOWN` because settlement is unproven. If the browser\nstill holds the exact current issuer token for that target, it keeps the named\nsession strip and only the live-monitor READ and DISABLE controls mounted. It\ndoes not admit another Enable, general B503 tabs, a new projection entry, or\nthose controls for any other `UNKNOWN` target/session. Target switch,\nnavigation away, ownership loss, or session departure from `Active` removes\nthis exception and follows the cleanup rules below."
+  },
+  "B503_REFRESH_CONTINUATION": {
+    "kind": "str",
+    "reason": "Preserve the existing b503 refresh continuation contract obligation.",
+    "value": "Refresh success revalidates only a surviving authenticated current-owner\ntoken/target/epoch handle and returns it to `Active`; it is continuation, not\nreconstruction or auto-resume. The pending triggering request then completes\nfrom exactly one dispatch using the rebound key: a read returns to `Active`,\nwhile a current-owner disable records and returns its exact native outcome,\nreleases the owner, retains Gateway's process-local defensive-cleanup\nobligation, and presents `Idle` with `owned:false` alongside capability\n`UNKNOWN`; Enable remains unavailable because ACK/NAK alone do not prove native\nsettlement. After restart, a lost owner handle, or an absent/invalid current\nissuer token, Gateway does not reconstruct the session. Each qualified target's\nlive-monitor capability is `UNKNOWN`, Enable is unavailable, and Gateway emits\nno automatic B503 enable or disable. The Portal exposes no recovery control.\nCurrent 0.7 defines no ACK/NAK-based maintenance path that restores\navailability; command-specific evidence and any revised recovery contract are\ndeferred to docs-eBUS issue #525.\nA terminal transport disconnect releases ownership. A later reconnect has no\nowner and does not enter `Refreshing`; when cleanup/session settlement is\nunproven, Gateway remains `UNKNOWN`, admits no Enable, and emits no automatic\nrecovery write."
+  },
+  "FORBIDDEN_B503_SESSION_STATE_CLAUSES": {
+    "kind": "tuple",
+    "reason": "Preserve the existing forbidden b503 session state clauses contract obligation.",
+    "value": [
+      "`Refreshing` may accept live-monitor operations.",
+      "`Disabled` may be reported with `owned:true`."
+    ]
+  },
+  "B503_MAIN_ROUTE_OPERATIONS": {
+    "kind": "str",
+    "reason": "Preserve the existing b503 main route operations contract obligation.",
+    "value": "- `vaillantCapabilities(targetAddress:)`\n- `vaillantErrors(targetAddress:)`\n- `vaillantServiceCurrent(targetAddress:)`\n- `vaillantErrorHistory(targetAddress:index:)`\n- `vaillantErrorsHistory(targetAddress:limit:)`\n- `vaillantServiceHistory(targetAddress:index:)`\n- `vaillantLiveMonitor(action:issuerToken:targetAddress:)`\n- `vaillantLiveMonitorSession(targetAddress:)`"
+  },
+  "B503_NO_EXPIRED_STATE": {
+    "kind": "str",
+    "reason": "Preserve the existing b503 no expired state contract obligation.",
+    "value": "`B503Availability` has exactly these five public reasons. `Refreshing` remains\nonly a session observation. `EXPIRED` is neither an availability reason nor a\nsession state and MUST NOT be implemented as an internal or public sixth state."
+  },
+  "FORBIDDEN": {
+    "kind": "tuple",
+    "reason": "Preserve the existing forbidden contract obligation.",
+    "value": [
+      "/portal/api/v1/b503",
+      "Gateway #552 is implemented",
+      "Gateway #552 has been implemented",
+      "Gateway #552 is complete"
+    ]
+  },
+  "B503_ROUTE_SURFACE_MARKERS": {
+    "kind": "tuple",
+    "reason": "Preserve the existing b503 route surface markers contract obligation.",
+    "value": [
+      "rest",
+      "mcp",
+      "native i/o",
+      "/portal/api/v1",
+      "/graphql/portal/v1",
+      "portalcatalogv1",
+      "portalactioninvokev1",
+      "/graphql",
+      "other route"
+    ]
+  },
+  "B503_ROUTE_SURFACE_PARAGRAPHS": {
+    "kind": "tuple",
+    "reason": "Preserve the existing b503 route surface paragraphs contract obligation.",
+    "value": [
+      "The historical `/portal/api/v1/*` endpoints documented below remain their own\nendpoint contracts. They are not a transport or semantic fallback for this\nINT-10 B503 presentation.",
+      "The browser obtains the catalog read model only through `POST /graphql/portal/v1`\nand the fixed `PortalCatalogV1` operation. The only action operation on that\nroute is `PortalActionInvokeV1`; it is governed by the action-admission rules\nbelow. No B503 operation is admitted on this route.\nFor this B503 UX there is no REST compatibility shim, no alternate Portal API\nroute, no dual semantic publication, and no direct MCP/native fallback.\nThe host does not use a central vendor switch or an arbitrary-English parser to\nrecover a contribution, field state, or action meaning.",
+      "Every rendered field is identified by its contribution identity, resource ID,\nfield ID, exact SemReg field `DefinitionRef`, service `DefinitionRef`,\ncapability `DefinitionRef`, and canonical-unit `DefinitionRef`. A B503 card\ncan display only a field admitted through this chain. It must show the\nGateway-supplied lifecycle, freshness, projection-loss, quality, and provenance\nstate; it cannot reconstruct any of them from a label, a historical aggregate,\nor a raw MCP response.",
+      "The `Vaillant B503` card is a contribution-driven section-projection card. It\nadmits a new perspective only for an admitted selected resource whose B503\ncapability state is `AVAILABLE`; it identifies the selected target and enters\nthe B503 perspective without creating another B503 data model. After a locally\ninitiated successful Enable ACK, the same target perspective remains mounted\nwhile session is `Active` with `owned:true`, capability is `UNKNOWN`, and the\nbrowser still holds that exact target's current issuer token. Only the session\nstrip and current-owner live-monitor READ/DISABLE controls remain admitted;\nthe browser admits no second Enable and no other `UNKNOWN` presentation gains\nB503 tabs or actions. Target selection is resource-scoped.\nEvery target-bearing B503 read or session request uses only the main public\n`POST /graphql` endpoint. That endpoint is protected by the stable eBUS MCP\ngraduation/parity contract. These operations are not `PortalCatalogV1` or\n`PortalActionInvokeV1` operations, and they do not call `/graphql/portal/v1`:",
+      "The catalog/action route and the B503 route are an exclusive operation-to-route\nsplit, not a fallback or compatibility shim. The B503 route does not expand the\naccepted #974 catalog/action endpoint. If either fixed route is unavailable,\nthe UI renders the Gateway-supplied unavailable state and does not try the\nother route, REST, MCP, or native I/O."
+    ]
+  },
+  "B503_SESSION_STATE_CONTRADICTION_PATTERNS_fragment_5": {
+    "kind": "str",
+    "reason": "Preserve the b503 session state contradiction patterns constraint fragment.",
+    "value": "(?:`Refreshing`\\s+(?:(?:may|can|must|shall)\\s+)?(?:accept|allow|permit)s?\\s+(?:new\\s+|bus-facing\\s+)?live-monitor operations?|live-monitor operations?\\s+(?:are|remain)\\s+(?:accepted|allowed|permitted)\\s+(?:during|while)\\s+`Refreshing`)"
+  },
+  "REQUIRED_fragment_4": {
+    "kind": "str",
+    "reason": "Preserve the required constraint fragment.",
+    "value": "The browser obtains the catalog read model only through `POST /graphql/portal/v1`\nand the fixed `PortalCatalogV1` operation."
+  },
+  "REQUIRED_fragment_9": {
+    "kind": "str",
+    "reason": "Preserve the required constraint fragment.",
+    "value": "no REST compatibility shim, no alternate Portal API\nroute, no dual semantic publication, and no direct MCP/native fallback."
+  },
+  "REQUIRED_fragment_18": {
+    "kind": "str",
+    "reason": "Preserve the required constraint fragment.",
+    "value": "revalidates the request-bound caller,\ncatalog revision/digest claim, contribution identity/digest, resource and\ncapability, semantic snapshot/revision, binding, source epoch/generation,\ntyped preconditions, route, deadline, and idempotency key."
+  },
+  "REQUIRED_fragment_31": {
+    "kind": "str",
+    "reason": "Preserve the required constraint fragment.",
+    "value": "linked source contract and current open evidence; #975 remains open,\nintermediate, and unmerged, and this documentation does not claim it is\nmerged."
+  },
+  "REQUIRED_fragment_33": {
+    "kind": "str",
+    "reason": "Preserve the required constraint fragment.",
+    "value": "Changing target atomically invalidates the active target-bound presentation:\ncapability, current errors/service, history, live-monitor strip, and pending\ncompletion must not bleed into the new target."
+  },
+  "REQUIRED_fragment_50": {
+    "kind": "str",
+    "reason": "Preserve the required constraint fragment.",
+    "value": "Gateway's session view exposes only `state`\nand opaque `owned`: `owned` means that the Gateway session gate is held, not\nwhich client holds it."
+  },
+  "PLAIN_AFFIRMATIVE_CONTROL_VERB_fragment_2": {
+    "kind": "str",
+    "reason": "Preserve the plain affirmative control verb constraint fragment.",
+    "value": "\\b(?:expose(?:s|d)?|render(?:s|ed)?|show(?:s|ed)?|offer(?:s|ed)?|provide(?:s|d)?|include(?:s|d)?|add(?:s|ed)?|display(?:s|ed)?|present(?:s|ed)?|create(?:s|d)?|support(?:s|ed)?|allow(?:s|ed)?|contain(?:s|ed)?|feature(?:s|d)?|list(?:s|ed)?|publish(?:es|ed)?|surface(?:s|d)?|exist(?:s|ed)?|appear(?:s|ed)?|use(?:s|d)?|click(?:s|ed)?|remain(?:s|ed)?|has|have|be|is|are|available|visible)\\b"
+  },
+  "PLAIN_AFFIRMATIVE_DOUBLE_NEGATIVE_fragment_2": {
+    "kind": "str",
+    "reason": "Preserve the plain affirmative double negative constraint fragment.",
+    "value": "\\b(?:(?:must|shall|may|can|is|are|was|were)\\s+(?:not|never)\\s+(?:be\\s+|remain\\s+)?|(?:is|are|was|were)n['’]t\\s+)(?:hidden|disabled|absent|unavailable|unsupported|prohibited|forbidden)\\b"
+  },
+  "COMPACT_PROHIBITED_COMMAND_fragment_2": {
+    "kind": "str",
+    "reason": "Preserve the compact prohibited command constraint fragment.",
+    "value": "^(?:(?:b503|vaillant)(?:clear(?!ance|ly|fix)|delete|reset|clearerrorhistory|clearservicehistory)[a-z0-9]*|(?:clear(?!ance|ly|fix)|clearerrorhistory|clearservicehistory|delete|reset)[a-z0-9]*)$"
+  },
+  "DOM_RELEVANT_ATTRIBUTE_NAME_fragment_2": {
+    "kind": "str",
+    "reason": "Preserve the dom relevant attribute name constraint fragment.",
+    "value": "^(?:id|class|for|hidden|name|role|title|value|href|src|data-[A-Za-z0-9_:.-]+|aria-[A-Za-z0-9_:.-]+|on[a-z][A-Za-z0-9_:.-]*)$"
+  }
+}
