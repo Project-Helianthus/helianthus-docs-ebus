@@ -11,8 +11,8 @@ class ModbusV1MCPContractTest(unittest.TestCase):
         text = CONTRACT.read_text(encoding="utf-8")
         normalized = " ".join(text.split())
         for required in (
-            "modbus.v1.raw.read",
-            "modbus.v1.profile.observation.get",
+            "modbus_v1_raw_read",
+            "modbus_v1_profile_observation_get",
             "FC03",
             "FC04",
             "1..125",

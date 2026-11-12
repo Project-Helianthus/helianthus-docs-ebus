@@ -680,8 +680,8 @@ def validate_text(text: str, atr: str) -> None:
         if not _contains_fragment(section, fragment):
             raise CheckError(f"required provenance rule missing: {fragment!r}")
 
-    obsolete = "verificationState=corroborated`"
-    canonical = "verificationState=corroborated_pending`"
+    obsolete = "verification_state=corroborated`"
+    canonical = "verification_state=corroborated_pending`"
     if obsolete in atr or atr.count(canonical) != 1:
         raise CheckError("ATR must use one canonical corroborated_pending label")
 

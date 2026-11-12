@@ -15,7 +15,7 @@ class PortalPVModbusContractTests(unittest.TestCase):
             "GET /portal/api/v1/semantic/pv/current",
             "POST /portal/api/v1/explorer/modbus/raw-read",
             "M2MCurrentSnapshot",
-            "modbus.v1.raw.read",
+            "modbus_v1_raw_read",
             "semantic_pv",
             "modbus_raw_diagnostic",
             "disabled independently by default",
@@ -48,7 +48,7 @@ class PortalPVModbusContractTests(unittest.TestCase):
     def test_raw_portal_reuses_mcp_limits_and_quota(self) -> None:
         mcp = (ROOT / "api/modbus-v1-mcp.md").read_text(encoding="utf-8")
         self.assertIn("FMV3-M5-06 Portal Reuse Target", mcp)
-        self.assertIn("same closed `modbus.v1.raw.read` operation core", mcp)
+        self.assertIn("same closed `modbus_v1_raw_read` operation core", mcp)
         self.assertIn("four-reads-per-second runtime quota", mcp)
         self.assertIn("fifth combined MCP-or-Portal request", mcp)
         self.assertIn("before wire I/O", mcp)

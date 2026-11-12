@@ -182,3 +182,126 @@ def test_dynamic_builder_start_remains_exported():
     page = documents()[0]
     assert "`Start(ctx)` performs an initial build" in page
     assert "`start(ctx)`" not in page
+
+
+@pytest.mark.parametrize("text", [
+    "```graphql\n{ busSummary { status } }\n```",
+    "Invoke `modbus.v1.raw.read`.",
+    "```graphql\n{ busSummary_extra { status } }\n```",
+    "```graphql\ntype Query { busSummaryExtra: String }\n```",
+    "```graphql\ntype Query { busSummary2: String }\n```",
+])
+def test_remaining_page_injection_rejected(tmp_path, text):
+    # Root field catches schema reversion; tool catches registration reversion.
+    fixture = tmp_path / "tests/fixtures"
+    fixture.mkdir(parents=True)
+    (fixture / "remaining_page_name_exemptions.json").write_text("[]")
+    (tmp_path / "api").mkdir()
+    (tmp_path / "api/portal.md").write_text(text)
+    with pytest.raises(ValueError, match="remaining API|partial stale"):
+        CHECKER.validate_remaining_pages(tmp_path)
+
+
+@pytest.mark.parametrize("name", ["current_temp_c_source", "current_temp_cSource"])
+def test_adopted_graphql_name_extension_allowed(tmp_path, name):
+    fixture = tmp_path / "tests/fixtures"
+    fixture.mkdir(parents=True)
+    (fixture / "remaining_page_name_exemptions.json").write_text("[]")
+    (tmp_path / "api").mkdir()
+    (tmp_path / "api/portal.md").write_text(
+        "```graphql\ntype Query { " + name + ": String }\n```\n")
+    CHECKER.validate_remaining_pages(tmp_path)
+
+
+def test_remaining_exemptions_exist():
+    CHECKER.validate_remaining_pages(ROOT)
+
+
+@pytest.mark.parametrize("opening,closing", [
+    ("```json", "```"),
+    ("```json response-example", "```"),
+    ("```yaml", "```"),
+    ("```", "```"),
+    ("```graphql", "```"),
+    ("```graphql schema-example", "```"),
+    ("~~~~graphql schema-example", "~~~~"),
+    ("  ````graphql schema-example", "  `````"),
+])
+def test_documentary_exemption_cannot_move_into_graphql(tmp_path, opening, closing):
+    fixture = tmp_path / "tests/fixtures"
+    fixture.mkdir(parents=True)
+    (fixture / "remaining_page_name_exemptions.json").write_text(json.dumps([{
+        "file": "api/graphql.md", "token": "flowsetHcMaxC",
+        "context": "flowsetHcMaxC", "count": 1,
+        "reason": "Preserved documentary correspondence.",
+    }]))
+    (tmp_path / "api").mkdir()
+    page = tmp_path / "api/graphql.md"
+    page.write_text("Documentary correspondence: `flowsetHcMaxC`.\n")
+    CHECKER.validate_remaining_pages(tmp_path)
+    body = ('type Query { flowsetHcMaxC: Float }' if "graphql" in opening
+            else '{"flowsetHcMaxC": 42}')
+    page.write_text(opening + "\n" + body + "\n" + closing + "\n")
+    with pytest.raises(ValueError, match="remaining API spelling or stale naming exemption"):
+        CHECKER.validate_remaining_pages(tmp_path)
+
+
+@pytest.mark.parametrize("value", [
+    '"busSummaryExtra"',
+    '"escaped \\" busSummaryExtra # still string"',
+    '"""block busSummaryExtra\nmore data"""',
+])
+def test_stale_prefix_in_graphql_strings_allowed(tmp_path, value):
+    fixture = tmp_path / "tests/fixtures"
+    fixture.mkdir(parents=True)
+    (fixture / "remaining_page_name_exemptions.json").write_text("[]")
+    page = tmp_path / "example.md"
+    page.write_text('```graphql schema-example\n{ search(value: ' + value + ') }\n```\n')
+    CHECKER.validate_remaining_pages(tmp_path)
+    page.write_text('```graphql schema-example\n{ busSummaryExtra(value: ' + value + ') }\n```\n')
+    with pytest.raises(ValueError, match="partial stale"):
+        CHECKER.validate_remaining_pages(tmp_path)
+
+
+@pytest.mark.parametrize("body", [
+    '{ search(value: "busSummary") }',
+    '{ search(value: "escaped \\" busSummary") }',
+    '"""busSummary\nblock description"""\ntype Query { search: String }',
+    '{ search } # busSummary',
+    '{ search(value: "busSummary") } # flowsetHcMaxC',
+])
+def test_exact_stale_graphql_data_ignored_but_names_checked(tmp_path, body):
+    fixture = tmp_path / "tests/fixtures"
+    fixture.mkdir(parents=True)
+    (fixture / "remaining_page_name_exemptions.json").write_text("[]")
+    page = tmp_path / "example.md"
+    page.write_text("```graphql schema-example\n" + body + "\n```\n")
+    CHECKER.validate_remaining_pages(tmp_path)
+    page.write_text("```graphql schema-example\n" + body + "\n{ busSummary }\n```\n")
+    with pytest.raises(ValueError, match="remaining API"):
+        CHECKER.validate_remaining_pages(tmp_path)
+
+
+@pytest.mark.parametrize("opening, name", [
+    ("```graphql", "busSummaryextra"),
+    ("```GraphQL", "busSummaryExtra"),
+    ("```GRAPHQL schema-example", "busSummary2"),
+])
+def test_stale_prefix_rejected_for_any_continuation_and_fence_case(tmp_path, opening, name):
+    fixture = tmp_path / "tests/fixtures"
+    fixture.mkdir(parents=True)
+    (fixture / "remaining_page_name_exemptions.json").write_text("[]")
+    page = tmp_path / "example.md"
+    page.write_text(opening + "\n{ " + name + " }\n```\n")
+    with pytest.raises(ValueError, match="partial stale"):
+        CHECKER.validate_remaining_pages(tmp_path)
+
+
+def test_exact_stale_prose_still_checked_beside_graphql_data(tmp_path):
+    fixture = tmp_path / "tests/fixtures"
+    fixture.mkdir(parents=True)
+    (fixture / "remaining_page_name_exemptions.json").write_text("[]")
+    (tmp_path / "example.md").write_text(
+        '```graphql\n{ search(value: "busSummary") }\n```\nbusSummary\n')
+    with pytest.raises(ValueError, match="remaining API"):
+        CHECKER.validate_remaining_pages(tmp_path)

@@ -87,7 +87,7 @@ Operational reading:
 4. `refreshSystem()` provides the system properties needed by later structural rules.
 5. `refreshRadioDevices()` provides remote inventory/evidence.
 6. `refreshFM5Semantic()` evaluates whether FM5-backed families can be interpreted at all.
-7. `refreshCircuits()` publishes circuit instances, and `publishCircuits()` attaches explicit `managingDevice`.
+7. `refreshCircuits()` publishes circuit instances, and `publishCircuits()` attaches explicit `managing_device`.
 8. `publishFM5Semantic()` gates `solar` and `cylinders`, then republishes circuits so ownership downgrades/upgrades stay coherent.
 
 ## Controlling FSMs
@@ -131,14 +131,14 @@ These do not create families, but define how published entities relate to each o
 
 - `roomTemperatureZoneMapping`
 - `associatedCircuit`
-- `circuits[].managingDevice`
+- `circuits[].managing_device`
 - `radio_devices[].slot_mode`
 
 ### 4. Family Gates
 
 These decide whether a whole semantic family may be published.
 
-- `fm5SemanticMode`
+- `fm5_semantic_mode`
 - `solar`
 - `cylinders`
 
@@ -150,7 +150,7 @@ The current functional-module architecture and deferred generic target are docum
 
 The canonical structural contract is now:
 
-- `circuits[].managingDevice`
+- `circuits[].managing_device`
 
 That change is the model for future cleanup:
 

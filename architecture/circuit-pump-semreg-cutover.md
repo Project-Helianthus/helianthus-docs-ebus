@@ -16,7 +16,7 @@ Native interpretation starts with the public
 and its
 [Circuit State Enum evidence discussion](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/vaillant/ebus-vaillant-b524-register-map.md#circuit-state-enum).
 The public
-[semantic mapping, `ebus.v1.semantic.circuits.get`](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/b524-semantic-mapping.md)
+[semantic mapping, `ebus_v1_semantic_circuits_get`](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/b524-semantic-mapping.md)
 records the legacy paths and selector-assignment correction. These sources
 describe only a zero-valued idle observation for RR=0x001B. There is no known
 observed nonzero raw code for that selector in this evidence set. A nonzero

@@ -27,21 +27,21 @@ The currently implemented functional-module surface is centered on `VR71/FM5`.
 The main exposed fields are:
 
 - `system.properties.moduleConfigurationVR71`
-- `fm5SemanticMode`
-- `circuits[].managingDevice`
+- `fm5_semantic_mode`
+- `circuits[].managing_device`
 
 Current behavior:
 
 - `moduleConfigurationVR71` is the raw configuration input currently read from B524
-- `fm5SemanticMode` is the gateway's semantic verdict for the current FM5 interpretation path
-- `circuits[].managingDevice` is the explicit ownership output already published on each circuit
+- `fm5_semantic_mode` is the gateway's semantic verdict for the current FM5 interpretation path
+- `circuits[].managing_device` is the explicit ownership output already published on each circuit
 
 The current implementation also gates:
 
 - `solar`
 - `cylinders`
 
-through `fm5SemanticMode`.
+through `fm5_semantic_mode`.
 
 This is valid as a **current implementation contract**, but it is not the right long-term architectural center for all functional modules.
 
@@ -116,8 +116,8 @@ What we already have:
   - `GG=0x00 RR=0x002F` (`functional_module_configuration_code`)
   - `GG=0x0C` remote-accessory slot evidence currently correlated with `VR71/FM5`
 - semantic contract:
-  - `fm5SemanticMode`
-  - `circuits[].managingDevice`
+  - `fm5_semantic_mode`
+  - `circuits[].managing_device`
   - FM5-gated `solar`
   - FM5-gated `cylinders`
 - regulator documentation evidence:
@@ -160,7 +160,7 @@ Evidence already visible in B524 docs:
 
 Important architectural consequence:
 
-- `VR70/FM3` must not be modeled as “just another scalar like `fm5SemanticMode`”
+- `VR70/FM3` must not be modeled as “just another scalar like `fm5_semantic_mode`”
 - it can exist as an extension to `FM5`
 - it can also exist as a standalone functional module
 - multiple `FM3` modules may exist
@@ -277,7 +277,7 @@ If a future family needs an explicit instance concept, that should be added in a
 The target should be per discovered module entry, not a single global scalar such as:
 
 - `fm3SemanticMode`
-- `fm5SemanticMode`
+- `fm5_semantic_mode`
 
 It should also avoid inventing a generic family taxonomy when the actual discriminator for interpretation is the concrete product identity plus the observed B524 surface.
 
@@ -297,7 +297,7 @@ They should not infer topology from synthetic thresholds or from a module list t
 
 For example:
 
-- `circuits[].managingDevice` should remain explicit
+- `circuits[].managing_device` should remain explicit
 
 The same principle should apply to future ownership relationships where useful.
 
@@ -330,11 +330,11 @@ If they are ever exposed in a generic module inventory, they must remain:
 If the generic target is implemented later:
 
 - `functionalModules[]` should become the inventory/identity/provenance substrate for functional modules
-- `fm5SemanticMode` should be treated as a transitional family-specific convenience surface derived from that substrate plus FM5-specific evaluation
-- `fm5SemanticMode` may still remain the family-specific semantic verdict until a richer FM5-specific detail layer exists
+- `fm5_semantic_mode` should be treated as a transitional family-specific convenience surface derived from that substrate plus FM5-specific evaluation
+- `fm5_semantic_mode` may still remain the family-specific semantic verdict until a richer FM5-specific detail layer exists
 - consumers should gradually move from singleton FM5-centric interpretation toward generic module inventory plus explicit ownership semantics
 
-This does **not** mean `fm5SemanticMode` must disappear immediately. It means the architectural center should stop being one family-specific scalar, while family-specific semantic verdicts may continue to exist above the generic inventory layer.
+This does **not** mean `fm5_semantic_mode` must disappear immediately. It means the architectural center should stop being one family-specific scalar, while family-specific semantic verdicts may continue to exist above the generic inventory layer.
 
 ## Deferred / Premature Fields
 

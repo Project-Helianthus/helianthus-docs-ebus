@@ -18,7 +18,7 @@ B524 semantic root discovery determines whether the gateway is allowed to evalua
 - `zones`
 - `circuits`
 - `radioDevices`
-- `fm5SemanticMode`
+- `fm5_semantic_mode`
 - `solar`
 - `cylinders`
 

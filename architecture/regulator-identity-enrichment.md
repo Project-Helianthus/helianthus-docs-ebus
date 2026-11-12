@@ -108,7 +108,7 @@ Identity enrichment can remain partial or unknown without blocking:
 - `zones`
 - `circuits`
 - `radioDevices`
-- `fm5SemanticMode`
+- `fm5_semantic_mode`
 - `solar`
 - `cylinders`
 
