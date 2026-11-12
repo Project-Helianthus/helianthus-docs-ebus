@@ -24,7 +24,14 @@
     "file": "api/graphql.md",
     "token": "current_temp_c",
     "context": "current_temp_c",
-    "count": 2,
+    "count": 1,
+    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
+  },
+  {
+    "file": "api/graphql.md",
+    "token": "current_temp_c",
+    "context": "graphql:current_temp_c",
+    "count": 1,
     "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
   },
   {
@@ -3038,10 +3045,10 @@
     "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
   },
   {
-    "file": "development/ha-integration.md",
-    "token": "deviceId",
-    "context": "deviceId",
-    "count": 1,
-    "reason": "Value pattern of a device identifier on a line that publication policy keeps as it is on main; not a GraphQL selection."
+    "file": "tests/test_naming_surface_contract.py",
+    "token": "flowsetHcMaxC",
+    "context": "flowsetHcMaxC",
+    "count": 4,
+    "reason": "Synthetic regression test for documentary exemption relocation."
   }
 ]

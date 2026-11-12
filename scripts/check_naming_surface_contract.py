@@ -178,16 +178,20 @@ def remaining_occurrences(root: Path):
             text = path.read_text()
         except (UnicodeError, OSError):
             continue
-        blocks = "\n".join(re.findall(r"```graphql\n(.*?)\n```", text, re.S))
+        fences = list(re.finditer(r"```graphql\n(.*?)\n```", text, re.S))
+        blocks = "\n".join(re.sub(r"#[^\n]*", "", fence[1]) for fence in fences)
         for identifier in re.findall(r"\b[A-Za-z_]\w*\b", blocks):
-            if any(identifier.startswith(token + "_") for token in REMAINING_TOKENS):
+            if any(re.match(re.escape(token) + r"[_A-Z]", identifier)
+                   for token in REMAINING_TOKENS):
                 raise ValueError("partial stale GraphQL identifier")
         for token in REMAINING_TOKENS:
             if token not in text:
                 continue
             for match in re.finditer(r"(?<![\w])" + re.escape(token) + r"(?![\w])", text):
-                # A full lexical token is context; counts bind repeated occurrences.
-                key = (str(relative), token, token)
+                # Bind exemptions to prose or GraphQL context as well as counts.
+                in_graphql = any(f.start(1) <= match.start() < f.end(1) for f in fences)
+                context = "graphql:" + token if in_graphql else token
+                key = (str(relative), token, context)
                 result[key] = result.get(key, 0) + 1
     return result
 

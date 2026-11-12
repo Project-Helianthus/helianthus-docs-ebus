@@ -188,6 +188,7 @@ def test_dynamic_builder_start_remains_exported():
     "```graphql\n{ busSummary { status } }\n```",
     "Invoke `modbus.v1.raw.read`.",
     "```graphql\n{ busSummary_extra { status } }\n```",
+    "```graphql\ntype Query { busSummaryExtra: String }\n```",
 ])
 def test_remaining_page_injection_rejected(tmp_path, text):
     # Root field catches schema reversion; tool catches registration reversion.
@@ -202,3 +203,27 @@ def test_remaining_page_injection_rejected(tmp_path, text):
 
 def test_remaining_exemptions_exist():
     CHECKER.validate_remaining_pages(ROOT)
+
+
+def test_documentary_exemption_cannot_move_into_graphql(tmp_path):
+    fixture = tmp_path / "tests/fixtures"
+    fixture.mkdir(parents=True)
+    (fixture / "remaining_page_name_exemptions.json").write_text(json.dumps([{
+        "file": "api/graphql.md", "token": "flowsetHcMaxC",
+        "context": "flowsetHcMaxC", "count": 1,
+        "reason": "Preserved documentary correspondence.",
+    }]))
+    (tmp_path / "api").mkdir()
+    page = tmp_path / "api/graphql.md"
+    page.write_text("Documentary correspondence: `flowsetHcMaxC`.\n")
+    CHECKER.validate_remaining_pages(tmp_path)
+    page.write_text("```graphql\ntype Query { flowsetHcMaxC: Float }\n```\n")
+    with pytest.raises(ValueError, match="remaining API spelling or stale naming exemption"):
+        CHECKER.validate_remaining_pages(tmp_path)
+
+
+def test_ha_controller_family_label_preserves_selection_and_display_mapping():
+    page = (ROOT / "development/ha-integration.md").read_text()
+    assert "- eBUS controller family (selected by `device_id=BASV*`)" in page
+    assert '  - Name: `sensoCOMFORT RF`' in page
+    assert '  - Model: `VRC 720f/2 (eBUS: BASV)` (when product model is available)' in page
