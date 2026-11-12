@@ -17,7 +17,7 @@ maker-derived terms while their open points await evidence. Canonical names and
 The inclusion rule is every nonempty `open_question` in the
 [canonical OP02 CSV](../protocols/vaillant/fixtures/b524-op02-register-names.csv).
 It currently selects **142 of 368 rows**, each listed exactly once below:
-131 retain documented terms and 11 use pre-existing `unknown` placeholders.
+132 retain documented terms and 10 use pre-existing `unknown` placeholders.
 Both subsets have explicit open questions; neither is silently excluded.
 The supplied parent snapshot has a historical title count of 96, a body count
 of 99 and a truncated table. Relative to those counts the current inventory is
@@ -233,7 +233,7 @@ II context stays separate rather than merging instances or inventing them.
 | 0x0018 | `dhw_circuit_circulation_pump_active` | Unknown | M | Two readings, unresolved (candidate interpretations, unconfirmed on the wire): the state of a DHW circulation pump, or that external DHW is active. |
 | 0x0019 | `circuit_external_demand_input` | Unknown | M, V | Candidate interpretation, unconfirmed on the wire: an external heat demand input of the circuit; the value class and the value table are not established. |
 | 0x001B | `circuit_pump_unknown_8` | Unknown | M, V | A raw two-byte value related to the circuit pump; value class and meaning are not established. |
-| 0x001D | `circuit_unknown_9` | Unknown | M | Candidate interpretations, unconfirmed on the wire: a DHW quick mode, or a frost protection threshold; the catalog decodes a float32 in °C; unresolved. |
+| 0x001D | `circuit_special_function_mode` | VRC700 family: dynamic; VRC720 family: dynamic | M, V | Hypothesis: candidate circuit special function mode and family enumeration; meaning and value table remain unconfirmed on the wire. |
 | 0x001E | `circuit_state` | VRC700 family: dynamic; VRC720 family: dynamic | M, V | Candidate interpretation, unconfirmed on the wire: an enumeration of the circuit state (0 standby, 1 heating, 2 cooling, 3 DHW); the assignment rests on observed naming and the hardware confirmation is pending. |
 | 0x0020 | `circuit_unknown_10` | Unknown | M | An observed one-byte raw value related to automatic heating and cooling; the meaning is not established. |
 

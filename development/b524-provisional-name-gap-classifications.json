@@ -42,6 +42,7 @@
     "Candidate interpretation, unconfirmed on the wire: 1 means that the use of a photovoltaic surplus is enabled; no value table is documented and the polarity is not established."
   ],
   "M, V": [
+    "Hypothesis: candidate circuit special function mode and family enumeration; meaning and value table remain unconfirmed on the wire.",
     "A raw two-byte value related to the circuit pump; value class and meaning are not established.",
     "Candidate interpretation, unconfirmed on the wire: 1 means that the DHW circuit is controlled by the system controller; no value table is documented.",
     "Candidate interpretation, unconfirmed on the wire: 1 means that the device runs in an emergency (failure) mode; no value table is documented.",
