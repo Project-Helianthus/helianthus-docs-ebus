@@ -91,8 +91,8 @@
     {
       "path": "architecture/aj16-b509-op59-quantities-api.md",
       "previous_path": "architecture/aj16_b509_op59_quantities_api.md",
-      "status": "accepted contract",
-      "basis": "The companion finite library contract has exactly two functions:"
+      "status": "candidate",
+      "basis": "Hypothesis for each of the five fields"
     },
     {
       "path": "architecture/aj17-b516-projection.md",
@@ -253,8 +253,8 @@
     {
       "path": "architecture/al06-b509-symbolic-annotations.md",
       "previous_path": "architecture/al06_b509_symbolic_annotations.md",
-      "status": "accepted contract",
-      "basis": "This finite library contract is the residual B509 correspondence area for"
+      "status": "candidate",
+      "basis": "**Hypothesis** describes symbolic labels and units as candidate annotations."
     },
     {
       "path": "architecture/al08-b524-system-information.md",
@@ -469,14 +469,14 @@
     {
       "path": "architecture/an24-b51b-local-budget-crc.md",
       "previous_path": "architecture/an24_b51b_local_budget_crc.md",
-      "status": "accepted contract",
-      "basis": "This page is a pre-1.0 software contract for offline helpers on the B51B family. It is the ordinary companion of AN23 for the same ab23an23 helper surface, and a partial child of issue 736. The parent stays open. The page does not qualify a device, repeat a native family page, or depend on an implementation change."
+      "status": "candidate",
+      "basis": "Local progress is a hypothesis."
     },
     {
       "path": "architecture/an26-standard09-body-views.md",
       "previous_path": "architecture/an26_standard09_body_views.md",
-      "status": "accepted contract",
-      "basis": "> AGPL-3.0 architecture contract for the `ab25an25` pure helper. This page"
+      "status": "candidate",
+      "basis": "Meaning of every represented layout below is Hypothesis."
     },
     {
       "path": "architecture/ao02-b505-sentinel-views.md",
@@ -565,8 +565,8 @@
     {
       "path": "architecture/ap04-b531-ordinary-limit.md",
       "previous_path": "architecture/ap04_b531_ordinary_limit.md",
-      "status": "accepted contract",
-      "basis": "This architecture page specifies a local software contract for the Vaillant"
+      "status": "candidate",
+      "basis": "These are candidate family/behavior results graded **Hypothesis**"
     },
     {
       "path": "architecture/ap06-b516-cycle-reducer.md",
@@ -751,14 +751,14 @@
     {
       "path": "protocols/ebus-services/ebus-service-0fh.md",
       "previous_path": "protocols/ebus-services/ebus-service-0Fh.md",
-      "status": "accepted contract",
-      "basis": "> Source: eBUS Specification Application Layer (OSI 7) V1.6.1, §3.6"
+      "status": "candidate",
+      "basis": "**Hypothesis:** the request declares primary `0F`"
     },
     {
       "path": "protocols/ebus-services/ebus-service-feh.md",
       "previous_path": "protocols/ebus-services/ebus-service-FEh.md",
-      "status": "accepted contract",
-      "basis": "> Source: eBUS Specification Application Layer (OSI 7) V1.6.1, §3.7"
+      "status": "candidate",
+      "basis": "**Hypothesis (partial FE01 family form):**"
     },
     {
       "path": "protocols/ebus-services/ebus-service-ffh.md",
@@ -769,8 +769,8 @@
     {
       "path": "protocols/vaillant/ebus-vaillant-b503.md",
       "previous_path": "protocols/vaillant/ebus-vaillant-B503.md",
-      "status": "accepted contract",
-      "basis": "This document specifies the publishable, implementation-neutral wire contract for the observed Vaillant `B503` selector family. It does not define client lifecycle, deployment policy, or consumer presentation."
+      "status": "candidate",
+      "basis": "**Hypothesis**: a candidate interpretation or layout remains unconfirmed on the wire; the category form and candidate layouts below retain this grade."
     },
     {
       "path": "protocols/vaillant/ebus-vaillant-b504.md",
@@ -919,8 +919,8 @@
     {
       "path": "protocols/vaillant/ebus-vaillant-b522.md",
       "previous_path": "protocols/vaillant/ebus-vaillant-B522.md",
-      "status": "unknown",
-      "basis": "No page-level status statement in the opening section."
+      "status": "candidate",
+      "basis": "Vaillant B522 Ventilation and Demand Candidates"
     },
     {
       "path": "protocols/vaillant/ebus-vaillant-b523.md",
@@ -931,14 +931,14 @@
     {
       "path": "protocols/vaillant/ebus-vaillant-b524-register-map.md",
       "previous_path": "protocols/vaillant/ebus-vaillant-B524-register-map.md",
-      "status": "accepted contract",
-      "basis": "> **Status:** Authoritative reference. Single source of truth for B524 register semantics."
+      "status": "candidate",
+      "basis": "Each unresolved mapping remains marked inline as **Hypothesis** or **Unknown**"
     },
     {
       "path": "protocols/vaillant/ebus-vaillant-b524.md",
       "previous_path": "protocols/vaillant/ebus-vaillant-B524.md",
-      "status": "accepted contract",
-      "basis": "This document is the canonical wire-protocol reference for Vaillant `GetExtendedRegisters` (`PB=0xB5`, `SB=0x24`)."
+      "status": "candidate",
+      "basis": "Result tables (candidate interpretations, unconfirmed on the wire):"
     },
     {
       "path": "protocols/vaillant/ebus-vaillant-b525.md",
@@ -1268,17 +1268,17 @@
     },
     {
       "file": "architecture/b524-structural-decisions.md",
-      "text": "`ebus-vaillant-B524-register-map.md#gg0x09--radio-sensors-\u0076rc7xx-multi-instance-dual-opcode`",
+      "text": "`ebus-vaillant-B524-register-map.md#gg0x09--radio-sensors-vrc7xx-multi-instance-dual-opcode`",
       "count": 1
     },
     {
       "file": "architecture/b524-structural-decisions.md",
-      "text": "`ebus-vaillant-B524-register-map.md#gg0x0a--radio-sensors-\u0076r92-multi-instance-dual-opcode`",
+      "text": "`ebus-vaillant-B524-register-map.md#gg0x0a--radio-sensors-vr92-multi-instance-dual-opcode`",
       "count": 1
     },
     {
       "file": "architecture/b524-structural-decisions.md",
-      "text": "`ebus-vaillant-B524-register-map.md#gg0x0c--remote-accessories-\u0076r71fm5-multi-instance-remote-only`",
+      "text": "`ebus-vaillant-B524-register-map.md#gg0x0c--remote-accessories-vr71fm5-multi-instance-remote-only`",
       "count": 1
     },
     {
