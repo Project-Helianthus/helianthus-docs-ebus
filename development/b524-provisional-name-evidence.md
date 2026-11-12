@@ -342,8 +342,6 @@ for row in rows:
     )
     ii = tuple(sorted(instances[key])) or ("Unknown",)
     evidence = normalized(evidence)
-    if key == ("0x02", "0x02", "0x001D"):
-        classifications["Hypothesis: candidate circuit special function mode and family enumeration; meaning and value table remain unconfirmed on the wire."] = gaps("M, V")
     assert evidence in classifications, "unreviewed gap classification for question"
     expected.append((*key, row["name"], ii, classifications[evidence], evidence))
 index = root / "development/b524-provisional-name-evidence.md"

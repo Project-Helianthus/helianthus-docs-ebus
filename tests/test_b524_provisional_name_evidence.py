@@ -184,3 +184,18 @@ def test_b524_provisional_name_evidence_rejects_correspondence_drift(checkout, o
         writer.writerows(rows)
     with pytest.raises(AssertionError, match="published correspondence totals differ"):
         run_check()
+
+
+@pytest.mark.parametrize("mutation", ["remove", "reclassify"])
+def test_b524_provisional_name_evidence_requires_circuit_mode_classification(checkout, mutation):
+    question = (
+        "Hypothesis: candidate circuit special function mode and family enumeration; "
+        "meaning and value table remain unconfirmed on the wire."
+    )
+    classifications = json.loads(CLASSIFICATIONS.read_text(encoding="utf-8"))
+    classifications["M, V"].remove(question)
+    if mutation == "reclassify":
+        classifications["M"].append(question)
+    CLASSIFICATIONS.write_text(json.dumps(classifications), encoding="utf-8")
+    with pytest.raises(AssertionError):
+        run_check()
