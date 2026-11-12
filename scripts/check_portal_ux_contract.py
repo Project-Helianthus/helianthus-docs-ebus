@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from html import unescape
 from html.parser import HTMLParser
+import json
 import pathlib
 import re
 import sys
@@ -12,133 +13,51 @@ from urllib.parse import unquote
 from markdown_it import MarkdownIt
 
 
-DOC = pathlib.Path("api/portal.md")
-TARGET_START = "## Contribution-Driven Portal Contract V1 (INT-10 Target)"
-TARGET_END = "## Observe-First Contract Ownership"
+# Rule identifiers retain a one-to-one inventory of the prior obligations.
+RULES = json.loads((pathlib.Path(__file__).parent / "rules/portal_ux.json").read_text())
 
-AVAILABILITY_ROWS = {
-    "AVAILABLE": "| `AVAILABLE` | `data-testid=\"b503-state-available\"` | Render admitted B503 tabs and the session strip for the selected target. |",
-    "NOT_SUPPORTED": "| `NOT_SUPPORTED` | `data-testid=\"b503-state-not-supported\"` | State that the selected target does not support the B503 surface; do not infer a value. |",
-    "TRANSPORT_DOWN": "| `TRANSPORT_DOWN` | `data-testid=\"b503-state-transport-down\"` | State that transport is unavailable and offer only a retry/reconnect hint. |",
-    "SESSION_BUSY": "| `SESSION_BUSY` | `data-testid=\"b503-state-session-busy\"` | State neutrally that bounded ownership-or-lifecycle contention makes the session busy; do not infer a foreign owner. |",
-    "UNKNOWN": "| `UNKNOWN` | `data-testid=\"b503-state-unknown\"` | State that capability is undetermined; do not equate it with unsupported. Only the same-browser token-owning `Active` exception below retains its bounded session controls. |",
-}
-AVAILABILITY_TABLE_HEADER = "| Reason | Stable selector | Required presentation truth |"
-AVAILABILITY_TABLE_SEPARATOR = "|---|---|---|"
-PROJECTION_CARD_ADMISSION = (
-    "The `Vaillant B503` card is a contribution-driven section-projection card. It\n"
-    "admits a new perspective only for an admitted selected resource whose B503\n"
-    "capability state is `AVAILABLE`; it identifies the selected target and enters\n"
-    "the B503 perspective without creating another B503 data model. After a locally\n"
-    "initiated successful Enable ACK, the same target perspective remains mounted\n"
-    "while session is `Active` with `owned:true`, capability is `UNKNOWN`, and the\n"
-    "browser still holds that exact target's current issuer token. Only the session\n"
-    "strip and current-owner live-monitor READ/DISABLE controls remain admitted;\n"
-    "the browser admits no second Enable and no other `UNKNOWN` presentation gains\n"
-    "B503 tabs or actions. Target selection is resource-scoped."
-)
-SELECTED_TARGET_TYPED_HISTORY = (
-    "The History tab uses the typed B503 history GraphQL records for the selected\n"
-    "target and has `data-role=\"vaillant-b503-tab-history\"`; it does not infer\n"
-    "history from labels or retained aggregate data."
-)
-B503_KEYBOARD_ACCESSIBILITY = (
-    "The selected-target B503 tabs expose a `role=\"tablist\"` with one named\n"
-    "`role=\"tab\"` and matching `role=\"tabpanel\"` for Errors, Service, History, and\n"
-    "Live-Monitor. Each tab exposes `aria-selected`; ArrowLeft, ArrowRight, Home,\n"
-    "and End move tab focus, while Enter and Space select the focused tab. The\n"
-    "session strip is a named `role=\"status\"` for the selected target."
-)
-B503_CAPABILITY_RECONNECT = (
-    "On a Gateway capability transition or transport reconnect, the browser renders\n"
-    "only the Gateway-supplied availability state. It neither preserves\n"
-    "`AVAILABLE`, replays a session enable/disable action, nor changes route; it\n"
-    "may re-query only the selected target after Gateway publishes a new state."
-)
-B503_FIELD_OPERATION_ERRORS = (
-    "On a selected-target context cancellation before bus turnaround, the browser\n"
-    "renders the Gateway-supplied structured `UPSTREAM_TIMEOUT` alongside the\n"
-    "unchanged last-known B503 availability. On a selected-target bus/arbitration\n"
-    "timeout, NAK, or CRC failure, it renders structured `UPSTREAM_RPC_FAILED`\n"
-    "alongside that same availability. Neither field-operation error becomes\n"
-    "`TRANSPORT_DOWN` or invalidates capability."
-)
-B503_FRONTEND_EPOCH_ROLLOVER = (
-    "Each target-bound asynchronous request captures a frontend presentation epoch\n"
-    "at dispatch. Target switch, B503 navigation-away, and reconnect advance that\n"
-    "epoch; a completion may mutate presentation only when both its target address\n"
-    "and captured epoch still match, otherwise it is discarded."
-)
-B503_SESSION_STATE_CONTRACT = "The strip states are `Idle`, `Enabling`, `Active`, and\n`Refreshing`, and `Disabled`. `Refreshing` means an epoch refresh holds the\nownership gate; the already-admitted triggering request remains pending and\nnew bus-facing live-monitor reads/actions are busy. Status-only\n`vaillantCapabilities(target_address:)` and\n`vaillantLiveMonitorSession(target_address:)` queries remain available to observe\navailability and session completion. Refresh success returns `Active` and\ncompletes a triggering read with exactly one native operation result, or\ndispatches a triggering current-owner disable exactly once after its frame\nreaches emission. A terminal disconnect before disable-frame emission emits no\ndisable, returns exact `TRANSPORT_DOWN`, releases ownership, retains Gateway's\nprocess-local cleanup obligation, presents session `Idle` with `owned:false`,\npublishes capability `UNKNOWN`, admits no Enable, and is never retried on\nreconnect. Every emitted disable outcome is recorded and returned exactly and\nfollows the same fail-closed public state because ACK/NAK alone do not prove\nnative settlement. Refresh failure also follows that public state and completes\nthe triggering request with the exact unavailable failure without dispatching\nits native operation.\n`Disabled` is never reported with `owned:true`."
-B503_DISABLED_PUBLIC_MAPPING = (
-    "`Disabled` with `owned:false`\n"
-    "maps only an out-of-band administrative/configuration-disabled condition\n"
-    "supplied by Gateway. It is never the result of a current-owner live-monitor\n"
-    "session DISABLE action; every terminal outcome of that action presents `Idle`\n"
-    "with `owned:false`, retains cleanup, and publishes `UNKNOWN`. A still-effective\n"
-    "out-of-band disabled condition takes precedence across Gateway\n"
-    "restart and remains `Disabled` with `owned:false`; enable failure, the 30-second\n"
-    "idle timeout, transport disconnect, and every other restart-derived cleanup\n"
-    "state map to `Idle` with `owned:false`. While cleanup is pending, capability\n"
-    "remains unavailable and `Idle` does not admit Enable."
-)
-B503_REFRESHING_CLEANUP = 'For a `REFRESHING` prior target, the browser queues that\nsame token-bound disable without invoking an operation while Refreshing is busy;\nafter refresh succeeds to `Active`, it dispatches the queued disable unless a\nterminal disconnect occurs before frame emission. That path emits no disable\nand returns exact `TRANSPORT_DOWN`. After refresh failure presents `Idle`,\nGateway retains the process-local cleanup obligation. The browser clears the\nqueued pair without a client disable. If the triggering request was already the\ncurrent-owner disable, that admitted request is the only client dispatch.\nGateway records and returns its emitted native outcome, or its pre-emission\n`TRANSPORT_DOWN`, releases ownership, and retains process-local fail-closed\ncleanup. The browser clears the queued pair without issuing a second disable.'
-B503_ENABLING_CLEANUP = (
-    "For an\n"
-    "`ENABLING` prior target, the browser registers cleanup at switch time under the\n"
-    "exact `(targetAddress, localEnableAttemptID, presentationEpoch)` tuple and\n"
-    "uses a fresh browser-local opaque `localEnableAttemptID` allocated before\n"
-    "dispatch and never reused. It\n"
-    "dispatches a target-specific disable immediately only when that same attempt\n"
-    "completes successfully with its issuer token. If that attempt does not complete\n"
-    "successfully with an issuer token—including cancellation before bus turnaround,\n"
-    "ACK timeout, NAK, CRC mismatch, bus-arbitration timeout, epoch-advance discard,\n"
-    "transport disconnect, gateway restart, or any other terminal failure—the\n"
-    "browser clears the registration without issuing a client disable before it may\n"
-    "admit any later enable; the registration never transfers to a later attempt or\n"
-    "session."
-)
-B503_TARGET_CLEANUP_SCOPE = (
-    "On every target switch, before\n"
-    "admitting the new target presentation, the browser begins targeted cleanup for\n"
-    "each prior target whose session is `ACTIVE` or `REFRESHING` and for which it\n"
-    "holds a local issuer token, plus each `ENABLING` prior target for which it owns\n"
-    "the locally initiated pending enable attempt."
-)
-B503_REFRESHING_UNKNOWN_STRIP = (
-    "When a selected target has Gateway session state `Refreshing` with `owned:true`,\n"
-    "the session strip remains observable alongside temporarily `UNKNOWN` capability.\n"
-    "It is status-only: the section-projection card, B503 tabs, and every new\n"
-    "bus-facing B503 read/action remain unavailable while Gateway reports\n"
-    "`Refreshing`. Only the status-only `vaillantCapabilities(target_address:)` and\n"
-    "`vaillantLiveMonitorSession(target_address:)` queries remain available during\n"
-    "that state. If the triggering READ succeeds and rebinds the same target and\n"
-    "issuer token into `Active` with `owned:true`, the bounded current-owner\n"
-    "READ/DISABLE exception above resumes immediately under `UNKNOWN`; it does not\n"
-    "wait for `AVAILABLE` and does not extend to a different target, token, or\n"
-    "general `UNKNOWN` presentation."
-)
-B503_ACTIVE_UNKNOWN_OWNER = (
-    "After a successful Enable ACK, session is `Active` with `owned:true` while\n"
-    "capability remains `UNKNOWN` because settlement is unproven. If the browser\n"
-    "still holds the exact current issuer token for that target, it keeps the named\n"
-    "session strip and only the live-monitor READ and DISABLE controls mounted. It\n"
-    "does not admit another Enable, general B503 tabs, a new projection entry, or\n"
-    "those controls for any other `UNKNOWN` target/session. Target switch,\n"
-    "navigation away, ownership loss, or session departure from `Active` removes\n"
-    "this exception and follows the cleanup rules below."
-)
-B503_REFRESH_CONTINUATION = "Refresh success revalidates only a surviving authenticated current-owner\ntoken/target/epoch handle and returns it to `Active`; it is continuation, not\nreconstruction or auto-resume. The pending triggering request then completes\nfrom exactly one dispatch using the rebound key: a read returns to `Active`,\nwhile a current-owner disable records and returns its exact native outcome,\nreleases the owner, retains Gateway's process-local defensive-cleanup\nobligation, and presents `Idle` with `owned:false` alongside capability\n`UNKNOWN`; Enable remains unavailable because ACK/NAK alone do not prove native\nsettlement. After restart, a lost owner handle, or an absent/invalid current\nissuer token, Gateway does not reconstruct the session. Each qualified target's\nlive-monitor capability is `UNKNOWN`, Enable is unavailable, and Gateway emits\nno automatic B503 enable or disable. The Portal exposes no recovery control.\nCurrent 0.7 defines no ACK/NAK-based maintenance path that restores\navailability; command-specific evidence and any revised recovery contract are\ndeferred to docs-eBUS issue #525.\nA terminal transport disconnect releases ownership. A later reconnect has no\nowner and does not enter `Refreshing`; when cleanup/session settlement is\nunproven, Gateway remains `UNKNOWN`, admits no Enable, and emits no automatic\nrecovery write."
-FORBIDDEN_B503_SESSION_STATE_CLAUSES = (
-    "`Refreshing` may accept live-monitor operations.",
-    "`Disabled` may be reported with `owned:true`.",
-)
+
+def _tuple_value(value):
+    return tuple(_tuple_value(item) if isinstance(item, list) else item for item in value)
+
+
+def _rule(name: str):
+    rule = RULES[name]
+    if not rule["reason"].strip():
+        raise ValueError(f"rule {name} needs a reason")
+    value = rule["value"]
+    if rule["kind"] == "tuple":
+        return _tuple_value(value)
+    if rule["kind"] not in {"str", "list", "dict"}:
+        raise ValueError(f"unknown rule kind: {rule['kind']}")
+    return value
+
+
+DOC = pathlib.Path("api/portal.md")
+TARGET_START = _rule("TARGET_START")
+TARGET_END = _rule("TARGET_END")
+
+AVAILABILITY_ROWS = _rule("AVAILABILITY_ROWS")
+AVAILABILITY_TABLE_HEADER = _rule("AVAILABILITY_TABLE_HEADER")
+AVAILABILITY_TABLE_SEPARATOR = _rule("AVAILABILITY_TABLE_SEPARATOR")
+PROJECTION_CARD_ADMISSION = _rule("PROJECTION_CARD_ADMISSION")
+SELECTED_TARGET_TYPED_HISTORY = _rule("SELECTED_TARGET_TYPED_HISTORY")
+B503_KEYBOARD_ACCESSIBILITY = _rule("B503_KEYBOARD_ACCESSIBILITY")
+B503_CAPABILITY_RECONNECT = _rule("B503_CAPABILITY_RECONNECT")
+B503_FIELD_OPERATION_ERRORS = _rule("B503_FIELD_OPERATION_ERRORS")
+B503_FRONTEND_EPOCH_ROLLOVER = _rule("B503_FRONTEND_EPOCH_ROLLOVER")
+B503_SESSION_STATE_CONTRACT = _rule("B503_SESSION_STATE_CONTRACT")
+B503_DISABLED_PUBLIC_MAPPING = _rule("B503_DISABLED_PUBLIC_MAPPING")
+B503_REFRESHING_CLEANUP = _rule("B503_REFRESHING_CLEANUP")
+B503_ENABLING_CLEANUP = _rule("B503_ENABLING_CLEANUP")
+B503_TARGET_CLEANUP_SCOPE = _rule("B503_TARGET_CLEANUP_SCOPE")
+B503_REFRESHING_UNKNOWN_STRIP = _rule("B503_REFRESHING_UNKNOWN_STRIP")
+B503_ACTIVE_UNKNOWN_OWNER = _rule("B503_ACTIVE_UNKNOWN_OWNER")
+B503_REFRESH_CONTINUATION = _rule("B503_REFRESH_CONTINUATION")
+FORBIDDEN_B503_SESSION_STATE_CLAUSES = _rule("FORBIDDEN_B503_SESSION_STATE_CLAUSES")
 B503_SESSION_STATE_CONTRADICTION_PATTERNS = (
     re.compile(
-        r"(?:`Refreshing`\s+(?:(?:may|can|must|shall)\s+)?"
-        r"(?:accept|allow|permit)s?\s+(?:new\s+|bus-facing\s+)?live-monitor operations?"
-        r"|live-monitor operations?\s+(?:are|remain)\s+"
-        r"(?:accepted|allowed|permitted)\s+(?:during|while)\s+`Refreshing`)",
+        _rule("B503_SESSION_STATE_CONTRADICTION_PATTERNS_fragment_5"),
         re.IGNORECASE,
     ),
     re.compile(
@@ -147,32 +66,19 @@ B503_SESSION_STATE_CONTRADICTION_PATTERNS = (
         re.IGNORECASE,
     ),
 )
-B503_MAIN_ROUTE_OPERATIONS = (
-    "- `vaillantCapabilities(target_address:)`\n"
-    "- `vaillantErrors(target_address:)`\n"
-    "- `vaillantServiceCurrent(target_address:)`\n"
-    "- `vaillantErrorHistory(target_address:index:)`\n"
-    "- `vaillantErrorsHistory(target_address:limit:)`\n"
-    "- `vaillantServiceHistory(target_address:index:)`\n"
-    "- `vaillantLiveMonitor(action:issuerToken:target_address:)`\n"
-    "- `vaillantLiveMonitorSession(target_address:)`"
-)
-B503_NO_EXPIRED_STATE = (
-    "`B503Availability` has exactly these five public reasons. `Refreshing` remains\n"
-    "only a session observation. `EXPIRED` is neither an availability reason nor a\n"
-    "session state and MUST NOT be implemented as an internal or public sixth state."
-)
+B503_MAIN_ROUTE_OPERATIONS = _rule("B503_MAIN_ROUTE_OPERATIONS")
+B503_NO_EXPIRED_STATE = _rule("B503_NO_EXPIRED_STATE")
 
 REQUIRED = (
     TARGET_START,
     "Gateway #552 is open;",
     "`helianthus.gateway.portal-catalog/v1`",
-    "The browser obtains the catalog read model only through `POST /graphql/portal/v1`\nand the fixed `PortalCatalogV1` operation.",
+    _rule("REQUIRED_fragment_4"),
     "`POST /graphql/portal/v1`",
     "`PortalCatalogV1`",
     "`PortalActionInvokeV1`",
     "No B503 operation is admitted on this route.",
-    "no REST compatibility shim, no alternate Portal API\nroute, no dual semantic publication, and no direct MCP/native fallback.",
+    _rule("REQUIRED_fragment_9"),
     "does not use a central vendor switch or an arbitrary-English parser",
     "`Thermal/HVAC`, `PV`, `Storage/BMS`, `EVSE`, and\n`Infrastructure`",
     "must not require a vendor switch, a product branch, or compatibility logic in\ncentral bootstrap or rendering code.",
@@ -181,7 +87,7 @@ REQUIRED = (
     "lifecycle, freshness, projection-loss, quality, and provenance",
     "Accepted source records and accepted semantic records remain distinct from the\nbrowser presentation state.",
     "Discovery\npermission controls visibility",
-    "revalidates the request-bound caller,\ncatalog revision/digest claim, contribution identity/digest, resource and\ncapability, semantic snapshot/revision, binding, source epoch/generation,\ntyped preconditions, route, deadline, and idempotency key.",
+    _rule("REQUIRED_fragment_18"),
     B503_MAIN_ROUTE_OPERATIONS,
     "`vaillantCapabilities(target_address:)`",
     "`vaillantErrors(target_address:)`",
@@ -194,9 +100,9 @@ REQUIRED = (
     "`POST /graphql` endpoint. That endpoint is protected by the stable eBUS MCP\ngraduation/parity contract.",
     "exclusive operation-to-route\nsplit, not a fallback or compatibility shim.",
     "does not expand the\naccepted #974 catalog/action endpoint.",
-    "linked source contract and current open evidence; #975 remains open,\nintermediate, and unmerged, and this documentation does not claim it is\nmerged.",
+    _rule("REQUIRED_fragment_31"),
     "`M8-TGT-01`,\n`M8-TGT-02`, `M8-TGT-03`, and `M8-TGT-04`",
-    "Changing target atomically invalidates the active target-bound presentation:\ncapability, current errors/service, history, live-monitor strip, and pending\ncompletion must not bleed into the new target.",
+    _rule("REQUIRED_fragment_33"),
     "Any late enable completion after a switch follows the same prior-target cleanup\nand cannot mutate the new target.",
     B503_NO_EXPIRED_STATE,
     'data-testid="b503-state-available"',
@@ -213,7 +119,7 @@ REQUIRED = (
     B503_ENABLING_CLEANUP,
     B503_REFRESHING_CLEANUP,
     "This is switch-time cleanup, never passive timeout cleanup.",
-    "Gateway's session view exposes only `state`\nand opaque `owned`: `owned` means that the Gateway session gate is held, not\nwhich client holds it.",
+    _rule("REQUIRED_fragment_50"),
     "never derives a foreign owner from `owned`\nor from an absent local token.",
     "never disables a gate-held session without a\nlocally held issuer token.",
     "Leaving the B503 perspective uses the same locally-token-bound cleanup\nrule as target switching.",
@@ -235,12 +141,7 @@ REQUIRED = (
     "scripts/check_portal_ux_contract.py",
 )
 
-FORBIDDEN = (
-    "/portal/api/v1/b503",
-    "Gateway #552 is implemented",
-    "Gateway #552 has been implemented",
-    "Gateway #552 is complete",
-)
+FORBIDDEN = _rule("FORBIDDEN")
 
 FORBIDDEN_B503_DOM_COMMAND_TOKENS = frozenset((
     "clear",
@@ -260,22 +161,14 @@ PLAIN_CONTROL_NOUN = re.compile(
     re.IGNORECASE,
 )
 PLAIN_AFFIRMATIVE_CONTROL_VERB = re.compile(
-    r"\b(?:expose(?:s|d)?|render(?:s|ed)?|show(?:s|ed)?|offer(?:s|ed)?|"
-    r"provide(?:s|d)?|include(?:s|d)?|add(?:s|ed)?|display(?:s|ed)?|"
-    r"present(?:s|ed)?|create(?:s|d)?|support(?:s|ed)?|allow(?:s|ed)?|"
-    r"contain(?:s|ed)?|feature(?:s|d)?|list(?:s|ed)?|"
-    r"publish(?:es|ed)?|surface(?:s|d)?|exist(?:s|ed)?|appear(?:s|ed)?|"
-    r"use(?:s|d)?|click(?:s|ed)?|remain(?:s|ed)?|"
-    r"has|have|be|is|are|available|visible)\b",
+    _rule("PLAIN_AFFIRMATIVE_CONTROL_VERB_fragment_2"),
     re.IGNORECASE,
 )
 PLAIN_CONTROL_CLAUSE_BOUNDARY = re.compile(
     r"\s*(?:;|\bbut\b|\bhowever\b)\s*", re.IGNORECASE
 )
 PLAIN_AFFIRMATIVE_DOUBLE_NEGATIVE = re.compile(
-    r"\b(?:(?:must|shall|may|can|is|are|was|were)\s+(?:not|never)\s+"
-    r"(?:be\s+|remain\s+)?|(?:is|are|was|were)n['’]t\s+)"
-    r"(?:hidden|disabled|absent|unavailable|unsupported|prohibited|forbidden)\b",
+    _rule("PLAIN_AFFIRMATIVE_DOUBLE_NEGATIVE_fragment_2"),
     re.IGNORECASE,
 )
 PLAIN_AFFIRMATIVE_ENABLED_STATE = re.compile(
@@ -284,10 +177,7 @@ PLAIN_AFFIRMATIVE_ENABLED_STATE = re.compile(
     re.IGNORECASE,
 )
 COMPACT_PROHIBITED_COMMAND = re.compile(
-    r"^(?:"
-    r"(?:b503|vaillant)(?:clear(?!ance|ly|fix)|delete|reset|clearerrorhistory|clearservicehistory)[a-z0-9]*"
-    r"|(?:clear(?!ance|ly|fix)|clearerrorhistory|clearservicehistory|delete|reset)[a-z0-9]*"
-    r")$",
+    _rule("COMPACT_PROHIBITED_COMMAND_fragment_2"),
     re.IGNORECASE,
 )
 INLINE_CODE_FRAGMENT = re.compile(r"\x60([^\x60\n]+)\x60")
@@ -296,7 +186,7 @@ INLINE_CODE_ATTRIBUTE = re.compile(
     r"(?:\"([^\"]*)\"|'([^']*)'|([^\s]+))"
 )
 DOM_RELEVANT_ATTRIBUTE_NAME = re.compile(
-    r"^(?:id|class|for|hidden|name|role|title|value|href|src|data-[A-Za-z0-9_:.-]+|aria-[A-Za-z0-9_:.-]+|on[a-z][A-Za-z0-9_:.-]*)$",
+    _rule("DOM_RELEVANT_ATTRIBUTE_NAME_fragment_2"),
     re.IGNORECASE,
 )
 HTML_URL_ATTRIBUTE_NAMES = frozenset(
@@ -316,56 +206,8 @@ NON_RENDERING_CONTAINERS = frozenset(
         "video",
     )
 )
-B503_ROUTE_SURFACE_MARKERS = (
-    "rest",
-    "mcp",
-    "native i/o",
-    "/portal/api/v1",
-    "/graphql/portal/v1",
-    "portalcatalogv1",
-    "portalactioninvokev1",
-    "/graphql",
-    "other route",
-)
-B503_ROUTE_SURFACE_PARAGRAPHS = (
-    "The historical `/portal/api/v1/*` endpoints documented below remain their own\n"
-    "endpoint contracts. They are not a transport or semantic fallback for this\n"
-    "INT-10 B503 presentation.",
-    "The browser obtains the catalog read model only through `POST /graphql/portal/v1`\n"
-    "and the fixed `PortalCatalogV1` operation. The only action operation on that\n"
-    "route is `PortalActionInvokeV1`; it is governed by the action-admission rules\n"
-    "below. No B503 operation is admitted on this route.\n"
-    "For this B503 UX there is no REST compatibility shim, no alternate Portal API\n"
-    "route, no dual semantic publication, and no direct MCP/native fallback.\n"
-    "The host does not use a central vendor switch or an arbitrary-English parser to\n"
-    "recover a contribution, field state, or action meaning.",
-    "Every rendered field is identified by its contribution identity, resource ID,\n"
-    "field ID, exact SemReg field `DefinitionRef`, service `DefinitionRef`,\n"
-    "capability `DefinitionRef`, and canonical-unit `DefinitionRef`. A B503 card\n"
-    "can display only a field admitted through this chain. It must show the\n"
-    "Gateway-supplied lifecycle, freshness, projection-loss, quality, and provenance\n"
-    "state; it cannot reconstruct any of them from a label, a historical aggregate,\n"
-    "or a raw MCP response.",
-    "The `Vaillant B503` card is a contribution-driven section-projection card. It\n"
-    "admits a new perspective only for an admitted selected resource whose B503\n"
-    "capability state is `AVAILABLE`; it identifies the selected target and enters\n"
-    "the B503 perspective without creating another B503 data model. After a locally\n"
-    "initiated successful Enable ACK, the same target perspective remains mounted\n"
-    "while session is `Active` with `owned:true`, capability is `UNKNOWN`, and the\n"
-    "browser still holds that exact target's current issuer token. Only the session\n"
-    "strip and current-owner live-monitor READ/DISABLE controls remain admitted;\n"
-    "the browser admits no second Enable and no other `UNKNOWN` presentation gains\n"
-    "B503 tabs or actions. Target selection is resource-scoped.\n"
-    "Every target-bearing B503 read or session request uses only the main public\n"
-    "`POST /graphql` endpoint. That endpoint is protected by the stable eBUS MCP\n"
-    "graduation/parity contract. These operations are not `PortalCatalogV1` or\n"
-    "`PortalActionInvokeV1` operations, and they do not call `/graphql/portal/v1`:",
-    "The catalog/action route and the B503 route are an exclusive operation-to-route\n"
-    "split, not a fallback or compatibility shim. The B503 route does not expand the\n"
-    "accepted #974 catalog/action endpoint. If either fixed route is unavailable,\n"
-    "the UI renders the Gateway-supplied unavailable state and does not try the\n"
-    "other route, REST, MCP, or native I/O.",
-)
+B503_ROUTE_SURFACE_MARKERS = _rule("B503_ROUTE_SURFACE_MARKERS")
+B503_ROUTE_SURFACE_PARAGRAPHS = _rule("B503_ROUTE_SURFACE_PARAGRAPHS")
 MARKDOWN = MarkdownIt("commonmark")
 TABLE_MARKDOWN = MarkdownIt("commonmark").enable("table")
 CSS_COMMENT = re.compile(r"/\*.*?\*/", re.DOTALL)

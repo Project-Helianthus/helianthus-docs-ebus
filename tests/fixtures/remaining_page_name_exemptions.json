@@ -2793,7 +2793,7 @@
     "reason": "Guard rejected-token literal or synthetic negative control."
   },
   {
-    "file": "scripts/check_portal_ux_contract.py",
+    "file": "scripts/rules/portal_ux.json",
     "token": "targetAddress",
     "context": "targetAddress",
     "count": 1,
@@ -2807,7 +2807,7 @@
     "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
   },
   {
-    "file": "scripts/check_vaillant_b503_milestones.py",
+    "file": "scripts/rules/vaillant_b503.json",
     "token": "targetAddress",
     "context": "targetAddress",
     "count": 9,

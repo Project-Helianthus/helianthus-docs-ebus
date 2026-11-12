@@ -1078,6 +1078,17 @@ def test_rejects_int10_safety_fragment_moved_beyond_target_section() -> None:
     rejects_text(text)
 
 
+@pytest.mark.parametrize("kind", ["str", "tuple", "dict"])
+def test_data_rule_kinds_require_reasons(kind, monkeypatch):
+    value = {"str": "synthetic", "tuple": ["synthetic"], "dict": {"field": "synthetic"}}[kind]
+    monkeypatch.setitem(CHECKER.RULES, "synthetic", {"kind": kind, "value": value, "reason": "Required contract"})
+    expected = tuple(value) if kind == "tuple" else value
+    assert CHECKER._rule("synthetic") == expected
+    CHECKER.RULES["synthetic"]["reason"] = ""
+    with pytest.raises(ValueError):
+        CHECKER._rule("synthetic")
+
+
 @pytest.mark.parametrize("operation", CHECKER.B503_MAIN_ROUTE_OPERATIONS.splitlines())
 def test_rejects_legacy_target_argument_spelling(operation: str) -> None:
     rejects(operation, operation.replace("target_address:", "targetAddress:"))

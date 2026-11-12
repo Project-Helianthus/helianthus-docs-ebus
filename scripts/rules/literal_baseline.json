@@ -1,0 +1,94 @@
+{
+  "scripts/check_graphql_face_provenance.py": [
+    {
+      "assignment": "INDEPENDENCE",
+      "value": "Valid non-null values are the Cartesian product of the\nseparately allowed source and state sets; no source label determines or\nrestricts the state label."
+    },
+    {
+      "assignment": "NON_PROOF",
+      "value": "A discovery source or verification state does not prove\na supported device, current qualification, stable cross-address identity, or\nlive behavior."
+    },
+    {
+      "assignment": "SOURCE_RETENTION",
+      "value": "The accepted registry rule requires `discovery_source` to preserve the original\nnative discovery source. Verification advancement MUST NOT rewrite\n`static_seed` or `passive_observed` to `active_confirmed`. Retained\n`static_seed` / `identity_confirmed` and `passive_observed` / `identity_confirmed`\nforms are valid."
+    },
+    {
+      "assignment": "TOPOLOGY_NON_PROOF",
+      "value": "Topology grouping does\nnot prove identity; only the documented qualified identity rule may establish a\ncross-address identity."
+    },
+    {
+      "assignment": "MCP_SOURCE_RETENTION",
+      "value": "Each face retains its original\n      discovery source when verification advances: a static-seeded face\n      remains `static_seed`, a passively discovered face remains\n      `passive_observed`, and `active_confirmed` applies only when active\n      discovery created that face. Passive corroboration may advance the\n      independent verification state to `corroborated_pending`; identity\n      confirmation may advance it to `identity_confirmed`. Neither event\n      rewrites `discovery_source`."
+    }
+  ],
+  "scripts/check_public_domain_boundary.py": [
+    {
+      "assignment": "UNPUBLISHABLE",
+      "value": "private(?:-context)?/|private static analysis|restricted static.analysis|_work_[\\w-]+/|(?<![\\w/-])(?-i:[A-Z][A-Z0-9]*\\d[A-Z0-9]*[-_](?:[\\w-]*\\.md|(?:DEEP|ANALYSIS|NOTES)\\b))|(?-i:\\b[A-Z]{2,})-(?:B[0-9A-F]{3}|corrections|semantic|protocol|timer)[\\w-]*(?:\\.md|-)"
+    }
+  ],
+  "scripts/check_runtime_driver_registration.py": [
+    {
+      "assignment": "REQUIREMENTS",
+      "value": "| `DriverID` | Canonical, unique, nonempty UTF-8 ID matching `^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$`, at most 128 bytes; stable across restart and gateway rename |"
+    },
+    {
+      "assignment": "REQUIREMENTS",
+      "value": "| Disposition | Explicit configured/enabled disposition; configuration eligibility is separate from durable desired state and current observed state |"
+    },
+    {
+      "assignment": "REQUIREMENTS",
+      "value": "| `NativeContractRef` | Nonempty `Owner`, `Contract` and `Version`, naming the public native owner, owner-defined contract and exact supported version/revision; sanitized, with no endpoint, credential, raw payload or handle |"
+    },
+    {
+      "assignment": "REQUIREMENTS",
+      "value": "| Lifecycle adapter | Typed factory plus Runtime binding over DriverManager; registration stores the adapter without invoking it |"
+    },
+    {
+      "assignment": "REQUIREMENTS",
+      "value": "| Owned `SourceID` set | Stable configured source identities, each exclusively owned by one driver across the entire descriptor set and existing hub ownership |"
+    },
+    {
+      "assignment": "REQUIREMENTS",
+      "value": "Direction expresses supported roles. It grants no forwarding, native operation,\npublication, write permission, profile qualification or evidence grade.\n`DriverID`, `SourceID`, semantic asset/binding identity and lifecycle correlation\nremain distinct. A source derives from DriverID plus configured owner identity,\nnever an endpoint, connection handle, path or discovery result. Reconnecting or\nchanging an endpoint cannot silently change ownership."
+    },
+    {
+      "assignment": "REQUIREMENTS",
+      "value": "Validate the **complete** descriptor set, including disabled entries, and freeze\ndetached copies before any factory invocation, semantic declaration or endpoint\ncall. Validate IDs, directions, dispositions, native references, adapters and\nsource ownership against both all other descriptors and the hub. Duplicate or\nnoncanonical driver IDs, duplicate source ownership and hub-source collisions\nrefuse registration before effects. Failure installs no partial registry and\nmutates no hub ownership. Retain unaffected last-known-good state and provenance;\nrejected registration never grants admission."
+    },
+    {
+      "assignment": "REQUIREMENTS",
+      "value": "Recognize only hooks implemented by this host at their supported versions.\nUnknown hook names and unsupported versions fail explicitly. The reserved\nfuture names are `mcp`, `setup`, `portal`, `semantic` and `evidence`; **all hook\ndeclarations currently fail**, including these names, because none is\nimplemented. Reserving a name is not accepting a nonfunctional control.\nRegistration and common lifecycle control contain no protocol, vendor or family\nswitch and perform no endpoint I/O or semantic declaration."
+    },
+    {
+      "assignment": "REQUIREMENTS",
+      "value": "List/get read only the frozen registry and cached lifecycle state. List returns\nall configured drivers sorted bytewise by `DriverID`, independent of registration\norder. Entries and catalog revision come from one coherent read transaction;\nget returns the corresponding coherent cached entry and `NOT_FOUND` for an\nunknown ID. Neither operation constructs a driver, probes an endpoint, refreshes\nnative state or performs discovery."
+    },
+    {
+      "assignment": "REQUIREMENTS",
+      "value": "`ebus.primary` is the only production registration in this slice. It is\nsouthbound, configured/enabled and lifecycle-only. It owns one stable configured\nsource and declares no hooks, semantic assets, bindings, capability instances or\nsemantic publications. Native invocation capabilities remain separate from\nsemantic capability instances. The empty barrier and cleanup set are valid;\nnever fabricate semantic material to satisfy a binding-bearing provider SPI."
+    },
+    {
+      "assignment": "REQUIREMENTS",
+      "value": "The native owner is\n[`github.com/Project-Helianthus/helianthus-ebusgo`](https://github.com/Project-Helianthus/helianthus-ebusgo),\nwith the transport API exposed by\n[`transport/driver_runtime.go`](https://github.com/Project-Helianthus/helianthus-ebusgo/blob/main/transport/driver_runtime.go).\nThese branch links identify the public owner and file, not a frozen dependency\nversion or native eBUS wire proof. The dispatch-pinned source provides\n`transport.DriverRuntime`; the supplied material does not establish an\nowner-defined contract identifier/version or the exact configured `SourceID`.\nThose values are **Unknown** and remain dispatch acceptance blockers. Gateway\ndescriptor `v1` must not substitute for a native contract version. Do not install\na placeholder reference, derive identity from an endpoint or admit this driver\nuntil the exact supported native contract and configured source are supplied\nand validated. This page does not claim that production registration has passed."
+    },
+    {
+      "assignment": "REQUIREMENTS",
+      "value": "Use synthetic southbound, northbound and both-role descriptors. Require zero\nfactory calls, semantic declarations, endpoint calls and state mutation for\nnoncanonical or duplicate DriverID, invalid direction/disposition, missing native\nreference fields or adapter, duplicate sources, hub ownership collision, unknown\nhook and unsupported hook version. Mutating caller-owned descriptors after freeze\nmust not alter the registry. Permute registration order and assert sorted,\ncoherent list/get views, including disabled entries, with no provider calls.\nProve registration/control packages import no protocol package and that the\nproduction composition registers only `ebus.primary`. These are gateway test\nobligations, not executed tests or wire-evidence claims in this prose slice."
+    },
+    {
+      "assignment": "S5_REQUIREMENTS",
+      "value": "Later managed sidecars must use this same validated registration path with their\nown direction, native contract and exclusively owned sources. Each migration\nowns durable intent/recovery, exact lifecycle correlation, pre-open barrier and\nadmission, activation proof, write-ahead publication/index, read-gated\nreprojection, independent native-close proof, restart non-overlap, one native\nretry owner and truthful status. Remove direct start/close ownership atomically\nwhen its managed adapter takes over; never create a dual-owner window or register\na placeholder accepting controls it cannot execute. No family mutates another\nfamily's state. Synthetic isolation fixtures use separate assets under the\ncurrent one-source-per-asset constraint."
+    },
+    {
+      "assignment": "S5_REQUIREMENTS",
+      "value": "The existing Portal contribution key is `{DriverID, Generation}` with no source\nepoch, while driver generation restarts in each epoch. DM-HOOKS must supply a\nper-DriverID monotonic contribution generation or an epoch-aware key before\ncontributions can safely span epoch succession. G5 registration does not solve\nthat limitation or implement Portal, MCP, setup, semantic or evidence hooks.\nS5 sidecar migrations, shared-asset source isolation/LIFE-22 and the universal\npublic SPI remain deferred; this slice closes none of them."
+    }
+  ],
+  "scripts/check_source_address_table_against_official_specs.py": [
+    {
+      "assignment": "TABLE_HEADER",
+      "value": "| Source | Priority index | Arbitration nibble | Official description summary | Canonical description | Free-use | Recommended for | Companion |"
+    }
+  ]
+}
