@@ -187,7 +187,7 @@ Device IDs are generated with deterministic fallback:
 
 For known Vaillant devices, integration-level names/models are normalized to stable marketing values:
 
-- `device_id=BASV*`
+- `deviceId=BASV*`
   - Name: `sensoCOMFORT RF`
   - Model: `VRC 720f/2 (eBUS: BASV)` (when product model is available)
 - `device_id=VR_71`

@@ -254,13 +254,13 @@ Node identity is derived from the canonical Service path, so the same logical no
 ```mermaid
 sequenceDiagram
   participant UI as Projection browser
-  participant P1 as Projection (Observability)
-  participant P2 as Projection (Service)
-  UI->>P1: select node
-  P1-->>UI: node.id + canonical_path
-  UI->>P2: switch plane (Service)
-  UI->>P2: find node by canonical_path
-  P2-->>UI: node or not found
+  participant PObs as Projection (Observability)
+  participant PSvc as Projection (Service)
+  UI->>PObs: select node
+  PObs-->>UI: node.id + canonical_path
+  UI->>PSvc: switch plane (Service)
+  UI->>PSvc: find node by canonical_path
+  PSvc-->>UI: node or not found
   UI-->>UI: highlight node or clear selection
 ```
 

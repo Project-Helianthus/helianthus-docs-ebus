@@ -37,12 +37,12 @@ Expected: device with `address=0x04 (4) discovery_source=static_seed verificatio
 
 ### P3 — 0xEC visible via static seed (with flag enabled)
 
-Same procedure as P2. Expected: device with `address=0xEC (236) discovery_source=static_seed verification_state=candidate`.
+Same procedure as the 0x04 case above. Expected: device with `address=0xEC (236) discovery_source=static_seed verification_state=candidate`.
 
 ### P4 — Existing devices unchanged
 
 Procedure: same as P1.
-Expected: 0x08 (BAI00), 0x15 (BASV2), 0x26 (VR_71) appear with `verification_state=identity_confirmed` (preserved from PR #560/#562 logic) — no regression.
+Expected: the boiler at 0x08, the regulator at 0x15 and the function module at 0x26 appear with `verification_state=identity_confirmed` — no regression.
 
 ### P5 — bus_admission preserved
 
