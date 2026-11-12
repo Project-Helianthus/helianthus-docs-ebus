@@ -182,7 +182,7 @@ Ownership note:
 | `[].config.cooling_enabled` | GG=0x02, RR=0x0006 | bool (u8) | |
 | `[].properties.heating_circuit_type` | GG=0x02, RR=0x0002 | u16 | |
 | `[].properties.mixer_circuit_type_external` | GG=0x02, RR=0x0002 | u16 | |
-| `[].config.circuit_special_function_mode` | OP=0x02, GG=0x02, II=dynamic, RR=0x001D | u8 enum, no unit | observed Vaillant definition, final without wire confirmation (Board 2026-11-08). Wire qualification: **Unknown**; no writable behavior established. VRC720 family: 0=no quick mode; 6=one-time cylinder loading; 255=no action needed. VRC700 family: 0=no quick mode; 2=party; 4=one-day holiday; 5=one-day bank holiday; 6=cylinder boost; 255=no action needed. Consumer projection pending coordinated implementation |
+| `[].config.circuit_special_function_mode` | OP=0x02, GG=0x02, II=dynamic, RR=0x001D | u8 enum, no unit | Hypothesis: candidate circuit special function mode and family enumeration. Wire qualification: **Unknown**; no writable behavior established. VRC720 family: 0=no quick mode; 6=one-time cylinder loading; 255=no action needed. VRC700 family: 0=no quick mode; 2=party; 4=one-day holiday; 5=one-day bank holiday; 6=cylinder boost; 255=no action needed. Consumer projection pending coordinated implementation |
 
 **Selector assignment (`circuit_state` / `pump_status`):** the circuit state
 enumeration (raw 0 = STANDBY, 1 = HEATING, 2 = COOLING, 3 = DHW) is read from

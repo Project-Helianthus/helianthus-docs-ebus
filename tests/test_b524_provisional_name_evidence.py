@@ -51,7 +51,7 @@ def change_cell(path, field, value):
 def test_b524_provisional_name_evidence_current_sources(checkout, capsys):
     run_check()
     output = capsys.readouterr().out
-    assert "Open rows: 141" in output
+    assert "Open rows: 142" in output
     assert "Missing: []" in output
     assert "Extra: []" in output
 
@@ -139,9 +139,9 @@ def test_b524_provisional_name_evidence_rejects_stale_gap(checkout, question):
     [
         ("368 OP02 entries and 2 OP06 entries", "369 OP02 entries and 2 OP06 entries"),
         ("368 OP02 entries and 2 OP06 entries", "368 OP02 entries and 3 OP06 entries"),
-        ("141 of 368", "142 of 368"),
-        ("141 of 368", "141 of 369"),
-        ("131 retain documented terms", "132 retain documented terms"),
+        ("142 of 368", "143 of 368"),
+        ("142 of 368", "142 of 369"),
+        ("132 retain documented terms", "133 retain documented terms"),
         ("10 use pre-existing", "11 use pre-existing"),
         ("| 0x02 | 0x00 | 108 |", "| 0x02 | 0x00 | 999 |"),
         ("| 0x02 | 0x09 | 5 |\n", ""),

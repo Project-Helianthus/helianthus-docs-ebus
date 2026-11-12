@@ -622,7 +622,7 @@ observations, but do not extend the current profile's II00..09 coverage.
 | 0x001A | circuit_mixer_movement | S | f32 | % | Hc{hc}MixerMovement | — | — | — | Signed float: `<0`=closing, `>0`=opening. Scan verified: -100.0 when fully closing. Read-only |
 | 0x001B | circuit_pump_unknown_8 | S | u16 | raw | Hc{hc}Status | — | — | — | Pump status per observed Vaillant naming ("Status Pump"). Earlier documented here as carrying the circuit state enumeration (STANDBY/HEATING/COOLING/DHW), on the strength of a single 2026-03-08 idle observation and a name correlation; that observation is equally consistent with a pump status and does not discriminate between the two readings. See [Circuit State Enum](#circuit-state-enum) |
 | 0x001C | circuit_adaptive_heating_curve_offset | S | f32 | — | Hc{hc}HeatCurveAdaption | — | — | — | Heat curve adaption factor. Dimensionless. Read-only |
-| 0x001D | circuit_special_function_mode | C | u8 | enum | Hc{hc}FrostProtThreshold (unconfirmed correspondence) | — | — | — | observed Vaillant definition, final without wire confirmation (Board 2026-11-08). Unsigned 8-bit enumeration, no unit. See the family table below; no writable behavior is established. |
+| 0x001D | circuit_special_function_mode | C | u8 | enum | Hc{hc}FrostProtThreshold (unconfirmed correspondence) | — | — | — | Hypothesis: candidate circuit special function mode and family enumeration. Unsigned 8-bit enumeration, no unit. See the family table below; no writable behavior is established. |
 | 0x001E | circuit_state | S | u16 | enum | Hc{hc}PumpStatus | — | — | — | Hypothesis: carries the circuit state enumeration (0=STANDBY, 1=HEATING, 2=COOLING, 3=DHW), based on observed Vaillant naming ("Status circuit", myVaillant `circuitState`); hardware confirmation pending. Installer-field candidate, distinct from RR001B and RR0020. See [Circuit State Enum](#circuit-state-enum) |
 | 0x001F | cooling_circuit_outdoor_temperature_limit_minimum | C | f32 | °C | Hc{hc}RoomSetpoint | — | — | — | |
 | 0x0020 | circuit_unknown_10 | S | u8 | raw | Hc{hc}FlowTempCalc | — | — | — | Observed UCH one-byte raw status (`00`) at the relevant circuit selectors. It is not a temperature value; earlier f32 prose is unqualified. |
@@ -632,10 +632,10 @@ observations, but do not extend the current profile's II00..09 coverage.
 | 0x0024 | circuit_pump_operating_time_total | S | u32 | hrs | Hc{hc}PumpHours | — | — | — | |
 | 0x0025 | circuit_pump_start_count_total | S | u32 | count | Hc{hc}PumpStarts | — | — | — | |
 
-`OP=0x02, GG=0x02, II=dynamic, RR=0x001D`: observed Vaillant definition, final without wire confirmation (Board 2026-11-08).
+`OP=0x02, GG=0x02, II=dynamic, RR=0x001D`: Hypothesis: candidate circuit special function mode and family enumeration.
 Wire qualification: **Unknown**. The community correspondence is unconfirmed.
 
-| Family | Unsigned u8 enumeration (no unit) |
+| Family | Hypothesis: candidate unsigned u8 enumeration (no unit) |
 | --- | --- |
 | VRC720 family | 0=no quick mode; 6=one-time cylinder loading; 255=no action needed |
 | VRC700 family | 0=no quick mode; 2=party; 4=one-day holiday; 5=one-day bank holiday; 6=cylinder boost; 255=no action needed |

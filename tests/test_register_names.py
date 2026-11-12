@@ -9,6 +9,7 @@ name in `previous_name`.
 from __future__ import annotations
 
 import csv
+import json
 import sys
 from pathlib import Path
 
@@ -976,7 +977,7 @@ def test_already_canonical_cells_are_left_to_existing_selector_checks() -> None:
 
 
 def test_circuit_special_function_mode_contract():
-    """Keep the complete family enumeration separate from wire qualification."""
+    """Keep candidate family meanings provisional independently of payload width."""
     canonical = "circuit_special_function_mode"
     identity = ("0x02", "0x02", "0x001D")
     with (FIXTURES / "b524-op02-register-names.csv").open() as stream:
@@ -984,7 +985,7 @@ def test_circuit_special_function_mode_contract():
     row = next(r for r in rows if tuple(r[k] for k in ("opcode", "group", "register")) == identity)
     assert row["name"] == canonical
     assert row["previous_name"] == "circuit_dhw_quick_mode"
-    assert row["open_question"] == ""
+    assert row["open_question"].startswith("Hypothesis: candidate circuit special function mode")
     with (FIXTURES / "b524-op02-requester-register-matrix.csv").open() as stream:
         rows = [r for r in csv.DictReader(stream) if r["name"] == canonical]
     expected = {
@@ -1001,6 +1002,10 @@ def test_circuit_special_function_mode_contract():
         assert row["candidate_value_type"] == "uint8"
         assert row["candidate_unit"] == ""
     page = (ROOT / "protocols/vaillant/ebus-vaillant-b524-register-map.md").read_text()
-    assert "observed Vaillant definition, final without wire confirmation (Board 2026-11-08)" in page
+    assert "Hypothesis: candidate circuit special function mode and family enumeration." in page
+    inventory = json.loads((ROOT / "scripts/name-decomposition.json").read_text())
+    entry = next(e for e in inventory["entries"] if e["selector"] == "0x02/0x02/0x001D")
+    assert entry["status"] == "provisional"
+    assert entry["open_question"].startswith("Hypothesis:")
     for family, enumeration in expected.items():
         assert f"| {family} | {enumeration} |" in page
