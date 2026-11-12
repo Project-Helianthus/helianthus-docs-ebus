@@ -110,6 +110,14 @@ def rename_row(root: Path, new_path: str) -> None:
     write(root, "guide/other.md", "# Other\n")
 
 
+def test_file_key_shortens_a_content_address_segment() -> None:
+    digest = "0123456789abcdef" * 4
+    assert checker.file_key(f"guide/history/{digest}/page.json") == (
+        "guide/history/0123456789abcdef/page.json"
+    )
+    assert checker.file_key("guide/history/page.json") == "guide/history/page.json"
+
+
 def test_repository_passes() -> None:
     assert checker.check(ROOT) == []
 

@@ -43,6 +43,7 @@ from collections import Counter
 from pathlib import Path
 
 TABLE = "architecture/page-status.json"
+CONTENT_ADDRESS = re.compile(r"^[0-9a-f]{64}$")
 STATUSES = ("implemented", "accepted contract", "candidate", "historical", "unknown")
 CONTROL_FILES = ("AGENTS.md", "CHANGELOG.md", "CONTRIBUTING.md", "README.md", "SECURITY.md")
 NO_STATEMENT = "No page-level status statement in the opening section."
@@ -160,6 +161,21 @@ def page_identifier(path: str) -> str:
     return hashlib.sha256(path.encode("utf-8")).hexdigest()[:16]
 
 
+def file_key(rel: str) -> str:
+    """Path whose content-address segment is shortened to its first 16 characters."""
+    parts = rel.split("/")
+    return "/".join(part[:16] if CONTENT_ADDRESS.match(part) else part for part in parts)
+
+
+def resolve_file_key(root: Path, key: str) -> str:
+    if (root / key).is_file():
+        return key
+    for rel, _ in repository_files(root):
+        if file_key(rel) == key:
+            return rel
+    return key
+
+
 def pinned_pairs(root: Path, entries: list) -> tuple[dict, list[str]]:
     pairs = {}
     errors = []
@@ -170,7 +186,7 @@ def pinned_pairs(root: Path, entries: list) -> tuple[dict, list[str]]:
             errors.append(f"{TABLE}: malformed pinned pair")
             continue
         key = (item["file"], item["path"])
-        text = read_text(root / key[0]) or ""
+        text = read_text(root / resolve_file_key(root, key[0])) or ""
         if key in pairs or text.count(key[1]) != item["count"]:
             errors.append(f"{TABLE}: pinned pair {key} occurrence count differs or is duplicated")
         pairs[key] = item["count"]
@@ -186,7 +202,7 @@ def valid_pin(item) -> bool:
 
 def pinned_occurrence(rel: str, text: str, start: int, end: int, pairs: dict) -> bool:
     for file, path in pairs:
-        if file != rel:
+        if file != file_key(rel):
             continue
         offset = text.rfind(path, 0, end)
         if offset >= 0 and offset <= start and offset + len(path) >= end:
