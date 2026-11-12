@@ -161,7 +161,8 @@ def visible_units(text: str) -> list[tuple[str, str]]:
             if opening.type == "heading_open" and opening.tag == "h2" and opening.level == 0:
                 units.append(("heading", token.content))
             elif opening.type == "heading_open" and opening.level == 0:
-                units.append(("subheading", token.content))
+                kind = "direct_subheading" if opening.tag == "h3" else "subheading"
+                units.append((kind, token.content))
             elif opening.type == "paragraph_open" and opening.level == 0 and not html:
                 units.append(("paragraph", token.content))
     return units
@@ -192,8 +193,8 @@ def missing_obligations(section: list[tuple[str, str]], requirements: dict[str, 
     units = set()
     normative = True
     for kind, block in section:
-        if kind == "subheading":
-            normative = requirements is REQUIREMENTS and block in {
+        if kind in {"direct_subheading", "subheading"}:
+            normative = kind == "direct_subheading" and requirements is REQUIREMENTS and block in {
                 "Validate and freeze before effects",
                 "First production registration and historical dispatch evidence",
                 "S0/CTL-01 synthetic acceptance obligations",

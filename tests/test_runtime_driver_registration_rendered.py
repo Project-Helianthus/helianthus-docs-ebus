@@ -34,6 +34,30 @@ def test_wrapped_visible_contract() -> None:
     assert checker.validate(changed) == []
 
 
+@pytest.mark.parametrize("depth", [4, 5, 6])
+@pytest.mark.parametrize("heading", [
+    "Validate and freeze before effects",
+    "First production registration and historical dispatch evidence",
+    "S0/CTL-01 synthetic acceptance obligations",
+])
+@pytest.mark.parametrize("name", NAMES)
+def test_nested_allowlisted_heading_cannot_restore_normative_scope(
+    depth: int, heading: str, name: str
+) -> None:
+    required = checker.REQUIREMENTS[name]
+    changed = TEXT.replace(required, "").replace(
+        checker.END,
+        f"### Example\n\n{'#' * depth} {heading}\n\n{required}\n\n{checker.END}",
+    )
+    assert name in checker.validate(changed)
+
+
+def test_direct_expected_subsection_restores_normative_scope() -> None:
+    heading = "### Validate and freeze before effects"
+    changed = TEXT.replace(heading, "### Example\n\n#### Nested example\n\n" + heading)
+    assert checker.validate(changed) == []
+
+
 @pytest.mark.parametrize("name", NAMES)
 @pytest.mark.parametrize("change", ["missing", "weakened", "before", "after", "intervening"])
 def test_each_obligation_requires_exact_unit_in_section(name: str, change: str) -> None:
