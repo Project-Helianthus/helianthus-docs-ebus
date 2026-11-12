@@ -141,8 +141,8 @@ def test_b524_provisional_name_evidence_rejects_stale_gap(checkout, question):
         ("368 OP02 entries and 2 OP06 entries", "368 OP02 entries and 3 OP06 entries"),
         ("142 of 368", "143 of 368"),
         ("142 of 368", "142 of 369"),
-        ("131 retain documented terms", "132 retain documented terms"),
-        ("11 use pre-existing", "12 use pre-existing"),
+        ("132 retain documented terms", "133 retain documented terms"),
+        ("10 use pre-existing", "11 use pre-existing"),
         ("| 0x02 | 0x00 | 108 |", "| 0x02 | 0x00 | 999 |"),
         ("| 0x02 | 0x09 | 5 |\n", ""),
         ("| 0x02 | 0x09 | 5 |", "| 0x02 | 0x0A | 5 |"),
@@ -183,4 +183,19 @@ def test_b524_provisional_name_evidence_rejects_correspondence_drift(checkout, o
         writer.writeheader()
         writer.writerows(rows)
     with pytest.raises(AssertionError, match="published correspondence totals differ"):
+        run_check()
+
+
+@pytest.mark.parametrize("mutation", ["remove", "reclassify"])
+def test_b524_provisional_name_evidence_requires_circuit_mode_classification(checkout, mutation):
+    question = (
+        "Hypothesis: candidate circuit special function mode and family enumeration; "
+        "meaning and value table remain unconfirmed on the wire."
+    )
+    classifications = json.loads(CLASSIFICATIONS.read_text(encoding="utf-8"))
+    classifications["M, V"].remove(question)
+    if mutation == "reclassify":
+        classifications["M"].append(question)
+    CLASSIFICATIONS.write_text(json.dumps(classifications), encoding="utf-8")
+    with pytest.raises(AssertionError):
         run_check()

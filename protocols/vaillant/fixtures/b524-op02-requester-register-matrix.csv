@@ -195,3 +195,5 @@ VRC700 family,0x02,0x03,dynamic,0x0015,cooling_zone_room_effective_temperature_s
 VRC700 family,0x02,0x03,dynamic,0x001B,zone_special_function_state,zone_special_function_status,1 or 2,uint8 or uint16 LE,,0=NoQuickMode; 1=VentilationBoost; 3=Party; 4=QuickVeto; 5=OneDayHoliday; 6=OneDayBankHoliday; 7=Holiday; 8=BankHoliday; 10=SystemOff
 VRC700 family,0x02,0x03,dynamic,0x001C,zone_circuit_assignment,zone_circuit_for_zone,1,int8,,0=Control_CC1; 1=Control_CC2; 2=Control_CC3; -1=notBound
 VRC700 family,0x02,0x03,dynamic,0x0028,zone_room_humidity,zone_current_humidity,4,float32 LE,%,
+VRC720 family,0x02,0x02,dynamic,0x001D,circuit_special_function_mode,circuit_dhw_quick_mode,1,uint8,,0=no quick mode; 6=one-time cylinder loading; 255=no action needed
+VRC700 family,0x02,0x02,dynamic,0x001D,circuit_special_function_mode,circuit_dhw_quick_mode,1,uint8,,0=no quick mode; 2=party; 4=one-day holiday; 5=one-day bank holiday; 6=cylinder boost; 255=no action needed

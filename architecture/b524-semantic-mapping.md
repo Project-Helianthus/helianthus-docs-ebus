@@ -182,7 +182,7 @@ Ownership note:
 | `[].config.cooling_enabled` | GG=0x02, RR=0x0006 | bool (u8) | |
 | `[].properties.heating_circuit_type` | GG=0x02, RR=0x0002 | u16 | |
 | `[].properties.mixer_circuit_type_external` | GG=0x02, RR=0x0002 | u16 | |
-| `[].properties.frost_protection_threshold` | GG=0x02, RR=0x001D | f32 | **Stale path**: FLAGS=0x02 (RW) — should be `config.*`. Pending gateway migration |
+| `[].config.circuit_special_function_mode` | OP=0x02, GG=0x02, II=dynamic, RR=0x001D | u8 enum, no unit | Hypothesis: candidate circuit special function mode and family enumeration. Wire qualification: **Unknown**; no writable behavior established. VRC720 family: 0=no quick mode; 6=one-time cylinder loading; 255=no action needed. VRC700 family: 0=no quick mode; 2=party; 4=one-day holiday; 5=one-day bank holiday; 6=cylinder boost; 255=no action needed. Consumer projection pending coordinated implementation |
 
 **Selector assignment (`circuit_state` / `pump_status`):** the circuit state
 enumeration (raw 0 = STANDBY, 1 = HEATING, 2 = COOLING, 3 = DHW) is read from
@@ -521,7 +521,7 @@ Category corrections applied from VRC Explorer FLAGS analysis and MCP validation
 | 0x02 | 0x0017 | screed_drying_circuit_temperature_setpoint | C | S | 0x01 | Computed setpoint, read-only |
 | 0x02 | 0x0018 | dhw_circuit_circulation_pump_active | C | S | 0x00 | Status register, not config |
 | 0x02 | 0x0019 | circuit_external_demand_input | C | S | 0x00 | External demand status |
-| 0x02 | 0x001D | circuit_unknown_9 | P | C | 0x02 | Technical config, writable |
+| 0x02 | 0x001D | circuit_special_function_mode | P | C | 0x02 | Catalog classification only; writable behavior unconfirmed |
 | 0x03 | 0x000E | zone_special_function_mode | S | C | 0x03 | User-writable (set quickveto/away) |
 | 0x03 | 0x0014 | heating_zone_room_effective_temperature_setpoint | C | S | 0x01 | Computed output, read-only |
 | 0x03 | 0x0015 | cooling_zone_room_effective_temperature_setpoint | C | S | 0x01 | Computed output, read-only |
