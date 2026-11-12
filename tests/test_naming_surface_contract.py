@@ -224,6 +224,7 @@ def test_documentary_exemption_cannot_move_into_graphql(tmp_path):
 
 def test_ha_controller_family_label_preserves_selection_and_display_mapping():
     page = (ROOT / "development/ha-integration.md").read_text()
-    assert "- eBUS controller family (selected by `device_id=BASV*`)" in page
-    assert '  - Name: `sensoCOMFORT RF`' in page
-    assert '  - Model: `VRC 720f/2 (eBUS: BASV)` (when product model is available)' in page
+    assert "- eBUS controller family (selected by the controller's `device_id` prefix)" in page
+    assert "- eBUS functional-module family (selected by the module's `device_id` prefix)" in page
+    assert page.count("  - Name: the family's marketing name") == 2
+    assert page.count("  - Model: the product model followed by `(eBUS: <device_id>)` (when product model is available)") == 2

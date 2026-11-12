@@ -187,12 +187,12 @@ Device IDs are generated with deterministic fallback:
 
 For known Vaillant devices, integration-level names/models are normalized to stable marketing values:
 
-- eBUS controller family (selected by `device_id=BASV*`)
-  - Name: `sensoCOMFORT RF`
-  - Model: `VRC 720f/2 (eBUS: BASV)` (when product model is available)
-- `device_id=VR_71`
-  - Name: `FM5 Control Centre`
-  - Model: `VR 71 (eBUS: VR_71)` (when product model is available)
+- eBUS controller family (selected by the controller's `device_id` prefix)
+  - Name: the family's marketing name
+  - Model: the product model followed by `(eBUS: <device_id>)` (when product model is available)
+- eBUS functional-module family (selected by the module's `device_id` prefix)
+  - Name: the family's marketing name
+  - Model: the product model followed by `(eBUS: <device_id>)` (when product model is available)
 
 Other devices keep gateway-provided display/model fields, with `model` augmented as `(<eBUS id>)` for stable troubleshooting context.
 
