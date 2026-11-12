@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import json
 from pathlib import Path
 import re
@@ -157,7 +158,54 @@ def validate_operation(page: str, contract: str) -> None:
                 raise ValueError("operation member or type missing")
 
 
+
+REMAINING_TOKENS = ['maintenanceDue', 'heatingMode', 'calcFlowTempC', 'corroboratedPending', 'macAddress', 'activeKeys', 'boilerConfig', 'deviceId', 'maxInterval', 'targetBucket', 'dhwStarts', 'm2mGraphqlConfig', 'systemStatus', 'fm5SemanticMode', 'activationCounts', 'busAdmissionRejectedCandidate', 'completionMode', 'staticPinnedFootprint', 'unqualifiedBound', 'unsupportedOrMisconfigured', 'systemUpdate', 'dhwDemandActive', 'snakeCase', 'invokeError', 'deactivationsIfc', 'automaticRetryScheduled', 'circuitManagingDevice', 'minC', 'passiveObserved', 'coolingEnabled', 'flowsetHwcMaxC', 'dedupDegraded', 'systemScheme', 'staticSeed', 'systemOff', 'pumpActive', 'requestLen', 'freshnessClasses', 'systemWaterPressure', 'compactorDegraded', 'unknownProfile', 'targetTempC', 'meanInterval', 'fanHours', 'dhwBivalencePoint', 'discoverySource', 'pumpHours', 'storageLoadPumpPct', 'dhwWaterFlowLpm', 'pinnedBudgetDegraded', 'busBoundedListSummary', 'updatesAvailable', 'maxC', 'seriesBudgetOverflowTotal', 'interfaceVersion', 'busPeriodicity', 'boilerDiagnostics', 'm2mGraphqlRuntime', 'selectedSource', 'heatingSwitchActive', 'outdoorTemperatureAvg24H', 'quickVetoExpiry', 'writeConfirmPinnedActive', 'circuitConfig', 'watchSummaryDegraded', 'lastSeen', 'elapsedSeconds', 'responseSchema', 'projectionNode', 'dhwState', 'flowTemperatureC', 'hcEmergencyTemperature', 'adaptiveHeatingCurve', 'sourceSelection', 'partNumber', 'companionTarget', 'zoneRoomHumidity', 'requiredTransactions', 'circuitState', 'evidenceRevision', 'setSystemConfig', 'dhwConfig', 'busMessages', 'busSummary', 'startupTimeout', 'boilerStatus', 'daemonStatus', 'diverterValvePositionPct', 'hwcCylinderTemperatureTop', 'flowsetHcMaxC', 'catalogDescriptors', 'centralHeatingHours', 'directApplyEligibilityClasses', 'returnTemperatureC', 'busAdmissionSourceSelection', 'shadowingEnabled', 'firmwareVersion', 'dhwBivalencePointBound', 'energyTotalsUpdate', 'dhwTemperatureC', 'productFamily', 'circulationPumpActive', 'degradedReason', 'summerLimitC', 'ebusV1SemanticSystemSetConfig', 'activeProbe', 'boilerConfigMutationResult', 'modulationPct', 'currentTempC', 'dewPoint', 'energyBucket', 'dhwOperatingMode', 'dhwUpdate', 'alternativePoint', 'activeConfirmed', 'controllerProfile', 'reconnectTimeout', 'verificationState', 'partloadHwcKw', 'centralHeatingStarts', 'sourceBucket', 'dhwHours', 'liveEpoch', 'boilerState', 'unmatchedPolicy', 'cacheEpoch', 'nextAction', 'flowTempMaxC', 'circuitType', 'warmingUp', 'narrowedOnly', 'circuitsUpdate', 'readOnly', 'flowTempDesiredC', 'moduleConfigurationVr71', 'pumpStarts', 'ebusV1RpcInvoke', 'capabilityWithdrawn', 'zoneConfig', 'stateClasses', 'dhwOutdoorBivalenceTemperatureLimit', 'interfaceRevision', 'systemConfig', 'activeSupported', 'waterPressureBar', 'maxRoomHumidity', 'managingDeviceRole', 'projectionEdge', 'dhwTempDesiredC', 'timingQuality', 'broadcastSupported', 'mixerPositionPct', 'managingDevice', 'sourceAddress', 'dhwStatusRaw', 'fanSpeedRpm', 'busPeriodicityEntry', 'systemFlowTemperature', 'primaryCircuitFlowLpm', 'busPeriodicityList', 'serviceStatus', 'busObservabilityStatus', 'roomTempControl', 'hwcCylinderTemperatureBottom', 'flowSetpointC', 'systemProperties', 'observedAt', 'lastInterval', 'responseLen', 'productModel', 'initiatorAddress', 'configMutationResult', 'broadcastEvent', 'deactivationsTemplimiter', 'sourceClasses', 'pinClasses', 'outdoorTemperature', 'energyCategory', 'unknownRegister', 'setBoilerConfig', 'softwareVersion', 'tapConnected', 'rejectedCandidates', 'frameType', 'hardwareVersion', 'getOperationalData', 'circuitStatus', 'busMessage', 'centralHeatingPumpActive', 'lastSuccessfulSource', 'busObservabilityWarmup', 'pinnedEntries', 'displayName', 'zoneState', 'systemState', 'watchSummaryClassCount', 'quickVetoSetpoint', 'hasMixer', 'heatingCircuitBivalencePoint', 'boilerStatusUpdate', 'endpointState', 'dhwTargetTemperatureC', 'busObservabilityCounters', 'systemBounds', 'zoneRoomTemperature', 'heatingStatusRaw', 'flowTempMinC', 'systemConfigBound', 'targetAddress', 'targetFanSpeedRpm', 'invalidBound', 'ebusV1SemanticFm5InterpretationGet', 'busMessagesList', 'socketLoss', 'evictableEntries', 'zonesUpdate', 'busObservabilityCapability', 'busObservabilityDegraded', 'invokeResult', 'm2mGraphqlEnabled', 'quickVeto', 'watchSummaryInventory', 'minInterval', 'busAdmissionActiveProbe', 'operatingMode', 'watchSummary', 'identityConfirmed', 'heatingCurve', 'periodicityBudgetOverflowTotal', 'passiveState', 'totalEntries', 'completedTransactions', 'sampleCount', 'frostProtC', 'testSystemConfigBoundContract', 'passiveReason', 'serialNumber', 'passiveSupported', 'hwcMaxFlowTempDesired', 'flapDampened', 'partloadHcKw', 'gasValveActive', 'ebusV1SemanticSystemGet', 'flameActive', 'energyTotals', 'ionisationVoltageUa', 'busObservabilityTimingQuality', 'busAdmission', 'watchSummaryActivationCounts', 'canonicalPath', 'fm5Interpretation', 'fm5SemanticDegradedReason', 'passiveAvailable', 'transportClass', 'externalPumpActive', 'stateNumber', 'modbus.v1.profile.observation.get', 'modbus.v1.raw.read', 'ebus.v1.semantic.boiler_status.get', 'ebus.v1.semantic.dhw.get', 'ebus.v1.semantic.circuits.get', 'ebus.v1.semantic.solar.get', 'current_temp_c', 'circuitState', 'frameType', 'assetIds', 'circuitType']
+
+
+def remaining_occurrences(root: Path):
+    result = {}
+    paths = []
+    for directory, directories, files in os.walk(root):
+        directories[:] = sorted(d for d in directories if not d.startswith('.') and d != '__pycache__')
+        paths.extend(Path(directory) / name for name in sorted(files))
+    for path in paths:
+        relative = path.relative_to(root)
+        if (not path.is_file() or any(part.startswith(".") for part in relative.parts)
+                or "__pycache__" in relative.parts or str(relative) in EXCLUSIONS
+                or str(relative) == "tests/fixtures/remaining_page_name_exemptions.json"):
+            continue
+        try:
+            text = path.read_text()
+        except (UnicodeError, OSError):
+            continue
+        blocks = "\n".join(re.findall(r"```graphql\n(.*?)\n```", text, re.S))
+        for identifier in re.findall(r"\b[A-Za-z_]\w*\b", blocks):
+            if any(identifier.startswith(token + "_") for token in REMAINING_TOKENS):
+                raise ValueError("partial stale GraphQL identifier")
+        for token in REMAINING_TOKENS:
+            if token not in text:
+                continue
+            for match in re.finditer(r"(?<![\w])" + re.escape(token) + r"(?![\w])", text):
+                # A full lexical token is context; counts bind repeated occurrences.
+                key = (str(relative), token, token)
+                result[key] = result.get(key, 0) + 1
+    return result
+
+
+def validate_remaining_pages(root: Path):
+    entries = json.loads((root / "tests/fixtures/remaining_page_name_exemptions.json").read_text())
+    expected = {}
+    for entry in entries:
+        key = (entry["file"], entry["token"], entry["context"])
+        if key in expected or not entry["reason"]:
+            raise ValueError("duplicate or unexplained naming exemption")
+        expected[key] = entry["count"]
+    if remaining_occurrences(root) != expected:
+        raise ValueError("remaining API spelling or stale naming exemption")
+
+
 def validate_root(root: Path, gateway: Path | None = None) -> None:
+    validate_remaining_pages(root)
     validate_operation((root / "api/semantic-operation-route.md").read_text(),
                        (root / "tests/semantic_operation_route_contract.json").read_text())
     registration = None

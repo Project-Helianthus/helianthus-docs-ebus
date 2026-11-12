@@ -169,8 +169,8 @@ def test_rejects_reintroduced_expired_state(clause: str) -> None:
          "B503 may fall back to the catalog route."),
         ("base `SESSION_BUSY` presentation is neutral.",
          "base `SESSION_BUSY` presentation identifies another client."),
-        ("`vaillantErrorsHistory(targetAddress:limit:)`", "`vaillantErrorsHistory()`"),
-        ("`vaillantLiveMonitorSession(targetAddress:)`", "`vaillantLiveMonitorSession()`"),
+        ("`vaillantErrorsHistory(target_address:limit:)`", "`vaillantErrorsHistory()`"),
+        ("`vaillantLiveMonitorSession(target_address:)`", "`vaillantLiveMonitorSession()`"),
         (CHECKER.B503_TARGET_CLEANUP_SCOPE,
          "Target-switch cleanup is optional."),
         (CHECKER.B503_ENABLING_CLEANUP,
@@ -1076,3 +1076,8 @@ def test_rejects_int10_safety_fragment_moved_beyond_target_section() -> None:
     text = contract().replace(fragment, "", 1)
     text = text.replace(CHECKER.TARGET_END, f"{CHECKER.TARGET_END}\n\n{fragment}", 1)
     rejects_text(text)
+
+
+@pytest.mark.parametrize("operation", CHECKER.B503_MAIN_ROUTE_OPERATIONS.splitlines())
+def test_rejects_legacy_target_argument_spelling(operation: str) -> None:
+    rejects(operation, operation.replace("target_address:", "targetAddress:"))

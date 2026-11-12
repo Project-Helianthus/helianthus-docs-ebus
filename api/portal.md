@@ -115,14 +115,14 @@ Every target-bearing B503 read or session request uses only the main public
 graduation/parity contract. These operations are not `PortalCatalogV1` or
 `PortalActionInvokeV1` operations, and they do not call `/graphql/portal/v1`:
 
-- `vaillantCapabilities(targetAddress:)`
-- `vaillantErrors(targetAddress:)`
-- `vaillantServiceCurrent(targetAddress:)`
-- `vaillantErrorHistory(targetAddress:index:)`
-- `vaillantErrorsHistory(targetAddress:limit:)`
-- `vaillantServiceHistory(targetAddress:index:)`
-- `vaillantLiveMonitor(action:issuerToken:targetAddress:)`
-- `vaillantLiveMonitorSession(targetAddress:)`
+- `vaillantCapabilities(target_address:)`
+- `vaillantErrors(target_address:)`
+- `vaillantServiceCurrent(target_address:)`
+- `vaillantErrorHistory(target_address:index:)`
+- `vaillantErrorsHistory(target_address:limit:)`
+- `vaillantServiceHistory(target_address:index:)`
+- `vaillantLiveMonitor(action:issuerToken:target_address:)`
+- `vaillantLiveMonitorSession(target_address:)`
 
 The catalog/action route and the B503 route are an exclusive operation-to-route
 split, not a fallback or compatibility shim. The B503 route does not expand the
@@ -193,8 +193,8 @@ session strip. The strip states are `Idle`, `Enabling`, `Active`, and
 `Refreshing`, and `Disabled`. `Refreshing` means an epoch refresh holds the
 ownership gate; the already-admitted triggering request remains pending and
 new bus-facing live-monitor reads/actions are busy. Status-only
-`vaillantCapabilities(targetAddress:)` and
-`vaillantLiveMonitorSession(targetAddress:)` queries remain available to observe
+`vaillantCapabilities(target_address:)` and
+`vaillantLiveMonitorSession(target_address:)` queries remain available to observe
 availability and session completion. Refresh success returns `Active` and
 completes a triggering read with exactly one native operation result, or
 dispatches a triggering current-owner disable exactly once after its frame
@@ -255,8 +255,8 @@ When a selected target has Gateway session state `Refreshing` with `owned:true`,
 the session strip remains observable alongside temporarily `UNKNOWN` capability.
 It is status-only: the section-projection card, B503 tabs, and every new
 bus-facing B503 read/action remain unavailable while Gateway reports
-`Refreshing`. Only the status-only `vaillantCapabilities(targetAddress:)` and
-`vaillantLiveMonitorSession(targetAddress:)` queries remain available during
+`Refreshing`. Only the status-only `vaillantCapabilities(target_address:)` and
+`vaillantLiveMonitorSession(target_address:)` queries remain available during
 that state. If the triggering READ succeeds and rebinds the same target and
 issuer token into `Active` with `owned:true`, the bounded current-owner
 READ/DISABLE exception above resumes immediately under `UNKNOWN`; it does not
@@ -327,8 +327,8 @@ physical validation.
 This page owns the frozen Portal-specific observe-first contract after merged
 `ISSUE-GW-14`.
 
-- GraphQL owns domain aggregate contracts (`zones`, `dhw`, `energyTotals`,
-  `watchSummary`, `busSummary`, `busMessages`, `busPeriodicity`) and
+- GraphQL owns domain aggregate contracts (`zones`, `dhw`, `energy_totals`,
+  `watch_summary`, `bus_summary`, `bus_messages`, `bus_periodicity`) and
   cross-surface schema semantics.
 - Portal API/SSE own Portal-specific transport/bootstrap/presentation behavior:
   endpoint names under `/portal/api/v1/*`, capability flags, stream/timeline/
@@ -547,7 +547,7 @@ Example response:
       "id": "zone_1",
       "name": "Living",
       "state": {
-        "current_temp_c": 21.3,
+        "zone_room_temperature": 21.3,
         "hvac_action": "HEATING"
       },
       "config": {
@@ -1237,7 +1237,7 @@ to 4 KiB and contains exactly:
 ```
 
 The route accepts no endpoint, tool name, profile, asset, credential, or write
-function. It invokes the same `modbus.v1.raw.read` core used by MCP, preserving
+function. It invokes the same `modbus_v1_raw_read` core used by MCP, preserving
 the FC03/FC04, unit, range, deadline, reconnect, resource, redaction, envelope,
 and shared four-reads-per-second limits. Portal cannot create a second quota or
 call the Modbus adapter directly. Raw words and wire bytes remain only in this

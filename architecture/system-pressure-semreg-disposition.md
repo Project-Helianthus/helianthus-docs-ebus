@@ -55,8 +55,8 @@ from acquisition success, freshness, admission, and binding qualification.
 | Universal projection | No accepted pressure semantic definition plus qualified mapping is available in this slice. | Withhold the pressure fact and its universal consumer projection. Record the disposition independently of a retained native value; emit no fabricated zero, temperature fact, or boiler substitute. |
 
 The [GraphQL contract](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/api/graphql.md)
-also distinguishes `SystemState.systemWaterPressure` from
-`BoilerState.waterPressureBar`. Their presence is API correspondence, not native
+also distinguishes `system_state.system_water_pressure` from
+`boiler_state.water_pressure_bar`. Their presence is API correspondence, not native
 equivalence. Existing MCP envelopes and GraphQL fields remain unchanged. Future
 bindings must give both surfaces the same owner, value eligibility and
 withholding meaning, using their existing omission/null conventions; this page

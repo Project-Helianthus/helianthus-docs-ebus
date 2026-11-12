@@ -74,8 +74,8 @@ state members `flow_temperature_c` / `return_temperature_c`, and GraphQL
 `graphql/schema_types.go` resolves them as null. The boiler projection in
 `cmd/gateway/gateway_portal_projection.go` copies the same pointers. HA
 `custom_components/helianthus/sensor_descriptors.py` lists these two names in
-`REDUCED_BOILER_TEMPERATURE_FIELDS`. Circuit `flowTemperatureC` and solar
-`returnTemperatureC` are separate fields.
+`REDUCED_BOILER_TEMPERATURE_FIELDS`. Circuit `flow_temperature_c` and solar
+`return_temperature_c` are separate fields.
 
 ## Two-field mapping and qualification
 

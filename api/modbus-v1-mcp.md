@@ -18,7 +18,7 @@ endpoint, with the single bounded reconnect-and-retry exception defined below.
 M4-02 does not run a detector, activate a profile, start a background poller, or
 produce retained profile observations. Those producer operations remain in the
 separately authorized M4-04 live-smoke node. Consequently,
-`modbus.v1.profile.observation.get` returns `UNAVAILABLE` until an owning
+`modbus_v1_profile_observation_get` returns `UNAVAILABLE` until an owning
 detector/poller records the exact requested profile/sample pair; it never
 fabricates a sample.
 
@@ -28,7 +28,7 @@ source-owned Modbus profile facts.
 
 ## Stable Tools
 
-### `modbus.v1.raw.read`
+### `modbus_v1_raw_read`
 
 The closed input object requires:
 
@@ -77,10 +77,10 @@ operation terminates with a bounded `UNAVAILABLE` error. Validation failures,
 quota rejection, and provider errors that do not require reconnect are never
 retried by this rule.
 
-`modbus.v1.profile.observation.get` reads an immutable retained observation and
+`modbus_v1_profile_observation_get` reads an immutable retained observation and
 does not reconnect to the Modbus endpoint or perform wire I/O.
 
-### `modbus.v1.profile.observation.get`
+### `modbus_v1_profile_observation_get`
 
 The closed input object requires non-empty UTF-8 `profile_id` and `sample_id`,
 each bounded to 128 bytes. The successful profile `data` object is closed and
@@ -149,7 +149,7 @@ already-published raw operation without changing that historical boundary.
 ## FMV3-M5-06 Portal Reuse Target
 
 The future Portal raw diagnostic route does not define another Modbus reader.
-It invokes the same closed `modbus.v1.raw.read` operation core in process, so
+It invokes the same closed `modbus_v1_raw_read` operation core in process, so
 MCP and Portal share argument validation, provider/deadline/reconnect behavior,
 the four-reads-per-second runtime quota, result envelope, endpoint hashing, and
 static error redaction. The fifth combined MCP-or-Portal request in one window

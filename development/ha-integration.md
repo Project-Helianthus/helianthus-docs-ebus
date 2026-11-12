@@ -46,11 +46,11 @@ The config entry `unique_id` is the verified `instanceGuid`, not `host:port`.
 | Capability | Query/Field | Required | Behavior if Missing |
 |---|---|---|---|
 | Config-flow identity probe | `gatewayIdentity.instanceGuid` | Yes | Setup blocked (`invalid_response` / `cannot_connect` / `requires_gateway_upgrade`) |
-| Device inventory (base) | `devices { address manufacturer deviceId softwareVersion hardwareVersion }` | Yes | Setup cannot build device tree |
-| Device identity enrichment | `devices { serialNumber macAddress }` | Optional | Integration falls back to base query and fallback ID scheme |
-| Service status | `daemonStatus`, `adapterStatus` | Yes (current implementation) | Setup refresh fails |
+| Device inventory (base) | `devices { address manufacturer device_id software_version hardware_version }` | Yes | Setup cannot build device tree |
+| Device identity enrichment | `devices { serial_number mac_address }` | Optional | Integration falls back to base query and fallback ID scheme |
+| Service status | `daemon_status`, `adapterStatus` | Yes (current implementation) | Setup refresh fails |
 | Semantic climate/DHW | `zones`, `dhw` | Optional | Coordinator returns empty/default semantic payload |
-| Energy totals | `energyTotals` | Optional | Coordinator returns `energyTotals: null` |
+| Energy totals | `energy_totals` | Optional | Coordinator returns `energy_totals: null` |
 | Realtime subscriptions | GraphQL WS (`graphql-transport-ws`) | Optional | Polling remains available via coordinator intervals |
 
 ## Semantic entity contract
@@ -180,17 +180,17 @@ The integration materializes this hierarchy in HA device registry:
 
 Device IDs are generated with deterministic fallback:
 
-1. Prefer stable, addressable identity: `deviceId + address + hw + sw`
-2. If present, include `serialNumber` and/or `macAddress` as *additional* identifiers (enrichment), but do not create a new device when those fields are temporarily missing.
+1. Prefer stable, addressable identity: `device_id + address + hw + sw`
+2. If present, include `serial_number` and/or `mac_address` as *additional* identifiers (enrichment), but do not create a new device when those fields are temporarily missing.
 
 ### Canonical naming/model mapping
 
 For known Vaillant devices, integration-level names/models are normalized to stable marketing values:
 
-- `deviceId=BASV*`
+- `device_id=BASV*`
   - Name: `sensoCOMFORT RF`
   - Model: `VRC 720f/2 (eBUS: BASV)` (when product model is available)
-- `deviceId=VR_71`
+- `device_id=VR_71`
   - Name: `FM5 Control Centre`
   - Model: `VR 71 (eBUS: VR_71)` (when product model is available)
 
@@ -240,7 +240,7 @@ Entity platforms consume these nested sub-objects directly from the coordinator 
 
 - If `zones` are absent, zone climate entities remain empty.
 - DHW entity is created even when `dhw` is initially absent; it stays unavailable until semantic DHW payload appears.
-- If `energyTotals` is absent, energy entities remain unavailable.
+- If `energy_totals` is absent, energy entities remain unavailable.
 - In `ebusd-tcp` deployments, zone entities can appear after the first semantic refresh cycle
   (default up to ~1 minute), because fallback discovery may hydrate zones from ebusd `grab result all`.
 - This fallback hydration is treated as live runtime semantic data (not stale cache preload), so startup

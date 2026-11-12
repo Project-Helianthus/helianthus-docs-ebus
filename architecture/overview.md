@@ -233,11 +233,11 @@ Projections are **multi-dimensional** views of the same canonical graph:
 
 The read-only projection browser at `cfg.UIPath` (default `/ui`) renders projection graphs and cross-plane views using a single GraphQL query and expects specific fields to be present and stable:
 
-- **Query shape** (example name: `ProjectionBrowserProjections`): `devices { address manufacturer deviceId projections { plane nodes { id path canonicalPath } edges { id from to } } }`
+- **Query shape** (example name: `ProjectionBrowserProjections`): `devices { address manufacturer device_id projections { plane nodes { id path canonical_path } edges { id from to } } }`
 - **Plane graph contract**: each `projections[]` entry is one plane-scoped graph where `plane -> nodes/edges`; clients render exactly one selected plane at a time.
 - **Identity**: `ProjectionNode.id` is derived from the `Service`-plane canonical path, so the same node ID appears across planes when they represent the same canonical entity.
-- **Display vs. join**: `path` is plane-local display data; `canonicalPath` is the join key used for cross-plane correlation and snapshot diffs.
-- **Plane switching**: preserve the selected node’s `canonicalPath`, switch plane, then resolve the target node by canonical path (or clear selection when absent in that plane).
+- **Display vs. join**: `path` is plane-local display data; `canonical_path` is the join key used for cross-plane correlation and snapshot diffs.
+- **Plane switching**: preserve the selected node’s `canonical_path`, switch plane, then resolve the target node by canonical path (or clear selection when absent in that plane).
 
 ### Projection Browser (`/ui`)
 
@@ -257,9 +257,9 @@ sequenceDiagram
   participant P1 as Projection (Observability)
   participant P2 as Projection (Service)
   UI->>P1: select node
-  P1-->>UI: node.id + canonicalPath
+  P1-->>UI: node.id + canonical_path
   UI->>P2: switch plane (Service)
-  UI->>P2: find node by canonicalPath
+  UI->>P2: find node by canonical_path
   P2-->>UI: node or not found
   UI-->>UI: highlight node or clear selection
 ```

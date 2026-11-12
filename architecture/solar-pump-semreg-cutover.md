@@ -24,7 +24,7 @@ The public native contract comes first:
   probed separately, while its detailed solar section describes II00. The
   current reader below uses only II00. II01 is not silently admitted or merged;
   its applicability and ownership remain **Unknown** for this slice.
-- [B524 semantic mapping, `ebus.v1.semantic.solar.get`](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/b524-semantic-mapping.md)
+- [B524 semantic mapping, `ebus_v1_semantic_solar_get`](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/b524-semantic-mapping.md)
   describes the FM5 non-null empty/retained-object compatibility behavior.
 - [Gateway `semantic_vaillant.go`](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/cmd/gateway/semantic_vaillant.go),
   specifically `localSolar`, `solarInstance`, `readSolarSnapshot`,

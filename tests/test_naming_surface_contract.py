@@ -182,3 +182,23 @@ def test_dynamic_builder_start_remains_exported():
     page = documents()[0]
     assert "`Start(ctx)` performs an initial build" in page
     assert "`start(ctx)`" not in page
+
+
+@pytest.mark.parametrize("text", [
+    "```graphql\n{ busSummary { status } }\n```",
+    "Invoke `modbus.v1.raw.read`.",
+    "```graphql\n{ busSummary_extra { status } }\n```",
+])
+def test_remaining_page_injection_rejected(tmp_path, text):
+    # Root field catches schema reversion; tool catches registration reversion.
+    fixture = tmp_path / "tests/fixtures"
+    fixture.mkdir(parents=True)
+    (fixture / "remaining_page_name_exemptions.json").write_text("[]")
+    (tmp_path / "api").mkdir()
+    (tmp_path / "api/portal.md").write_text(text)
+    with pytest.raises(ValueError, match="remaining API|partial stale"):
+        CHECKER.validate_remaining_pages(tmp_path)
+
+
+def test_remaining_exemptions_exist():
+    CHECKER.validate_remaining_pages(ROOT)

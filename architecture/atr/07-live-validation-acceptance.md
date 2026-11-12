@@ -20,9 +20,9 @@ pass every positive assertion and MUST preserve every negative assertion.
 Procedure:
 - Set `EnableStaticSeedTable=false` in addon config
 - Deploy gateway; let it run ≥10 minutes during normal NETX3 polling activity
-- Query GraphQL `{ devices { address discoverySource verificationState } }`
+- Query GraphQL `{ devices { address discovery_source verification_state } }`
 
-Expected: device with `address=0xF6 (246) discoverySource=passive_observed verificationState=corroborated_pending`.
+Expected: device with `address=0xF6 (246) discovery_source=passive_observed verification_state=corroborated_pending`.
 
 Provenance: NETX3's master 0xF1 emits frames during normal operation; Phase A's M3+M4 derives companion (0xF1 → 0xF6) and inserts slot[0xF6] after second corroborating observation.
 
@@ -31,22 +31,22 @@ Provenance: NETX3's master 0xF1 emits frames during normal operation; Phase A's 
 Procedure:
 - Set `EnableStaticSeedTable=true` in addon config
 - Restart addon; let it run ≥30 seconds
-- Query GraphQL `{ devices { address discoverySource verificationState } }`
+- Query GraphQL `{ devices { address discovery_source verification_state } }`
 
-Expected: device with `address=0x04 (4) discoverySource=static_seed verificationState=candidate`.
+Expected: device with `address=0x04 (4) discovery_source=static_seed verification_state=candidate`.
 
 ### P3 — 0xEC visible via static seed (with flag enabled)
 
-Same procedure as P2. Expected: device with `address=0xEC (236) discoverySource=static_seed verificationState=candidate`.
+Same procedure as P2. Expected: device with `address=0xEC (236) discovery_source=static_seed verification_state=candidate`.
 
 ### P4 — Existing devices unchanged
 
 Procedure: same as P1.
-Expected: 0x08 (BAI00), 0x15 (BASV2), 0x26 (VR_71) appear with `verificationState=identity_confirmed` (preserved from PR #560/#562 logic) — no regression.
+Expected: 0x08 (BAI00), 0x15 (BASV2), 0x26 (VR_71) appear with `verification_state=identity_confirmed` (preserved from PR #560/#562 logic) — no regression.
 
 ### P5 — bus_admission preserved
 
-Procedure: query `{ busSummary { status { bus_admission { source_selection { state outcome selected_source companion_target active_probe { status } } } } } }`.
+Procedure: query `{ bus_summary { status { bus_admission { source_selection { state outcome selected_source companion_target active_probe { status } } } } } }`.
 Expected: `state=active outcome=active_probe_passed selected_source=127 (0x7F) companion_target=132 (0x84) active_probe.status=active_probe_passed`. Identical to pre-Phase-A.
 
 ### P6 — Transport matrix parity

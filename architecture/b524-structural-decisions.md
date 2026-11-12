@@ -62,7 +62,7 @@ This document is authoritative for Phase 1 structural discovery and complements,
 | Scope of validity | `PROTOCOL` for the capability gate; `GATEWAY_POLICY` for candidate ordering and multi-root selection policy |
 | Evaluation rule | B524-backed structure discovery is allowed once at least one candidate target address responds coherently to B524 discovery probes. Scan may start at `0x15` for convenience, but it must not be limited to `0x15` and must not require known product identity. |
 | Fallback / unknown behavior | If no candidate target proves B524 capability, B524-backed families remain unavailable. Unknown identity does not block discovery once capability is proven. |
-| Published effect | `zones`, `circuits`, `radioDevices`, `fm5SemanticMode`, `solar`, and `cylinders` are eligible for structural evaluation once a B524 semantic root is available. |
+| Published effect | `zones`, `circuits`, `radioDevices`, `fm5_semantic_mode`, `solar`, and `cylinders` are eligible for structural evaluation once a B524 semantic root is available. |
 | Evidence status | `PROVEN` for the capability gate; candidate ordering remains `GATEWAY_POLICY` |
 
 
@@ -192,12 +192,12 @@ This document is authoritative for Phase 1 structural discovery and complements,
 | Evidence status | `PROVEN` |
 | Code anchors | `refreshCircuits()`, `mergeCircuitSnapshotNonDestructive()`, `publishCircuits()` |
 
-## B524-SD-09 — Circuit Ownership via `managingDevice`
+## B524-SD-09 — Circuit Ownership via `managing_device`
 
 | Field | Value |
 | --- | --- |
-| Semantic effect | Defines `circuits[].managingDevice` instead of using a global FM5 threshold |
-| Source registers | `GG=0x00 RR=0x0036` (`hydraulic_scheme_code`), `GG=0x00 RR=0x002F` (`functional_module_configuration_code`) plus the evaluated `fm5SemanticMode` |
+| Semantic effect | Defines `circuits[].managing_device` instead of using a global FM5 threshold |
+| Source registers | `GG=0x00 RR=0x0036` (`hydraulic_scheme_code`), `GG=0x00 RR=0x002F` (`functional_module_configuration_code`) plus the evaluated `fm5_semantic_mode` |
 | Reference | [`ebus-vaillant-B524-register-map.md#gg0x00--systemregulator`](../protocols/vaillant/ebus-vaillant-b524-register-map.md#gg0x00--systemregulator), [`ebus-vaillant-B524-register-map.md#ebusv1semanticcircuitsget`](../protocols/vaillant/ebus-vaillant-b524-register-map.md#ebusv1semanticcircuitsget) |
 | Source document title | `Vaillant sensoCOMFORT (VRC 720) -- Training Document` |
 | Source section | `4.3.1 VR 71 Main Connection Center`; `5.2 System Requirements` |
@@ -205,7 +205,7 @@ This document is authoritative for Phase 1 structural discovery and complements,
 | Constraint strength | `CONSTRAINING` |
 | Scope of validity | `LAB` for the currently validated live tuple; `PROFILE` for the documented VR71 role model; broader tuples remain `UNKNOWN` |
 | Evaluation rule | `deriveCircuitManagingDevice()` emits `FUNCTION_MODULE / VR_71 / 0x26` only when `systemScheme == 1`, `moduleConfigurationVR71 == 2`, and `fm5SemanticMode == INTERPRETED`; otherwise it emits `UNKNOWN` |
-| Fallback / unknown behavior | Gateway intentionally does not guess another owner for unproven topologies. A documented profile such as `moduleConfigurationVR71 = 3` ("3x mixer circuit") still implies VR 71 circuit ownership in regulator documentation, but the current implementation emits `UNKNOWN` because ownership is presently coupled to `fm5SemanticMode == INTERPRETED`. This is a known implementation gap, not an evidence-free topology. |
+| Fallback / unknown behavior | Gateway intentionally does not guess another owner for unproven topologies. A documented profile such as `moduleConfigurationVR71 = 3` ("3x mixer circuit") still implies VR 71 circuit ownership in regulator documentation, but the current implementation emits `UNKNOWN` because ownership is presently coupled to `fm5_semantic_mode == INTERPRETED`. This is a known implementation gap, not an evidence-free topology. |
 | Published effect | GraphQL/MCP/Portal expose explicit per-circuit ownership; HA can parent circuits without global threshold heuristics |
 | Evidence status | `PROVEN` for the current live tuple, `UNKNOWN` for all other tuples |
 | Code anchors | `refreshSystem()`, `deriveCircuitManagingDevice()`, `publishCircuits()` |
@@ -243,7 +243,7 @@ This document is authoritative for Phase 1 structural discovery and complements,
 | Evaluation rule | The provider returns one mode/reason/revision verdict, but structural mode and acquisition health are independent. Fresh coherent identity plus an interpretable configuration establishes `INTERPRETED`; fresh coherent identity plus a known unsupported configuration establishes `GPIO_ONLY`; fresh coherent absence establishes `ABSENT`. A transient acquisition failure does not produce a new structural classification, so the previous coherent `INTERPRETED` mode remains unchanged. |
 | Coherence / linearization rule | Relevant device-registry identity mutations advance a monotonic observation generation. The provider's final registry-generation comparison and semantic verdict commit execute in one registry read critical section, so a registry writer linearizes either before both operations or after both operations. A generation mismatch records `INCOHERENT_ACQUISITION` against retained state and does not commit a structural verdict from a detached registry snapshot. |
 | Fallback / unknown behavior | The provider emits `GPIO_ONLY` only from fresh coherent `CONFIGURATION_NOT_INTERPRETABLE` evidence. Failed controller, configuration, solar, or cylinder acquisition retains the previous coherent structural mode and values without refreshing them. Before the first coherent classification, incomplete evidence leaves the structural verdict unpublished rather than inventing `GPIO_ONLY` or `ABSENT`. The full closed reason and precedence contract is [`../api/eebus-operator-admin.md#fm5-behavioral-verdict`](../api/eebus-operator-admin.md#fm5-behavioral-verdict). |
-| Published effect | Controls `fm5SemanticMode`, `fm5SemanticDegradedReason`, `fm5SemanticEvidenceRevision`, and gates publication of `solar`, `cylinders`, and FM5-backed circuit ownership. |
+| Published effect | Controls `fm5_semantic_mode`, `fm5SemanticDegradedReason`, `fm5SemanticEvidenceRevision`, and gates publication of `solar`, `cylinders`, and FM5-backed circuit ownership. |
 | Evidence status | `PROVEN` for the implemented decision tree, `UNKNOWN` for unvalidated controller tuples |
 | Code anchors | `refreshFM5Semantic()`, provider-owned verdict derivation, `publishFM5Semantic()` |
 
@@ -270,7 +270,7 @@ This document is authoritative for Phase 1 structural discovery and complements,
 | Field | Value |
 | --- | --- |
 | Semantic effect | Determines whether `cylinders[]` may be published at all |
-| Source registers | Cylinder family reads come from `GG=0x05`, but family publication is gated by `fm5SemanticMode` |
+| Source registers | Cylinder family reads come from `GG=0x05`, but family publication is gated by `fm5_semantic_mode` |
 | Reference | [`ebus-vaillant-B524-register-map.md#gg0x05--cylinders-multi-instance`](../protocols/vaillant/ebus-vaillant-b524-register-map.md#gg0x05--cylinders-multi-instance), [`ebus-vaillant-B524-register-map.md#ebusv1semanticcylindersget`](../protocols/vaillant/ebus-vaillant-b524-register-map.md#ebusv1semanticcylindersget) |
 | Source document title | `Vaillant sensoCOMFORT (VRC 720) -- Training Document`; `Vaillant multiMATIC VRC 700/4f, VRC 700/5 - Control por compensacion climatica` |
 | Source section | `Installer Level -- Solar Circuit`; `Deposito solar 1`; ACS/accumulator sections in multiMATIC training |
@@ -313,7 +313,7 @@ This document is authoritative for Phase 1 structural discovery and complements,
 | Supporting statement | Across `4.2.1 VR 92 Remote Control Unit`, `4.3.1 VR 71 Main Connection Center`, `Installer Level -- Zones 1 to 9`, `Installer Level -- Solar Circuit`, and the multiMATIC sections `Distribucion de zonas y circuitos de calefaccion`, `Zonas 1 a 9`, `Circuito solar 1`, and `Deposito solar 1`, the regulator documents consistently present structure as explicit relationships: zones have room controls and circuit assignments, circuits have types and actuator state, VR 71 owns relay-backed functions, and solar/cylinder screens appear only for certain configurations. This matches the gateway design choice to publish explicit structural fields instead of hidden thresholds, but it does not widen the scope beyond the underlying decisions. This entry is exhaustive only for the currently published structure-bearing fields named below. |
 | Constraint strength | `CORROBORATING` |
 | Scope of validity | `GATEWAY_POLICY`; each constituent field inherits the narrower scope of its underlying decision |
-| Evaluation rule | Gateway publishes structure-bearing fields instead of hidden thresholds: `roomTemperatureZoneMapping`, `associatedCircuit`, `radioDevices[]`, `fm5SemanticMode`, `circuits[].managingDevice`, and gated `solar`/`cylinders` (including per-instance cylinder evidence from SD-14) |
+| Evaluation rule | Gateway publishes structure-bearing fields instead of hidden thresholds: `roomTemperatureZoneMapping`, `associatedCircuit`, `radioDevices[]`, `fm5_semantic_mode`, `circuits[].managing_device`, and gated `solar`/`cylinders` (including per-instance cylinder evidence from SD-14) |
 | Fallback / unknown behavior | Consumer-specific parent trees remain consumer behavior; this catalog documents the semantic contract they must consume |
 | Published effect | GraphQL/MCP/Portal expose enough structure for consumers such as HA to build explainable parent-child hierarchy without inventing local thresholds |
 | Evidence status | `COMPOSITE` |
