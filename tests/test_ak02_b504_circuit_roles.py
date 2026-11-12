@@ -10,7 +10,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 PAGE = ROOT / 'protocols/vaillant/ebus-b504-circuit-roles.md'
 DATA = ROOT / 'protocols/vaillant/fixtures/ak02_b504_circuit_roles.json'
-API = ROOT / 'architecture/ak02_b504_circuit_roles_api.md'
+API = ROOT / 'architecture/ak02-b504-circuit-roles-api.md'
 
 # Expected meanings come from the finite contract, independently of the fixture.
 RELATIONS = (

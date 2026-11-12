@@ -7,7 +7,7 @@ import unittest
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = Path('architecture/al18_b516_residual_fields.md')
+PAGE = Path('architecture/al18-b516-residual-fields.md')
 FIXTURE = Path('architecture/fixtures/al18_b516_residual_fields.json')
 AXES = ('family', 'variant', 'primary', 'secondary', 'operation', 'direction',
         'field', 'alternative', 'group', 'instance_scope', 'register')
@@ -160,7 +160,7 @@ class ResidualFieldsTest(unittest.TestCase):
         for phrase in REQUIRED_PROSE:
             with self.subTest(phrase=phrase):
                 self.assertIn(phrase, text)
-        self.assertIn('../protocols/vaillant/ebus-vaillant-B516-energy.md#10-other-b516-sub-ids-candidate', text)
+        self.assertIn('../protocols/vaillant/ebus-vaillant-b516-energy.md#10-other-b516-sub-ids-candidate', text)
         self.assertIn('fixtures/al18_b516_residual_fields.json', text)
         self.assertIn('Synthetic examples deliberately supply no native direction or variant association.', text)
 

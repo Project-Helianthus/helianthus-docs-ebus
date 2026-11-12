@@ -67,7 +67,7 @@
         "scripts/validate_b524_basv0_description_profile.py",
         "scripts/validate_b524_bounded_survey_profile.py",
         "scripts/ci_local.sh",
-        "protocols/vaillant/ebus-vaillant-B524-register-map.md",
+        "protocols/vaillant/ebus-vaillant-b524-register-map.md",
         "protocols/vaillant/ebus-vaillant-b524-basv0-profile-v1.md",
         "protocols/vaillant/ebus-vaillant-b524-survey-*.md",
         "protocols/vaillant/fixtures/b524-basv0-*",

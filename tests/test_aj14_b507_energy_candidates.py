@@ -8,7 +8,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 NATIVE = Path('protocols/vaillant/ebus-b507-energy-candidates.md')
 FIXTURE = Path('protocols/vaillant/fixtures/aj14_b507_energy_candidates.json')
-API = Path('architecture/aj14_b507_energy_candidates_api.md')
+API = Path('architecture/aj14-b507-energy-candidates-api.md')
 
 # Independent expectations: no values are derived from the page or fixture.
 FIELD_ROWS = [
@@ -159,7 +159,7 @@ class EnergyCandidatesTest(unittest.TestCase):
                        'do not transfer to\nOP09, OP0B',
                        'half-percent correction is outside'):
             self.assertIn(phrase, self.native)
-        self.assertNotIn('](ebus-vaillant-B507.md', self.native)
+        self.assertNotIn('](ebus-vaillant-b507.md', self.native)
         for forbidden in ('Ab13', 'GraphQL', 'MCP', 'CLI', 'unittest', 'ebusreg'):
             self.assertNotIn(forbidden, self.native)
 

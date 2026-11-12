@@ -214,7 +214,7 @@ ab11ao11_numeric = {
 
 class TestAb11Ao11Contract(ab11ao11_unittest.TestCase):
     def setUp(self):
-        self.ab11ao11_page_text = (ab11ao11_root / 'architecture/ao12_b510_cache_transition.md').read_text()
+        self.ab11ao11_page_text = (ab11ao11_root / 'architecture/ao12-b510-cache-transition.md').read_text()
         self.ab11ao11_page = ab11ao11_page(self.ab11ao11_page_text)
         self.ab11ao11_fixture = ab11ao11_load((ab11ao11_root / 'architecture/fixtures/ao12_b510_cache_transition.json').read_text())
 
@@ -324,7 +324,7 @@ class TestAb11Ao11Contract(ab11ao11_unittest.TestCase):
         ab11ao11_mutated_text = self.ab11ao11_page_text.replace('"number":64', '"number":63', 1)
         self.assertNotEqual(ab11ao11_mutated_text, self.ab11ao11_page_text)
         with ab11ao11_tempfile.TemporaryDirectory(dir=ab11ao11_root / '.tmp', prefix='ab11ao11-') as ab11ao11_dir:
-            ab11ao11_path = ab11ao11_pathlib.Path(ab11ao11_dir) / 'ao12_b510_cache_transition.md'
+            ab11ao11_path = ab11ao11_pathlib.Path(ab11ao11_dir) / 'ao12-b510-cache-transition.md'
             ab11ao11_path.write_text(ab11ao11_mutated_text)
             with self.assertRaises(AssertionError):
                 self.ab11ao11_assert_table(ab11ao11_page(ab11ao11_path.read_text()))

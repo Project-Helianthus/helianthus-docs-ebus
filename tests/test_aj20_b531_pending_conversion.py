@@ -7,7 +7,7 @@ from pathlib import Path
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / 'architecture/aj20_b531_pending_conversion.md'
+PAGE = ROOT / 'architecture/aj20-b531-pending-conversion.md'
 FIXTURE = ROOT / 'architecture/fixtures/aj20_b531_pending_conversion.json'
 
 BASE = dict(family='synthetic-heat-pump', limit_id='limit-a', operation='merge',
@@ -124,7 +124,7 @@ class PendingConversionContract(unittest.TestCase):
         self.assertEqual(table(self.page, '## Local feedback'),
                          [('candidate_grade', 'Hypothesis', 'Hypothesis')] +
                          [(key, 'Unknown', 'Unknown') for key in UNKNOWN])
-        for phrase in ('../protocols/vaillant/ebus-vaillant-B531-hem-power-limit.md',
+        for phrase in ('../protocols/vaillant/ebus-vaillant-b531-hem-power-limit.md',
                        'Ten-second local health timing is not a physical control timeout.',
                        'No queue, heartbeat, writer or acknowledgement protocol is implemented.',
                        'does not establish native\nunits', 'eBUS MCP', 'GraphQL parity',

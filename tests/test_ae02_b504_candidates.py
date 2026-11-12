@@ -4,7 +4,7 @@ from pathlib import Path
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / "protocols/vaillant/ebus-vaillant-B504.md"
+PAGE = ROOT / "protocols/vaillant/ebus-vaillant-b504.md"
 FIXTURE = ROOT / "protocols/vaillant/fixtures/ae02_b504_candidates.json"
 EXPECTED_COLUMNS = ['ID',
  'Grade',

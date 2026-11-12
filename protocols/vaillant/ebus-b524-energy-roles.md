@@ -2,7 +2,7 @@
 
 ## Native contract and evidence
 
-The [native B524 contract](ebus-vaillant-B524.md#411-writes-with-iiff-dhw-cylinder-and-buffer-registers)
+The [native B524 contract](ebus-vaillant-b524.md#411-writes-with-iiff-dhw-cylinder-and-buffer-registers)
 comes first: OP02 and OP06 are independent namespaces, and request context
 retains the instance. This supplement narrows that contract to five candidate
 energy-command targets. The [synthetic tuples](fixtures/aj02_b524_energy_roles.json)

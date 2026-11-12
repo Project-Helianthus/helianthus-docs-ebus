@@ -133,7 +133,7 @@ def ab13ap13_table(ab13ap13_text, ab13ap13_header):
 class TestAb13Ap13(unittest.TestCase):
     def setUp(self):
         self.ab13ap13_fixture = json.loads((ab13ap13_root / 'architecture/fixtures/ap14_b512_heatpump_io.json').read_text())
-        self.ab13ap13_page = (ab13ap13_root / 'architecture/ap14_b512_heatpump_io.md').read_text()
+        self.ab13ap13_page = (ab13ap13_root / 'architecture/ap14-b512-heatpump-io.md').read_text()
 
     def test_ab13ap13_tables_and_signature(self):
         self.assertEqual(self.ab13ap13_fixture['selectors'], ab13ap13_selectors)

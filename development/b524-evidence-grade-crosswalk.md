@@ -98,6 +98,6 @@ reuse page; it does not revise that contract or claim implementation parity.
 [scope]: ebus-vaillant-b524-basv0-profile-reuse.md#validation_scope-and-presence
 [baseline]: ebus-vaillant-b524-explorer-discovery.md#bundled-metadata-and-rechecking
 [discovery]: ebus-vaillant-b524-explorer-discovery.md#recommended-op00-count-guidance
-[flags]: ../protocols/vaillant/ebus-vaillant-B524.md#22-common-read-response-header-0x02--0x06
-[responses]: ../protocols/vaillant/ebus-vaillant-B524.md#23-register-response-states
+[flags]: ../protocols/vaillant/ebus-vaillant-b524.md#22-common-read-response-header-0x02--0x06
+[responses]: ../protocols/vaillant/ebus-vaillant-b524.md#23-register-response-states
 [shared]: https://github.com/Project-Helianthus/helianthus-vrc-explorer/blob/main/docs/shared-evidence-contract.md

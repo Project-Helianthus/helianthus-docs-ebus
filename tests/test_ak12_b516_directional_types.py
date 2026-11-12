@@ -10,7 +10,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 NATIVE = ROOT / 'protocols/vaillant/ebus-b516-directional-types.md'
 DATA = ROOT / 'protocols/vaillant/fixtures/ak12_b516_directional_types.json'
-API = ROOT / 'architecture/ak12_b516_directional_types_api.md'
+API = ROOT / 'architecture/ak12-b516-directional-types-api.md'
 ABSENT = object()
 AXES = ('family', 'variant', 'primary', 'secondary', 'operation', 'direction',
         'field', 'alternative', 'group', 'instance_scope', 'register')

@@ -6,7 +6,7 @@ import unittest
 AB97_ROOT = Path(__file__).resolve().parents[1]
 AB97_NATIVE = 'protocols/vaillant/ebus-b512-dhw-stepper.md'
 AB97_FIXTURE = 'protocols/vaillant/fixtures/aj06_b512_dhw_stepper.json'
-AB97_API = 'architecture/aj06_b512_dhw_stepper_api.md'
+AB97_API = 'architecture/aj06-b512-dhw-stepper-api.md'
 
 
 def ab97_expected():

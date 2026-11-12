@@ -5,7 +5,7 @@ from pathlib import Path
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / 'protocols/vaillant/ebus-vaillant-B51B.md'
+PAGE = ROOT / 'protocols/vaillant/ebus-vaillant-b51b.md'
 FIXTURE = ROOT / 'protocols/vaillant/fixtures/ac18_program_blocks.json'
 # Independent finite oracle: operation, request fields/extent, positive fields/extent.
 LAYOUTS = (

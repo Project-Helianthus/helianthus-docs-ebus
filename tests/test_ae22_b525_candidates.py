@@ -83,7 +83,7 @@ class B525Candidates(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.data = json.loads((ROOT / 'protocols/vaillant/fixtures/ae22_b525_candidates.json').read_text())
-        cls.page = (ROOT / 'protocols/vaillant/ebus-vaillant-B525.md').read_text()
+        cls.page = (ROOT / 'protocols/vaillant/ebus-vaillant-b525.md').read_text()
         cls.cases = cls.data['synthetic_cases']
         cls.expected = expected_declarations()
 

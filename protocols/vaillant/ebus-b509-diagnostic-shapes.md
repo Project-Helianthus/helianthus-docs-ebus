@@ -9,7 +9,7 @@ local arithmetic, never native support. Qualification, freshness, persistence
 and execution permission remain **Unknown** independently of those grades.
 No installed device behavior or physical effect is established.
 
-The [native B509 reference](ebus-vaillant-B509.md) describes the distinct
+The [native B509 reference](ebus-vaillant-b509.md) describes the distinct
 `0x0D`/`0x0E` register-access forms. Its two-byte symbolic address does not
 establish the diagnostic address width here. Those raw alternatives remain
 separate; no capture resolves a conflict or establishes equivalence.

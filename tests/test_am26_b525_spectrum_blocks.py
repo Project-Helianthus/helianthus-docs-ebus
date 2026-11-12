@@ -8,7 +8,7 @@ import struct
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / 'architecture/am26_b525_spectrum_blocks.md'
+PAGE = ROOT / 'architecture/am26-b525-spectrum-blocks.md'
 FIXTURE = ROOT / 'architecture/fixtures/am26_b525_spectrum_blocks.json'
 FIELDS = ['family', 'variant', 'operation', 'direction', 'selector', 'form',
           'candidate_grade']

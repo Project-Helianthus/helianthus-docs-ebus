@@ -17,7 +17,7 @@ Those remain **Unknown** without their own evidence. A native interpretation may
 remain a **Hypothesis** even when this application catalog behavior is Proven.
 
 The native contract comes first: check the public
-[B524 wire contract](../protocols/vaillant/ebus-vaillant-B524.md),
+[B524 wire contract](../protocols/vaillant/ebus-vaillant-b524.md),
 [OP00 identifier package](../protocols/vaillant/fixtures/b524-op00-system-information-ids.csv),
 [OP02 family register matrix](../protocols/vaillant/fixtures/b524-op02-requester-register-matrix.csv),
 and [OP06 observed-window package](../protocols/vaillant/fixtures/b524-op06-observed-windows-v1.json).
@@ -244,7 +244,7 @@ description response a presence result.
 OP00 information identifiers do not enumerate OP06 groups. Counts and same-numbered
 identifiers never suppress an independently configured device class. The following
 table describes the characterized controller profile; names are operation-scoped.
-The wider [OP06 presentation-name catalog](../protocols/vaillant/ebus-vaillant-B524.md#34-op06-family-presentation-name-catalog)
+The wider [OP06 presentation-name catalog](../protocols/vaillant/ebus-vaillant-b524.md#34-op06-family-presentation-name-catalog)
 is a hypothesis catalog, not an expansion of this discovery policy.
 
 | OP06 GG | Public class | Discovery II bounds | RR0001 interpretation |

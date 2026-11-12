@@ -124,7 +124,7 @@ class LocalCycleTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.fixture = json.loads((ROOT / 'architecture/fixtures/ai25_b516_local_cycle.json').read_text())
-        cls.page = (ROOT / 'architecture/b516_local_cycle.md').read_text()
+        cls.page = (ROOT / 'architecture/b516-local-cycle.md').read_text()
         cls.steps = {s['id']: s for s in cls.fixture['steps']}
 
     def test_fixture_and_page_independent_contract(self):

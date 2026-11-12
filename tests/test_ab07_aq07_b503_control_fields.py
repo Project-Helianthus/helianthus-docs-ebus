@@ -8,7 +8,7 @@ from pathlib import Path
 import re
 import unittest
 
-PAGE = Path(__file__).resolve().parents[1] / 'architecture' / 'aq08_b503_control_fields.md'
+PAGE = Path(__file__).resolve().parents[1] / 'architecture' / 'aq08-b503-control-fields.md'
 RESERVED = ('state', 'results', 'physical', 'qualified')
 UNKNOWN = 'Unknown'
 VIEWS = {

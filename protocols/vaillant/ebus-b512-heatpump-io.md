@@ -3,7 +3,7 @@
 ## Evidence and status
 
 The [native framing contract](../ebus-services/ebus-overview.md) defines wire framing.
-The [B512 family reference](ebus-vaillant-B512.md) provides family context.
+The [B512 family reference](ebus-vaillant-b512.md) provides family context.
 The finite declarations for [this supplement](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/946)
 are **Hypothesis**, not a native qualification. The existing family reference uses
 unavailable wording for replacements; this supplement retains replacement without

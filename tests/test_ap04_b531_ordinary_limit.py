@@ -5,7 +5,7 @@ from pathlib import Path
 import unittest
 
 ab03ap03Root = Path(__file__).resolve().parents[1]
-ab03ap03PagePath = ab03ap03Root / 'architecture/ap04_b531_ordinary_limit.md'
+ab03ap03PagePath = ab03ap03Root / 'architecture/ap04-b531-ordinary-limit.md'
 ab03ap03FixturePath = ab03ap03Root / 'architecture/fixtures/ap04_b531_ordinary_limit.json'
 
 # Independent constants: do not obtain expected numbers or rules from the page.

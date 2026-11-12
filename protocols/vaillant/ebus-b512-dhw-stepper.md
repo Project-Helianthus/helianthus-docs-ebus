@@ -8,7 +8,7 @@
 are unresolved. Exact missing condition labels are **Unknown**. Family names are
 correspondence names, not evidence of support for individual devices.
 
-The public native [B512 reference](ebus-vaillant-B512.md#candidate-sub-commands-op)
+The public native [B512 reference](ebus-vaillant-b512.md#candidate-sub-commands-op)
 provides the candidate service context. This focused supplement records the
 bounded candidate detail; no native capture establishing these offsets or flags
 is supplied. The [synthetic tuples](fixtures/aj06_b512_dhw_stepper.json) are

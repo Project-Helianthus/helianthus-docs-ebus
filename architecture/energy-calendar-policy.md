@@ -7,7 +7,7 @@ Nothing in this proposal is stable before Helianthus 1.0.
 
 ## Sources and status
 
-The native authority comes first: [B516 energy statistics](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/vaillant/ebus-vaillant-B516-energy.md),
+The native authority comes first: [B516 energy statistics](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/vaillant/ebus-vaillant-b516-energy.md),
 sections 3, 4.3–4.5 and 6.1, documents packed absolute calendar components and
 their evidence limits. A civil date is not an instant or a time-zone identifier.
 The [energy merge contract](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/energy-merge.md)

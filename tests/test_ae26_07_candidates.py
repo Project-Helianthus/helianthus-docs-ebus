@@ -5,7 +5,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 NATIVE = 'protocols/ebus-services/ebus-service-07h.md'
-ARCH = 'architecture/ae26_0704_local_parser.md'
+ARCH = 'architecture/ae26-0704-local-parser.md'
 FIXTURE = 'protocols/ebus-services/fixtures/ae26_07_candidates.json'
 
 

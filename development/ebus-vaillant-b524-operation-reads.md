@@ -7,7 +7,7 @@ namespace.
 
 ## Finite registry read and offline plan results
 
-The public [native B524 contract](../protocols/vaillant/ebus-vaillant-B524.md)
+The public [native B524 contract](../protocols/vaillant/ebus-vaillant-b524.md)
 defines the opcode-scoped identities and the limits of native evidence. Its
 [timer selector evidence](../protocols/vaillant/fixtures/b524-op03-op04-program-selectors.csv)
 and [Event selector candidates](../protocols/vaillant/fixtures/b524-event-selector-candidates.csv)

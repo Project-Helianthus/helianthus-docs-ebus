@@ -229,7 +229,7 @@ class SensorFieldsTest(unittest.TestCase):
         self.assertIn('unresolved materialization conflict', self.text)
         self.assertIn('does not establish unavailable', self.text)
         self.assertIn('not telegrams', self.text)
-        self.assertIn('ebus-vaillant-B523.md#candidate-layouts', self.text)
+        self.assertIn('ebus-vaillant-b523.md#candidate-layouts', self.text)
 
 
 if __name__ == '__main__':

@@ -126,7 +126,7 @@ class Ab44ContractTests(unittest.TestCase):
                 self.assertIsNone(ab44_result['ab44_limits'])
 
     def test_ab44_page_contract(self):
-        ab44_page = (ab44_root / 'architecture/al10_b524_description_spans.md').read_text()
+        ab44_page = (ab44_root / 'architecture/al10-b524-description-spans.md').read_text()
         ab44_policy = json.loads(re.search(r'```json\n(.*?)\n```', ab44_page, re.S)[1])
         self.assertEqual(ab44_policy, {
             'ab44_request_ops': [1, 7], 'ab44_metadata_ops': {'1': 2, '7': 6},

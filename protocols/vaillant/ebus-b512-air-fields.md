@@ -2,7 +2,7 @@
 
 This focused native contract covers the fan-module and smart-module families
 OP0B, OP0C, OP0D and OP0E of B512 (PB B5, SB 12). The
-[public B512 family contract](ebus-vaillant-B512.md#candidate-sub-commands-op)
+[public B512 family contract](ebus-vaillant-b512.md#candidate-sub-commands-op)
 is the prior native declaration; its candidate layouts remain **Hypothesis**.
 The field detail here is a synthetic candidate declaration, not new native
 observation. No native specification or capture establishes these field details.

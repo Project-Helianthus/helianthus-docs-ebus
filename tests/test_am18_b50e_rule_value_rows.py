@@ -8,7 +8,7 @@ import struct
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / 'architecture/am18_b50e_rule_value_rows.md'
+PAGE = ROOT / 'architecture/am18-b50e-rule-value-rows.md'
 FIXTURE = ROOT / 'architecture/fixtures/am18_b50e_rule_value_rows.json'
 IDENTITY = dict(family='vaillant', variant='B50E', primary=181, secondary=14,
                 operation=2, direction='positive', field='rule_value_row')
@@ -429,7 +429,7 @@ class RuleValueRowsContract(unittest.TestCase):
                 headings = re.findall(r'^#+ (.+)$', linked.read_text(), re.M)
                 slugs = [re.sub(r'[^\w -]', '', h.lower()).replace(' ', '-') for h in headings]
                 self.assertIn(anchor, slugs)
-        native = (ROOT / 'protocols/vaillant/ebus-vaillant-B50E.md').read_text()
+        native = (ROOT / 'protocols/vaillant/ebus-vaillant-b50e.md').read_text()
         self.assertIn('Inverse bytes are carried raw.', native)
         self.assertIn('the rule-read type table does not apply to the buffer', native)
 

@@ -6,7 +6,7 @@ import re
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / 'architecture/ebus_standard/ai02_03_counter_bodies.md'
+PAGE = ROOT / 'architecture/ebus_standard/ai02-03-counter-bodies.md'
 FIXTURE = ROOT / 'architecture/ebus_standard/fixtures/ai02_03_counter_bodies.json'
 LAYOUTS = {
     '04': [('decimal_1s', 99), ('decimal_100s', 99), ('decimal_10000s', 99)],

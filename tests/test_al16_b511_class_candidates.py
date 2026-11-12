@@ -6,7 +6,7 @@ import unittest
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / 'architecture/al16_b511_class_candidates.md'
+PAGE = ROOT / 'architecture/al16-b511-class-candidates.md'
 FIXTURE = ROOT / 'architecture/fixtures/al16_b511_class_candidates.json'
 
 AXES = [
@@ -250,7 +250,7 @@ class B511ClassCandidatesTest(unittest.TestCase):
 
     def test_required_error_memory_grade_and_scope_declarations(self):
         for phrase in (
-            '../protocols/vaillant/ebus-vaillant-B511.md#operating-data-classes-candidate',
+            '../protocols/vaillant/ebus-vaillant-b511.md#operating-data-classes-candidate',
             'must\nmerge before this page', 'merge status is not established',
             'Candidate interpretations are **Hypothesis**', '**Proven** is limited to',
             'Physical qualification, presence, freshness and execution\nremain **Unknown**',

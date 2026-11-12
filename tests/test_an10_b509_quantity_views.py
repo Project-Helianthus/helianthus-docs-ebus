@@ -16,7 +16,7 @@ import unittest
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / "architecture" / "an10_b509_quantity_views.md"
+PAGE = ROOT / "architecture" / "an10-b509-quantity-views.md"
 FIXTURE = ROOT / "architecture" / "fixtures" / "an10_b509_quantity_views.json"
 
 SELECTION_AXES = ("family", "variant", "operation", "direction")

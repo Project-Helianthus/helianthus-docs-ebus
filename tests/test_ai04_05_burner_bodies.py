@@ -4,7 +4,7 @@ from pathlib import Path
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / 'architecture/ebus_standard/ai04_05_burner_bodies.md'
+PAGE = ROOT / 'architecture/ebus_standard/ai04-05-burner-bodies.md'
 FIXTURE = PAGE.parent / 'fixtures/ai04_05_burner_bodies.json'
 
 # Expected constants are independent of both published artifacts.

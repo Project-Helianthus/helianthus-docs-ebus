@@ -117,7 +117,7 @@ class LocalTransferTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.fixture = json.loads((ROOT / 'architecture/fixtures/ai26_b51b_local_transfer.json').read_text())
-        cls.page = (ROOT / 'architecture/b51b_local_transfer.md').read_text()
+        cls.page = (ROOT / 'architecture/b51b-local-transfer.md').read_text()
 
     def test_publication_tables_and_fixture(self):
         self.assertEqual(self.fixture, {'tables': TABLES, 'gates': list(GATES),

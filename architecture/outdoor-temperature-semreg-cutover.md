@@ -12,8 +12,8 @@ The contract is evolving; nothing is stable before Helianthus 1.0.
 
 ## Public authority and current boundary
 
-Start with the native [B524 wire contract](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/vaillant/ebus-vaillant-B524.md)
-and [register catalog](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/vaillant/ebus-vaillant-B524-register-map.md).
+Start with the native [B524 wire contract](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/vaillant/ebus-vaillant-b524.md)
+and [register catalog](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/vaillant/ebus-vaillant-b524-register-map.md).
 The catalog distinguishes read-only outdoor temperature at `RR=0x0073` from
 the rounded average at `RR=0x0095`, updated every three hours. A register name
 or implementation label alone does not qualify an installation.

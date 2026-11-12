@@ -101,7 +101,7 @@ def table(page, header):
 class LocalPolicyTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.page = (ROOT / 'architecture/aj26_standard09_local_policy.md').read_text()
+        cls.page = (ROOT / 'architecture/aj26-standard09-local-policy.md').read_text()
         cls.fixture = json.loads((ROOT / 'architecture/fixtures/aj26_standard09_local_policy.json').read_text())
 
     def test_refresh_transition_and_page(self):

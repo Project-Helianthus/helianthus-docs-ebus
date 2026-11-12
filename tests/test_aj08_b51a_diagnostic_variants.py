@@ -8,7 +8,7 @@ import unittest
 Ab98Root = Path(__file__).resolve().parents[1]
 Ab98Native = 'protocols/vaillant/ebus-b51a-diagnostic-variants.md'
 Ab98Fixture = 'protocols/vaillant/fixtures/aj08_b51a_diagnostic_variants.json'
-Ab98Architecture = 'architecture/aj08_b51a_diagnostic_variants_api.md'
+Ab98Architecture = 'architecture/aj08-b51a-diagnostic-variants-api.md'
 
 
 def ab98_tables(ab98_text):

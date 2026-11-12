@@ -1,6 +1,6 @@
 # Protocol routing: Vaillant B503
 
-This AGPL architecture document holds product routing rules that were removed from the CC0 B503 wire specification. The native selector, response, sentinel, and write-safety evidence remains in [the protocol specification](../protocols/vaillant/ebus-vaillant-B503.md).
+This AGPL architecture document holds product routing rules that were removed from the CC0 B503 wire specification. The native selector, response, sentinel, and write-safety evidence remains in [the protocol specification](../protocols/vaillant/ebus-vaillant-b503.md).
 
 ## 1. Status
 
@@ -13,7 +13,7 @@ those observations, not a pre-release compatibility guarantee.
 
 Implementation requirements on this page do not qualify candidate wire details.
 Native conclusions use **Proven**, **Hypothesis**, and **Unknown** per claim in
-[the native status and evidence](../protocols/vaillant/ebus-vaillant-B503.md#status-and-evidence).
+[the native status and evidence](../protocols/vaillant/ebus-vaillant-b503.md#status-and-evidence).
 **Proven:** a candidate form cannot inherit native authority from a blanket
 normative label. Candidate layouts remain **Hypothesis**; unresolved native
 settlement remains **Unknown**. Implementation behavior, codec qualification,
@@ -51,7 +51,7 @@ Evidence labels used throughout:
 
 ## 2. Native protocol reference
 
-The native wire specification is [B503](../protocols/vaillant/ebus-vaillant-B503.md).
+The native wire specification is [B503](../protocols/vaillant/ebus-vaillant-b503.md).
 
 ## Scope of the extracted contract
 

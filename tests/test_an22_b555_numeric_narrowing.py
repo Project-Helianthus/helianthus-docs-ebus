@@ -30,7 +30,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / "architecture" / "an22_b555_numeric_narrowing.md"
+PAGE = ROOT / "architecture" / "an22-b555-numeric-narrowing.md"
 FIXTURE = ROOT / "architecture" / "fixtures" / "an22_b555_numeric_narrowing.json"
 
 INT64_MIN = -9223372036854775808

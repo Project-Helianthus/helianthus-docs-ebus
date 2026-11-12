@@ -247,7 +247,7 @@ class TestAb21Ao21OpaqueViews(unittest.TestCase):
                          json.dumps(ab21ao21Expected, sort_keys=True).encode())
 
     def setUp(self):
-        self.ab21ao21Page = (ab21ao21Root / 'architecture/ao22_b519_opaque_views.md').read_text()
+        self.ab21ao21Page = (ab21ao21Root / 'architecture/ao22-b519-opaque-views.md').read_text()
         self.ab21ao21Fixture = ab21ao21Load((ab21ao21Root / 'architecture/fixtures/ao22_b519_opaque_views.json').read_text())
         ab21ao21Match = re.search(r'<!-- ab21ao21-contract -->\s*```json\n(.*?)\n```\s*<!-- /ab21ao21-contract -->', self.ab21ao21Page, re.S)
         self.assertIsNotNone(ab21ao21Match)

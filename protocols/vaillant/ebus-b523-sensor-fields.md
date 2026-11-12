@@ -3,7 +3,7 @@
 ## Evidence and scope
 
 **Hypothesis:** these functional-module sensor declarations refine the candidate
-layouts in the [B523 family reference](ebus-vaillant-B523.md#candidate-layouts).
+layouts in the [B523 family reference](ebus-vaillant-b523.md#candidate-layouts).
 That public native contract comes first: no candidate layout is confirmed on the
 wire. The [native tuples](fixtures/ai22_b523_sensor_fields.json) are entirely
 synthetic, with no device observations or installed-support evidence.

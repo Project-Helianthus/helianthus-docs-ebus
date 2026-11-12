@@ -7,7 +7,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 NATIVE = ROOT / 'protocols/vaillant/ebus-b506-rf-sequence.md'
 DATA = ROOT / 'protocols/vaillant/fixtures/ak06_b506_rf_sequence.json'
-API = ROOT / 'architecture/ak06_b506_rf_sequence_api.md'
+API = ROOT / 'architecture/ak06-b506-rf-sequence-api.md'
 COUNTS = [(0, 'unlimited'), (1, 'finite-1'), (2, 'finite-2'), (255, 'finite-255')]
 CLASSES = [(0, 'rf-class-a'), (1, 'rf-class-a'), (2, 'rf-class-a'),
            (3, 'rf-class-b'), (4, None)]

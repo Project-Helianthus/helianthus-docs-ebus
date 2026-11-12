@@ -10,7 +10,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = ROOT / 'architecture/fixtures/am08_b524_zone_scalars.json'
-PAGE = ROOT / 'architecture/am08_b524_zone_scalars.md'
+PAGE = ROOT / 'architecture/am08-b524-zone-scalars.md'
 
 # Independent oracle, written from the contract rather than read from the package.
 EXPECTED = {

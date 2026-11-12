@@ -9,7 +9,7 @@ import unittest
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / "architecture/al24_b524_numeric_candidates.md"
+PAGE = ROOT / "architecture/al24-b524-numeric-candidates.md"
 FIXTURE = ROOT / "architecture/fixtures/al24_b524_numeric_candidates.json"
 CONTEXT = (
     "ab56_family", "ab56_software", "ab56_hardware", "ab56_api_version",
@@ -172,7 +172,7 @@ class AL24ContractTests(unittest.TestCase):
         ):
             self.assertIn(phrase, self.text)
         links = re.findall(r"\]\(([^)]+)\)", self.text)
-        self.assertIn("../protocols/vaillant/ebus-vaillant-B524.md", links)
+        self.assertIn("../protocols/vaillant/ebus-vaillant-b524.md", links)
         self.assertIn("../types/ebusd-csv.md", links)
         for link in links:
             self.assertTrue((PAGE.parent / link.split("#")[0]).is_file(), link)

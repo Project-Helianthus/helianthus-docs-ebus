@@ -28,6 +28,49 @@ This document describes naming patterns used in the current implementation.
 - eBUS addresses and command bytes are referenced in hex (e.g., `0xB5`, `0x04`).
 - Control symbols are named by their protocol role (`SymbolAck`, `SymbolNack`, `SymbolEscape`, `SymbolSyn`).
 
+## Documentation page file names
+
+Page file names, and so the published URLs, are lowercase kebab-case: lowercase
+letters and digits joined by single hyphens, with the `.md` extension.
+snake_case stays for API, register and code names. A rename changes neither the
+directory, the headings and their anchors, nor the status that a page states for
+itself, and it leaves no redirect page or alias behind.
+
+The repository control files `README.md`, `AGENTS.md`, `CONTRIBUTING.md`,
+`CHANGELOG.md` and `SECURITY.md` are tooling entrypoints, not published page
+names. They keep their conventional spelling wherever they occur.
+
+The [page status table](page-status.json) lists every page renamed to this
+form. Each row gives the page, its earlier file name, one status from the
+closed set below and the sentence of the page that carries that status. The
+earlier file name is documentary only; nothing reads it as a fallback.
+
+| Status | Meaning |
+|---|---|
+| `implemented` | The page states that the behavior it describes is implemented. |
+| `accepted contract` | The page states a documentation, wire or software contract and does not grade its own subject as Hypothesis, candidate or proposed. |
+| `candidate` | The page grades its subject, or the native layout it depends on, as Hypothesis, candidate, proposed or unconfirmed. Contract wording on such a page does not promote it. |
+| `historical` | The page states that it is superseded or kept as history. |
+| `unknown` | The page makes no page-level status statement in its opening section. |
+
+`python3 scripts/check_page_names.py` enforces the table: one-to-one
+destinations without collisions, the exact spelling of each directory entry, no
+earlier file name left in the repository, the links and anchors into the
+renamed pages, and the tree indexes. Two kinds of text keep an earlier file
+name: pinned provenance that pairs a path with a fixed owner commit, and the
+link text on an existing References line, where only the link target follows
+the rename. Each tree index ([api](../api/index.md),
+[architecture](index.md), [deployment](../deployment/index.md),
+[development](../development/index.md), [protocols](../protocols/index.md)) is
+linked from `README.md` and lists every publishable page of its tree.
+Each tree index links every page of its tree except pages that publication policy keeps out of navigation, which the status table identifies by a digest prefix of their path.
+
+Names outside this bounded set are not converted yet: the remaining snake_case
+pages under `architecture/`, the `ebus_standard` directory name, the
+version-numbered directories under `docs/platform/live/` and upper-case
+evidence report names. Their conversion, the work-item prefixes that the
+renamed pages keep, and any further directory taxonomy remain open.
+
 ## Register and field names
 
 These rules are a binding contract for canonical register and decoded-value
@@ -233,7 +276,7 @@ Incomplete naming coverage remains tracked in the
 
 These synthetic examples establish spelling, not device qualification.
 `special_function` names an observed Vaillant definition in the
-[public B524 catalog](../protocols/vaillant/ebus-vaillant-B524-register-map.md);
+[public B524 catalog](../protocols/vaillant/ebus-vaillant-b524-register-map.md);
 a generic mode term does not distinguish this function. The `mode` predicate
 states the candidate value class; native behavior remains subject to the
 catalog's evidence status and open questions.

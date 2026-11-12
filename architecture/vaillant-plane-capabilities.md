@@ -9,7 +9,7 @@ route or describe a newly repaired runtime. No pre-1.0 stability promise follows
 
 Native protocol facts come first from the public
 [standard service references](./ebus_standard/01-services-catalog.md#scope)
-and [B516 energy contract](../protocols/vaillant/ebus-vaillant-B516-energy.md).
+and [B516 energy contract](../protocols/vaillant/ebus-vaillant-b516-energy.md).
 Implementation behavior can corroborate a wire interpretation but cannot
 establish it. **Proven**, **Hypothesis** and **Unknown** describe evidence for
 an individual claim, independently of implementation completeness, codec
@@ -76,8 +76,8 @@ or write permission. A readable value does not establish writable behavior.
 ## B516: passive and active contracts remain separate
 
 The native authority is the public B516 page's
-[request layout](../protocols/vaillant/ebus-vaillant-B516-energy.md#3-request-payload-layout)
-and [response format](../protocols/vaillant/ebus-vaillant-B516-energy.md#6-response-format).
+[request layout](../protocols/vaillant/ebus-vaillant-b516-energy.md#3-request-payload-layout)
+and [response format](../protocols/vaillant/ebus-vaillant-b516-energy.md#6-response-format).
 These describe the energy-statistics sub-command, not every B516 body.
 
 Implementation evidence for the table is in `helianthus-ebusreg`:

@@ -256,7 +256,7 @@ class Ab17Ao17DocumentationTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.ab17ao17Fixture = json.loads((ab17ao17Root / "architecture/fixtures/ao18_b513_information_views.json").read_text(), object_pairs_hook=ab17ao17UniqueObject)
-        cls.ab17ao17Text = (ab17ao17Root / "architecture/ao18_b513_information_views.md").read_text()
+        cls.ab17ao17Text = (ab17ao17Root / "architecture/ao18-b513-information-views.md").read_text()
         cls.ab17ao17Page = json.loads(cls.ab17ao17Text.split("<!-- ab17ao17-finite-table -->\n```json\n", 1)[1].split("\n```", 1)[0], object_pairs_hook=ab17ao17UniqueObject)
 
     def ab17ao17AssertExact(self, ab17ao17Actual, ab17ao17ExpectedValue):

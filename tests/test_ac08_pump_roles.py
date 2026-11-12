@@ -5,7 +5,7 @@ from pathlib import Path
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / 'protocols/vaillant/ebus-vaillant-B508.md'
+PAGE = ROOT / 'protocols/vaillant/ebus-vaillant-b508.md'
 FIXTURE = ROOT / 'protocols/vaillant/fixtures/ac08_pump_roles.json'
 AXES = ('family', 'variant', 'direction', 'service', 'operation', 'alternative')
 IDENTITIES = (

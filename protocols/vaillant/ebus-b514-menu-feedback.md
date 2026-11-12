@@ -3,7 +3,7 @@
 ## Evidence and qualification
 
 This finite Vaillant family supplement refines the
-[existing B514 candidate sub-commands](ebus-vaillant-B514.md#candidate-sub-commands).
+[existing B514 candidate sub-commands](ebus-vaillant-b514.md#candidate-sub-commands).
 Its source is the supplied finite declaration set in issue #840, corroborated
 by the AI13 B514 menu-feedback catalog (companion registry PR #274). Neither is
 a reproducible native capture or vendor specification. Every native declaration

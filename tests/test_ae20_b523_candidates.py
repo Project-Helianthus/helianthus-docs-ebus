@@ -4,7 +4,7 @@ from pathlib import Path
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / 'protocols/vaillant/ebus-vaillant-B523.md'
+PAGE = ROOT / 'protocols/vaillant/ebus-vaillant-b523.md'
 FIXTURE = ROOT / 'protocols/vaillant/fixtures/ae20_b523_candidates.json'
 HEADERS = ['Grade', 'Identity', 'Direction', 'Logical position / extent',
            'Raw type / domain', 'Scale', 'Sentinel / default', 'Conflict / unresolved']

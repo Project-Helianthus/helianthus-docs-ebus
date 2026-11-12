@@ -8,7 +8,7 @@ import unittest as ab05ap05unittest
 
 ab05ap05root = Ab05Ap05Path(ab05ap05os.environ.get(
     'AB05AP05_ARTIFACT_ROOT', str(Ab05Ap05Path(__file__).resolve().parents[1])))
-ab05ap05page = ab05ap05root / 'architecture/ap06_b516_cycle_reducer.md'
+ab05ap05page = ab05ap05root / 'architecture/ap06-b516-cycle-reducer.md'
 ab05ap05fixture = ab05ap05root / 'architecture/fixtures/ap06_b516_cycle_reducer.json'
 ab05ap05rules = {
     'slot_count': '9', 'modulus': '4294967296', 'sentinel': '4294967295',

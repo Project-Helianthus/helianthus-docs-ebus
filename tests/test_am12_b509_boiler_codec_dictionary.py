@@ -8,7 +8,7 @@ import unittest
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / "architecture/am12_b509_boiler_codec_dictionary.md"
+PAGE = ROOT / "architecture/am12-b509-boiler-codec-dictionary.md"
 FIXTURE = ROOT / "architecture/fixtures/am12_b509_boiler_codec_dictionary.json"
 # Independent ticket oracle, deliberately not read from the reference or fixture.
 EXPECTED = (

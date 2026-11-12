@@ -10,7 +10,7 @@ Ab96Root = Path(__file__).resolve().parents[1]
 Ab96Paths = (
     'protocols/vaillant/ebus-b503-text-categories.md',
     'protocols/vaillant/fixtures/aj04_b503_text_categories.json',
-    'architecture/aj04_b503_text_categories_api.md',
+    'architecture/aj04-b503-text-categories-api.md',
 )
 Ab96Fields = [
     (3, 'unlock', 8, None, None),

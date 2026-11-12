@@ -4,7 +4,7 @@ from pathlib import Path
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / 'protocols/vaillant/ebus-vaillant-B512.md'
+PAGE = ROOT / 'protocols/vaillant/ebus-vaillant-b512.md'
 FIXTURE = ROOT / 'protocols/vaillant/fixtures/ae18_b512_candidates.json'
 
 EXPECTED = {'provenance': 'synthetic only; not wire observations',

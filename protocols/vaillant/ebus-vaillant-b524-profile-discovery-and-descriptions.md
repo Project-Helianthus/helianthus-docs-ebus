@@ -1,8 +1,8 @@
 # B524 class discovery and parameter descriptions
 
 B524 selectors are `(OP, GG, II, RR)`. OP02 and OP06 are separate namespaces;
-OP00 identifiers are not group numbers. The [protocol specification](ebus-vaillant-B524.md)
-defines request and response layouts, and the [register map](ebus-vaillant-B524-register-map.md)
+OP00 identifiers are not group numbers. The [protocol specification](ebus-vaillant-b524.md)
+defines request and response layouts, and the [register map](ebus-vaillant-b524-register-map.md)
 records observed classes and register addresses.
 
 ## System information and concrete instances

@@ -9,7 +9,7 @@ import struct
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / 'architecture/am02_b524_system_scalars.md'
+PAGE = ROOT / 'architecture/am02-b524-system-scalars.md'
 PACKAGE = ROOT / 'architecture/fixtures/am02_b524_system_scalars.json'
 
 # Independent finite oracle for candidate declarations.

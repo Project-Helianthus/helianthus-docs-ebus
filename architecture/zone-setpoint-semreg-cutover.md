@@ -14,7 +14,7 @@ The following public sources are the claim anchors; sections and function names
 identify the reviewed material. Links use public `blob/main` paths, which may
 move after review.
 
-- [Native B524 catalog](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/vaillant/ebus-vaillant-B524-register-map.md):
+- [Native B524 catalog](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/vaillant/ebus-vaillant-b524-register-map.md):
   “GG=0x03 — Zones”, “Zone Mode Derivation” and “Open questions”. This is the
   native documentation contract first; naming and catalog constraints do not
   constitute installation qualification or prove a write route.

@@ -5,7 +5,7 @@ from pathlib import Path
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / 'architecture/aj25_b517_local_tunnel.md'
+PAGE = ROOT / 'architecture/aj25-b517-local-tunnel.md'
 FIXTURE = ROOT / 'architecture/fixtures/aj25_b517_local_tunnel.json'
 UNKNOWN = {
     'native_behavior', 'physical_route', 'fragmentation', 'timeout',

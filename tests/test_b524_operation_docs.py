@@ -7,8 +7,8 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-B524 = ROOT / "protocols" / "vaillant" / "ebus-vaillant-B524.md"
-REGISTER_MAP = ROOT / "protocols" / "vaillant" / "ebus-vaillant-B524-register-map.md"
+B524 = ROOT / "protocols" / "vaillant" / "ebus-vaillant-b524.md"
+REGISTER_MAP = ROOT / "protocols" / "vaillant" / "ebus-vaillant-b524-register-map.md"
 SEMANTIC_MAPPING = ROOT / "architecture" / "b524-semantic-mapping.md"
 REGULATORS = ROOT / "protocols" / "vaillant" / "ebus-vaillant-regulators.md"
 
@@ -184,7 +184,7 @@ def test_semantic_scan_policy_uses_complete_descriptions_and_unqualified_history
 def test_semantic_fallback_and_b509_evidence_links_match_the_op06_catalog() -> None:
     semantic = SEMANTIC_MAPPING.read_text(encoding="utf-8")
     boiler_map = (
-        ROOT / "protocols" / "vaillant" / "ebus-vaillant-B509-boiler-register-map.md"
+        ROOT / "protocols" / "vaillant" / "ebus-vaillant-b509-boiler-register-map.md"
     ).read_text(encoding="utf-8")
     anchor = "#op0x06--controller-mediated-device-parameters"
 
@@ -858,7 +858,7 @@ def test_b524_split_fragment_links_resolve_to_the_owning_contract() -> None:
         ),
         (
             ROOT / "development/ebus-vaillant-b524-description-acquisition.md",
-            "../protocols/vaillant/ebus-vaillant-B524-register-map.md",
+            "../protocols/vaillant/ebus-vaillant-b524-register-map.md",
             "constraint-catalog",
         ),
     ]

@@ -6,7 +6,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = ROOT / 'protocols/vaillant/fixtures/ac20_simulator_adc.json'
-PAGE = ROOT / 'protocols/vaillant/ebus-vaillant-B520.md'
+PAGE = ROOT / 'protocols/vaillant/ebus-vaillant-b520.md'
 
 
 def expected():
@@ -183,14 +183,14 @@ class SimulatorADC(unittest.TestCase):
     def test_service_index_links_page(self):
         overview = (PAGE.parent / 'ebus-vaillant.md').read_text()
         index = overview.split('## Scope', 1)[0]
-        self.assertIn('[`ebus-vaillant-B520.md`](ebus-vaillant-B520.md)', index)
+        self.assertIn('[`ebus-vaillant-b520.md`](ebus-vaillant-b520.md)', index)
         without_page = next(line for line in index.splitlines()
                             if 'without a dedicated page' in line)
         self.assertNotIn('B520', without_page)
         section = overview.split('## Other B5 services (candidate layouts)', 1)[1]
         preamble = ' '.join(section.split('###', 1)[0].split())
         self.assertIn('The services below have no dedicated page except for '
-                      '[B520](ebus-vaillant-B520.md) and [B50B](ebus-vaillant-B50B.md).', preamble)
+                      '[B520](ebus-vaillant-b520.md) and [B50B](ebus-vaillant-b50b.md).', preamble)
 
     def test_page_tables(self):
         identity = [['Family', 'Variant', 'Direction', 'Service', 'Operation', 'Alternative',

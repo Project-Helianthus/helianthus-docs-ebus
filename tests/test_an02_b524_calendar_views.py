@@ -7,7 +7,7 @@ import re
 import unittest
 
 ROOT = Path(os.environ.get('AN02_ROOT', Path(__file__).resolve().parents[1]))
-PAGE = ROOT / 'architecture/an02_b524_calendar_views.md'
+PAGE = ROOT / 'architecture/an02-b524-calendar-views.md'
 FIXTURE = ROOT / 'architecture/fixtures/an02_b524_calendar_views.json'
 FIELDS = ('family', 'software', 'hardware', 'api_version', 'api_revision',
           'opcode', 'group', 'instance', 'register')

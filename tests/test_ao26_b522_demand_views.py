@@ -6,7 +6,7 @@ import re
 import unittest
 
 ab25ao25Root = Path(__file__).resolve().parents[1]
-ab25ao25Page = ab25ao25Root / 'architecture/ao26_b522_demand_views.md'
+ab25ao25Page = ab25ao25Root / 'architecture/ao26-b522-demand-views.md'
 ab25ao25Fixture = ab25ao25Root / 'architecture/fixtures/ao26_b522_demand_views.json'
 ab25ao25Labels = (
     'no-heating-demand-to-source-or-circuits',

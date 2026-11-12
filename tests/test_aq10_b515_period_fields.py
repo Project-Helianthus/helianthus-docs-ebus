@@ -10,7 +10,7 @@ from pathlib import Path
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-DOC = ROOT / 'architecture' / 'aq10_b515_period_fields.md'
+DOC = ROOT / 'architecture' / 'aq10-b515-period-fields.md'
 UNKNOWN = 'Unknown'
 
 

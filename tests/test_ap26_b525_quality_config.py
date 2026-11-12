@@ -6,7 +6,7 @@ from pathlib import Path
 import unittest
 
 ab25ap25Root = Path(os.environ.get('ab25ap25_ROOT', Path(__file__).resolve().parents[1]))
-ab25ap25Page = ab25ap25Root / 'architecture/ap26_b525_quality_config.md'
+ab25ap25Page = ab25ap25Root / 'architecture/ap26-b525-quality-config.md'
 ab25ap25Fixture = ab25ap25Root / 'architecture/fixtures/ap26_b525_quality_config.json'
 
 

@@ -10,7 +10,7 @@ import unittest
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / 'architecture/am10_b524_unscoped_hints.md'
+PAGE = ROOT / 'architecture/am10-b524-unscoped-hints.md'
 FIXTURE = ROOT / 'architecture/fixtures/am10_b524_unscoped_hints.json'
 KEY_FIELDS = ('opcode', 'group', 'register')
 PROPERTIES = ('Type', 'Min', 'Max', 'Step')

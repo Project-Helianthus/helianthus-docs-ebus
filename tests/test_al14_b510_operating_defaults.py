@@ -4,7 +4,7 @@ from pathlib import Path
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / 'architecture/al14_b510_operating_defaults.md'
+PAGE = ROOT / 'architecture/al14-b510-operating-defaults.md'
 FIXTURE = ROOT / 'architecture/fixtures/al14_b510_operating_defaults.json'
 
 
@@ -81,7 +81,7 @@ class OperatingDefaultsContract(unittest.TestCase):
             'No real timer runs', 'not a timing guarantee or actuator implementation',
             'does not import or execute the companion implementation',
             'Nothing is stable before Helianthus 1.0',
-            '../protocols/vaillant/ebus-vaillant-B510.md',
+            '../protocols/vaillant/ebus-vaillant-b510.md',
         ):
             with self.subTest(clause=clause):
                 self.assertIn(clause, text)

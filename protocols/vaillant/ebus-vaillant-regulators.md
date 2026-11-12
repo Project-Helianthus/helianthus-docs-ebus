@@ -32,8 +32,8 @@ The crosswalk distinguishes model rows from protocol-family labels:
 
 Protocol details remain in their owning documents:
 
-- [B524 operation specification](ebus-vaillant-B524.md)
-- [B524 register map](ebus-vaillant-B524-register-map.md)
+- [B524 operation specification](ebus-vaillant-b524.md)
+- [B524 register map](ebus-vaillant-b524-register-map.md)
 - [B524 profile discovery and descriptions](ebus-vaillant-b524-profile-discovery-and-descriptions.md)
 - [B524 bounded survey methodology](ebus-vaillant-b524-survey-methodology.md)
 - [B555 timer/schedule protocol](ebus-vaillant-b555-timer-protocol.md)
@@ -155,7 +155,7 @@ VRC700 row selects a candidate family description; it does not qualify a
 request, a response, or the availability of a channel on a connected regulator.
 It does not replace existing command identity guards. Follow the
 operation-specific evidence requirements in
-[B524 sections 4.4 and 4.6](ebus-vaillant-B524.md#44-0x03--0x04-timer-schedules).
+[B524 sections 4.4 and 4.6](ebus-vaillant-b524.md#44-0x03--0x04-timer-schedules).
 
 ## Discovery Record
 

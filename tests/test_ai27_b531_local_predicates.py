@@ -125,7 +125,7 @@ class CandidatePredicates(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.fixture = json.loads((ROOT / 'architecture/fixtures/ai27_b531_local_predicates.json').read_text())
-        cls.page = (ROOT / 'architecture/b531_local_predicates.md').read_text()
+        cls.page = (ROOT / 'architecture/b531-local-predicates.md').read_text()
 
     def test_tables_and_fixture_independent_constants(self):
         # Exact scalar serialization also distinguishes booleans from integers.

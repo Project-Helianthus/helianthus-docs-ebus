@@ -6,7 +6,7 @@ import re
 import unittest
 
 Ab19Ap19Root = Path(__file__).resolve().parents[1]
-Ab19Ap19Page = Ab19Ap19Root / 'architecture/ap20_b51a_mirror_fields.md'
+Ab19Ap19Page = Ab19Ap19Root / 'architecture/ap20-b51a-mirror-fields.md'
 Ab19Ap19Fixture = Ab19Ap19Root / 'architecture/fixtures/ap20_b51a_mirror_fields.json'
 
 # Independent constants, including asymmetric address bytes and reply extents.

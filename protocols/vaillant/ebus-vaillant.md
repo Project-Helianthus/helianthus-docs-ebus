@@ -3,33 +3,33 @@
 This document is the top-level reference for observed Vaillant message identifiers (`PB/SB`).
 
 For detailed coverage of selector-heavy identifiers, see:
-- `0xB5 0x03` (B503, diagnostic / service / HMU live-monitor — **normative L7 spec**): [`ebus-vaillant-B503.md`](ebus-vaillant-B503.md)
-- `0xB5 0x04` (B504, GetOperationalData): [`ebus-vaillant-B504.md`](ebus-vaillant-B504.md)
-- `0xB5 0x05` (B505, SetOperationalData): [`ebus-vaillant-B505.md`](ebus-vaillant-B505.md)
-- `0xB5 0x06` (B506, I/O and test services): [`ebus-vaillant-B506.md`](ebus-vaillant-B506.md)
-- `0xB5 0x07` (B507, heat pump load/poll): [`ebus-vaillant-B507.md`](ebus-vaillant-B507.md)
-- `0xB5 0x08` (B508, NoiseReduction broadcast): [`ebus-vaillant-B508.md`](ebus-vaillant-B508.md)
-- `0xB5 0x09` (B509, register access / scan-id): [`ebus-vaillant-B509.md`](ebus-vaillant-B509.md)
-- `0xB5 0x0B` (B50B, candidate holiday field declarations — **Hypothesis**): [`ebus-vaillant-B50B.md`](ebus-vaillant-B50B.md)
-- `0xB5 0x10` (B510, SetMode): [`ebus-vaillant-B510.md`](ebus-vaillant-B510.md)
-- `0xB5 0x11` (B511, remote control): [`ebus-vaillant-B511.md`](ebus-vaillant-B511.md)
-- `0xB5 0x12` (B512, circulation pump / VR65-style state): [`ebus-vaillant-B512.md`](ebus-vaillant-B512.md)
-- `0xB5 0x13` (B513, value-range query): [`ebus-vaillant-B513.md`](ebus-vaillant-B513.md)
-- `0xB5 0x14` (B514, service test-menu values): [`ebus-vaillant-B514.md`](ebus-vaillant-B514.md)
+- `0xB5 0x03` (B503, diagnostic / service / HMU live-monitor — **normative L7 spec**): [`ebus-vaillant-b503.md`](ebus-vaillant-b503.md)
+- `0xB5 0x04` (B504, GetOperationalData): [`ebus-vaillant-b504.md`](ebus-vaillant-b504.md)
+- `0xB5 0x05` (B505, SetOperationalData): [`ebus-vaillant-b505.md`](ebus-vaillant-b505.md)
+- `0xB5 0x06` (B506, I/O and test services): [`ebus-vaillant-b506.md`](ebus-vaillant-b506.md)
+- `0xB5 0x07` (B507, heat pump load/poll): [`ebus-vaillant-b507.md`](ebus-vaillant-b507.md)
+- `0xB5 0x08` (B508, NoiseReduction broadcast): [`ebus-vaillant-b508.md`](ebus-vaillant-b508.md)
+- `0xB5 0x09` (B509, register access / scan-id): [`ebus-vaillant-b509.md`](ebus-vaillant-b509.md)
+- `0xB5 0x0B` (B50B, candidate holiday field declarations — **Hypothesis**): [`ebus-vaillant-b50b.md`](ebus-vaillant-b50b.md)
+- `0xB5 0x10` (B510, SetMode): [`ebus-vaillant-b510.md`](ebus-vaillant-b510.md)
+- `0xB5 0x11` (B511, remote control): [`ebus-vaillant-b511.md`](ebus-vaillant-b511.md)
+- `0xB5 0x12` (B512, circulation pump / VR65-style state): [`ebus-vaillant-b512.md`](ebus-vaillant-b512.md)
+- `0xB5 0x13` (B513, value-range query): [`ebus-vaillant-b513.md`](ebus-vaillant-b513.md)
+- `0xB5 0x14` (B514, service test-menu values): [`ebus-vaillant-b514.md`](ebus-vaillant-b514.md)
   — [diagnostic-menu feedback and pressure candidates supplement](ebus-b514-menu-feedback.md) (**Hypothesis**)
-- `0xB5 0x15` (B515, legacy timer template): [`ebus-vaillant-B515.md`](ebus-vaillant-B515.md)
-- `0xB5 0x16` (B516, Energy statistics): [`ebus-vaillant-B516-energy.md`](ebus-vaillant-B516-energy.md)
-- `0xB5 0x17` (B517, sub-eBUS tunnel candidate declarations): [`ebus-vaillant-B517.md`](ebus-vaillant-B517.md)
-- `0xB5 0x19` (B519, test and echo services, opaque data and CRC bytes): [`ebus-vaillant-B519.md`](ebus-vaillant-B519.md)
-- `0xB5 0x1A` (B51A, heat-pump statistics and live-monitor): [`ebus-vaillant-B51A.md`](ebus-vaillant-B51A.md)
-- `0xB5 0x20` (B520, simulator actuator ranges and ADC quantities): [`ebus-vaillant-B520.md`](ebus-vaillant-B520.md)
-- `0xB5 0x21` (B521, OMU service registers): [`ebus-vaillant-B521.md`](ebus-vaillant-B521.md)
-- `0xB5 0x22` (B522, recoVAIR ventilation commands): [`ebus-vaillant-B522.md`](ebus-vaillant-B522.md)
-- `0xB5 0x23` (B523, functional-module actor/sensor data): [`ebus-vaillant-B523.md`](ebus-vaillant-B523.md)
-- `0xB5 0x24` (B524, GetExtendedRegisters): [`ebus-vaillant-B524.md`](ebus-vaillant-B524.md)
+- `0xB5 0x15` (B515, legacy timer template): [`ebus-vaillant-b515.md`](ebus-vaillant-b515.md)
+- `0xB5 0x16` (B516, Energy statistics): [`ebus-vaillant-b516-energy.md`](ebus-vaillant-b516-energy.md)
+- `0xB5 0x17` (B517, sub-eBUS tunnel candidate declarations): [`ebus-vaillant-b517.md`](ebus-vaillant-b517.md)
+- `0xB5 0x19` (B519, test and echo services, opaque data and CRC bytes): [`ebus-vaillant-b519.md`](ebus-vaillant-b519.md)
+- `0xB5 0x1A` (B51A, heat-pump statistics and live-monitor): [`ebus-vaillant-b51a.md`](ebus-vaillant-b51a.md)
+- `0xB5 0x20` (B520, simulator actuator ranges and ADC quantities): [`ebus-vaillant-b520.md`](ebus-vaillant-b520.md)
+- `0xB5 0x21` (B521, OMU service registers): [`ebus-vaillant-b521.md`](ebus-vaillant-b521.md)
+- `0xB5 0x22` (B522, recoVAIR ventilation commands): [`ebus-vaillant-b522.md`](ebus-vaillant-b522.md)
+- `0xB5 0x23` (B523, functional-module actor/sensor data): [`ebus-vaillant-b523.md`](ebus-vaillant-b523.md)
+- `0xB5 0x24` (B524, GetExtendedRegisters): [`ebus-vaillant-b524.md`](ebus-vaillant-b524.md)
 - `0xB5 0x55` (B555, timer/schedule protocol): [`ebus-vaillant-b555-timer-protocol.md`](ebus-vaillant-b555-timer-protocol.md)
 - VR90 room controller protocol: [`ebus-vaillant-vr90-emulation.md`](ebus-vaillant-vr90-emulation.md)
-- `0xB5 0x0F` (B50F, demand and integrity candidates): [`ebus-vaillant-B50F.md`](ebus-vaillant-B50F.md)
+- `0xB5 0x0F` (B50F, demand and integrity candidates): [`ebus-vaillant-b50f.md`](ebus-vaillant-b50f.md)
 - B5 services without a dedicated page (B501, B502, B50A, B50C, B50D, B518, B525, header-only identities): [Other B5 services](#other-b5-services-candidate-layouts)
 
 ## Scope
@@ -48,15 +48,15 @@ PeBUS is not known, so this repository does not expand it.
 - No op of the B5 services B501 to B525 and B555 is known to be available only on
   PeBUS (candidate), with one candidate exception, unresolved: `B5 09 34`, which
   may be available only under PeBUS on some installations. The
-  [B509 page](ebus-vaillant-B509.md) states instead that no B509 subcommand is
+  [B509 page](ebus-vaillant-b509.md) states instead that no B509 subcommand is
   known to be available only on PeBUS (candidate); `B5 09 34` is not in its
   subcommand table, and the disagreement is unresolved.
-- The pages of [B503](ebus-vaillant-B503.md) (with `B5 09 18`),
-  [B50E](ebus-vaillant-B50E.md), [B509](ebus-vaillant-B509.md),
-  [B510](ebus-vaillant-B510.md), [B511](ebus-vaillant-B511.md),
-  [B512](ebus-vaillant-B512.md), [B513](ebus-vaillant-B513.md),
-  [B514](ebus-vaillant-B514.md), [B515](ebus-vaillant-B515.md),
-  [B516](ebus-vaillant-B516-energy.md) and
+- The pages of [B503](ebus-vaillant-b503.md) (with `B5 09 18`),
+  [B50E](ebus-vaillant-b50e.md), [B509](ebus-vaillant-b509.md),
+  [B510](ebus-vaillant-b510.md), [B511](ebus-vaillant-b511.md),
+  [B512](ebus-vaillant-b512.md), [B513](ebus-vaillant-b513.md),
+  [B514](ebus-vaillant-b514.md), [B515](ebus-vaillant-b515.md),
+  [B516](ebus-vaillant-b516-energy.md) and
   [B555](ebus-vaillant-b555-timer-protocol.md) state, as a candidate
   unconfirmed on the wire, that the operations they list are available under
   both the eBUS and the PeBUS profiles; each page names the operations its
@@ -76,7 +76,7 @@ The word PeBus also has other meanings in candidate layouts:
 - Candidate, unconfirmed on the wire: bit 3 of the B5 11 0E status byte is a
   PeBus flag; its effect is unknown.
 
-The [B509](ebus-vaillant-B509.md) and [B511](ebus-vaillant-B511.md) pages spell
+The [B509](ebus-vaillant-b509.md) and [B511](ebus-vaillant-b511.md) pages spell
 these address bytes and this flag "PeBUS".
 
 The profile assignment is a candidate, unconfirmed on the wire; it does not state
@@ -204,7 +204,7 @@ Example payload families:
 The candidate layouts of B504 give different lengths for `0x09` (11 data bytes)
 and `0x0D` (5 data bytes) than the examples above; the relation is unresolved.
 The candidate op catalogue is on the page
-[`ebus-vaillant-B504.md`](ebus-vaillant-B504.md) (see also the open questions
+[`ebus-vaillant-b504.md`](ebus-vaillant-b504.md) (see also the open questions
 below).
 
 ## SetOperationalData (0xB5 0x05)
@@ -222,7 +222,7 @@ Response is device/op-specific and may be empty (ack-only).
 ## Register Access (0xB5 0x09)
 
 `0xB5 0x09` multiplexes at least two payload forms; see also
-[`ebus-vaillant-B509.md`](ebus-vaillant-B509.md). This section keeps both forms.
+[`ebus-vaillant-b509.md`](ebus-vaillant-b509.md). This section keeps both forms.
 
 ### Form A: register-like read/write
 
@@ -242,7 +242,7 @@ Write request payload (3+ bytes):
   data    : bytes (0+)
 ```
 
-A register id such as `0x1800` is written as the two address bytes in wire order, first byte first. Whether the first byte is the low or the high byte of a 16-bit address is unresolved; the little-endian reading is a **Hypothesis**, see [`ebus-vaillant-B509.md`](ebus-vaillant-B509.md).
+A register id such as `0x1800` is written as the two address bytes in wire order, first byte first. Whether the first byte is the low or the high byte of a 16-bit address is unresolved; the little-endian reading is a **Hypothesis**, see [`ebus-vaillant-b509.md`](ebus-vaillant-b509.md).
 
 Response is device/register-specific. In some cases, only a single `0x00` status byte is observed.
 
@@ -271,7 +271,7 @@ fill, so the `27` reply carries two serial bytes followed by seven `FF` bytes.
 This differs from the layout above (a status byte and eight ASCII bytes per
 window), which is the layout known for controllers; whether controllers slice the
 serial the same way is not established, and the discrepancy is unresolved; see
-also [`ebus-vaillant-B509.md`](ebus-vaillant-B509.md).
+also [`ebus-vaillant-b509.md`](ebus-vaillant-b509.md).
 
 For deterministic target emulation:
 - treat this format as valid only when payload is exactly one selector byte
@@ -294,7 +294,7 @@ The resulting string is often parsed into model/product and serial-like fields; 
 `0xB5 0x24` is a selector-opcode multiplexed protocol used heavily by Vaillant regulators.
 
 - Dedicated reference:
-  [`ebus-vaillant-B524.md`](ebus-vaillant-B524.md)
+  [`ebus-vaillant-b524.md`](ebus-vaillant-b524.md)
 - This includes opcode families, selector structures (`GG/II/RR`), response headers (`FLAGS/GG/RR`), discovery rules, and schedule/table read notes.
 
 ## Timer/Schedule Protocol (0xB5 0x55, B555)
@@ -315,7 +315,7 @@ of the reply are a single little-endian packed date (day/month/year), not a
 separate month/day nibble pair and a half-year year-selector byte.
 
 - Dedicated reference:
-  [`ebus-vaillant-B516-energy.md`](ebus-vaillant-B516-energy.md)
+  [`ebus-vaillant-b516-energy.md`](ebus-vaillant-b516-energy.md)
 - This includes the packed-date formula and worked, read-only decode
   examples; the period/source/usage selector values; the `PERIOD_IDX` /
   `ENERGY_IDX` reply fields; and the VWZ/VWZIO alternative access path
@@ -373,16 +373,16 @@ existing identity guard.
 
 Address `0x08` hosts completely different device types depending on installation:
 - **Boiler** (gas appliance) — B509 register `0xBB00` = `gasValveActive` (UCH sentinel 0x0F/0xF0)
-- **Heat pump** — same address `0xBB00` = `ActualEnvPowerPercentage` (percent, %; candidate, see the collision table of [`ebus-vaillant-B509.md`](ebus-vaillant-B509.md)). On a heat-pump interface unit the meaning of these register ids is unresolved.
+- **Heat pump** — same address `0xBB00` = `ActualEnvPowerPercentage` (percent, %; candidate, see the collision table of [`ebus-vaillant-b509.md`](ebus-vaillant-b509.md)). On a heat-pump interface unit the meaning of these register ids is unresolved.
 
-Device type MUST be established before decoding any B509 register at address `0x08`; the identification sources are listed in the device-type gate of [`ebus-vaillant-B509.md`](ebus-vaillant-B509.md).
+Device type MUST be established before decoding any B509 register at address `0x08`; the identification sources are listed in the device-type gate of [`ebus-vaillant-b509.md`](ebus-vaillant-b509.md).
 
 ### f32 Byte Order Gate
 
 B524 f32 registers have a profile-dependent byte order; the rows below state the
 byte order per family or device class (observed for the VRC720 family, a
 candidate for the heat-pump interface unit), and a destination address alone
-does not select it (see [`ebus-vaillant-B524.md`](ebus-vaillant-B524.md)):
+does not select it (see [`ebus-vaillant-b524.md`](ebus-vaillant-b524.md)):
 
 | Device Class | eBUS Address | f32 Byte Order |
 |--------------|-------------|----------------|
@@ -468,7 +468,7 @@ to a device family.
 
 `0xB5 0x10` carries SetMode commands from the regulator to the boiler (VRC720-family controller initiator 0x10 -> boiler target 0x08).
 
-- Dedicated reference: [`ebus-vaillant-B510.md`](ebus-vaillant-B510.md)
+- Dedicated reference: [`ebus-vaillant-b510.md`](ebus-vaillant-b510.md)
 - Payload includes hcmode, flowtempdesired, hwctempdesired, hwcflowtempdesired, and disable/release bits.
 
 ## Remote Control (0xB5 0x11, B511)
@@ -483,19 +483,19 @@ Together with B510, these protocols form a control loop between regulator, boile
 
 On heat pump systems with VWZIO (0x76), B511 traffic involving that device has also been observed.
 
-- Dedicated reference: [`ebus-vaillant-B511.md`](ebus-vaillant-B511.md)
+- Dedicated reference: [`ebus-vaillant-b511.md`](ebus-vaillant-b511.md)
 
 ## Circulation Pump / VR65-Style State (0xB5 0x12, B512)
 
 `0xB5 0x12` carries circulation pump state and VR65-style control data. Observed from the boiler initiator (0x03) targeting address 0x64.
 
-- Dedicated reference: [`ebus-vaillant-B512.md`](ebus-vaillant-B512.md)
+- Dedicated reference: [`ebus-vaillant-b512.md`](ebus-vaillant-b512.md)
 - Known selectors include StatusCirPump (off=0, on=100), VR65-style shape (0x02), and heat-pump-specific shapes.
 
 ## Other B5 services (candidate layouts)
 
 The services below have no dedicated page except for
-[B520](ebus-vaillant-B520.md) and [B50B](ebus-vaillant-B50B.md). Every layout in this section is a candidate layout,
+[B520](ebus-vaillant-b520.md) and [B50B](ebus-vaillant-b50b.md). Every layout in this section is a candidate layout,
 unconfirmed on the wire. No exchange of any of these services
 on the wire is known (see [Open questions](#open-questions)). No service in this
 section is documented as safe to send; the state-changing ones (including, but
@@ -503,7 +503,7 @@ not limited to, the B501 write, the `B5 09 35` write, the B50B writes, the B519
 test and B520 simulator services and the `B5 09 51` binding) need a
 separately established safety procedure and target qualification, and an ACK
 does not show the resulting device state. The B51A reset and parameter write are
-documented on [`ebus-vaillant-B51A.md`](ebus-vaillant-B51A.md), which states
+documented on [`ebus-vaillant-b51a.md`](ebus-vaillant-b51a.md), which states
 the same rule for its ops.
 
 Candidate field shapes for `B5 09 13`, `34`, `35` and `51` are declared on the
@@ -638,7 +638,7 @@ B50D fields or establish physical behavior for another family.
 ### B50F: safety-relevant temperature, status and demand
 
 The scoped declarations for this family are on the
-[B50F candidate page](ebus-vaillant-B50F.md). The layout below is a separate,
+[B50F candidate page](ebus-vaillant-b50f.md). The layout below is a separate,
 older Hypothesis; where it differs from that page (direction, absolute
 positions), neither is Proven and both stay Unknown on the wire.
 
@@ -728,7 +728,7 @@ interpretation, unconfirmed on the wire: the service is mutative and intended to
 bind an RF device; its effect on a target is unknown. `B5 09 51`, and `B5 09 34`
 and `B5 09 35` in the [identifier index](#identifier-index), are documented on
 this page; they are not in the subcommand table of
-[`ebus-vaillant-B509.md`](ebus-vaillant-B509.md). The
+[`ebus-vaillant-b509.md`](ebus-vaillant-b509.md). The
 [diagnostic shapes page](ebus-b509-diagnostic-shapes.md) declares the same `51` fields
 as four separate software decimal components with widths and ranges Unknown and
 declares no packed word. The packed-BCD reading and the 0..99 ranges above remain
@@ -746,12 +746,12 @@ the meaning of each is Unknown.
 
 Other pages give candidate statements, unconfirmed on the wire, for some of
 these identities; they do not change the Unknown status above. The
-[B509 page](ebus-vaillant-B509.md) gives a candidate request service byte `B5`
+[B509 page](ebus-vaillant-b509.md) gives a candidate request service byte `B5`
 and a candidate positive reply byte `F5` for B509 `38`, `5A`, `5B` and `5C`, and
 the [B555 page](ebus-vaillant-b555-timer-protocol.md) gives the same two
 candidate bytes and a candidate meaning for B555 `04` and `06`. The
-[B511](ebus-vaillant-B511.md), [B512](ebus-vaillant-B512.md) and
-[B514](ebus-vaillant-B514.md) pages give candidate names for B511 `10` and `11`,
+[B511](ebus-vaillant-b511.md), [B512](ebus-vaillant-b512.md) and
+[B514](ebus-vaillant-b514.md) pages give candidate names for B511 `10` and `11`,
 B512 `14` and B514 `09`.
 
 ## Open questions
@@ -761,7 +761,7 @@ B512 `14` and B514 `09`.
 - Whether the first B509 address byte is the low or the high byte of a 16-bit
   address is unresolved, and the meaning of the B509 register ids on a heat-pump
   interface unit is unresolved; see
-  [`ebus-vaillant-B509.md`](ebus-vaillant-B509.md).
+  [`ebus-vaillant-b509.md`](ebus-vaillant-b509.md).
 - The services in "Other B5 services (candidate layouts)" and the candidate
   layouts on the B504 to B508, B51A and B521 to B523 pages are known only as
   candidate layouts; no exchange was observed beyond the observations on those
@@ -782,7 +782,7 @@ B512 `14` and B514 `09`.
   their candidate intervals (see the fixtures); the intended defaults are
   unresolved. The intended default `FFFF` of B5 07 0B, for which no interval
   other than the raw range is recorded, is unresolved (see the
-  [B507 page](ebus-vaillant-B507.md)).
+  [B507 page](ebus-vaillant-b507.md)).
 - How the candidate response offsets (counted from the first byte of the service
   prefix) map onto the data bytes of a bus response is unconfirmed on the wire.
   The B501 positive-status forms place `Status` at offset 2, which the offset-3
@@ -801,7 +801,7 @@ B512 `14` and B514 `09`.
   unknown.
 - Whether `B5 09 34` is available only under PeBUS on some installations is a
   candidate, unresolved; whether its layout differs under PeBUS is not
-  established. The [B509 page](ebus-vaillant-B509.md) states that no B509
+  established. The [B509 page](ebus-vaillant-b509.md) states that no B509
   subcommand is known to be available only on PeBUS (candidate); this
   disagreement is unresolved.
 - Whether controllers slice the serial windows of B5 09 24..27 as one 36-byte

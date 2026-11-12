@@ -8,7 +8,7 @@ import unittest
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / 'architecture/am14_b509_heatpump_codec_dictionary.md'
+PAGE = ROOT / 'architecture/am14-b509-heatpump-codec-dictionary.md'
 FIXTURE = ROOT / 'architecture/fixtures/am14_b509_heatpump_codec_dictionary.json'
 KEY_FIELDS = ('target_family', 'variant', 'primary', 'secondary', 'operation',
               'direction', 'selector')

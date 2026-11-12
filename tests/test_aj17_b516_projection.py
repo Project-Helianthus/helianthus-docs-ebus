@@ -12,7 +12,7 @@ class LocalEnergyContract(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.data = json.loads((ROOT / 'architecture/fixtures/aj17_b516_projection.json').read_text())
-        cls.page = (ROOT / 'architecture/aj17_b516_projection.md').read_text()
+        cls.page = (ROOT / 'architecture/aj17-b516-projection.md').read_text()
 
     def table(self, header):
         lines = self.page.splitlines()
@@ -142,13 +142,13 @@ class LocalEnergyContract(unittest.TestCase):
         fixture = (ROOT / 'architecture/fixtures/aj17_b516_projection.json').read_text()
         self.assertIsNone(banned.search(fixture))
         self.assertIn(
-            '[B516 energy](../protocols/vaillant/ebus-vaillant-B516-energy.md)',
+            '[B516 energy](../protocols/vaillant/ebus-vaillant-b516-energy.md)',
             self.page)
         self.assertIn('§9', self.page)
         self.assertIn('sub-id 0x14', self.page)
         self.assertIn('current electrical power candidate', self.page)
         self.assertIn(
-            '../protocols/vaillant/ebus-vaillant-B516-energy.md#11-open-questions',
+            '../protocols/vaillant/ebus-vaillant-b516-energy.md#11-open-questions',
             self.page)
         self.assertIsNone(re.search(r'B516-energy\.md#9-', self.page))
 

@@ -4,7 +4,7 @@ from pathlib import Path
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / 'protocols/vaillant/ebus-vaillant-B511.md'
+PAGE = ROOT / 'protocols/vaillant/ebus-vaillant-b511.md'
 FIXTURE = ROOT / 'protocols/vaillant/fixtures/ae16_b511_candidates.json'
 
 # Independently transcribed acceptance tuples, not loaded from either artifact.

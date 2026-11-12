@@ -7,7 +7,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = ROOT / 'protocols/vaillant/fixtures/ak10_b512_heatpump_io.json'
 PAGE = ROOT / 'protocols/vaillant/ebus-b512-heatpump-io.md'
-API = ROOT / 'architecture/ak10_b512_heatpump_io_api.md'
+API = ROOT / 'architecture/ak10-b512-heatpump-io-api.md'
 
 # Literal coordinates and carriers: independent of the page and fixture.
 COORDINATES = '''0F request outputs 3 8 bits
@@ -364,7 +364,7 @@ class HeatPumpIO(unittest.TestCase):
         ):
             self.assertIn(phrase, text)
         self.assertIn('(../ebus-services/ebus-overview.md)', self.page)
-        self.assertIn('(ebus-vaillant-B512.md)', self.page)
+        self.assertIn('(ebus-vaillant-b512.md)', self.page)
         self.assertNotRegex(self.page + FIXTURE.read_text(), r'Ab19|GraphQL|MCP|json.RawMessage')
 
     def test_exact_api_types_and_all_eleven_axes(self):

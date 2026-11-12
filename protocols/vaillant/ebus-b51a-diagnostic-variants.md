@@ -2,7 +2,7 @@
 
 ## Evidence and scope
 
-The [existing candidate layouts](ebus-vaillant-B51A.md#candidate-mirror-and-diagnosis-layouts)
+The [existing candidate layouts](ebus-vaillant-b51a.md#candidate-mirror-and-diagnosis-layouts)
 provide context for the Vaillant mirror and diagnosis family, PB/SB `B5 1A`.
 They are an earlier documentation summary, not an independently traceable source
 for the detailed mappings previously listed in this supplement.

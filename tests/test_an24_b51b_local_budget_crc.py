@@ -14,7 +14,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / "architecture" / "an24_b51b_local_budget_crc.md"
+PAGE = ROOT / "architecture" / "an24-b51b-local-budget-crc.md"
 FIXTURE = ROOT / "architecture" / "fixtures" / "an24_b51b_local_budget_crc.json"
 
 WIDTH_BITS = 64

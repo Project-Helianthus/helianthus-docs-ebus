@@ -8,7 +8,7 @@ import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / 'architecture/an06_b503_history_branches.md'
+PAGE = ROOT / 'architecture/an06-b503-history-branches.md'
 FIXTURE = ROOT / 'architecture/fixtures/an06_b503_history_branches.json'
 NAMES = ('minute', 'hour', 'day', 'month', 'year')
 DOMAINS = ((0, 59), (0, 23), (1, 31), (1, 12), (0, 99))

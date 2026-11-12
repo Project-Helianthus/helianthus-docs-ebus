@@ -2,7 +2,7 @@
 
 **Hypothesis:** For the Vaillant B504 family (`PB=0xB5`, `SB=0x04`),
 operation, direction, field and circuit role jointly constrain interpretation.
-The [public native family contract](ebus-vaillant-B504.md#candidate-op-catalogue)
+The [public native family contract](ebus-vaillant-b504.md#candidate-op-catalogue)
 and [candidate field catalogue](fixtures/b504-b505-candidate-fields.csv)
 provide the existing selector context. They are candidate evidence rather than
 native qualification. This supplement adds only the finite semantic associations

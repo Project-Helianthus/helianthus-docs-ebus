@@ -10,9 +10,9 @@ The downstream producer work owns implementation and cutover evidence.
 
 ## Native contract and evidence boundary
 
-Start with the public [B509 wire contract](../protocols/vaillant/ebus-vaillant-B509.md#wire-shape),
-its [Device-Type Gate](../protocols/vaillant/ebus-vaillant-B509.md#device-type-gate-register-address-collision),
-the [boiler register candidates](../protocols/vaillant/ebus-vaillant-B509-boiler-register-map.md#direct-read-candidates),
+Start with the public [B509 wire contract](../protocols/vaillant/ebus-vaillant-b509.md#wire-shape),
+its [Device-Type Gate](../protocols/vaillant/ebus-vaillant-b509.md#device-type-gate-register-address-collision),
+the [boiler register candidates](../protocols/vaillant/ebus-vaillant-b509-boiler-register-map.md#direct-read-candidates),
 and the [name correspondence fixture](../protocols/vaillant/fixtures/b509-register-name-correspondence.csv).
 The flow row identifies operation `0D`, selector bytes `18 00`, canonical name
 `flow_temperature`, and codec `DATA2c`. There is no boiler-return row. Selector
@@ -169,7 +169,7 @@ native bytes.
 
 ## Examined, not admitted
 
-- [B524 circuit flow](../protocols/vaillant/ebus-vaillant-B524-register-map.md):
+- [B524 circuit flow](../protocols/vaillant/ebus-vaillant-b524-register-map.md):
   `(OP=0x02, GG=0x02, II=circuit instance, RR=0x0008)` is circuit flow, explicitly
   **not boiler return**.
 - B524 system flow `(OP=0x02, GG=0x00, II=0x00, RR=0x004B)` is a distinct
@@ -182,15 +182,15 @@ native bytes.
   Without an eligible qualified B509 observation, new boiler flow is withheld.
   Whether the legacy mirror remains on its existing surface or is removed is
   an open M15 / gateway #952 decision; this page does not resolve it.
-- [OP06 controller-mediated selectors](../protocols/vaillant/ebus-vaillant-B524-register-map.md#op0x06--controller-mediated-device-parameters)
+- [OP06 controller-mediated selectors](../protocols/vaillant/ebus-vaillant-b524-register-map.md#op0x06--controller-mediated-device-parameters)
   remain a different namespace. Their unproven layouts/meanings do not supply
   either boiler temperature.
 - B509 selector `39 00` (`0x3900`) is a setpoint candidate, with flow-versus-return
   regulation meaning unresolved in the boiler register map. It is not a
   measured return value or a replacement for `18 00`.
-- Return-bearing fields in [B511](../protocols/vaillant/ebus-vaillant-B511.md),
-  [B512](../protocols/vaillant/ebus-vaillant-B512.md),
-  [B514](../protocols/vaillant/ebus-vaillant-B514.md),
+- Return-bearing fields in [B511](../protocols/vaillant/ebus-vaillant-b511.md),
+  [B512](../protocols/vaillant/ebus-vaillant-b512.md),
+  [B514](../protocols/vaillant/ebus-vaillant-b514.md),
   [service 05h](../protocols/ebus-services/ebus-service-05h.md), and
   [service 08h](../protocols/ebus-services/ebus-service-08h.md) belong to other
   service/selector or device-family contexts. They are unqualified for this

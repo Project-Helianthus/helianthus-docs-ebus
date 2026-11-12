@@ -18,7 +18,7 @@ import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / 'architecture/an14_b512_dhw_views.md'
+PAGE = ROOT / 'architecture/an14-b512-dhw-views.md'
 FIXTURE = ROOT / 'architecture/fixtures/an14_b512_dhw_views.json'
 PREFIX = (181, 18, 6)
 REQUEST_LAST = 9

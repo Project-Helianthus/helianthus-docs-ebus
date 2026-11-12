@@ -6,7 +6,7 @@ import re
 import unittest
 
 ab09ao09Root = Path(__file__).resolve().parents[1]
-ab09ao09Page = ab09ao09Root / 'architecture/ao10_b50f_field_views.md'
+ab09ao09Page = ab09ao09Root / 'architecture/ao10-b50f-field-views.md'
 ab09ao09Fixture = ab09ao09Root / 'architecture/fixtures/ao10_b50f_field_views.json'
 ab09ao09Flags = ['burner', 'reformer-gas-valve', 'gas-flow', 'fan-power', 'valve']
 ab09ao09Widths = {

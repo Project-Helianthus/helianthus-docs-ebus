@@ -2,7 +2,7 @@
 
 **Hypothesis:** The Vaillant B519 family has separate candidate reply policies
 for each transaction mode. This supplement covers only OP01 and OP03 mode-policy
-metadata. The [field and CRC catalog](ebus-vaillant-B519.md) retains its separate
+metadata. The [field and CRC catalog](ebus-vaillant-b519.md) retains its separate
 selector layouts and unresolved CRC coordinates. Its mode-policy Unknown is
 narrowed here to candidate relationships, without establishing native behavior.
 The family variant remains **Unknown**.

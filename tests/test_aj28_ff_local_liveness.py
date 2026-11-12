@@ -7,7 +7,7 @@ from copy import deepcopy
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = Path('architecture/aj28_ff_local_liveness.md')
+PAGE = Path('architecture/aj28-ff-local-liveness.md')
 FIXTURE = Path('architecture/fixtures/aj28_ff_local_liveness.json')
 
 # Independent issue-derived expectations, not loaded from fixture outputs.
@@ -67,7 +67,7 @@ class LocalLivenessContract(unittest.TestCase):
         self.assertEqual(tables(page), [LIVENESS_ROWS, STATE_ROWS, FF02_ROWS])
         self.assertIn('**Hypothesis:**', page)
         self.assertIn('**Unknown:** native', page)
-        self.assertIn('../protocols/ebus-services/ebus-service-FFh.md', page)
+        self.assertIn('../protocols/ebus-services/ebus-service-ffh.md', page)
         for statement in (
             'longest-cycle duration,', 'FF query bodies, physical emission policy,',
             'No scenario grants execution\nadmission.', 'Admission remains fail-closed.',

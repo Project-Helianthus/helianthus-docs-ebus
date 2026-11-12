@@ -16,14 +16,14 @@ This document specifies the eBUS B555 protocol used by **VRC720-family controlle
 See the [numeric range and contextual units supplement](ebus-b555-numeric-units.md)
 for **Hypothesis** declarations and **Unknown** unit and sentinel contexts.
 
-> **CORRECTION (2026-04-14):** B555 is NOT used by VRC700. The original scope statement "VRC700/VRC720 series" was incorrect. VRC700 (device ID `70000`, including Saunier Duval `B7S00`) uses [B524 opcodes 0x03/0x04](./ebus-vaillant-B524.md#44-0x03--0x04-timer-schedules) for timer operations. The [VRC700 crosswalk](./ebus-vaillant-regulators.md#vrc700-operation-profile) adds model-row context without changing that command identity guard. Both device families share eBUS target address `0x15` but are different device classes with different timer transports.
+> **CORRECTION (2026-04-14):** B555 is NOT used by VRC700. The original scope statement "VRC700/VRC720 series" was incorrect. VRC700 (device ID `70000`, including Saunier Duval `B7S00`) uses [B524 opcodes 0x03/0x04](./ebus-vaillant-b524.md#44-0x03--0x04-timer-schedules) for timer operations. The [VRC700 crosswalk](./ebus-vaillant-regulators.md#vrc700-operation-profile) adds model-row context without changing that command identity guard. Both device families share eBUS target address `0x15` but are different device classes with different timer transports.
 
 ### 1.0 Timer Transport Device Binding
 
 | Device class | Device IDs | Timer transport | Reference |
 |---|---|---|---|
 | VRC720 family | BASV0, BASV2, BASV3, CTLV0, CTLV2, CTLV3, CTLS2 | **B555** (this document) | Validated on BASV2 |
-| VRC700 | `70000` (including Saunier Duval `B7S00`) | **B524 opcodes 0x03/0x04** | [B524 section 4.4](./ebus-vaillant-B524.md#44-0x03--0x04-timer-schedules) |
+| VRC700 | `70000` (including Saunier Duval `B7S00`) | **B524 opcodes 0x03/0x04** | [B524 section 4.4](./ebus-vaillant-b524.md#44-0x03--0x04-timer-schedules) |
 
 A scanner or schedule writer that does not check device identity before choosing transport will send B555 to a VRC700 (no response or error) or send B524 timer frames to a BASV2 (empty response). Device identity can be determined from the eBUS device ID returned during identification.
 
@@ -189,7 +189,7 @@ reconciled with this correspondence (Open questions).
 | 0x01 | Cooling | Not observed (unavailable on test system) |
 | 0x02 | HWC (Domestic Hot Water) | Yes (DHW target temp) |
 | 0x03 | CC (DHW recirculation pump schedule) | No — time-only schedule, temp field carries 0xFFFF |
-| 0x04 | NoiseReduction (Silent) | Not observed (answered as not available). One VRC720-family CSV uses `Silent`; another uses `NoiseReduction`. Both describe the same function: a quiet-hours schedule. Name aligns with B508 broadcast field `NoiseReduction`. See also [B524 section 4.4](./ebus-vaillant-B524.md#44-0x03--0x04-timer-schedules), where ADDRESS `02` under GG `0x00` is Ventilation, with a conflict noted against the VRC700 community configuration; the VRC700 equivalent of this channel is unresolved. |
+| 0x04 | NoiseReduction (Silent) | Not observed (answered as not available). One VRC720-family CSV uses `Silent`; another uses `NoiseReduction`. Both describe the same function: a quiet-hours schedule. Name aligns with B508 broadcast field `NoiseReduction`. See also [B524 section 4.4](./ebus-vaillant-b524.md#44-0x03--0x04-timer-schedules), where ADDRESS `02` under GG `0x00` is Ventilation, with a conflict noted against the VRC700 community configuration; the VRC700 equivalent of this channel is unresolved. |
 | 0x05 | Ventilation (candidate) | Unknown. The setpoint unit and scale of this type are unresolved (Sections 5.3.1 and 10). |
 | 0x06 | High tariff (candidate) | Not observed |
 | 0x07 | External DHW circuit (candidate) | Not observed |
@@ -216,7 +216,7 @@ validated exchanges. A Vaillant requester sends the type values 0,
 #### 4.3.1 Group-day values in A6 (candidate)
 
 **Hypothesis — aggregate-day mappings, unconfirmed on the wire:** the
-[B524 timer section](./ebus-vaillant-B524.md#44-0x03--0x04-timer-schedules)
+[B524 timer section](./ebus-vaillant-b524.md#44-0x03--0x04-timer-schedules)
 already documents its candidate weekday table. The two transports differ:
 
 | Family / transport | Operation | 0..6 | 7 (`0x07`) | 8 (`0x08`) | 9 (`0x09`) | Evidence status |
@@ -902,7 +902,7 @@ Every item below is unresolved. None is promoted by the candidate text above.
   with the candidate correspondence ZONE = module index.
 - The B524 OP04 aggregate-day numbering (8 = Saturday-Sunday,
   9 = Monday-Friday) is documented as a **Hypothesis** in the
-  [B524 timer section](./ebus-vaillant-B524.md#44-0x03--0x04-timer-schedules).
+  [B524 timer section](./ebus-vaillant-b524.md#44-0x03--0x04-timer-schedules).
   Physical acceptance, support and persistence remain **Unknown**.
 - Other installations of the VRC720 family have not been observed for any
   candidate statement in this document.

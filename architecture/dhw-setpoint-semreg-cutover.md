@@ -18,7 +18,7 @@ Links use the public main branch; they are navigation references, not immutable
 execution evidence. Code establishes implementation behavior, never native
 source equivalence by itself.
 
-- [Native B524 catalog](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/vaillant/ebus-vaillant-B524-register-map.md):
+- [Native B524 catalog](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/vaillant/ebus-vaillant-b524-register-map.md):
   “Table Legend”, “Group Topology”, “GG=0x01 — Native Domestic Hot Water”,
   “GG=0x00 — System” rows RR=0x0046 and RR=0x00FC, and
   “GG=0x05 — Solar Loaded Cylinder”. This is the native contract prerequisite.

@@ -7,7 +7,7 @@ import re
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / 'architecture/al06_b509_symbolic_annotations.md'
+PAGE = ROOT / 'architecture/al06-b509-symbolic-annotations.md'
 FIXTURE = ROOT / 'architecture/fixtures/al06_b509_symbolic_annotations.json'
 REQUIRED = ('family', 'variant', 'primary', 'direction', 'field', 'alternative',
             'instance_scope', 'class')
@@ -214,7 +214,7 @@ class AnnotationContract(unittest.TestCase):
         ):
             with self.subTest(text=text):
                 self.assertIn(text, self.page)
-        self.assertIn('../protocols/vaillant/ebus-vaillant-B509.md#register-name-correspondence-fixture', self.page)
+        self.assertIn('../protocols/vaillant/ebus-vaillant-b509.md#register-name-correspondence-fixture', self.page)
         self.assertEqual(set(self.contract), {'api', 'identity', 'catalog',
                                              'interpretation', 'admission'})
         self.assertEqual(set(self.fixture), {'purpose', 'examples', 'absence_probe'})

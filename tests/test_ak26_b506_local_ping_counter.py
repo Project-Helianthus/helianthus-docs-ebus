@@ -4,7 +4,7 @@ from pathlib import Path
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / 'architecture/ak26_b506_local_ping_counter.md'
+PAGE = ROOT / 'architecture/ak26-b506-local-ping-counter.md'
 FIXTURE = ROOT / 'architecture/fixtures/ak26_b506_local_ping_counter.json'
 UNKNOWN = {
     'line_admission_rule', 'rx_tx_selection', 'reset_conditions',
@@ -73,7 +73,7 @@ class LocalPingCounter(unittest.TestCase):
         flat = ' '.join(self.page.split())
         for phrase in (
             '**Hypothesis**', 'Nothing here is stable before 1.0',
-            '../protocols/vaillant/ebus-vaillant-B506.md',
+            '../protocols/vaillant/ebus-vaillant-b506.md',
             'does not count radio packets, delivered packets or parsed numeric values',
             'it is not a physical reset',
             'No hardware, transport or wall-clock procedure',

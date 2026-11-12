@@ -10,7 +10,7 @@ import unittest
 AB12_ROOT = Path(__file__).resolve().parents[1]
 AB12_NATIVE = Path('protocols/vaillant/ebus-b50f-status-spans.md')
 AB12_FIXTURE = Path('protocols/vaillant/fixtures/aj12_b50f_status_spans.json')
-AB12_API = Path('architecture/aj12_b50f_status_spans_api.md')
+AB12_API = Path('architecture/aj12-b50f-status-spans-api.md')
 AB12_FIELDS = (
     'status_container_1', 'status_container_2', 'status_container_3',
     'status_container_4', 'status_container_5', 'status_container_6',

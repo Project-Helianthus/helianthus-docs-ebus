@@ -7,8 +7,8 @@ import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-NATIVE = Path('protocols/vaillant/ebus-vaillant-B531-hem-power-limit.md')
-LOCAL = Path('architecture/ae24_b531_local_projection.md')
+NATIVE = Path('protocols/vaillant/ebus-vaillant-b531-hem-power-limit.md')
+LOCAL = Path('architecture/ae24-b531-local-projection.md')
 FIXTURE = Path('protocols/vaillant/fixtures/ae24_b531_candidates.json')
 PROJECTION = Path('architecture/fixtures/ae24_b531_local_projection.json')
 UNRESOLVED = ('endpoint support; native units; correlation; reply adaptation; '
@@ -96,7 +96,7 @@ def check_contract(test, root):
          'absent', 'endpoint support; cache freshness; target eligibility; applied limits: Unknown')
         for index in ('0', '8')])
     test.assertIn('](fixtures/ae24_b531_candidates.json)', native)
-    test.assertNotIn('architecture/ae24_b531_local_projection.md', native)
+    test.assertNotIn('architecture/ae24-b531-local-projection.md', native)
     test.assertIn('Logical positions below order the two candidate', native)
     test.assertIn('they are not wire offsets', native)
     test.assertIn('No native 10 W-per-count claim follows', native)

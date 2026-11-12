@@ -9,7 +9,7 @@ import unittest
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGE = ROOT / "architecture/al02_b524_name_annotations.md"
+PAGE = ROOT / "architecture/al02-b524-name-annotations.md"
 FIXTURE = ROOT / "architecture/fixtures/al02_b524_name_annotations.json"
 PUBLIC = ROOT / "protocols/vaillant/fixtures"
 AXES = ("opcode", "group", "register", "instance_scope", "family", "variant")
