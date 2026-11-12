@@ -203,6 +203,17 @@ def graphql_name_text(body: str) -> str:
     return re.sub(lexical_data, lambda match: " " * len(match[0]), body)
 
 
+def masked_graphql_text(text: str, fences) -> str:
+    """Mask GraphQL data and comments inside the fences, keeping every offset."""
+    parts = []
+    cursor = 0
+    for start, end in fences:
+        parts.extend((text[cursor:start], graphql_name_text(text[start:end])))
+        cursor = end
+    parts.append(text[cursor:])
+    return "".join(parts)
+
+
 def occurrence_context(position, token, examples):
     """Keep documentary and fenced-example exemptions distinct."""
     for start, end, language in examples:
@@ -230,7 +241,8 @@ def remaining_occurrences(root: Path):
         examples = list(markdown_fence_spans(text))
         fences = [(start, end) for start, end, language in examples
                   if language == "graphql"]
-        blocks = "\n".join(graphql_name_text(text[start:end]) for start, end in fences)
+        occurrence_text = masked_graphql_text(text, fences)
+        blocks = "\n".join(occurrence_text[start:end] for start, end in fences)
         for identifier in re.findall(r"\b[A-Za-z_]\w*\b", blocks):
             if any(re.match(re.escape(token) + r"[_A-Z0-9]", identifier)
                    for token in STALE_GRAPHQL_TOKENS):
@@ -238,7 +250,7 @@ def remaining_occurrences(root: Path):
         for token in REMAINING_TOKENS:
             if token not in text:
                 continue
-            for match in re.finditer(r"(?<![\w])" + re.escape(token) + r"(?![\w])", text):
+            for match in re.finditer(r"(?<![\w])" + re.escape(token) + r"(?![\w])", occurrence_text):
                 # A documentary exemption cannot authorize a fenced API example.
                 context = occurrence_context(match.start(), token, examples)
                 key = (str(relative), token, context)

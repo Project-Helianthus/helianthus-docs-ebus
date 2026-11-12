@@ -245,6 +245,13 @@
     "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
   },
   {
+    "file": "development/ha-integration.md",
+    "token": "deviceId",
+    "context": "deviceId",
+    "count": 2,
+    "reason": "Selection label in the integration's naming list; the list stays as published so the documented name and model mapping is preserved."
+  },
+  {
     "file": "docs/platform/fixtures/coexistence-no-drift/v1/positive/evidence.json",
     "token": "targetTempC",
     "context": "targetTempC",
@@ -2915,7 +2922,7 @@
     "file": "tests/test_naming_surface_contract.py",
     "token": "busSummary",
     "context": "busSummary",
-    "count": 1,
+    "count": 8,
     "reason": "Guard rejected-token literal or synthetic negative control."
   },
   {
@@ -3048,7 +3055,7 @@
     "file": "tests/test_naming_surface_contract.py",
     "token": "flowsetHcMaxC",
     "context": "flowsetHcMaxC",
-    "count": 5,
+    "count": 6,
     "reason": "Synthetic regression test for documentary exemption relocation."
   }
 ]

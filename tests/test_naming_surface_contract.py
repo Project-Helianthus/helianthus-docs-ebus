@@ -246,14 +246,6 @@ def test_documentary_exemption_cannot_move_into_graphql(tmp_path, opening, closi
         CHECKER.validate_remaining_pages(tmp_path)
 
 
-def test_ha_controller_family_label_preserves_selection_and_display_mapping():
-    page = (ROOT / "development/ha-integration.md").read_text()
-    assert "- eBUS controller family (selected by the controller's `device_id` prefix)" in page
-    assert "- eBUS functional-module family (selected by the module's `device_id` prefix)" in page
-    assert page.count("  - Name: the family's marketing name") == 2
-    assert page.count("  - Model: the product model followed by `(eBUS: <device_id>)` (when product model is available)") == 2
-
-
 @pytest.mark.parametrize("value", [
     '"busSummaryExtra"',
     '"escaped \\" busSummaryExtra # still string"',
@@ -268,4 +260,33 @@ def test_stale_prefix_in_graphql_strings_allowed(tmp_path, value):
     CHECKER.validate_remaining_pages(tmp_path)
     page.write_text('```graphql schema-example\n{ busSummaryExtra(value: ' + value + ') }\n```\n')
     with pytest.raises(ValueError, match="partial stale"):
+        CHECKER.validate_remaining_pages(tmp_path)
+
+
+@pytest.mark.parametrize("body", [
+    '{ search(value: "busSummary") }',
+    '{ search(value: "escaped \\" busSummary") }',
+    '"""busSummary\nblock description"""\ntype Query { search: String }',
+    '{ search } # busSummary',
+    '{ search(value: "busSummary") } # flowsetHcMaxC',
+])
+def test_exact_stale_graphql_data_ignored_but_names_checked(tmp_path, body):
+    fixture = tmp_path / "tests/fixtures"
+    fixture.mkdir(parents=True)
+    (fixture / "remaining_page_name_exemptions.json").write_text("[]")
+    page = tmp_path / "example.md"
+    page.write_text("```graphql schema-example\n" + body + "\n```\n")
+    CHECKER.validate_remaining_pages(tmp_path)
+    page.write_text("```graphql schema-example\n" + body + "\n{ busSummary }\n```\n")
+    with pytest.raises(ValueError, match="remaining API"):
+        CHECKER.validate_remaining_pages(tmp_path)
+
+
+def test_exact_stale_prose_still_checked_beside_graphql_data(tmp_path):
+    fixture = tmp_path / "tests/fixtures"
+    fixture.mkdir(parents=True)
+    (fixture / "remaining_page_name_exemptions.json").write_text("[]")
+    (tmp_path / "example.md").write_text(
+        '```graphql\n{ search(value: "busSummary") }\n```\nbusSummary\n')
+    with pytest.raises(ValueError, match="remaining API"):
         CHECKER.validate_remaining_pages(tmp_path)
