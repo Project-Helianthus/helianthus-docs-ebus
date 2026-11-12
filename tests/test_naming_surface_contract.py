@@ -189,6 +189,7 @@ def test_dynamic_builder_start_remains_exported():
     "Invoke `modbus.v1.raw.read`.",
     "```graphql\n{ busSummary_extra { status } }\n```",
     "```graphql\ntype Query { busSummaryExtra: String }\n```",
+    "```graphql\ntype Query { busSummary2: String }\n```",
 ])
 def test_remaining_page_injection_rejected(tmp_path, text):
     # Root field catches schema reversion; tool catches registration reversion.
@@ -217,6 +218,10 @@ def test_remaining_exemptions_exist():
 
 
 @pytest.mark.parametrize("opening,closing", [
+    ("```json", "```"),
+    ("```json response-example", "```"),
+    ("```yaml", "```"),
+    ("```", "```"),
     ("```graphql", "```"),
     ("```graphql schema-example", "```"),
     ("~~~~graphql schema-example", "~~~~"),
@@ -234,7 +239,9 @@ def test_documentary_exemption_cannot_move_into_graphql(tmp_path, opening, closi
     page = tmp_path / "api/graphql.md"
     page.write_text("Documentary correspondence: `flowsetHcMaxC`.\n")
     CHECKER.validate_remaining_pages(tmp_path)
-    page.write_text(opening + "\ntype Query { flowsetHcMaxC: Float }\n" + closing + "\n")
+    body = ('type Query { flowsetHcMaxC: Float }' if "graphql" in opening
+            else '{"flowsetHcMaxC": 42}')
+    page.write_text(opening + "\n" + body + "\n" + closing + "\n")
     with pytest.raises(ValueError, match="remaining API spelling or stale naming exemption"):
         CHECKER.validate_remaining_pages(tmp_path)
 

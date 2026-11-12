@@ -86,7 +86,7 @@
   {
     "file": "api/portal.md",
     "token": "current_temp_c",
-    "context": "current_temp_c",
+    "context": "json:current_temp_c",
     "count": 1,
     "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
   },
@@ -3048,7 +3048,7 @@
     "file": "tests/test_naming_surface_contract.py",
     "token": "flowsetHcMaxC",
     "context": "flowsetHcMaxC",
-    "count": 4,
+    "count": 5,
     "reason": "Synthetic regression test for documentary exemption relocation."
   }
 ]

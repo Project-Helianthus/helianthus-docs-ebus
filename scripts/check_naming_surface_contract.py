@@ -168,8 +168,8 @@ ADOPTED_GRAPHQL_TOKENS = {"current_temp_c"}
 STALE_GRAPHQL_TOKENS = set(REMAINING_TOKENS) - ADOPTED_GRAPHQL_TOKENS
 
 
-def graphql_fence_spans(text: str):
-    """Yield body offsets for GraphQL fences, including extended info strings."""
+def markdown_fence_spans(text: str):
+    """Yield body offsets and language for fenced examples."""
     opening = None
     offset = 0
     for line in text.splitlines(keepends=True):
@@ -177,24 +177,38 @@ def graphql_fence_spans(text: str):
             match = re.match(r"^ {0,3}(`{3,}|~{3,})([^\r\n]*)", line)
             if match and not (match[1][0] == "`" and "`" in match[2]):
                 info = match[2].split()
-                opening = (match[1], bool(info and info[0] == "graphql"),
+                opening = (match[1], info[0] if info else "",
                            offset + len(line))
         else:
-            marker, is_graphql, start = opening
+            marker, language, start = opening
             if re.fullmatch(r" {0,3}" + re.escape(marker[0]) +
                             r"{" + str(len(marker)) + r",}[ \t]*(?:\r?\n)?", line):
-                if is_graphql:
-                    yield start, offset
+                yield start, offset, language
                 opening = None
         offset += len(line)
-    if opening is not None and opening[1]:
-        yield opening[2], len(text)
+    if opening is not None:
+        yield opening[2], len(text), opening[1]
+
+
+def graphql_fence_spans(text: str):
+    """Yield GraphQL bodies, including extended info strings."""
+    for start, end, language in markdown_fence_spans(text):
+        if language == "graphql":
+            yield start, end
 
 
 def graphql_name_text(body: str) -> str:
     """Mask comments and regular/block strings before scanning GraphQL names."""
     lexical_data = r'"""(?:\\"""|(?!""")[\s\S])*"""|"(?:\\[\s\S]|[^"\\])*"|#[^\r\n]*'
     return re.sub(lexical_data, lambda match: " " * len(match[0]), body)
+
+
+def occurrence_context(position, token, examples):
+    """Keep documentary and fenced-example exemptions distinct."""
+    for start, end, language in examples:
+        if start <= position < end:
+            return (language or "code") + ":" + token
+    return token
 
 
 def remaining_occurrences(root: Path):
@@ -213,19 +227,20 @@ def remaining_occurrences(root: Path):
             text = path.read_text()
         except (UnicodeError, OSError):
             continue
-        fences = list(graphql_fence_spans(text))
+        examples = list(markdown_fence_spans(text))
+        fences = [(start, end) for start, end, language in examples
+                  if language == "graphql"]
         blocks = "\n".join(graphql_name_text(text[start:end]) for start, end in fences)
         for identifier in re.findall(r"\b[A-Za-z_]\w*\b", blocks):
-            if any(re.match(re.escape(token) + r"[_A-Z]", identifier)
+            if any(re.match(re.escape(token) + r"[_A-Z0-9]", identifier)
                    for token in STALE_GRAPHQL_TOKENS):
                 raise ValueError("partial stale GraphQL identifier")
         for token in REMAINING_TOKENS:
             if token not in text:
                 continue
             for match in re.finditer(r"(?<![\w])" + re.escape(token) + r"(?![\w])", text):
-                # Bind exemptions to prose or GraphQL context as well as counts.
-                in_graphql = any(start <= match.start() < end for start, end in fences)
-                context = "graphql:" + token if in_graphql else token
+                # A documentary exemption cannot authorize a fenced API example.
+                context = occurrence_context(match.start(), token, examples)
                 key = (str(relative), token, context)
                 result[key] = result.get(key, 0) + 1
     return result
