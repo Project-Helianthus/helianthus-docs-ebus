@@ -6,6 +6,7 @@ import textwrap
 import pytest
 
 from scripts import check_runtime_driver_registration as checker
+from scripts import check_bidirectional_registration as bidirectional
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -210,3 +211,23 @@ def test_s5_obligation_cannot_move_sections(name: str, location: str) -> None:
 def test_s5_contract_mutations(before: str, after: str) -> None:
     assert before in TEXT
     assert checker.validate(TEXT.replace(before, after))
+
+
+@pytest.mark.parametrize("depth", [1, 3, 4, 5, 6])
+def test_shared_units_exclude_non_section_headings(depth: int) -> None:
+    text = f"## Section\n\n{'#' * depth} Obligation\n\nParagraph\n"
+    assert checker.visible_units(text) == [
+        ("heading", "Section"), ("paragraph", "Paragraph"),
+    ]
+
+
+@pytest.mark.parametrize("depth", [3, 4, 5, 6])
+@pytest.mark.parametrize("block", [
+    block for blocks in bidirectional.REQUIREMENTS.values() for block in blocks
+])
+def test_bidirectional_paragraph_cannot_be_replaced_by_heading(depth: int, block: str) -> None:
+    text = (ROOT / bidirectional.DOCUMENT).read_text(encoding="utf-8")
+    assert bidirectional.validate(text) == []
+    assert text.count(block) == 1
+    changed = text.replace(block, f"{'#' * depth} {checker.normalize(block)}")
+    assert bidirectional.validate(changed)

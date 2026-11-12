@@ -141,8 +141,8 @@ class HTMLVisibility(HTMLParser):
         return bool(self.containers or self.rawdata)
 
 
-def visible_units(text: str) -> list[tuple[str, str]]:
-    """Select top-level headings/paragraphs, retaining exact obligation markup."""
+def visible_units(text: str, *, include_subheadings: bool = False) -> list[tuple[str, str]]:
+    """Select H2 headings and paragraphs; optionally retain subsection boundaries."""
     tokens = MarkdownIt().parse(text)
     visibility = HTMLVisibility()
     units = []
@@ -160,7 +160,7 @@ def visible_units(text: str) -> list[tuple[str, str]]:
             opening = tokens[index - 1]
             if opening.type == "heading_open" and opening.tag == "h2" and opening.level == 0:
                 units.append(("heading", token.content))
-            elif opening.type == "heading_open" and opening.level == 0:
+            elif include_subheadings and opening.type == "heading_open" and opening.level == 0:
                 kind = "direct_subheading" if opening.tag == "h3" else "subheading"
                 units.append((kind, token.content))
             elif opening.type == "paragraph_open" and opening.level == 0 and not html:
@@ -170,7 +170,7 @@ def visible_units(text: str) -> list[tuple[str, str]]:
 
 def validate(text: str) -> list[str]:
     """Return missing/changed obligations in the bounded registration section."""
-    rendered = visible_units(text)
+    rendered = visible_units(text, include_subheadings=True)
     headings = [(i, content) for i, (kind, content) in enumerate(rendered)
                 if kind == "heading"]
     titles = [title for _, title in headings]
