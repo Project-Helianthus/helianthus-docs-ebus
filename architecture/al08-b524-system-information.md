@@ -25,45 +25,45 @@ before the companion's own checks.
 
 ## Pure helper contract
 
-`Ab42BuildInformation(identifier uint16) []byte` returns a fresh three-byte
+`B524SystemBuildInformation(identifier uint16) []byte` returns a fresh three-byte
 buffer `[00, IDlo, IDhi]`. Identifier 0x1234 builds `00 34 12`.
-`Ab42DecodeInformation(requestContext, raw) result` accepts exactly four
+`B524SystemDecodeInformation(requestContext, raw) result` accepts exactly four
 transport-normalized bytes and decodes little-endian IEEE binary32.
-Every new context/result field uses the `ab42` prefix. The following JSON block
+Context and result field names carry no prefix. The following JSON block
 is the bounded declaration checked alongside the synthetic examples:
 
 ```json
 {
-  "ab42RequestOrder": ["00", "IDlo", "IDhi"],
-  "ab42ReplyLength": 4,
-  "ab42Representation": "little-endian IEEE binary32",
-  "ab42ContextFields": ["ab42Family", "ab42Software", "ab42Hardware", "ab42APIVersion", "ab42APIRevision", "ab42Identifier"],
-  "ab42ResultFields": ["ab42Context", "ab42Raw", "ab42State", "ab42Value", "ab42Capacity", "ab42CapacityState"],
-  "ab42InvalidLengths": [0, 1, 2, 3, 5],
-  "ab42NonFinite": ["NaN", "positive infinity", "negative infinity"],
-  "ab42CapacityRule": "profile-supported integer: 1, 2, 3, 5, 7, 8",
-  "ab42Cardinality": "supported capacity; never discovered cardinality or slot presence",
-  "ab42InterpretationGrade": "Hypothesis"
+  "request_order": ["00", "IDlo", "IDhi"],
+  "reply_length": 4,
+  "representation": "little-endian IEEE binary32",
+  "context_fields": ["family", "software", "hardware", "api_version", "api_revision", "identifier"],
+  "result_fields": ["context", "raw", "state", "value", "capacity", "capacity_state"],
+  "invalid_lengths": [0, 1, 2, 3, 5],
+  "non_finite": ["NaN", "positive infinity", "negative infinity"],
+  "capacity_rule": "profile-supported integer: 1, 2, 3, 5, 7, 8",
+  "cardinality": "supported capacity; never discovered cardinality or slot presence",
+  "interpretation_grade": "Hypothesis"
 }
 ```
 
-The result owns a copy of `ab42Raw` and a snapshot of all six context fields.
+The result owns a copy of `raw` and a snapshot of all six context fields.
 Caller mutation cannot change a returned result; mutation of one returned buffer
 cannot change caller input or any other result. Each build also owns its buffer.
 Family, software, hardware, API version, API revision and numeric identifier
 remain independent, including on invalid replies. API version and API revision
 are distinct fields; neither replaces the other.
 
-`ab42State` is `decoded`, `invalid_length` or `invalid_non_finite`.
-`ab42Value` is a finite number only for `decoded`, otherwise null. Invalid
+`state` is `decoded`, `invalid_length` or `invalid_non_finite`.
+`value` is a finite number only for `decoded`, otherwise null. Invalid
 lengths and NaN or either infinity retain owned raw bytes with explicit invalid
 state. Never fabricate a terminal discovery marker. Partial failure retains
 context and raw evidence rather than discarding independently useful fields.
 There is no discovery-state update here, so existing last-known-good state is
 not replaced by an invalid decode.
 
-`ab42CapacityState` is `decoded` only for identifiers 0x0000 and 0x0001 with a
-profile-supported integer value in {1, 2, 3, 5, 7, 8}; `ab42Capacity` then
+`capacity_state` is `decoded` only for identifiers 0x0000 and 0x0001 with a
+profile-supported integer value in {1, 2, 3, 5, 7, 8}; `capacity` then
 contains that integer. Otherwise capacity is `Unknown` and null. Any other finite
 value remains decoded while capacity is Unknown, including zero, unsupported
 positive integers, fractional values and negative values. Zero is numeric zero,

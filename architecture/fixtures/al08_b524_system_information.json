@@ -1,19 +1,19 @@
 {
-  "ab42Context": {
-    "ab42Family": "synthetic-family-a",
-    "ab42Software": "synthetic-software-a",
-    "ab42Hardware": "synthetic-hardware-a",
-    "ab42APIVersion": 2,
-    "ab42APIRevision": 7,
-    "ab42Identifier": 4660
+  "context": {
+    "family": "synthetic-family-a",
+    "software": "synthetic-software-a",
+    "hardware": "synthetic-hardware-a",
+    "api_version": 2,
+    "api_revision": 7,
+    "identifier": 4660
   },
-  "ab42Examples": [
-    {"ab42Identifier": 4660, "ab42Request": [0, 52, 18], "ab42Raw": [0, 0, 128, 63], "ab42Value": 1.0, "ab42Capacity": null, "ab42CapacityState": "Unknown"},
-    {"ab42Identifier": 0, "ab42Request": [0, 0, 0], "ab42Raw": [0, 0, 128, 63], "ab42Value": 1.0, "ab42Capacity": 1, "ab42CapacityState": "decoded"},
-    {"ab42Identifier": 0, "ab42Request": [0, 0, 0], "ab42Raw": [0, 0, 192, 63], "ab42Value": 1.5, "ab42Capacity": null, "ab42CapacityState": "Unknown"},
-    {"ab42Identifier": 0, "ab42Request": [0, 0, 0], "ab42Raw": [0, 0, 128, 191], "ab42Value": -1.0, "ab42Capacity": null, "ab42CapacityState": "Unknown"},
-    {"ab42Identifier": 1, "ab42Request": [0, 1, 0], "ab42Raw": [0, 0, 0, 0], "ab42Value": 0.0, "ab42Capacity": null, "ab42CapacityState": "Unknown"},
-    {"ab42Identifier": 65535, "ab42Request": [0, 255, 255], "ab42Raw": [0, 0, 128, 63], "ab42Value": 1.0, "ab42Capacity": null, "ab42CapacityState": "Unknown"},
-    {"ab42Identifier": 13, "ab42Request": [0, 13, 0], "ab42Raw": [0, 0, 128, 63], "ab42Value": 1.0, "ab42Capacity": null, "ab42CapacityState": "Unknown"}
+  "examples": [
+    {"identifier": 4660, "request": [0, 52, 18], "raw": [0, 0, 128, 63], "value": 1.0, "capacity": null, "capacity_state": "Unknown"},
+    {"identifier": 0, "request": [0, 0, 0], "raw": [0, 0, 128, 63], "value": 1.0, "capacity": 1, "capacity_state": "decoded"},
+    {"identifier": 0, "request": [0, 0, 0], "raw": [0, 0, 192, 63], "value": 1.5, "capacity": null, "capacity_state": "Unknown"},
+    {"identifier": 0, "request": [0, 0, 0], "raw": [0, 0, 128, 191], "value": -1.0, "capacity": null, "capacity_state": "Unknown"},
+    {"identifier": 1, "request": [0, 1, 0], "raw": [0, 0, 0, 0], "value": 0.0, "capacity": null, "capacity_state": "Unknown"},
+    {"identifier": 65535, "request": [0, 255, 255], "raw": [0, 0, 128, 63], "value": 1.0, "capacity": null, "capacity_state": "Unknown"},
+    {"identifier": 13, "request": [0, 13, 0], "raw": [0, 0, 128, 63], "value": 1.0, "capacity": null, "capacity_state": "Unknown"}
   ]
 }

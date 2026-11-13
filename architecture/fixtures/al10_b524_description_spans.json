@@ -1,22 +1,22 @@
 {
-  "ab44_examples": [
+  "examples": [
     {
-      "ab44_name": "ab44_uin",
-      "ab44_context": {
-        "ab44_family": "synthetic-controller-family",
-        "ab44_software": "synthetic-software-a",
-        "ab44_hardware": "synthetic-hardware-a",
-        "ab44_api_version": 1,
-        "ab44_api_revision": 1,
-        "ab44_op": 1,
-        "ab44_gg": 2,
-        "ab44_ii": 1,
-        "ab44_rr": 2
+      "name": "uin",
+      "context": {
+        "family": "synthetic-controller-family",
+        "software": "synthetic-software-a",
+        "hardware": "synthetic-hardware-a",
+        "api_version": 1,
+        "api_revision": 1,
+        "op": 1,
+        "gg": 2,
+        "ii": 1,
+        "rr": 2
       },
-      "ab44_codec": "UIN",
-      "ab44_width": 2,
-      "ab44_grade": "Hypothesis",
-      "ab44_raw": [
+      "codec": "UIN",
+      "width": 2,
+      "grade": "Hypothesis",
+      "raw": [
         2,
         2,
         0,
@@ -27,30 +27,30 @@
         1,
         0
       ],
-      "ab44_expected_limits": [
+      "expected_limits": [
         0,
         4,
         1
       ],
-      "ab44_expected_reason": null
+      "expected_reason": null
     },
     {
-      "ab44_name": "ab44_wrong_pair",
-      "ab44_context": {
-        "ab44_family": "synthetic-controller-family",
-        "ab44_software": "synthetic-software-a",
-        "ab44_hardware": "synthetic-hardware-a",
-        "ab44_api_version": 1,
-        "ab44_api_revision": 1,
-        "ab44_op": 1,
-        "ab44_gg": 2,
-        "ab44_ii": 1,
-        "ab44_rr": 2
+      "name": "wrong_pair",
+      "context": {
+        "family": "synthetic-controller-family",
+        "software": "synthetic-software-a",
+        "hardware": "synthetic-hardware-a",
+        "api_version": 1,
+        "api_revision": 1,
+        "op": 1,
+        "gg": 2,
+        "ii": 1,
+        "rr": 2
       },
-      "ab44_codec": "EXP",
-      "ab44_width": 4,
-      "ab44_grade": "Hypothesis",
-      "ab44_raw": [
+      "codec": "EXP",
+      "width": 4,
+      "grade": "Hypothesis",
+      "raw": [
         2,
         2,
         0,
@@ -61,26 +61,26 @@
         1,
         0
       ],
-      "ab44_expected_limits": null,
-      "ab44_expected_reason": "ab44_length"
+      "expected_limits": null,
+      "expected_reason": "length"
     },
     {
-      "ab44_name": "ab44_exp",
-      "ab44_context": {
-        "ab44_family": "synthetic-controller-family",
-        "ab44_software": "synthetic-software-a",
-        "ab44_hardware": "synthetic-hardware-a",
-        "ab44_api_version": 1,
-        "ab44_api_revision": 1,
-        "ab44_op": 1,
-        "ab44_gg": 2,
-        "ab44_ii": 1,
-        "ab44_rr": 2
+      "name": "exp",
+      "context": {
+        "family": "synthetic-controller-family",
+        "software": "synthetic-software-a",
+        "hardware": "synthetic-hardware-a",
+        "api_version": 1,
+        "api_revision": 1,
+        "op": 1,
+        "gg": 2,
+        "ii": 1,
+        "rr": 2
       },
-      "ab44_codec": "EXP",
-      "ab44_width": 4,
-      "ab44_grade": "Hypothesis",
-      "ab44_raw": [
+      "codec": "EXP",
+      "width": 4,
+      "grade": "Hypothesis",
+      "raw": [
         2,
         2,
         0,
@@ -97,30 +97,30 @@
         128,
         63
       ],
-      "ab44_expected_limits": [
+      "expected_limits": [
         -20,
         20,
         1
       ],
-      "ab44_expected_reason": null
+      "expected_reason": null
     },
     {
-      "ab44_name": "ab44_date",
-      "ab44_context": {
-        "ab44_family": "synthetic-controller-family",
-        "ab44_software": "synthetic-software-a",
-        "ab44_hardware": "synthetic-hardware-a",
-        "ab44_api_version": 1,
-        "ab44_api_revision": 1,
-        "ab44_op": 1,
-        "ab44_gg": 2,
-        "ab44_ii": 1,
-        "ab44_rr": 2
+      "name": "date",
+      "context": {
+        "family": "synthetic-controller-family",
+        "software": "synthetic-software-a",
+        "hardware": "synthetic-hardware-a",
+        "api_version": 1,
+        "api_revision": 1,
+        "op": 1,
+        "gg": 2,
+        "ii": 1,
+        "rr": 2
       },
-      "ab44_codec": "date/time",
-      "ab44_width": 3,
-      "ab44_grade": "Hypothesis",
-      "ab44_raw": [
+      "codec": "date/time",
+      "width": 3,
+      "grade": "Hypothesis",
+      "raw": [
         2,
         2,
         0,
@@ -134,8 +134,8 @@
         8,
         9
       ],
-      "ab44_expected_limits": null,
-      "ab44_expected_reason": "ab44_date_step_unknown"
+      "expected_limits": null,
+      "expected_reason": "date_step_unknown"
     }
   ]
 }
