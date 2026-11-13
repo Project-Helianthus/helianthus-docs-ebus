@@ -203,14 +203,6 @@ pages keep the status statements in their own text.
 
 - [adaptermux/first-byte-arbitration-revalidation.md](adaptermux/first-byte-arbitration-revalidation.md)
 - [adaptermux/frame-atomic-syn-padding-math.md](adaptermux/frame-atomic-syn-padding-math.md)
-- [adaptermux/frame-atomic-visibility-v2.md](adaptermux/frame-atomic-visibility-v2.md)
-- [adaptermux/frame-atomic-visibility-v3.md](adaptermux/frame-atomic-visibility-v3.md)
-- [adaptermux/frame-atomic-visibility-v4.md](adaptermux/frame-atomic-visibility-v4.md)
-- [adaptermux/frame-atomic-visibility-v5.md](adaptermux/frame-atomic-visibility-v5.md)
-- [adaptermux/frame-atomic-visibility-v6.md](adaptermux/frame-atomic-visibility-v6.md)
-- [adaptermux/frame-atomic-visibility-v7.md](adaptermux/frame-atomic-visibility-v7.md)
-- [adaptermux/frame-atomic-visibility-v8.md](adaptermux/frame-atomic-visibility-v8.md)
-- [adaptermux/frame-atomic-visibility-v9.md](adaptermux/frame-atomic-visibility-v9.md)
 - [adaptermux/frame-atomic-visibility.md](adaptermux/frame-atomic-visibility.md)
 
 ## `architecture/atr/`

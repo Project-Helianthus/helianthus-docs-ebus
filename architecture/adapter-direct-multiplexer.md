@@ -172,7 +172,7 @@ reconnect, close) retires the response without being counted.
 Whenever a START ends without a clean ownership, the mux fences selection until
 the next SYN and also has to bring two trackers back in step: the wire-phase
 tracker and the AA-injection classifier (see the
-[frame-atomic visibility v8 design](adaptermux/frame-atomic-visibility-v8.md)). A fence is raised by
+[frame-atomic visibility design](adaptermux/frame-atomic-visibility.md#wire-phase-state-machine)). A fence is raised by
 cancellation, replacement or expiry of the selected bid before its result, an
 undeliverable STARTED, a STARTED naming a different address than the pending
 bid, a FAILED naming a foreign winner or a bit-arbitration artifact, and a START

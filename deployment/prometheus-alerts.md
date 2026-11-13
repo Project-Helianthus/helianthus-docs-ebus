@@ -11,14 +11,14 @@ with the deployment.
 
 | Alert name | Source counter | Reference |
 |---|---|---|
-| `HelianthusRound9FiredUnderProxy` | `helianthus_round9_absorb_entered_total` | [frame-atomic-visibility-v8 §1.12 / I8](../architecture/adaptermux/frame-atomic-visibility-v8.md) |
-| `HelianthusV8ShadowWouldHaveDroppedGrowing` | `helianthus_v8_shadow_would_have_dropped_total` | [frame-atomic-visibility-v8 §4.7 — B3.7 shadow divergence](../architecture/adaptermux/frame-atomic-visibility-v8.md) |
+| `HelianthusRound9FiredUnderProxy` | `helianthus_round9_absorb_entered_total` | [frame-atomic visibility, round-9 absorb fallback and alerts / I8](../architecture/adaptermux/frame-atomic-visibility.md#round-9-absorb-fallback-and-alerts) |
+| `HelianthusV8ShadowWouldHaveDroppedGrowing` | `helianthus_v8_shadow_would_have_dropped_total` | [frame-atomic visibility, rollout modes (shadow divergence)](../architecture/adaptermux/frame-atomic-visibility.md#rollout-modes) |
 
 ## HelianthusRound9FiredUnderProxy
 
 **Owner:** operations team. The rule MUST be present in the Prometheus
 config (`prometheus-rules.yaml`) before the adaptermux classifier is
-enabled in `enforce` mode. Step C live-bus validation (v8 §14) verifies
+enabled in `enforce` mode. Live-bus validation ([rollout modes](../architecture/adaptermux/frame-atomic-visibility.md#rollout-modes)) verifies
 rule presence via the Prometheus API before proxy rollout.
 
 **Counter source:** `helianthus_round9_absorb_entered_total`
@@ -26,7 +26,7 @@ rule presence via the Prometheus API before proxy rollout.
 accessor. The counter is named neutrally on the Go side — it counts
 every round-9 AUTO-SYN absorb predicate fire inside `sendRawWithEcho`
 (`protocol/bus.go`), gated on the runtime phase predicate
-`inSendRawWithEchoActiveEchoWait()` (see [frame-atomic-visibility-v8 §1.8](../architecture/adaptermux/frame-atomic-visibility-v8.md)).
+`inSendRawWithEchoActiveEchoWait()` (see [round-9 absorb fallback and alerts](../architecture/adaptermux/frame-atomic-visibility.md#round-9-absorb-fallback-and-alerts)).
 The "fired under proxy" interpretation lives ENTIRELY in this alert
 rule's PromQL (which AND-s the counter with `classifier_mode == "enforce"`),
 not in the counter's code-side name. This keeps the Go protocol layer
@@ -54,12 +54,12 @@ during the absorb window.
 See the "Diagnostic correlation" runbook section below for how
 to interpret entry-vs-consumption gaps during incident response.
 
-**Why this alert exists:** under v8 I8, round-9 absorb code is RETAINED
+**Why this alert exists:** under invariant I8, round-9 absorb code is RETAINED
 as a legacy fallback for direct-adapter mode (no proxy mediating wire
 AUTO-SYNs). When the adaptermux classifier is in `enforce` mode, the
 proxy is contractually obligated to filter wire AUTO-SYNs before they
 reach the gateway's echo position; any round-9 fire under that mode is
-a v8 invariant violation — the proxy is not filtering correctly.
+an I8 invariant violation — the proxy is not filtering correctly.
 
 **Suggested rule:**
 
@@ -81,15 +81,15 @@ groups:
           description: |
             The gateway's round-9 AUTO-SYN absorb predicate fired on instance
             {{ $labels.instance }} while the adaptermux classifier is in
-            `enforce` mode. Per frame-atomic-visibility v8 §1.8 / I8, the
+            `enforce` mode. Per frame-atomic visibility invariant I8, the
             proxy MUST filter wire AUTO-SYNs before they reach the gateway's
             echo position when classifier mode is `enforce` — round-9 firing
             indicates the proxy is not correctly filtering. Investigate the
             adaptermux classifier path and per-session pacer; this is the
-            v8 invariant violation that the round-9 fallback was kept to
+            I8 invariant violation that the round-9 fallback was kept to
             measure, not to mask.
           runbook_url: |
-            https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/adaptermux/frame-atomic-visibility-v8.md#18
+            https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/adaptermux/frame-atomic-visibility.md#round-9-absorb-fallback-and-alerts
 ```
 
 **Gating model:**
@@ -104,7 +104,7 @@ groups:
   will trip on ANY round-9 fire, which is conservative and
   acceptable for the bootstrap phase.
 
-**Pre-deploy gate (Step C live-validation, v8 §14):**
+**Pre-deploy gate (live validation, see [rollout modes](../architecture/adaptermux/frame-atomic-visibility.md#rollout-modes)):**
 
 ```bash
 # Check the rule is loaded.
@@ -118,7 +118,7 @@ curl -s "${PROMETHEUS_URL}/api/v1/rules" \
 ```
 
 If the rule is absent or fails to load, the proxy MUST NOT be promoted
-to `enforce` mode — the v8 invariant is unobservable without it.
+to `enforce` mode — invariant I8 is unobservable without it.
 
 **Diagnostic correlation (incident-response runbook):**
 
@@ -171,14 +171,14 @@ Interpretation matrix (all terms read as `increase(...[5m])`):
 | Counter pattern | Diagnosis |
 |---|---|
 | `entered > 0`, all three sub-counters at 0 | All round-9 entries in the window had transport errors before reading the first absorb byte. **This is STILL an I8 violation** — the proxy let the wire AUTO-SYN reach the gateway's echo position in the first place. The transport-error layer is a secondary fault on top: investigate `ebus_errors_total{class="transport_reset"}` and `ebus_passive_tap_connected` alongside the adaptermux classifier path. |
-| `entered` approximately equal to `recovered`, `drain_exhausted == 0` | Healthy round-9 rescue: every entered transaction recovered cleanly via the absorb loop. Under `enforce` mode this is the v8 invariant violation HelianthusRound9FiredUnderProxy is alerting on — the proxy let AUTO-SYNs through and round-9 absorbed them. Investigate the adaptermux classifier path and per-session pacer; round-9 ABSORBED the violation but the entry itself is the contract breach. (Exact equality is not safe — scrape-boundary effects, `increase()` extrapolation, and in-flight transactions allow small skew; treat ratios within a few percent as "approximately equal".) |
+| `entered` approximately equal to `recovered`, `drain_exhausted == 0` | Healthy round-9 rescue: every entered transaction recovered cleanly via the absorb loop. Under `enforce` mode this is the I8 invariant violation HelianthusRound9FiredUnderProxy is alerting on — the proxy let AUTO-SYNs through and round-9 absorbed them. Investigate the adaptermux classifier path and per-session pacer; round-9 ABSORBED the violation but the entry itself is the contract breach. (Exact equality is not safe — scrape-boundary effects, `increase()` extrapolation, and in-flight transactions allow small skew; treat ratios within a few percent as "approximately equal".) |
 | `entered > recovered + drain_exhausted` | The residual covers BOTH first-call transport failures (no sub-counter ticks at all) AND non-SYN-break terminations (`absorbed` ticks at least once, `recovered`/`drain_exhausted` don't, transaction falls through the generic `if echo != raw` branch and surfaces as `ebus_errors_total{class="echo_mismatch"}`, mapped to `BusOutcomeEchoMismatch` via `busOutcomeFromError`). **Disambiguation is asymmetric.** `helianthus_payload_aa_auto_syn_absorbed_total == 0` for the same window is a one-way signal that the residual is exclusively pre-first-drain transport failures (no read ever completed). `absorbed > 0` is AMBIGUOUS by itself — it also accumulates from recovered transactions (1+ absorb per rescue) and drain-exhausted transactions (up to 3 absorbs each). To distinguish non-SYN-break from the other contributors, correlate against `ebus_errors_total{class="echo_mismatch"}` deltas and inspect `ebus_active_echo_mismatch_subclass_total` to see which subclass is firing. CAVEAT: the generic echo-mismatch branch emits a `BusEventEchoMismatch` observer event AND the downstream `emitOutcomeEvent` emits another echo-mismatch event with zero-valued byte/provenance, so the subclass counter may show a noisier sample alongside the real drained-byte subclass — treat per-subclass ratios, not absolute counts, as the operationally meaningful signal. |
 | `drain_exhausted > 0` | Sustained AUTO-SYN bursts longer than the 3-byte drain cap, OR a genuinely-stuck adapter. As noted in the counter table, each drain_exhausted transaction surfaces on BOTH `ebus_errors_total{class="echo_mismatch"}` and `class="collision"`. Check upstream-adapter health (voltage / WiFi signal / `ebus_passive_tap_connected`) before assuming classifier fault. |
 | `recovered > drain_exhausted` steady-state with `classifier_mode != "enforce"` | Healthy round-9 operation in direct-adapter mode. Expected; alert does NOT fire (gated on `classifier_mode == "enforce"`). |
 
 The `HelianthusRound9FiredUnderProxy` alert is intentionally
 deliberate: it does NOT subdivide by which sub-counter ticked, because
-the v8 invariant (I8) is "no round-9 entry under proxy enforce-mode",
+invariant I8 is "no round-9 entry under proxy enforce-mode",
 not "no absorb work under proxy enforce-mode". An entry that
 immediately transport-failed STILL indicates the proxy let an
 AUTO-SYN reach the gateway's echo position — the proxy's job is to
@@ -239,7 +239,7 @@ groups:
             positive flagging legitimate bytes. DO NOT promote to
             `enforce` until the growth is explained.
           runbook_url: |
-            https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/adaptermux/frame-atomic-visibility-v8.md#47
+            https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/adaptermux/frame-atomic-visibility.md#rollout-modes
 ```
 
 **Severity rationale (info, not warning):** non-zero growth in shadow
@@ -249,7 +249,7 @@ specifically looking for during canary validation. Promote to
 shadow validation runbook is complete and they want failure on
 any unexpected growth.
 
-**Pre-promotion gate (Step C live-validation, v8 §14):**
+**Pre-promotion gate (live validation, see [rollout modes](../architecture/adaptermux/frame-atomic-visibility.md#rollout-modes)):**
 
 ```bash
 # 1. Check the rule is loaded.
