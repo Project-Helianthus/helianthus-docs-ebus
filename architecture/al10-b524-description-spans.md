@@ -7,12 +7,12 @@ profile. Nothing is stable before Helianthus 1.0.
 
 ## Pure helper contract
 
-**Proven — representation shape:** `Ab44BuildDescription(context)` produces
+**Proven — representation shape:** `B524BuildDescription(context)` produces
 `[OP,GG,II,RRlo,RRhi]` only for OP01/07. Other operations or incomplete contexts
 produce no request and an explicit reason. Legacy `01 GG RR` is incomplete.
-`Ab44DecodeDescription(context, explicitCodec, explicitWidth, grade, raw)`
+`B524DecodeDescription(context, explicitCodec, explicitWidth, grade, raw)`
 retains the complete request identity and original raw bytes on every outcome.
-The JSON spelling of each context field has an `ab44_` prefix: family,
+The JSON spelling of each context field has no prefix: family,
 software, hardware, API version, API revision, OP, GG, II and full 16-bit RR.
 No identity field is inferred. Each field independently distinguishes contexts;
 identical replies from different contexts must remain separate results.
@@ -50,60 +50,60 @@ remains fail-closed.
 ## Machine-readable representation assertions
 
 These finite assertions constrain this page and its examples, not a dictionary
-or runtime implementation. All new fixture and test identifiers use `ab44`.
+or runtime implementation.
 
 ```json
 {
-  "ab44_request_ops": [
+  "request_ops": [
     1,
     7
   ],
-  "ab44_metadata_ops": {
+  "metadata_ops": {
     "1": 2,
     "7": 6
   },
-  "ab44_context_fields": [
-    "ab44_family",
-    "ab44_software",
-    "ab44_hardware",
-    "ab44_api_version",
-    "ab44_api_revision",
-    "ab44_op",
-    "ab44_gg",
-    "ab44_ii",
-    "ab44_rr"
+  "context_fields": [
+    "family",
+    "software",
+    "hardware",
+    "api_version",
+    "api_revision",
+    "op",
+    "gg",
+    "ii",
+    "rr"
   ],
-  "ab44_reply_header": [
+  "reply_header": [
     "GG",
     "RRlo",
     "RRhi"
   ],
-  "ab44_span_count": 3,
-  "ab44_length": "3+3w",
-  "ab44_infer_codec": false,
-  "ab44_echo": [
+  "span_count": 3,
+  "length": "3+3w",
+  "infer_codec": false,
+  "echo": [
     "GG",
     "RRlo",
     "RRhi"
   ],
-  "ab44_ii_echo": false,
-  "ab44_typed_grades": [
+  "ii_echo": false,
+  "typed_grades": [
     "Hypothesis",
     "Proven"
   ],
-  "ab44_codecs": {
+  "codecs": {
     "UCH": 1,
     "UIN": 2,
     "EXP": 4,
     "date/time": 3
   },
-  "ab44_nonfinite_valid": false,
-  "ab44_reversed_valid": false,
-  "ab44_negative_step_valid": false,
-  "ab44_zero_step": "literal zero",
-  "ab44_date_numeric_permission": false,
-  "ab44_presence_authority": false,
-  "ab44_write_authority": false
+  "nonfinite_valid": false,
+  "reversed_valid": false,
+  "negative_step_valid": false,
+  "zero_step": "literal zero",
+  "date_numeric_permission": false,
+  "presence_authority": false,
+  "write_authority": false
 }
 ```
 
