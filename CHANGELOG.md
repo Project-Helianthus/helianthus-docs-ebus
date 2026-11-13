@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- The required `Modbus Trusted Revision` status is produced by
+  `.github/workflows/modbus-trusted-revision-pr.yml` on `pull_request` events,
+  with the same job, permissions, checkouts and pinned immutable anchor run as
+  the protected `pull_request_target` workflow, which stays byte-identical.
+  Docs CI path filters include the new workflow, repository tests fail when it
+  differs from the protected workflow in anything but its name and trigger or
+  when another workflow file names a job of that name literally, and the Modbus
+  multivendor boundaries page states the guarantee, its limit and the pull
+  requests that need the owner's explicit approval before merge.
 - Breaking documentation URL change: the frame-atomic visibility revision pages
   `frame-atomic-visibility-v2.md` to `frame-atomic-visibility-v9.md` under
   `architecture/adaptermux/` are removed without redirect pages.

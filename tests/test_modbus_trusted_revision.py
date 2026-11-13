@@ -1,9 +1,14 @@
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
 import pathlib
+import re
 import shutil
+from typing import Any
+
+import pytest
 
 from scripts import validate_modbus_revision_transition as transition_validator
 
@@ -150,3 +155,150 @@ def test_contract_removal_fails(tmp_path: pathlib.Path) -> None:
     current.mkdir()
     errors = run_validator(prior, current)
     assert "the Modbus companion manifest cannot be removed" in errors
+
+
+PR_WORKFLOW = REPO_ROOT / ".github/workflows/modbus-trusted-revision-pr.yml"
+STATUS_JOB_NAME = "Modbus Trusted Revision"
+PR_WORKFLOW_NAME = "Modbus Trusted Revision (pull_request)"
+YAML_JOB_NAME_LINE = re.compile(
+    r"""^\s*name:\s*["']?Modbus Trusted Revision["']?\s*$""",
+    re.MULTILINE,
+)
+
+
+def load_workflow(path: pathlib.Path) -> dict[str, Any]:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def expected_pull_request_workflow(protected: dict[str, Any]) -> dict[str, Any]:
+    expected = copy.deepcopy(protected)
+    assert set(expected["on"]) == {"pull_request_target"}
+    expected["name"] = PR_WORKFLOW_NAME
+    expected["on"] = {"pull_request": expected["on"]["pull_request_target"]}
+    return expected
+
+
+def status_producers(directory: pathlib.Path) -> list[str]:
+    producers: list[str] = []
+    paths = sorted([*directory.glob("*.yml"), *directory.glob("*.yaml")])
+    for path in paths:
+        raw = path.read_text(encoding="utf-8")
+        try:
+            parsed = json.loads(raw)
+        except json.JSONDecodeError:
+            if YAML_JOB_NAME_LINE.search(raw) is not None:
+                producers.append(path.name)
+            continue
+        jobs = parsed.get("jobs", {}) if isinstance(parsed, dict) else {}
+        if any(
+            isinstance(job, dict) and job.get("name") == STATUS_JOB_NAME
+            for job in jobs.values()
+        ):
+            producers.append(path.name)
+    return producers
+
+
+def anchor_ref(workflow: dict[str, object]) -> str:
+    jobs = workflow["jobs"]
+    assert isinstance(jobs, dict)
+    refs = [
+        step["with"]["ref"]
+        for job in jobs.values()
+        for step in job["steps"]
+        if step.get("with", {}).get("path") == "anchor"
+    ]
+    assert len(refs) == 1
+    return refs[0]
+
+
+def test_pull_request_workflow_is_canonical_sorted_json() -> None:
+    raw = PR_WORKFLOW.read_bytes()
+    parsed = json.loads(raw.decode("utf-8"))
+    canonical = json.dumps(parsed, indent=2, sort_keys=True) + "\n"
+    assert raw == canonical.encode("utf-8")
+
+
+def test_pull_request_workflow_equals_protected_except_name_and_trigger() -> None:
+    expected = expected_pull_request_workflow(load_workflow(WORKFLOW))
+    assert load_workflow(PR_WORKFLOW) == expected
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        "top_level_env",
+        "top_level_defaults",
+        "top_level_concurrency",
+        "changed_step",
+        "added_step_env",
+        "added_trigger",
+        "changed_trigger_types",
+    ],
+)
+def test_whole_document_comparison_rejects_any_other_difference(
+    tmp_path: pathlib.Path, mutation: str
+) -> None:
+    candidate = load_workflow(PR_WORKFLOW)
+    steps = candidate["jobs"]["trusted-revision"]["steps"]
+    if mutation == "top_level_env":
+        candidate["env"] = {"PYTHONPATH": "current"}
+    elif mutation == "top_level_defaults":
+        candidate["defaults"] = {"run": {"working-directory": "current"}}
+    elif mutation == "top_level_concurrency":
+        candidate["concurrency"] = {"group": "status", "cancel-in-progress": True}
+    elif mutation == "changed_step":
+        steps[-1]["run"] = "true"
+    elif mutation == "added_step_env":
+        steps[-1]["env"] = {"PYTHONPATH": "current"}
+    elif mutation == "added_trigger":
+        candidate["on"]["workflow_dispatch"] = {}
+    else:
+        candidate["on"]["pull_request"]["types"].append("edited")
+    mutated = tmp_path / PR_WORKFLOW.name
+    mutated.write_text(
+        json.dumps(candidate, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    expected = expected_pull_request_workflow(load_workflow(WORKFLOW))
+    unchanged = tmp_path / "unchanged.yml"
+    shutil.copy2(PR_WORKFLOW, unchanged)
+    assert load_workflow(unchanged) == expected
+    assert load_workflow(mutated) != expected
+
+
+def test_only_the_two_known_workflows_produce_the_status_job() -> None:
+    """YAML is matched by a line expression: it finds plain literal names only."""
+    assert status_producers(REPO_ROOT / ".github/workflows") == [
+        "modbus-trusted-revision-pr.yml",
+        "modbus-trusted-revision.yml",
+    ]
+
+
+def test_status_producer_detection_finds_json_and_yaml_jobs(
+    tmp_path: pathlib.Path,
+) -> None:
+    shutil.copy2(WORKFLOW, tmp_path / WORKFLOW.name)
+    (tmp_path / "other.yaml").write_text(
+        "jobs:\n  x:\n    name: 'Modbus Trusted Revision'\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "unrelated.yml").write_text(
+        "jobs:\n  x:\n    name: Docs Checks\n",
+        encoding="utf-8",
+    )
+    renamed = json.loads(WORKFLOW.read_text(encoding="utf-8"))
+    renamed["jobs"]["trusted-revision"]["name"] = "Docs Checks"
+    (tmp_path / "renamed.yml").write_text(json.dumps(renamed), encoding="utf-8")
+    assert status_producers(tmp_path) == [
+        WORKFLOW.name,
+        "other.yaml",
+    ]
+
+
+def test_both_workflows_pin_the_manifest_trust_anchor() -> None:
+    manifest = load_manifest(REPO_ROOT)
+    trust_anchor = manifest["trust_anchor"]
+    assert isinstance(trust_anchor, dict)
+    expected = trust_anchor["commit_sha"]
+    for path in (WORKFLOW, PR_WORKFLOW):
+        workflow = json.loads(path.read_text(encoding="utf-8"))
+        assert anchor_ref(workflow) == expected
