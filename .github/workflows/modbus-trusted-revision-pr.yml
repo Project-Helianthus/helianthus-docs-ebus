@@ -1,0 +1,70 @@
+{
+  "jobs": {
+    "trusted-revision": {
+      "name": "Modbus Trusted Revision",
+      "runs-on": "ubuntu-latest",
+      "steps": [
+        {
+          "name": "Checkout immutable trust anchor",
+          "uses": "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683",
+          "with": {
+            "clean": true,
+            "path": "anchor",
+            "persist-credentials": false,
+            "ref": "e633fa22a6a6fe3e4f3b74a68eb44401fe26f38d",
+            "repository": "Project-Helianthus/helianthus-execution-plans"
+          }
+        },
+        {
+          "name": "Checkout trusted prior state",
+          "uses": "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683",
+          "with": {
+            "clean": true,
+            "path": "prior",
+            "persist-credentials": false,
+            "ref": "${{ github.event.pull_request.base.sha }}",
+            "repository": "Project-Helianthus/helianthus-docs-ebus"
+          }
+        },
+        {
+          "name": "Checkout untrusted PR head as data",
+          "uses": "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683",
+          "with": {
+            "clean": true,
+            "path": "current",
+            "persist-credentials": false,
+            "ref": "${{ github.event.pull_request.head.sha }}",
+            "repository": "${{ github.event.pull_request.head.repo.full_name }}"
+          }
+        },
+        {
+          "env": {
+            "TRUSTED_BASE_SHA": "${{ github.event.pull_request.base.sha }}",
+            "UNTRUSTED_HEAD_SHA": "${{ github.event.pull_request.head.sha }}"
+          },
+          "name": "Verify immutable checkout identities",
+          "run": "set -euo pipefail\ntest \"$(git -C anchor rev-parse HEAD)\" = \"e633fa22a6a6fe3e4f3b74a68eb44401fe26f38d\"\ntest \"$(git -C prior rev-parse HEAD)\" = \"${TRUSTED_BASE_SHA}\"\ntest \"$(git -C current rev-parse HEAD)\" = \"${UNTRUSTED_HEAD_SHA}\"",
+          "shell": "bash"
+        },
+        {
+          "name": "Validate Modbus revision transition with immutable anchor",
+          "run": "python3 anchor/scripts/validate_modbus_docs_trust.py --prior-root prior --current-root current --trust-anchor-sha e633fa22a6a6fe3e4f3b74a68eb44401fe26f38d",
+          "shell": "bash"
+        }
+      ]
+    }
+  },
+  "name": "Modbus Trusted Revision (pull_request)",
+  "on": {
+    "pull_request": {
+      "types": [
+        "opened",
+        "reopened",
+        "synchronize"
+      ]
+    }
+  },
+  "permissions": {
+    "contents": "read"
+  }
+}

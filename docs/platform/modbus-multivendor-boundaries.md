@@ -285,11 +285,34 @@ Each implementation PR must:
   licensing, security, and adversarial review gates.
 
 Changes in the Modbus companion surface are additionally checked by the
-required `Modbus Trusted Revision` status. That check executes the base-owned
-workflow under `pull_request_target`, checks out the proposed head only as
-untrusted data, and validates the transition with the immutable external anchor
-recorded in the companion manifest. The protected workflow and validators must
-not be executed from the proposed head.
+required `Modbus Trusted Revision` status. The workflow in
+`.github/workflows/modbus-trusted-revision-pr.yml` produces that status on
+`pull_request` events. It checks out the proposed head only as untrusted data,
+takes the base revision as trusted prior state, and validates the transition
+with the immutable external anchor recorded in the companion manifest, so the
+validator that runs is the anchor's and not the head's.
+
+The workflow definition itself comes from the pull request under test, so a
+pull request that edits the producing workflow or adds another job of the same
+name can obtain the status without the anchor run. Every pull request that
+touches `.github/workflows/`, the trusted-revision drift tests in
+`tests/test_modbus_trusted_revision.py`, the protected companion validators
+`scripts/validate_modbus_revision_transition.py` and
+`scripts/validate_modbus_companion.py`, or a Modbus manifest under
+`docs/platform/manifests/` is identified by path and needs the owner's explicit
+approval before merge.
+
+The repository tests fail when the producing workflow differs from the
+protected workflow in anything but its name and trigger, and when another
+workflow file names a job `Modbus Trusted Revision` in JSON or on a plain YAML
+`name:` line; a job name written in any other form, such as one built by an
+expression, is caught by the approval rule and not by the tests. The
+base-owned `pull_request_target` workflow stays in the repository unchanged as
+a protected path of the V1 contract and produces the same status wherever the
+hosting platform starts workflows on that trigger. The statement of the
+[V1 policy page](./modbus-foundation-profile-contract-v1.md) that a head change
+cannot remove, repin, or replace the anchor invocation describes this
+base-owned `pull_request_target` run only.
 
 Any proposed gateway composition or private binding change is outside this
 pre-gateway contract and requires its own execution authorization.
