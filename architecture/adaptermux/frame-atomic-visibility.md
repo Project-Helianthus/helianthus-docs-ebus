@@ -1,528 +1,481 @@
-# Frame-Atomic Visibility — Helianthus Proxy Design Sketch
-
-> **Current delivery contract:** [v9 — bounded pacer backlog and strict
-> arbitration ordering](frame-atomic-visibility-v9.md). The design sketch below
-> is historical; its unbounded pacing and real-time arbitration descriptions
-> are superseded by v9.
->
-> **I5 (pacer correctness, current restatement of v5 I5):** on-time delivery
-> retains `τ_wire_byte` cadence per session. The paced backlog has a default
-> bound of **2 RECEIVED symbols**; beyond that bound, flush the backlog
-> immediately in stream order and resume pacing from the current time.
-> `STARTED` and `FAILED` never overtake queued `RECEIVED` symbols: flush the
-> preceding backlog first and write the arbitration result immediately after it.
-> Export backlog flushes separately as `adaptermux_session_backlog_flushes_total`,
-> outside the latency histogram. See v9 for counter scope and ordering examples.
-
-> Status: design sketch · Branch: `frame-atomic-visibility` (multi-repo)
-> · Authors: Razvan + Claude · Date: 2026-05-18
-
-
-<!-- legacy-role-mapping:begin -->
-> **Legacy terminology note.** This historical design doc was written before
-> the canonical `initiator`/`target` rename completed across the docs corpus.
-> Wherever you encounter `m`+`aster` or `sl`+`ave` in this file, read it
-> as `initiator`/`target` respectively (per the legacy-role-mapping
-> convention used throughout `helianthus-docs-ebus`). Live source code and
-> new design docs use the canonical terms exclusively.
-
-A design note for a curious reader. This describes a redesign of how the
-Helianthus eBUS gateway/proxy exposes wire activity to its multiple
-clients (ebusd, vrc-explorer, the Helianthus gateway when it is acting as
-observer on someone else's transaction, etc.). The current model leaks
-intra-frame artifacts; the proposed model treats each telegram as an
-atomic event.
-
----
-
-## 0. Headline invariant — proxy transparency
-
-The single overriding constraint is **proxy transparency**: no client of
-the proxy should be able to detect that a proxy exists between it and
-the physical bus. Every connected client must behave as if it had its
-own dedicated ENS-WiFi adapter wired directly to the raw eBUS, reached
-over TCP/ENS.
-
-Concrete consequences, each one cross-referenced in the sections below:
-
-  - The byte stream emitted to a client conforms exactly to the ENS/ENH
-    protocol an actual adapter would emit — same event types, same
-    framing, same escape rules. (§6)
-  - The perceived bus density (`symbol_rate`) per session matches what
-    a real ENS adapter would deliver to that specific client over its
-    own TCP link, including any per-link latency or congestion. (§3)
-  - Telegram bytes are paced across roughly the wire-time of the
-    telegram, not burst-flushed. (§4.5)
-  - Arbitration control events (`STARTED` / `FAILED` / `RESET`) carry
-    timing as close to direct-adapter timing as the model can preserve.
-  - The proxy never injects events the wire did not produce. No health
-    frames, no markers, no debug taps. Diagnostic telemetry lives
-    strictly on the proxy's own out-of-band admin channel, never in
-    the client byte stream.
-
-Every design choice below derives from this single rule.
-
----
-
-## 1. Problem
-
-eBUS is a 2400-baud half-duplex serial protocol where every transaction
-is a multi-byte telegram (master telegram + optional slave response +
-CRC + ACK + terminator SYN). On an idle bus, an AUTO-SYN byte (0xAA) is
-emitted roughly every 35 ms to keep the bus alive.
-
-Our gateway speaks to a WiFi-connected eBUS adapter (eBUSD-WiFi) using
-the ENH/ENS framing protocol. The adapter buffers bytes for some amount
-of time before placing them on the physical wire, and conversely buffers
-received bytes before delivering them to us over WiFi. There is real
-latency and jitter in this hop (call it `L_up` for proxy→adapter and
-`L_dn` for adapter→proxy; both are on the order of 5–30 ms, occasionally
-spiking higher).
-
-The proxy currently mirrors raw byte events to every connected client in
-real time. Side effects observed in production:
-
-  - AUTO-SYNs emitted by the adapter mid-frame leak to clients as if
-    they were real wire bytes.
-  - When client A is mid-write but client B is also subscribed, B sees
-    A's bytes intermixed with AUTO-SYN noise that has no meaning at the
-    eBUS protocol layer.
-  - The gateway has accreted multiple suppression gates over time
-    (mid-write suppression, between-writes suppression, post-grant
-    pre-echo suppression, payload-0xAA + AUTO-SYN drain absorption) to
-    paper over this leak. Each gate fixes some cases and shifts others
-    into different failure modes (most recently: echo_mismatch errors
-    became timeout errors, with the same underlying transactions just
-    relabelled).
-
-The root cause is the visibility model itself: bytes are not the natural
-unit of eBUS observation. Telegrams are.
-
----
-
-## 2. Three observer modes
-
-The proposal splits client visibility into three modes. Any one client
-may transition between modes from one telegram to the next.
-
-| Mode             | Stream                            | SYN source        | Used when                                  |
-|------------------|-----------------------------------|-------------------|--------------------------------------------|
-| `token-holder`   | byte-level real time              | wire-exact        | client owns arbitration for this telegram  |
-| `passive-direct` | byte-level real time              | wire-exact        | client is a hardware pass-through observer |
-| `cross-proxy`    | telegram-atomic + synthetic SYNs  | symbol-rate based | every other client of the proxy            |
-
-In our topology nearly every observer is `cross-proxy`. There is exactly
-one `token-holder` at a time (the arbitration winner for the current
-telegram), and `passive-direct` is rare (it requires a separate
-physical tap on the bus, which we do not have).
-
-**The mode is per-telegram, not per-session.** A session's role is
-fixed at the moment a telegram begins — specifically at the
-`IDLE → ARBITRATING` FSM transition (§5). If this session was the
-arbitration winner it becomes `token-holder` for this telegram; every
-other session becomes `cross-proxy` observer for this telegram. The
-role is held until the telegram terminates (`DONE` or `ABORTED`), at
-which point the session drops back to "no role" and sees only the
-inter-telegram filler stream until the next `STARTED` event.
-
-A session therefore cannot be `token-holder` and `cross-proxy`
-*simultaneously*. It alternates between the two roles from one
-telegram to the next as arbitration outcomes determine.
-
-For `token-holder`, byte-level visibility is unavoidable — the client is
-driving the wire and must see its own echoes byte by byte to detect
-arbitration outcome, NACKs, and so on. This is the only mode that
-requires mid-telegram visibility, and the current code path stays as-is
-for it.
-
-For `cross-proxy`, telegrams are buffered server-side until complete and
-then emitted as a coherent block, paced across the wire-time of the
-telegram and padded with synthetic SYNs to preserve correct wire-density
-timing.
-
----
-
-## 3. Symbol-rate measurement (ebusd-style)
-
-ebusd exposes a `symbol_rate` statistic computed against the live byte
-stream. The theoretical maximum on eBUS is 240 symbols/sec (2400 baud,
-10-bit UART framing). The observed rate is always a submultiple — a
-typical healthy bus reports somewhere around 100–150 symbols/sec,
-reflecting actual telegram density plus AUTO-SYN keepalives.
-
-The Helianthus proxy maintains a `symbol_rate` EMA **per cross-proxy
-session** — not a single global per-transport value. The EMA tracks
-the rate at which bytes can actually be drained to that session's TCP
-egress (bytes-delivered ÷ wall-clock window), bounded above by the
-wire-side observed rate.
-
-Per-session scoping is dictated by the transparency invariant of §0:
-each client must perceive the bus density it would have observed if
-connected to its own dedicated ENS adapter over its own TCP link. A
-client with a slow or jittery link to the proxy will see a slightly
-lower `symbol_rate` than a client with a fast link, exactly mirroring
-what would happen with two independent ENS adapters delivering the
-same physical bus to two different observers with different link
-qualities. This is the architecturally correct behavior even though it
-means the proxy generates fewer filler SYNs for slow clients, lowering
-their effective view of bus density.
-
-**Bootstrap.** A session that has just connected has no per-session
-history. The proxy seeds the per-session EMA from a transport-level
-"wire-observed" reference rate (computed once on the adapter-facing
-side, common across sessions only as a bootstrap value), then lets the
-per-session EMA diverge as the session's own drain characteristics
-manifest. The transport-level reference is only ever used at session
-boot or after a session reset.
-
-This is the analogue of ebusd's `symbol_rate` indicator — but
-ebusd-as-process has only one bus view per process, so its
-`symbol_rate` is naturally per-process. We have N concurrent sessions
-on one proxy, so we need N independent rates.
-
----
-
-## 4. SYN insertion model
-
-### 4.1 Continuous idle generator
-
-Between telegrams the proxy continuously emits filler SYN bytes to each
-`cross-proxy` observer at the observed `symbol_rate`. This holds the
-illusion of a quiet but live bus while no real telegram is in flight.
-
-### 4.2 Prefix and postfix when emitting a telegram
-
-When telegram `F` becomes complete (the terminator SYN has been observed
-on the adapter side), the proxy releases it to each `cross-proxy`
-observer with this shape:
-
-```
-[prefix_filler_SYNs] [byte_0 ... byte_N of F] [postfix continues idle]
-```
-
-The prefix and postfix asymmetry is intentional.
-
-  - `prefix_filler_count = round(L_up_estimate × observed_symbol_rate)`
-  - `postfix_filler_count` = whatever the continuous idle generator
-    naturally emits until the next telegram or external event.
-
-**Why asymmetric?** From the point of view of an originating client A:
-
-  - A submitted its frame to the proxy at wall clock T₀.
-  - The bytes actually started moving on the physical wire at T₀ + L_up.
-  - During the interval [T₀, T₀ + L_up] the WIRE was idle, and a
-    `passive-direct` observer would have counted ~`L_up * symbol_rate`
-    SYN bytes during that window.
-  - A `cross-proxy` observer (which may be A itself, observing its own
-    transaction reflected back) sees no events during this window — the
-    proxy is holding the frame. To make A's perceived view match what a
-    `passive-direct` consumer would have seen, the proxy must back-fill
-    the equivalent number of SYNs as a prefix immediately before
-    releasing F.
-
-After the telegram, the situation is different:
-
-  - The wire idle resumes at T₀ + L_up + W_F (where W_F is the
-    wire-time duration of the telegram itself).
-  - The proxy receives the terminator SYN of F at T₀ + L_up + W_F + L_dn.
-  - From this point onward, the continuous idle generator naturally
-    emits SYNs at the observed rate. There is no past gap to back-fill.
-
-Hence: prefix compensates for `L_up`; postfix needs no compensation.
-
-### 4.3 Estimating `L_up`
-
-`L_up` is measured per transaction by the proxy. For an outbound write
-issued at T_send, the first echo byte (if telegram is initiator-side) or
-the first received byte is observed at T_recv. With knowledge of the
-expected wire transmit time for a single byte (~4 ms at 2400 baud) and
-a running EMA of `L_dn`:
-
-```
-L_up_estimate(F) = T_recv_first - T_send_first - tau_wire_byte - L_dn_EMA
-```
-
-The estimator is allowed to be coarse — quantization to the SYN period
-(~35 ms or whatever the observed rate dictates) is fine, because the
-filler granularity is one SYN. A 5 ms vs 25 ms `L_up` difference is
-below the resolution of the model.
-
-### 4.4 Cross-effect with `symbol_rate` jitter
-
-`observed_symbol_rate` is an EMA, so it lags real conditions. During a
-transient bus burst the actual rate spikes high; during a quiet stretch
-it drops. The proxy emits at the EMA, not the instantaneous rate, which
-smooths the cross-proxy view. This is intentional — clients receive a
-locally-stable view of wire density and do not chase microsecond
-jitter.
-
-### 4.5 Intra-telegram pacing
-
-Telegram bytes are emitted to a `cross-proxy` observer **spread
-across roughly the wire-time `W_F` of the telegram, not burst-flushed.**
-Each byte is scheduled at approximately
-
-```
-T_byte_i = T_emit_start + i × tau_byte
-```
-
-where `tau_byte = 1 / per_session_symbol_rate`.
-
-This matches the natural pacing a real ENS adapter would produce —
-bytes arrive at the receiver spaced by the wire bit period plus
-inter-byte processing time (≈4–8 ms per byte at 2400 baud). A
-burst-flush would deliver the entire telegram in a single TCP write
-(<1 ms perceived by the client), which would violate the transparency
-invariant of §0: no real adapter delivers bytes that fast, and a
-client running its own framing-by-timing heuristics could detect the
-proxy by the unnatural intra-telegram density.
-
-The cost is straightforward emission-scheduling complexity in the
-proxy: each per-session emission queue is timer-driven rather than
-flush-on-arrival. The benefit is a wire-indistinguishable byte stream
-on the client side.
-
----
-
-## 5. Telegram state machine (sketch)
-
-The proxy needs a deterministic state machine that decides "this
-telegram is now complete" so it can flush the buffered bytes. The
-machine runs once per active session, fed by `StreamEvent`s from the
-transport.
-
-```mermaid
-stateDiagram-v2
-    [*] --> IDLE
-
-    IDLE --> ARBITRATING : STARTED event
-
-    ARBITRATING --> IDLE : FAILED event
-    ARBITRATING --> MASTER_HEADER : grant resolved<br/>first byte = QQ
-
-    MASTER_HEADER --> MASTER_DATA : NN > 0
-    MASTER_HEADER --> MASTER_CRC : NN == 0
-
-    MASTER_DATA --> MASTER_CRC : NN bytes consumed
-
-    MASTER_CRC --> WAIT_TERMINATOR_SYN : ZZ == 0xFE<br/>(broadcast)
-    MASTER_CRC --> WAIT_MASTER_ACK : ZZ != 0xFE
-
-    WAIT_MASTER_ACK --> MASTER_HEADER : NACK<br/>(retransmit, retries remain)
-    WAIT_MASTER_ACK --> WAIT_TERMINATOR_SYN : ACK +<br/>master-master
-    WAIT_MASTER_ACK --> SLAVE_LENGTH : ACK +<br/>master-slave
-    WAIT_MASTER_ACK --> ABORTED : NACK exhausted
-
-    SLAVE_LENGTH --> SLAVE_DATA : NN' > 0
-    SLAVE_LENGTH --> SLAVE_CRC : NN' == 0
-
-    SLAVE_DATA --> SLAVE_CRC : NN' bytes consumed
-
-    SLAVE_CRC --> WAIT_SLAVE_ACK
-
-    WAIT_SLAVE_ACK --> SLAVE_LENGTH : NACK<br/>(retransmit, retries remain)
-    WAIT_SLAVE_ACK --> WAIT_TERMINATOR_SYN : ACK
-    WAIT_SLAVE_ACK --> ABORTED : NACK exhausted
-
-    WAIT_TERMINATOR_SYN --> DONE : SYN observed
-
-    DONE --> IDLE : emit telegram block<br/>to cross-proxy observers
-    ABORTED --> IDLE : emit failure marker
-
-    note right of IDLE
-        Every non-terminal state may transition
-        to ABORTED on:
-        - per-state read timeout exceeded
-        - transport reset / adapter disconnect
-        - arbitration-loss observed mid-telegram
-        - illegal symbol in current phase
-    end note
-```
-
-### 5.1 State legend
-
-| State                 | Consumes / awaits                                       | Typical wall-clock budget |
-|-----------------------|---------------------------------------------------------|----------------------------|
-| `IDLE`                | filler SYN stream; STARTED arbitration event           | unbounded                  |
-| `ARBITRATING`         | grant resolution (won/lost), first post-grant byte     | ~50 ms                     |
-| `MASTER_HEADER`       | `QQ ZZ PB SB NN` (5 bytes)                              | ~25 ms                     |
-| `MASTER_DATA`         | NN data bytes (0–16)                                    | ~70 ms                     |
-| `MASTER_CRC`          | 1 CRC byte                                              | ~5 ms                      |
-| `WAIT_MASTER_ACK`     | ACK (0x00), NACK (0xFF), or SYN-timeout                 | ~25 ms                     |
-| `SLAVE_LENGTH`        | NN' (response data length)                              | ~25 ms                     |
-| `SLAVE_DATA`          | NN' data bytes (0–16)                                   | ~70 ms                     |
-| `SLAVE_CRC`           | 1 CRC byte                                              | ~5 ms                      |
-| `WAIT_SLAVE_ACK`      | initiator's ACK/NACK back to slave                      | ~25 ms                     |
-| `WAIT_TERMINATOR_SYN` | first SYN after the telegram ends                       | ~50 ms                     |
-| `DONE`                | terminal-success; emit block; reset                     | one tick                   |
-| `ABORTED`             | terminal-failure; emit failure marker; reset            | one tick                   |
-
-### 5.2 Inheritance from `passive_reconstructor`
-
-This machine is closely modelled on the existing passive reconstructor
-in `helianthus-ebusgo/protocol/passive_reconstructor.go`, which already
-solves the bulk of the framing problem for `passive` scope. The
-proposal is to use the same machine for `active` cross-proxy emission,
-with the addition of per-telegram timing metadata (`T_wire_start`,
-`W_F`, `L_up`) needed by the SYN insertion logic described in §4.
-
----
-
-## 6. ENH/ENS protocol compatibility
-
-ENH is byte-event-oriented: each transport read returns a `(byte,
-was_escaped)` pair, plus occasional `STARTED` / `FAILED` arbitration
-markers. There is no native frame envelope on the wire — frame
-boundaries are implicit in the eBUS protocol semantics.
-
-A `cross-proxy` client does not need a new transport protocol. The
-proxy emits the same `ENH_EVT_RECEIVED` byte events it would have
-emitted under the byte-level model — but the timing and content of
-those events is controlled by the state machine above. From the
-client's perspective the byte stream looks exactly like a real wire:
-filler SYNs between telegrams, contiguous telegram bytes within
-telegrams. There are no intra-telegram AUTO-SYNs and no escape-layer
-leaks.
-
-Arbitration markers (`STARTED`, `FAILED`, `RESET`) remain real-time. A
-client that wants to compete for arbitration receives these as it does
-today; the change only affects byte-stream visibility, not control
-plane.
-
----
-
-## 7. What the proposal removes
-
-Several suppression layers in the current code become unnecessary:
-
-  - The mid-write SYN suppression gate in the adapter mux.
-  - The between-writes suppression gate (round-7 patch).
-  - The post-grant pre-echo suppression window in the ENH transport
-    layer.
-  - The payload-0xAA + AUTO-SYN drain absorption logic in the protocol
-    layer (round-9 patch).
-
-These exist to hide bytes that should never have been exposed to
-clients in the first place. Under telegram-atomic visibility they are
-simply absent from the cross-proxy stream.
-
-The token-holder path keeps its byte-level model and continues to use
-the existing escape-decoder + echo-comparator infrastructure unchanged.
-
----
-
-## 8. What the proposal costs
-
-  - **Latency.** Cross-proxy observers see each telegram only after it
-    has completed on the wire and traversed the proxy. Worst case
-    latency add is one telegram wire-time (~50–150 ms) plus L_dn.
-    Acceptable for polling-class clients (ebusd, vrc-explorer,
-    dashboards).
-
-  - **Buffer state.** Per session: roughly one max-size telegram (<100
-    bytes payload) plus state-machine metadata. Bounded and small.
-
-  - **Failure visibility latency.** A telegram that aborts mid-way is
-    not visible to cross-proxy observers until the abort is detected
-    and the failure marker is emitted. Worst case: state-specific
-    timeout budget elapses. The proxy needs explicit per-state timeout
-    values.
-
-  - **State machine completeness.** Edge cases (NACK retransmit,
-    broadcast with no response, master-master frames, mid-telegram
-    transport reset) must be modelled exhaustively. The risk is a
-    state transition we forgot, producing a stuck telegram. Mitigation:
-    model inherits from the existing passive reconstructor, which has
-    been validated against live traffic.
-
-  - **Telegram-ordering policy.** If two telegrams overlap due to
-    arbitration race resolution, which one is released first to
-    cross-proxy observers? Proposal: completion order (the order in
-    which `DONE` is reached). Start order is meaningless under
-    half-duplex arbitration.
-
----
-
-## 9. Decisions
-
-The four design questions raised in the initial draft have been
-resolved. Numbering preserved for traceability.
-
-  1. **Intra-telegram pacing: natural (per-byte pacing).** Telegram
-     bytes are emitted across `W_F` matching wire pacing, not
-     burst-flushed. Driven directly by the transparency invariant of
-     §0 — a burst-flushed telegram is detectable by the client as
-     non-wire timing. Detailed in §4.5.
-
-  2. **`token-holder` vs `cross-proxy` is a per-telegram role, never
-     simultaneous.** A session cannot hold both roles at once. Its
-     role is determined at the `IDLE → ARBITRATING` FSM transition
-     (arbitration winner = token holder for that telegram; everyone
-     else = cross-proxy observer for that telegram) and remains fixed
-     until `DONE` or `ABORTED`. Between telegrams the session has no
-     role; it sees only the filler SYN stream. Detailed in §2.
-
-  3. **Symbol-rate EMA is per-session, not per-transport.** Each
-     cross-proxy session has its own `symbol_rate` EMA driven by the
-     actual rate at which bytes drain to that session's TCP egress.
-     Slow clients perceive a slower bus by design — a consequence of
-     the transparency invariant. The transport-level wire-observed
-     rate is retained only as a bootstrap seed for newly connected
-     sessions. Detailed in §3.
-
-  4. **Backpressure: drop whole telegrams from the per-session queue.**
-     If the per-session emission queue overflows because the client
-     cannot drain fast enough, the proxy drops entire queued telegrams
-     oldest-first. Communication is at the telegram layer, so partial
-     drops are nonsensical. An `OVERFLOW` notice is recorded on the
-     proxy's admin channel — never injected into the client byte
-     stream (transparency invariant). From the client's perspective
-     this looks identical to a real ENS adapter whose buffer
-     overflowed: the client simply misses telegrams from its view of
-     the bus, with no in-stream indication that anything was dropped.
-
----
-
-## 10. Why this is worth doing
-
-The Helianthus codebase has spent roughly nine investigation cycles
-patching byte-level visibility leaks under the existing model. Each
-round either fixes a subset of cases and shifts the rest to a new
-error class, or trades one masking layer for another. The structural
-cause is that we expose a unit (the byte) that is not meaningful at
-the protocol layer, and then we try to hide individual byte exposures
-via heuristics.
-
-Telegram-atomic visibility eliminates the unit mismatch. The proxy
-becomes a translator between two layers — physical wire bytes on one
-side, protocol-level telegrams plus calibrated idle on the other —
-and all the heuristics dissolve into a single clean contract: clients
-see the bus as a sequence of telegrams separated by SYN-rate-matched
-idle periods. No mid-telegram leaks, no AUTO-SYN intrusions, no
-escape-layer contamination, no race between competing clients during
-arbitration hand-off.
-
-It is the same simplification ebusd applied internally years ago when
-it adopted the `symbol_rate` framework: stop fighting the byte stream,
-treat the bus as the protocol abstraction it actually is.
-
----
-
-## Companion repos
-
-This design will be implemented (when promoted past sketch status)
-across four repositories. Each carries its own branch of the same name
-so the work can land coherently.
-
-| Repo                              | Branch                      | Role                                                              |
-|-----------------------------------|-----------------------------|-------------------------------------------------------------------|
-| `helianthus-docs-ebus`            | `frame-atomic-visibility`   | this design doc + ongoing iterations                              |
-| `helianthus-ebusgo`               | `frame-atomic-visibility`   | telegram state machine + symbol-rate EMA at the protocol layer    |
-| `helianthus-ebusgateway`          | `frame-atomic-visibility`   | adapter-mux integration + cross-proxy emission scheduling         |
-| `helianthus-ebus-adapter-proxy`   | `frame-atomic-visibility`   | per-observer queue + SYN filler generator                         |
-
-Status today: design only, no code changes. The companion-repo branches
-exist as markers to anchor future commits when this proposal exits
-sketch state.
-
-<!-- legacy-role-mapping:end -->
+# Frame-Atomic Visibility
+
+> Status: implemented design of the gateway adapter multiplexer's session
+> view, with per-section implementation labels. The [History](#history)
+> section summarizes the revisions that led to it.
+
+## Scope and evidence
+
+This page states how the gateway's adapter multiplexer keeps the byte stream
+of each client session faithful to the wire while an adapter injects spurious
+`AA` symbols, and how it paces session output. It covers the gateway and the
+eBUS library it uses. It describes the implementation, not a native wire
+contract: native event identities and encodings stay defined by the public
+[ENH reference](../../protocols/enh.md) and
+[ENS reference](../../protocols/ens.md). Arbitration among the multiplexer's
+own sessions is specified in the
+[adapter-direct multiplexer page](../adapter-direct-multiplexer.md#ad06-owner-arbitration-model).
+
+Each section opens with one of four implementation labels:
+
+| Label | Meaning |
+|---|---|
+| Implemented | The gateway or the library contains the mechanism and applies it. |
+| Implemented when the mode is not `off` | The mechanism exists and runs only in the `shadow` and `enforce` [rollout modes](#rollout-modes). |
+| Declared but not enforced | The values exist as declarations; no runtime path applies them. |
+| Not implemented | The design specifies the rule; no implementation performs it. |
+
+**Proven (implementation evidence):** the sections labelled Implemented, in
+either form, describe mechanisms present in the gateway and the library. The
+evidence is the implementation and its synthetic tests, for session output
+delivery the change in gateway
+[issue #1403](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1403)
+and [PR #1406](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/1406);
+it is not a device observation.
+**Unknown:** native symbol timing, and qualification of any mode on live
+equipment. This page adds no live claim.
+
+## Proxy transparency
+
+**Label: Implemented.** For the arbitration case, see
+[AD06](../adapter-direct-multiplexer.md#ad06-owner-arbitration-model).
+
+Every client of the multiplexer should behave as if it had its own ENH or ENS
+adapter on the bus. The byte stream a session receives contains only events an
+adapter delivered: the multiplexer does not inject health frames, markers or
+synthetic ENH events into it. Classifier diagnostics, protocol faults and
+telegram aborts go to the multiplexer's admin channel only, which is a separate
+diagnostic plane and not part of any client's transport.
+
+The one place where the multiplexer writes a session-local byte is arbitration
+among its own sessions: a session that lost locally receives the winner's
+source byte, and the multiplexer delivers resynchronization SYNs to the
+gateway session after a loss. Those rules are specified in
+[AD06](../adapter-direct-multiplexer.md#ad06-owner-arbitration-model) and stay
+there.
+
+The observation unit is the byte. Telegram-atomic delivery, synthetic SYN
+padding, an idle generator and a per-session symbol rate are not part of the
+design; the [History](#history) records why, and the
+[SYN padding page](frame-atomic-syn-padding-math.md) is kept as a historical
+derivation.
+
+## Rollout modes
+
+**Label: Implemented.**
+
+The classifier runs in one of three modes, read from the environment variable
+`HELIANTHUS_V8_CLASSIFIER_MODE`:
+
+| Mode | Classification | Byte drops | Session pacing |
+|---|---|---|---|
+| `off` | No classifier. | None. | No pacer; session output keeps a FIFO path. |
+| `shadow` | Every byte is classified and would-be drops are counted. | None. | Applies. |
+| `enforce` | Every byte is classified. | Injected `AA` symbols are dropped. | Applies. |
+
+Two defaults apply:
+
+- **Gateway default:** an unset variable selects `off`.
+- **Add-on default:** the Home Assistant add-on option `v8_classifier_mode`
+  defaults to `enforce` and exports it to the gateway; an explicit `off` or
+  `shadow` is kept.
+
+Promotion from `shadow` to `enforce` rests on the gate documented in
+[Prometheus alert rules](../../deployment/prometheus-alerts.md#helianthusv8shadowwouldhavedroppedgrowing):
+the shadow divergence counter `helianthus_v8_shadow_would_have_dropped_total`
+must stay at zero or be explained by known injection events, and the alert
+rules must be loaded before the mode changes. The mitigations that predate the
+classifier stay reachable in `off` and `shadow`; see
+[Round-9 absorb fallback and alerts](#round-9-absorb-fallback-and-alerts).
+
+## Wire-phase state machine
+
+**Label: Implemented (byte-driven).**
+
+The library's telegram state machine follows each telegram on the wire, one
+decoded byte at a time. The gateway classifier embeds it and exposes the
+current state and a passive flag. Its states are idle, arbitrating, initiator
+header, initiator data, initiator CRC, initiator ACK wait, initiator
+retransmission, target length, target data, target CRC, target ACK wait,
+target retransmission, terminator SYN wait, aborted, and passive tracking.
+
+| From | Event | To |
+|---|---|---|
+| idle | STARTED for a multiplexer session | arbitrating |
+| idle | first non-SYN byte without a STARTED in flight | passive tracking (see [Passive tracking](#passive-tracking)) |
+| arbitrating | grant resolved | initiator header |
+| arbitrating | FAILED | idle |
+| initiator header | `NN` > 0, or `NN` = 0 | initiator data, or initiator CRC |
+| initiator data | `NN` data bytes consumed | initiator CRC |
+| initiator CRC | broadcast (`ZZ` = `0xFE`) | terminator SYN wait |
+| initiator CRC | any other target | initiator ACK wait |
+| initiator ACK wait | ACK, target address of the initiator class | terminator SYN wait |
+| initiator ACK wait | ACK, any other target | target length |
+| initiator ACK wait | NACK before any retransmission | initiator retransmission, then initiator header |
+| initiator ACK wait | NACK after one retransmission | aborted |
+| target length | `NN'` > 0, or `NN'` = 0 | target data, or target CRC |
+| target data | `NN'` data bytes consumed | target CRC |
+| target CRC | CRC byte consumed | target ACK wait |
+| target ACK wait | ACK | terminator SYN wait |
+| target ACK wait | NACK before any retransmission | target retransmission, then target length |
+| target ACK wait | NACK after one retransmission | aborted |
+| terminator SYN wait | SYN | idle |
+| aborted | reset | idle |
+
+An aborted state machine filters nothing; only a reset revives it. The
+multiplexer's
+[post-arbitration recovery](../adapter-direct-multiplexer.md#post-arbitration-recovery)
+states when it resets the classifier and the wire-phase tracker. Every state
+machine instance is autonomous: it reaches its state from the events it
+observes, and the only resynchronization signals are events the wire or the
+adapter produced (a terminator SYN, a RESETTED from the adapter). Recovery
+resets inside the multiplexer are local state changes and never appear to a
+client as RESETTED.
+
+### Classify, then transition
+
+Each byte is handled in four steps, in this order:
+
+1. Classify the byte under the phase in force when it arrived.
+2. Apply the decision: forward, drop as injected, or report a protocol fault.
+3. If the byte was forwarded or was the echo of an own write, consume it in
+   that phase.
+4. If consuming it completes the phase, transition to the next phase.
+
+The transition is a consequence of the byte's interpretation. An ACK `0x00`
+in the initiator ACK wait is therefore read as an ACK, and only then does the
+machine move to target length; it is never misread as a zero response length.
+The one exception is the entry into passive tracking: the byte that leaves
+idle is classified as byte 0 of the initiator header.
+
+### Passive tracking
+
+When the first non-SYN byte arrives in idle and no STARTED for a multiplexer
+session is in flight, the byte is the foreign initiator's source address
+`QQ`. The machine enters passive tracking and classifies the byte as byte 0 of
+the initiator header. Passive tracking runs the same phases as an own
+telegram, including both retransmission paths, and leaves to idle on the
+terminator SYN. The only difference is that it has no echo matching, because
+no session wrote the bytes.
+
+Passive tracking keeps the filter active for foreign telegrams. Without it,
+bytes of a foreign telegram would pass unfiltered, and a client parser that
+aborts on an extra SYN inside a telegram would lose that telegram.
+
+### Per-phase timeouts
+
+**Label: Declared but not enforced.**
+
+The library declares these constants:
+
+| Phase group | Declared timeout |
+|---|---|
+| Inter-byte, within header, data, length and CRC phases | 10 ms |
+| Initiator ACK wait and target ACK wait | 200 ms |
+| Terminator SYN wait | 100 ms |
+| Arbitrating | 50 ms |
+
+No code path outside tests refers to them, neither in the library nor in the
+gateway. The state machine has no time-based logic, and the library documents
+that its read path has no per-phase timeouts. Every transition above is
+driven by a byte or by a reset. The 200 ms ACK wait was an engineering choice
+of the design, not a value that the eBUS specification mandates. The
+alignment of the gateway bus timeouts with these values (invariant I7) is
+therefore not in force either.
+
+## AA-injection filter
+
+**Label: Implemented (acts in `enforce`).**
+
+The filter applies in every phase except idle and terminator SYN wait: the
+arbitrating phase, the initiator header, data, CRC and retransmission phases,
+the initiator ACK wait, the target length, data, CRC and retransmission
+phases, and the target ACK wait, both for own telegrams and in passive
+tracking. In these phases a raw `AA` (one that did not come out of an escape
+pair) that does not match the role the phase expects is classified as
+injected by the adapter. In the ACK waits the expected bytes are ACK `0x00`
+and NACK `0xFF`.
+
+Two phases are exempt and forward a raw `AA`:
+
+- **Idle.** The bus is idle and an `AA` is a real AUTO-SYN. An injected `AA`
+  in idle cannot be told apart from one (see [Residual limits](#residual-limits)).
+- **Terminator SYN wait.** The terminator is itself a raw `AA`; it is
+  forwarded and the machine returns to idle.
+
+The drop decision applies only in `enforce`. In `shadow` the same decision is
+counted as a would-have-dropped byte and the byte is forwarded; the
+would-have-dropped counter and the drops-applied counter are kept apart.
+
+## Escape decoder bound
+
+**Label: Implemented.**
+
+The transport's escape decoder absorbs injected `AA` symbols that arrive
+between an escape lead `0xA9` and its suffix, and bounds that absorption in
+two ways, whichever is reached first:
+
+- at most **8** absorbed `AA` symbols per escape pair;
+- at most **32 ms** in the escape-pending state, measured on the monotonic
+  clock.
+
+On either bound, and on a malformed suffix, the decoder emits nothing for the
+pair, reports the event on the admin channel and returns to normal decoding;
+when the time bound expires, the byte that arrived late is decoded again in
+the normal state so that it is not lost. The decoder never fabricates a byte
+the wire did not send. The classifier mirrors both bounds (invariant I4).
+
+The 32 ms bound is eight wire symbol times (8 × 4.17 ms), so an escape pair
+held open longer than that cannot be explained by absorbed symbols alone. The
+design also paused the inter-byte timer while an escape pair was pending; with
+per-phase timeouts not enforced, that pause has no runtime effect.
+
+## Protocol faults and admin events
+
+**Label: Implemented.**
+
+When a byte cannot belong to the phase in force, the classifier decides a
+protocol fault (invariant I10): it forwards the byte to every session, so the
+stream stays faithful to the wire, and emits a protocol-fault event on the
+admin channel. A telegram abort after retransmission is exhausted is reported
+the same way. No ENH event is synthesized for either case: in particular no
+RESETTED, which the [ENH reference](../../protocols/enh.md) reserves for an
+adapter reset or initialization, and no FAILED. Each client detects the fault
+with its own protocol logic, as it would on its own adapter.
+
+## Retransmission cap
+
+**Label: Implemented in the state machine.**
+
+A NACK before any retransmission moves the initiator ACK wait or the target ACK
+wait to its retransmission phase, and the telegram restarts at the initiator
+header or the target length. A NACK after one retransmission moves to aborted
+(invariant I6). The cap is one retransmission per phase.
+
+## Address-class validation
+
+**Label: Not implemented.**
+
+The design checks the first header byte against the initiator address class
+and the second against the broadcast, initiator and target classes, and
+reports a protocol fault on a mismatch. The library state machine records the
+first header byte without validating it; its own documentation defers the
+check. No comparison of that byte with a winner named by a FAILED is made in
+the state machine either.
+
+## Echo timing and grace bootstrap
+
+**Label: Implemented when the mode is not `off`.**
+
+The session pacer keeps a round-trip latency average (exponential, weight
+0.3, starting at 100 ms) for echoes of own writes. It samples only active
+echoes: latency inferred from passive traffic would mix foreign inter-byte
+gaps, target think time and link jitter into the average.
+
+| Regime | Soft deadline | Hard deadline |
+|---|---|---|
+| Grace: the first 3 echoes after at least 30 s without an echo | average + 500 ms | none |
+| Normal | average + 100 ms | 2 × average + 200 ms |
+
+A missed soft deadline is logged on the admin channel. The pacer is called
+before each active write and on each echo arrival, and an echo watchdog checks
+the deadlines in between.
+
+## Session output delivery
+
+**Label: Implemented when the mode is not `off`.** Native timing is Unknown.
+
+Pacing applies only where a session pacer exists, so in `shadow` and
+`enforce`; in `off` session output keeps a FIFO path without a pacer. These
+are host egress scheduling rules of the gateway; the gateway's own
+documentation of raw-symbol continuity states the same rules.
+
+### Pacing and the bounded backlog
+
+Invariant I3 (pacing): `RECEIVED` symbols that are on time keep the
+per-session wire cadence of one symbol per 4.17 ms (2400 baud, 10 bits per
+symbol). The paced backlog is bounded at **2** `RECEIVED` symbols:
+
+- Pacing reserves one slot per `RECEIVED` symbol, independent of its encoded
+  ENH length; control frames reserve none.
+- The session writer looks ahead over at most three queued frames. When that
+  lookahead holds more than two `RECEIVED` frames, the writer takes a snapshot
+  of the queue and writes it at once, in FIFO order, without pacing waits.
+- When the flush write completes, cadence is rebased to that moment: the next
+  ordinary symbol waits one period, instead of replaying the scheduling debt.
+
+The bound limits how much backlog is spread over future pacing slots; it is
+not a capacity limit of the session queue. A flush keeps every queued frame
+and its order; it never drops a symbol or inserts an event. The gap of at
+least one symbol time holds for ordinary paced delivery, not inside a flush.
+
+### STARTED and FAILED keep stream order
+
+`STARTED` and `FAILED` never overtake older queued `RECEIVED` symbols. When an
+arbitration result is queued behind them, the writer drains that older prefix
+without pacing and writes the result immediately after it, also when the
+prefix is within the bound. The result reserves no pacing slot and never
+crosses RESETTED or other control frames. A client therefore never sees older
+received symbols as echoes after its grant. Immediate means no intentional
+pacing wait, not a socket-write or network deadline.
+
+Synthetic examples, in enqueue and delivery order:
+
+| Queued stream | Delivery |
+|---|---|
+| `RECEIVED(A), RECEIVED(B)` | Normal cadence at the bound. |
+| `RECEIVED(A), RECEIVED(B), RECEIVED(C)` | Over the bound: flush A, B, C at once in order, then pace from the end of the flush. |
+| `RECEIVED(A), RECEIVED(B), STARTED` | Drain A, B; write STARTED immediately after them. |
+| `RECEIVED(A), RECEIVED(B), FAILED` | Drain A, B; write FAILED immediately after them. |
+
+### Flush observability
+
+Each session counts its backlog flushes. The integer expvar
+`adaptermux_session_backlog_flushes_total` aggregates them across sessions. It
+is kept apart from the latency histogram
+`adaptermux_session_frame_latency_us_bucket_total`, which holds no flush
+entry. Draining an older prefix for a `STARTED` or `FAILED` does not count as a
+backlog flush, and a result delivered inside a counted flush adds no second
+count. These diagnostics never enter a client stream.
+
+## Round-9 absorb fallback and alerts
+
+**Label: Implemented.**
+
+The library's bus keeps its round-9 absorb path as a fallback: when the echo
+of an own payload `AA` is followed by wire AUTO-SYNs, it absorbs up to three of
+them before giving up. The path serves adapter-direct use without a
+classifier and stays reachable in `off` and `shadow`, together with the other
+mitigations that predate the classifier.
+
+The library exports the entries into that path as
+`helianthus_round9_absorb_entered_total`. The counter is gated on the active
+echo wait of an own write, so ordinary idle AUTO-SYNs do not move it, and it
+does not consult the classifier mode. Invariant I8: in `enforce`, the
+classifier filters injected symbols before they reach the gateway's echo
+position, so any entry is a violation. The alert rules carry the mode
+condition:
+
+| Alert | Counter | Meaning |
+|---|---|---|
+| [`HelianthusRound9FiredUnderProxy`](../../deployment/prometheus-alerts.md#helianthusround9firedunderproxy) | `helianthus_round9_absorb_entered_total` | A round-9 entry while the classifier is in `enforce`. |
+| [`HelianthusV8ShadowWouldHaveDroppedGrowing`](../../deployment/prometheus-alerts.md#helianthusv8shadowwouldhavedroppedgrowing) | `helianthus_v8_shadow_would_have_dropped_total` | Shadow divergence before promotion to `enforce`. |
+
+Both rules must be loaded before the classifier is promoted to `enforce`.
+
+## Invariants
+
+**Concurrency, label: Implemented as a single producer.** The multiplexer's
+read loop is the single producer of the classifier: classification,
+transitions, forwarding to session queues and admin events for a byte happen
+in sequence on that loop, and no session sees a partial transition
+(invariant I11).
+
+The numbering I0 to I11 is kept so that existing citations stay valid. I3 is
+the pacing guarantee as revised by the bounded backlog.
+
+| Invariant | Statement | Section |
+|---|---|---|
+| I0 | Scheduling and bounds use the monotonic clock. | [Escape decoder bound](#escape-decoder-bound), [Session output delivery](#session-output-delivery) |
+| I1 | No synthetic event enters a client byte stream; the admin channel is outside it. | [Proxy transparency](#proxy-transparency) |
+| I2 | The wire-phase state machine is the sole authority for injected-`AA` classification. | [AA-injection filter](#aa-injection-filter) |
+| I3 | On-time `RECEIVED` symbols keep the wire cadence; the paced backlog is bounded at 2 symbols and flushed in order beyond it; `STARTED` and `FAILED` never overtake older symbols. | [Pacing and the bounded backlog](#pacing-and-the-bounded-backlog) |
+| I4 | The escape decoder absorbs at most 8 `AA` symbols or waits at most 32 ms per pair, whichever comes first, and then emits nothing. | [Escape decoder bound](#escape-decoder-bound) |
+| I5 | Each state machine is autonomous and resynchronizes only on events the wire or the adapter produced. | [Wire-phase state machine](#wire-phase-state-machine) |
+| I6 | One retransmission per phase; a second NACK aborts. | [Retransmission cap](#retransmission-cap) |
+| I7 | Gateway bus timeouts align with the declared per-phase timeouts. | [Per-phase timeouts](#per-phase-timeouts) (declared but not enforced) |
+| I8 | Round-9 absorb stays as a fallback; an entry in `enforce` is a violation and alerts. | [Round-9 absorb fallback and alerts](#round-9-absorb-fallback-and-alerts) |
+| I9 | Classify under the phase in force, then consume, then transition. | [Classify, then transition](#classify-then-transition) |
+| I10 | A protocol-fault byte is forwarded to every session and reported on the admin channel. | [Protocol faults and admin events](#protocol-faults-and-admin-events) |
+| I11 | One producer drives classification, transitions, forwarding and admin events in sequence. | This section |
+
+## Residual limits
+
+- **Injected `AA` on an idle bus.** In idle an injected `AA` cannot be told
+  apart from a real AUTO-SYN and is forwarded. The window is the gap between
+  telegrams.
+- **Two adjacent injected `AA` symbols.** Inside a live telegram they are
+  indistinguishable from an idle bus; the multiplexer's
+  [post-arbitration recovery](../adapter-direct-multiplexer.md#post-arbitration-recovery)
+  lists the consequence for its foreign states.
+- **Phases without a closing byte.** The design's residual for a target that
+  answers after the ACK-wait window assumed an enforced timeout. With
+  per-phase timeouts not enforced, how the classifier leaves a phase whose
+  expected byte never arrives is covered here only by the multiplexer's
+  post-arbitration recovery and is otherwise Unknown.
+- **Address classes.** Header addresses are not validated; see
+  [Address-class validation](#address-class-validation).
+- **Per-session pacing.** The pacer regulates each session's TCP egress, not a
+  shared wire; two sessions may receive the same symbol at slightly different
+  times, as two clients on separate adapters with different links would.
+- **Adapter byte loss.** A byte the adapter transmits but does not report back
+  is invisible to every session, as it would be to a client on its own
+  adapter.
+
+## Supporting pages
+
+- [First-byte arbitration revalidation](first-byte-arbitration-revalidation.md):
+  the accepted implementation contract for the first foreign initiator-class
+  byte that arrives during a gateway-owned write; it is forwarded, not
+  dropped.
+- [SYN padding and timing derivations](frame-atomic-syn-padding-math.md):
+  historical; it derives the timing model of the original sketch, which the
+  gateway does not implement.
+- [Adapter-direct multiplexer](../adapter-direct-multiplexer.md): arbitration
+  among the multiplexer's sessions
+  ([AD06](../adapter-direct-multiplexer.md#ad06-owner-arbitration-model)) and
+  [post-arbitration recovery](../adapter-direct-multiplexer.md#post-arbitration-recovery).
+- [Prometheus alert rules](../../deployment/prometheus-alerts.md): the alert
+  rules, their counters and the promotion gate.
+
+## History
+
+The design went through a sketch and eight revisions, v2 to v9. The full
+revision texts remain in the repository history; this page replaces them.
+
+### Revisions
+
+| Revision | What it changed | Why |
+|---|---|---|
+| Sketch | Proposed telegram-atomic delivery to observing sessions, with synthetic SYN padding, an idle generator and a per-session symbol rate. | Arbitration is byte-level, so a telegram-atomic byte stream splits an active client's view, and the padding model emitted events the wire did not produce. |
+| v2 | Kept the byte as the observation unit; proposed per-byte provenance passed to clients and forwarding gated on the adapter echo; bounded retransmission; required a monotonic clock. | ENS clients cannot receive provenance metadata, and one provenance bit could not separate a terminator SYN from an injected SYN. |
+| v3 | Moved the filter into the multiplexer with provenance kept internal and a per-session echo match; added a wire-rate pacer; carried no telegram structure. | Without telegram structure the filter missed injected AA bytes while no session was writing and inside escape pairs, and a retransmission cap needs telegram state. |
+| v4 | Added a minimal telegram state machine to drive the filter, an escape decoder that absorbs injected `AA`, a pacer acting as a rate limiter and a cadence threshold for idle. | A cadence threshold at proxy receive time could not separate fast wire SYNs from injected AA bytes, and a time window in the escape decoder lost valid pairs under network jitter. |
+| v5 | Filtered only during active phases and passed idle through; bounded the escape decoder by count (8 absorptions); corrected the pacer's scheduling chain; sampled latency per echo; first per-phase timeouts; answered protocol faults with RESETTED. | Idle pass-through was not shown harmless for clients, a synthetic RESETTED on protocol faults contradicted the ENH reference, and a timeout back to idle left later bytes unreconstructable. |
+| v6 | Kept the state machine always on with active, passive and idle modes; added passive tracking; moved protocol faults to the admin channel; kept round-9 absorb as a fallback with a regression counter; made malformed escapes emit nothing. | Passive tracking closes the idle gap; the direct-adapter path still needs the round-9 fallback. |
+| v7 | Forwarded the protocol-fault byte with an admin event (I10); processed bytes one at a time (I9); added retransmission paths to passive tracking; paused the inter-byte timer during an escape pair; gated the round-9 counter and added its alert rule; set a deployment order. | Localized fixes to v6 without a structural change. |
+| v8 | Classified each byte under the phase in force before the transition (I9); made the first non-SYN byte the passive entry; capped the escape-pending time at 32 ms (I4); sampled latency from active echoes only, with a grace bootstrap; extended the filter to all non-idle phases; specified address-class validation; added the single-producer rule (I11). | Byte-ordering and bound fixes to v7 that keep its structure. |
+| v9 | Bounded the paced backlog at 2 symbols with an in-order flush and a cadence rebase; kept `STARTED` and `FAILED` behind older symbols; counted flushes outside the latency histogram. | The pacing guarantee of v5 and v8 allowed an unbounded backlog. |
+
+### Section map for earlier citations
+
+Comments and pages, in this repository and others, cite sections and
+invariants of the revision pages. They map to this page as follows.
+
+| Earlier citation | Section of this page |
+|---|---|
+| sketch §0 | [Proxy transparency](#proxy-transparency) |
+| sketch §4.5, v8 §4.5 | [Pacing and the bounded backlog](#pacing-and-the-bounded-backlog) |
+| v5 I5 / v8 I3 / v9 I5 | [Pacing and the bounded backlog](#pacing-and-the-bounded-backlog); invariant I3 in [Invariants](#invariants) |
+| v6 §3, v8 §3 (state machine, idle pass-through), v8 §3.1 | [Wire-phase state machine](#wire-phase-state-machine); timeouts in [Per-phase timeouts](#per-phase-timeouts) |
+| v8 §1.1, I9 | [Classify, then transition](#classify-then-transition) |
+| v8 §1.2 | [Passive tracking](#passive-tracking) |
+| v8 §1.3, I4; v8 §5 | [Escape decoder bound](#escape-decoder-bound) |
+| v8 §1.4 | [Echo timing and grace bootstrap](#echo-timing-and-grace-bootstrap) |
+| v8 §1.5 | [Per-phase timeouts](#per-phase-timeouts) |
+| v8 §1.6, v8 §4 | [AA-injection filter](#aa-injection-filter) |
+| v8 §1.7 | [Address-class validation](#address-class-validation) |
+| v8 §1.8, v8 §1.9, v8 §10 | [Round-9 absorb fallback and alerts](#round-9-absorb-fallback-and-alerts) |
+| v8 §1.12, I8 | [Round-9 absorb fallback and alerts](#round-9-absorb-fallback-and-alerts); invariant I8 in [Invariants](#invariants) |
+| v8 §4.7 shadow divergence | [Rollout modes](#rollout-modes) |
+| v8 §14 | [Rollout modes](#rollout-modes) |
+| v8 §1.11, I11; v8 §3 (invariants list) | [Invariants](#invariants) |
+| v7 §1.1, I10; v8 §8 (protocol faults) | [Protocol faults and admin events](#protocol-faults-and-admin-events) |
+| v7 §1.5, I6; v8 §8 (abort after retransmission) | [Retransmission cap](#retransmission-cap) |
+| v7 §2.1, v7 §2.2, v8 §2 | [Residual limits](#residual-limits) |
+| v9 §2 | [Pacing and the bounded backlog](#pacing-and-the-bounded-backlog) |
+| v9 §3 | [STARTED and FAILED keep stream order](#started-and-failed-keep-stream-order) |
+| v9 §4 | [Flush observability](#flush-observability) |
+
+v5 and v9 called the pacing guarantee I5. In the v8 numbering kept here, I5
+is state-machine autonomy and the pacing guarantee is I3.

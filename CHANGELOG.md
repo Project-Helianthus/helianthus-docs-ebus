@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Breaking documentation URL change: the frame-atomic visibility revision pages
+  `frame-atomic-visibility-v2.md` to `frame-atomic-visibility-v9.md` under
+  `architecture/adaptermux/` are removed without redirect pages.
+  `frame-atomic-visibility.md` now states the design the gateway implements,
+  with a History section that summarizes each revision and maps earlier
+  section citations; the SYN padding page is marked historical. Links from
+  other repositories to the removed pages need the same update.
 - Breaking documentation URL change: 154 page file names under `architecture/`,
   `protocols/` and `types/` use lowercase kebab-case. Directories, headings,
   anchors and page text are unchanged apart from the renamed file names in

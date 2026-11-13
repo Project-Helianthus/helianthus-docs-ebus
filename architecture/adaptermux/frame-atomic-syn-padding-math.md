@@ -1,7 +1,6 @@
 # Frame-Atomic Visibility — SYN Padding and Timing Derivations
 
-> Companion to `frame-atomic-visibility.md`. Status: design sketch.
-> Branch: `frame-atomic-visibility` (multi-repo).
+> Companion to [frame-atomic-visibility.md](frame-atomic-visibility.md). Status: historical. It derives the timing model of the original sketch; the gateway does not implement synthetic SYN padding, an idle generator or a per-session symbol rate.
 
 
 <!-- legacy-role-mapping:begin -->
