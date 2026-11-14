@@ -177,6 +177,18 @@ def test_synthetic_extra_row_rejected(tmp_path, family):
         CHECKER.validate(*docs, setter_keys=loaded_setter_keys(tmp_path))
 
 
+@pytest.mark.parametrize("family", CHECKER.SETTER_KEY_FAMILIES)
+@pytest.mark.parametrize("key_cell", ["synthetic_extra", "**synthetic_extra**", "", "`synthetic_extra", "Key"])
+def test_malformed_setter_row_rejected(tmp_path, family, key_cell):
+    docs = documents()
+    key = next(iter(SETTER_KEYS[CHECKER.SETTER_KEY_FAMILIES[family][0]]))
+    row = family_row(docs[1], family, key)
+    extra = row.replace("`" + key + "`", key_cell, 1)
+    docs[1] = replace_in_family(docs[1], family, row, row + extra)
+    with pytest.raises(ValueError, match="malformed setter table row"):
+        CHECKER.validate(*docs, setter_keys=loaded_setter_keys(tmp_path))
+
+
 @pytest.mark.parametrize("family,key", PREVIOUS_KEY_CASES)
 def test_previous_setter_key_listed_rejected(tmp_path, family, key):
     # Each case catches a previous spelling returning to its family table,

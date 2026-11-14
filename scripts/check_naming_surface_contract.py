@@ -195,8 +195,21 @@ def documented_setter_rows(tools: str, heading: str):
     match = re.search(r"^" + re.escape(heading) + r"\n(.*?)(?=^#|\Z)", tools, re.M | re.S)
     if match is None:
         return None
-    return [(row[1], row[0]) for row in
-            re.finditer(r"^\| `([^`]+)` \|.*$", match[1], re.M)]
+    rows = []
+    for row in match[1].splitlines():
+        if not row.lstrip().startswith("|"):
+            continue
+        cells = [cell.strip() for cell in row.strip().strip("|").split("|")]
+        if cells in (["Key", "Opcode / group / instance / register", "Value type", "Existing bound"],
+                     ["Key", "B509 register selector", "Value type", "Existing bound"]):
+            continue
+        if len(cells) == 4 and all(re.fullmatch(r":?-{3,}:?", cell) for cell in cells):
+            continue
+        key = re.fullmatch(r"`([^`]+)`", cells[0])
+        if len(cells) != 4 or key is None:
+            raise ValueError("malformed setter table row: " + heading)
+        rows.append((key[1], row))
+    return rows
 
 
 def _documented_setter_keys(tools: str) -> dict:
