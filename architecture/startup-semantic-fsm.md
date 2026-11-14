@@ -72,6 +72,10 @@ The caller `recordEpochUpdateLocked` increments `liveEpoch` on a live update and
 - Persistent semantic snapshot preload (`semantic_cache.json`) is cache-backed and only advances `cache_epoch`.
 - In `ebusd-tcp` fallback mode, successful `grab result all` hydration for zones/DHW is classified as **live** and can advance `live_epoch`.
 - Energy broadcast ingestion updates `energy_totals` but does **not** advance startup `live_epoch` and does not trigger startup phase transitions.
+- `energy_totals` is null until the energy merge store has accepted its first
+  point. Energy is not persisted, so after every gateway restart the plane is
+  null until the first accepted energy point (see
+  [`energy-merge.md`](./energy-merge.md#null-before-the-first-accepted-point)).
 
 ## M4 L1 Startup Priming
 
@@ -197,6 +201,41 @@ The startup L1 semantic priming path is not weakened by this pacing: startup may
 still perform bounded direct reads needed to publish the required MCP semantic
 planes non-null within the startup gate.
 
+### Scheduling Without a System Controller
+
+On a bus with a heat source and no system controller, no B524 root is found and
+the state and configuration tasks run a fallback B524 root discovery pass on
+their ticks. Once the regulator absence state (`semantic_regulator_state`, see
+[`observability.md`](./observability.md#regulator-state)) is `ABSENT` and this
+gateway process has never discovered a B524 root, the state and configuration
+tasks no longer run that fallback pass. Root discovery then runs only from the
+discovery task at the configured discovery interval (10 minutes by default) and
+from event-driven refreshes: a registry inventory change seen by the regulator
+recheck, passive address insertion and passive promotion. The suspension logs
+`semantic_discovery_fallback_suspended regulator_state=ABSENT
+discovery_interval=<interval>` once each time it starts.
+
+- With the periodic discovery task disabled (a discovery interval of zero or
+  less) nothing is suspended and the per-minute search stays.
+- While suspended, the state and configuration ticks still read the
+  boiler-class heat source from the registry, so a heat source identified after
+  `ABSENT` gets its status reads on the next tick. The FM5 interpretation is
+  still refreshed by the energy task.
+- `ABSENT` alone does not mean that there is no controller: a controller
+  registered without a serial, with a part number missing from the product
+  data, or with the product data unavailable also reaches it. A process that
+  has discovered a root once therefore keeps the per-minute recovery after a
+  failed discovery pass. Before `ABSENT`, with a known controller, and with a
+  known controller that has no zone, the per-minute rediscovery is unchanged.
+- A controller that becomes reachable after `ABSENT` on a bus that never had
+  one, without passive observation or a registry change, is found within one
+  discovery interval instead of one minute. The same applies in a gateway
+  process that has not discovered a root yet, for example after a restart
+  while a controller that the product data does not classify is still
+  unreachable when the absence state is reached.
+
+No configuration switch is added.
+
 ## Incremental Merge and Freshness Semantics
 
 Zone and DHW updates are merged incrementally, not replaced wholesale.
@@ -236,6 +275,38 @@ Implementation note:
 - Runtime bootstrap timeout is controlled by `-boot-live-timeout` (default `2m`).
 - If timeout elapses before live-ready, runtime transitions to `DEGRADED`.
 - `DEGRADED` does not block recovery; later live updates can still move runtime to warmup/live-ready.
+
+### Startup Reason Without a Supported Heat-Source Data Path
+
+The startup block of the bus observability summary carries an additive
+`reason` next to the phase (GraphQL `bus_summary.status.startup.reason`, MCP
+`ebus_v1_bus_summary_get` `status.startup.reason`). Its only value is
+`no_supported_heat_source_path`. It is set while the semantic poller has no
+supported heat-source data path: no B524 root and no boiler-class heat source,
+while the inventory holds a heat-pump-class identity (a heat-pump device-ID
+family `EHP`, `HMU`, `VWL`, `VWS` or `VWZ`, or a Vaillant serial whose part
+number the product catalog lists with role Heat Pump).
+
+- The poller evaluates the reason after every discovery pass and on the
+  registry-only heat-source refresh of the state and configuration ticks. It
+  clears the reason as soon as a root or a boiler-class heat source exists.
+- The reason stays clear when the process has discovered a root before or the
+  product catalog classifies an inventory identity as a controller, because a
+  missing root is then a failing read.
+- A heat source of unknown class (neither family nor catalog role) sets no
+  reason.
+- Otherwise GraphQL returns `reason` as null and MCP omits it.
+
+The phase vocabulary, the readiness predicate, the boot-live timeout and its
+default are unchanged. Without live data the phase does not reach
+`LIVE_READY`, and the boot-live timer still moves it to `DEGRADED`. With the
+reason set, that transition logs `reason="boot_live_timeout elapsed=<timeout>
+startup_reason=no_supported_heat_source_path"`, so a bus with nothing the
+gateway can read is distinguishable from failing reads. Root discovery is
+unchanged: a heat-pump-class unit that answers the root probe coherently is
+still adopted as semantic root, and the reason is then clear. No heat-pump
+register is read and no heat-pump value is published. Setting and clearing log
+markers are listed in [`observability.md`](./observability.md#semantic-lifecycle).
 
 ## API and Runtime Cross-Links
 

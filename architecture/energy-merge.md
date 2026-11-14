@@ -145,6 +145,10 @@ After each accepted merge, the store rebuilds a full `EnergyTotals` snapshot. Th
 
 Live readers are not served the cached copy. Every live resolver calls the provider's energy-totals accessor, which builds the snapshot from the store against the current gateway clock on each call, so the two-slot projection (see [Public Two-Slot Projection](#public-two-slot-projection)) is rebuilt on every live read. Captured MCP snapshots and GraphQL subscription events are the exceptions described there: they carry the projection as of capture or event time.
 
+### Null Before the First Accepted Point
+
+GraphQL `energy_totals`, the MCP energy totals tool (`ebus_v1_semantic_energy_totals_get`) and the energy plane of the MCP semantic snapshot are null until the energy merge store has accepted its first point; no projection of `0` values with provenance `none` is published before it. From the first accepted point on, the per-slot projection, its `0`/`none` placeholders and its freshness metadata apply as described above, also after the store prunes points. Energy is not persisted, so after every gateway restart the plane is null until the first accepted energy point (the first energy refresh comes up to 5 minutes after start with the defaults). On a bus with a heat source and no system controller no register point is read, so the plane stays null while no energy point is accepted. Merge rules, provenance values and retention are unchanged.
+
 ## Thread Safety
 
 The `energyMergeStore` has its own `sync.RWMutex`, separate from the `LiveSemanticProvider.mu`. Lock ordering is:

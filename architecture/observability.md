@@ -111,6 +111,24 @@ These variables exist in-process today but are not mounted as a public HTTP endp
 | `semantic_cache_epoch` | int | Current cache epoch counter |
 | `semantic_live_epoch` | int | Current live epoch counter |
 
+### Startup Block Reason
+
+The startup block of the bus observability summary (GraphQL
+`bus_summary.status.startup`, MCP `ebus_v1_bus_summary_get` `status.startup`)
+carries the additive field `reason` next to `phase`, `cache_epoch` and
+`live_epoch`. It is `no_supported_heat_source_path` while the semantic poller
+has no supported heat-source data path: no B524 root and no boiler-class heat
+source, while the inventory holds a heat-pump-class identity. Otherwise GraphQL
+returns `reason` as null and MCP omits it, so existing outputs are unchanged.
+The rule, its evaluation points and the phase behaviour are described in
+[`startup-semantic-fsm.md`](./startup-semantic-fsm.md#startup-reason-without-a-supported-heat-source-data-path).
+
+On a bus whose controller is present but not classified by the product data,
+and whose inventory holds a heat-pump-class identity, a failed first discovery
+pass can set the reason, because neither a discovered root nor a
+controller classification keeps it clear yet. It clears on the next successful
+discovery pass, when the root is found.
+
 ### Zone Presence
 
 | Metric | Type | Description |
@@ -136,8 +154,18 @@ These variables exist in-process today but are not mounted as a public HTTP endp
 
 | Metric | Type | Description |
 | --- | --- | --- |
-| `semantic_regulator_state` | string | Current regulator absence state (PRESENT, ABSENCE_GRACE, ABSENT) |
-| `semantic_regulator_transitions_total` | map | Count of regulator state transitions |
+| `semantic_regulator_state` | string | Current regulator absence state (UNKNOWN, PRESENT, ABSENCE_GRACE, ABSENT) |
+| `semantic_regulator_transitions_total` | map | Count of regulator state transitions, keyed by `"FROM->TO"` |
+
+The absence state starts at `UNKNOWN` (not yet evaluated). The first regulator
+recheck moves it to `PRESENT` when the regulator capability is `PRESENT` and to
+`ABSENCE_GRACE` otherwise, with the grace period measured from that recheck, so
+`ABSENT` is reached at the same moment as before (six minutes of polling with
+the defaults). The transition log and `semantic_regulator_transitions_total`
+report `UNKNOWN` as the source state of that first transition. On a bus with a
+heat source and no system controller the sequence is `UNKNOWN` →
+`ABSENCE_GRACE` → `ABSENT`. `vaillant_regulator_capability`, the grace period
+and the controller search before `ABSENT` are unchanged.
 
 ### Read Circuit Breaker
 
@@ -233,6 +261,17 @@ Bus observability warmup and dedup health are metric-first today. The structured
 | `semantic_regulator_transition` | Regulator absence FSM changes state | `from`, `to`, `capability` |
 | `semantic_regulator_absence` | Regulator absence state is published after a transition | `state`, `capability` |
 | `semantic_regulator_recheck` | Inventory change triggers immediate discovery refresh | `prev`, `curr` |
+| `semantic_discovery_fallback_suspended` | The state and configuration tasks stop their fallback B524 root discovery because the absence state is `ABSENT` and the process has never discovered a root; logged once each time the suspension starts | `regulator_state`, `discovery_interval` |
+| `semantic_startup_reason` | The startup reason is set or cleared | `reason`, `state` (`set` or `cleared`); `heat_source` when set; `controller`, `boiler` when cleared |
+| `startup scan: root confirmation not required: inventory has no regulator identity` | Explicitly configured source: the root confirmation of a startup scan pass found no B524 root and every Vaillant identity is classified as a non-controller | `active confirmation` |
+
+The startup reason markers have the forms
+`semantic_startup_reason reason=no_supported_heat_source_path state=set heat_source=0x<addr>`
+and
+`semantic_startup_reason reason=no_supported_heat_source_path state=cleared controller=0x<addr> boiler=0x<addr>`.
+With the reason set, the boot-live timeout transition of
+`semantic_startup_phase_transition` carries
+`reason="boot_live_timeout elapsed=<timeout> startup_reason=no_supported_heat_source_path"`.
 
 ### Read Path and Energy Merge
 
@@ -252,6 +291,7 @@ Bus observability warmup and dedup health are metric-first today. The structured
 | DHW disappearing | `semantic_dhw_stale_expiry_total`, `semantic_dhw_updates_total`, `semantic_dhw_expired` | Expiry count grows faster than updates, or `age` exceeds the configured TTL |
 | Energy not updating | `semantic_energy_merges_total`, `semantic_energy_rejections_total`, `semantic_energy_merge_reject` | Rejections grow, especially `source_downgrade` or `monotonic` |
 | Regulator lost | `semantic_regulator_state`, `semantic_regulator_transition`, `semantic_regulator_absence` | State reaches `ABSENT`, typically through `PRESENT -> ABSENCE_GRACE -> ABSENT` |
+| Bus without a system controller | `semantic_regulator_state`, `semantic_discovery_fallback_suspended`, startup block `reason` | State reaches `ABSENT` through `UNKNOWN -> ABSENCE_GRACE -> ABSENT`; the suspension marker appears once; `reason` is `no_supported_heat_source_path` while no root and no boiler-class heat source exist and the inventory holds a heat-pump-class identity |
 | Passive observe-first unavailable | `ebus_passive_warmup_state`, `ebus_passive_capability_unavailable_reason`, `ebus_observability_transport_info` | `state="unavailable"` with reason `unsupported_or_misconfigured` is expected on `ebusd-tcp` and direct adapter-class `enh`/`ens` endpoints |
 | Busy metrics missing | `ebus_observability_transport_info`, `ebus_passive_warmup_state`, `ebus_bus_busy_ratio` | Busy metrics emit only once passive state is `available` and passive timing quality is not `unavailable` |
 | Dedup stays degraded | `ebus_dedup_degraded_state`, `ebus_dedup_degraded_total`, `ebus_passive_fanout_overflow_total` | Degraded state stays `1`, or overflow/degraded counters keep increasing |
