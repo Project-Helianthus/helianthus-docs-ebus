@@ -515,8 +515,8 @@ type system_status {
 }
 type system_state {
   system_off: Boolean
-  system_water_pressure: Float
-  system_flow_temperature: Float
+  water_pressure: Float
+  flow_temperature: Float
   outdoor_temperature: Float
   outdoor_temperature_avg24h: Float
   maintenance_due: Boolean
@@ -524,16 +524,16 @@ type system_state {
   hwc_cylinder_temperature_bottom: Float
 }
 type system_config {
-  adaptive_heating_curve: Boolean
+  adaptive_heating_curve_enabled: Boolean
   alternative_point: Float
-  heating_circuit_bivalence_point: Float
+  heating_outdoor_bivalence_temperature_limit: Float
   dhw_bivalence_point: Float
   dhw_bivalence_point_bound: system_config_bound
   hc_emergency_temperature: Float
   hwc_max_flow_temp_desired: Float
-  max_room_humidity: Int
+  room_humidity_limit_maximum: Int
 }
-# active write bound of dhwBivalencePointC (see "system config Write Bounds").
+# active write bound of the dhw_outdoor_bivalence_temperature_limit setter key (see "System Config Write Bounds").
 type system_config_bound {
   min_c: Float!
   max_c: Float!
@@ -543,8 +543,8 @@ type system_config_bound {
   profile: String   # set only for "controller_profile"
 }
 type system_properties {
-  system_scheme: Int
-  module_configuration_vr71: Int
+  hydraulic_scheme_code: Int
+  functional_module_configuration_code: Int
 }
 
 type circuit_status {
@@ -1098,7 +1098,7 @@ type config_mutation_result {
   - Fractional values for integer fields are rejected (`INVALID_PAYLOAD`).
 - **Error mapping**: typed errors are mapped to `code`/`category` (e.g., `TIMEOUT` → `TRANSIENT`, `NO_SUCH_DEVICE` → `DEFINITIVE`).
 - **Result normalization**: `types.Value{Valid:false}` fields are returned as `null` in the JSON result map.
-- **Boiler writes**: `set_boiler_config` accepts the provisional keys `flowsetHcMaxC`, `flowsetHwcMaxC`, `partloadHcKW`, `partloadHwcKW`, `phoneNumber` and `installerMenuCode`; selector-qualified meanings and value roles remain unresolved. The mutation accepts the value as a string, rejects non-finite input, enforces server-side ranges, and only reports success after B509 ack + read-back confirmation.
+- **Boiler writes**: `set_boiler_config` accepts exactly the keys `maximum_heating_flow_temperature_setpoint`, `maximum_dhw_flow_temperature_setpoint`, `heating_partial_load_power`, `dhw_partial_load_power`, `installer_phone_number` and the provisional `installerMenuCode`, whose register meaning is open; [the MCP setter tables](./mcp.md#boiler-setter-keys) list their selectors and bounds. The mutation accepts the value as a string, rejects non-finite input, enforces server-side ranges, and only reports success after B509 ack + read-back confirmation.
 - **Boiler write normalization**: `DATA2c` boiler temperature writes publish the normalized wire value, not the raw input string. `UCH` power-limit writes require whole-number kW.
 
 ### System Config Write Bounds
@@ -1113,7 +1113,7 @@ in this repository pins the documented members and examples.
 
 The `set_system_config(field, value)` mutation, the MCP tool
 `ebus_v1_semantic_system_set_config`, and the registry/invoker mutation path
-share one validation rule for the `dhwBivalencePointC` field (register
+share one validation rule for the `dhw_outdoor_bivalence_temperature_limit` key (register
 `GG=0x00`, `RR=0x0001`): the accepted range is not fixed, it is resolved per
 controller.
 
@@ -1179,9 +1179,11 @@ match (none is reachable until identities are acquired at discovery, gateway
 - **Non-finite input.** Every numeric configuration write rejects `NaN` and
   positive or negative infinity before encoding, with `success: false` and
   no bus request.
-- **Other system numbers.** `maxRoomHumidityPct`, `hcBivalencePointC`,
-  `hcEmergencyTempC`, `hwcMaxFlowTempC` and `installerMenuCode` keep their fixed
-  ranges and carry no bound.
+- **Other system numbers.** `room_humidity_limit_maximum`,
+  `heating_outdoor_bivalence_temperature_limit`,
+  `heating_flow_temperature_setpoint_maximum_at_heat_pump_fault`,
+  `dhw_flow_temperature_setpoint_maximum` and `installer_access_code` keep
+  their fixed ranges and carry no bound.
 
 `system_config_bound` publishes `min_c`, `max_c`, and `narrowed_only`.
 

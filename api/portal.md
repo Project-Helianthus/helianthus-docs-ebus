@@ -598,8 +598,8 @@ Example response:
   "system": {
     "state": {
       "system_off": false,
-      "system_water_pressure": 1.5,
-      "system_flow_temperature": 31.4,
+      "water_pressure": 1.5,
+      "flow_temperature": 31.4,
       "outdoor_temperature": 5.0,
       "outdoor_temperature_avg24h": 4.8,
       "maintenance_due": false,
@@ -607,16 +607,16 @@ Example response:
       "hwc_cylinder_temperature_bottom": 42.5
     },
     "config": {
-      "adaptive_heating_curve": true,
-      "heating_circuit_bivalence_point": -3.0,
+      "adaptive_heating_curve_enabled": true,
+      "heating_outdoor_bivalence_temperature_limit": -3.0,
       "dhw_bivalence_point": -7.0,
       "hc_emergency_temperature": 30.0,
       "hwc_max_flow_temp_desired": 60.0,
-      "max_room_humidity": 70
+      "room_humidity_limit_maximum": 70
     },
     "properties": {
-      "system_scheme": 1,
-      "module_configuration_vr71": 2
+      "hydraulic_scheme_code": 1,
+      "functional_module_configuration_code": 2
     }
   },
   "circuits": [

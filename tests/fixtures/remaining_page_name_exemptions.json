@@ -1,20 +1,6 @@
 [
   {
     "file": "api/graphql.md",
-    "token": "flowsetHwcMaxC",
-    "context": "flowsetHwcMaxC",
-    "count": 1,
-    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
-  },
-  {
-    "file": "api/graphql.md",
-    "token": "flowsetHcMaxC",
-    "context": "flowsetHcMaxC",
-    "count": 1,
-    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
-  },
-  {
-    "file": "api/graphql.md",
     "token": "busAdmission",
     "context": "busAdmission",
     "count": 1,
@@ -36,36 +22,8 @@
   },
   {
     "file": "api/mcp.md",
-    "token": "flowsetHwcMaxC",
-    "context": "flowsetHwcMaxC",
-    "count": 1,
-    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
-  },
-  {
-    "file": "api/mcp.md",
-    "token": "adaptiveHeatingCurve",
-    "context": "adaptiveHeatingCurve",
-    "count": 1,
-    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
-  },
-  {
-    "file": "api/mcp.md",
-    "token": "flowsetHcMaxC",
-    "context": "flowsetHcMaxC",
-    "count": 1,
-    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
-  },
-  {
-    "file": "api/mcp.md",
     "token": "readOnly",
     "context": "readOnly",
-    "count": 1,
-    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
-  },
-  {
-    "file": "api/mcp.md",
-    "token": "operatingMode",
-    "context": "operatingMode",
     "count": 1,
     "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
   },
@@ -137,13 +95,6 @@
     "token": "current_temp_c",
     "context": "current_temp_c",
     "count": 4,
-    "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
-  },
-  {
-    "file": "architecture/dhw-setpoint-semreg-cutover.md",
-    "token": "flowsetHwcMaxC",
-    "context": "flowsetHwcMaxC",
-    "count": 1,
     "reason": "Preserved non-API identifier or documentary correspondence; no emitted member substitution authorized."
   },
   {
@@ -1452,7 +1403,7 @@
     "file": "scripts/check_naming_surface_contract.py",
     "token": "adaptiveHeatingCurve",
     "context": "adaptiveHeatingCurve",
-    "count": 1,
+    "count": 2,
     "reason": "Guard rejected-token literal or synthetic negative control."
   },
   {

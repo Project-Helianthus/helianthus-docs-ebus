@@ -4,7 +4,7 @@
 > changes the native protocol nor enables a producer.
 
 This is the pressure disposition slice of gateway #952 / Project #2 INT-08.
-It separates the existing `state.system_water_pressure` observation from
+It separates the existing `state.water_pressure` observation from
 boiler-pressure consumers and deliberately withholds universal projection.
 The parent acceptance remains open. Nothing here declares a stable contract
 before Helianthus 1.0 or adds an authorization gate.
@@ -31,7 +31,7 @@ or byte order stays **Unknown**.
 
 **Proven — documented correspondence:** the catalog and
 [B524 semantic mapping](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/b524-semantic-mapping.md)
-associate this system register with `state.system_water_pressure` (`f32`).
+associate this system register with `state.water_pressure` (`f32`).
 This is a source-document correspondence, not newly proven native sensor
 placement or an executed gateway result.
 **Hypothesis — broader physical equivalence:** the system and boiler readings
@@ -55,7 +55,7 @@ from acquisition success, freshness, admission, and binding qualification.
 | Universal projection | No accepted pressure semantic definition plus qualified mapping is available in this slice. | Withhold the pressure fact and its universal consumer projection. Record the disposition independently of a retained native value; emit no fabricated zero, temperature fact, or boiler substitute. |
 
 The [GraphQL contract](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/api/graphql.md)
-also distinguishes `system_state.system_water_pressure` from
+also distinguishes `system_state.water_pressure` from
 `boiler_state.water_pressure_bar`. Their presence is API correspondence, not native
 equivalence. Existing MCP envelopes and GraphQL fields remain unchanged. Future
 bindings must give both surfaces the same owner, value eligibility and
