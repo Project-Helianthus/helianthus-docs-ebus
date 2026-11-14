@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import copy
+import shutil
 import importlib.util
 from pathlib import Path
 
@@ -618,3 +619,54 @@ def test_boiler_phone_wire_type_and_validation():
     assert cells[2] == "HEX:8"
     assert "16 hex characters" in cells[3]
     assert "BCD" in cells[3]
+
+
+# Canonical system field and its previous name. The module-configuration
+# property's previous name ends in a device model token; a synthetic suffix
+# stands in for it, matched by the checker through the shared stem.
+RENAMED_SYSTEM_FIELDS = [
+    ("water_pressure", "system_water_pressure"),
+    ("flow_temperature", "system_flow_temperature"),
+    ("adaptive_heating_curve_enabled", "adaptive_heating_curve"),
+    ("heating_outdoor_bivalence_temperature_limit", "heating_circuit_bivalence_point"),
+    ("room_humidity_limit_maximum", "max_room_humidity"),
+    ("installer_access_code", "installer_menu_code"),
+    ("hydraulic_scheme_code", "system_scheme"),
+    ("functional_module_configuration_code", "module_configuration_synthetic"),
+]
+
+
+def api_root(tmp_path):
+    shutil.copytree(ROOT / "api", tmp_path / "api")
+    return tmp_path
+
+
+def test_published_api_pages_name_no_previous_system_field():
+    CHECKER.validate_api_pages(ROOT)
+
+
+@pytest.mark.parametrize("canonical,previous", RENAMED_SYSTEM_FIELDS)
+def test_previous_system_field_rejected_on_portal(tmp_path, canonical, previous):
+    root = api_root(tmp_path)
+    page = root / "api/portal.md"
+    text = page.read_text()
+    CHECKER.validate_api_pages(root)
+    if '"' + canonical + '"' in text:
+        changed = text.replace('"' + canonical + '"', '"' + previous + '"', 1)
+    else:
+        anchor = '"water_pressure": 1.5,'
+        assert anchor in text
+        changed = text.replace(anchor, anchor + ' "' + previous + '": 1,', 1)
+    page.write_text(changed)
+    with pytest.raises(ValueError, match="previous system field"):
+        CHECKER.validate_api_pages(root)
+
+
+@pytest.mark.parametrize("canonical,previous", RENAMED_SYSTEM_FIELDS)
+@pytest.mark.parametrize("index", [0, 1])
+def test_previous_system_field_rejected_in_additional_example(canonical, previous, index):
+    docs = documents()
+    docs[index] += ("\n```graphql\n{ system { config { " + previous + " } } }\n```\n"
+                    if index == 0 else '\n```json\n{"' + previous + '": 1}\n```\n')
+    with pytest.raises(ValueError, match="previous system field"):
+        CHECKER.validate(*docs)

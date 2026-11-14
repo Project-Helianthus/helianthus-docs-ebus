@@ -64,6 +64,15 @@ PREVIOUS_SETTER_KEYS = {
     "boiler": ("flowsetHcMaxC", "flowsetHwcMaxC", "partloadHcKW",
                "partloadHwcKW", "phoneNumber"),
 }
+# Previous names of the renamed system fields. No published API page (GraphQL,
+# MCP, Portal) names them; the register maps keep them only as documentary
+# columns. The module-configuration property's previous name ends in a device
+# model token, so it is matched by its stem: any name starting with it.
+PREVIOUS_SYSTEM_FIELDS = (
+    r"system_water_pressure", r"system_flow_temperature", r"adaptive_heating_curve",
+    r"heating_circuit_bivalence_point", r"max_room_humidity", r"installer_menu_code",
+    r"system_scheme", r"module_configuration_\w+",
+)
 
 
 def _validate_tool_names(tools: str, registration) -> None:
@@ -102,6 +111,25 @@ def _validate_system_members(graphql: str) -> None:
         members = re.findall(r"^\s*(\w+)\s*:", declarations[0], re.M)
         if sorted(members) != sorted(expected):
             raise ValueError(type_name + " value spelling or membership differs")
+
+
+def reject_previous_system_fields(texts) -> None:
+    """Fail when any text names a previous system field as a whole name."""
+    for pattern in PREVIOUS_SYSTEM_FIELDS:
+        if any(re.search(r"(?<![\w])" + pattern + r"(?![\w])", text) for text in texts):
+            raise ValueError("previous system field named: " + pattern)
+
+
+def validate_api_pages(root: Path) -> None:
+    """Check every published API page, Portal included, for previous system fields."""
+    texts = []
+    for path in sorted((root / "api").rglob("*")):
+        relative = str(path.relative_to(root))
+        if path.is_file() and relative not in EXCLUSIONS:
+            texts.append(path.read_text())
+    if not texts:
+        raise ValueError("published API pages missing")
+    reject_previous_system_fields(texts)
 
 
 def _validate_graphql_names(graphql: str) -> None:
@@ -274,6 +302,7 @@ def validate(graphql: str, tools: str, coverage: str, registration=None,
              setter_keys=None) -> None:
     _validate_tool_names(tools, registration)
     _validate_graphql_names(graphql)
+    reject_previous_system_fields((graphql, tools))
     _validate_setter_families(tools, graphql, setter_keys)
     _validate_qualifications(graphql, tools)
     metrics.validate(coverage)
@@ -423,6 +452,7 @@ def validate_remaining_pages(root: Path):
 def validate_root(root: Path, gateway: Path | None = None) -> None:
     setter_keys = None if gateway is None else load_setter_keys(gateway)
     validate_remaining_pages(root)
+    validate_api_pages(root)
     validate_operation((root / "api/semantic-operation-route.md").read_text(),
                        (root / "tests/semantic_operation_route_contract.json").read_text())
     registration = None
