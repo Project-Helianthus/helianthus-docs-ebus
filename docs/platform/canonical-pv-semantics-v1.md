@@ -11,7 +11,10 @@ and its
 [kernel](https://github.com/Project-Helianthus/helianthus-docs-semantic/blob/main/api/v1/kernel.md)
 in docs-semantic own them. `helianthus-ebusreg`, named in the manifest's
 `owner` field, applies the value, unit, quality, availability, freshness,
-continuity, and provenance rules of this page; it is not the semantic owner.
+continuity, and provenance rules of this page as an implementation role;
+the registry responsibilities listed in the repository ownership table of the
+multi-vendor boundaries page are read under the common contract, which stays
+authoritative for meaning and identity.
 
 `helianthus-modbusreg` owns source-model decoding and qualification. The
 gateway owns acquisition and composition, but it must not redefine canonical
