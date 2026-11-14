@@ -75,7 +75,9 @@ Optional expected-failure inputs:
 
 ### Full run recommendation
 
-For transport/protocol merges, run the complete set (`T01..T88`) and keep `results/index.json` as the merge-gate artifact:
+This command describes the consolidated candidate session's last full `T01..T88` run, which kept `results/index.json` as its artifact and still needs the archived proxy for `T09..T88`.
+It is not a merge gate for new changes: transport/protocol merges use the applicable cells of the gateway [`adaptermux-v2` matrix](https://github.com/Project-Helianthus/helianthus-ebusgateway/tree/main/matrix).
+The last run used:
 
 ```bash
 go run ./cmd/matrix-runner \
@@ -134,7 +136,7 @@ Each command step is logged with command string, timestamps, status, and exit co
 
 ## Observe-First Proof Note
 
-This runbook documents the current `T01..T88` transport gate and the bounded
+This runbook documents the consolidated candidate session's last `T01..T88` run and the bounded
 observe-first proof shape used by `P03` on the passive suite.
 
 Canonical `P03` bounded proof contract:
@@ -192,8 +194,16 @@ Current factual references:
 
 ## Proxy-Semantics Adjunct Gate (`PX01..PX12`)
 
-`T01..T88` remains the primary transport gate. For proxy transport/protocol
-merges, a required adjunct proof subset is evaluated in addition to `T01..T88`:
+This section is historical. The adapter proxy repository is archived, and its
+`PX01..PX12` case set and runner are no longer a required merge gate. The
+gateway [`adaptermux-v2` matrix](https://github.com/Project-Helianthus/helianthus-ebusgateway/tree/main/matrix)
+carries these cases as the cells `<transport>-PX01` to `<transport>-PX12` on
+every southbound transport; `PX09` to `PX11` are planned until the multiplexer
+has a local responder. The list below, the policy and the artifact shape
+describe the last proxy-backed run of the consolidated candidate session.
+
+For proxy transport/protocol merges, that run evaluated an adjunct proof subset
+in addition to `T01..T88`:
 
 - `PX01`: stale `STARTED` absorb with matching result inside absorb window
 - `PX02`: stale `STARTED` absorb expiry with bounded fail path
@@ -210,16 +220,16 @@ merges, a required adjunct proof subset is evaluated in addition to `T01..T88`:
 
 ### Gate policy with `PX` adjunct
 
-- `T01..T88` verdict remains the primary merge gate for transport/protocol work.
-- `PX01..PX12` is a required adjunct for proxy wire-semantics scope.
-- Merge requires no unexpected `fail` and no unexpected `xpass` across both
+- `T01..T88` verdict was the primary merge gate for transport/protocol work in that run.
+- `PX01..PX12` was a required adjunct for proxy wire-semantics scope in that run.
+- Merge required no unexpected `fail` and no unexpected `xpass` across both
   gate sets.
-- `xfail` must stay bound to a documented expected-failure inventory with case
+- `xfail` stayed bound to a documented expected-failure inventory with case
   IDs and reasons.
 
 ### Expected artifact shape for proxy-semantics proof runs
 
-Proof runs must include an attached artifact bundle shaped as:
+The last proxy-backed run included an attached artifact bundle shaped as:
 
 ```text
 results/
@@ -238,7 +248,7 @@ results/
       logs/runner.log
 ```
 
-`proxy-semantics/index.json` must summarize `PX01..PX12` outcomes and expected
+`proxy-semantics/index.json` summarized the `PX01..PX12` outcomes and expected
 failure annotations used for that run.
 
 ### Deferred ESERA passive validation note
