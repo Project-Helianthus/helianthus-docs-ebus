@@ -75,7 +75,9 @@ Optional expected-failure inputs:
 
 ### Full run recommendation
 
-For transport/protocol merges, run the complete set (`T01..T88`) and keep `results/index.json` as the merge-gate artifact:
+This command describes the consolidated candidate session's last full `T01..T88` run, which kept `results/index.json` as its artifact and still needs the archived proxy for `T09..T88`.
+It is not a merge gate for new changes: transport/protocol merges use the applicable cells of the gateway [`adaptermux-v2` matrix](https://github.com/Project-Helianthus/helianthus-ebusgateway/tree/main/matrix).
+The last run used:
 
 ```bash
 go run ./cmd/matrix-runner \
@@ -134,7 +136,7 @@ Each command step is logged with command string, timestamps, status, and exit co
 
 ## Observe-First Proof Note
 
-This runbook documents the current `T01..T88` transport gate and the bounded
+This runbook documents the consolidated candidate session's last `T01..T88` run and the bounded
 observe-first proof shape used by `P03` on the passive suite.
 
 Canonical `P03` bounded proof contract:

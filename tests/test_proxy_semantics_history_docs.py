@@ -115,6 +115,39 @@ def test_contributing_primary_artifact_is_the_gateway_matrix():
     assert "gateway matrix result" in reference
 
 
+def section(text, heading):
+    body = text.split(f"\n{heading}\n", 1)[1]
+    level = heading.split(" ", 1)[0]
+    return re.split(rf"\n#{{2,{len(level)}}} ", body, maxsplit=1)[0]
+
+
+def test_runbook_full_run_describes_the_last_run_not_a_current_gate():
+    text = read(RUNBOOK)
+    full_run = flat(section(text, "### Full run recommendation"))
+    assert "For transport/protocol merges, run the complete set" not in full_run
+    assert "consolidated candidate session's last full `T01..T88` run" in full_run
+    assert "not a merge gate for new changes" in full_run
+    assert MATRIX_LINK in full_run
+    observe_first = flat(section(text, "## Observe-First Proof Note"))
+    assert "the current `T01..T88` transport gate" not in observe_first
+    assert "consolidated candidate session's last `T01..T88` run" in observe_first
+
+
+def test_m4_proof_gates_require_only_gateway_cells():
+    gates = section(read("architecture/adaptermux/first-byte-arbitration-revalidation.md"), "## M4 Live Proof Gates")
+    rows = [flat(line) for line in gates.splitlines() if line.startswith("| ")]
+    assert rows, "M4 gate table"
+    for row in rows:
+        assert "T01..T88" not in row, row
+    px = [row for row in rows if row.startswith("| PX |")]
+    assert len(px) == 1
+    assert MATRIX_LINK in px[0]
+    assert "`<transport>-PX01` to `<transport>-PX12`" in px[0]
+    history = flat(gates)
+    assert "consolidated candidate session's last `T01..T88` run is historical context" in history
+    assert "not part of this proof" in history
+
+
 def test_missing_gateway_cells_are_rejected():
     with pytest.raises(AssertionError):
         check_names_gateway_cells(f"The case set is historical; see [{MATRIX_LINK}].")

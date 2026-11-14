@@ -122,7 +122,11 @@ The M4 proof must establish all of the following on the deployed add-on build:
 | O3 | Over the 90-minute stress window, `helianthus_round9_absorb_entered_total` has zero delta. |
 | O4 | `post_grant_ack` is at most 15 over 90 minutes, equivalent to the 10/hour absolute cap. |
 | O5 | Active request collision rate is at most 825/hour. |
-| T/PX | The consolidated candidate session's last T01..T88 run and the gateway [`adaptermux-v2` matrix](https://github.com/Project-Helianthus/helianthus-ebusgateway/tree/main/matrix) cells `<transport>-PX01` to `<transport>-PX12` have no unexpected fail or xpass, except for owner-recorded `adapter_no_signal` infrastructure blockage. PX09 to PX11 are planned until the multiplexer has a local responder; the proxy's PX01..PX12 case set and runner are historical. |
+| PX | The applicable gateway [`adaptermux-v2` matrix](https://github.com/Project-Helianthus/helianthus-ebusgateway/tree/main/matrix) cells `<transport>-PX01` to `<transport>-PX12` have no unexpected fail or xpass, except for owner-recorded `adapter_no_signal` infrastructure blockage. PX09 to PX11 are planned until the multiplexer has a local responder; the proxy's PX01..PX12 case set and runner are historical. |
+
+The consolidated candidate session's last `T01..T88` run is historical context
+and not part of this proof: `T09..T88` need the archived proxy and cannot
+exercise the deployed add-on build.
 
 The proof must also close the active, passive, and cross-session classification
 predicates:
