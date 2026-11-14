@@ -145,13 +145,19 @@ new XR rows or native wire claims. Host-to-adapter command rejection,
 arbitration, transmission/echo, fairness and ownership tests are outside this
 passive worksheet; do not imply that passive receipt covers them.
 
-Select actual case IDs from the existing manifest, without inventing a mapping:
+Select actual case IDs from the existing manifest, without inventing a mapping.
+For the consolidated candidate session's last `T01..T88` run these are
 `T01..T04` direct, `T05..T08` via ebusd-tcp, `T09..T24` proxy single-client,
 and `T25..T88` proxy dual-client. The
 [P03 proof](smoke-matrix.md#observe-first-proof-note) applies only to its stated
 proxy-backed ENS family; this worksheet does not execute its canary phases.
-The [proxy adjunct](smoke-matrix.md#proxy-semantics-adjunct-gate-px01px12)
-retains `PX01..PX12` and its existing scope. No XR implementation status,
+The `PX01..PX12` case set and runner of the proxy are historical; the
+[proxy adjunct](smoke-matrix.md#proxy-semantics-adjunct-gate-px01px12) (historical)
+lists them. Each PX case is now carried by the gateway
+[`adaptermux-v2` matrix](https://github.com/Project-Helianthus/helianthus-ebusgateway/tree/main/matrix)
+as the cells `<transport>-PX01` to `<transport>-PX12` on every southbound
+transport; `PX09` to `PX11` are planned until the multiplexer has a local
+responder. No XR implementation status,
 synthetic result, P03 artifact shape, or worksheet entry substitutes for the
 required hardware matrix or changes its expected-failure inventory.
 
@@ -168,5 +174,7 @@ The [deferred FOLLOWUP-01 ownership](smoke-matrix.md#deferred-esera-passive-vali
 and [transport runtime gate](contributing.md#transport-runtime-gate-merge-blocking)
 remain unchanged. Documentation preparation closes no hardware acceptance.
 Any required production transport change is HELD for a separately owned patch
-and the applicable `T01..T88` gate, plus `PX01..PX12` when in scope. Ordinary
+and the applicable gateway `adaptermux-v2` matrix cells, including
+`<transport>-PX01` to `<transport>-PX12` when in scope (the proxy's
+`PX01..PX12` case set is historical). Ordinary
 CI, documentation review and any failing result still gate this docs slice.
