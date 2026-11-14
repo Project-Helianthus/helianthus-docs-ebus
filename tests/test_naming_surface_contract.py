@@ -538,3 +538,33 @@ def test_exact_stale_prose_still_checked_beside_graphql_data(tmp_path):
         '```graphql\n{ search(value: "busSummary") }\n```\nbusSummary\n')
     with pytest.raises(ValueError, match="remaining API"):
         CHECKER.validate_remaining_pages(tmp_path)
+
+
+@pytest.mark.parametrize("type_name,field", [
+    ("system_state", "water_pressure"),
+    ("system_state", "flow_temperature"),
+    ("system_config", "adaptive_heating_curve_enabled"),
+    ("system_config", "heating_outdoor_bivalence_temperature_limit"),
+    ("system_config", "room_humidity_limit_maximum"),
+    ("system_properties", "hydraulic_scheme_code"),
+    ("system_properties", "functional_module_configuration_code"),
+])
+@pytest.mark.parametrize("mutation", ["missing", "renamed", "extra", "duplicate"])
+def test_system_member_contract_rejected(type_name, field, mutation):
+    docs = documents()
+    declaration = "type " + type_name + " {"
+    start = docs[0].index(declaration)
+    end = docs[0].index("}", start)
+    body = docs[0][start:end]
+    row = next(row for row in body.splitlines(True) if row.strip().startswith(field + ":"))
+    if mutation == "missing":
+        changed = body.replace(row, "")
+    elif mutation == "renamed":
+        changed = body.replace(field + ":", "system_" + field + ":")
+    elif mutation == "extra":
+        changed = body + "  system_" + field + ": Float\n"
+    else:
+        changed = body + row
+    docs[0] = docs[0][:start] + changed + docs[0][end:]
+    with pytest.raises(ValueError, match="system.*membership"):
+        CHECKER.validate(*docs)

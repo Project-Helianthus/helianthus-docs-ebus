@@ -78,7 +78,34 @@ def _validate_tool_names(tools: str, registration) -> None:
         mcp.validate(registration, tools)
 
 
+def _validate_system_members(graphql: str) -> None:
+    system_members = {
+        "system_state": (
+            "system_off", "water_pressure", "flow_temperature", "outdoor_temperature",
+            "outdoor_temperature_avg24h", "maintenance_due",
+            "hwc_cylinder_temperature_top", "hwc_cylinder_temperature_bottom",
+        ),
+        "system_config": (
+            "adaptive_heating_curve_enabled", "alternative_point",
+            "heating_outdoor_bivalence_temperature_limit", "dhw_bivalence_point",
+            "dhw_bivalence_point_bound", "hc_emergency_temperature",
+            "hwc_max_flow_temp_desired", "room_humidity_limit_maximum",
+        ),
+        "system_properties": (
+            "hydraulic_scheme_code", "functional_module_configuration_code",
+        ),
+    }
+    for type_name, expected in system_members.items():
+        declarations = re.findall(r"type " + type_name + r"\s*\{([^}]+)\}", graphql)
+        if len(declarations) != 1:
+            raise ValueError(type_name + " declaration membership differs")
+        members = re.findall(r"^\s*(\w+)\s*:", declarations[0], re.M)
+        if sorted(members) != sorted(expected):
+            raise ValueError(type_name + " value spelling or membership differs")
+
+
 def _validate_graphql_names(graphql: str) -> None:
+    _validate_system_members(graphql)
     # Scope the value assertions to the zone object, preserving distinct DHW meaning.
     zone = re.search(r"type zone_state\s*\{([^}]+)\}", graphql)
     if zone is None:
