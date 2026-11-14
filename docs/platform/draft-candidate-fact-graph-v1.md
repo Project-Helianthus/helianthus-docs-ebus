@@ -29,6 +29,13 @@ vendor-restricted details. eeBUS identifiers in public fixtures are redacted
 per-bundle pseudonyms. Native eeBUS protocol meaning remains canonical in
 `helianthus-docs-eebus`; this contract owns only the cross-runtime envelope.
 
+The candidate fact graph is a cross-runtime evidence record, not the resource
+graph, a plane or a lens of the
+[common semantic contract](https://github.com/Project-Helianthus/helianthus-docs-semantic/blob/main/api/v1/graph.md).
+It defines no canonical identity of a semantic fact, resource or relation, and
+neither this repository nor the eBUS registry owns semantic meaning; the common
+contract in docs-semantic owns both.
+
 ## Closed Machine Contract
 
 The canonical machine files are:

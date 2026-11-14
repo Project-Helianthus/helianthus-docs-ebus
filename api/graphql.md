@@ -75,6 +75,8 @@ The builder assembles a GraphQL-oriented schema model directly from the registry
 - **Graceful channel close**: if the `changes` channel is closed, the builder stops listening instead of spinning rebuilds.
 - **Revisioned snapshots**: each successful rebuild increments a revision counter; `Schema()` returns a deep-copied snapshot to keep callers insulated from concurrent rebuilds.
 
+Vocabulary: `plane`, `planes` and `projections` on this page name registry planes, the per-device views of the eBUS registry, and registry projections, the plane-scoped graphs of one device. Neither is a plane, a lens or a target projection of the [common semantic contract](https://github.com/Project-Helianthus/helianthus-docs-semantic/blob/main/api/v1/graph.md); no type, field or route name changes.
+
 ## Observe-First Query Roots (Implemented)
 
 This excerpt freezes the `ISSUE-DOC-07` + `ISSUE-DOC-09` observe-first subset

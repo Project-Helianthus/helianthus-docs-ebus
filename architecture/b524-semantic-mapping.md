@@ -1,4 +1,4 @@
-# B524 Semantic Plane Mapping (Helianthus)
+# B524 MCP Semantic Plane Mapping (Helianthus)
 
 > **License:** AGPL-3.0. This file documents Helianthus-specific semantic mapping, not protocol-level specifications.
 >
@@ -6,6 +6,8 @@
 > For the register catalog, see [`../protocols/vaillant/ebus-vaillant-b524-register-map.md`](../protocols/vaillant/ebus-vaillant-b524-register-map.md).
 
 This document maps B524 registers to Helianthus MCP semantic plane fields. Only registers actively read by the gateway's semantic poller are listed. The **S** prefix in the register map's Notes column marks these registers.
+
+Vocabulary: an MCP semantic plane on this page is a gateway data family, the payload of one `ebus_v1_semantic_*` tool, and a derived projection is gateway runtime logic. Neither is a plane, a lens or a target projection of the [common semantic contract](https://github.com/Project-Helianthus/helianthus-docs-semantic/blob/main/api/v1/graph.md); no tool or field name changes.
 
 Related architecture:
 - Structural decision catalog: [`./b524-structural-decisions.md`](./b524-structural-decisions.md)
@@ -230,7 +232,7 @@ Source: `refreshState()` / `refreshDiscovery()` in `semantic_vaillant.go`
 
 ### Zone Mode Derivation
 
-The `operating_mode` and `preset` exposed in the zones semantic plane are derived from:
+The `operating_mode` and `preset` exposed in the zones MCP semantic plane are derived from:
 - `heating_operation_mode` (0x0006): opmode enum (0=off, 1=auto, 2=manual)
 - `current_special_function` (0x000E): sfmode enum (2=quickveto, 3/4=away)
 - Associated circuit's `cooling_enabled` (GG=0x02 RR=0x0006): determines heat vs cool capability for the zone

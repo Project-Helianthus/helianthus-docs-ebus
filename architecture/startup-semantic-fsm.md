@@ -4,6 +4,12 @@ This page documents the startup behavior for semantic data publication in `helia
 
 Goal: publish deterministic semantic data during startup without pretending cached values are live.
 
+Vocabulary: on this page a plane, or MCP semantic plane, is a gateway data
+family, the payload of one `ebus_v1_semantic_*` tool such as `zones` or `dhw`.
+It is not a plane, a lens or a target projection of the
+[common semantic contract](https://github.com/Project-Helianthus/helianthus-docs-semantic/blob/main/api/v1/graph.md),
+and no tool or field name changes.
+
 ## State Machine
 
 ```mermaid
@@ -188,7 +194,7 @@ connected. This bounds request bursts against empty FM detail registers while
 preserving physical topology evidence.
 
 The startup L1 semantic priming path is not weakened by this pacing: startup may
-still perform bounded direct reads needed to publish the required semantic
+still perform bounded direct reads needed to publish the required MCP semantic
 planes non-null within the startup gate.
 
 ## Incremental Merge and Freshness Semantics

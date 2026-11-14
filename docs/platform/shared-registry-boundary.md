@@ -9,8 +9,13 @@ identity, observations, evidence, and candidate correlations through versioned
 contracts; they do not create canonical semantic facts by naming a native
 field like an existing leaf.
 
-Canonical semantic identity is the tuple of semantic path, schema version, and
-accepted provenance policy. Runtime ids, protocol addresses, native paths, and
+This page does not define the canonical identity of a semantic fact, resource
+or relation, and neither this repository nor the eBUS registry owns semantic
+meaning. The
+[common semantic contract](https://github.com/Project-Helianthus/helianthus-docs-semantic/blob/main/api/v1/graph.md)
+and its
+[kernel](https://github.com/Project-Helianthus/helianthus-docs-semantic/blob/main/api/v1/kernel.md)
+in docs-semantic own both. Runtime ids, protocol addresses, native paths, and
 vendor labels remain source identity. They may participate in provenance but
 cannot become cross-runtime registry keys.
 

@@ -16,6 +16,12 @@ an individual claim, independently of implementation completeness, codec
 qualification and qualified physical support. A working codec does not promote
 a candidate mapping or qualify a device family.
 
+Vocabulary: a Vaillant plane here, including the `(*plane)` receiver in the
+implementation sources below, is a per-device method bundle of the eBUS
+registry, that is, the methods of one registry plane. It is not a plane, a lens
+or a target projection of the
+[common semantic contract](https://github.com/Project-Helianthus/helianthus-docs-semantic/blob/main/api/v1/graph.md).
+
 ## Five independent properties
 
 | Property | What it establishes | What it does not establish |

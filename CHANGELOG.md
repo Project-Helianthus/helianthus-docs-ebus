@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+- Plane, projection and lens wording states its native meaning. The GraphQL,
+  MCP and Portal API pages, the architectural decisions, the registry catalog
+  capability page, the B524 mapping page (now titled "B524 MCP Semantic Plane
+  Mapping") and the semantic startup page each say whether they mean a registry
+  plane, a registry projection, a method bundle or a gateway data family, and
+  that none of these is a plane, a lens or a target projection of the common
+  semantic contract in docs-semantic. No type, field, tool, argument or route
+  name changes. `scripts/check_semantic_term_qualifiers.py` rejects the
+  unqualified plane, lens and canonical identity terms on every page outside
+  its exact quotation list, and its test runs in the local gate.
+- The shared registry boundary, canonical photovoltaic semantics and draft
+  candidate fact graph pages no longer define the canonical identity of a
+  semantic fact or name this repository or the eBUS registry as semantic
+  owner; they point to the common semantic contract in docs-semantic. The
+  shared registry boundary text changes, so the digest that docs-eebus pins
+  for it in `scripts/platform_cross_seed_snapshot.yaml` moves in a follow-up
+  docs-eebus cross-seed change.
 - The required `Modbus Trusted Revision` status is produced by
   `.github/workflows/modbus-trusted-revision-pr.yml` on `pull_request` events,
   with the same job, permissions, checkouts and pinned immutable anchor run as
