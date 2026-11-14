@@ -1485,7 +1485,7 @@ The boiler setter accepts `field` and `value` strings. These routes are implemen
 | `maximum_dhw_flow_temperature_setpoint` | `0x0F04` | DATA2c | 30–65 |
 | `heating_partial_load_power` | `0x0704` | UCH | Whole number 0–40 |
 | `dhw_partial_load_power` | `0x0804` | UCH | Whole number 0–40 |
-| `installer_phone_number` | `0x8104` | BCD | Existing BCD validation |
+| `installer_phone_number` | `0x8104` | HEX:8 | Raw string of 16 hex characters; existing BCD-digit input validation |
 | `installerMenuCode` | `0x4904` | UCH | Existing integer validation. Provisional: the meaning of this register is open (candidate: central heating pump mode; another reading: installer access code), so the key keeps its current name until that question is resolved. |
 
 The selector columns identify registers, not new writable native semantics; no value or unit conversion follows from naming.

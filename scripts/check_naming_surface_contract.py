@@ -200,7 +200,7 @@ def documented_setter_rows(tools: str, heading: str):
     match = matches[0]
     rows = []
     for row in match[1].splitlines():
-        if not row.lstrip().startswith("|"):
+        if "|" not in row:
             continue
         cells = [cell.strip() for cell in row.strip().strip("|").split("|")]
         if cells in (["Key", "Opcode / group / instance / register", "Value type", "Existing bound"],

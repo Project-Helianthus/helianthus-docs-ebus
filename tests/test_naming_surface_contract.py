@@ -595,3 +595,26 @@ def test_system_member_contract_rejected(type_name, field, mutation):
     docs[0] = docs[0][:start] + changed + docs[0][end:]
     with pytest.raises(ValueError, match="system.*membership"):
         CHECKER.validate(*docs)
+
+
+@pytest.mark.parametrize("family", CHECKER.SETTER_KEY_FAMILIES)
+@pytest.mark.parametrize("trailing_pipe", [False, True])
+def test_extra_setter_row_without_leading_pipe_rejected(tmp_path, family, trailing_pipe):
+    docs = documents()
+    key = next(iter(SETTER_KEYS[CHECKER.SETTER_KEY_FAMILIES[family][0]]))
+    row = family_row(docs[1], family, key)
+    extra = row.replace("`" + key + "`", "`synthetic_extra`", 1).lstrip("| ").rstrip()
+    if not trailing_pipe:
+        extra = extra.rstrip("| ")
+    docs[1] = replace_in_family(docs[1], family, row, row + extra + "\n")
+    with pytest.raises(ValueError, match="extra setter key: " + family):
+        CHECKER.validate(*docs, setter_keys=loaded_setter_keys(tmp_path))
+
+
+def test_boiler_phone_wire_type_and_validation():
+    row = family_row(documents()[1], "boiler", "installer_phone_number")
+    cells = [cell.strip() for cell in row.strip().strip("|").split("|")]
+    assert cells[1] == "`0x8104`"
+    assert cells[2] == "HEX:8"
+    assert "16 hex characters" in cells[3]
+    assert "BCD" in cells[3]
