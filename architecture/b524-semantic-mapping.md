@@ -22,23 +22,23 @@ Source: `refreshSystem()` in `semantic_vaillant.go`
 |---------------|------|------|
 | `state.system_off` | GG=0x00, RR=0x0007 | bool |
 | `state.energy_manager_state` | GG=0x00, RR=0x0048 | u16 (enum) |
-| `state.system_water_pressure` | GG=0x00, RR=0x0039 | f32 |
-| `state.system_flow_temperature` | GG=0x00, RR=0x004B | f32 |
+| `state.water_pressure` | GG=0x00, RR=0x0039 | f32 |
+| `state.flow_temperature` | GG=0x00, RR=0x004B | f32 |
 | `state.outdoor_temperature` | GG=0x00, RR=0x0073 | f32 |
 | `state.outdoor_temperature_avg24h` | GG=0x00, RR=0x0095 | f32 |
 | `state.maintenance_due` | GG=0x00, RR=0x0096 | bool |
 | `state.hwc_cylinder_temperature_top` | GG=0x00, RR=0x009D | f32 |
 | `state.hwc_cylinder_temperature_bottom` | GG=0x00, RR=0x009E | f32 |
-| `config.adaptive_heating_curve` | GG=0x00, RR=0x0014 | bool |
+| `config.adaptive_heating_curve_enabled` | GG=0x00, RR=0x0014 | bool |
 | `config.alternative_point` | GG=0x00, RR=0x0022 | f32 |
-| `config.heating_circuit_bivalence_point` | GG=0x00, RR=0x0023 | f32 |
+| `config.heating_outdoor_bivalence_temperature_limit` | GG=0x00, RR=0x0023 | f32 |
 | `config.dhw_bivalence_point` | GG=0x00, RR=0x0001 | f32 |
 | `config.dhw_bivalence_point_bound` | derived (controller-profile lookup; no register) | object: `min_c`, `max_c`, `source`, `reason`, `profile`, boolean `narrowed_only` |
 | `config.hc_emergency_temperature` | GG=0x00, RR=0x0026 | f32 |
 | `config.hwc_max_flow_temp_desired` | GG=0x00, RR=0x0046 | f32 |
-| `config.max_room_humidity` | GG=0x00, RR=0x000E | u16 |
-| `properties.system_scheme` | GG=0x00, RR=0x0036 | u16 |
-| `properties.module_configuration_vr71` | GG=0x00, RR=0x002F | u16 |
+| `config.room_humidity_limit_maximum` | GG=0x00, RR=0x000E | u16 |
+| `properties.hydraulic_scheme_code` | GG=0x00, RR=0x0036 | u16 |
+| `properties.functional_module_configuration_code` | GG=0x00, RR=0x002F | u16 |
 
 `config.dhw_bivalence_point_bound` is the active write bound of
 `dhw_bivalence_point`, not a register value. It is resolved from the exact
@@ -112,7 +112,7 @@ big-endian and is not a substitute for these rows.
 | Legacy system field | Native read tuple | Native wire value / unit | SemReg field | Exact FactKey dimension | SemReg quantity unit | Disposition |
 | --- | --- | --- | --- | --- | --- | --- |
 | `state.outdoor_temperature` | `PB=0xB5, SB=0x24, OP=0x02, GG=0x00, II=0x00, RR=0x0073` | IEEE-754 `f32` little-endian / `degC` | `thermal.measurement.air_temperature` | `thermal.dimension.temperature=temperature:outdoor_air` | `unit.celsius` | **Exact, read-only candidate.** The value is an instantaneous outdoor-air observation when the qualified binding admits it. |
-| `state.system_flow_temperature` | `PB=0xB5, SB=0x24, OP=0x02, GG=0x00, II=0x00, RR=0x004B` | IEEE-754 `f32` little-endian / `degC` | `thermal.measurement.water_temperature` | `thermal.dimension.temperature=temperature:system_flow` | `unit.celsius` | **Exact, read-only candidate.** The value is the controller system-flow observation when the qualified binding admits it. |
+| `state.flow_temperature` | `PB=0xB5, SB=0x24, OP=0x02, GG=0x00, II=0x00, RR=0x004B` | IEEE-754 `f32` little-endian / `degC` | `thermal.measurement.water_temperature` | `thermal.dimension.temperature=temperature:system_flow` | `unit.celsius` | **Exact, read-only candidate.** The value is the controller system-flow observation when the qualified binding admits it. |
 | `state.outdoor_temperature_avg24h` | `PB=0xB5, SB=0x24, OP=0x02, GG=0x00, II=0x00, RR=0x0095` | IEEE-754 `f32` little-endian / `degC`; rounded average updated every three hours | — | — | — | **Withheld.** It is a rolling aggregate, not an instantaneous `thermal.measurement.air_temperature` value. No aggregate/window fact is defined by this mapping. |
 
 `thermal.dimension.system` is **not** a FactKey dimension for either mapped

@@ -10,14 +10,14 @@ import sys
 INDEX = Path("architecture/fixtures/vaillant-semreg-thermal-map-v1.json")
 EXPECTED_SELECTORS = {
     "state.outdoor_temperature": "0x0073",
-    "state.system_flow_temperature": "0x004B",
+    "state.flow_temperature": "0x004B",
     "state.outdoor_temperature_avg24h": "0x0095",
 }
 EXPECTED_FACTS = {
     "state.outdoor_temperature": (
         "thermal.measurement.air_temperature", "temperature:outdoor_air", "exact", None
     ),
-    "state.system_flow_temperature": (
+    "state.flow_temperature": (
         "thermal.measurement.water_temperature", "temperature:system_flow", "exact", None
     ),
     "state.outdoor_temperature_avg24h": (
