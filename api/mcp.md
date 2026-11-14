@@ -1407,6 +1407,14 @@ write). The gateway enforces `allow_dangerous` and idempotency gates.
 
 ## Plane Boundary Note
 
+Vocabulary: the `plane` argument and result of the `ebus_v1_registry_*` tools
+and `ebus_v1_rpc_invoke` name a registry plane, a per-device method bundle of
+the eBUS registry. Where this page calls the payload of one
+`ebus_v1_semantic_*` tool a plane, it means that gateway data family. Neither
+is a plane, a lens or a target projection of the
+[common semantic contract](https://github.com/Project-Helianthus/helianthus-docs-semantic/blob/main/api/v1/graph.md),
+and no tool, argument or field name changes.
+
 - `scan` is treated as a cross-device discovery layer and is not modeled as a
   heat-source class plane.
 - Heat-source planes (for class-specific modeling) are documented under

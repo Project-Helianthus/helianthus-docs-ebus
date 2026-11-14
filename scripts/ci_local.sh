@@ -287,6 +287,10 @@ echo "==> check CC0 and AGPL documentation boundary"
 python3 scripts/check_public_domain_boundary.py
 python3 -m pytest -q tests/test_public_domain_boundary.py
 
+echo "==> check semantic term qualifiers"
+python3 scripts/check_semantic_term_qualifiers.py
+python3 -m pytest -q tests/test_semantic_term_qualifiers.py
+
 echo "==> check Vaillant room-action and return-service declarations"
 python3 -m pytest -q tests/test_ac06_room_actions.py
 

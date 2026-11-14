@@ -444,6 +444,12 @@ Example response:
 
 ## Data Endpoints
 
+Vocabulary: the `plane` parameter and the `/portal/api/v1/projection/*` routes
+below name registry planes and registry projections, the per-device views and
+plane-scoped graphs of the eBUS registry. Neither is a plane, a lens or a
+target projection of the [common semantic contract](https://github.com/Project-Helianthus/helianthus-docs-semantic/blob/main/api/v1/graph.md),
+and no route, parameter or field name changes.
+
 ### `GET /portal/api/v1/registry/devices`
 
 Returns a read-only snapshot list of discovered registry devices.

@@ -494,7 +494,12 @@ def test_negative_fixtures_are_rejected_by_declared_rule():
 def test_human_contract_preserves_ownership_and_private_boundary():
     text = " ".join(DOC.read_text(encoding="utf-8").split())
     required_phrases = [
-        "`helianthus-ebusreg` owns the canonical fact identity",
+        "This page does not own semantic meaning or the canonical identity of a semantic fact",
+        "https://github.com/Project-Helianthus/helianthus-docs-semantic/blob/main/api/v1/graph.md",
+        "in docs-semantic own them",
+        "`helianthus-ebusreg`, named in the manifest's `owner` field, applies the value, unit,",
+        "as an implementation role",
+        "which stays authoritative for meaning and identity",
         "gateway scheduling order is never precedence",
         "binary JSON floating-point values are forbidden",
         "bitfield symbols are lexicographically ascending",
@@ -507,3 +512,4 @@ def test_human_contract_preserves_ownership_and_private_boundary():
     ]
     for phrase in required_phrases:
         assert phrase in text
+    assert "owns the canonical fact identity" not in text

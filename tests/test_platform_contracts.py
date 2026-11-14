@@ -104,6 +104,9 @@ PAGE_REQUIRED_TERMS = {
         "protocol-neutral",
         "registry",
         "canonical",
+        "This page does not define the canonical identity of a semantic fact, resource",
+        "neither this repository nor the eBUS registry owns semantic",
+        "https://github.com/Project-Helianthus/helianthus-docs-semantic/blob/main/api/v1/graph.md",
     ),
     pathlib.Path("docs/platform/promotion-and-consumer-contract.md"): (
         "per-leaf",

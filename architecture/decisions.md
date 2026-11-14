@@ -2,6 +2,8 @@
 
 This document records the architectural decisions implemented in the codebase. Each section is an ADR with context, decision, and consequences.
 
+Vocabulary: a plane in ADR-011, ADR-014, ADR-015 and ADR-025 is a registry plane, a per-device view of the eBUS registry with its method bundle, and a projection is a registry projection, the plane-scoped graph of one device. Neither is a plane, a lens or a target projection of the [common semantic contract](https://github.com/Project-Helianthus/helianthus-docs-semantic/blob/main/api/v1/graph.md), and no type, field or route name changes.
+
 ## ADR-001: Three-repo split with a strict dependency chain
 
 **Status:** Accepted
