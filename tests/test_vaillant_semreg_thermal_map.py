@@ -42,6 +42,22 @@ def test_exact_rows_keep_native_and_semreg_units_and_delayed_evaluation_separate
     assert lifecycle["freshness_axis"] == "elapsed_monotonic"  # type: ignore[index]
 
 
+def test_flow_temperature_row_uses_the_canonical_system_field() -> None:
+    rows = index()["mappings"]  # type: ignore[index]
+    fields = [row["legacy_system_field"] for row in rows]  # type: ignore[index]
+    assert "state.flow_temperature" in fields
+    assert "state.system_flow_temperature" not in fields
+
+
+def test_rejects_the_previous_flow_temperature_field() -> None:
+    mutated = deepcopy(index())
+    row = mutated["mappings"][1]  # type: ignore[index]
+    assert row["legacy_system_field"] == "state.flow_temperature"  # type: ignore[index]
+    row["legacy_system_field"] = "state.system_flow_temperature"  # type: ignore[index]
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_index(mutated)
+
+
 def test_rejects_system_identity_as_temperature_dimension() -> None:
     mutated = deepcopy(index())
     row = mutated["mappings"][0]  # type: ignore[index]
