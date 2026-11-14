@@ -29,7 +29,7 @@
       "loss": null
     },
     {
-      "legacy_system_field": "state.system_flow_temperature",
+      "legacy_system_field": "state.flow_temperature",
       "native_selector": {"pb": "0xB5", "sb": "0x24", "operation": "0x02", "group": "0x00", "instance": "0x00", "register": "0x004B", "destination": "0x15", "controller_family": "BASV2/CTLV2/VRC720", "request_direction": "initiator_to_target", "value_direction": "target_to_initiator"},
       "native_value": {"wire_type": "f32_le", "unit": "degC"},
       "semreg_fact": "thermal.measurement.water_temperature",

@@ -43,11 +43,26 @@ SETTER_FAMILIES = {
                 "circuit_flow_temperature_setpoint_minimum",
                 "heating_circuit_outdoor_temperature_limit_maximum",
                 "circuit_room_temperature_influence_mode", "circuit_cooling_enabled"),
-    "system": ("dhwBivalencePointC", "installerMenuCode"),
-    "zone": ("operatingMode", "quickVetoTemperature", "quickVetoDuration",
-             "desiredSetpoint", "holidaySetpoint"),
+}
+# The accepted keys of these families come from the gateway's published
+# setter-key file; the page lists exactly those keys under one heading each.
+SETTER_KEY_FILE = "docs/testing/config-setter-keys.json"
+SETTER_KEY_FORMAT = "helianthus.ebusgateway.config_setter_keys.v1"
+SETTER_KEY_FAMILIES = {
+    "system": ("set_system_config", "#### System setter keys"),
+    "zone": ("set_zone_config", "#### Zone setter keys"),
+    "boiler": ("set_boiler_config", "#### Boiler setter keys"),
+}
+# Previous spellings of each family; none is accepted or listed as current.
+PREVIOUS_SETTER_KEYS = {
+    "system": ("dhwBivalencePointC", "maxRoomHumidityPct", "adaptiveHeatingCurve",
+               "hcBivalencePointC", "hcEmergencyTempC", "maintenanceDate",
+               "hwcMaxFlowTempC", "installerName", "installerPhone",
+               "installerMenuCode"),
+    "zone": ("holidaySetpoint", "operatingMode", "quickVetoTemperature",
+             "desiredSetpoint", "quickVetoDuration"),
     "boiler": ("flowsetHcMaxC", "flowsetHwcMaxC", "partloadHcKW",
-               "partloadHwcKW", "phoneNumber", "installerMenuCode"),
+               "partloadHwcKW", "phoneNumber"),
 }
 
 
@@ -63,7 +78,34 @@ def _validate_tool_names(tools: str, registration) -> None:
         mcp.validate(registration, tools)
 
 
+def _validate_system_members(graphql: str) -> None:
+    system_members = {
+        "system_state": (
+            "system_off", "water_pressure", "flow_temperature", "outdoor_temperature",
+            "outdoor_temperature_avg24h", "maintenance_due",
+            "hwc_cylinder_temperature_top", "hwc_cylinder_temperature_bottom",
+        ),
+        "system_config": (
+            "adaptive_heating_curve_enabled", "alternative_point",
+            "heating_outdoor_bivalence_temperature_limit", "dhw_bivalence_point",
+            "dhw_bivalence_point_bound", "hc_emergency_temperature",
+            "hwc_max_flow_temp_desired", "room_humidity_limit_maximum",
+        ),
+        "system_properties": (
+            "hydraulic_scheme_code", "functional_module_configuration_code",
+        ),
+    }
+    for type_name, expected in system_members.items():
+        declarations = re.findall(r"type " + type_name + r"\s*\{([^}]+)\}", graphql)
+        if len(declarations) != 1:
+            raise ValueError(type_name + " declaration membership differs")
+        members = re.findall(r"^\s*(\w+)\s*:", declarations[0], re.M)
+        if sorted(members) != sorted(expected):
+            raise ValueError(type_name + " value spelling or membership differs")
+
+
 def _validate_graphql_names(graphql: str) -> None:
+    _validate_system_members(graphql)
     # Scope the value assertions to the zone object, preserving distinct DHW meaning.
     zone = re.search(r"type zone_state\s*\{([^}]+)\}", graphql)
     if zone is None:
@@ -105,11 +147,102 @@ def _validate_graphql_names(graphql: str) -> None:
             raise ValueError("removed GraphQL member spelling restored")
 
 
-def _validate_setter_families(tools: str) -> None:
+def _setter_key(row) -> tuple[str, bool]:
+    """Return one accepted key and whether its register meaning is open."""
+    key = row.get("key") if isinstance(row, dict) else None
+    is_open = row.get("open") if isinstance(row, dict) else None
+    if not isinstance(key, str) or not key or not isinstance(is_open, bool):
+        raise ValueError("malformed setter key reference: key entry")
+    question = row.get("open_question")
+    if is_open and (not isinstance(question, str) or not question.strip()):
+        raise ValueError("malformed setter key reference: open key without question")
+    if not is_open and not re.fullmatch(r"[a-z][a-z0-9]*(?:_[a-z0-9]+)*", key):
+        raise ValueError("malformed setter key reference: key spelling")
+    return key, is_open
+
+
+def _setter_family_keys(setters: dict, setter: str) -> dict:
+    entry = setters.get(setter)
+    rows = entry.get("keys") if isinstance(entry, dict) else None
+    if not isinstance(rows, list) or not rows:
+        raise ValueError("malformed setter key reference: " + setter)
+    keys = dict(_setter_key(row) for row in rows)
+    if len(keys) != len(rows):
+        raise ValueError("malformed setter key reference: duplicate key in " + setter)
+    return keys
+
+
+def load_setter_keys(gateway: Path) -> dict:
+    """Read the accepted keys per family; a missing or malformed file fails."""
+    path = gateway / SETTER_KEY_FILE
+    if not path.is_file():
+        raise ValueError("setter key reference missing: " + SETTER_KEY_FILE)
+    try:
+        document = json.loads(path.read_text())
+    except (UnicodeError, json.JSONDecodeError) as error:
+        raise ValueError("malformed setter key reference") from error
+    if not isinstance(document, dict) or document.get("format") != SETTER_KEY_FORMAT:
+        raise ValueError("malformed setter key reference: format")
+    setters = document.get("setters")
+    if not isinstance(setters, dict):
+        raise ValueError("malformed setter key reference: setters")
+    return {family: _setter_family_keys(setters, setter)
+            for family, (setter, _) in SETTER_KEY_FAMILIES.items()}
+
+
+def documented_setter_rows(tools: str, heading: str):
+    """Return (key, row) pairs of the table under one setter heading."""
+    match = re.search(r"^" + re.escape(heading) + r"\n(.*?)(?=^#|\Z)", tools, re.M | re.S)
+    if match is None:
+        return None
+    return [(row[1], row[0]) for row in
+            re.finditer(r"^\| `([^`]+)` \|.*$", match[1], re.M)]
+
+
+def _documented_setter_keys(tools: str) -> dict:
+    documented = {}
+    for family, (_, heading) in SETTER_KEY_FAMILIES.items():
+        rows = documented_setter_rows(tools, heading)
+        if not rows:
+            raise ValueError(f"missing setter family: {family}")
+        keys = [key for key, _ in rows]
+        if len(set(keys)) != len(keys):
+            raise ValueError(f"duplicate setter key: {family}")
+        if set(keys) & set(PREVIOUS_SETTER_KEYS[family]):
+            raise ValueError(f"previous setter key listed: {family}")
+        documented[family] = dict(rows)
+    return documented
+
+
+def _reject_previous_setter_keys(texts, current: set) -> None:
+    for key in sorted(set().union(*PREVIOUS_SETTER_KEYS.values()) - current):
+        if any(re.search(r"(?<![\w])" + re.escape(key) + r"(?![\w])", text)
+               for text in texts):
+            raise ValueError(f"previous setter key named: {key}")
+
+
+def _compare_setter_keys(documented: dict, setter_keys: dict) -> None:
+    for family, expected in setter_keys.items():
+        actual = documented[family]
+        if set(expected) - set(actual):
+            raise ValueError(f"missing setter key: {family}")
+        if set(actual) - set(expected):
+            raise ValueError(f"extra setter key: {family}")
+        if any(is_open and "provisional" not in actual[key].lower()
+               for key, is_open in expected.items()):
+            raise ValueError(f"open setter key not provisional: {family}")
+
+
+def _validate_setter_families(tools: str, graphql: str = "", setter_keys=None) -> None:
     for family, keys in SETTER_FAMILIES.items():
         if any(
                 f"`{key}`" not in tools for key in keys):
             raise ValueError(f"missing setter family: {family}")
+    documented = _documented_setter_keys(tools)
+    current = set().union(*documented.values(), *(setter_keys or {}).values())
+    _reject_previous_setter_keys((tools, graphql), current)
+    if setter_keys is not None:
+        _compare_setter_keys(documented, setter_keys)
 
 
 def _validate_qualifications(graphql: str, tools: str) -> None:
@@ -121,10 +254,11 @@ def _validate_qualifications(graphql: str, tools: str) -> None:
         raise ValueError("separate M2M shape limitation missing")
 
 
-def validate(graphql: str, tools: str, coverage: str, registration=None) -> None:
+def validate(graphql: str, tools: str, coverage: str, registration=None,
+             setter_keys=None) -> None:
     _validate_tool_names(tools, registration)
     _validate_graphql_names(graphql)
-    _validate_setter_families(tools)
+    _validate_setter_families(tools, graphql, setter_keys)
     _validate_qualifications(graphql, tools)
     metrics.validate(coverage)
 
@@ -271,6 +405,7 @@ def validate_remaining_pages(root: Path):
 
 
 def validate_root(root: Path, gateway: Path | None = None) -> None:
+    setter_keys = None if gateway is None else load_setter_keys(gateway)
     validate_remaining_pages(root)
     validate_operation((root / "api/semantic-operation-route.md").read_text(),
                        (root / "tests/semantic_operation_route_contract.json").read_text())
@@ -286,7 +421,7 @@ def validate_root(root: Path, gateway: Path | None = None) -> None:
             raise ValueError("metric emission parity differs")
     validate((root / "api/graphql.md").read_text(),
              (root / "api/mcp.md").read_text(),
-             (root / metrics.DOCUMENT).read_text(), registration)
+             (root / metrics.DOCUMENT).read_text(), registration, setter_keys)
 
 
 def main() -> int:

@@ -815,7 +815,7 @@ registration inventory. In particular, the adapter information tool is
   - `ebus_v1_semantic_boiler_status_get`
   - `ebus_v1_semantic_system_get`
   - `ebus_v1_semantic_system_set_config`
-    - Required arguments: `field` and `value`, both strings; `field` accepts emitted provisional keys such as `dhwBivalencePointC`; its selector-qualified value name remains unresolved.
+    - Required arguments: `field` and `value`, both strings; `field` accepts exactly the system setter keys of [Accepted system, zone and boiler setter keys](#accepted-system-zone-and-boiler-setter-keys), such as `dhw_outdoor_bivalence_temperature_limit`.
     - Returns the standard `meta`, `data`, `error` envelope, with
       `meta.contract`, `meta.consistency`, `meta.data_timestamp` and
       `meta.data_hash`. The setter uses `LIVE` consistency.
@@ -1333,7 +1333,7 @@ shape and is not a substitute for the degradation verdict.
 - `managing_device.device_id` and `managing_device.address` are populated only when the gateway has ownership evidence for the current topology.
 - `ebus_v1_semantic_system_get` exposes `config.dhw_bivalence_point_bound`
   (`min_c`, `max_c`, `source`, optional `reason` and `profile`): the range
-  `ebus_v1_semantic_system_set_config` accepts for `dhwBivalencePointC`.
+  `ebus_v1_semantic_system_set_config` accepts for `dhw_outdoor_bivalence_temperature_limit`.
   A value outside it is rejected before any bus write. Before the first
   resolution, MCP omits the bound entirely; GraphQL returns `null`.
   Empty optional `reason` and `profile` strings are omitted in MCP and
@@ -1444,41 +1444,48 @@ The circuit configuration setter accepts these selector-qualified fields under g
 
 F56b is a partial control-withdrawal and width-evidence boundary: `frostProtC` and `frost_prot_c` are rejected without dispatch. No enum writer is defined. The raw provisional read representation and width evidence remain unchanged.
 
-### Provisional system and zone setter names
+### Accepted system, zone and boiler setter keys
 
-These accepted keys remain unchanged and provisional rather than receiving invented canonical value names. Their open question is which selector-qualified quantity and value role each key should express; syntax-only alternatives are not accepted. Native meaning remains governed by [the B524 register identities](../protocols/vaillant/ebus-vaillant-b524.md).
+The system, zone and boiler setters accept exactly the keys below as their `field` argument; the MCP system and boiler setter tools accept the same keys. Each key is the canonical register name of its selector in [the B524 register names](../protocols/vaillant/fixtures/b524-op02-register-names.csv) or [the native B509 correspondence](../protocols/vaillant/fixtures/b509-register-name-correspondence.csv). Any other key, a previous spelling included, is rejected before dispatch; there is no alias and no second spelling. The previous spellings remain only in the documentary columns of the register maps. Native meaning remains governed by [the B524 register identities](../protocols/vaillant/ebus-vaillant-b524.md) and the B509 correspondence; types and bounds are the existing ones.
 
-| Family | Accepted key | Opcode / group / instance / register |
-| --- | --- | --- |
-| system | `dhwBivalencePointC` | `0x02 / 0x00 / 0x00 / 0x0001` |
-| system | `maxRoomHumidityPct` | `0x02 / 0x00 / 0x00 / 0x000E` |
-| system | `adaptiveHeatingCurve` | `0x02 / 0x00 / 0x00 / 0x0014` |
-| system | `hcBivalencePointC` | `0x02 / 0x00 / 0x00 / 0x0023` |
-| system | `hcEmergencyTempC` | `0x02 / 0x00 / 0x00 / 0x0026` |
-| system | `hwcMaxFlowTempC` | `0x02 / 0x00 / 0x00 / 0x0046` |
-| system | `maintenanceDate` | `0x02 / 0x00 / 0x00 / 0x002C` |
-| system | `installerName` | `0x02 / 0x00 / 0x00 / 0x006C` |
-| system | `installerPhone` | `0x02 / 0x00 / 0x00 / 0x006F` |
-| system | `installerMenuCode` | `0x02 / 0x00 / 0x00 / 0x0076` |
-| zone | `operatingMode` | `0x02 / 0x03 / selected zone / 0x0006` |
-| zone | `quickVetoTemperature` | `0x02 / 0x03 / selected zone / 0x0008` |
-| zone | `quickVetoDuration` | `0x02 / 0x03 / selected zone / 0x0026` |
-| zone | `desiredSetpoint` | `0x02 / 0x03 / selected zone / 0x0022` |
-| zone | `holidaySetpoint` | `0x02 / 0x03 / selected zone / 0x0005` |
+#### System setter keys
+
+| Key | Opcode / group / instance / register | Value type | Existing bound |
+| --- | --- | --- | --- |
+| `dhw_outdoor_bivalence_temperature_limit` | `0x02 / 0x00 / 0x00 / 0x0001` | float32 | Resolved per controller inside the policy window -20–50; see [System Bound Payload Contract](#system-bound-payload-contract) |
+| `room_humidity_limit_maximum` | `0x02 / 0x00 / 0x00 / 0x000E` | uint16 | 30–80 |
+| `adaptive_heating_curve_enabled` | `0x02 / 0x00 / 0x00 / 0x0014` | bool_u8 | Boolean |
+| `heating_outdoor_bivalence_temperature_limit` | `0x02 / 0x00 / 0x00 / 0x0023` | float32 | -20–30 |
+| `heating_flow_temperature_setpoint_maximum_at_heat_pump_fault` | `0x02 / 0x00 / 0x00 / 0x0026` | float32 | 20–80 |
+| `maintenance_date` | `0x02 / 0x00 / 0x00 / 0x002C` | date_hda3 | Existing date validation |
+| `dhw_flow_temperature_setpoint_maximum` | `0x02 / 0x00 / 0x00 / 0x0046` | float32 | 15–80 |
+| `installer_name` | `0x02 / 0x00 / 0x00 / 0x006C` and `0x006D` | cstring_pair: one text over `installer_name_prefix` and `installer_name_suffix` | Existing text validation |
+| `installer_phone_number` | `0x02 / 0x00 / 0x00 / 0x006F` and `0x0070` | cstring_pair: one text over `installer_phone_number_prefix` and `installer_phone_number_suffix` | Existing text validation |
+| `installer_access_code` | `0x02 / 0x00 / 0x00 / 0x0076` | uint16 | 0–999 |
+
+#### Zone setter keys
+
+| Key | Opcode / group / instance / register | Value type | Existing bound |
+| --- | --- | --- | --- |
+| `zone_room_temperature_setpoint_at_holiday` | `0x02 / 0x03 / selected zone / 0x0005` | float32 | 5–30 |
+| `heating_zone_operating_mode` | `0x02 / 0x03 / selected zone / 0x0006` | enum_u16 | `off`, `auto`, `manual` |
+| `zone_room_temperature_setpoint_at_quick_veto` | `0x02 / 0x03 / selected zone / 0x0008` | float32 | 5–30 |
+| `heating_zone_room_manual_temperature_setpoint` | `0x02 / 0x03 / selected zone / 0x0022` | float32 | 5–30 |
+| `zone_quick_veto_time` | `0x02 / 0x03 / selected zone / 0x0026` | float32 | 0.5–12 |
 
 Runtime input keys `DriverID` and `ExpectedRevision` remain emitted provisional exceptions: which structural spellings can express their existing identity and optimistic revision without changing the closed request shape?
 
-### Provisional boiler setter names
+#### Boiler setter keys
 
-The boiler setter accepts `field` and `value` strings. Its accepted value keys remain provisional; the open questions are the selector-qualified value roles, the partial-load unit and the meaning of the access-code candidate. No syntax-only alternatives are accepted. These routes are implementation behavior; the [native B509 correspondence](../protocols/vaillant/fixtures/b509-register-name-correspondence.csv) governs interpretation.
+The boiler setter accepts `field` and `value` strings. These routes are implementation behavior; the [native B509 correspondence](../protocols/vaillant/fixtures/b509-register-name-correspondence.csv) governs interpretation. Two questions stay open: the partial-load unit, and which devices of the class use selector `0x0E04` or `0xA500` for the maximum heating flow temperature setpoint.
 
-| Accepted key | B509 register selector | Existing encoding and bound |
-| --- | --- | --- |
-| `flowsetHcMaxC` | `0x0E04`; existing alternate `0xA500` | DATA2c, 20–80 |
-| `flowsetHwcMaxC` | `0x0F04` | DATA2c, 30–65 |
-| `partloadHcKW` | `0x0704` | UCH, whole number 0–40 |
-| `partloadHwcKW` | `0x0804` | UCH, whole number 0–40 |
-| `phoneNumber` | `0x8104` | Existing BCD validation |
-| `installerMenuCode` | `0x4904` | Existing integer validation; native meaning unresolved |
+| Key | B509 register selector | Value type | Existing bound |
+| --- | --- | --- | --- |
+| `maximum_heating_flow_temperature_setpoint` | `0x0E04`; existing alternate `0xA500` | DATA2c | 20–80 |
+| `maximum_dhw_flow_temperature_setpoint` | `0x0F04` | DATA2c | 30–65 |
+| `heating_partial_load_power` | `0x0704` | UCH | Whole number 0–40 |
+| `dhw_partial_load_power` | `0x0804` | UCH | Whole number 0–40 |
+| `installer_phone_number` | `0x8104` | BCD | Existing BCD validation |
+| `installerMenuCode` | `0x4904` | UCH | Existing integer validation. Provisional: the meaning of this register is open (candidate: central heating pump mode; another reading: installer access code), so the key keeps its current name until that question is resolved. |
 
 The selector columns identify registers, not new writable native semantics; no value or unit conversion follows from naming.
