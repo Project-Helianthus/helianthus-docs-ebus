@@ -1,4 +1,5 @@
 """Keep the proxy PX01..PX12 case set presented as history, not as a current gate."""
+import re
 from pathlib import Path
 
 import pytest
@@ -13,6 +14,9 @@ PAGES = (
     "development/smoke-matrix.md",
 )
 RUNBOOK = "development/smoke-matrix.md"
+CONTRIBUTING = "development/contributing.md"
+BLOCK_SPLIT = re.compile(r"\n\s*\n|\n(?=\s*(?:[-*|]|\d+\.)\s)")
+PX_STATEMENT = re.compile(r"PX\d|proxy", re.IGNORECASE)
 RUNBOOK_SECTION = "## Proxy-Semantics Adjunct Gate (`PX01..PX12`)\n"
 CURRENT_GATE_PHRASES = (
     "remains the primary transport gate",
@@ -49,10 +53,23 @@ def check_names_gateway_cells(text):
     assert "`PX09` to `PX11` are planned" in text or "PX09 to PX11 are planned" in text
 
 
+def px_statements(text):
+    """Paragraphs, list items and table rows that speak about the proxy or its PX cases."""
+    return [flat(block) for block in BLOCK_SPLIT.split(text) if PX_STATEMENT.search(block)]
+
+
 def check_no_current_gate(text):
-    text = flat(text)
-    for phrase in CURRENT_GATE_PHRASES:
-        assert phrase not in text, phrase
+    for statement in px_statements(text):
+        for phrase in CURRENT_GATE_PHRASES:
+            assert phrase not in statement, phrase
+
+
+def bullet(text, label):
+    for statement in BLOCK_SPLIT.split(text):
+        statement = flat(statement)
+        if statement.startswith(f"- **{label}:**"):
+            return statement
+    raise AssertionError(label)
 
 
 @pytest.mark.parametrize("page", PAGES)
@@ -73,7 +90,29 @@ def test_runbook_proxy_section_is_historical():
 @pytest.mark.parametrize("phrase", CURRENT_GATE_PHRASES)
 def test_current_gate_phrase_is_rejected(phrase):
     with pytest.raises(AssertionError):
-        check_no_current_gate(f"Intro. {phrase} here.")
+        check_no_current_gate(f"Intro.\n\n- The `PX01..PX12` cases: {phrase} here.\n")
+    with pytest.raises(AssertionError):
+        check_no_current_gate(f"Intro.\n\nThe proxy matrix: {phrase} here.\n")
+
+
+@pytest.mark.parametrize("phrase", [p for p in CURRENT_GATE_PHRASES if not PX_STATEMENT.search(p)])
+def test_current_gate_phrase_outside_px_statements_is_accepted(phrase):
+    check_no_current_gate(f"The PX cases are historical.\n\n- Lint gate: {phrase} the lint result.\n")
+
+
+def test_contributing_primary_artifact_is_the_gateway_matrix():
+    text = read(CONTRIBUTING)
+    primary = bullet(text, "Primary required artifact")
+    assert MATRIX_LINK in primary
+    assert "T01..T88" not in primary
+    assert "T09..T88" not in primary
+    history = bullet(text, "Historical evidence")
+    assert "`T01..T88`" in history
+    assert "consolidated candidate session's last `T01..T88` run" in history
+    assert "not a merge requirement for new changes" in history
+    reference = bullet(text, "Required reference")
+    assert "results/index.json" not in reference
+    assert "gateway matrix result" in reference
 
 
 def test_missing_gateway_cells_are_rejected():
