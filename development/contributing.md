@@ -99,9 +99,10 @@ are unchanged; the shared gate retains workflow syntax and shell lint coverage.
 For eBUS transport/protocol changes, merge readiness requires an additional runtime gate:
 
 - **Scope:** changes in transport/protocol code paths (gateway transport selection, proxy upstream/downstream transport behavior, ebusgo transport implementations, arbitration behavior tied to wire protocol).
-- **Primary required artifact:** full matrix result (`T01..T88`) with no unexpected failures (`fail`) and no unexpected passes (`xpass`) against the active expected-failure inventory.
-- **Proxy adjunct artifact (when proxy wire-semantics scope applies):** proxy-semantics subset (`PX01..PX12`) with the same no-unexpected-`fail`/`xpass` policy.
-- **Required reference:** PR description must include the primary `results/index.json` path or attachment reference, and for proxy wire-semantics scope it must also include the proxy-semantics artifact index reference.
+- **Primary required artifact:** the result of the gateway [`adaptermux-v2` matrix](https://github.com/Project-Helianthus/helianthus-ebusgateway/tree/main/matrix) cells that the change touches, with no unexpected failures (`fail`) and no unexpected passes (`xpass`) against the active expected-failure inventory.
+- **Historical evidence:** the full matrix result (`T01..T88`) describes the consolidated candidate session's last `T01..T88` run, which still needs the proxy for `T09..T88`; it is not a merge requirement for new changes.
+- **PX cases (when proxy wire-semantics scope applies):** the gateway [`adaptermux-v2` matrix](https://github.com/Project-Helianthus/helianthus-ebusgateway/tree/main/matrix) cells `<transport>-PX01` to `<transport>-PX12` on every southbound transport, with the same no-unexpected-`fail`/`xpass` policy; `PX09` to `PX11` are planned until the multiplexer has a local responder. The proxy's own `PX01..PX12` case set and its runner are historical.
+- **Required reference:** PR description must include the path or attachment reference of the gateway matrix result, and for proxy wire-semantics scope it must also reference the result of the `<transport>-PX01` to `<transport>-PX12` cells of the gateway matrix.
 - **Expected-failure inventory:** any `xfail` must map to a documented transport limitation (case IDs + reason), and that inventory must be attached in the PR description.
 - **Default policy:** if runtime gate is not satisfied, merge is blocked.
 - **Owner override:** only explicit owner approval may bypass this gate, with a written reason.
