@@ -192,9 +192,12 @@ def load_setter_keys(gateway: Path) -> dict:
 
 def documented_setter_rows(tools: str, heading: str):
     """Return (key, row) pairs of the table under one setter heading."""
-    match = re.search(r"^" + re.escape(heading) + r"\n(.*?)(?=^#|\Z)", tools, re.M | re.S)
-    if match is None:
+    matches = list(re.finditer(r"^" + re.escape(heading) + r"\n(.*?)(?=^#|\Z)", tools, re.M | re.S))
+    if len(matches) > 1:
+        raise ValueError("duplicate setter heading: " + heading)
+    if not matches:
         return None
+    match = matches[0]
     rows = []
     for row in match[1].splitlines():
         if not row.lstrip().startswith("|"):

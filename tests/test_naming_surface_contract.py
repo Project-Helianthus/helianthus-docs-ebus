@@ -140,6 +140,21 @@ def test_missing_setter_key_table_rejected(family):
         CHECKER.validate(*docs)
 
 
+@pytest.mark.parametrize("family", CHECKER.SETTER_KEY_FAMILIES)
+@pytest.mark.parametrize("extra_key", [False, True])
+def test_duplicate_setter_heading_rejected(tmp_path, family, extra_key):
+    docs = documents()
+    start, end = family_section(docs[1], family)
+    duplicate = docs[1][start:end]
+    if extra_key:
+        key = next(iter(SETTER_KEYS[CHECKER.SETTER_KEY_FAMILIES[family][0]]))
+        duplicate = duplicate.replace("`" + key + "`", "`synthetic_extra_setter_key`", 1)
+    docs[1] += "\n" + duplicate
+    for keys in (None, loaded_setter_keys(tmp_path)):
+        with pytest.raises(ValueError, match="duplicate setter heading"):
+            CHECKER.validate(*docs, setter_keys=keys)
+
+
 def test_setter_keys_match_reference(tmp_path):
     keys = loaded_setter_keys(tmp_path)
     assert {family: set(entries) for family, entries in keys.items()} == {
