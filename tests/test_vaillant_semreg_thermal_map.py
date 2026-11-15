@@ -197,6 +197,13 @@ def test_rejects_a_dangling_endpoint() -> None:
     rejects(with_zone_candidate(index(), list_zone=False))
 
 
+def test_rejects_a_dangling_endpoint_with_the_right_kind_but_another_selector() -> None:
+    # The listed zone_instance is not the candidate's native position.
+    mutated = with_zone_candidate(index(), list_zone=True)
+    mutated["native_resources"][-1]["selector"] = "OP=0x02 GG=0x04 II=wrong"  # type: ignore[index]
+    rejects(mutated)
+
+
 def test_rejects_unknown_ordinal_or_unrelated_candidate_references() -> None:
     mutated = with_zone_candidate(index(), list_zone=True)
     mutated["mappings"][0]["relation_candidates"]["refs"] = ["SRC-not-listed"]  # type: ignore[index]

@@ -100,16 +100,36 @@ def selector_parts(selector: object, label: str) -> dict[str, str]:
     return parts
 
 
-def endpoint_kinds(structural: object) -> dict[str, set[str]]:
-    """Map each structural candidate id to the native kinds of its endpoints."""
+Endpoint = tuple[str, str | None]
+
+
+def endpoint(end: dict[str, object]) -> Endpoint:
+    """A candidate endpoint: its native kind and its native position, when it has one."""
+    positions = [
+        item["selector"] for item in end.get("identity_evidence", [])
+        if isinstance(item, dict) and item.get("classification") == "native_position"
+    ]
+    return end["kind"], (" ".join(positions) if positions else None)  # type: ignore[return-value]
+
+
+def endpoint_kinds(structural: object) -> dict[str, set[Endpoint]]:
+    """Map each structural candidate id to the native endpoints it names."""
     if not isinstance(structural, dict):
         raise CheckError("structural candidates fixture must be an object")
-    kinds: dict[str, set[str]] = {}
+    ends: dict[str, set[Endpoint]] = {}
     for row in structural.get("attachments", []):
-        kinds[row["id"]] = {row["from"]["kind"], row["to"]["kind"]}
+        ends[row["id"]] = {endpoint(row["from"]), endpoint(row["to"])}
     for row in structural.get("relayed_identity", []):
-        kinds[row["id"]] = {row["relaying_end"]["kind"], row["slot_view"]["kind"], row["direct_view"]["kind"]}
-    return kinds
+        ends[row["id"]] = {endpoint(row[name]) for name in ("relaying_end", "slot_view", "direct_view")}
+    return ends
+
+
+def listed_for(end: Endpoint, resources: dict[str, str]) -> set[str]:
+    kind, position = end
+    return {
+        selector for selector, listed in resources.items()
+        if listed == kind and (position is None or selector == position)
+    }
 
 
 def native_resources(value: object, label: str) -> dict[str, str]:
@@ -138,9 +158,9 @@ def check_native_key(row: dict[str, object], selector: dict[str, object], label:
 
 def check_attachment(
     row: dict[str, object], key: str, resources: dict[str, str], expected: tuple[str, str],
-    candidates: dict[str, set[str]], label: str,
+    candidates: dict[str, set[Endpoint]], label: str,
 ) -> set[str]:
-    """Check the native resource and relation candidates; return the kinds the row uses."""
+    """Check the native resource and relation candidates; return the selectors the row uses."""
     resource = row.get("native_resource")
     parts = selector_parts(resource, f"{label}: native_resource")
     if resource not in resources:
@@ -149,11 +169,11 @@ def check_attachment(
     if any(parts.get(name) != key_parts.get(name) for name in ("OP", "GG", "II")):
         raise CheckError(f"{label}: false join; {resource!r} does not hold {key!r}")
     require((resource, resources[resource]), expected, f"{label}: native resource")
-    return check_relation_candidates(row.get("relation_candidates"), resources[resource], resources, candidates, label)
+    return check_relation_candidates(row.get("relation_candidates"), resource, resources, candidates, label)
 
 
 def check_relation_candidates(
-    relation: object, own_kind: str, resources: dict[str, str], candidates: dict[str, set[str]], label: str,
+    relation: object, own: str, resources: dict[str, str], candidates: dict[str, set[Endpoint]], label: str,
 ) -> set[str]:
     if not isinstance(relation, dict) or set(relation) != CANDIDATE_KEYS:
         raise CheckError(f"{label}: relation_candidates has exactly refs and absence")
@@ -164,17 +184,17 @@ def check_relation_candidates(
         raise CheckError(f"{label}: relation candidates are either referenced or absent, not both")
     if not refs and (not isinstance(absence, str) or not absence.strip()):
         raise CheckError(f"{label}: an absent relation candidate needs its reason")
-    used = {own_kind}
-    listed_kinds = set(resources.values())
+    used = {own}
     for ref in refs:
         if not isinstance(ref, str) or ref not in candidates:
             raise CheckError(f"{label}: relation candidate {ref!r} is not in the structural candidates fixture")
-        dangling = candidates[ref] - listed_kinds
+        dangling = sorted(str(end) for end in candidates[ref] if not listed_for(end, resources))
         if dangling:
-            raise CheckError(f"{label}: dangling endpoint; {ref} names {sorted(dangling)} that no listed native resource is")
-        if own_kind not in candidates[ref]:
+            raise CheckError(f"{label}: dangling endpoint; {ref} names {dangling} that no listed native resource is")
+        if not any(own in listed_for(end, resources) for end in candidates[ref]):
             raise CheckError(f"{label}: relation candidate {ref} does not end at the row's native resource")
-        used |= candidates[ref]
+        for end in candidates[ref]:
+            used |= listed_for(end, resources)
     return used
 
 
@@ -188,13 +208,13 @@ def check_target(target: object, fact: str | None, label: str) -> None:
 
 
 def check_unused_resources(resources: dict[str, str], used: set[str], label: str) -> None:
-    unused = sorted(selector for selector, kind in resources.items() if kind not in used)
+    unused = sorted(selector for selector in resources if selector not in used)
     if unused:
         raise CheckError(f"{label}: native resources {unused} attach no row and end no referenced candidate")
 
 
 def validate_row(
-    row: object, resources: dict[str, str], candidates: dict[str, set[str]],
+    row: object, resources: dict[str, str], candidates: dict[str, set[Endpoint]],
 ) -> tuple[str, set[str]]:
     if not isinstance(row, dict) or set(row) != ROW_KEYS:
         raise CheckError(f"mapping row members must be exactly {sorted(ROW_KEYS)}")
