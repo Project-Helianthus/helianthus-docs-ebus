@@ -607,10 +607,10 @@ Native wire semantics belong to the
 [eeBUS protocol documentation](https://github.com/Project-Helianthus/helianthus-docs-eebus).
 Unresolved STD-01 revisions do not establish native mappings. The SemReg
 [family-catalog fixture](https://github.com/Project-Helianthus/helianthus-semreg/blob/main/fixtures/v1/family-catalog-v1.json)
-keeps `eebus-inbound` at `unknown` with reason `unknown_pending_std_01`.
+keeps `eebus-inbound` at `unknown` with reason `unknown_pending_normative_source`.
 
 The current [shared-view source](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/internal/semanticview/view.go)
-recognizes an affected item by the exact `unknown_pending_std_01` token in a
+recognizes an affected item by the exact `unknown_pending_normative_source` token in a
 contributing candidate's `quality.reasons`; it gives that signal precedence and
 sets the disposition to `unknown` with that reason. The catalog is provenance
 for the family state, not an observation lookup or an automatic protocol/name
@@ -621,7 +621,7 @@ Affected inbound observations remain `candidate` or `unknown`, unpromoted and
 non-actionable, preserving that reason and native evidence references. Expose
 an `unknown` or `withheld` disposition as appropriate, never qualified support,
 a normative mapping or an invented value. Native and family reason codes are
-preserved verbatim; do not prefix or reinterpret `unknown_pending_std_01` as an
+preserved verbatim; do not prefix or reinterpret `unknown_pending_normative_source` as an
 API-owned reason. A readable candidate and a transport connection cannot
 establish capability admission or conformance. No eeBUS payload is decoded here.
 
