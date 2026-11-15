@@ -1,5 +1,3 @@
-import hashlib
-import inspect
 import ipaddress
 import json
 from pathlib import Path
@@ -335,12 +333,78 @@ def select_gateway_flags(flags):
     return "MIXED_CONFIGURATION" if any(flag in flags for flag in V1_GATEWAY_FLAGS) else "v2"
 
 
-def asset_id(domain: str, label: str, asset_class: str, unit: int) -> str:
-    """The stated rule for assets of a multi-asset instance: three inputs only."""
-    digest = hashlib.sha256(
-        b"".join(field.encode() + b"\x00" for field in (domain, label, asset_class, str(unit)))
-    ).hexdigest()
-    return f"{asset_class}-asset-{digest[:32]}"
+def unit(**overrides) -> dict:
+    """A synthetic observation of one published unit, with every field the page names."""
+    observation = {
+        "kind": "resource.equipment",
+        "operator_label": "site-a",
+        "native_child_key": "child-key-a",
+        "scheme_listed": False,
+        "class_token": "pv",
+        "routed_unit": 11,
+        "endpoint": "tcp://logger-a.example.invalid:502",
+        "generation": 1,
+    }
+    observation.update(overrides)
+    return observation
+
+
+def anchor_key(observation: dict) -> tuple:
+    """The stated anchor: the operator label until a scheme is listed, then the native child key."""
+    if observation["scheme_listed"]:
+        return (observation["kind"], "native_identity", observation["native_child_key"])
+    return (observation["kind"], "operator_slot", observation["operator_label"])
+
+
+class ReferenceAllocator:
+    """The stated identity outcomes of the asset and publication keying section.
+
+    The class token, the routed unit, the endpoint and the driver generation are
+    never read: they are selectors and addresses, not identity.
+    """
+
+    def __init__(self) -> None:
+        self.next_id = 0
+        self.current: dict[str, dict] = {}
+        self.retired: set[str] = set()
+
+    def retire_label(self, label: str) -> None:
+        """An instance leaves: resources anchored on its label retire, native anchors stay."""
+        for resource_id, record in list(self.current.items()):
+            if record["anchor"][1:] == ("operator_slot", label):
+                del self.current[resource_id]
+                self.retired.add(resource_id)
+            elif record["operator_label"] == label:
+                record["operator_label"] = None
+
+    def resolve(self, observation: dict) -> str:
+        anchor = anchor_key(observation)
+        for resource_id, record in self.current.items():
+            if record["native_child_key"] != observation["native_child_key"]:
+                continue
+            if record["anchor"] == anchor:
+                record["operator_label"] = observation["operator_label"]
+                return resource_id
+            upgrade = (record["anchor"][0], record["anchor"][1], anchor[1]) == (
+                anchor[0], "operator_slot", "native_identity"
+            )
+            if upgrade and record["operator_label"] == observation["operator_label"]:
+                record["anchor"] = anchor  # supersession: operator label to native token
+                return resource_id
+            return "ASSET_CONFLICT"  # one unit through two labels: never a second identity
+        for resource_id, record in list(self.current.items()):
+            if record["anchor"] == anchor:
+                # Same anchor, another native child key: a replaced unit, never a continuation.
+                del self.current[resource_id]
+                self.retired.add(resource_id)
+        self.next_id += 1
+        resource_id = f"resource-{self.next_id}"
+        self.current[resource_id] = {
+            "anchor": anchor,
+            "native_child_key": observation["native_child_key"],
+            "operator_label": observation["operator_label"],
+        }
+        return resource_id
 
 
 class ModbusMultiEndpointRuntimeContractTest(unittest.TestCase):
@@ -559,34 +623,141 @@ class ModbusMultiEndpointRuntimeContractTest(unittest.TestCase):
         for invalid in ("Roof_1", "1roof", "roof-", "-roof", "a.b", "a--b", "", "a" * 33):
             self.assertIsNone(self.validator.label.fullmatch(invalid) if len(invalid) <= 32 else None)
 
-    def test_asset_id_rule_uses_exactly_label_class_and_unit(self) -> None:
-        domain = re.search(r"domain tag `([^`]+)`", self.text).group(1)
-        self.assertEqual(domain, "helianthus.modbus.asset.v1")
-        self.assertEqual(list(inspect.signature(asset_id).parameters), ["domain", "label", "asset_class", "unit"])
-        base = asset_id(domain, "site-a", "pv", 11)
-        self.assertRegex(base, r"^pv-asset-[0-9a-f]{32}$")
-        self.assertEqual(base, asset_id(domain, "site-a", "pv", 11))
-        # Each field changes the identity; a production mutation that ignores
-        # the field (or merges fields without a separator) would collapse these.
-        variants = {
-            "domain tag": asset_id("helianthus.modbus.asset.v2", "site-a", "pv", 11),
-            "label": asset_id(domain, "site-b", "pv", 11),
-            "class": asset_id(domain, "site-a", "storage", 11),
-            "routed unit": asset_id(domain, "site-a", "pv", 12),
-        }
-        for field, identifier in variants.items():
-            with self.subTest(field=field):
-                self.assertNotEqual(identifier.split("-")[-1], base.split("-")[-1])
-        self.assertTrue(variants["class"].startswith("storage-asset-"))
-        self.assertNotEqual(
-            asset_id(domain, "ab", "c", 1).split("-")[-1], asset_id(domain, "a", "bc", 1).split("-")[-1]
-        )
-        self.assertNotEqual(
-            asset_id(domain, "a", "pv", 11).split("-")[-1], asset_id(domain, "a", "pv", 1).split("-")[-1]
-        )
+    def test_published_identity_follows_the_common_rule_not_the_class_or_unit(self) -> None:
         rule = " ".join(self.sections["Asset and publication keying"].split())
-        for excluded in ("serial number", "ESN", "Endpoint, host, port, address, model, firmware"):
-            self.assertIn(excluded, rule)
+        for required in (
+            "The asset stays the publication scope.",
+            "Identity of what is published follows the [common identity rule]",
+            "helianthus-docs-semantic/blob/main/api/v1/graph.md",
+            "one resource per unit",
+            "an asset identifier is not a resource identifier",
+            "a unit is anchored on an operator label (`operator_slot` in the common contract)",
+            "Until the common element inventory lists an identification scheme",
+            "The native child key that the family's native contract defines is the documented native token",
+            "helianthus-docs-modbus/blob/main/protocols/huawei/gateway-readonly-v1.md",
+            "The pack class token is an interpretation selector and the routed unit is an address; "
+            "neither is identity.",
+            "a hybrid inverter, is one asset and one resource, never one asset per class",
+            "A replaced unit is a new equipment resource.",
+            "serial number",
+            "ESN",
+            "digest included",
+        ):
+            self.assertIn(required, rule)
+        # The earlier per-class digest rule is gone, not kept beside the new one.
+        for withdrawn in (
+            "helianthus.modbus.asset.v1",
+            "the class's asset prefix",
+            "Two sets of IDs",
+            "IDs stay; identity changes appear as facts",
+        ):
+            self.assertNotIn(withdrawn, rule)
+
+        # Anchor fields. Each varied field must change the anchor key; the production
+        # mutation each line catches is named beside it.
+        base = anchor_key(unit())
+        self.assertNotEqual(anchor_key(unit(kind="resource.battery")), base)  # kind dropped from the key
+        self.assertNotEqual(anchor_key(unit(operator_label="site-b")), base)  # operator label dropped
+        listed = anchor_key(unit(scheme_listed=True))
+        self.assertNotEqual(listed, base)  # scheme listing ignored: anchor never upgrades
+        self.assertNotEqual(
+            anchor_key(unit(scheme_listed=True, native_child_key="child-key-b")), listed
+        )  # native child key dropped from a native anchor
+        # Selector and address fields. Each varied field must keep the anchor key; the
+        # production mutation caught is a class token, routed unit, endpoint or driver
+        # generation that enters identity.
+        for field, value in (
+            ("class_token", "storage"),
+            ("routed_unit", 12),
+            ("endpoint", "tcp://logger-b.example.invalid:502"),
+            ("generation", 2),
+        ):
+            with self.subTest(field=field):
+                self.assertEqual(anchor_key(unit(**{field: value})), base)
+                self.assertEqual(anchor_key(unit(scheme_listed=True, **{field: value})), listed)
+
+    def test_re_addressing_table_matches_the_reference_allocator(self) -> None:
+        rows = {
+            row[0]: " ".join(row[1].split())
+            for row in table_with(self.sections["Asset and publication keying"], "Change")
+        }
+
+        def same_resource(*changes: dict) -> bool:
+            allocator = ReferenceAllocator()
+            first = allocator.resolve(unit())
+            return all(allocator.resolve(unit(**change)) == first for change in changes)
+
+        def renamed(scheme_listed: bool) -> bool:
+            allocator = ReferenceAllocator()
+            first = allocator.resolve(unit(scheme_listed=scheme_listed))
+            allocator.retire_label("site-a")
+            return allocator.resolve(unit(operator_label="site-b", scheme_listed=scheme_listed)) == first
+
+        def replaced() -> tuple[bool, bool]:
+            allocator = ReferenceAllocator()
+            first = allocator.resolve(unit())
+            second = allocator.resolve(unit(native_child_key="child-key-b"))
+            return second != first, first in allocator.retired
+
+        def two_labels() -> str:
+            allocator = ReferenceAllocator()
+            allocator.resolve(unit())
+            return allocator.resolve(unit(operator_label="site-b", endpoint="tcp://logger-b.example.invalid:502"))
+
+        expectations = {
+            "Restart the driver, or a new source epoch or driver generation": (
+                "Same resource",
+                same_resource({"generation": 2}),
+            ),
+            "Change the routed unit of a child": ("Same resource", same_resource({"routed_unit": 12})),
+            "Change the pack class token that reads a unit": (
+                "Same resource",
+                same_resource({"class_token": "storage"}),
+            ),
+            "Point the same label at another endpoint": (
+                "Same resource",
+                same_resource({"endpoint": "tcp://logger-b.example.invalid:502"}),
+            ),
+            "A unit keyed by an operator label gains a registered native identifier": (
+                "Same resource",
+                same_resource({"scheme_listed": True}),
+            ),
+            "Rename the label": ("A new driver ID and source", not renamed(False) and renamed(True)),
+            "Replace a device in the same slot": ("A new equipment resource", all(replaced())),
+            "Reach one device through two labels": ("One identity", two_labels() == "ASSET_CONFLICT"),
+        }
+        for change, (outcome, holds) in expectations.items():
+            with self.subTest(change=change):
+                self.assertIn(change, rows)
+                self.assertTrue(rows[change].startswith(outcome), rows[change])
+                self.assertTrue(holds)
+        self.assertIn("keeps its resource", rows["Rename the label"])
+        self.assertIn("never a continuation", rows["Replace a device in the same slot"])
+        two = rows["Reach one device through two labels"]
+        for required in ("identity link", "`ASSET_CONFLICT`", "never a second identity"):
+            self.assertIn(required, two)
+        self.assertIn("Reach one `sunspec` device through two endpoints", rows)
+
+        # Negative vector: a mutation that mints a second resource for the second label
+        # would return a fresh identifier here instead of the explicit conflict.
+        allocator = ReferenceAllocator()
+        first = allocator.resolve(unit())
+        second = allocator.resolve(unit(operator_label="site-b"))
+        self.assertNotEqual(second, first)
+        self.assertEqual(second, "ASSET_CONFLICT")
+        self.assertEqual(len(allocator.current), 1)
+
+        obligations = " ".join(self.sections["Acceptance obligations"].split())
+        for required in (
+            "Resource identity stays the same across a driver restart, a changed routed unit, a changed "
+            "class token, another endpoint and an anchor upgrade",
+            "Negative vector: one device reached through two labels with the same native child key never "
+            "yields two current resources",
+        ):
+            self.assertIn(required, obligations)
+        self.assertNotIn("Asset IDs change when, and only when, the label, class or routed unit changes", obligations)
+        questions = " ".join(self.sections["Open questions"].split())
+        self.assertIn("Where an operator label for a routed child unit is configured", questions)
 
     def test_pacing_defaults_are_bounded_proposals(self) -> None:
         pacing = self.validator.pacing

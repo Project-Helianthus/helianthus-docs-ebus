@@ -373,3 +373,26 @@ def test_public_pages_link_packets_and_preserve_safety_boundary():
     assert "0xFF -> 0x00" in huawei
     assert "FC05, FC06, FC0F, FC10" in sunspec
     assert "registration-key, serial-number, credential, and device-search writes" in huawei
+
+
+def test_huawei_child_identity_cites_the_native_child_key_only():
+    huawei = " ".join(
+        (ROOT / "architecture/protocol-routing-vendor-huawei-candidate-evidence-v1.md").read_text().split()
+    )
+    for required in (
+        "The one native identity evidence of a child is the stable child key that the "
+        "[native gateway contract]",
+        "helianthus-docs-modbus/blob/main/protocols/huawei/gateway-readonly-v1.md",
+        "ESN is never public and never enters identity in any form, a digest included.",
+        "Identity of a published child follows the [common identity rule]",
+        "helianthus-docs-semantic/blob/main/api/v1/graph.md",
+    ):
+        assert required in huawei
+    # The competing serial-digest allowance is removed, not kept beside the native key.
+    for withdrawn in (
+        "a private digest may participate in stable identity",
+        "only if identity policy allows it",
+    ):
+        assert withdrawn not in huawei
+    runtime = " ".join((ROOT / "api/modbus-multi-endpoint-runtime.md").read_text().split())
+    assert "The native child key that the family's native contract defines is the documented native token" in runtime

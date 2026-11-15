@@ -333,7 +333,7 @@ state and from the evidence labels:
 | `WITHHELD` | `AMBIGUOUS_RESULT` | The result is ambiguous or incoherent: more than one match or conflicting identity facts. | Hypothesis |
 | `WITHHELD` | `TUPLE_NOT_ADMITTED` | The result is complete but the observed identity tuple is not an admitted exact one. | Hypothesis |
 | `WITHHELD` | `INSUFFICIENT_EVIDENCE` | The bounded attempt ended without enough evidence, including a timeout, a truncated read or a transport error. | Hypothesis |
-| `WITHHELD` | `ASSET_CONFLICT` | The hub refused an asset because another instance already owns it. | Hypothesis |
+| `WITHHELD` | `ASSET_CONFLICT` | The hub refused an asset because another instance already owns it, or the unit reached is already published through another instance. | Hypothesis |
 
 For `sunspec` the record V3 decisions map as follows: `GO` is `ADMITTED`; a
 `NO_GO` is `TUPLE_NOT_ADMITTED`, except that the capability reason
@@ -407,36 +407,55 @@ observations, not measured guarantees, and no site is known to tolerate them.
 
 ## Asset and publication keying
 
+The asset stays the publication scope. Identity of what is published follows the
+[common identity rule](https://github.com/Project-Helianthus/helianthus-docs-semantic/blob/main/api/v1/graph.md#6-resources-and-identity):
+the gateway allocates one resource per unit, every fact, service and capability
+of the unit names that resource, and an asset identifier is not a resource
+identifier. This section is a Hypothesis.
+
 | Level | Rule | Grade |
 | --- | --- | --- |
 | Source | Exactly one per instance, as above | Hypothesis |
 | Asset of a single-asset family | `sunspec` publishes one PV asset per instance. Its ID follows the existing PV publication rule, which the migrated `default` entry keeps unchanged. A further `sunspec` instance follows the same rule for its own device. | Proven for one instance, Hypothesis for several |
-| Assets of a multi-asset instance | One asset per admitted child device and class, each with the instance's source | Hypothesis |
+| Assets of a multi-asset instance | One home asset per admitted routed child unit, with the instance's source. It holds the facts of every capability pack of that unit, so a unit that serves two packs, such as a hybrid inverter, is one asset and one resource, never one asset per class. The gateway allocates the asset identifier as an opaque publication-scope identifier. | Hypothesis |
+| Resource | One resource per unit, allocated by the gateway under the common identity rule | Hypothesis |
 | Publication scope | Every asset carries its instance's source, epoch and driver generation. Fencing or retiring an instance acts on every asset of its source and on no other source's assets. | Proven for the hub seam, Hypothesis for the instances |
 
-The ID of an asset of a multi-asset instance never derives from a serial number
-or an ESN. It is the class's asset prefix, a hyphen, and the first 32 lowercase
-hexadecimal characters of the SHA-256 digest of these UTF-8 fields in order,
-each followed by a NUL byte: the domain tag `helianthus.modbus.asset.v1`, the
-configured instance label, the class token, and the routed unit in decimal.
-The prefix for PV is `pv-asset`; other classes use their lowercase class token
-followed by `-asset`. The inputs are the label, the class and the routed unit
-only. Endpoint, host, port, address, model, firmware and listing order are not
-inputs. A family that cannot give its children distinct class and unit pairs
-withholds the ambiguous children rather than inventing an ordinal. The rule is
-a Hypothesis. The operator-selected alternative, an operator-configured ID for
-every asset, is not part of this contract.
+Until the common element inventory lists an identification scheme for a
+family's units, a unit is anchored on an operator label (`operator_slot` in the
+common contract). For `sunspec` that label is the instance label. The endpoints
+document carries no label for a routed child, so a routed child of a
+multi-asset instance publishes no resource and is withheld until an operator
+label for it is configured or a scheme is listed. The native child key that the
+family's native contract defines is the documented native token of a routed
+child; for the Huawei gateway families it is the stable child key of the
+[native gateway contract](https://github.com/Project-Helianthus/helianthus-docs-modbus/blob/main/protocols/huawei/gateway-readonly-v1.md).
+It stays native evidence beside the child's binding, and once its scheme is
+listed it becomes the anchor through a supersession that keeps the resource.
 
-Re-addressing consequences:
+The pack class token is an interpretation selector and the routed unit is an
+address; neither is identity. They select what is read and where it is read.
+Endpoint, host, port, address, model, firmware, listing order, source epoch and
+driver generation are not identity either. No identifier derives from a serial
+number or an ESN in any form, a digest included. A family that cannot tell its
+children apart by their native child keys withholds the ambiguous children
+rather than inventing an ordinal. A replaced unit is a new equipment resource.
+These rules are a Hypothesis.
 
-| Change | Effect on asset IDs | Grade |
+Identity outcomes, which follow the identity events of the
+[common identity rule](https://github.com/Project-Helianthus/helianthus-docs-semantic/blob/main/api/v1/graph.md#63-allocation-identification-schemes-and-what-can-be-detected):
+
+| Change | Identity outcome | Grade |
 | --- | --- | --- |
-| Rename the label | Every ID of the instance changes, together with its driver ID and source; the old assets are withdrawn and no alias is kept | Hypothesis |
-| Change the routed unit of a child | The IDs of that child change; other children keep theirs | Hypothesis |
-| Remove a child from `units` and add it back | The same label, class and unit give the same ID again | Hypothesis |
-| Point the same label at another endpoint | IDs stay; the endpoint is not an input, so only qualification guards what answers there | Hypothesis |
-| Replace a device in the same slot | IDs stay; identity changes appear as facts, not as an ID | Hypothesis |
-| Reach one device through two labels | Two sets of IDs | Hypothesis |
+| Restart the driver, or a new source epoch or driver generation | Same resource; a binding change never rewrites a resource | Hypothesis |
+| Change the routed unit of a child | Same resource; the routed unit is an address | Hypothesis |
+| Change the pack class token that reads a unit | Same resource; the class token is an interpretation selector | Hypothesis |
+| Point the same label at another endpoint | Same resource; the endpoint is an address, so qualification and the native child key guard what answers there | Hypothesis |
+| Remove a child from `units` and add it back | Same resource while its anchor and native child key are unchanged; it is withdrawn and later current again | Hypothesis |
+| A unit keyed by an operator label gains a registered native identifier | Same resource, through a supersession from the operator label to the native token | Hypothesis |
+| Rename the label | A new driver ID and source. A unit anchored on that label gets a new resource and the earlier one is retired, with no alias; a unit anchored on a native token keeps its resource | Hypothesis |
+| Replace a device in the same slot | A new equipment resource, and the earlier one is retired. Another native child key under an unchanged label is a replacement, never a continuation. Without native identity evidence the replacement is not detectable and needs an operator declaration | Hypothesis |
+| Reach one device through two labels | One identity. When both paths expose the same native child key, the unit is one resource in one home asset, and each path is a binding with an identity link that names it. Until the hub accepts a second source for one asset, the second claimant is withheld as `ASSET_CONFLICT`: an explicit conflict, never a second identity | Hypothesis |
 | Reach one `sunspec` device through two endpoints | The second instance is withheld as `ASSET_CONFLICT` | Hypothesis |
 
 ## Observability
@@ -495,7 +514,8 @@ tests. Every obligation is a Hypothesis.
 | An endpoint appears in no log, error, argument, environment variable or status | Protected materialization | Hypothesis |
 | A withheld instance is listed with its closed reason, sends nothing when `FAMILY_NOT_ADMITTED`, and publishes nothing | Qualification | Hypothesis |
 | Under concurrent callers, one instance never has more than one request in flight and honors the gap and the settle wait | Pacing profile | Hypothesis |
-| Asset IDs change when, and only when, the label, class or routed unit changes | Asset and publication keying | Hypothesis |
+| Resource identity stays the same across a driver restart, a changed routed unit, a changed class token, another endpoint and an anchor upgrade, and changes for a unit anchored on a renamed label and for a replaced unit; no asset identifier encodes a class token or a routed unit | Asset and publication keying | Hypothesis |
+| Negative vector: one device reached through two labels with the same native child key never yields two current resources; the second claimant is withheld as `ASSET_CONFLICT` | Asset and publication keying | Hypothesis |
 | The four status tools answer for each `instance` case listed above, and a withheld `sunspec` instance reports its closed reason through the SunSpec tool | Observability | Hypothesis |
 | The add-on emits exact document content and modes for a valid list, rejects each invalid case with a redacted message, rejects a mixed configuration, and produces byte-identical v1 arguments for a v1-only configuration | Selection and document | Hypothesis |
 
@@ -507,6 +527,8 @@ tests. Every obligation is a Hypothesis.
 | Whether a raw read or retained observation may select an instance | Unknown |
 | Whether the maximum of eight entries fits every deployment | Unknown |
 | Whether two names for one device, such as a host name and an address, can be detected | Unknown |
+| Where an operator label for a routed child unit is configured | Unknown |
+| Which identification scheme a family's native child key maps to | Unknown here; owned by the family's native contract and the common element inventory |
 | Vendor-specific pacing minimums, defaults and child routing | Unknown here; owned by each family's native contract |
 | Portal-managed endpoint setup | Unknown; outside this contract and a separate decision |
 
