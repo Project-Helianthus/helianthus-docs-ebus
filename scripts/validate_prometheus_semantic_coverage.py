@@ -316,6 +316,12 @@ NATIVE_LIFETIME_RULES = (
     "lifetime admission set of label sets",
     "never replaced by another candidate",
 )
+# The unit rule covers the value and age families only; the overflow family
+# carries neither labels nor a unit.
+NATIVE_UNIT_RULES = (
+    "Each value family and the age family has exactly one constant `unit` label value, and it is SI.",
+    "`helianthus_native_render_overflow` has no labels and no unit.",
+)
 
 
 def _validate_native_points(text: str, emitted_names: set[str]) -> None:
@@ -341,6 +347,9 @@ def _validate_native_points(text: str, emitted_names: set[str]) -> None:
     flat = " ".join(native.split())
     if any(rule not in flat for rule in NATIVE_LIFETIME_RULES):
         raise CheckError("native label and series lifetime rules are missing")
+    if (any(rule not in flat for rule in NATIVE_UNIT_RULES)
+            or "Each family has exactly one constant unit" in normalized(native)):
+        raise CheckError("native unit rule must exempt the label-free overflow family")
 
 
 def validate(text: str, *, thermal_fixture: Path = THERMAL_FIXTURE) -> None:

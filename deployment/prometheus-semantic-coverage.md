@@ -496,8 +496,9 @@ semantic resource, a qualified binding or a write path.
 | `helianthus_native_point_age` | `gauge` | age of the held observation | `seconds` | `device, index, point, protocol, unit` | `Target` |
 | `helianthus_native_render_overflow` | `gauge` | value series omitted by the budget | `none` | `none` | `Target` |
 
-Each family has exactly one constant `unit` label value, and it is SI. A
-temperature is in kelvin (Celsius + 273.15); a temperature difference is in
+Each value family and the age family has exactly one constant `unit` label
+value, and it is SI. `helianthus_native_render_overflow` has no labels and no
+unit. A temperature is in kelvin (Celsius + 273.15); a temperature difference is in
 kelvin with the Celsius difference unchanged; a pressure is in pascals
 (bar × 100,000); a volume flow is in cubic meters per second (litre/minute /
 60,000); an energy is in joules (kWh × 3,600,000); a power is in watts; a time

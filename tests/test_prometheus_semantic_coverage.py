@@ -324,6 +324,23 @@ def test_native_section_requires_lifetime_rules(phrase):
         CHECKER.validate(_without_phrase(text, phrase))
 
 
+@pytest.mark.parametrize("replacement", [
+    "Each family has exactly one constant `unit` label value, and it is SI.",
+    "Each value family and the age family has exactly one constant `unit` label\n"
+    "value, and it is SI. Every native family carries the `unit` label.",
+], ids=["unqualified_every_family", "overflow_exemption_missing"])
+def test_native_unit_rule_exempts_overflow_family(replacement):
+    # The overflow row has no labels and no unit, so a sentence requiring a
+    # unit label on every native family contradicts its row.
+    text = document()
+    scoped = ("Each value family and the age family has exactly one constant `unit` label\n"
+              "value, and it is SI. `helianthus_native_render_overflow` has no labels and no\n"
+              "unit.")
+    assert text.count(scoped) == 1
+    with pytest.raises(CHECKER.CheckError, match="native unit rule"):
+        CHECKER.validate(text.replace(scoped, replacement))
+
+
 def _without_phrase(text, phrase):
     words = phrase.split()
     pattern = r"\s+".join(re.escape(word) for word in words)
