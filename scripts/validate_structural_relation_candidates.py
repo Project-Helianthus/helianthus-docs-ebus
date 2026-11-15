@@ -41,6 +41,14 @@ DIRECT_VIEW_KEYS = {"kind", "status", "identity_evidence"}
 REQUIRED_DECISIONS = (
     "SD-05", "SD-06", "SD-07", "SD-09", "SD-10", "SD-15", "functional-modules",
 )
+REQUIRED_ROW_IDS = {
+    "SRC-SD05-zone-room-unit", "SRC-SD06-zone-to-circuit",
+    "SRC-SD07-zone-to-circuit-fallback", "SRC-SD09-circuit-managing-module",
+    "SRC-SD10-connected-device-slot", "SRC-SD10-inventory-device-slot",
+    "SRC-SD15-controller-zone", "SRC-SD15-controller-circuit",
+    "SRC-SD15-module-solar-circuit", "SRC-SD15-module-cylinder",
+    "SRC-FM-second-family-slot", "SRC-FM-second-family-status",
+}
 DISPOSITIONS = {"relation_candidate", "configuration_only", "absent", "unresolved"}
 EVIDENCE_GRADES = {"Proven", "Hypothesis", "Unknown"}
 SCOPES = {"PROTOCOL", "PROFILE", "LAB", "GATEWAY_POLICY"}
@@ -163,7 +171,7 @@ def check_endpoint(endpoint, label: str, errors: list) -> None:
     check_evidence(endpoint["identity_evidence"], f"{label}.identity_evidence", errors)
 
 
-def check_statements(items, label: str, errors: list) -> None:
+def check_statements(items, label: str, errors: list, pages: dict | None = None) -> None:
     if not isinstance(items, list):
         errors.append(f"{label}: must be a list")
         return
@@ -173,8 +181,28 @@ def check_statements(items, label: str, errors: list) -> None:
             continue
         check_selector(item["selector"], f"{where}.selector", errors)
         check_member(item["source"], set(STATEMENT_SOURCES), f"{where}.source", errors)
+        check_source_anchor(item, where, errors, pages)
         check_text(item["reading"], f"{where}.reading", errors)
         check_member(item["scope"], SCOPES, f"{where}.scope", errors)
+
+
+def selector_groups(selector: str) -> list:
+    match = re.search(r"GG=((?:0x[0-9A-F]{2}/?)+)", selector)
+    return match.group(1).split("/") if match else []
+
+
+def check_source_anchor(item: dict, where: str, errors: list, pages: dict | None) -> None:
+    source = item.get("source")
+    selector = item.get("selector")
+    if pages is None or source not in STATEMENT_SOURCES or not isinstance(selector, str):
+        return
+    text = pages[STATEMENT_SOURCES[source].as_posix()].upper()
+    register = re.search(r"RR=(0X[0-9A-F]{4})", selector.upper())
+    if register and register.group(1) not in text:
+        errors.append(f"{where}: source {source} does not contain register {register.group(1)}")
+    groups = selector_groups(selector)
+    if groups and not register and not all(group.upper() in text for group in groups):
+        errors.append(f"{where}: source {source} does not contain the cited group")
 
 
 def check_decisions(value, label: str, errors: list) -> None:
@@ -236,7 +264,7 @@ def check_row(row, index: int, errors: list, pages: dict) -> None:
     check_member(row["evidence_grade"], EVIDENCE_GRADES, f"{label}.evidence_grade", errors)
     check_scopes(row["validity_scope"], f"{label}.validity_scope", errors)
     check_member(row["disposition"], DISPOSITIONS, f"{label}.disposition", errors)
-    check_statements(row["native_statements"], f"{label}.native_statements", errors)
+    check_statements(row["native_statements"], f"{label}.native_statements", errors, pages)
     check_text(row["reason"], f"{label}.reason", errors)
     if row["pending_review"] is not None:
         check_text(row["pending_review"], f"{label}.pending_review", errors)
@@ -277,6 +305,7 @@ def check_identity_row(row, index: int, errors: list) -> None:
     ):
         errors.append(f"{label}.groups: must list OP=0x06 group numbers")
     check_endpoint(row["relaying_end"], f"{label}.relaying_end", errors)
+    check_group_binding(row, label, errors)
     check_view(row["slot_view"], VIEW_KEYS, "device_slot", f"{label}.slot_view", errors)
     check_view(row["direct_view"], DIRECT_VIEW_KEYS, "direct_bus_entry", f"{label}.direct_view", errors)
     check_member(row["shared_anchor_key_source"], ANCHOR_SOURCES, f"{label}.shared_anchor_key_source", errors)
@@ -289,6 +318,22 @@ def check_identity_row(row, index: int, errors: list) -> None:
         errors.append(f"{label}: one resource needs a shared native token or operator label")
     if disposition == "two_views_unresolved" and source != "none":
         errors.append(f"{label}: a shared anchor key source resolves to one resource")
+
+
+def check_group_binding(row: dict, label: str, errors: list) -> None:
+    view, groups = row.get("slot_view"), row.get("groups")
+    if not isinstance(view, dict) or not isinstance(groups, list):
+        return
+    evidence = view.get("identity_evidence")
+    if not isinstance(evidence, list):
+        return
+    bound = [
+        selector_groups(item["selector"]) for item in evidence
+        if isinstance(item, dict) and isinstance(item.get("selector"), str)
+        and item["selector"].startswith("OP=0x06")
+    ]
+    if not bound or any(sorted(found) != sorted(map(str, groups)) for found in bound):
+        errors.append(f"{label}.groups: must equal the groups of the slot_view selectors")
 
 
 def check_view(view, keys: set, kind: str, label: str, errors: list) -> None:
@@ -325,6 +370,9 @@ def check_coverage(rows: list, errors: list, pages: dict, identity: list) -> Non
             errors.append(f"coverage: no attachment row for {decision}")
         if decision.startswith("SD-") and f"## B524-{decision} " not in pages[DECISIONS_PAGE.as_posix()]:
             errors.append(f"coverage: {decision} is not a heading of the decision page")
+    present = {row.get("id") for row in rows if isinstance(row, dict)}
+    for missing in sorted(REQUIRED_ROW_IDS - present):
+        errors.append(f"coverage: attachment row {missing} is missing")
     ids = [row.get("id") for row in rows + identity if isinstance(row, dict)]
     if len(ids) != len(set(map(str, ids))):
         errors.append("fixture: row identifiers repeat across attachments and relayed_identity")

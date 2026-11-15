@@ -285,3 +285,30 @@ def test_each_row_is_cited_in_its_primary_decision(row_id: str) -> None:
             pages[page] = pages[page].replace(f"`{row_id}`", "`SRC-elsewhere`")
 
     assert any(f"{row_id}: not cited" in error for error in errors_after(mutate_pages=mutate))
+
+
+@pytest.mark.parametrize("row_id", sorted(VALIDATOR.REQUIRED_ROW_IDS))
+def test_every_catalogued_attachment_row_is_required(row_id: str) -> None:
+    def mutate(document: dict) -> None:
+        document["attachments"] = [item for item in document["attachments"] if item["id"] != row_id]
+
+    assert any(row_id in error for error in errors_after(mutate))
+
+
+def test_swapped_identity_groups_are_rejected() -> None:
+    def mutate(document: dict) -> None:
+        first, second = row(document, "SRI-functional-module-slot"), row(document, "SRI-room-unit-slots")
+        first["groups"], second["groups"] = second["groups"], first["groups"]
+
+    assert any(".groups" in error for error in errors_after(mutate))
+
+
+def test_statement_reassigned_to_an_unrelated_source_is_rejected() -> None:
+    def mutate(document: dict) -> None:
+        row(document, MANAGING)["native_statements"][0]["source"] = "functional_modules"
+        row(document, MANAGING)["native_statements"][0]["selector"] = "OP=0x02 GG=0x00 RR=0x0036"
+
+    def mutate_pages(pages: dict) -> None:
+        pages[MODULES] = pages[MODULES].replace("0x0036", "")
+
+    assert any("does not contain" in error for error in errors_after(mutate, mutate_pages))
