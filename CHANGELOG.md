@@ -2,6 +2,31 @@
 
 ## Unreleased
 
+- `protocols/vaillant/fixtures/b509-register-name-correspondence.csv` has
+  `codec` and `scale` columns after `unit`. They hold what the boiler and heat
+  pump register maps state for each row: the codec of the `Codec / scale`
+  column, or the `Type` column for the five-byte selectors, and the stated
+  factor as a decimal multiplier (`SIN / 10` gives `0.1`; `0xE201` gives
+  `100`). A row whose map states no codec, and the two operation rows, keep
+  both cells empty. Every name, unit and open question is unchanged. The
+  column table of `protocols/vaillant/ebus-vaillant-b509.md` defines both
+  columns and states that an empty scale is not an unresolved factor.
+  `protocols/vaillant/ebus-vaillant-b509-heatpump-register-map.md` has a
+  "Refrigerant and compressor numeric rows" section that lists the final
+  numeric refrigerant and compressor rows of the `heat_pump` and
+  `heat_pump_interface_unit` classes and the evidence each needs: the pressure
+  reference, absolute or gauge, for the refrigerant pressures and the unit for
+  the compressor speed. `architecture/b509-heatpump-refrigerant-poll.md`
+  defines the read-only poll of those rows: at most one read of each selector
+  per cycle and at least 60 seconds between cycle starts, only on a target
+  identified as a heat pump class, off by default and never started by a
+  scrape or status read, with points that lack their evidence withheld.
+  Enabling the poll on an installation is the owner's decision at live
+  testing; the page authorizes no read on any installation.
+  `tests/test_b509_register_name_correspondence.py` asserts that both columns
+  equal the map pages, that the table matches the fixture and that the poll
+  page states its bounds.
+
 - `api/semantic-snapshot-read.md` has an "Assets with several sources"
   section. A source counts when it is admitted (live, not fenced, not retired)
   with a published, unfenced cursor of its current generation, and an asset

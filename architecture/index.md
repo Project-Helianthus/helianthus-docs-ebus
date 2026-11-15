@@ -127,6 +127,7 @@ pages keep the status statements in their own text.
 - [aq22-b51a-diagnostic-fields.md](aq22-b51a-diagnostic-fields.md) (status: candidate)
 - [aq24-b512-valve-pump-fields.md](aq24-b512-valve-pump-fields.md) (status: candidate)
 - [aq26-b512-power-stepper-fields.md](aq26-b512-power-stepper-fields.md) (status: candidate)
+- [b509-heatpump-refrigerant-poll.md](b509-heatpump-refrigerant-poll.md)
 - [b510-b511-local-cache.md](b510-b511-local-cache.md) (status: candidate)
 - [b516-local-cycle.md](b516-local-cycle.md) (status: candidate)
 - [b51b-local-transfer.md](b51b-local-transfer.md) (status: candidate)

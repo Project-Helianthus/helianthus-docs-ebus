@@ -24,6 +24,15 @@ selectors of section 2 to the `heat_pump_interface_unit` class. A register is
 identified by target class, operation and complete selector; equal names never
 merge entries.
 
+The `codec` and `scale` columns of the fixture hold what this map states for
+each row. For a two-byte register the codec is the code span of the
+`Codec / scale` column without its remark, and a stated factor is the scale:
+`UCH` (100W units) at `0xE201` gives codec `UCH` and scale `100`. For a
+five-byte selector the codec is the `Type` column and the scale is empty. The
+scale multiplies the decoded value. An empty scale means that this map states
+no factor beyond the codec; an empty codec means that this map states no codec,
+as for `0x8000`. Neither column qualifies a codec on the wire.
+
 ## Device-Type Gate
 
 The registers of section 1 are documented for devices with the identity
@@ -272,6 +281,64 @@ diverge on a live scan, the discrepancy points to a firmware variant difference.
 Canonical naming uses `dhw_*` (snake_case) for domestic hot water.
 The community ebusd names use `Hwc*` (camelCase). Both refer to the same thing.
 The earlier map name column keeps the ebusd-style `Hwc` names.
+
+---
+
+## Refrigerant and compressor numeric rows
+
+This section lists the refrigerant circuit and compressor rows of this map that
+have a numeric value class. It records no observation and qualifies no row: each
+row keeps the confidence, evidence and open questions given in the tables above.
+
+### Selectors
+
+The list covers the rows of the `heat_pump` and `heat_pump_interface_unit`
+classes whose subject is the refrigerant or the compressor, whose canonical name
+is final and whose value class is numeric (a pressure, a temperature, a
+temperature difference, a speed, a duration or a count). A covered row is not a
+configuration value and has a unit and no open question in the correspondence
+fixture. The compressor speed is covered although its unit is unresolved.
+
+| Selector | Operation | Class | Name | Unit | Unresolved evidence |
+|----------|-----------|-------|------|------|---------------------|
+| `0x8D00` | `0D` | `heat_pump` | `refrigerant_superheat` | K | -- |
+| `0x8E00` | `0D` | `heat_pump` | `refrigerant_subcooling` | K | -- |
+| `0x1400` | `0D` | `heat_pump` | `refrigerant_high_pressure` | bar | The pressure reference, absolute or gauge |
+| `0x1500` | `0D` | `heat_pump` | `refrigerant_low_pressure` | bar | The pressure reference, absolute or gauge |
+| `0xA800` | `0D` | `heat_pump` | `compressor_dhw_start_count` | count | -- |
+| `0xB400` | `0D` | `heat_pump` | `compressor_high_pressure_cutout_count` | count | -- |
+| `54 02 00 0D 0A` | `54` | `heat_pump_interface_unit` | `compressor_speed` | unresolved | The unit, revolutions per minute or per second |
+| `54 02 00 6A 09` | `54` | `heat_pump_interface_unit` | `refrigerant_high_pressure` | bar | The pressure reference, absolute or gauge |
+| `54 02 00 98 08` | `54` | `heat_pump_interface_unit` | `compressor_inlet_temperature` | °C | -- |
+| `54 02 00 A2 08` | `54` | `heat_pump_interface_unit` | `compressor_outlet_temperature` | °C | -- |
+| `54 02 00 A7 0E` | `54` | `heat_pump_interface_unit` | `refrigerant_evaporation_temperature` | °C | -- |
+| `54 02 00 C2 0B` | `54` | `heat_pump_interface_unit` | `compressor_operating_time` | h | -- |
+| `54 02 00 C3 0B` | `54` | `heat_pump_interface_unit` | `compressor_start_count` | count | -- |
+
+Refrigerant and compressor rows that the list does not cover:
+
+- `0xE400` and `0xE900`: state codes, not numeric values.
+- `0xE600`, `0xE700` and `0xE800`: configuration values.
+- `0xE901`: the unit and the meaning are unresolved (Open Questions item 8).
+- `0x8000`: the codec and the unit are unresolved (Open Questions item 8).
+- `54 02 00 A6 0E` and `54 02 00 AC 08`: the canonical names are provisional
+  (Open Questions item 11).
+- `54 02 00 A9 0E`: whether it denotes the same measurement as `0x8D00` is
+  unresolved (Open Questions item 11).
+
+### Unresolved evidence
+
+The two-byte registers of the table are known only on the `heat_pump` identity
+`EHP00`, and the five-byte selectors on the `heat_pump_interface_unit`
+identities starting `HMU`. Several ids of this map mean another quantity on a
+boiler at the same address: `0x1400` is a boiler operating time there. The
+rows below lack one stated fact, named in the table above:
+
+- `refrigerant_high_pressure` (`0x1400` and `54 02 00 6A 09`) and
+  `refrigerant_low_pressure` (`0x1500`): the pressure reference, absolute or
+  gauge, is not stated.
+- `compressor_speed` (`54 02 00 0D 0A`): the unit, revolutions per minute or
+  per second, is unresolved (Open Questions item 10).
 
 ---
 
