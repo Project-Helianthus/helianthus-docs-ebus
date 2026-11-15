@@ -118,7 +118,9 @@ The startup block of the bus observability summary (GraphQL
 carries the additive field `reason` next to `phase`, `cache_epoch` and
 `live_epoch`. It is `no_supported_heat_source_path` while the semantic poller
 has no supported heat-source data path: no B524 root and no boiler-class heat
-source, while the inventory holds a heat-pump-class identity. Otherwise GraphQL
+source, while the inventory holds a heat-pump-class identity. The reason stays
+clear when the process has discovered a root before or the product catalog
+classifies an inventory identity as a controller. Otherwise GraphQL
 returns `reason` as null and MCP omits it, so existing outputs are unchanged.
 The rule, its evaluation points and the phase behaviour are described in
 [`startup-semantic-fsm.md`](./startup-semantic-fsm.md#startup-reason-without-a-supported-heat-source-data-path).
@@ -301,7 +303,7 @@ With the reason set, the boot-live timeout transition of
 | DHW disappearing | `semantic_dhw_stale_expiry_total`, `semantic_dhw_updates_total`, `semantic_dhw_expired` | Expiry count grows faster than updates, or `age` exceeds the configured TTL |
 | Energy not updating | `semantic_energy_merges_total`, `semantic_energy_rejections_total`, `semantic_energy_merge_reject` | Rejections grow, especially `source_downgrade` or `monotonic` |
 | Regulator lost | `semantic_regulator_state`, `semantic_regulator_transition`, `semantic_regulator_absence` | State reaches `ABSENT`, typically through `PRESENT -> ABSENCE_GRACE -> ABSENT` |
-| Bus without a system controller | `semantic_regulator_state`, `semantic_discovery_fallback_suspended`, startup block `reason` | State reaches `ABSENT` through `UNKNOWN -> ABSENCE_GRACE -> ABSENT`; the suspension marker appears once; `reason` is `no_supported_heat_source_path` while no root and no boiler-class heat source exist and the inventory holds a heat-pump-class identity |
+| Bus without a system controller | `semantic_regulator_state`, `semantic_discovery_fallback_suspended`, startup block `reason` | State reaches `ABSENT` through `UNKNOWN -> ABSENCE_GRACE -> ABSENT`; the suspension marker appears once; `reason` is `no_supported_heat_source_path` while no root and no boiler-class heat source exist and the inventory holds a heat-pump-class identity; it stays clear when the process has discovered a root before or the product catalog classifies an inventory identity as a controller |
 | Passive observe-first unavailable | `ebus_passive_warmup_state`, `ebus_passive_capability_unavailable_reason`, `ebus_observability_transport_info` | `state="unavailable"` with reason `unsupported_or_misconfigured` is expected on `ebusd-tcp` and direct adapter-class `enh`/`ens` endpoints |
 | Busy metrics missing | `ebus_observability_transport_info`, `ebus_passive_warmup_state`, `ebus_bus_busy_ratio` | Busy metrics emit only once passive state is `available` and passive timing quality is not `unavailable` |
 | Dedup stays degraded | `ebus_dedup_degraded_state`, `ebus_dedup_degraded_total`, `ebus_passive_fanout_overflow_total` | Degraded state stays `1`, or overflow/degraded counters keep increasing |

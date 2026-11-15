@@ -124,8 +124,10 @@ discovery enqueues an energy refresh, so with a controller the plane becomes
 non-null once that refresh or an energy broadcast is accepted. For energy
 totals the 60-second requirement is therefore met only when a first energy
 point is accepted within that window. Without a discovered B524 root, as on a
-bus with a heat source and no system controller, no priming pass runs and the
-plane stays null.
+bus with a heat source and no system controller, no priming pass runs. Energy
+broadcasts remain an independent input there: a valid accepted energy broadcast
+makes the plane non-null without any register read, and on such a bus with no
+accepted energy broadcast the plane stays null.
 
 The normal steady-state pollers remain authoritative for complete values,
 freshness, removal, and downgrade behavior. For example, schedules may become
