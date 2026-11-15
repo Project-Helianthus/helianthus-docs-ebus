@@ -49,8 +49,9 @@ accepted identity basis (manifest member `identity_bases`):
   slot; for a zone, the same operator-declared thermal system and the same
   slot;
 - `shared_native_anchor_key`: both views carry the same native anchor key; the
-  mapping records the identification scheme and issuer of that key, and the
-  token stays native evidence.
+  mapping records the identification scheme, the issuer and the shared key
+  value, so a validator can tell one shared key from two keys of a
+  compatible format.
 
 An ordinal, a shared digit in a path or label, a bundle-local slot label, a
 similar name, and a bus or network address are never a basis. A mapping

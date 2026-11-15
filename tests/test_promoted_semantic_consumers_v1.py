@@ -13,12 +13,12 @@ ACCEPTED_BASES = ("operator_declaration", "shared_native_anchor_key")
 UNRESOLVED = "unresolved"
 BASIS_MEMBERS = {
     "operator_declaration": {"class", "parent", "slot"},
-    "shared_native_anchor_key": {"class", "scheme", "issuer"},
+    "shared_native_anchor_key": {"class", "scheme", "issuer", "key"},
     UNRESOLVED: {"class", "reason"},
 }
 REQUIRED_NONEMPTY = {
     "operator_declaration": ("parent", "slot"),
-    "shared_native_anchor_key": ("scheme",),
+    "shared_native_anchor_key": ("scheme", "key"),
     UNRESOLVED: ("reason",),
 }
 MERGE_BY_BASIS = {
@@ -269,8 +269,8 @@ def test_m9_ordinal_zone_join_without_basis_is_rejected() -> None:
     "basis",
     [
         {"class": "operator_declaration", "parent": "thermal system A", "slot": "zone east"},
-        {"class": "shared_native_anchor_key", "scheme": "scheme.synthetic", "issuer": ""},
-        {"class": "shared_native_anchor_key", "scheme": "scheme.synthetic", "issuer": "X1"},
+        {"class": "shared_native_anchor_key", "scheme": "scheme.synthetic", "issuer": "", "key": "key-synthetic-1"},
+        {"class": "shared_native_anchor_key", "scheme": "scheme.synthetic", "issuer": "X1", "key": "key-synthetic-1"},
     ],
 )
 def test_m9_accepted_basis_merges_candidates_of_one_resource(basis: dict) -> None:
@@ -290,6 +290,7 @@ def test_m9_accepted_basis_merges_candidates_of_one_resource(basis: dict) -> Non
         ("operator_declaration", "parent"),
         ("operator_declaration", "slot"),
         ("shared_native_anchor_key", "scheme"),
+        ("shared_native_anchor_key", "key"),
         ("unresolved", "reason"),
     ],
 )
@@ -300,6 +301,7 @@ def test_m9_each_basis_member_is_required(basis_class: str, member: str) -> None
         },
         "shared_native_anchor_key": {
             "class": "shared_native_anchor_key", "scheme": "scheme.synthetic", "issuer": "",
+            "key": "key-synthetic-1",
         },
         "unresolved": {"class": "unresolved", "reason": "no shared key"},
     }[basis_class]
@@ -353,7 +355,7 @@ def test_m9_undecided_resource_kind_states_its_reason() -> None:
 
 
 def test_m9_shared_native_anchor_key_issuer_is_a_code_or_empty() -> None:
-    complete = {"class": "shared_native_anchor_key", "scheme": "scheme.synthetic", "issuer": ""}
+    complete = {"class": "shared_native_anchor_key", "scheme": "scheme.synthetic", "issuer": "", "key": "key-synthetic-1"}
     missing = {key: value for key, value in complete.items() if key != "issuer"}
     with pytest.raises(ValueError, match="has members"):
         validate_identity_basis(missing)
@@ -377,3 +379,37 @@ def test_m9_leaf_basis_must_equal_its_mapping_basis() -> None:
     zone_leaf["identity_basis"] = "operator_declaration"
     with pytest.raises(ValueError, match="does not carry the identity basis of zones"):
         validate_manifest(mismatched)
+
+
+def test_m9_shared_native_anchor_key_records_the_shared_key() -> None:
+    basis = {"class": "shared_native_anchor_key", "scheme": "scheme.synthetic", "issuer": ""}
+    with pytest.raises(ValueError, match="has members"):
+        validate_identity_basis(basis)
+    with pytest.raises(ValueError, match="lacks key"):
+        validate_identity_basis(dict(basis, key=""))
+    assert validate_identity_basis(dict(basis, key="key-synthetic-1")) == (
+        "shared_native_anchor_key"
+    )
+
+
+def test_m9_zone_candidates_name_their_native_instance() -> None:
+    mappings = {m["target"]: m for m in _load(MANIFEST)["resources"]}
+    for zone_id, instance in (("zone-1", "II=0x00"), ("zone-2", "II=0x01")):
+        ebus = [
+            c for c in mappings[f"zones[id={zone_id}]"]["candidates"] if c["protocol"] == "ebus"
+        ]
+        assert len(ebus) == 1
+        assert ebus[0]["native_resource"].endswith(instance)
+
+
+def test_m9_candidate_provenance_points_at_checked_in_entries() -> None:
+    registry_text = REGISTRY.read_text(encoding="utf-8")
+    for mapping in _load(MANIFEST)["resources"]:
+        for candidate in mapping["candidates"]:
+            provenance = candidate["provenance"]
+            if provenance["repository"] != "helianthus-docs-ebus":
+                continue
+            assert (ROOT / provenance["document"]).is_file()
+            entry = provenance.get("entry", "")
+            if entry.startswith("entity_slot="):
+                assert f'"entity_slot":"{entry.split("=", 1)[1]}"' in registry_text

@@ -16,7 +16,7 @@
       "resource_kind_reason": "The element inventory holds the hot-water kind as unknown; which common resource kind a hot-water value describes is not decided here.",
       "candidates": [
         {"protocol": "ebus", "native_resource": "B524 native hot-water group OP=0x02 GG=0x01 II=0x00", "provenance": {"repository": "helianthus-docs-ebus", "document": "architecture/fixtures/dhw-setpoint-semreg-cutover-v1.json"}},
-        {"protocol": "eebus", "native_resource": "SPINE DHWCircuit entity", "provenance": {"repository": "helianthus-docs-eebus", "document": "eeBUS multi-leaf source inventory", "section": "Observed Relations"}}
+        {"protocol": "eebus", "native_resource": "SPINE DHWCircuit entity", "provenance": {"repository": "helianthus-docs-ebus", "document": "docs/platform/schemas/leaf-promotion-captured-multi-leaf-registry-v1.json", "entry": "entity_slot=dhw_circuit"}}
       ],
       "identity_basis": {"class": "unresolved", "reason": "No published native anchor key is shared by the B524 hot-water group and the DHWCircuit entity, and no operator declaration is part of this contract."},
       "merge": "not_merged"
@@ -27,8 +27,8 @@
       "resource_kind_reason": null,
       "candidates": [
         {"protocol": "ebus", "native_resource": "B524 semantic root system group OP=0x02 GG=0x00 II=0x00", "provenance": {"repository": "helianthus-docs-ebus", "document": "architecture/fixtures/vaillant-semreg-thermal-map-v1.json"}},
-        {"protocol": "eebus", "native_resource": "SPINE TemperatureSensor entity with outsideAirTemperature scope", "provenance": {"repository": "helianthus-docs-eebus", "document": "eeBUS multi-leaf source inventory", "section": "Observed Relations"}},
-        {"protocol": "eebus", "native_resource": "SPINE DeviceInformation entity", "provenance": {"repository": "helianthus-docs-eebus", "document": "eeBUS multi-leaf source inventory", "section": "Observed Relations"}}
+        {"protocol": "eebus", "native_resource": "SPINE TemperatureSensor entity with outsideAirTemperature scope", "provenance": {"repository": "helianthus-docs-ebus", "document": "docs/platform/schemas/leaf-promotion-captured-multi-leaf-registry-v1.json", "entry": "entity_slot=outside_sensor"}},
+        {"protocol": "eebus", "native_resource": "SPINE DeviceInformation entity", "provenance": {"repository": "helianthus-docs-ebus", "document": "docs/platform/schemas/leaf-promotion-captured-multi-leaf-registry-v1.json", "entry": "entity_slot=device_information"}}
       ],
       "identity_basis": {"class": "unresolved", "reason": "No published native anchor key is shared by the B524 system group and either eeBUS entity, and no operator declaration is part of this contract."},
       "merge": "not_merged"
@@ -38,9 +38,9 @@
       "resource_kind": "resource.zone",
       "resource_kind_reason": null,
       "candidates": [
-        {"protocol": "ebus", "native_resource": "B524 zone instance OP=0x02 GG=0x03 behind this eBUS-typed row", "provenance": {"repository": "helianthus-docs-ebus", "document": "architecture/fixtures/structural-relation-candidates-v1.json", "entry": "SRC-SD15-controller-zone"}},
-        {"protocol": "eebus", "native_resource": "SPINE HVACRoom entity", "provenance": {"repository": "helianthus-docs-eebus", "document": "eeBUS multi-leaf source inventory", "section": "Observed Relations"}},
-        {"protocol": "eebus", "native_resource": "SPINE HeatingZone entity", "provenance": {"repository": "helianthus-docs-eebus", "document": "eeBUS multi-leaf source inventory", "section": "Observed Relations"}}
+        {"protocol": "ebus", "native_resource": "B524 zone instance OP=0x02 GG=0x03 II=0x00", "provenance": {"repository": "helianthus-docs-ebus", "document": "architecture/fixtures/structural-relation-candidates-v1.json", "entry": "SRC-SD15-controller-zone"}},
+        {"protocol": "eebus", "native_resource": "SPINE HVACRoom entity", "provenance": {"repository": "helianthus-docs-ebus", "document": "docs/platform/schemas/leaf-promotion-captured-multi-leaf-registry-v1.json", "entry": "entity_slot=zone_1_room"}},
+        {"protocol": "eebus", "native_resource": "SPINE HeatingZone entity", "provenance": {"repository": "helianthus-docs-ebus", "document": "docs/platform/schemas/leaf-promotion-captured-multi-leaf-registry-v1.json", "entry": "entity_slot=zone_1"}}
       ],
       "identity_basis": {"class": "unresolved", "reason": "The B524 zone instance and the eeBUS entities share no published native anchor key, the eeBUS slot labels are bundle-local, no relation joins the HVACRoom and HeatingZone entities, and no operator declaration is part of this contract."},
       "merge": "not_merged"
@@ -50,9 +50,9 @@
       "resource_kind": "resource.zone",
       "resource_kind_reason": null,
       "candidates": [
-        {"protocol": "ebus", "native_resource": "B524 zone instance OP=0x02 GG=0x03 behind this eBUS-typed row", "provenance": {"repository": "helianthus-docs-ebus", "document": "architecture/fixtures/structural-relation-candidates-v1.json", "entry": "SRC-SD15-controller-zone"}},
-        {"protocol": "eebus", "native_resource": "SPINE HVACRoom entity", "provenance": {"repository": "helianthus-docs-eebus", "document": "eeBUS multi-leaf source inventory", "section": "Observed Relations"}},
-        {"protocol": "eebus", "native_resource": "SPINE HeatingZone entity", "provenance": {"repository": "helianthus-docs-eebus", "document": "eeBUS multi-leaf source inventory", "section": "Observed Relations"}}
+        {"protocol": "ebus", "native_resource": "B524 zone instance OP=0x02 GG=0x03 II=0x01", "provenance": {"repository": "helianthus-docs-ebus", "document": "architecture/fixtures/structural-relation-candidates-v1.json", "entry": "SRC-SD15-controller-zone"}},
+        {"protocol": "eebus", "native_resource": "SPINE HVACRoom entity", "provenance": {"repository": "helianthus-docs-ebus", "document": "docs/platform/schemas/leaf-promotion-captured-multi-leaf-registry-v1.json", "entry": "entity_slot=zone_2_room"}},
+        {"protocol": "eebus", "native_resource": "SPINE HeatingZone entity", "provenance": {"repository": "helianthus-docs-ebus", "document": "docs/platform/schemas/leaf-promotion-captured-multi-leaf-registry-v1.json", "entry": "entity_slot=zone_2"}}
       ],
       "identity_basis": {"class": "unresolved", "reason": "The B524 zone instance and the eeBUS entities share no published native anchor key, the eeBUS slot labels are bundle-local, no relation joins the HVACRoom and HeatingZone entities, and no operator declaration is part of this contract."},
       "merge": "not_merged"
