@@ -98,6 +98,25 @@ circuit-zero entry in `boilerStatusRegisterDefinitionsForTier` is not an
 active source-equivalence rule. Its cleanup remains with the separately owned
 M13/M15 work; this contract changes no implementation branch.
 
+## Native attachment
+
+- **Native resource.** Pump status, operating hours and starts belong to the
+  circuit instance `OP=0x02 GG=0x02 II=circuit` of the controller's B524
+  namespace, whose instance number is local to that controller. They are not
+  values of a boiler, of a functional module or of the system group; circuit
+  instance zero is no boiler pump.
+- **Relation candidates.** The
+  [structural relation candidates](fixtures/structural-relation-candidates-v1.json)
+  offer `SRC-SD15-controller-circuit` (`relation_candidate`) and
+  `SRC-SD09-circuit-managing-module` (`configuration_only`, for one validated
+  tuple). Neither attachment carries a pump value to another native resource:
+  no row joins a circuit pump to a functional module's own pump or to a boiler.
+- **Element inventory.** No pump status, operating-time or starts fact has an
+  element inventory entry. `thermal.service.circuit` and
+  `thermal.capability.read.circuit` are `unknown` with the reason
+  `catalog.reason.no_fact_or_relation` and no plane. The common subject of
+  these values is not decided; this page proposes none.
+
 ## Proposed cutover: retain native, withhold universal facts
 
 The current Thermal `fields` table has no pump-specific status, operating-time
@@ -108,22 +127,22 @@ field definition.
 
 | Field group member | Proposed universal FactKey | Service and qualification disposition | Consumer loss |
 | --- | --- | --- | --- |
-| Pump status | Withheld; no field definition or FactKey allocated | Existing `thermal.service.circuit` and `thermal.dimension.circuit` can identify circuit service scope, but cannot supply a missing pump field. Native codebook and circuit-specific correlation remain unqualified. | A universal-only consumer cannot obtain pump active/idle; retain raw status plus the labeled legacy interpretation. |
-| Operating hours | Withheld; no field definition or FactKey allocated | Circuit service is a possible future owner, conditional on an owned field definition, qualified source binding, unit and reset semantics. | No universal pump runtime counter, delta or rate. Retain native total and its own receipt context. |
-| Starts | Withheld; no field definition or FactKey allocated | Same circuit ownership requirement, separately qualified count semantics and continuity. | No universal starts counter, delta or rate. Retain native count and its own receipt context. |
+| Pump status | Withheld; no field definition or FactKey allocated | No service placement: the value stays on its native circuit instance (see [Native attachment](#native-attachment)). Native codebook and circuit-specific correlation remain unqualified. | A universal-only consumer cannot obtain pump active/idle; retain raw status plus the labeled legacy interpretation. |
+| Operating hours | Withheld; no field definition or FactKey allocated | No service placement; a later mapping needs an owned field definition, a decided subject, qualified source binding, unit and reset semantics. | No universal pump runtime counter, delta or rate. Retain native total and its own receipt context. |
+| Starts | Withheld; no field definition or FactKey allocated | Same requirements, with separately qualified count semantics and continuity. | No universal starts counter, delta or rate. Retain native count and its own receipt context. |
 
 This is explicit withholding, not a proposal to add universal definitions.
 `thermal.capability.read.circuit` does not itself establish these facts. A
 future mapping must be owned and qualified before allocating a FactKey; do not
-invent field IDs, overload system status or attach an unsupported field to the
-circuit dimension. The eeBUS output binding stays driver-owned. G5 D1–D5/O8,
+invent field IDs, overload system status or attach an unsupported field to a
+service or dimension. The eeBUS output binding stays driver-owned. G5 D1–D5/O8,
 existing trust/admission checks and deterministic envelopes remain unchanged.
 This slice adds no principal, credential or permission gate; authentication
 and authorization remain 0.11 work, with no new authorization gate before 0.9.
 Reading these fields establishes no writable support or operation route.
 
 For each retained native member, the proposed binding preserves asset and
-circuit service identity separately from source identity, source epoch,
+native circuit instance identity separately from source identity, source epoch,
 driver generation, full selector, source/target and direction, raw response
 bytes, decoded value/type/unit, evidence reference, semantic revision,
 qualification and receipt context. Record family/firmware applicability when
@@ -188,7 +207,7 @@ framing. No example qualifies a native code or a device family.
 | Requested shared field has one qualified projected source; a second source lacks a pump-related candidate | Per-source absence cannot decide shared projection accounting | Keep the single projected `(kind,item_id)` result; attach source absence separately. Do not replace it with withheld or append a duplicate. |
 
 Source-specific equivalence is deliberately limited: the same admitted asset,
-circuit service, source, epoch, driver generation and complete native selector
+native circuit instance, source, epoch, driver generation and complete native selector
 (including source/target, PB/SB, opcode, operation type, group, instance,
 register and direction) with the same valid raw value preserves its native
 value, subject to independent freshness and qualification. Legacy

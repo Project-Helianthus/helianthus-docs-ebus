@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+- Each of the twelve thermal cutover and disposition pages under
+  `architecture/` has a "Native attachment" section. It names the native
+  resource each value belongs to (the system group of the B524 semantic root,
+  a zone or circuit instance, the native hot-water group, the solar circuit, a
+  device slot, or the boiler's B509 register space), the relation candidates
+  of `architecture/fixtures/structural-relation-candidates-v1.json` that reach
+  it or their absence, and the element inventory disposition of the target.
+  Where that disposition is `unknown`, or the value has no element inventory
+  entry, the page says that the common subject is not decided and proposes
+  none. No page places a pump on a circuit service, pressure or a system
+  value on the controller's system service, or a role or resource in
+  dimension text. `architecture/energy-merge.md` states the hand-off to the
+  common model: heating, cooling and hot-water usage, the reporting source
+  path and the lifetime window stay distinct; the `climate` merge, the
+  register-over-broadcast precedence and the two-slot form are losses of the
+  one `EnergyTotals` target.
 - The B524 thermal map fixture
   `architecture/fixtures/vaillant-semreg-thermal-map-v1.json` and the
   hot-water fixture `architecture/fixtures/dhw-setpoint-semreg-cutover-v1.json`

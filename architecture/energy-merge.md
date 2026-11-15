@@ -11,6 +11,55 @@ Energy data arrives via two paths:
 | **Broadcast** | Low | eBUS bus broadcast events (passive listening) |
 | **Register** | High | Direct B5/24 register reads from the regulator-family controller (active polling, 5-minute interval) |
 
+## Hand-off to the common model
+
+The merge store, its `climate` usage, the register-over-broadcast precedence
+and the public two-slot form below serve one target: the gateway's
+`EnergyTotals` public form, which GraphQL `energy_totals`, the MCP tool
+`ebus_v1_semantic_energy_totals_get`, the portal and the energy plane of the
+MCP semantic snapshot read through one provider call. They are that target's
+projection and its loss. They are not the form in which energy values reach
+the common model.
+
+For the common model, the hand-off keeps each energy observation as its native
+source states it:
+
+- **Usage.** Heating, cooling and hot water stay three usages.
+  **Hypothesis:** the
+  [B516 usage selector](../protocols/vaillant/ebus-vaillant-b516-energy.md)
+  states them as `3`, `5` and `4`. The native page lists this
+  interpretation as a candidate that is not confirmed on the wire, so the
+  mapping stays a hypothesis until native evidence promotes it. A value whose usage selector is `0` (sum or
+  unspecified) stays unspecified and is never split. A register total keeps
+  the usage its register states: the `Hc` registers name heating and the `Hwc`
+  registers hot water. Whether an `Hc` total includes cooling is **Unknown**,
+  and merging does not settle it.
+- **Reporting source path.** A broadcast value (B516, received passively) and
+  a register value (B524, read from the controller) are separate
+  observations, each with its own native selector, source and receipt. The
+  precedence of the [merge truth table](#merge-truth-table) selects a value for
+  the `EnergyTotals` target only; it never removes the other path's
+  observation from the hand-off.
+- **Window.** A lifetime total stays a lifetime window, period `all`, and a
+  dated value stays its absolute window; neither becomes a current-year or
+  previous-year position.
+
+The `EnergyTotals` target loses the following:
+
+| Merge step | Loss of the `EnergyTotals` target |
+| --- | --- |
+| `heating` and `cooling` both map to `climate` | The distinction between heating and cooling usage |
+| One stored point per window key, register over broadcast | The path and the observation that did not win; per-slot provenance names only the winner |
+| Lifetime total in the current yearly slot, previous slot and today held at zero | The lifetime window: the slot reads as a year value although it holds an all-time total, and the zeros are no observations |
+| Only the reference and previous windows are projected | Every other stored dated window |
+
+These are losses of that one target. The common subject of an energy value is
+not decided here; this page proposes none and places no quantity on a
+resource. Native values keep their native unit (kWh in the register reply) in
+evidence. The gateway's publication of energy values to the common model is
+follow-up work: this section states the hand-off contract and does not claim
+that the gateway implements it.
+
 ## Merge Key
 
 The merge store holds two kinds of window:
@@ -27,13 +76,15 @@ The merge store holds two kinds of window:
 Common to both kinds:
 
 - **Channel:** `gas`, `electricity`, `solar`
-- **Usage:** `hot_water`, `climate` (canonicalized from `heating`/`cooling`)
+- **Usage:** `hot_water`, `climate` (canonicalized from `heating`/`cooling` for the `EnergyTotals` target)
 
 No key holds a relative label. The B516 selector carries an absolute date and a dated key stores that date, so a stored key never goes stale when the calendar year or day changes. A lifetime key has no date to go stale.
 
-Usage canonicalization: both `heating` and `cooling` bus values map to the single `climate` series in the `EnergyChannel` struct. This prevents nondeterministic snapshot writes from separate keys targeting the same output field.
+Usage canonicalization belongs to the `EnergyTotals` target: both `heating` and `cooling` bus values map to the single `climate` series in the `EnergyChannel` struct, which has one output field for both. This prevents nondeterministic snapshot writes from separate keys targeting the same output field, and it costs that target the distinction between heating and cooling (see [Hand-off to the common model](#hand-off-to-the-common-model)).
 
 ### Public Two-Slot Projection
+
+The two-slot form belongs to the `EnergyTotals` target alone; see [Hand-off to the common model](#hand-off-to-the-common-model).
 
 The public yearly series keeps its two-slot shape (current year and previous year). It is a projection of the stored windows, rebuilt on each live accessor call against the current gateway clock; it is not fixed at merge time. A snapshot is also built after an accepted merge and cached by the provider, but live readers are not served that cached copy. Every live reader (the GraphQL query root, the live MCP tools, the portal and the semantic inventory) obtains the energy totals through one provider call that builds the snapshot from the store at that moment. Consequently a day, month or year boundary is reflected on the next live read even when no merge has happened since (all register reads failing, or a quiet bus), and the only thing that ages without a merge is the freshness metadata. Two surfaces are frozen by design and do not recompute: a captured MCP snapshot returns the energy totals as projected at capture time for the snapshot's lifetime (five-minute TTL), so a snapshot captured before a boundary keeps the pre-boundary projection until it expires; and a GraphQL subscription event (`energy`, `energy_update`) carries the projection computed when the event was built. Consumers of those two surfaces read the projection as of the capture or event time. Two rules apply:
 
@@ -44,7 +95,7 @@ The public yearly series keeps its two-slot shape (current year and previous yea
 | dated month, `(year, month)` equals the reference month | current month position |
 | dated month, `(year, month)` equals the month before the reference month (December of the previous year when the reference month is January) | previous month position |
 | dated day equal to the reference date | today value |
-| lifetime total | compatibility mapping: current slot; the previous slot and today are held at zero |
+| lifetime total | compatibility mapping, a loss of the `EnergyTotals` target: current slot; the previous slot and today are held at zero |
 
 The public monthly series has the same two-slot shape (previous month and current month). Lifetime totals have no monthly mapping. The reference-date rule applies to dated values and the compatibility mapping applies to lifetime values. The lifetime mapping does not depend on the reference year, so it holds unchanged across a year rollover.
 
@@ -184,7 +235,7 @@ These four addresses are the lifetime (all-time) reads. Each acquisition issues 
 
 ### Merge Key Mapping
 
-Each of the four lifetime register values is a cumulative all-time total, so it is written to the lifetime window of its `(channel, usage)` and not to a dated year key. The projection maps the lifetime window to the current yearly slot and holds the previous slot and today at zero (see [Public Two-Slot Projection](#public-two-slot-projection)). Because the total already includes those periods, the zeros also stop a broadcast value from being counted twice in the public series. The ULG sentinel `0xFFFFFFFF` is rejected as invalid.
+Each of the four lifetime register values is a cumulative all-time total, so it is written to the lifetime window of its `(channel, usage)` and not to a dated year key. The projection maps the lifetime window to the current yearly slot and holds the previous slot and today at zero (see [Public Two-Slot Projection](#public-two-slot-projection)); this mapping is a loss of the `EnergyTotals` target, and the hand-off to the common model keeps the lifetime window. Because the total already includes those periods, the zeros also stop a broadcast value from being counted twice in the public series. The ULG sentinel `0xFFFFFFFF` is rejected as invalid.
 
 Each register acquisition captures one reference time and derives every dated key of that acquisition from it. If the reference clock crosses a month or year boundary while the acquisition is running, the replies read after the crossing are discarded (their relative windows would be mislabelled) and the acquisition stops; the next poll acquires again.
 

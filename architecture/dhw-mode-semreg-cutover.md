@@ -69,6 +69,28 @@ other → `UNKNOWN(raw)`. These differ from the DHW helper's 1 → `auto`,
 boiler mirror is not an independent boiler-source fact. Preserve source and
 raw code; do not normalize the two surfaces into an asserted equivalence.
 
+## Native attachment
+
+- **Native resource.** Configured mode, special-function mode and state, and
+  the pump-active registers belong to the controller's native hot-water group
+  `OP=0x02 GG=0x01 II=0x00`, the singleton instance the register map
+  establishes. `OP=0x06 GG=0x01` is a different native resource (primary heat
+  sources) and the circuit group's virtual native-water entry at II09 is a
+  third; neither is this group.
+- **Relation candidates.** None. The
+  [structural relation candidates](fixtures/structural-relation-candidates-v1.json)
+  list no attachment of the native hot-water group. `SRC-SD15-module-cylinder`
+  attaches a cylinder instance of `OP=0x02 GG=0x05` to a functional module by
+  configuration only; it does not reach this group.
+- **Element inventory.** No hot-water mode, special-function, time-program
+  membership or boost fact has an element inventory entry.
+  `thermal.service.dhw` and `thermal.capability.read.dhw` are `unknown` with
+  the reason `catalog.reason.no_fact_or_relation` and no plane.
+  `thermal.mode.system`, `thermal.action.state` and `thermal.status.operation`
+  are `member` facts whose subject is a thermal system; none of them is a
+  target of these values. The common subject of these values is not decided;
+  this page proposes none.
+
 ## Proposed cutover and explicit withholding
 
 The current Thermal `fields` table has no dedicated DHW mode,
@@ -84,15 +106,15 @@ whose declared dimension is system or zone.
 
 | Requested meaning | Proposed FactKey / service / qualification | Consumer loss disposition |
 | --- | --- | --- |
-| DHW configured mode, including valid off | FactKey withheld: no dedicated field. A separately qualified `thermal.service.dhw` may identify the service using `thermal.dimension.dhw`; this does not supply a mode field. | Retain exact raw mode and legacy source label; normalized DHW mode is unrepresentable in Thermal. |
+| DHW configured mode, including valid off | FactKey withheld: no dedicated field. The value stays on the native hot-water group (see [Native attachment](#native-attachment)); no service placement is proposed. | Retain exact raw mode and legacy source label; normalized DHW mode is unrepresentable in Thermal. |
 | Native special-function mode or state | FactKey withheld: no matching field, with independent qualification for `0x000D` and `0x000F`. | Retain raw code, width and selector; lose normalized preset/load/state if consumer accepts only Thermal facts. |
 | Membership or boost | FactKey withheld: no matching field and no qualified native derivation here. | Unknown membership/boost must remain unknown, never inferred false. |
 | System mode, system action or system active/idle requested from these inputs | Withhold these candidates for `thermal.mode.system`, `thermal.action.state`, `thermal.status.operation`; no source-specific equivalence is established. | A native DHW off or load candidate cannot supply system off, action DHW, or operation active/idle. |
-| DHW read service metadata | Candidate existing definitions: `thermal.service.dhw`, service FactKey dimension `thermal.dimension.dhw=<binding-owned DHW identity>`, and `thermal.capability.read.dhw`. `Metadata` declares the capability's service. No field FactKey or operation is added. | Expose only metadata backed by an independently qualified, admitted read binding; it advertises neither dedicated mode coverage nor the entire service's possible observations. Withhold runtime binding/capability admission when that evidence is absent. Definition inventory alone is not a bound service. |
+| DHW read service metadata | No service binding: `thermal.service.dhw` and `thermal.capability.read.dhw` are `unknown` in the element inventory, and no dimension value is assigned to the hot-water group. No field FactKey or operation is added. | Expose only metadata backed by an independently qualified, admitted read binding; it advertises neither dedicated mode coverage nor the entire service's possible observations. Withhold runtime binding/capability admission when that evidence is absent. Definition inventory alone is not a bound service. |
 
-The service identity must retain asset, service, source, source epoch, driver
-generation, semantic revision, qualification evidence and its own native DHW
-identity. Do not derive it from a display ID or assume `II=0x00` across sources
+The retained observation must keep asset, native hot-water group, source,
+source epoch, driver generation, semantic revision, qualification evidence
+and its own native DHW identity. Do not derive it from a display ID or assume `II=0x00` across sources
 means the same asset. Record the actual request initiator and controller target,
 request/value directions, PB/SB, opcode/group/instance/register, original reply
 bytes and width, decoder identity, family/applicability context, evidence
