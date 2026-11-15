@@ -145,6 +145,13 @@ def test_row_identifiers_are_unique() -> None:
     assert errors_after(lambda document: row(document, MANAGING).__setitem__("id", ZONE_ROOM))
 
 
+def test_relayed_identity_identifiers_are_unique() -> None:
+    def clash(document: dict) -> None:
+        row(document, MODULE_SLOT)["id"] = "SRI-heat-source-slots"
+
+    assert any("repeat" in error for error in errors_after(clash))
+
+
 def test_zone_to_circuit_stays_unresolved_with_both_native_statements() -> None:
     selectors = {item["selector"] for item in row(load_fixture(), ZONE_CIRCUIT)["native_statements"]}
     assert VALIDATOR.ZONE_CIRCUIT_SELECTORS <= selectors

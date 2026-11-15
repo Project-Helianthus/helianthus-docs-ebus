@@ -356,6 +356,8 @@ python3 -m pytest -q tests/test_ak08_b512_feedback_fallback.py
 echo "==> check B509/B524 passive watch-policy documentation contract"
 python3 -m pytest -q tests/test_watch_policy_contract.py
 python3 -m pytest -q tests/test_b524_operation_docs.py
+python3 scripts/validate_structural_relation_candidates.py
+python3 -m pytest -q tests/test_structural_relation_candidates.py
 python3 -m pytest -q tests/test_am04_b524_dhw_ventilation_scalars.py
 python3 -m pytest -q tests/test_b524_register_name_correspondence.py
 python3 -m pytest -q tests/test_b524_name_bridge_contract.py

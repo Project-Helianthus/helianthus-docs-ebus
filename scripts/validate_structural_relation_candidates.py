@@ -318,16 +318,16 @@ def check_identity_coverage(rows: list, errors: list, pages: dict) -> None:
         errors.append(f"relayed_identity: groups {sorted(listed)} must cover SD-10 groups {expected} once")
 
 
-def check_coverage(rows: list, errors: list, pages: dict) -> None:
+def check_coverage(rows: list, errors: list, pages: dict, identity: list) -> None:
     named = {item for row in rows if isinstance(row, dict) for item in row.get("decisions", []) or []}
     for decision in REQUIRED_DECISIONS:
         if decision not in named:
             errors.append(f"coverage: no attachment row for {decision}")
         if decision.startswith("SD-") and f"## B524-{decision} " not in pages[DECISIONS_PAGE.as_posix()]:
             errors.append(f"coverage: {decision} is not a heading of the decision page")
-    ids = [row.get("id") for row in rows if isinstance(row, dict)]
+    ids = [row.get("id") for row in rows + identity if isinstance(row, dict)]
     if len(ids) != len(set(map(str, ids))):
-        errors.append("attachments: row identifiers repeat")
+        errors.append("fixture: row identifiers repeat across attachments and relayed_identity")
 
 
 def check_pages(pages: dict, errors: list) -> None:
@@ -381,7 +381,7 @@ def validate(document, pages: dict) -> list:
     for index, row in enumerate(identity):
         check_identity_row(row, index, errors)
     check_zone_to_circuit(rows, errors)
-    check_coverage(rows, errors, pages)
+    check_coverage(rows, errors, pages, identity)
     check_identity_coverage(identity, errors, pages)
     check_citations(rows + identity, errors, pages)
     check_pages(pages, errors)
