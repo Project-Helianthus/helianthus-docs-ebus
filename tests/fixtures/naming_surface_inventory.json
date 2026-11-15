@@ -9005,186 +9005,186 @@
       "implementation_source": "mcp/eebus_v1.go"
     },
     {
-      "name": "helianthus_experimental_leaf_promotion_capture",
+      "name": "helianthus_runtime_get",
+      "surface": "operator",
+      "registration_profile": "operator_composed",
+      "availability_condition": "all composed ordinary and operator providers present",
+      "implementation_source": "mcp/runtime_control.go"
+    },
+    {
+      "name": "helianthus_runtime_get",
+      "surface": "ordinary",
+      "registration_profile": "ordinary_composed",
+      "availability_condition": "all composed ordinary optional providers present",
+      "implementation_source": "mcp/runtime_control.go"
+    },
+    {
+      "name": "helianthus_runtime_get",
+      "surface": "ordinary",
+      "registration_profile": "runtime_disabled",
+      "availability_condition": "runtime service absent; eeBUS absent",
+      "implementation_source": "mcp/runtime_control.go"
+    },
+    {
+      "name": "helianthus_runtime_get",
+      "surface": "ordinary",
+      "registration_profile": "runtime_enabled",
+      "availability_condition": "runtime service present; eeBUS absent",
+      "implementation_source": "mcp/runtime_control.go"
+    },
+    {
+      "name": "helianthus_runtime_list",
+      "surface": "operator",
+      "registration_profile": "operator_composed",
+      "availability_condition": "all composed ordinary and operator providers present",
+      "implementation_source": "mcp/runtime_control.go"
+    },
+    {
+      "name": "helianthus_runtime_list",
+      "surface": "ordinary",
+      "registration_profile": "ordinary_composed",
+      "availability_condition": "all composed ordinary optional providers present",
+      "implementation_source": "mcp/runtime_control.go"
+    },
+    {
+      "name": "helianthus_runtime_list",
+      "surface": "ordinary",
+      "registration_profile": "runtime_disabled",
+      "availability_condition": "runtime service absent; eeBUS absent",
+      "implementation_source": "mcp/runtime_control.go"
+    },
+    {
+      "name": "helianthus_runtime_list",
+      "surface": "ordinary",
+      "registration_profile": "runtime_enabled",
+      "availability_condition": "runtime service present; eeBUS absent",
+      "implementation_source": "mcp/runtime_control.go"
+    },
+    {
+      "name": "helianthus_runtime_restart",
+      "surface": "operator",
+      "registration_profile": "operator_composed",
+      "availability_condition": "all composed ordinary and operator providers present",
+      "implementation_source": "mcp/runtime_control.go"
+    },
+    {
+      "name": "helianthus_runtime_restart",
+      "surface": "ordinary",
+      "registration_profile": "ordinary_composed",
+      "availability_condition": "all composed ordinary optional providers present",
+      "implementation_source": "mcp/runtime_control.go"
+    },
+    {
+      "name": "helianthus_runtime_restart",
+      "surface": "ordinary",
+      "registration_profile": "runtime_disabled",
+      "availability_condition": "runtime service absent; eeBUS absent",
+      "implementation_source": "mcp/runtime_control.go"
+    },
+    {
+      "name": "helianthus_runtime_restart",
+      "surface": "ordinary",
+      "registration_profile": "runtime_enabled",
+      "availability_condition": "runtime service present; eeBUS absent",
+      "implementation_source": "mcp/runtime_control.go"
+    },
+    {
+      "name": "helianthus_runtime_start",
+      "surface": "operator",
+      "registration_profile": "operator_composed",
+      "availability_condition": "all composed ordinary and operator providers present",
+      "implementation_source": "mcp/runtime_control.go"
+    },
+    {
+      "name": "helianthus_runtime_start",
+      "surface": "ordinary",
+      "registration_profile": "ordinary_composed",
+      "availability_condition": "all composed ordinary optional providers present",
+      "implementation_source": "mcp/runtime_control.go"
+    },
+    {
+      "name": "helianthus_runtime_start",
+      "surface": "ordinary",
+      "registration_profile": "runtime_disabled",
+      "availability_condition": "runtime service absent; eeBUS absent",
+      "implementation_source": "mcp/runtime_control.go"
+    },
+    {
+      "name": "helianthus_runtime_start",
+      "surface": "ordinary",
+      "registration_profile": "runtime_enabled",
+      "availability_condition": "runtime service present; eeBUS absent",
+      "implementation_source": "mcp/runtime_control.go"
+    },
+    {
+      "name": "helianthus_runtime_stop",
+      "surface": "operator",
+      "registration_profile": "operator_composed",
+      "availability_condition": "all composed ordinary and operator providers present",
+      "implementation_source": "mcp/runtime_control.go"
+    },
+    {
+      "name": "helianthus_runtime_stop",
+      "surface": "ordinary",
+      "registration_profile": "ordinary_composed",
+      "availability_condition": "all composed ordinary optional providers present",
+      "implementation_source": "mcp/runtime_control.go"
+    },
+    {
+      "name": "helianthus_runtime_stop",
+      "surface": "ordinary",
+      "registration_profile": "runtime_disabled",
+      "availability_condition": "runtime service absent; eeBUS absent",
+      "implementation_source": "mcp/runtime_control.go"
+    },
+    {
+      "name": "helianthus_runtime_stop",
+      "surface": "ordinary",
+      "registration_profile": "runtime_enabled",
+      "availability_condition": "runtime service present; eeBUS absent",
+      "implementation_source": "mcp/runtime_control.go"
+    },
+    {
+      "name": "helianthus_v1_leaf_promotion_capture",
       "surface": "operator",
       "registration_profile": "operator_composed",
       "availability_condition": "all composed ordinary and operator providers present",
       "implementation_source": "mcp/leaf_promotion_capture.go"
     },
     {
-      "name": "helianthus_experimental_leaf_promotion_capture",
+      "name": "helianthus_v1_leaf_promotion_capture",
       "surface": "operator",
       "registration_profile": "operator_enabled",
       "availability_condition": "eeBUS provider, command router and capture providers present",
       "implementation_source": "mcp/leaf_promotion_capture.go"
     },
     {
-      "name": "helianthus_experimental_leaf_promotion_capture",
+      "name": "helianthus_v1_leaf_promotion_capture",
       "surface": "operator",
       "registration_profile": "operator_promotion_only",
       "availability_condition": "leaf promotion capture provider present; eeBUS provider absent",
       "implementation_source": "mcp/leaf_promotion_capture.go"
     },
     {
-      "name": "helianthus_experimental_m8_source_state_get",
+      "name": "helianthus_v1_source_state_get",
       "surface": "operator",
       "registration_profile": "operator_composed",
       "availability_condition": "all composed ordinary and operator providers present",
       "implementation_source": "mcp/m8_source_state.go"
     },
     {
-      "name": "helianthus_experimental_m8_source_state_get",
+      "name": "helianthus_v1_source_state_get",
       "surface": "operator",
       "registration_profile": "operator_eebus_only",
       "availability_condition": "eeBUS provider present; command and capture providers absent",
       "implementation_source": "mcp/m8_source_state.go"
     },
     {
-      "name": "helianthus_experimental_m8_source_state_get",
+      "name": "helianthus_v1_source_state_get",
       "surface": "operator",
       "registration_profile": "operator_enabled",
       "availability_condition": "eeBUS provider, command router and capture providers present",
       "implementation_source": "mcp/m8_source_state.go"
-    },
-    {
-      "name": "helianthus_runtime_get",
-      "surface": "operator",
-      "registration_profile": "operator_composed",
-      "availability_condition": "all composed ordinary and operator providers present",
-      "implementation_source": "mcp/runtime_control.go"
-    },
-    {
-      "name": "helianthus_runtime_get",
-      "surface": "ordinary",
-      "registration_profile": "ordinary_composed",
-      "availability_condition": "all composed ordinary optional providers present",
-      "implementation_source": "mcp/runtime_control.go"
-    },
-    {
-      "name": "helianthus_runtime_get",
-      "surface": "ordinary",
-      "registration_profile": "runtime_disabled",
-      "availability_condition": "runtime service absent; eeBUS absent",
-      "implementation_source": "mcp/runtime_control.go"
-    },
-    {
-      "name": "helianthus_runtime_get",
-      "surface": "ordinary",
-      "registration_profile": "runtime_enabled",
-      "availability_condition": "runtime service present; eeBUS absent",
-      "implementation_source": "mcp/runtime_control.go"
-    },
-    {
-      "name": "helianthus_runtime_list",
-      "surface": "operator",
-      "registration_profile": "operator_composed",
-      "availability_condition": "all composed ordinary and operator providers present",
-      "implementation_source": "mcp/runtime_control.go"
-    },
-    {
-      "name": "helianthus_runtime_list",
-      "surface": "ordinary",
-      "registration_profile": "ordinary_composed",
-      "availability_condition": "all composed ordinary optional providers present",
-      "implementation_source": "mcp/runtime_control.go"
-    },
-    {
-      "name": "helianthus_runtime_list",
-      "surface": "ordinary",
-      "registration_profile": "runtime_disabled",
-      "availability_condition": "runtime service absent; eeBUS absent",
-      "implementation_source": "mcp/runtime_control.go"
-    },
-    {
-      "name": "helianthus_runtime_list",
-      "surface": "ordinary",
-      "registration_profile": "runtime_enabled",
-      "availability_condition": "runtime service present; eeBUS absent",
-      "implementation_source": "mcp/runtime_control.go"
-    },
-    {
-      "name": "helianthus_runtime_restart",
-      "surface": "operator",
-      "registration_profile": "operator_composed",
-      "availability_condition": "all composed ordinary and operator providers present",
-      "implementation_source": "mcp/runtime_control.go"
-    },
-    {
-      "name": "helianthus_runtime_restart",
-      "surface": "ordinary",
-      "registration_profile": "ordinary_composed",
-      "availability_condition": "all composed ordinary optional providers present",
-      "implementation_source": "mcp/runtime_control.go"
-    },
-    {
-      "name": "helianthus_runtime_restart",
-      "surface": "ordinary",
-      "registration_profile": "runtime_disabled",
-      "availability_condition": "runtime service absent; eeBUS absent",
-      "implementation_source": "mcp/runtime_control.go"
-    },
-    {
-      "name": "helianthus_runtime_restart",
-      "surface": "ordinary",
-      "registration_profile": "runtime_enabled",
-      "availability_condition": "runtime service present; eeBUS absent",
-      "implementation_source": "mcp/runtime_control.go"
-    },
-    {
-      "name": "helianthus_runtime_start",
-      "surface": "operator",
-      "registration_profile": "operator_composed",
-      "availability_condition": "all composed ordinary and operator providers present",
-      "implementation_source": "mcp/runtime_control.go"
-    },
-    {
-      "name": "helianthus_runtime_start",
-      "surface": "ordinary",
-      "registration_profile": "ordinary_composed",
-      "availability_condition": "all composed ordinary optional providers present",
-      "implementation_source": "mcp/runtime_control.go"
-    },
-    {
-      "name": "helianthus_runtime_start",
-      "surface": "ordinary",
-      "registration_profile": "runtime_disabled",
-      "availability_condition": "runtime service absent; eeBUS absent",
-      "implementation_source": "mcp/runtime_control.go"
-    },
-    {
-      "name": "helianthus_runtime_start",
-      "surface": "ordinary",
-      "registration_profile": "runtime_enabled",
-      "availability_condition": "runtime service present; eeBUS absent",
-      "implementation_source": "mcp/runtime_control.go"
-    },
-    {
-      "name": "helianthus_runtime_stop",
-      "surface": "operator",
-      "registration_profile": "operator_composed",
-      "availability_condition": "all composed ordinary and operator providers present",
-      "implementation_source": "mcp/runtime_control.go"
-    },
-    {
-      "name": "helianthus_runtime_stop",
-      "surface": "ordinary",
-      "registration_profile": "ordinary_composed",
-      "availability_condition": "all composed ordinary optional providers present",
-      "implementation_source": "mcp/runtime_control.go"
-    },
-    {
-      "name": "helianthus_runtime_stop",
-      "surface": "ordinary",
-      "registration_profile": "runtime_disabled",
-      "availability_condition": "runtime service absent; eeBUS absent",
-      "implementation_source": "mcp/runtime_control.go"
-    },
-    {
-      "name": "helianthus_runtime_stop",
-      "surface": "ordinary",
-      "registration_profile": "runtime_enabled",
-      "availability_condition": "runtime service present; eeBUS absent",
-      "implementation_source": "mcp/runtime_control.go"
     },
     {
       "name": "helianthus_v1_synchronized_evidence_capture",
@@ -9951,6 +9951,12 @@
       "labels": [
         "subclass"
       ],
+      "constant_unit": "none"
+    },
+    {
+      "name": "ebus_adaptermux_active_arbitration_held",
+      "type": "gauge",
+      "labels": [],
       "constant_unit": "none"
     },
     {
