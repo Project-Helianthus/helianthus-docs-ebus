@@ -2,6 +2,36 @@
 
 ## Unreleased
 
+- The SunSpec model-chain contract defers canonical field identity to the
+  common element inventory in docs-semantic and keeps native model and point
+  names only: the required facts of the three-phase monitoring profile are
+  profile keys with their native point, not field identifiers. A new section
+  defines a multi-device chain and states, for its inverter, meter, storage
+  control and per-device repeat occurrences, the resource kind each would
+  describe and whether it is attributed. Only the inverter of a single-device
+  chain is attributed; the semantic values of a multi-device chain are withheld
+  with the reason `MULTI_DEVICE_UNATTRIBUTED`, while the native provider and
+  native surface proceed. The sentence pins of
+  `tests/test_sunspec_model_chain_contract.py` move in place. Follow-up: the
+  gateway's SunSpec publication and its golden envelopes.
+- The Modbus multi-endpoint runtime page keeps the asset as the publication
+  scope and follows the common identity rule in docs-semantic for what it
+  publishes: one resource per unit, anchored on an operator label until the
+  common element inventory lists an identification scheme, with the native
+  child key as the documented native token. The pack class token and the routed
+  unit are a selector and an address, never identity; a hybrid inverter is one
+  asset and one resource; a replaced unit is a new equipment resource; one
+  device reached through two labels has one identity or is withheld as
+  `ASSET_CONFLICT`. The per-class digest rule for asset identifiers is removed.
+  The Huawei candidate evidence page cites the stable child key of the native
+  gateway contract in docs-modbus as the one native identity evidence of a
+  child and drops the serial-digest allowance. The sentence pins of
+  `tests/test_modbus_v1_addon_runtime_contract.py` and
+  `tests/test_modbus_vendor_evidence_v1.py` move in place. Follow-ups: the
+  gateway allocator and its identity vectors in
+  Project-Helianthus/helianthus-ebusgateway#1539, the mapping gate statements
+  of the Huawei gateway families, and the `esn_digest` member of
+  `docs/platform/manifests/modbus-vendor-evidence-v1.json`.
 - Plane, projection and lens wording states its native meaning. The GraphQL,
   MCP and Portal API pages, the architectural decisions, the registry catalog
   capability page, the B524 mapping page (now titled "B524 MCP Semantic Plane

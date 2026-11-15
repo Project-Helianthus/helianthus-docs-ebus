@@ -127,10 +127,15 @@ PDU: 2B 0E 03 87
 
 Traversal must bound total deadline, pages, objects, and bytes; track visited
 cursors; reject loops, duplicate objects, duplicate addresses, count mismatch,
-and malformed ASCII. Device IDs must be in `0..247`. ESN is never public; a
-private digest may participate in stable identity only if identity policy allows
-it. Parent-child provenance includes gateway identity, inventory generation,
-child routing address, model/product type, source revision, and raw evidence.
+and malformed ASCII. Device IDs must be in `0..247`. ESN is never public and
+never enters identity in any form, a digest included. The one native identity
+evidence of a child is the stable child key that the
+[native gateway contract](https://github.com/Project-Helianthus/helianthus-docs-modbus/blob/main/protocols/huawei/gateway-readonly-v1.md)
+defines. Identity of a published child follows the
+[common identity rule](https://github.com/Project-Helianthus/helianthus-docs-semantic/blob/main/api/v1/graph.md#63-allocation-identification-schemes-and-what-can-be-detected):
+a device ID is a routing address and never identity. Parent-child provenance
+includes gateway identity, inventory generation, child routing address,
+model/product type, source revision, and raw evidence.
 Disappearance/reappearance changes lifecycle state without silently reusing a
 different child's identity.
 

@@ -121,7 +121,8 @@ def test_three_phase_capability_equivalence_is_semantic_and_fail_closed() -> Non
     assert CAPABILITY_ID in capability
     assert re.search(r"Model `103` or Model `113`", capability)
     assert "complete,\nvalid minimum fact set" in capability
-    assert "same canonical field IDs" in capability
+    assert "same profile keys" in capability
+    assert "canonical field ID" not in capability
     assert "units" in capability
     assert "three-phase topology" in capability
     assert "distinct decoder keys" in capability
@@ -197,3 +198,296 @@ def test_existing_fronius_material_is_legacy_only_and_points_to_registry_selecti
     assert package_pin == FRONIUS_PACKAGE_SHA256
     assert FRONIUS_PACKAGE_SHA256 in evidence
     assert FRONIUS_PACKAGE_SHA256 in text(CHAIN_CONTRACT)
+
+
+ELEMENT_INVENTORY = (
+    "https://github.com/Project-Helianthus/helianthus-docs-semantic/blob/main/"
+    "api/v1/graph.md#10-element-catalog"
+)
+DEFERRAL = (
+    "Canonical field identity belongs to the common element inventory; this "
+    "page keeps native model and point names only."
+)
+# Profile key -> (unit, native point in Models 103 and 113).
+PROFILE_POINTS = {
+    "inverter.ac.current.total": ("A", "A"),
+    "inverter.ac.current.phase_a": ("A", "AphA"),
+    "inverter.ac.current.phase_b": ("A", "AphB"),
+    "inverter.ac.current.phase_c": ("A", "AphC"),
+    "inverter.ac.voltage.phase_a": ("V", "PhVphA"),
+    "inverter.ac.voltage.phase_b": ("V", "PhVphB"),
+    "inverter.ac.voltage.phase_c": ("V", "PhVphC"),
+    "inverter.ac.power.active": ("W", "W"),
+    "inverter.ac.frequency": ("Hz", "Hz"),
+    "inverter.ac.energy_lifetime": ("Wh", "WH"),
+    "inverter.temperature.cabinet": ("C", "TmpCab"),
+    "inverter.operating_state": ("none", "St"),
+    "inverter.events.1": ("none", "Evt1"),
+    "inverter.events.2": ("none", "Evt2"),
+}
+ATTRIBUTION_HEADING = "## Resource attribution of a multi-device chain"
+ATTRIBUTION_HEADER = (
+    "| Occurrence class | Native models | Resource kind it would describe "
+    "| Mapping grade | Mapping source | State | Reason |"
+)
+WITHHELD_REASON = "MULTI_DEVICE_UNATTRIBUTED"
+# Occurrence class -> (native model tokens, with the length where the page
+# pins one, resource kinds, state).
+# Required clauses of each reason are listed in REASON_CLAUSES.
+# Mapping grade per occurrence class, and the artifacts every source cites.
+EXPECTED_GRADE = {
+    "Inverter": "Proven",
+    "Meter": "Hypothesis",
+    "Storage control": "Hypothesis",
+    "Per-device repeat": "Unknown",
+}
+SOURCE_CLAUSES = {
+    "Inverter": ("`sunspec/models` pin", "element inventory of docs-semantic"),
+    "Meter": ("`sunspec/models` pin", "element inventory of docs-semantic"),
+    "Storage control": ("`sunspec/models` pin", "element inventory of docs-semantic"),
+    "Per-device repeat": ("no exact section", "element inventory names no resource kind"),
+}
+EXPECTED_ATTRIBUTION = {
+    "Inverter": (
+        ("101", "102", "103", "111", "112", "113"),
+        ("resource.inverter", "resource.phase"),
+        "attributed",
+    ),
+    "Meter": (
+        ("201", "202", "203", "204", "211", "212", "213", "214"),
+        ("resource.meter",),
+        "unsupported",
+    ),
+    "Storage control": (
+        ("124/L24",),
+        ("resource.battery", "resource.storage_system"),
+        "unsupported",
+    ),
+    "Per-device repeat": (
+        ("1",),
+        ("resource.inverter", "resource.meter", "resource.equipment"),
+        "unsupported",
+    ),
+}
+REASON_CLAUSES = {
+    "Inverter": (
+        "Attributed only in a single-device chain",
+        "one-resource-per-unit rule",
+        "contains its phases by position",
+    ),
+    "Meter": (
+        "No decoder of this page admits a meter model",
+        "carries no identity of a meter",
+        "configured `measures` relation that is not defined for this family",
+    ),
+    "Storage control": (
+        "carries no identity of a battery",
+        "configured relation that is not defined for this family",
+        "outside the capability profile",
+    ),
+    "Per-device repeat": (
+        "position of a segment in the chain is an address, not an identity",
+        "lists no identification scheme for a device of a chain",
+    ),
+}
+
+
+def normalize(value: str) -> str:
+    return " ".join(value.split())
+
+
+def attribution_section(contract: str) -> str:
+    start = contract.index(ATTRIBUTION_HEADING)
+    end = contract.index("\n## ", start + len(ATTRIBUTION_HEADING))
+    return contract[start:end]
+
+
+def attribution_rows(section: str) -> list[list[str]]:
+    lines = section.splitlines()
+    start = lines.index(ATTRIBUTION_HEADER)
+    rows = []
+    for line in lines[start + 2 :]:
+        if not line.startswith("|"):
+            break
+        rows.append([cell.strip() for cell in line.strip("|").split("|")])
+    return rows
+
+
+def row_errors(row: list[str]) -> list[str]:
+    if len(row) != 7:
+        return [f"row width {row}"]
+    occurrence, models, kinds, grade, source, state, reason = row
+    if occurrence not in EXPECTED_ATTRIBUTION:
+        return []
+    want_models, want_kinds, want_state = EXPECTED_ATTRIBUTION[occurrence]
+    errors = []
+    got_models = tuple(re.findall(r"`(\d+(?:/L\d+)?)`", models))
+    if got_models != want_models:
+        errors.append(f"{occurrence}: models {got_models}")
+    got_kinds = tuple(re.findall(r"`(resource\.[a-z_]+)`", kinds))
+    if got_kinds != want_kinds:
+        errors.append(f"{occurrence}: kinds {got_kinds}")
+    if state != want_state:
+        errors.append(f"{occurrence}: state {state!r}")
+    if grade != EXPECTED_GRADE[occurrence]:
+        errors.append(f"{occurrence}: grade {grade!r}")
+    errors += [
+        f"{occurrence}: source lacks {clause!r}"
+        for clause in SOURCE_CLAUSES[occurrence]
+        if clause not in normalize(source)
+    ]
+    errors += [
+        f"{occurrence}: reason lacks {clause!r}"
+        for clause in REASON_CLAUSES[occurrence]
+        if clause not in normalize(reason)
+    ]
+    return errors
+
+
+def attribution_errors(contract: str) -> list[str]:
+    """Return every way the attribution table departs from the contract."""
+    try:
+        rows = attribution_rows(attribution_section(contract))
+    except ValueError as error:
+        return [f"attribution table missing: {error}"]
+    errors = []
+    classes = [row[0] for row in rows]
+    if classes != list(EXPECTED_ATTRIBUTION):
+        errors.append(f"occurrence classes {classes}")
+    for row in rows:
+        errors += row_errors(row)
+    return errors
+
+
+def profile_point_errors(capability: str) -> list[str]:
+    """Return every way the profile-key table departs from the frozen rows."""
+    rows = re.findall(r"^\| `([^`]+)` \| `([^`]+)` \| `([^`]+)` \|$", capability, re.MULTILINE)
+    got = {key: (unit, point) for key, unit, point in rows}
+    if len(got) != len(rows):
+        return [f"duplicate profile keys {rows}"]
+    if got == PROFILE_POINTS:
+        return []
+    return [
+        f"{key}: {got.get(key)} != {PROFILE_POINTS.get(key)}"
+        for key in sorted(set(got) | set(PROFILE_POINTS))
+        if got.get(key) != PROFILE_POINTS.get(key)
+    ]
+
+
+def capability_section(contract: str) -> str:
+    return contract[contract.index("## Capability Profile") : contract.index("## Vendor Flavor")]
+
+
+def test_field_identity_is_deferred_to_the_common_element_inventory() -> None:
+    contract = text(CHAIN_CONTRACT)
+    normalized = normalize(contract)
+    capability = capability_section(contract)
+
+    assert DEFERRAL in normalized
+    assert ELEMENT_INVENTORY in contract
+    assert "Canonical field ID" not in contract
+    assert "| Profile key | Unit | Native point in Models 103 and 113 |" in capability
+    assert profile_point_errors(capability) == []
+    for required in (
+        "A profile key names a required fact inside this capability profile only",
+        "it is not a field identifier",
+        "a phase is a resource of its own, a component of its inverter",
+    ):
+        assert required in normalized
+
+
+def test_multi_device_chain_attribution_is_stated_per_occurrence_class() -> None:
+    contract = text(CHAIN_CONTRACT)
+    assert attribution_errors(contract) == []
+
+    section = normalize(attribution_section(contract))
+    for required in (
+        "A **multi-device chain** is a terminal-verified chain whose first occurrence "
+        "is Common Model `1` and which carries a further Common occurrence;",
+        "Nothing of a multi-device chain is published before its row is attributed.",
+        "The semantic values of a multi-device chain are withheld with the reason "
+        f"`{WITHHELD_REASON}`",
+        "a chain with exactly one Common occurrence is a single-device chain",
+        "The native provider and the native surface proceed",
+        "Attributed only in a single-device chain",
+        "is not a catalog disposition",
+        "This segmentation rule is a **Hypothesis**",
+        "no exact section of it is pinned for the rule",
+    ):
+        assert required in section
+    # The capability decision for a repeated Common occurrence is unchanged.
+    assert "`INVALID_CHAIN`" in section
+
+
+def _mutate(contract: str, old: str, new: str) -> str:
+    assert contract.count(old) == 1, old
+    return contract.replace(old, new)
+
+
+def test_attribution_checker_rejects_a_change_of_any_row_field() -> None:
+    contract = text(CHAIN_CONTRACT)
+    rows = attribution_rows(attribution_section(contract))
+    assert len(rows) == len(EXPECTED_ATTRIBUTION)
+
+    for row in rows:
+        line = "| " + " | ".join(row) + " |"
+        occurrence, models, kinds, grade, source, state, reason = row
+        mutations = {
+            "occurrence class": [f"{occurrence} occurrence", *row[1:]],
+            "native models": [occurrence, models.replace("`", "", 2), *row[2:]],
+            "resource kind": [
+                occurrence, models, kinds.replace("resource.", "resource.x", 1), *row[3:]
+            ],
+            "mapping grade": [occurrence, models, kinds, "Proven" if grade != "Proven" else "Unknown", *row[4:]],
+            "mapping grade removed": [occurrence, models, kinds, "", *row[4:]],
+            "mapping source": [occurrence, models, kinds, grade, "Not stated.", state, reason],
+            "state": [
+                occurrence,
+                models,
+                kinds,
+                grade,
+                source,
+                "unsupported" if state == "attributed" else "attributed",
+                reason,
+            ],
+            "reason": [occurrence, models, kinds, grade, source, state, "None."],
+            "reason replaced by unrelated text": [
+                occurrence,
+                models,
+                kinds,
+                grade,
+                source,
+                state,
+                "The weather forecast for the coming week predicts mild temperatures.",
+            ],
+        }
+        for field, cells in mutations.items():
+            mutated = _mutate(contract, line, "| " + " | ".join(cells) + " |")
+            assert attribution_errors(mutated), (occurrence, field)
+
+        dropped = _mutate(contract, line + "\n", "")
+        assert attribution_errors(dropped), (occurrence, "row removed")
+
+
+def test_profile_point_checker_rejects_a_change_of_unit_or_native_point() -> None:
+    capability = capability_section(text(CHAIN_CONTRACT))
+    assert profile_point_errors(capability) == []
+
+    for key, (unit, point) in PROFILE_POINTS.items():
+        line = f"| `{key}` | `{unit}` | `{point}` |"
+        other_unit = "V" if unit != "V" else "Hz"
+        for field, replacement in (
+            ("unit", f"| `{key}` | `{other_unit}` | `{point}` |"),
+            ("native point", f"| `{key}` | `{unit}` | `{point}X` |"),
+        ):
+            mutated = _mutate(capability, line, replacement)
+            assert profile_point_errors(mutated), (key, field)
+        assert profile_point_errors(_mutate(capability, line + "\n", "")), (key, "row removed")
+
+
+def test_attribution_checker_rejects_a_changed_model_length() -> None:
+    contract = text(CHAIN_CONTRACT)
+    assert attribution_errors(contract) == []
+    for wrong in ("`124/L99`", "`124`"):
+        mutated = _mutate(contract, "| Storage control | `124/L24` |", f"| Storage control | {wrong} |")
+        assert attribution_errors(mutated), wrong

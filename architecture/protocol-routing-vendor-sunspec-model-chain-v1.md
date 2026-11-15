@@ -110,22 +110,33 @@ facts. The initial profile identifier is
 Model `103` or Model `113` only when the following complete minimum fact set is
 present and valid:
 
-| Canonical field ID | Unit |
-|---|---|
-| `inverter.ac.current.total` | `A` |
-| `inverter.ac.current.phase_a` | `A` |
-| `inverter.ac.current.phase_b` | `A` |
-| `inverter.ac.current.phase_c` | `A` |
-| `inverter.ac.voltage.phase_a` | `V` |
-| `inverter.ac.voltage.phase_b` | `V` |
-| `inverter.ac.voltage.phase_c` | `V` |
-| `inverter.ac.power.active` | `W` |
-| `inverter.ac.frequency` | `Hz` |
-| `inverter.ac.energy_lifetime` | `Wh` |
-| `inverter.temperature.cabinet` | `C` |
-| `inverter.operating_state` | `none` |
-| `inverter.events.1` | `none` |
-| `inverter.events.2` | `none` |
+| Profile key | Unit | Native point in Models 103 and 113 |
+|---|---|---|
+| `inverter.ac.current.total` | `A` | `A` |
+| `inverter.ac.current.phase_a` | `A` | `AphA` |
+| `inverter.ac.current.phase_b` | `A` | `AphB` |
+| `inverter.ac.current.phase_c` | `A` | `AphC` |
+| `inverter.ac.voltage.phase_a` | `V` | `PhVphA` |
+| `inverter.ac.voltage.phase_b` | `V` | `PhVphB` |
+| `inverter.ac.voltage.phase_c` | `V` | `PhVphC` |
+| `inverter.ac.power.active` | `W` | `W` |
+| `inverter.ac.frequency` | `Hz` | `Hz` |
+| `inverter.ac.energy_lifetime` | `Wh` | `WH` |
+| `inverter.temperature.cabinet` | `C` | `TmpCab` |
+| `inverter.operating_state` | `none` | `St` |
+| `inverter.events.1` | `none` | `Evt1` |
+| `inverter.events.2` | `none` | `Evt2` |
+
+A profile key names a required fact inside this capability profile only, so
+that the admission rules below can refer to it; it is not a field identifier.
+Canonical field identity belongs to the common element inventory; this page
+keeps native model and point names only. The
+[element inventory](https://github.com/Project-Helianthus/helianthus-docs-semantic/blob/main/api/v1/graph.md#10-element-catalog)
+of the common semantic contract in docs-semantic gives every published field
+its identifier and its subject resource. There a phase is a resource of its
+own, a component of its inverter, so no published field carries a phase in its
+name, and a native point reaches publication only under the field and subject
+that the inventory gives it.
 
 The capability evaluator accepts the complete `SunSpecChainSnapshot`, not a
 caller-provided decoded-model list or detached identity values. Before source
@@ -159,8 +170,8 @@ not pick the first or last occurrence and does not merge facts across source
 models.
 
 Model `103` and Model `113` are capability-equivalent only for that complete,
-valid minimum fact set: both decoders must emit the same canonical field IDs,
-units, and three-phase topology. They remain distinct decoder keys with distinct
+valid minimum fact set: both decoders must emit the same profile keys, units,
+and three-phase topology. They remain distinct decoder keys with distinct
 raw encodings and provenance. Capability equivalence does not assert equal
 precision or representation. A wrong model length, invalid encoding, sentinel,
 or non-finite value in any required fact fails admission rather than producing
@@ -233,6 +244,46 @@ firmware string; it does not reinterpret or widen V1 or V1.1. This model-chain
 contract does not itself activate any of these flavors, and none of these
 contracts records a completed live qualification or broad Fronius support
 result.
+
+## Resource attribution of a multi-device chain
+
+A **multi-device chain** is a terminal-verified chain whose first occurrence is
+Common Model `1` and which carries a further Common occurrence; a chain with
+exactly one Common occurrence is a single-device chain. Each Common occurrence
+starts the segment of one device, which runs up to the next Common occurrence
+or the end marker. This segmentation rule is a **Hypothesis**: it is the
+Helianthus reading of the Common-first rule above, in which a Common occurrence
+opens the model list of one device. The SunSpec Device Information Model
+Specification named in the source boundary is the reference, no exact section
+of it is pinned for the rule, and no retained wire evidence of a multi-device
+chain backs it yet, so the segment boundary is **Unknown** beyond the Common
+occurrence itself. The capability decision for such a chain stays
+`INVALID_CHAIN` under the Common exactly-once rule above; the table below
+states what each occurrence class would describe once it is published.
+
+The table gives, per occurrence class, the resource kind of the common element
+inventory that the class would describe and its attribution state. The state
+is `attributed` or `unsupported`; `unsupported` is the attribution state of
+this page and is not a catalog disposition of the element inventory. Nothing of
+a multi-device chain is published before its row is attributed. The mapping
+grade (**Proven**, **Hypothesis** or **Unknown**) and the mapping source of each
+row grade the native model class and its resource kind, separately from the state.
+
+| Occurrence class | Native models | Resource kind it would describe | Mapping grade | Mapping source | State | Reason |
+|---|---|---|---|---|---|---|
+| Inverter | `101`, `102`, `103`, `111`, `112`, `113`, with the other models of the same segment | `resource.inverter`, with its phases as `resource.phase` components | Proven | the `sunspec/models` pin of the source boundary names Models 101, 102, 103, 111, 112 and 113 as inverter models; the kind `resource.inverter` and its `resource.phase` components are in the element inventory of docs-semantic (`api/v1/graph.md`) | attributed | Attributed only in a single-device chain: its one admitted source describes one inverter resource under the one-resource-per-unit rule of the [Modbus multi-endpoint runtime page](../api/modbus-multi-endpoint-runtime.md), and the inverter contains its phases by position. |
+| Meter | `201`, `202`, `203`, `204`, `211`, `212`, `213`, `214` | `resource.meter` | Hypothesis | the `sunspec/models` pin of the source boundary names Models 201 to 204 and 211 to 214 as meter models; the mapping to `resource.meter` is the Helianthus reading of the element inventory of docs-semantic (`api/v1/graph.md`), with no retained wire evidence | unsupported | No decoder of this page admits a meter model, the chain carries no identity of a meter, and the role of a meter is a configured `measures` relation that is not defined for this family. |
+| Storage control | `124/L24` | `resource.battery`, grouped by a `resource.storage_system` | Hypothesis | the `sunspec/models` pin of the source boundary names Model 124 as storage control; the mapping to `resource.battery` and `resource.storage_system` is the Helianthus reading of the element inventory of docs-semantic (`api/v1/graph.md`), with no retained wire evidence | unsupported | The chain carries no identity of a battery, its attachment to the inverter is a configured relation that is not defined for this family, and the model is outside the capability profile. |
+| Per-device repeat | a further Common `1` and the occurrences of its segment | `resource.inverter`, `resource.meter` or `resource.equipment`, one equipment resource per segment | Unknown | no exact section of the SunSpec Device Information Model Specification is pinned for the segment rule, and the element inventory names no resource kind for a device of a chain | unsupported | The position of a segment in the chain is an address, not an identity, and the element inventory lists no identification scheme for a device of a chain. |
+
+The semantic values of a multi-device chain are withheld with the reason
+`MULTI_DEVICE_UNATTRIBUTED` until every row its occurrences fall into is
+attributed: no fact, service, capability or resource of any of its segments is
+published, the first segment included. An occurrence of an unsupported row in a single-device chain, such as
+a storage control, is retained and publishes nothing; it does not change the
+capability decision or the inverter. The native provider and the native surface
+proceed: the bounded raw chain, every occurrence with its provenance, and the
+qualification posture stay observable as they are today.
 
 ## Read/write boundary
 
