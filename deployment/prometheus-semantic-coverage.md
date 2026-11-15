@@ -1,7 +1,8 @@
 # Bounded transport and semantic Prometheus coverage
 
 This is the deployment contract for the remaining baud-observation and
-Thermal/HVAC and Infrastructure exports. **Target** names below reserve a
+Thermal/HVAC and Infrastructure exports, and for the optional
+[native point export](#native-point-coverage). **Target** names below reserve a
 bounded projection; they do not claim an implemented collector, qualified
 binding, live measurement, or release acceptance. Existing transport names
 remain compatible. Nothing here changes MCP namespaces or GraphQL contracts;
@@ -20,8 +21,8 @@ evidence; revalidate the exact deployment candidate before enabling rules.
 For eBUS facts, start with the public [native B524 contract][native-b524],
 then the [semantic mapping][thermal-map] and its
 [typed candidate index][thermal-fixture]. Preserve the native
-`(opcode, group, instance, register)` identity in provenance, outside metric
-labels. Never substitute OP02 and OP06 or infer writes from reads. For other
+`(opcode, group, instance, register)` identity in provenance, outside the
+labels of the semantic series. Never substitute OP02 and OP06 or infer writes from reads. For other
 protocols, their corresponding public native documentation and admitted
 source owner must establish the mapping first; this page defines no native
 Modbus, eeBUS or CAN behavior.
@@ -75,7 +76,7 @@ domain heading in the semantic tables; it does not form a cross product.
   collectors and changes to those combinations multiply the budget; capacity
   acceptance must bound `T` over the retention period. The baud target budget reserves two per target; only availability is emitted. Existing bus series retain their own bounded
   source-owner budgets.
-- Do not export raw asset IDs, addresses, locators, request bytes, serials,
+- In semantic series, do not export raw asset IDs, addresses, locators, request bytes, serials,
   network endpoints, contributor identities, capture times or fingerprints
   as labels. Do not turn arbitrary pack dimension text into labels. Internal
   provenance retains the exact source binding and dimensions separately.
@@ -89,14 +90,14 @@ domain heading in the semantic tables; it does not form a cross product.
 
 ## Missing values, lifecycle and resets
 
-For every target numeric/status field, emit a value only from the current,
+For every semantic target numeric/status field, emit a value only from the current,
 admitted, qualified, valid and fresh source record, using the same semantic
 revision and evaluation as the public projection. Do not read native devices
 from a scrape, reconstruct from UI labels, or use raw MCP as a fallback.
 Preserve eBUS MCP compatibility and GraphQL parity: unavailable public facts
-cannot become current Prometheus measurements.
+cannot become current semantic measurements.
 
-Unknown, unsupported, withheld, stale, withdrawn, conflicting or invalid
+For a semantic field, unknown, unsupported, withheld, stale, withdrawn, conflicting or invalid
 values have **no value sample**. The availability gauge is `0` for such a
 configured field and `1` only when its value is exportable. An unconfigured
 field has neither series. Zero availability describes a known export state,
@@ -458,3 +459,150 @@ constraints. Other unchanged names retain their recorded meaning.
 - `helianthus_thermal_flow_cubic_meters_per_second`: provisional; unit-label adoption is unresolved.
 - `helianthus_thermal_power_watts`: provisional; unit-label adoption is unresolved.
 - `helianthus_thermal_water_temperature_celsius`: provisional; unit-label adoption is unresolved.
+
+## Native point coverage
+
+This section reserves the optional export of native register values whose
+interpretation is clear, including registers that SemReg does not publish.
+Every row is **Target**: no renderer emits these names, none of them is in the
+emitted table above, and the 107 emitted families are unchanged. The family
+names are provisional. Open question: does the register-name vocabulary admit
+`native` as a qualifier in a metric name? Until it is settled, each name below
+keeps its spelling and stays provisional.
+
+Native and semantic families have different names and different contracts,
+and neither suppresses the other. Consumer-grade use, such as Home Assistant,
+Matter and the alert examples above, takes the semantic family. A native
+family shows the native value as the owning protocol documents it; it is not a
+semantic resource, a qualified binding or a write path.
+
+### Native families
+
+| Series | Type | Quantity | Constant unit | Labels | Status |
+| --- | --- | --- | --- | --- | --- |
+| `helianthus_native_temperature` | `gauge` | temperature | `kelvin` | `device, index, point, protocol, unit` | `Target` |
+| `helianthus_native_temperature_difference` | `gauge` | temperature difference | `kelvin` | `device, index, point, protocol, unit` | `Target` |
+| `helianthus_native_pressure` | `gauge` | pressure | `pascals` | `device, index, point, protocol, unit` | `Target` |
+| `helianthus_native_volume_flow` | `gauge` | volume flow | `cubic_meters_per_second` | `device, index, point, protocol, unit` | `Target` |
+| `helianthus_native_energy` | `gauge` | energy | `joules` | `device, index, point, protocol, unit` | `Target` |
+| `helianthus_native_power` | `gauge` | power | `watts` | `device, index, point, protocol, unit` | `Target` |
+| `helianthus_native_time` | `gauge` | time | `seconds` | `device, index, point, protocol, unit` | `Target` |
+| `helianthus_native_ratio` | `gauge` | ratio | `ratio` | `device, index, point, protocol, unit` | `Target` |
+| `helianthus_native_count` | `gauge` | count | `count` | `device, index, point, protocol, unit` | `Target` |
+| `helianthus_native_rotational_speed` | `gauge` | rotational speed | `hertz` | `device, index, point, protocol, unit` | `Target` |
+| `helianthus_native_frequency` | `gauge` | frequency | `hertz` | `device, index, point, protocol, unit` | `Target` |
+| `helianthus_native_current` | `gauge` | electric current | `amperes` | `device, index, point, protocol, unit` | `Target` |
+| `helianthus_native_voltage` | `gauge` | voltage | `volts` | `device, index, point, protocol, unit` | `Target` |
+| `helianthus_native_point_age` | `gauge` | age of the held observation | `seconds` | `device, index, point, protocol, unit` | `Target` |
+| `helianthus_native_render_overflow` | `gauge` | value series omitted by the budget | `none` | `none` | `Target` |
+
+Each value family and the age family has exactly one constant `unit` label
+value, and it is SI. `helianthus_native_render_overflow` has no labels and no
+unit. A temperature is in kelvin (Celsius + 273.15); a temperature difference is in
+kelvin with the Celsius difference unchanged; a pressure is in pascals
+(bar × 100,000); a volume flow is in cubic meters per second (litre/minute /
+60,000); an energy is in joules (kWh × 3,600,000); a power is in watts; a time
+is in seconds; a ratio is a plain number (percent / 100); a count is a plain
+number; a rotational speed is in revolutions per second, with the unit
+`hertz` (revolutions per minute / 60); a frequency is in hertz; a current is
+in amperes and a voltage in volts. Conversion to customary units, such as Celsius, bar, litre per minute,
+kWh, percent or revolutions per minute, happens only at display. A family name
+carries no unit suffix, and the count family carries no `_total`: it is a
+gauge reading of the native register, not an exporter counter. Energy and
+count readings follow the gauge lifecycle above; never compute `rate` on them
+across a meter replacement or reset.
+
+### Native labels
+
+| Label | Allowed domain |
+| --- | --- |
+| `protocol` | `ebus, modbus, eebus` |
+| `device` | `documented_device_class` |
+| `index` | `documented_instance_index` |
+| `point` | `canonical_register_name` |
+| `unit` | `family_constant_unit` |
+
+- `protocol` names the protocol whose public native documentation owns the
+  point. CAN has no admitted native acquisition seam and no value here.
+- `device` is the device class written in the point's row of that
+  documentation, in snake_case. It is never an address, serial, hash, model,
+  product name or operator label.
+- `index` is present only where the protocol documentation defines a native
+  instance index for the row, such as a B524 instance. Its value is the
+  unpadded decimal instance number within the documented range. A row without
+  a documented instance index has no `index` label.
+- `point` is the canonical register name, spelled as the owning documentation
+  repository spells it under the
+  [register naming rules](../architecture/naming.md#register-and-field-names).
+  Raw bytes, selectors, opcodes and addresses are never a `point` value.
+- `unit` is the constant unit of the family from the table above.
+
+These labels are native locators, never a semantic resource identity. They do
+not join to a semantic `slot`, select no SemReg fact and supply no write
+authority. The rule against raw asset IDs, addresses, request bytes, serials,
+network endpoints, contributor identities and fingerprints as labels applies
+to native series too. A label set belongs to one native identity for the
+lifetime of the scrape target: the first identity admitted to a label set keeps
+it, and a different native identity that maps to the same label set, whether
+held at the same time or observed after the first was evicted or expired, is
+withheld. Opcode, group and register stay out of band, so the label set alone
+cannot tell two identities apart; the lifetime reservation is what keeps their
+histories from merging in one series.
+
+### Clear interpretation
+
+The native registry of the owning protocol decides whether a point has a clear
+interpretation; the gateway only applies applicability to the identified target
+and freshness. A point is exported only when all of the following hold:
+
+1. Its canonical name is final: not provisional, not unresolved, without an
+   open question, and not `label_only` or `conflict`.
+2. It is a numeric quantity. A boolean, mode, state, code, bitfield, text,
+   date, identifier or access code is never a native point.
+3. Its unit is known, and the native registry holds a machine-readable codec
+   and scale for it.
+4. Its row names a documented device class, and that class matches the
+   identified target.
+5. A pressure states its reference, absolute or gauge, in the registry row;
+   otherwise the point is withheld. The reference is never a label.
+
+A point that fails any condition is withheld, and no other source fills it. A
+clear interpretation is a naming and codec condition; evidence status
+(`Proven`, `Hypothesis`, `Unknown`) and qualification stay separate.
+
+### Native freshness, age and budget
+
+- Values come only from retained observations. A scrape sends no bus request,
+  starts no read and schedules none.
+- A value sample is present only while its observation is fresh. A stale
+  observation has no value sample, and no value is carried forward or filled
+  with zero.
+- `helianthus_native_point_age` holds the seconds since the held observation
+  was received. It is present while an observation of the point is held, fresh
+  or stale, and absent when none is held.
+- No native sample carries an exposition timestamp.
+- At most 1,024 value series appear per scrape target, for the lifetime of the
+  target and not only per scrape. The gateway keeps a lifetime admission set of
+  value series, each keyed by its family name together with its label set, so
+  one label set under two families, such as `temperature` and
+  `temperature_difference` or `rotational_speed` and `frequency`, takes two
+  entries. It orders the candidates by family name, `protocol`, `device`,
+  `point` and then numeric `index`, with no index first, and admits candidates
+  in that order until the set holds 1,024 value series. An admitted value
+  series stays admitted and is never replaced by another candidate, so arrival,
+  expiry, eviction or a registry or documentation change that moves a point to
+  another family cannot raise the number of native value series a target has
+  emitted above 1,024. A candidate outside the set is omitted and
+  counted. The set resets only when the scrape target restarts. An age series
+  appears only for a point inside that selection.
+  `helianthus_native_render_overflow` holds the number of value series omitted
+  in the scrape, `0` when none.
+- The native export is off by default. When it is off, no family of this
+  section appears in the exposition, the overflow and age gauges included.
+  Turning it on or off changes no semantic family.
+- An invalid unit, an unknown device class or a label collision withholds the
+  affected point. Valid siblings and their last-known-good provenance remain.
+
+The validator checks the two tables of this section: the family name pattern,
+one constant SI unit per family, the closed label keys and their domains, and
+that no native family is also an emitted family.

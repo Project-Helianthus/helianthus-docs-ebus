@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -223,3 +224,161 @@ def test_emitted_metric_rejects_removed_spelling(canonical, removed):
                if line.startswith("| `" + canonical + "` | `gauge`"))
     with pytest.raises(CHECKER.CheckError, match="emitted metric"):
         CHECKER.validate(text.replace(row, row + "\n" + row.replace(canonical, removed)))
+
+
+NATIVE_ROW_TEXT = "| `helianthus_native_temperature` | `gauge` | temperature | `kelvin` | `device, index, point, protocol, unit` | `Target` |"
+NATIVE_LABELS = "`device, index, point, protocol, unit`"
+
+
+def native_rows():
+    return CHECKER.rows("\n".join("| " + line for line in CHECKER.NATIVE_ROWS.strip().splitlines()))
+
+
+def test_native_section_counts_and_emitted_count_unchanged():
+    assert len(native_rows()) == 15
+    emitted = CHECKER.rows("\n".join("| " + line for line in CHECKER.RENDERER_ROWS.strip().splitlines()))
+    assert len(emitted) == 107
+    assert "all 107 custom families" in document()
+    assert not {row[0] for row in native_rows()} & {row[0] for row in emitted}
+
+
+@pytest.mark.parametrize("row", native_rows(), ids=lambda row: row[0])
+@pytest.mark.parametrize("field", range(6),
+                         ids=["name", "type", "quantity", "constant_unit", "labels", "status"])
+def test_native_family_tuple_rejects_each_changed_field(row, field):
+    # name catches an unreviewed family; type catches a counter; quantity
+    # catches a changed physical meaning; constant_unit catches a non-SI unit;
+    # labels catch a forbidden locator key; status catches a premature claim.
+    text = document()
+    cells = ["`" + value + "`" for value in row]
+    cells[2] = row[2]
+    original = "| " + " | ".join(cells) + " |"
+    changed = list(cells)
+    changed[field] = {0: "`helianthus_native_unreviewed`", 1: "`counter`",
+                      2: "unreviewed quantity", 3: "`celsius`",
+                      4: "`address, device, point, protocol, unit`", 5: "`Proven`"}[field]
+    assert text.count(original) == 1
+    with pytest.raises(CHECKER.CheckError, match="native"):
+        CHECKER.validate(text.replace(original, "| " + " | ".join(changed) + " |"))
+
+
+@pytest.mark.parametrize("replacement", [
+    NATIVE_ROW_TEXT + "\n" + NATIVE_ROW_TEXT.replace("`kelvin`", "`celsius`"),
+    NATIVE_ROW_TEXT + "\n" + NATIVE_ROW_TEXT.replace("`kelvin`", "`pascals`"),
+    NATIVE_ROW_TEXT.replace("`kelvin`", "`kelvin, celsius`"),
+    NATIVE_ROW_TEXT + "\n" + NATIVE_ROW_TEXT,
+], ids=["second_unit_row", "second_si_unit_row", "two_units_in_cell", "duplicate_row"])
+def test_native_family_rejects_second_unit(replacement):
+    text = document()
+    assert text.count(NATIVE_ROW_TEXT) == 1
+    with pytest.raises(CHECKER.CheckError, match="native"):
+        CHECKER.validate(text.replace(NATIVE_ROW_TEXT, replacement))
+
+
+@pytest.mark.parametrize("key", ["address", "serial", "slot", "model", "fact_id"])
+def test_native_family_rejects_forbidden_label_key(key):
+    text = document()
+    changed = NATIVE_ROW_TEXT.replace(NATIVE_LABELS, "`device, index, " + key + ", point, protocol, unit`")
+    with pytest.raises(CHECKER.CheckError, match="forbidden native label key"):
+        CHECKER.validate(text.replace(NATIVE_ROW_TEXT, changed))
+
+
+@pytest.mark.parametrize(("old", "new", "message"), [
+    ("`helianthus_native_temperature` |", "`helianthus_native_temperature_kelvin` |", "native family name"),
+    ("`helianthus_native_temperature` |", "`native_temperature` |", "native family name"),
+    ("`helianthus_native_temperature` |", "`helianthus_native_Temperature` |", "native family name"),
+    ("`helianthus_native_count` |", "`helianthus_native_count_total` |", "native family name"),
+    ("`helianthus_native_temperature` |", "`helianthus_semantic_render_overflow` |", "also emitted"),
+    ("| `helianthus_native_render_overflow` | `gauge` | value series omitted by the budget | `none` | `none` |",
+     "| `helianthus_native_render_overflow` | `gauge` | value series omitted by the budget | `none` | `protocol` |",
+     "native"),
+    ("| `helianthus_native_render_overflow` | `gauge` | value series omitted by the budget | `none` | `none` |",
+     "| `helianthus_native_render_overflow` | `gauge` | value series omitted by the budget | `none` | `unit` |",
+     "native"),
+    ("| `helianthus_native_power` | `gauge` | power | `watts` | `device, index, point, protocol, unit` | `Target` |\n",
+     "", "native families"),
+    ("| `protocol` | `ebus, modbus, eebus` |", "| `protocol` | `ebus, modbus, eebus, can` |", "native label"),
+    ("| `device` | `documented_device_class` |", "| `device` | `device_address` |", "native label"),
+    ("| `index` | `documented_instance_index` |\n", "", "native label"),
+    ("| `unit` | `family_constant_unit` |",
+     "| `unit` | `family_constant_unit` |\n| `address` | `documented_device_class` |", "native label"),
+    ("### Native labels\n", "### Native label domains\n", "heading"),
+    ("## Native point coverage\n", "## Native points\n", "native"),
+])
+def test_native_section_rejects_drift(old, new, message):
+    text = document()
+    assert text.count(old) == 1
+    with pytest.raises(CHECKER.CheckError, match=message):
+        CHECKER.validate(text.replace(old, new))
+
+
+@pytest.mark.parametrize("phrase", [
+    "A label set belongs to one native identity for the\nlifetime of the scrape target",
+    "lifetime admission set of\nvalue series, each keyed by its family name together with its label set",
+    "until the set holds 1,024 value series",
+    "never replaced by another candidate",
+])
+def test_native_section_requires_lifetime_rules(phrase):
+    text = document()
+    assert " ".join(phrase.split()) in " ".join(text.split())
+    with pytest.raises(CHECKER.CheckError, match="lifetime rules"):
+        CHECKER.validate(_without_phrase(text, phrase))
+
+
+@pytest.mark.parametrize(("old", "new"), [
+    ("until the set holds 1,024 value series.",
+     "until the set holds 1,024 value series. It keeps a lifetime admission set of label sets."),
+    ("until the set holds 1,024 value series.",
+     "until the set holds 1,024 value series. The set holds 1,024 label sets."),
+], ids=["admission_key_label_sets", "bound_label_sets"])
+def test_native_budget_counts_value_series_not_label_sets(old, new):
+    # Two families share a unit (temperature and temperature_difference,
+    # rotational_speed and frequency), so a point moved between them keeps its
+    # label set and adds a series; a budget counted in label sets would let a
+    # target emit more than 1,024 value series.
+    text = document()
+    assert text.count(old) == 1
+    with pytest.raises(CHECKER.CheckError, match="value series, not label sets"):
+        CHECKER.validate(text.replace(old, new))
+
+
+def test_native_budget_key_names_same_unit_family_pairs():
+    flat = " ".join(document().split())
+    assert ("one label set under two families, such as `temperature` and "
+            "`temperature_difference` or `rotational_speed` and `frequency`, "
+            "takes two entries") in flat
+    assert "It orders the candidates by family name, `protocol`" in flat
+
+
+@pytest.mark.parametrize("replacement", [
+    "Each family has exactly one constant `unit` label value, and it is SI.",
+    "Each value family and the age family has exactly one constant `unit` label\n"
+    "value, and it is SI. Every native family carries the `unit` label.",
+], ids=["unqualified_every_family", "overflow_exemption_missing"])
+def test_native_unit_rule_exempts_overflow_family(replacement):
+    # The overflow row has no labels and no unit, so a sentence requiring a
+    # unit label on every native family contradicts its row.
+    text = document()
+    scoped = ("Each value family and the age family has exactly one constant `unit` label\n"
+              "value, and it is SI. `helianthus_native_render_overflow` has no labels and no\n"
+              "unit.")
+    assert text.count(scoped) == 1
+    with pytest.raises(CHECKER.CheckError, match="native unit rule"):
+        CHECKER.validate(text.replace(scoped, replacement))
+
+
+def _without_phrase(text, phrase):
+    words = phrase.split()
+    pattern = r"\s+".join(re.escape(word) for word in words)
+    result, count = re.subn(pattern, "removed", text, count=1)
+    assert count == 1
+    return result
+
+
+def test_native_section_accepts_row_order_and_spacing():
+    text = document()
+    lines = [line for line in text.splitlines(keepends=True)
+             if line.startswith("| `helianthus_native_")]
+    assert len(lines) == 15
+    text = text.replace("".join(lines), "".join(reversed(lines)).replace("| `helianthus_native_", "|  `helianthus_native_"))
+    CHECKER.validate(text)

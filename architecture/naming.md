@@ -272,6 +272,20 @@ records constant units, preserved numeric scales and measured library exceptions
 Incomplete naming coverage remains tracked in the
 [metric follow-up](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/1153).
 
+Native point values use one family per physical quantity under
+`helianthus_native_`, such as `helianthus_native_temperature` or
+`helianthus_native_pressure`, never one family per register. The register is
+the `point` label, spelled as its canonical register name under the rules
+above; a native instance index is the `index` label, an unpadded decimal
+number present only where the protocol documentation defines one. The unit
+sits in the constant `unit` label and is SI: `kelvin`, `pascals`,
+`cubic_meters_per_second`, `joules`, `watts`, `seconds`, `hertz`, `amperes` or
+`volts`, and `ratio` or `count` for a plain number. A native family name
+carries no unit suffix. Customary units are a display conversion only. These
+names are provisional: whether the vocabulary admits `native` as a qualifier
+is an open question, recorded with the Target rows of the
+[native point coverage](../deployment/prometheus-semantic-coverage.md#native-point-coverage).
+
 ### Checked examples
 
 These synthetic examples establish spelling, not device qualification.
