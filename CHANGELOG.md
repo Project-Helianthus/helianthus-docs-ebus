@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+- `api/semantic-snapshot-read.md` has an "Assets with several sources"
+  section. A source counts when it is admitted (live, not fenced, not retired)
+  with a published, unfenced cursor of its current generation, and an asset
+  with several sources is readable when at least one of its sources counts.
+  Otherwise the entry is unavailable with `source_unavailable` when no source
+  is admitted, `snapshot_unavailable` when no source has an accepted
+  publication, and `publication_withheld` otherwise; a pending lifecycle
+  control of any source keeps the whole asset closed. Each source's
+  descriptor, cursors and fences stay visible, including a fenced or retired
+  source, whose observations remain only as retained observations. Candidates
+  of several sources coexist under one complete `FactKey` and a reader never
+  adds or otherwise combines them into one value. The result for an asset with
+  one source is unchanged, and seeing a source grants no control.
+  `tests/test_semantic_snapshot_read_contract.py` asserts each of these rules
+  and rejects a weakened wording of each. The request shape and the per-asset
+  revision rule are unchanged. Follow-up: the gateway work under
+  Project-Helianthus/helianthus-ebusgateway#1539.
+
 - `deployment/prometheus-semantic-coverage.md` has a "Native point coverage"
   section with Target rows only for the optional native point export: one
   gauge family per physical quantity under `helianthus_native_`, each with one
