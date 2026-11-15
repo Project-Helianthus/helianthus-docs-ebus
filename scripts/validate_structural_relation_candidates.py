@@ -85,6 +85,36 @@ REQUIRED_ROWS = {
     ))),
 }
 REQUIRED_ROW_IDS = set(REQUIRED_ROWS)
+# Each catalogued row also keeps its published field, the resolution of each
+# end, its evidence grade and its validity scope (order not significant).
+REQUIRED_ROW_FACTS = {
+    "SRC-SD05-zone-room-unit": (
+        "zones[].config.roomTemperatureZoneMapping", "native", "gateway_policy", "Proven", ("PROTOCOL",)),
+    "SRC-SD06-zone-to-circuit": (
+        "zones[].config.associatedCircuit", "native", "unresolved", "Unknown", ("LAB", "PROFILE")),
+    "SRC-SD07-zone-to-circuit-fallback": (
+        "zones[].config.associatedCircuit", "native", "gateway_policy", "Unknown", ("GATEWAY_POLICY",)),
+    "SRC-SD09-circuit-managing-module": (
+        "circuits[].managing_device", "native", "gateway_policy", "Proven", ("LAB", "PROFILE")),
+    "SRC-SD10-connected-device-slot": ("radioDevices[]", "native", "native", "Proven", ("PROTOCOL",)),
+    "SRC-SD10-inventory-device-slot": (
+        "radioDevices[]", "native", "gateway_policy", "Hypothesis", ("GATEWAY_POLICY",)),
+    "SRC-SD15-controller-zone": ("zones[]", "native", "native", "Proven", ("PROTOCOL",)),
+    "SRC-SD15-controller-circuit": ("circuits[]", "native", "native", "Proven", ("PROTOCOL",)),
+    "SRC-SD15-module-solar-circuit": ("solar", "gateway_policy", "native", "Proven", ("PROFILE",)),
+    "SRC-SD15-module-cylinder": ("cylinders", "gateway_policy", "native", "Proven", ("PROFILE",)),
+    "SRC-FM-second-family-slot": (None, "native", "unresolved", "Unknown", ("PROFILE",)),
+    "SRC-FM-second-family-status": (None, "native", "unresolved", "Unknown", ("PROFILE",)),
+}
+# Each catalogued relayed-identity row keeps its slot grouping and the
+# status of its direct view; the relaying end is always resolved natively.
+REQUIRED_IDENTITY = {
+    "SRI-functional-module-slot": (("0x0C",), "correlated"),
+    "SRI-heat-source-slots": (("0x01", "0x02"), "not_established"),
+    "SRI-room-unit-slots": (("0x09", "0x0A"), "not_established"),
+    "SRI-uncharacterized-slots": (("0x0E", "0x0F"), "not_established"),
+}
+RELAYING_END_RESOLUTION = "native"
 DISPOSITIONS = {"relation_candidate", "configuration_only", "absent", "unresolved"}
 EVIDENCE_GRADES = {"Proven", "Hypothesis", "Unknown"}
 SCOPES = {"PROTOCOL", "PROFILE", "LAB", "GATEWAY_POLICY"}
@@ -313,10 +343,13 @@ def evidence_pairs(endpoint: dict) -> list:
     return sorted((item["selector"], item["role"]) for item in endpoint["identity_evidence"])
 
 
-def check_pinned_end(endpoint: dict, expected: tuple, label: str, errors: list) -> None:
+def check_pinned_end(endpoint: dict, expected: tuple, label: str, errors: list,
+                     resolution: str | None = None) -> None:
     kind, pairs = expected
     if endpoint["kind"] != kind or evidence_pairs(endpoint) != sorted(pairs):
         errors.append(f"{label}: native identity differs from the catalogued {kind} end {sorted(pairs)}")
+    if resolution is not None and endpoint["resolution"] != resolution:
+        errors.append(f"{label}.resolution: the catalogue states {resolution}")
 
 
 def check_pinned_row(row: dict, errors: list) -> None:
@@ -325,10 +358,31 @@ def check_pinned_row(row: dict, errors: list) -> None:
         errors.append(f"{row_id}: not a catalogued attachment row")
         return
     disposition, source, target = REQUIRED_ROWS[row_id]
+    field, source_resolution, target_resolution, grade, scopes = REQUIRED_ROW_FACTS[row_id]
     if row["disposition"] != disposition:
         errors.append(f"{row_id}.disposition: the catalogue states {disposition}")
-    check_pinned_end(row["from"], source, f"{row_id}.from", errors)
-    check_pinned_end(row["to"], target, f"{row_id}.to", errors)
+    if row["published_field"] != field:
+        errors.append(f"{row_id}.published_field: the catalogue states {field!r}")
+    if row["evidence_grade"] != grade:
+        errors.append(f"{row_id}.evidence_grade: the catalogue states {grade}")
+    if sorted(row["validity_scope"]) != sorted(scopes):
+        errors.append(f"{row_id}.validity_scope: the catalogue states {sorted(scopes)}")
+    check_pinned_end(row["from"], source, f"{row_id}.from", errors, source_resolution)
+    check_pinned_end(row["to"], target, f"{row_id}.to", errors, target_resolution)
+
+
+def check_pinned_identity(row: dict, errors: list) -> None:
+    row_id = row["id"]
+    if row_id not in REQUIRED_IDENTITY:
+        errors.append(f"{row_id}: not a catalogued relayed-identity row")
+        return
+    groups, status = REQUIRED_IDENTITY[row_id]
+    if sorted(row["groups"]) != sorted(groups):
+        errors.append(f"{row_id}.groups: the catalogue states {sorted(groups)}")
+    if row["direct_view"]["status"] != status:
+        errors.append(f"{row_id}.direct_view.status: the catalogue states {status}")
+    check_pinned_end(row["relaying_end"], ROOT_END, f"{row_id}.relaying_end", errors, RELAYING_END_RESOLUTION)
+    check_pinned_end(row["direct_view"], ("direct_bus_entry", DIRECT_END), f"{row_id}.direct_view", errors)
 
 
 def errors_for(label: str, errors: list) -> bool:
@@ -378,8 +432,7 @@ def check_identity_row(row, index: int, errors: list) -> None:
     if disposition == "two_views_unresolved" and source != "none":
         errors.append(f"{label}: a shared anchor key source resolves to one resource")
     if not errors_for(label, errors):
-        check_pinned_end(row["relaying_end"], ROOT_END, f"{row['id']}.relaying_end", errors)
-        check_pinned_end(row["direct_view"], ("direct_bus_entry", DIRECT_END), f"{row['id']}.direct_view", errors)
+        check_pinned_identity(row, errors)
 
 
 def check_group_binding(row: dict, label: str, errors: list) -> None:
@@ -423,6 +476,9 @@ def check_identity_coverage(rows: list, errors: list, pages: dict) -> None:
     listed = [group for row in rows if isinstance(row, dict) for group in row.get("groups", []) or []]
     if sorted(listed) != expected:
         errors.append(f"relayed_identity: groups {sorted(listed)} must cover SD-10 groups {expected} once")
+    present = {row.get("id") for row in rows if isinstance(row, dict)}
+    for missing in sorted(set(REQUIRED_IDENTITY) - present):
+        errors.append(f"coverage: relayed-identity row {missing} is missing")
 
 
 def check_coverage(rows: list, errors: list, pages: dict, identity: list) -> None:

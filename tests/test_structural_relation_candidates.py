@@ -385,3 +385,119 @@ def test_statement_reassigned_to_an_unrelated_source_is_rejected() -> None:
         pages[MODULES] = pages[MODULES].replace("0x0036", "")
 
     assert any("does not contain" in error for error in errors_after(mutate, mutate_pages))
+
+
+@pytest.mark.parametrize(
+    ("row_id", "field"),
+    [("SRC-SD15-controller-zone", "circuits[]"), (ZONE_ROOM, "zones[]"),
+     (MANAGING, None), ("SRC-FM-second-family-slot", "radioDevices[]")],
+)
+def test_each_row_keeps_its_catalogued_published_field(row_id: str, field) -> None:
+    def mutate(document: dict) -> None:
+        row(document, row_id)["published_field"] = field
+
+    assert any(f"{row_id}.published_field" in error for error in errors_after(mutate))
+
+
+@pytest.mark.parametrize(
+    ("row_id", "end", "resolution"),
+    [("SRC-SD15-controller-zone", "to", "gateway_policy"), (ZONE_CIRCUIT, "to", "native"),
+     (ZONE_ROOM, "to", "unresolved"), ("SRC-SD15-module-cylinder", "from", "native"),
+     ("SRC-FM-second-family-slot", "from", "gateway_policy")],
+)
+def test_each_endpoint_keeps_its_catalogued_resolution(row_id: str, end: str, resolution: str) -> None:
+    def mutate(document: dict) -> None:
+        row(document, row_id)[end]["resolution"] = resolution
+
+    assert any(f"{row_id}.{end}.resolution" in error for error in errors_after(mutate))
+
+
+def test_relaying_end_keeps_its_catalogued_resolution() -> None:
+    def mutate(document: dict) -> None:
+        row(document, MODULE_SLOT)["relaying_end"]["resolution"] = "gateway_policy"
+
+    assert any(f"{MODULE_SLOT}.relaying_end.resolution" in error for error in errors_after(mutate))
+
+
+@pytest.mark.parametrize(
+    ("row_id", "grade"),
+    [("SRC-SD15-controller-zone", "Hypothesis"), (MANAGING, "Hypothesis"),
+     ("SRC-SD10-inventory-device-slot", "Proven"), (ZONE_FALLBACK, "Hypothesis")],
+)
+def test_each_row_keeps_its_catalogued_evidence_grade(row_id: str, grade: str) -> None:
+    def mutate(document: dict) -> None:
+        row(document, row_id)["evidence_grade"] = grade
+
+    assert any(f"{row_id}.evidence_grade" in error for error in errors_after(mutate))
+
+
+@pytest.mark.parametrize(
+    ("row_id", "scope"),
+    [("SRC-SD15-controller-zone", ["LAB"]), (MANAGING, ["PROTOCOL"]),
+     (MANAGING, ["LAB"]), ("SRC-SD15-module-solar-circuit", ["PROTOCOL"])],
+)
+def test_each_row_keeps_its_catalogued_validity_scope(row_id: str, scope: list) -> None:
+    def mutate(document: dict) -> None:
+        row(document, row_id)["validity_scope"] = scope
+
+    assert any(f"{row_id}.validity_scope" in error for error in errors_after(mutate))
+
+
+def test_catalogued_scope_order_is_not_significant() -> None:
+    assert errors_after(lambda document: row(document, MANAGING)["validity_scope"].reverse()) == []
+
+
+def test_published_rows_match_the_pinned_facts() -> None:
+    document = load_fixture()
+    for item in document["attachments"]:
+        field, source, target, grade, scopes = VALIDATOR.REQUIRED_ROW_FACTS[item["id"]]
+        assert (item["published_field"], item["from"]["resolution"], item["to"]["resolution"],
+                item["evidence_grade"], sorted(item["validity_scope"])) == (
+            field, source, target, grade, sorted(scopes)), item["id"]
+    assert {item["id"] for item in document["attachments"]} == set(VALIDATOR.REQUIRED_ROW_FACTS)
+    for item in document["relayed_identity"]:
+        groups, status = VALIDATOR.REQUIRED_IDENTITY[item["id"]]
+        assert (sorted(item["groups"]), item["direct_view"]["status"]) == (sorted(groups), status)
+    assert {item["id"] for item in document["relayed_identity"]} == set(VALIDATOR.REQUIRED_IDENTITY)
+
+
+@pytest.mark.parametrize("row_id", sorted(VALIDATOR.REQUIRED_IDENTITY))
+def test_every_catalogued_identity_row_is_required(row_id: str) -> None:
+    def mutate(document: dict) -> None:
+        document["relayed_identity"] = [item for item in document["relayed_identity"] if item["id"] != row_id]
+
+    assert any(row_id in error for error in errors_after(mutate))
+
+
+def test_repartitioned_identity_groups_are_rejected() -> None:
+    def mutate(document: dict) -> None:
+        document["relayed_identity"] = [
+            item for item in document["relayed_identity"] if item["id"] != MODULE_SLOT
+        ]
+        heat = row(document, "SRI-heat-source-slots")
+        heat["groups"].append("0x0C")
+        retarget(heat["slot_view"]["identity_evidence"], "GG=0x01/0x02", "GG=0x01/0x02/0x0C")
+        heat["decisions"].append("functional-modules")
+
+    errors = errors_after(mutate)
+    assert any(f"{MODULE_SLOT} is missing" in error for error in errors)
+    assert any("SRI-heat-source-slots.groups" in error for error in errors)
+
+
+def test_an_uncatalogued_identity_row_is_rejected() -> None:
+    def mutate(document: dict) -> None:
+        row(document, "SRI-uncharacterized-slots")["id"] = "SRI-other-slots"
+
+    assert any("not a catalogued relayed-identity row" in error for error in errors_after(mutate))
+
+
+@pytest.mark.parametrize(
+    ("row_id", "status"),
+    [(MODULE_SLOT, "not_established"), ("SRI-heat-source-slots", "correlated"),
+     ("SRI-room-unit-slots", "correlated")],
+)
+def test_each_identity_row_keeps_its_direct_view_status(row_id: str, status: str) -> None:
+    def mutate(document: dict) -> None:
+        row(document, row_id)["direct_view"]["status"] = status
+
+    assert any(f"{row_id}.direct_view.status" in error for error in errors_after(mutate))
