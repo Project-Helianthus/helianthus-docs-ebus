@@ -577,7 +577,7 @@ Current timing-quality values evidenced on the merged `GW-04` runtime are
 | `last_updated_at` | Time of the last semantic startup state update, as an RFC 3339 timestamp string. Omitted when the runtime has no update time; GraphQL returns null in that case. |
 | `cache_epoch` | Current cache epoch counter. |
 | `live_epoch` | Current live epoch counter. |
-| `reason` | Additive. `no_supported_heat_source_path` while the semantic poller has no supported heat-source data path: no B524 root and no boiler-class heat source, while the inventory holds a heat-pump-class identity. Omitted when no reason applies, so existing outputs are unchanged. |
+| `reason` | Additive. `no_supported_heat_source_path` while the semantic poller has no supported heat-source data path: no B524 root and no boiler-class heat source, while the inventory holds a heat-pump-class identity, and the process has not discovered a root before and the product catalog classifies no inventory identity as a controller. Omitted when no reason applies, so existing outputs are unchanged. |
 
 See [Startup reason](../architecture/startup-semantic-fsm.md#startup-reason-without-a-supported-heat-source-data-path)
 for the evaluation and clearing rules.

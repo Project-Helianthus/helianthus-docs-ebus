@@ -810,8 +810,10 @@ The semantic runtime distinguishes cache bootstrap from live updates during star
 - `reason` (nullable `String`) is additive. It is
   `no_supported_heat_source_path` while the semantic poller has no supported
   heat-source data path: no B524 root and no boiler-class heat source, while
-  the inventory holds a heat-pump-class identity. Otherwise it is null, so
-  existing outputs are unchanged. The phase is unchanged by the reason; with the
+  the inventory holds a heat-pump-class identity, and the process has not
+  discovered a root before and the product catalog classifies no inventory
+  identity as a controller. Otherwise it is null, so existing outputs are
+  unchanged. The phase is unchanged by the reason; with the
   reason set, the boot-live timeout still moves the phase to `DEGRADED`. MCP
   `ebus_v1_bus_summary_get` carries the same value in `status.startup.reason`
   and omits the field when no reason applies. See
