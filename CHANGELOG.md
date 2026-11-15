@@ -2,6 +2,27 @@
 
 ## Unreleased
 
+- The B524 structural decision catalog hands the controller's attachments to
+  the common model as relation and identity candidates. The new fixture
+  `architecture/fixtures/structural-relation-candidates-v1.json` lists each
+  attachment of SD-05, SD-06, SD-07, SD-09, SD-10, SD-15 and the
+  functional-module page with its native endpoint kinds, the native identity
+  evidence of each end and its classification, the evidence grade, the
+  validity scope and one disposition: `relation_candidate`,
+  `configuration_only`, `absent` with its reason, or `unresolved`. The
+  zone-to-circuit assignment stays `unresolved` and names both native
+  statements (`GG=0x03 RR=0x0013` read with an offset under laboratory scope,
+  and `GG=0x03 RR=0x001C` `zone_circuit_assignment`) until the specialist
+  review records which register establishes it. A controller-mediated device
+  slot and the same unit's direct bus entry share no anchor key source, so
+  they stay two views with the disposition `two_views_unresolved`. SD-10 and
+  SD-15 give parenting to the common model instead of consumers; each listed
+  entry gains a `Common-model candidate` row, and the functional-module and
+  structure-discovery pages cite the fixture. No quantity is placed and no
+  common relation definition is proposed. New validator
+  `scripts/validate_structural_relation_candidates.py` with
+  `tests/test_structural_relation_candidates.py`. Follow-ups: the thermal map
+  fixtures and the gateway's resource and relation publication.
 - The SunSpec model-chain contract defers canonical field identity to the
   common element inventory in docs-semantic and keeps native model and point
   names only: the required facts of the three-phase monitoring profile are

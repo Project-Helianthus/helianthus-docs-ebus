@@ -361,6 +361,32 @@ A safer long-term model is:
 
 This avoids using generic inventory as a hidden backdoor for topology inference.
 
+## Relation and Identity Candidates
+
+The [relation-candidate fixture](./fixtures/structural-relation-candidates-v1.json)
+states, for the common model, which functional-module attachments are
+observable natively and which are not:
+
+- `circuits[].managing_device` is `configuration_only`: no register states
+  which module manages a circuit, and the ownership follows installer
+  configuration codes for one validated tuple (row
+  `SRC-SD09-circuit-managing-module`).
+- `OP=0x06, GG=0x0B` carries a presentation name only, so no relation
+  candidate is offered for its slots (row `SRC-FM-second-family-slot`).
+- The raw module status registers `GG=0x00 RR=0x0067` and `RR=0x0068` state
+  no attachment of an FM3-family module to a circuit, a zone or a slot (row
+  `SRC-FM-second-family-status`).
+- An `OP=0x06, GG=0x0C` slot and the directly identified module share no
+  anchor key source. The slot's class address equals the module's bus address
+  only as a laboratory correlation, and an address is never an identity, so
+  the two views stay two with the disposition `two_views_unresolved` (row
+  `SRI-functional-module-slot`).
+
+A future `functionalModules[]` inventory takes its module identity from the
+common model's identity rule. `busAddress` is never the entry's identity;
+whether `profileAddressIndex` is a native position local to the controller
+stays open until its evidence is reviewed.
+
 ## Non-Goals
 
 This page does not currently define:
@@ -380,4 +406,5 @@ This page does not currently define:
 - Current structural flow: [`semantic-structure-discovery.md`](./semantic-structure-discovery.md)
 - Current configuration gates: [`semantic-configuration-gates.md`](./semantic-configuration-gates.md)
 - B524 decision catalog: [`./b524-structural-decisions.md`](./b524-structural-decisions.md)
+- Relation and identity candidates: [`./fixtures/structural-relation-candidates-v1.json`](./fixtures/structural-relation-candidates-v1.json)
 - B524 register map: [`../protocols/vaillant/ebus-vaillant-b524-register-map.md`](../protocols/vaillant/ebus-vaillant-b524-register-map.md)

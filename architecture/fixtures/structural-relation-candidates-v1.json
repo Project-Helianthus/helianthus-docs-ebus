@@ -1,0 +1,916 @@
+{
+  "schema": "helianthus.docs.ebus.structural-relation-candidates/v1",
+  "decision_catalog": "architecture/b524-structural-decisions.md",
+  "attachments": [
+    {
+      "id": "SRC-SD05-zone-room-unit",
+      "decisions": [
+        "SD-05",
+        "SD-15"
+      ],
+      "attachment": "zone_room_unit_binding",
+      "published_field": "zones[].config.roomTemperatureZoneMapping",
+      "from": {
+        "kind": "zone_instance",
+        "identity_evidence": [
+          {
+            "selector": "OP=0x02 GG=0x03 II=zone",
+            "role": "instance_position",
+            "classification": "native_position"
+          },
+          {
+            "selector": "OP=0x02 GG=0x03 II=zone RR=0x0013",
+            "role": "binding_value",
+            "classification": "relation_value"
+          }
+        ],
+        "resolution": "native"
+      },
+      "to": {
+        "kind": "device_slot",
+        "identity_evidence": [
+          {
+            "selector": "OP=0x06 GG=0x09/0x0A II=slot",
+            "role": "instance_position",
+            "classification": "native_position"
+          }
+        ],
+        "resolution": "gateway_policy"
+      },
+      "evidence_grade": "Proven",
+      "validity_scope": [
+        "PROTOCOL"
+      ],
+      "disposition": "relation_candidate",
+      "native_statements": [
+        {
+          "selector": "OP=0x02 GG=0x03 II=zone RR=0x0013",
+          "source": "decision_catalog",
+          "reading": "The zone states its room-unit binding as a raw value: 0 none, 1 the controller's own unit, 2 and above a room-unit number.",
+          "scope": "PROTOCOL"
+        }
+      ],
+      "reason": "The binding is a native zone value for the zone end. The step from the value to one OP=0x06 slot instance (1 to GG=0x09, 2 and above to GG=0x0A at value minus one) is gateway policy, so the room-unit end stays a gateway-policy resolution. The room-unit side value OP=0x06 GG=0x09/0x0A RR=0x0025 corroborates the binding and is no gate.",
+      "pending_review": null
+    },
+    {
+      "id": "SRC-SD06-zone-to-circuit",
+      "decisions": [
+        "SD-06",
+        "SD-15"
+      ],
+      "attachment": "zone_to_circuit",
+      "published_field": "zones[].config.associatedCircuit",
+      "from": {
+        "kind": "zone_instance",
+        "identity_evidence": [
+          {
+            "selector": "OP=0x02 GG=0x03 II=zone",
+            "role": "instance_position",
+            "classification": "native_position"
+          }
+        ],
+        "resolution": "native"
+      },
+      "to": {
+        "kind": "circuit_instance",
+        "identity_evidence": [
+          {
+            "selector": "OP=0x02 GG=0x02 II=circuit",
+            "role": "instance_position",
+            "classification": "native_position"
+          }
+        ],
+        "resolution": "unresolved"
+      },
+      "evidence_grade": "Unknown",
+      "validity_scope": [
+        "LAB",
+        "PROFILE"
+      ],
+      "disposition": "unresolved",
+      "native_statements": [
+        {
+          "selector": "OP=0x02 GG=0x03 II=zone RR=0x0013",
+          "source": "decision_catalog",
+          "reading": "SD-06 reads values 1 to 0x20 as a one-based circuit number and subtracts one; the formula holds for the laboratory scope only.",
+          "scope": "LAB"
+        },
+        {
+          "selector": "OP=0x02 GG=0x03 II=zone RR=0x001C",
+          "source": "register_map",
+          "reading": "The register map names this register zone_circuit_assignment: a raw one-byte index kept without renumbering, with a signed reading in which -1 means not bound as a candidate.",
+          "scope": "PROFILE"
+        }
+      ],
+      "reason": "The two native statements name different registers, and RR=0x0013 is also the room-unit binding of SD-05; no relation candidate is offered while they differ.",
+      "pending_review": "The specialist review of the native owner records which register establishes the zone-to-circuit assignment; no relation candidate is admitted before it."
+    },
+    {
+      "id": "SRC-SD07-zone-to-circuit-fallback",
+      "decisions": [
+        "SD-07",
+        "SD-15"
+      ],
+      "attachment": "zone_to_circuit",
+      "published_field": "zones[].config.associatedCircuit",
+      "from": {
+        "kind": "zone_instance",
+        "identity_evidence": [
+          {
+            "selector": "OP=0x02 GG=0x03 II=zone",
+            "role": "instance_position",
+            "classification": "native_position"
+          }
+        ],
+        "resolution": "native"
+      },
+      "to": {
+        "kind": "circuit_instance",
+        "identity_evidence": [
+          {
+            "selector": "OP=0x02 GG=0x02 II=circuit",
+            "role": "instance_position",
+            "classification": "native_position"
+          }
+        ],
+        "resolution": "gateway_policy"
+      },
+      "evidence_grade": "Unknown",
+      "validity_scope": [
+        "GATEWAY_POLICY"
+      ],
+      "disposition": "absent",
+      "native_statements": [],
+      "reason": "The fallback to the zone's own instance number is gateway policy. Equal instance numbers are never a relation basis, so the fallback offers no candidate.",
+      "pending_review": null
+    },
+    {
+      "id": "SRC-SD09-circuit-managing-module",
+      "decisions": [
+        "SD-09",
+        "SD-15",
+        "functional-modules"
+      ],
+      "attachment": "circuit_managing_module",
+      "published_field": "circuits[].managing_device",
+      "from": {
+        "kind": "circuit_instance",
+        "identity_evidence": [
+          {
+            "selector": "OP=0x02 GG=0x02 II=circuit",
+            "role": "instance_position",
+            "classification": "native_position"
+          }
+        ],
+        "resolution": "native"
+      },
+      "to": {
+        "kind": "functional_module",
+        "identity_evidence": [
+          {
+            "selector": "OP=0x06 GG=0x0C II=slot",
+            "role": "instance_position",
+            "classification": "native_position"
+          },
+          {
+            "selector": "OP=0x06 GG=0x0C II=slot RR=0x0002",
+            "role": "class_address",
+            "classification": "interpretation_selector"
+          }
+        ],
+        "resolution": "gateway_policy"
+      },
+      "evidence_grade": "Proven",
+      "validity_scope": [
+        "LAB",
+        "PROFILE"
+      ],
+      "disposition": "configuration_only",
+      "native_statements": [
+        {
+          "selector": "OP=0x02 GG=0x00 RR=0x0036",
+          "source": "decision_catalog",
+          "reading": "The hydraulic scheme code is installer configuration reported by the controller.",
+          "scope": "LAB"
+        },
+        {
+          "selector": "OP=0x02 GG=0x00 RR=0x002F",
+          "source": "decision_catalog",
+          "reading": "The functional module configuration code is installer configuration whose meanings are documented per controller family.",
+          "scope": "PROFILE"
+        }
+      ],
+      "reason": "No register states which module manages a circuit. The gateway derives ownership from installer configuration codes for one validated tuple; every other tuple stays unknown, and no absence is stated for it. The module end is reached through a slot class address, which selects an interpretation and is never an identity.",
+      "pending_review": null
+    },
+    {
+      "id": "SRC-SD10-connected-device-slot",
+      "decisions": [
+        "SD-10",
+        "SD-15",
+        "functional-modules"
+      ],
+      "attachment": "controller_relays_device_slot",
+      "published_field": "radioDevices[]",
+      "from": {
+        "kind": "b524_semantic_root",
+        "identity_evidence": [
+          {
+            "selector": "PB=0xB5 SB=0x24",
+            "role": "b524_capability",
+            "classification": "provenance"
+          },
+          {
+            "selector": "ZZ",
+            "role": "bus_address",
+            "classification": "bus_address"
+          }
+        ],
+        "resolution": "native"
+      },
+      "to": {
+        "kind": "device_slot",
+        "identity_evidence": [
+          {
+            "selector": "OP=0x06 GG=0x01/0x02/0x09/0x0A/0x0C/0x0E/0x0F II=slot",
+            "role": "instance_position",
+            "classification": "native_position"
+          },
+          {
+            "selector": "OP=0x06 GG=0x01/0x02/0x09/0x0A/0x0C/0x0E/0x0F II=slot RR=0x0001",
+            "role": "presence",
+            "classification": "attribute"
+          },
+          {
+            "selector": "OP=0x06 GG=0x01/0x02/0x09/0x0A/0x0C/0x0E/0x0F II=slot RR=0x0002",
+            "role": "class_address",
+            "classification": "interpretation_selector"
+          },
+          {
+            "selector": "OP=0x06 GG=0x01/0x02/0x09/0x0A/0x0C/0x0E/0x0F II=slot RR=0x0004",
+            "role": "firmware_version",
+            "classification": "attribute"
+          },
+          {
+            "selector": "OP=0x06 GG=0x09/0x0A II=slot RR=0x0023",
+            "role": "hardware_identifier",
+            "classification": "attribute"
+          }
+        ],
+        "resolution": "native"
+      },
+      "evidence_grade": "Proven",
+      "validity_scope": [
+        "PROTOCOL"
+      ],
+      "disposition": "relation_candidate",
+      "native_statements": [
+        {
+          "selector": "OP=0x06 GG=0x01/0x02/0x09/0x0A/0x0C/0x0E/0x0F II=slot RR=0x0001",
+          "source": "decision_catalog",
+          "reading": "A connected slot is a device whose data the controller answers for under OP=0x06.",
+          "scope": "PROTOCOL"
+        }
+      ],
+      "reason": "The controller relays the data of the device in a connected slot. The slot number is local to the controller and is no unit identity; see the relayed-identity rows for the same unit's direct bus entry.",
+      "pending_review": null
+    },
+    {
+      "id": "SRC-SD10-inventory-device-slot",
+      "decisions": [
+        "SD-10"
+      ],
+      "attachment": "controller_relays_device_slot",
+      "published_field": "radioDevices[]",
+      "from": {
+        "kind": "b524_semantic_root",
+        "identity_evidence": [
+          {
+            "selector": "PB=0xB5 SB=0x24",
+            "role": "b524_capability",
+            "classification": "provenance"
+          },
+          {
+            "selector": "ZZ",
+            "role": "bus_address",
+            "classification": "bus_address"
+          }
+        ],
+        "resolution": "native"
+      },
+      "to": {
+        "kind": "device_slot",
+        "identity_evidence": [
+          {
+            "selector": "OP=0x06 GG=0x0C II=slot",
+            "role": "instance_position",
+            "classification": "native_position"
+          },
+          {
+            "selector": "OP=0x06 GG=0x0C II=slot RR=0x0001",
+            "role": "presence",
+            "classification": "attribute"
+          },
+          {
+            "selector": "OP=0x06 GG=0x0C II=slot RR=0x0004",
+            "role": "firmware_version",
+            "classification": "attribute"
+          }
+        ],
+        "resolution": "gateway_policy"
+      },
+      "evidence_grade": "Hypothesis",
+      "validity_scope": [
+        "GATEWAY_POLICY"
+      ],
+      "disposition": "absent",
+      "native_statements": [
+        {
+          "selector": "OP=0x06 GG=0x0C II=slot RR=0x0001",
+          "source": "decision_catalog",
+          "reading": "device_connected reads 0 while firmware or hardware identity stays retained in the slot.",
+          "scope": "GATEWAY_POLICY"
+        }
+      ],
+      "reason": "A disconnected slot with retained identity is no relay that the controller is performing; listing it with slot_mode inventory is gateway policy and offers no candidate.",
+      "pending_review": null
+    },
+    {
+      "id": "SRC-SD15-controller-zone",
+      "decisions": [
+        "SD-15"
+      ],
+      "attachment": "controller_zone_instance",
+      "published_field": "zones[]",
+      "from": {
+        "kind": "b524_semantic_root",
+        "identity_evidence": [
+          {
+            "selector": "PB=0xB5 SB=0x24",
+            "role": "b524_capability",
+            "classification": "provenance"
+          },
+          {
+            "selector": "ZZ",
+            "role": "bus_address",
+            "classification": "bus_address"
+          }
+        ],
+        "resolution": "native"
+      },
+      "to": {
+        "kind": "zone_instance",
+        "identity_evidence": [
+          {
+            "selector": "OP=0x02 GG=0x03 II=zone",
+            "role": "instance_position",
+            "classification": "native_position"
+          }
+        ],
+        "resolution": "native"
+      },
+      "evidence_grade": "Proven",
+      "validity_scope": [
+        "PROTOCOL"
+      ],
+      "disposition": "relation_candidate",
+      "native_statements": [
+        {
+          "selector": "OP=0x02 GG=0x03 II=zone RR=0x001C",
+          "source": "decision_catalog",
+          "reading": "SD-02 marks a zone instance present when this register reads a value other than 0xFF.",
+          "scope": "PROTOCOL"
+        }
+      ],
+      "reason": "A zone instance exists only inside the controller's B524 namespace, and its instance number is local to that controller. Whether the common model records this as the zone's parent or as a relation is its decision.",
+      "pending_review": null
+    },
+    {
+      "id": "SRC-SD15-controller-circuit",
+      "decisions": [
+        "SD-15"
+      ],
+      "attachment": "controller_circuit_instance",
+      "published_field": "circuits[]",
+      "from": {
+        "kind": "b524_semantic_root",
+        "identity_evidence": [
+          {
+            "selector": "PB=0xB5 SB=0x24",
+            "role": "b524_capability",
+            "classification": "provenance"
+          },
+          {
+            "selector": "ZZ",
+            "role": "bus_address",
+            "classification": "bus_address"
+          }
+        ],
+        "resolution": "native"
+      },
+      "to": {
+        "kind": "circuit_instance",
+        "identity_evidence": [
+          {
+            "selector": "OP=0x02 GG=0x02 II=circuit",
+            "role": "instance_position",
+            "classification": "native_position"
+          },
+          {
+            "selector": "OP=0x02 GG=0x02 II=circuit RR=0x0002",
+            "role": "presence",
+            "classification": "attribute"
+          }
+        ],
+        "resolution": "native"
+      },
+      "evidence_grade": "Proven",
+      "validity_scope": [
+        "PROTOCOL"
+      ],
+      "disposition": "relation_candidate",
+      "native_statements": [
+        {
+          "selector": "OP=0x02 GG=0x02 II=circuit RR=0x0002",
+          "source": "decision_catalog",
+          "reading": "SD-08 keeps a circuit instance active when circuit_type reads a value other than an inactive marker.",
+          "scope": "PROTOCOL"
+        }
+      ],
+      "reason": "A circuit instance exists only inside the controller's B524 namespace, and its instance number is local to that controller. Whether the common model records this as the circuit's parent or as a relation is its decision.",
+      "pending_review": null
+    },
+    {
+      "id": "SRC-SD15-module-solar-circuit",
+      "decisions": [
+        "SD-15"
+      ],
+      "attachment": "module_solar_circuit",
+      "published_field": "solar",
+      "from": {
+        "kind": "functional_module",
+        "identity_evidence": [
+          {
+            "selector": "OP=0x06 GG=0x0C II=slot",
+            "role": "instance_position",
+            "classification": "native_position"
+          },
+          {
+            "selector": "OP=0x06 GG=0x0C II=slot RR=0x0002",
+            "role": "class_address",
+            "classification": "interpretation_selector"
+          }
+        ],
+        "resolution": "gateway_policy"
+      },
+      "to": {
+        "kind": "solar_circuit",
+        "identity_evidence": [
+          {
+            "selector": "OP=0x02 GG=0x04",
+            "role": "instance_position",
+            "classification": "native_position"
+          }
+        ],
+        "resolution": "native"
+      },
+      "evidence_grade": "Proven",
+      "validity_scope": [
+        "PROFILE"
+      ],
+      "disposition": "configuration_only",
+      "native_statements": [
+        {
+          "selector": "OP=0x02 GG=0x00 RR=0x002F",
+          "source": "decision_catalog",
+          "reading": "The functional module configuration code selects whether the controller family shows a solar circuit.",
+          "scope": "PROFILE"
+        }
+      ],
+      "reason": "The solar circuit appears only for some installer configuration codes; no register attaches it to a module unit.",
+      "pending_review": null
+    },
+    {
+      "id": "SRC-SD15-module-cylinder",
+      "decisions": [
+        "SD-15"
+      ],
+      "attachment": "module_cylinder",
+      "published_field": "cylinders",
+      "from": {
+        "kind": "functional_module",
+        "identity_evidence": [
+          {
+            "selector": "OP=0x06 GG=0x0C II=slot",
+            "role": "instance_position",
+            "classification": "native_position"
+          },
+          {
+            "selector": "OP=0x06 GG=0x0C II=slot RR=0x0002",
+            "role": "class_address",
+            "classification": "interpretation_selector"
+          }
+        ],
+        "resolution": "gateway_policy"
+      },
+      "to": {
+        "kind": "cylinder_instance",
+        "identity_evidence": [
+          {
+            "selector": "OP=0x02 GG=0x05 II=cylinder",
+            "role": "instance_position",
+            "classification": "native_position"
+          }
+        ],
+        "resolution": "native"
+      },
+      "evidence_grade": "Proven",
+      "validity_scope": [
+        "PROFILE"
+      ],
+      "disposition": "configuration_only",
+      "native_statements": [
+        {
+          "selector": "OP=0x02 GG=0x00 RR=0x002F",
+          "source": "decision_catalog",
+          "reading": "The functional module configuration code selects how many solar cylinders the controller family shows.",
+          "scope": "PROFILE"
+        }
+      ],
+      "reason": "Cylinders appear only for some installer configuration codes; no register attaches a cylinder to a module unit.",
+      "pending_review": null
+    },
+    {
+      "id": "SRC-FM-second-family-slot",
+      "decisions": [
+        "functional-modules"
+      ],
+      "attachment": "controller_relays_device_slot",
+      "published_field": null,
+      "from": {
+        "kind": "b524_semantic_root",
+        "identity_evidence": [
+          {
+            "selector": "PB=0xB5 SB=0x24",
+            "role": "b524_capability",
+            "classification": "provenance"
+          },
+          {
+            "selector": "ZZ",
+            "role": "bus_address",
+            "classification": "bus_address"
+          }
+        ],
+        "resolution": "native"
+      },
+      "to": {
+        "kind": "device_slot",
+        "identity_evidence": [
+          {
+            "selector": "OP=0x06 GG=0x0B II=slot",
+            "role": "instance_position",
+            "classification": "native_position"
+          }
+        ],
+        "resolution": "unresolved"
+      },
+      "evidence_grade": "Unknown",
+      "validity_scope": [
+        "PROFILE"
+      ],
+      "disposition": "absent",
+      "native_statements": [],
+      "reason": "OP=0x06 GG=0x0B carries a presentation name only: no slot bounds, register layout or unit identity is established, so no candidate is offered.",
+      "pending_review": null
+    },
+    {
+      "id": "SRC-FM-second-family-status",
+      "decisions": [
+        "functional-modules"
+      ],
+      "attachment": "controller_module_status",
+      "published_field": null,
+      "from": {
+        "kind": "b524_semantic_root",
+        "identity_evidence": [
+          {
+            "selector": "PB=0xB5 SB=0x24",
+            "role": "b524_capability",
+            "classification": "provenance"
+          },
+          {
+            "selector": "ZZ",
+            "role": "bus_address",
+            "classification": "bus_address"
+          }
+        ],
+        "resolution": "native"
+      },
+      "to": {
+        "kind": "functional_module",
+        "identity_evidence": [
+          {
+            "selector": "OP=0x02 GG=0x00 RR=0x0067",
+            "role": "presence",
+            "classification": "attribute"
+          },
+          {
+            "selector": "OP=0x02 GG=0x00 RR=0x0068",
+            "role": "presence",
+            "classification": "attribute"
+          }
+        ],
+        "resolution": "unresolved"
+      },
+      "evidence_grade": "Unknown",
+      "validity_scope": [
+        "PROFILE"
+      ],
+      "disposition": "absent",
+      "native_statements": [
+        {
+          "selector": "OP=0x02 GG=0x00 RR=0x0067",
+          "source": "register_map",
+          "reading": "A raw module status register of the second module family.",
+          "scope": "PROFILE"
+        },
+        {
+          "selector": "OP=0x02 GG=0x00 RR=0x0068",
+          "source": "register_map",
+          "reading": "A second raw module status register of the same family.",
+          "scope": "PROFILE"
+        }
+      ],
+      "reason": "The status registers state no attachment of a module of the second family to a circuit, a zone or a slot.",
+      "pending_review": null
+    }
+  ],
+  "relayed_identity": [
+    {
+      "id": "SRI-functional-module-slot",
+      "decisions": [
+        "SD-10",
+        "functional-modules"
+      ],
+      "groups": [
+        "0x0C"
+      ],
+      "relaying_end": {
+        "kind": "b524_semantic_root",
+        "identity_evidence": [
+          {
+            "selector": "PB=0xB5 SB=0x24",
+            "role": "b524_capability",
+            "classification": "provenance"
+          },
+          {
+            "selector": "ZZ",
+            "role": "bus_address",
+            "classification": "bus_address"
+          }
+        ],
+        "resolution": "native"
+      },
+      "slot_view": {
+        "kind": "device_slot",
+        "identity_evidence": [
+          {
+            "selector": "OP=0x06 GG=0x0C II=slot",
+            "role": "instance_position",
+            "classification": "native_position"
+          },
+          {
+            "selector": "OP=0x06 GG=0x0C II=slot RR=0x0002",
+            "role": "class_address",
+            "classification": "interpretation_selector"
+          },
+          {
+            "selector": "OP=0x06 GG=0x0C II=slot RR=0x0004",
+            "role": "firmware_version",
+            "classification": "attribute"
+          }
+        ]
+      },
+      "direct_view": {
+        "kind": "direct_bus_entry",
+        "status": "correlated",
+        "identity_evidence": [
+          {
+            "selector": "PB=0x07 SB=0x04",
+            "role": "bus_identification",
+            "classification": "interpretation_selector"
+          },
+          {
+            "selector": "ZZ",
+            "role": "bus_address",
+            "classification": "bus_address"
+          }
+        ]
+      },
+      "shared_anchor_key_source": "none",
+      "disposition": "two_views_unresolved",
+      "reason": "The slot carries a class address and a firmware version. In the laboratory scope its class address equals the address of a directly identified module; an equal address is a correlation and never an identity basis. The direct entry's identification reply carries manufacturer, device identifier and versions, which select an interpretation; no unit token is documented on either path."
+    },
+    {
+      "id": "SRI-heat-source-slots",
+      "decisions": [
+        "SD-10"
+      ],
+      "groups": [
+        "0x01",
+        "0x02"
+      ],
+      "relaying_end": {
+        "kind": "b524_semantic_root",
+        "identity_evidence": [
+          {
+            "selector": "PB=0xB5 SB=0x24",
+            "role": "b524_capability",
+            "classification": "provenance"
+          },
+          {
+            "selector": "ZZ",
+            "role": "bus_address",
+            "classification": "bus_address"
+          }
+        ],
+        "resolution": "native"
+      },
+      "slot_view": {
+        "kind": "device_slot",
+        "identity_evidence": [
+          {
+            "selector": "OP=0x06 GG=0x01/0x02 II=slot",
+            "role": "instance_position",
+            "classification": "native_position"
+          },
+          {
+            "selector": "OP=0x06 GG=0x01/0x02 II=slot RR=0x0002",
+            "role": "class_address",
+            "classification": "interpretation_selector"
+          },
+          {
+            "selector": "OP=0x06 GG=0x01/0x02 II=slot RR=0x0004",
+            "role": "firmware_version",
+            "classification": "attribute"
+          }
+        ]
+      },
+      "direct_view": {
+        "kind": "direct_bus_entry",
+        "status": "not_established",
+        "identity_evidence": [
+          {
+            "selector": "PB=0x07 SB=0x04",
+            "role": "bus_identification",
+            "classification": "interpretation_selector"
+          },
+          {
+            "selector": "ZZ",
+            "role": "bus_address",
+            "classification": "bus_address"
+          }
+        ]
+      },
+      "shared_anchor_key_source": "none",
+      "disposition": "two_views_unresolved",
+      "reason": "The slots carry the common OP=0x06 class address and firmware version; no correspondence to a direct bus entry is documented. The direct entry's identification reply carries manufacturer, device identifier and versions, which select an interpretation; no unit token is documented on either path."
+    },
+    {
+      "id": "SRI-room-unit-slots",
+      "decisions": [
+        "SD-10"
+      ],
+      "groups": [
+        "0x09",
+        "0x0A"
+      ],
+      "relaying_end": {
+        "kind": "b524_semantic_root",
+        "identity_evidence": [
+          {
+            "selector": "PB=0xB5 SB=0x24",
+            "role": "b524_capability",
+            "classification": "provenance"
+          },
+          {
+            "selector": "ZZ",
+            "role": "bus_address",
+            "classification": "bus_address"
+          }
+        ],
+        "resolution": "native"
+      },
+      "slot_view": {
+        "kind": "device_slot",
+        "identity_evidence": [
+          {
+            "selector": "OP=0x06 GG=0x09/0x0A II=slot",
+            "role": "instance_position",
+            "classification": "native_position"
+          },
+          {
+            "selector": "OP=0x06 GG=0x09/0x0A II=slot RR=0x0002",
+            "role": "class_address",
+            "classification": "interpretation_selector"
+          },
+          {
+            "selector": "OP=0x06 GG=0x09/0x0A II=slot RR=0x0004",
+            "role": "firmware_version",
+            "classification": "attribute"
+          },
+          {
+            "selector": "OP=0x06 GG=0x09/0x0A II=slot RR=0x0023",
+            "role": "hardware_identifier",
+            "classification": "attribute"
+          }
+        ]
+      },
+      "direct_view": {
+        "kind": "direct_bus_entry",
+        "status": "not_established",
+        "identity_evidence": [
+          {
+            "selector": "PB=0x07 SB=0x04",
+            "role": "bus_identification",
+            "classification": "interpretation_selector"
+          },
+          {
+            "selector": "ZZ",
+            "role": "bus_address",
+            "classification": "bus_address"
+          }
+        ]
+      },
+      "shared_anchor_key_source": "none",
+      "disposition": "two_views_unresolved",
+      "reason": "The slots also carry a raw hardware identifier whose first byte does not match the class address in the room-unit group; it is not documented as a unit token. The direct entry's identification reply carries manufacturer, device identifier and versions, which select an interpretation; no unit token is documented on either path."
+    },
+    {
+      "id": "SRI-uncharacterized-slots",
+      "decisions": [
+        "SD-10"
+      ],
+      "groups": [
+        "0x0E",
+        "0x0F"
+      ],
+      "relaying_end": {
+        "kind": "b524_semantic_root",
+        "identity_evidence": [
+          {
+            "selector": "PB=0xB5 SB=0x24",
+            "role": "b524_capability",
+            "classification": "provenance"
+          },
+          {
+            "selector": "ZZ",
+            "role": "bus_address",
+            "classification": "bus_address"
+          }
+        ],
+        "resolution": "native"
+      },
+      "slot_view": {
+        "kind": "device_slot",
+        "identity_evidence": [
+          {
+            "selector": "OP=0x06 GG=0x0E/0x0F II=slot",
+            "role": "instance_position",
+            "classification": "native_position"
+          },
+          {
+            "selector": "OP=0x06 GG=0x0E/0x0F II=slot RR=0x0002",
+            "role": "class_address",
+            "classification": "interpretation_selector"
+          },
+          {
+            "selector": "OP=0x06 GG=0x0E/0x0F II=slot RR=0x0004",
+            "role": "firmware_version",
+            "classification": "attribute"
+          }
+        ]
+      },
+      "direct_view": {
+        "kind": "direct_bus_entry",
+        "status": "not_established",
+        "identity_evidence": [
+          {
+            "selector": "PB=0x07 SB=0x04",
+            "role": "bus_identification",
+            "classification": "interpretation_selector"
+          },
+          {
+            "selector": "ZZ",
+            "role": "bus_address",
+            "classification": "bus_address"
+          }
+        ]
+      },
+      "shared_anchor_key_source": "none",
+      "disposition": "two_views_unresolved",
+      "reason": "Only the common OP=0x06 register names are documented for these groups; no register layout or direct correspondence is established. The direct entry's identification reply carries manufacturer, device identifier and versions, which select an interpretation; no unit token is documented on either path."
+    }
+  ]
+}
