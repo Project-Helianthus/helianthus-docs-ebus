@@ -5,8 +5,9 @@ a canonical name and, where known, correspondence names. An entry is identified
 by `(device_class, operation, selector)`; equal names never merge entries of
 different identity. These tests keep the fixture and the two maps in step,
 including the codec and scale of every register, keep the fixture's own keys,
-names and multi-value cells well formed, and keep the read-only refrigerant
-poll of the heat pump map consistent with the fixture.
+names and multi-value cells well formed, and keep the refrigerant and
+compressor rows of the heat pump map consistent with the fixture, and keep the
+read-only poll page of the architecture tree consistent with the map.
 """
 
 import csv
@@ -69,9 +70,10 @@ CODEC_HEADER = "Codec / scale"
 SELECTOR_HEADER = "Full selector (hex)"
 
 HEAT_PUMP_CLASSES = ("heat_pump", "heat_pump_interface_unit")
-POLL_HEADING = "## Read-only refrigerant poll"
+POLL_HEADING = "## Refrigerant and compressor numeric rows"
+POLL_PAGE = ROOT / "architecture" / "b509-heatpump-refrigerant-poll.md"
 POLL_SUBJECTS = ("refrigerant_", "compressor_")
-POLL_HEADER = ["Selector", "Operation", "Class", "Name", "Unit", "Evidence before export"]
+POLL_HEADER = ["Selector", "Operation", "Class", "Name", "Unit", "Evidence for use as a point"]
 
 
 def _rows(path: Path) -> list[dict[str, str]]:
@@ -170,7 +172,7 @@ def _map_codecs(path: Path, register_class: str) -> dict[tuple[str, str], tuple[
 def _poll_rows() -> list[dict[str, str]]:
     """Return the rows of the table in the read-only refrigerant poll section."""
     lines = HEAT_PUMP_MAP.read_text(encoding="utf-8").splitlines()
-    assert POLL_HEADING in lines, "the heat pump map has no read-only refrigerant poll"
+    assert POLL_HEADING in lines, "the heat pump map has no refrigerant and compressor numeric rows section"
     section = []
     for line in lines[lines.index(POLL_HEADING) + 1 :]:
         if line.startswith("## "):
@@ -408,7 +410,7 @@ def test_poll_covers_the_final_numeric_refrigerant_and_compressor_rows() -> None
 
 def test_poll_withholds_pressures_and_compressor_speed_until_their_evidence() -> None:
     for poll in _poll_rows():
-        evidence = poll["Evidence before export"]
+        evidence = poll["Evidence for use as a point"]
         if poll["Unit"] == "bar":
             assert "pressure reference" in evidence and "absolute or gauge" in evidence, poll
         elif poll["Name"] == "compressor_speed":
@@ -417,8 +419,18 @@ def test_poll_withholds_pressures_and_compressor_speed_until_their_evidence() ->
             assert evidence == "--", poll
 
 
-def test_poll_section_states_its_bounds_and_the_owner_decision() -> None:
-    text = _section_text(POLL_HEADING)
+def test_protocol_page_carries_no_poll_behaviour() -> None:
+    text = HEAT_PUMP_MAP.read_text(encoding="utf-8")
+    assert "Read-only refrigerant poll" not in text
+    assert "refrigerant-poll" not in text, "the protocol page must not link to the poll page"
+    section = _section_text(POLL_HEADING)
+    for forbidden in ("at least 60 seconds", "off by default", "scrape", "cycle", "Owner approval"):
+        assert forbidden not in section, f"the protocol page states gateway behaviour: {forbidden}"
+
+
+def test_poll_page_states_its_bounds_and_the_owner_decision() -> None:
+    text = " ".join(POLL_PAGE.read_text(encoding="utf-8").split())
+    assert "(../protocols/vaillant/ebus-vaillant-b509-heatpump-register-map.md)" in text
     for statement in (
         "at most one read of each listed selector",
         "at least 60 seconds",
@@ -426,6 +438,11 @@ def test_poll_section_states_its_bounds_and_the_owner_decision() -> None:
         "never starts, schedules or hastens a poll read",
         "stays withheld",
         "Enabling the poll on an installation is the owner's decision at live testing.",
-        "Nothing in this page authorizes a read on a field bus.",
+        "Nothing in this page authorizes a read on any installation or field bus.",
     ):
-        assert statement in text, f"the poll section does not state: {statement}"
+        assert statement in text, f"the poll page does not state: {statement}"
+
+
+def test_poll_page_is_listed_in_the_architecture_index() -> None:
+    index = (ROOT / "architecture" / "index.md").read_text(encoding="utf-8")
+    assert "(b509-heatpump-refrigerant-poll.md)" in index

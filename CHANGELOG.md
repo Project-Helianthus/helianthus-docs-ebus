@@ -10,17 +10,20 @@
   `100`). A row whose map states no codec, and the two operation rows, keep
   both cells empty. Every name, unit and open question is unchanged.
   `protocols/vaillant/ebus-vaillant-b509-heatpump-register-map.md` has a
-  "Read-only refrigerant poll" section: it covers the final numeric
-  refrigerant and compressor rows of the `heat_pump` and
-  `heat_pump_interface_unit` classes, with at most one read of each selector
+  "Refrigerant and compressor numeric rows" section that lists the final
+  numeric refrigerant and compressor rows of the `heat_pump` and
+  `heat_pump_interface_unit` classes and the evidence each needs: the pressure
+  reference, absolute or gauge, for the refrigerant pressures and the unit for
+  the compressor speed. `architecture/b509-heatpump-refrigerant-poll.md`
+  defines the read-only poll of those rows: at most one read of each selector
   per cycle and at least 60 seconds between cycle starts, only on a target
   identified as a heat pump class, off by default and never started by a
-  scrape or status read. The two refrigerant pressures stay withheld until
-  their reference, absolute or gauge, is stated, and the compressor speed
-  until its unit is resolved. Enabling the poll on an installation is the
-  owner's decision at live testing; the page authorizes no read on a field
-  bus. `tests/test_b509_register_name_correspondence.py` asserts that both
-  columns equal the map pages and that the poll table matches the fixture.
+  scrape or status read, with points that lack their evidence withheld.
+  Enabling the poll on an installation is the owner's decision at live
+  testing; the page authorizes no read on any installation.
+  `tests/test_b509_register_name_correspondence.py` asserts that both columns
+  equal the map pages, that the table matches the fixture and that the poll
+  page states its bounds.
 
 - `api/semantic-snapshot-read.md` has an "Assets with several sources"
   section. A source counts when it is admitted (live, not fenced, not retired)
