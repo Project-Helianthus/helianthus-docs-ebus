@@ -583,12 +583,16 @@ clear interpretation is a naming and codec condition; evidence status
 - No native sample carries an exposition timestamp.
 - At most 1,024 value series appear per scrape target, for the lifetime of the
   target and not only per scrape. The gateway keeps a lifetime admission set of
-  label sets. It orders the candidates by `protocol`, `device`, `point` and then
-  numeric `index`, with no index first, and admits candidates in that order
-  until the set holds 1,024 label sets. An admitted label set stays admitted
-  and is never replaced by another candidate, so arrival, expiry, eviction or a
-  registry or documentation change cannot raise the number of native series a
-  target has emitted above 1,024. A candidate outside the set is omitted and
+  value series, each keyed by its family name together with its label set, so
+  one label set under two families, such as `temperature` and
+  `temperature_difference` or `rotational_speed` and `frequency`, takes two
+  entries. It orders the candidates by family name, `protocol`, `device`,
+  `point` and then numeric `index`, with no index first, and admits candidates
+  in that order until the set holds 1,024 value series. An admitted value
+  series stays admitted and is never replaced by another candidate, so arrival,
+  expiry, eviction or a registry or documentation change that moves a point to
+  another family cannot raise the number of native value series a target has
+  emitted above 1,024. A candidate outside the set is omitted and
   counted. The set resets only when the scrape target restarts. An age series
   appears only for a point inside that selection.
   `helianthus_native_render_overflow` holds the number of value series omitted

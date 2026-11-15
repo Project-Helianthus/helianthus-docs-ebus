@@ -313,8 +313,15 @@ def _check_native_family(row: tuple[str, ...], emitted_names: set[str]) -> None:
 
 NATIVE_LIFETIME_RULES = (
     "A label set belongs to one native identity for the lifetime of the scrape target",
-    "lifetime admission set of label sets",
+    "lifetime admission set of value series, each keyed by its family name together with its label set",
+    "until the set holds 1,024 value series",
     "never replaced by another candidate",
+)
+# A label set can appear under two families that share a unit, so a budget
+# counted in label sets would let one target emit more than 1,024 series.
+NATIVE_BUDGET_FORBIDDEN = (
+    "admission set of label sets",
+    "holds 1,024 label sets",
 )
 # The unit rule covers the value and age families only; the overflow family
 # carries neither labels nor a unit.
@@ -347,6 +354,8 @@ def _validate_native_points(text: str, emitted_names: set[str]) -> None:
     flat = " ".join(native.split())
     if any(rule not in flat for rule in NATIVE_LIFETIME_RULES):
         raise CheckError("native label and series lifetime rules are missing")
+    if any(phrase in flat for phrase in NATIVE_BUDGET_FORBIDDEN):
+        raise CheckError("native series budget must count value series, not label sets")
     if (any(rule not in flat for rule in NATIVE_UNIT_RULES)
             or "Each family has exactly one constant unit" in normalized(native)):
         raise CheckError("native unit rule must exempt the label-free overflow family")

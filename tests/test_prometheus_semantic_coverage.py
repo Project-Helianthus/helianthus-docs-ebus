@@ -314,7 +314,8 @@ def test_native_section_rejects_drift(old, new, message):
 
 @pytest.mark.parametrize("phrase", [
     "A label set belongs to one native identity for the\nlifetime of the scrape target",
-    "lifetime admission set of label sets",
+    "lifetime admission set of\nvalue series, each keyed by its family name together with its label set",
+    "until the set holds 1,024 value series",
     "never replaced by another candidate",
 ])
 def test_native_section_requires_lifetime_rules(phrase):
@@ -322,6 +323,31 @@ def test_native_section_requires_lifetime_rules(phrase):
     assert " ".join(phrase.split()) in " ".join(text.split())
     with pytest.raises(CHECKER.CheckError, match="lifetime rules"):
         CHECKER.validate(_without_phrase(text, phrase))
+
+
+@pytest.mark.parametrize(("old", "new"), [
+    ("until the set holds 1,024 value series.",
+     "until the set holds 1,024 value series. It keeps a lifetime admission set of label sets."),
+    ("until the set holds 1,024 value series.",
+     "until the set holds 1,024 value series. The set holds 1,024 label sets."),
+], ids=["admission_key_label_sets", "bound_label_sets"])
+def test_native_budget_counts_value_series_not_label_sets(old, new):
+    # Two families share a unit (temperature and temperature_difference,
+    # rotational_speed and frequency), so a point moved between them keeps its
+    # label set and adds a series; a budget counted in label sets would let a
+    # target emit more than 1,024 value series.
+    text = document()
+    assert text.count(old) == 1
+    with pytest.raises(CHECKER.CheckError, match="value series, not label sets"):
+        CHECKER.validate(text.replace(old, new))
+
+
+def test_native_budget_key_names_same_unit_family_pairs():
+    flat = " ".join(document().split())
+    assert ("one label set under two families, such as `temperature` and "
+            "`temperature_difference` or `rotational_speed` and `frequency`, "
+            "takes two entries") in flat
+    assert "It orders the candidates by family name, `protocol`" in flat
 
 
 @pytest.mark.parametrize("replacement", [
