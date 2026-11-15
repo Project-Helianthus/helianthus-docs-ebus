@@ -45,6 +45,25 @@ absence is scoped to the supplied public contract, not a claim about every
 possible registry. Evidence labels Proven/Hypothesis/Unknown remain separate
 from acquisition success, freshness, admission, and binding qualification.
 
+## Native attachment
+
+- **Native resource.** The system value belongs to the singleton system group
+  `OP=0x02 GG=0x00 II=0x00` of the B524 semantic root, at `RR=0x0039`. The
+  boiler candidate belongs to a different native resource, the B509 register
+  space of the qualified boiler target. Neither is the native resource of the
+  other, and the B524 register says nothing about where the sensor sits in the
+  water circuit.
+- **Relation candidates.** None. The
+  [structural relation candidates](fixtures/structural-relation-candidates-v1.json)
+  list no attachment that carries a system-group register to another native
+  resource. Their heat-source slot row `SRI-heat-source-slots` leaves the
+  correspondence between a controller slot and a direct bus entry unresolved
+  (`two_views_unresolved`), so no candidate joins the system value to the
+  boiler.
+- **Element inventory.** No water pressure fact has an element inventory
+  entry. The common subject of a pressure value is not decided; this page
+  proposes none.
+
 ## Four distinct dispositions
 
 | Layer | Current documented identity or evidence | Disposition of this contract |
@@ -69,7 +88,7 @@ artifact schema or a claim about today's cache implementation.
 
 | Identity or retained information | Required boundary |
 | --- | --- |
-| Owning asset and service | Explicitly bound system asset and controller system service. A boiler asset/service remains distinct. Never derive ownership from a display name, public ID, equal scalar, or shared bus address. |
+| Owning asset and native resource | Explicitly bound asset and the native system group of the B524 semantic root (see [Native attachment](#native-attachment)); no service placement is proposed. A boiler asset and its B509 register space remain distinct. Never derive ownership from a display name, public ID, equal scalar, or shared bus address. |
 | Native route | Actual initiator and target, request/reply direction, full `PB/SB/OP/OT/GG/II/RR`, controller family and qualified profile context. A routing address is not a durable asset identity. Do not copy the temperature map's destination as pressure proof. |
 | Source continuity | Source identity, source epoch and driver generation remain separate from asset/service and selector. Replacement at the same address cannot inherit qualification or last-known-good state by address alone. |
 | Evidence and decoding | Preserve original reply/value bytes, response outcome, evidence reference, codec, byte order, unit and interpretation status alongside the decoded scalar. Rejected attempts remain distinguishable from accepted observations. |

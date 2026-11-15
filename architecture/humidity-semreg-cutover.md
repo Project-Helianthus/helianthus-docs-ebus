@@ -32,9 +32,9 @@ qualification under its evidence-gap revision; it supplies no humidity binding.
   sensor descriptions below; source inspection establishes the code paths
   described here. This does not claim newly reproduced native observations.
 - **Hypothesis:** an exact qualified humidity sensor could project through the
-  existing relative-humidity quantity with the service associations below.
+  existing relative-humidity quantity from the native attachments below.
   Raw zone mapping labels are not independent proof of physical sensor identity.
-- **Unknown:** complete humidity FactKey role values, collision-free source/service
+- **Unknown:** the common subject of humidity, collision-free source
   bindings, exact family/profile qualification witnesses and accepted lifecycle
   policy for this cutover. Acquisition, qualification, freshness and admission
   are independent of these evidence labels.
@@ -110,6 +110,33 @@ binding. Family enum candidate labels and slot numbers do not establish physical
 identity. A future stricter qualification refusal must be reported as loss,
 not disguised as an unchanged selected source.
 
+## Native attachment
+
+- **Native resource.** Each observation belongs to its own native resource of
+  the controller's B524 namespace: controller-zone humidity to the zone
+  instance `OP=0x02 GG=0x03 II=zone` (`RR=0x0028`); remote-room humidity to the
+  device slot `OP=0x06 GG=0x09/0x0A II=slot` (`RR=0x0007`); circuit humidity to
+  the circuit instance `OP=0x02 GG=0x02 II=circuit` (`RR=0x0022`); and the
+  maximum-room-humidity threshold to the system group `OP=0x02 GG=0x00 II=0x00`
+  of the B524 semantic root (`RR=0x000E`). Equal values never merge them.
+- **Relation candidates.** The
+  [structural relation candidates](fixtures/structural-relation-candidates-v1.json)
+  offer `SRC-SD15-controller-zone` and `SRC-SD15-controller-circuit`
+  (`relation_candidate`: each instance exists only inside the controller's
+  namespace), `SRC-SD10-connected-device-slot` (`relation_candidate`: the
+  controller relays the data of a connected slot) and `SRC-SD05-zone-room-unit`
+  (`relation_candidate` whose room-unit end is a gateway-policy resolution of
+  the binding `RR=0x0013`). `SRI-room-unit-slots` leaves the slot view and the
+  unit's direct bus entry unresolved (`two_views_unresolved`). The zone-to-circuit
+  rows `SRC-SD06-zone-to-circuit` (`unresolved`) and
+  `SRC-SD07-zone-to-circuit-fallback` (`absent`) join no circuit humidity to a
+  zone. The threshold has no relation candidate.
+- **Element inventory.** The measurement target `thermal.measurement.humidity`
+  is `unknown` with the reason `catalog.reason.subject_unresolved` and no
+  plane. The threshold has no element inventory entry. The common subject of
+  these values is not decided; this page proposes none, and a remote value
+  that a legacy fallback presents for a zone stays a value of its device slot.
+
 ## Proposed SemReg mapping and withholding
 
 `thermal.measurement.humidity_relative` is an existing quantity in `unit.percent`
@@ -117,17 +144,17 @@ with field dimension `thermal.dimension.ratio`, inclusive bounds 0 and 100
 (`bound("0",0)` and `bound("1",2)`). Use percent magnitude: 50 percent remains
 50, not 0.5. These are pack validation bounds, not device qualification.
 
-| Native role | Candidate service / capability | Cutover disposition against the supplied pack evidence |
+| Native role | Native resource; service placement | Cutover disposition against the supplied pack evidence |
 |---|---|---|
-| Controller-zone measurement | `thermal.service.zone`, `thermal.capability.read.zone`; service identity dimension `thermal.dimension.zone` | Candidate humidity field only. Withhold the complete FactKey and runtime publication until exact sensor role, ratio-dimension value and per-zone/source binding are evidenced. |
-| Remote-room measurement | Qualified destination zone may associate with `thermal.service.zone` and its read capability | Keep the remote identity even when projected into a zone. No dedicated remote-room service/binding is established here. Unassigned remote can remain native evidence but has no inferred zone service. Withhold unresolved FactKey or service. |
-| Circuit measurement | `thermal.service.circuit`, `thermal.capability.read.circuit`; service identity dimension `thermal.dimension.circuit` | Candidate humidity field only, with separate circuit sensor identity and exact ratio-dimension binding unresolved. Never reuse a zone key because values match. |
+| Controller-zone measurement | Zone instance `OP=0x02 GG=0x03 II=zone`; no service placement is proposed | Candidate humidity field only. Withhold the complete FactKey and runtime publication until the subject is decided, the sensor role is evidenced and the per-zone/source binding is qualified. |
+| Remote-room measurement | Device slot `OP=0x06 GG=0x09/0x0A II=slot`; no service placement is proposed, also when a legacy fallback shows the value for a zone | Keep the remote identity even when projected into a zone. No dedicated remote-room service/binding is established here. Unassigned remote can remain native evidence but has no inferred zone service. Withhold unresolved FactKey or service. |
+| Circuit measurement | Circuit instance `OP=0x02 GG=0x02 II=circuit`; no service placement is proposed | Candidate humidity field only, with separate circuit sensor identity and the subject unresolved. Never reuse a zone key because values match. |
 | Configuration threshold | No matching humidity-threshold field or operation in `fields` / `operations` | Withhold universal projection: configuration threshold is unrepresentable by the measurement definition. Keep the native/legacy config value; do not repurpose demand level, a temperature setpoint or measured humidity. |
 
-The service identity dimensions are not permission to insert extra zone/circuit
-or source dimensions into the humidity FactKey. `Metadata` establishes a field
-ratio dimension, but these sources supply no exact humidity role value or
-collision-free binding. This page invents none. Until that gap is closed, no
+No zone, circuit, slot or source dimension is inserted into the humidity
+FactKey. `Metadata` establishes only a ratio qualifier dimension; no role or
+resource is carried in its text, and these sources supply no collision-free
+binding. This page invents none. Until that gap is closed, no
 complete humidity FactKey is admitted by this contract. Percent representability
 alone cannot qualify a role, sensor, or service. No universal definition, new
 namespace, writable route or inferred write support is added.
@@ -223,8 +250,8 @@ example and public link against the sources above. Readability is not semantic
 validation or runtime proof. No new prose tests, fixtures, validators or schemas
 are required or introduced. This contract closes only the documentation slice.
 
-Implementation acceptance still needs reviewed exact humidity FactKey role values
-and source/service bindings; family-qualified native sensor/mapping/codec evidence;
+Implementation acceptance still needs a decided common subject for humidity
+and qualified source bindings; family-qualified native sensor/mapping/codec evidence;
 accepted lifecycle policy and runtime qualification; per-source retention and
 loss handling; and MCP/GraphQL equivalence evidence. Those downstream changes do
 not block authoring this bounded contract and do not close gateway #952. Full

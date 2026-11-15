@@ -131,6 +131,30 @@ separately; their presence is not a holiday-active decision. MCP semantic
 paths and the GraphQL Zone fields remain compatibility surfaces; this source
 inspection does not validate their transports at runtime.
 
+## Native attachment
+
+- **Native resource.** Operating mode O, special function S, room sensor
+  binding R, zone circuit assignment A and the quick-veto and holiday context
+  belong to the zone instance `OP=0x02 GG=0x03 II=zone` of the controller's
+  B524 namespace, whose instance number is local to that controller. Circuit
+  type T and cooling-enabled C belong to a circuit instance
+  `OP=0x02 GG=0x02 II=circuit`, a different native resource.
+- **Relation candidates.** The
+  [structural relation candidates](fixtures/structural-relation-candidates-v1.json)
+  offer `SRC-SD15-controller-zone` (`relation_candidate`: the zone instance
+  exists only inside the controller's namespace) and
+  `SRC-SD05-zone-room-unit` (`relation_candidate` for R, whose room-unit end is
+  a gateway-policy resolution). The zone-to-circuit attachment that T and C
+  need is `SRC-SD06-zone-to-circuit` (`unresolved`: the native statements name
+  different registers) and `SRC-SD07-zone-to-circuit-fallback` (`absent`:
+  equal instance numbers are never a relation basis). No candidate therefore
+  joins T or C to a zone.
+- **Element inventory.** The target `thermal.mode.zone` is `member` in the
+  control plane, and its subject kind is a zone. Which zone resource a native
+  zone instance becomes is a gateway allocation; this page allocates none.
+  Preset, allowed modes and quick-veto activity have no element inventory
+  entry.
+
 ## Proposed bounded binding and exact loss decisions
 
 The only proposed target is a read-only candidate FactKey:
@@ -138,12 +162,14 @@ The only proposed target is a read-only candidate FactKey:
 - `PackID = helianthus.pack.thermal`, `PackVersion = 1.0.0` (existing pack
   identifier, not a claim of platform stability).
 - `FactID = thermal.mode.zone`.
-- Exactly one dimension: `thermal.dimension.zone`, text value `zone:alpha`
-  in the synthetic cases. Production uses its qualified stable zone identity;
-  never infer it from `zone-1`, z+1, R or a display name.
-- Separate binding metadata identifies the qualified asset and
-  `thermal.service.zone` service, native source, epoch and driver generation.
-  They are not additional FactKey dimensions.
+- Exactly one dimension: `thermal.dimension.zone`, whose value is the
+  resource identifier the gateway allocates for the zone resource, never
+  dimension text. The synthetic cases call that resource `alpha`. Never infer
+  it from `zone-1`, z+1, R or a display name.
+- Separate binding metadata identifies the qualified asset, the native zone
+  instance, the `thermal.service.zone` service instance that names the same
+  zone resource, native source, epoch and driver generation. They are not
+  additional FactKey dimensions.
 
 This is a **proposed**, unpromoted candidate mapping, not an implemented fact
 producer. A candidate is not an admitted projection. Auto/off equivalence

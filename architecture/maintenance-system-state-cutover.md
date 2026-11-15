@@ -75,6 +75,24 @@ and `runtime_qualification_permitted=false`. It qualifies neither field here.
 A future binding needs its own selector-correlated public evidence revision;
 reusing the temperature revision or a display label cannot admit these values.
 
+## Native attachment
+
+- **Native resource.** Both values belong to the singleton system group
+  `OP=0x02 GG=0x00 II=0x00` of the B524 semantic root, at `RR=0x0007` and
+  `RR=0x0096`. The system group is a native resource of the controller; it is
+  not by itself a thermal system of the common model.
+- **Relation candidates.** None. The
+  [structural relation candidates](fixtures/structural-relation-candidates-v1.json)
+  list no attachment that carries a system-group register to another native
+  resource, so neither value reaches a zone, a circuit, the hot-water group or
+  a functional module.
+- **Element inventory.** Neither a system switch nor a maintenance indicator
+  has an element inventory entry. `thermal.mode.system` (`member`, control),
+  `thermal.status.operation` and `thermal.status.fault` (`member`, diagnostic)
+  have a thermal system as subject kind; they are requested fields here, not
+  targets of these values. Which thermal system, if any, the controller's
+  system group belongs to is not decided; this page proposes none.
+
 ## Proposed withholding table
 
 The current thermal pack's
@@ -86,7 +104,7 @@ none adds a field, service, operation, namespace or write route.
 
 | Retained source | Requested canonical field | FactKey / service decision | Disposition and consumer loss |
 | --- | --- | --- | --- |
-| RR=0x0007 switch, false or true | `thermal.mode.system` (`auto`, `cool`, `heat`, `off`) | No emitted FactKey. Candidate service is `thermal.service.system`; any future key requires a qualified source-owned `thermal.dimension.system` value. No value is assigned by this contract. | Withheld: unresolved polarity and installation scope. False cannot choose auto/heat/cool; true cannot establish every service's off mode. A canonical-only consumer loses the legacy switch indicator. |
+| RR=0x0007 switch, false or true | `thermal.mode.system` (`auto`, `cool`, `heat`, `off`) | No emitted FactKey and no service placement. Any future key requires the common model to decide which thermal system resource the system group belongs to (see [Native attachment](#native-attachment)). No value is assigned by this contract. | Withheld: unresolved polarity and installation scope. False cannot choose auto/heat/cool; true cannot establish every service's off mode. A canonical-only consumer loses the legacy switch indicator. |
 | RR=0x0007 switch | `thermal.status.operation` (`active`, `idle`) | No emitted FactKey or service binding from the switch. | Withheld: switch selection does not prove observed activity, idle, or `thermal.action.state`. Canonical consumers cannot infer an action or operation from it. |
 | RR=0x0007 switch | `thermal.status.fault` (`clear`, `present`) | No emitted FactKey or service binding from the switch. | Withheld: no fault diagnosis evidence. Off and healthy/faulted are independent. |
 | RR=0x0096 maintenance, false or true | `thermal.mode.system` | No emitted FactKey or service binding from maintenance. | Withheld: maintenance state is not a system mode. |
@@ -94,9 +112,9 @@ none adds a field, service, operation, namespace or write route.
 | RR=0x0096 maintenance, false or true | `thermal.status.fault` | No emitted FactKey or service binding from maintenance. | Withheld: maintenance true must not imply fault.present; maintenance false must not imply fault.clear. The pack has no maintenance field. A canonical-only consumer loses the maintenance indicator; retain it natively and in compatible legacy reads. |
 
 A future **source-specific equivalence candidate** could map the switch's proven
-off code to `thermal.mode.system.off` for the exact owned system service, with
-an explicit system FactKey dimension, if public evidence resolves polarity,
-service scope and qualification. This is **Hypothesis**, currently withheld;
+off code to `thermal.mode.system.off` for the thermal system resource that the
+common model decides, if public evidence resolves polarity, installation scope
+and qualification. This is **Hypothesis**, currently withheld;
 even that evidence would not map the other code to auto/heat/cool, other thermal
 services, operation, action or fault. Another independently qualified source may
 supply fault or activity observations under its own binding. Neither false

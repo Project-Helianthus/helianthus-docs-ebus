@@ -83,9 +83,33 @@ Consequently a retained boiler number alone cannot prove a fresh target.
 Do not borrow the age check for the system-flow mirror as evidence that the
 DHW target mirror has the same check.
 
+## Native attachment
+
+- **Native resource.** The requested target belongs to the controller's native
+  hot-water group `OP=0x02 GG=0x01 II=0x00` (kind `dhw_instance` in the
+  [hot-water fixture](fixtures/dhw-setpoint-semreg-cutover-v1.json)), keyed by
+  `PB=0xB5 SB=0x24 OP=0x02 GG=0x01 II=0x00 RR=0x0004`. The flow ceilings
+  `RR=0x0046` and `RR=0x00FC` belong to the system group of the B524 semantic
+  root, the cylinder maximum to a cylinder instance of `OP=0x02 GG=0x05`, and
+  the B509 candidates to the boiler's register space. None of them is the
+  hot-water group.
+- **Relation candidates.** None. The
+  [structural relation candidates](fixtures/structural-relation-candidates-v1.json)
+  list no attachment of the native hot-water group, and the fixture row states
+  that absence. `SRC-SD15-module-cylinder` attaches a cylinder instance to a
+  functional module by configuration only and does not reach the hot-water
+  group.
+- **Element inventory.** The target `thermal.setpoint.dhw_temperature_setpoint`
+  is `unknown` with the reason `catalog.reason.subject_unresolved` and no
+  plane. The common subject of this value is not decided; this page proposes
+  none. The service-identity gap of the two synthetic sources alpha and beta is
+  this unresolved subject, not a projection loss.
+
 ## Proposed canonical binding and explicit losses
 
-For a qualified controller requested-target source only, propose:
+The pack-level form examined for a qualified controller requested-target
+source is the following. It is not the common model's placement, which the
+[Native attachment](#native-attachment) section states:
 
 - `FactKey.PackID = helianthus.pack.thermal`, `PackVersion = 1.0.0`
   (the existing pack reference), `FactID = thermal.setpoint.dhw_temperature`.
@@ -97,6 +121,9 @@ For a qualified controller requested-target source only, propose:
   Values are quantities in `unit.celsius`, using exact decimal conversion of
   the decoded native value without silent rounding or clamping.
 
+This form carries a role and a resource in dimension text, which the common
+model does not accept.
+
 This is a **Hypothesis** for migration acceptance, not a new definition or a
 claim that these sources are qualified today. The current pack can express a
 DHW requested temperature with only `thermal.dimension.temperature`, with
@@ -106,13 +133,13 @@ must establish requested role, unit, profile, service owner, native domain and
 freshness. The current Thermal validator rejects the proposed additional
 `thermal.dimension.dhw` on this fact. **Proven** implementation constraint:
 this two-dimension binding is not currently representable. Withhold it with
-explicit service-identity loss until the pack supports the proposed key or a
-separately reviewed binding preserves service identity. Removing the service
+the reason `catalog.reason.subject_unresolved` and no projection loss until
+the common model decides the subject. Removing the service
 dimension merely to pass validation would lose identity. All `exact` results
 below are conditional acceptance requirements after that blocker is resolved;
-the current fixture expects one aggregate `withheld` disposition for both the
-two-service and partial-absence cases. Absent qualification evidence, retain a
-candidate with `qualification`
+the current fixture expects one aggregate `withheld` disposition, with that
+reason and no loss, for both the two-service and partial-absence cases.
+Absent qualification evidence, retain a candidate with `qualification`
 `candidate`/`unknown` as appropriate and withhold consumer admission. Do not
 relabel it `qualified` because the pack accepts the number.
 

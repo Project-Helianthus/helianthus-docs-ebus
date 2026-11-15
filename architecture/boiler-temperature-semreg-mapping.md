@@ -77,6 +77,27 @@ state members `flow_temperature_c` / `return_temperature_c`, and GraphQL
 `REDUCED_BOILER_TEMPERATURE_FIELDS`. Circuit `flow_temperature_c` and solar
 `return_temperature_c` are separate fields.
 
+## Native attachment
+
+- **Native resource.** Boiler flow belongs to the B509 register space of the
+  qualified boiler target: `PB=0xB5, SB=0x09, OP=0x0D`, selector `18 00`, at
+  the boiler-class bus participant that the product-ID gate identifies. It is
+  not a value of the controller's B524 namespace. Boiler return has no native
+  resource, because no native source is accepted for it. The B524 system flow
+  `(OP=0x02, GG=0x00, II=0x00, RR=0x004B)` belongs to the system group of the
+  B524 semantic root, a different native resource.
+- **Relation candidates.** None. The
+  [structural relation candidates](fixtures/structural-relation-candidates-v1.json)
+  list attachments inside the controller's B524 namespace only. Their
+  heat-source slot row `SRI-heat-source-slots` (`OP=0x06 GG=0x01/0x02`) leaves
+  the correspondence between a slot and a direct bus entry unresolved
+  (`two_views_unresolved`), so no candidate joins the boiler's B509 value to a
+  controller slot, to the system group or to a circuit.
+- **Element inventory.** The flow target `thermal.measurement.water_temperature`
+  is `unknown` with the reason `catalog.reason.subject_unresolved` and no
+  plane. The common subject of this value is not decided; this page proposes
+  none. Return has no target.
+
 ## Two-field mapping and qualification
 
 The Thermal pack source is SemReg `semreg/v1/packs/thermal/definitions.go`
@@ -91,8 +112,8 @@ separate from that role dimension, following the
 
 | Existing boiler field | Native source and evidence | Required qualification | Proposed Thermal mapping / current disposition |
 | --- | --- | --- | --- |
-| Flow: `FlowTemperatureC` | B509 `PB=0xB5, SB=0x09, OP=0x0D`, complete selector `18 00`; initiator-to-qualified-boiler-target request, target-to-initiator reply; `DATA2c`, °C. Native meaning **Hypothesis**; software source **Proven**. | Exact current boiler-class target identity through the native product-ID gate, bound to the actual routing target, service, operation, complete selector, response shape and codec. Family-prefix or bus-address matching alone is insufficient. No qualifying boiler-target artifact/rule exists today: runtime qualification `unknown`, field withheld. | Candidate `thermal.measurement.water_temperature`, quantity `unit.celsius`, dimension `thermal.dimension.temperature` with proposed text role `temperature:boiler_flow`. Exact numeric mapping only after qualification and validity/freshness admission; no fact emitted today. Missing qualification has proposed reason `reason.boiler_temperature.qualification_unknown`. |
-| Return: `ReturnTemperatureC` | No accepted native source, selector, codec or source unit; evidence **Unknown**. Legacy C suffix is not source evidence. | A future exact boiler-target product identity, native return selector, response shape, codec and unit must be evidenced and qualified independently. None exists: runtime qualification `unknown`, field withheld. | Legacy field absent; no fact emitted and no separate projection disposition. `temperature:boiler_return` is reserved and unpublished, not an admitted FactKey. Proposed missing-source reason `reason.boiler_temperature.return_source_unknown` describes this legacy-field absence outside projection accounting; it must not be replaced by a guessed temperature. |
+| Flow: `FlowTemperatureC` | B509 `PB=0xB5, SB=0x09, OP=0x0D`, complete selector `18 00`; initiator-to-qualified-boiler-target request, target-to-initiator reply; `DATA2c`, °C. Native meaning **Hypothesis**; software source **Proven**. | Exact current boiler-class target identity through the native product-ID gate, bound to the actual routing target, service, operation, complete selector, response shape and codec. Family-prefix or bus-address matching alone is insufficient. No qualifying boiler-target artifact/rule exists today: runtime qualification `unknown`, field withheld. | Candidate target `thermal.measurement.water_temperature`, whose element inventory entry is `unknown` (see [Native attachment](#native-attachment)). No FactKey, role or dimension text is proposed. Exact numeric mapping only after the subject is decided, qualification and validity/freshness admission; no fact emitted today. Missing qualification has proposed reason `reason.boiler_temperature.qualification_unknown`. |
+| Return: `ReturnTemperatureC` | No accepted native source, selector, codec or source unit; evidence **Unknown**. Legacy C suffix is not source evidence. | A future exact boiler-target product identity, native return selector, response shape, codec and unit must be evidenced and qualified independently. None exists: runtime qualification `unknown`, field withheld. | Legacy field absent; no fact emitted and no separate projection disposition. No return role, dimension text or FactKey is reserved. Proposed missing-source reason `reason.boiler_temperature.return_source_unknown` describes this legacy-field absence outside projection accounting; it must not be replaced by a guessed temperature. |
 
 Reason codes here are proposed mapping diagnostics for downstream adoption,
 not a claim that the producer or a reason registry already implements them.
@@ -158,12 +179,12 @@ disposition;
 use `withheld` only when the requested item is not projected. The
 [snapshot projection accounting contract](../api/semantic-snapshot-read.md#projection-accounting-and-deterministic-order)
 requires one disposition per `(kind,item_id)`, collecting all matching complete
-FactKeys in `source_keys`. Flow and the reserved return role share
+FactKeys in `source_keys`. Flow and any future return value would share
 `thermal.measurement.water_temperature`; an absent return cannot add a separate
 disposition or make the shared item withheld when flow is projected. Return's
 qualification remains `unknown`; its missing-source reason describes only the
 legacy-field absence outside this report. No return fact is emitted, including
-a zero-valued fact, and return must not reuse the flow role. These
+a zero-valued fact, and no return value is ever published as flow. These
 loss requirements do not introduce a new projection schema or erase retained
 native bytes.
 
@@ -173,7 +194,7 @@ native bytes.
   `(OP=0x02, GG=0x02, II=circuit instance, RR=0x0008)` is circuit flow, explicitly
   **not boiler return**.
 - B524 system flow `(OP=0x02, GG=0x00, II=0x00, RR=0x004B)` is a distinct
-  controller observation with role `temperature:system_flow`. Its use as the
+  controller observation of the B524 semantic root's system group. Its use as the
   old boiler-flow mirror does not admit it here. The
   [existing typed map](fixtures/vaillant-semreg-thermal-map-v1.json) explicitly
   forbids substituting B509 for B524 rows; neither direction supplies identity

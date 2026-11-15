@@ -68,6 +68,23 @@ it. `publishFM5Semantic` publishes an empty typed solar object on structural
 withdrawal or when no snapshots exist. Empty does not mean false or zero.
 These are current implementation rules, not proof of a physical solar service.
 
+## Native attachment
+
+- **Native resource.** Pump-active and operating hours belong to the solar
+  circuit `OP=0x02 GG=0x04`, instance `II=0x00`, of the controller's B524
+  namespace. Starts has no native resource, because no selector is
+  established. The solar circuit is not a circuit instance of `GG=0x02`, and a
+  circuit or boiler pump is a different native resource.
+- **Relation candidates.** The
+  [structural relation candidates](fixtures/structural-relation-candidates-v1.json)
+  offer `SRC-SD15-module-solar-circuit` as `configuration_only`: the solar
+  circuit appears only for some installer configuration codes, and no register
+  attaches it to a module unit. No row carries a solar pump value to a heating
+  circuit, a cylinder or the system group.
+- **Element inventory.** No pump-active, operating-hours or starts fact and no
+  solar-loop service has an element inventory entry. The common subject of
+  these values is not decided; this page proposes none.
+
 ## Proposed admission and loss contract
 
 [Thermal pack `definitions.go`](https://github.com/Project-Helianthus/helianthus-semreg/blob/main/semreg/v1/packs/thermal/definitions.go),

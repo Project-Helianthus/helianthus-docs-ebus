@@ -90,6 +90,29 @@ heuristic, not proof of native topology. The zone catalog's raw assignment at
 0x001C remains separate evidence. System holiday GG=0x00 selectors and other
 families' comfort selectors cannot replace the zone holiday/manual rows.
 
+## Native attachment
+
+- **Native resource.** Every role in the table belongs to the zone instance
+  `OP=0x02 GG=0x03 II=zone` of the controller's B524 namespace, at its own
+  register: heating manual `RR=0x0022`, heating effective `RR=0x0014`, cooling
+  manual `RR=0x0023`, cooling effective `RR=0x0015`, quick-veto `RR=0x0008` and
+  holiday `RR=0x0005`. Heating and cooling stay distinct roles of that one
+  native resource. System holiday selectors belong to the system group of the
+  B524 semantic root, a different native resource.
+- **Relation candidates.** The
+  [structural relation candidates](fixtures/structural-relation-candidates-v1.json)
+  offer `SRC-SD15-controller-zone` (`relation_candidate`). The zone-to-circuit
+  attachment is `SRC-SD06-zone-to-circuit` (`unresolved`) and
+  `SRC-SD07-zone-to-circuit-fallback` (`absent`), so no candidate joins a zone
+  setpoint to a circuit instance, and the raw assignment `RR=0x001C` stays
+  native evidence.
+- **Element inventory.** The target `thermal.setpoint.temperature_setpoint` is
+  `unknown` with the reason `catalog.reason.subject_unresolved` and no plane.
+  `thermal.operation.set_temperature` and its effect rule are `unknown` with
+  the reason `catalog.reason.argument_unresolved`;
+  `thermal.capability.set_temperature` is `member` in the control plane. The
+  common subject of a zone setpoint is not decided; this page proposes none.
+
 ## Proposed FactKey and service decision
 
 The existing pack defines `thermal.setpoint.temperature` as a quantity in
@@ -101,19 +124,20 @@ The service zone identity and the temperature field dimension are distinct.
 `thermal.operation.set_temperature` uses this field as argument; their presence
 in pack metadata does not advertise either for a particular observation.
 
-A proposed fact may use the existing field only if an owner-approved mapping
-assigns an unambiguous temperature-dimension value identifying the exact zone,
-heating/cooling role and manual/effective/override/holiday meaning without
-collision, and the existing pack validates that complete FactKey and value.
-The field reference and its semantic revision, exact dimension set/value,
+No zone, heating/cooling role or manual/effective/override/holiday meaning is
+carried in temperature-dimension text. A later fact needs a decided subject
+(see [Native attachment](#native-attachment)) and a reviewed definition that
+keeps heating and cooling, and the manual, effective, override and holiday
+meanings, distinct; the existing pack must validate the complete FactKey and
+value. The field reference and its semantic revision, exact dimension set/value,
 asset binding and separate zone service identity must all be explicit. A zone
 service dimension alone is not the temperature FactKey. Native source identity
 remains provenance, not an invented extra FactKey axis. This document allocates
 no role tokens, definitions, aliases, or service IDs.
 
 The supplied pack tables have no explicit role selector or override/holiday
-interval fact. They do not establish an approved encoding of those meanings
-in a temperature dimension. Therefore **no complete role-preserving zone
+interval fact. They establish no encoding of those meanings, and a temperature
+dimension never carries one. Therefore **no complete role-preserving zone
 FactKey is admitted by this slice today**. Each role remains withheld pending
 the owner decision and qualified mapping; do not overload one key with several
 roles or mint a universal role definition. Even manual heating is conditional,

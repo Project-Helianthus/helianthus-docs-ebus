@@ -38,11 +38,29 @@ evidence conclusions, separate from runtime qualification, acquisition,
 validity, freshness and admission. The conditional qualified cases below are
 requirements for future acceptance, not new qualification or runtime proof.
 
+## Native attachment
+
+- **Native resource.** Both values belong to the singleton system group
+  `OP=0x02 GG=0x00 II=0x00` of the B524 semantic root, at `RR=0x0073` and
+  `RR=0x0095`, exactly as the
+  [typed Thermal map](fixtures/vaillant-semreg-thermal-map-v1.json) records
+  them. The system group is a native resource of the controller; the outdoor
+  sensor's own location is not a native resource of this namespace.
+- **Relation candidates.** None. The
+  [structural relation candidates](fixtures/structural-relation-candidates-v1.json)
+  list no attachment that carries these values to another native resource, and
+  each row of the typed map states that absence.
+- **Element inventory.** The instantaneous target
+  `thermal.measurement.air_temperature` is `unknown` with the reason
+  `catalog.reason.subject_unresolved` and no plane. The aggregate has no
+  target. The common subject of the outdoor value is not decided; this page
+  proposes none.
+
 ## Exact mapping and source join
 
 | Field | Existing native contract | Proposed cutover result |
 | --- | --- | --- |
-| Instantaneous `state.outdoor_temperature` | VRC720-family controller; `PB=0xB5`, `SB=0x24`, `OP=0x02`, `GG=0x00`, `II=0x00`, `RR=0x0073`, destination `0x15`; qualified initiator to target request, target to the same initiator value reply; profile-scoped IEEE-754 `f32` little-endian, `degC` | `thermal.measurement.air_temperature`, quantity `unit.celsius`, exactly `thermal.dimension.temperature=temperature:outdoor_air`; read-only exact numeric candidate, admitted only after existing binding and lifecycle requirements succeed |
+| Instantaneous `state.outdoor_temperature` | Controller family of the typed Thermal map; `PB=0xB5`, `SB=0x24`, `OP=0x02`, `GG=0x00`, `II=0x00`, `RR=0x0073`, destination `0x15`; qualified initiator to target request, target to the same initiator value reply; profile-scoped IEEE-754 `f32` little-endian, `degC` | Target `thermal.measurement.air_temperature`, element inventory `unknown` (see [Native attachment](#native-attachment)); no FactKey, role or dimension text is formed. Read-only exact numeric candidate, admitted only after the subject is decided and existing binding and lifecycle requirements succeed |
 | Aggregate `state.outdoor_temperature_avg24h` | Same service, operation, group, instance, destination, family and directions, but `RR=0x0095`; `f32` little-endian, `degC`; rounded rolling average | No SemReg fact, value or dimensions; existing disposition `withheld`, loss `rolling_average_window_unrepresentable` |
 
 The initiator address is binding evidence, not a constant selected here.
@@ -55,7 +73,7 @@ Join each native observation to the **same current binding** using all of:
 
 | Join member | Requirement |
 | --- | --- |
-| Asset and service | Exact qualified asset and `thermal.service.system` identity; no join through a public display, zone or GraphQL ID |
+| Asset and native resource | Exact qualified asset and the row's native resource, the system group of the B524 semantic root; a runtime service binding decides no common subject; no join through a public display, zone or GraphQL ID |
 | Native route | Request initiator, response target and directions, destination, family/profile, PB, SB, opcode, group, instance and register must match the binding and correlated response |
 | Runtime source | Exact source identity, source epoch and driver generation; replacement or a generation change cannot inherit old source evidence |
 | Interpretation and proof | Codec/unit, evidence reference, qualification and semantic revision belong to that observation and binding; a newer registry snapshot must not lend proof to an older unrelated sample |

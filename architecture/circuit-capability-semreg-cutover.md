@@ -73,6 +73,31 @@ a documented implementation/native-contract conflict. Preserve its raw evidence
 and synthetic derivation marker; never promote that heuristic into qualification.
 No temperature field is migrated by this contract.
 
+## Native attachment
+
+- **Native resource.** Circuit type and cooling-enabled belong to the circuit
+  instance `OP=0x02 GG=0x02 II=circuit` of the controller's B524 namespace,
+  whose instance number is local to that controller. The virtual native-water
+  entry at II09 is an instance position of the same circuit group; it is not
+  the native hot-water group `OP=0x02 GG=0x01 II=0x00`, and no native statement
+  joins the two. The module rule's inputs belong to the system group
+  `OP=0x02 GG=0x00 II=0x00` of the B524 semantic root.
+- **Relation candidates.** The
+  [structural relation candidates](fixtures/structural-relation-candidates-v1.json)
+  offer `SRC-SD15-controller-circuit` (`relation_candidate`: the circuit
+  instance exists only inside the controller's namespace) and
+  `SRC-SD09-circuit-managing-module` (`configuration_only`: ownership comes from
+  installer configuration codes for one validated tuple, every other tuple
+  stays unknown). The zone-to-circuit rows are `SRC-SD06-zone-to-circuit`
+  (`unresolved`) and `SRC-SD07-zone-to-circuit-fallback` (`absent`). No row
+  attaches the II09 entry to the hot-water group.
+- **Element inventory.** Circuit type, cooling-enabled, presence and managing
+  module have no element inventory entry. `thermal.service.circuit`,
+  `thermal.capability.read.circuit`, `thermal.service.dhw` and
+  `thermal.capability.read.dhw` are `unknown` with the reason
+  `catalog.reason.no_fact_or_relation` and no plane. The common subject of
+  these values is not decided; this page proposes none.
+
 ## Proposed disposition and binding contract
 
 These are migration requirements, not claims of implemented gateway integration.
@@ -86,18 +111,19 @@ those concepts. Do not invent a universal field or a new namespace.
 | --- | --- | --- |
 | Native circuit type | No corresponding field, hence no FactKey; withhold semantic field projection even for qualified known codes. Retain selector, raw code, source and interpretation in native evidence. | SemReg-only consumers cannot reconstruct the legacy type token, emitter kind, mixer or physical equipment identity. |
 | Native cooling-enabled | No corresponding field, hence no FactKey; withhold semantic field projection even for qualified 0/false or 1/true. | SemReg-only consumers lose the independent configuration flag and cannot safely offer cooling based on type, mode or action. False is valid evidence, not missing. |
-| Ordinary circuit read service | Candidate `thermal.service.circuit` with `thermal.capability.read.circuit`; `Metadata` associates the service with `thermal.dimension.circuit`. Service binding is metadata, not a fabricated presence FactKey. Require independently qualified presence, circuit role, source and read binding. | Qualified service presence may survive; it proves neither physical-device identity, type nor cooling. A service definition existing in the pack does not mean this source implements it. |
-| Virtual native-water read service | Candidate `thermal.service.dhw` with `thermal.capability.read.dhw`, dimension `thermal.dimension.dhw`, only after independent presence and DHW-role qualification. No presence FactKey exists. Until then, withhold this source's service binding. | A legacy pseudo-circuit list entry can disappear from the semantic projection; it must not become a physical circuit or an automatically duplicated DHW service. |
+| Ordinary circuit read service | No service binding: `thermal.service.circuit` and `thermal.capability.read.circuit` are `unknown` in the element inventory (see [Native attachment](#native-attachment)). The circuit instance stays a native resource; no presence FactKey is fabricated. A later binding requires independently qualified presence, circuit role, source and read binding. | The native circuit instance and its qualified presence evidence survive; they prove neither physical-device identity, type nor cooling. A service definition existing in the pack does not mean this source implements it. |
+| Virtual native-water read service | No service binding: `thermal.service.dhw` and `thermal.capability.read.dhw` are `unknown` in the element inventory, and no native statement joins II09 to the hot-water group. No presence FactKey exists. Withhold this source's service binding. | A legacy pseudo-circuit list entry can disappear from the semantic projection; it must not become a physical circuit or an automatically duplicated DHW service. |
 | Managing-module relation | No corresponding field or FactKey; retain qualified native role/ownership evidence separately. Module assignment is a binding prerequisite, not a Thermal topology fact. | No SemReg reconstruction of the legacy managing-device relation. |
 
-Use an opaque, source-qualified service identity and dimension value associated
-with the independently identified circuit or DHW role. A display index, zone
+The circuit instance and the II09 entry stay native resources named by their
+native selectors; no service identity or dimension value is assigned to them
+here. A display index, zone
 number, number of circuits or temperature cannot create an asset, dimension
 identity or physical device. Neither type 1 nor type 3 supplies physical identity.
 The type code is not the cooling flag; a read capability is not writable support.
 No operation binding is added.
 
-Before admitting either candidate service, require qualified asset/service and
+Before any later service binding is admitted, require qualified asset/service and
 role evidence, an existing supported read binding, exact native selector and
 family applicability, valid decoding, freshness under the accepted lifecycle
 policy, and unambiguous source ownership. Preserve current trust/admission
@@ -164,19 +190,19 @@ identities. Each row inherits all binding prerequisites above.
 
 | Case | Inputs / transition | Required equivalence or explicit loss |
 | --- | --- | --- |
-| Heating with cooling | A/C, ordinary qualified presence and role; type `01 00`, flag `01` | Legacy heating and true are independent native observations. Circuit read-service candidate can survive qualification; both field facts remain withheld. Type does not imply cooling or emitter identity. |
+| Heating with cooling | A/C, ordinary qualified presence and role; type `01 00`, flag `01` | Legacy heating and true are independent native observations. The native circuit instance and its qualified presence survive; both field facts remain withheld. Type does not imply cooling or emitter identity. |
 | Known type, missing flag | A/C type `01 00`; flag read missing, with and without a prior valid flag | Preserve prior native flag only as last-known-good with original freshness; first-read missing remains missing. Never infer false or cooling support; independently qualified service can survive. |
 | Valid zero / false | A/C flag `00`; separately a qualified ordinary type `00 00` | Flag false is valid evidence, still unrepresentable as a Thermal field. Type zero means inactive in that context and withdraws active binding; neither is an invalid read. |
 | Unknown or invalid | A/C type `07 00`; separately empty/truncated type, or flag outside 0/1 | Preserve unknown raw type separately from invalid decoding. Legacy may list `unknown_7` or convert a decoded nonzero flag to true; proposed path cannot use either as capability/presence proof. An independently qualified service need not lose unrelated facts. |
 | Stale / unqualified | A/C valid bytes with expired freshness; separately fresh but unqualified bytes | Distinct loss reasons; neither admits new service presence or renews old evidence. Evidence label alone does not change qualification. |
 | Sparse disappearance / return | C and D exist; C stops replying while D remains, then C returns | No count-based removal, renumbering or new device. Preserve D and historical C; qualify C's return. Contrast a qualified inactive C result, which withdraws C's binding. |
-| Virtual pseudo-circuit | II09 inactive type with legacy heuristic evidence; separately independent qualified native-water presence and DHW role | Heuristic-only entry is withheld, never physical. Independently qualified virtual role may bind DHW read service without creating a heating device; current sources do not provide that missing predicate. |
+| Virtual pseudo-circuit | II09 inactive type with legacy heuristic evidence; separately independent qualified native-water presence and DHW role | Heuristic-only entry is withheld, never physical. Independently qualified virtual role binds no DHW read service while no native statement joins II09 to the hot-water group, and never creates a heating device; current sources do not provide that missing predicate. |
 | Module reassignment | A/C keeps II and type; module role/assignment context changes | Fence old owner and flag; require new qualified ownership. Legacy global topology rule alone does not prove a new per-circuit assignment. |
 | Source replacement | A/C replaced by B at same native address/II, new epoch or generation | Historical A remains separate; B starts unqualified until its own evidence qualifies. No cached true/false or type transfers by address equality. |
 | Conflict and shared definition | A and B disagree about the same selected role/flag; separately B has no fact while qualified A already projects a requested shared service | Unresolved relevant conflict is withheld with both candidates retained. Mere B absence cannot replace A's projected `(kind,item_id)` disposition. Different services C/D retain independent outcomes. |
 
 Source-specific equivalence is limited to preserving an independently qualified
-read service's identity, role and availability. It does not establish equivalence
+native circuit instance's identity, role and availability. It does not establish equivalence
 of the lost type/cooling/ownership fields. Closing those losses requires an
 accepted corresponding definition and qualified native mapping in future work,
 not reinterpretation of a temperature, mode, action or writable operation.
