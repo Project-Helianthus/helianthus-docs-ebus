@@ -2,6 +2,32 @@
 
 ## Unreleased
 
+- `deployment/prometheus-semantic-coverage.md` has a "Native point coverage"
+  section with Target rows only for the optional native point export: one
+  gauge family per physical quantity under `helianthus_native_`, each with one
+  constant SI `unit` label (kelvin, pascals, cubic meters per second, joules,
+  watts, seconds, hertz, amperes, volts, or a plain ratio or count), plus
+  `helianthus_native_point_age` in seconds and
+  `helianthus_native_render_overflow` without labels. The labels `protocol`,
+  `device`, `index`, `point` and `unit` each have a closed documented domain
+  and are native locators, never a semantic resource identity. The section
+  states the rule for a clear interpretation, which the native registry
+  evaluates; that values come only from retained observations, so a scrape
+  sends no bus request; that a value is present only while fresh and the age
+  while an observation is held; at most 1,024 value series in a fixed order
+  with the rest counted; and that the export is off by default. The family
+  names are provisional with an open question on the `native` qualifier. The
+  sentences on native identity outside labels, label exclusions and
+  unavailable facts now name the semantic series. `architecture/naming.md`,
+  section Metrics, states the per-quantity native families, the `point` and
+  `index` label keys and the SI constant unit.
+  `scripts/validate_prometheus_semantic_coverage.py` checks both native
+  tables (name pattern, one constant SI unit per family, closed label keys
+  and domains, no family also emitted); the 107 emitted families are
+  unchanged. `tests/test_prometheus_semantic_coverage.py` rejects a change of
+  each field of every native row, a second unit on one family and a forbidden
+  label key. Follow-ups: the gateway renderer and the native registry catalog.
+
 - `docs/platform/promoted-semantic-consumers-v1.md` and its manifest
   `docs/platform/manifests/promoted-semantic-consumers-v1.json` map each
   target object (`zones[id=zone-1]`, `zones[id=zone-2]`, `dhw`, `system`) to

@@ -179,6 +179,39 @@ missed_due_to_transport_limitations_total | counter | family, freshness_profile,
 passive_hits_total | counter | family, freshness_profile | none
 """
 
+# Reviewed Target native point families: name, type, quantity, constant unit,
+# labels and status. None of them is emitted.
+NATIVE_ROWS = """
+helianthus_native_temperature | gauge | temperature | kelvin | device, index, point, protocol, unit | Target
+helianthus_native_temperature_difference | gauge | temperature difference | kelvin | device, index, point, protocol, unit | Target
+helianthus_native_pressure | gauge | pressure | pascals | device, index, point, protocol, unit | Target
+helianthus_native_volume_flow | gauge | volume flow | cubic_meters_per_second | device, index, point, protocol, unit | Target
+helianthus_native_energy | gauge | energy | joules | device, index, point, protocol, unit | Target
+helianthus_native_power | gauge | power | watts | device, index, point, protocol, unit | Target
+helianthus_native_time | gauge | time | seconds | device, index, point, protocol, unit | Target
+helianthus_native_ratio | gauge | ratio | ratio | device, index, point, protocol, unit | Target
+helianthus_native_count | gauge | count | count | device, index, point, protocol, unit | Target
+helianthus_native_rotational_speed | gauge | rotational speed | hertz | device, index, point, protocol, unit | Target
+helianthus_native_frequency | gauge | frequency | hertz | device, index, point, protocol, unit | Target
+helianthus_native_current | gauge | electric current | amperes | device, index, point, protocol, unit | Target
+helianthus_native_voltage | gauge | voltage | volts | device, index, point, protocol, unit | Target
+helianthus_native_point_age | gauge | age of the held observation | seconds | device, index, point, protocol, unit | Target
+helianthus_native_render_overflow | gauge | value series omitted by the budget | none | none | Target
+"""
+# Closed native label keys and their documented domains.
+NATIVE_LABEL_ROWS = """
+protocol | ebus, modbus, eebus
+device | documented_device_class
+index | documented_instance_index
+point | canonical_register_name
+unit | family_constant_unit
+"""
+NATIVE_LABEL_KEYS = frozenset({"protocol", "device", "index", "point", "unit"})
+SI_UNITS = frozenset({"kelvin", "pascals", "cubic_meters_per_second", "joules", "watts",
+                      "seconds", "ratio", "count", "hertz", "amperes", "volts"})
+NATIVE_NAME = re.compile(r"helianthus_native_[a-z]+(?:_[a-z]+)*")
+NATIVE_FAMILY_HEADER = ("Series", "Type", "Quantity", "Constant unit", "Labels", "Status")
+
 
 class CheckError(ValueError):
     pass
@@ -258,6 +291,48 @@ def _validate_thermal_dispositions(text: str, thermal_fixture: Path) -> None:
         raise CheckError("withheld associations differ from the source fixture")
 
 
+def table(text: str) -> list[tuple[str, ...]]:
+    return rows("\n".join("| " + line for line in text.strip().splitlines()))
+
+
+def _check_native_family(row: tuple[str, ...], emitted_names: set[str]) -> None:
+    name, kind, _quantity, unit, labels, status = row
+    if name in emitted_names:
+        raise CheckError(f"native family is also emitted: {name}")
+    if not NATIVE_NAME.fullmatch(name) or name.endswith("_total") or any(
+            name.endswith("_" + suffix) for suffix in SI_UNITS - {"ratio", "count"}):
+        raise CheckError(f"invalid native family name: {name}")
+    if kind != "gauge" or status != "Target":
+        raise CheckError(f"native family must be a Target gauge: {name}")
+    keys = [] if labels == "none" else labels.split(", ")
+    if len(keys) != len(set(keys)) or not set(keys) <= NATIVE_LABEL_KEYS:
+        raise CheckError(f"forbidden native label key: {name}")
+    if ("unit" in keys) != (unit in SI_UNITS) or ("unit" not in keys and unit != "none"):
+        raise CheckError(f"native family needs exactly one constant SI unit: {name}")
+
+
+def _validate_native_points(text: str, emitted_names: set[str]) -> None:
+    if text.count("## Native point coverage\n") != 1:
+        raise CheckError("missing or duplicate native point coverage section")
+    native = text.split("## Native point coverage\n", 1)[1]
+    families = rows(section(native, "### Native families\n", "### Native labels\n"))
+    if (families[:2] != [NATIVE_FAMILY_HEADER, ("---",) * 6]
+            or any(len(row) != 6 for row in families[2:])):
+        raise CheckError("native family table header or row shape differs")
+    for row in families[2:]:
+        _check_native_family(row, emitted_names)
+    names = [row[0] for row in families[2:]]
+    if len(names) != len(set(names)):
+        raise CheckError("native family has more than one row or unit")
+    if Counter(families[2:]) != Counter(table(NATIVE_ROWS)):
+        raise CheckError("native families differ from the reviewed Target rows")
+    labels = rows(section(native, "### Native labels\n", "### Clear interpretation\n"))
+    if (Counter(labels) != Counter(table(NATIVE_LABEL_ROWS) + [
+            ("Label", "Allowed domain"), ("---", "---")])
+            or {row[0] for row in labels[2:]} != NATIVE_LABEL_KEYS):
+        raise CheckError("native label keys or domains differ from the closed vocabulary")
+
+
 def validate(text: str, *, thermal_fixture: Path = THERMAL_FIXTURE) -> None:
     emitted = section(text, "## Emitted metric names\n", "## Provisional metric exceptions\n")
     expected_emitted = rows("\n".join("| " + line for line in RENDERER_ROWS.strip().splitlines()))
@@ -304,6 +379,7 @@ def validate(text: str, *, thermal_fixture: Path = THERMAL_FIXTURE) -> None:
             ("Series group", "Label", "Allowed domain"), ("---", "---", "---")]):
         raise CheckError("structured label domains differ from the contract")
     _validate_thermal_dispositions(text, thermal_fixture)
+    _validate_native_points(text, {row[0] for row in expected_emitted})
     blocks = re.findall(r"^```yaml\n(.*?)^```$", text, re.MULTILINE | re.DOTALL)
     if len(blocks) != 1:
         raise CheckError("expected one alert YAML block")
@@ -325,7 +401,8 @@ def main() -> int:
     except (CheckError, OSError) as exc:
         print(f"Prometheus semantic coverage: {exc}")
         return 1
-    print("Prometheus semantic coverage passed: 32 bounded fields and 107 emitted metric families.")
+    print("Prometheus semantic coverage passed: 32 bounded fields, 107 emitted metric "
+          "families and 15 Target native families.")
     return 0
 
 
