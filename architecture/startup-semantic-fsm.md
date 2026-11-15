@@ -116,6 +116,17 @@ planes. The L1 gate requires non-null publication for zones, circuits, DHW,
 radio devices, FM5 mode, solar, cylinders, schedules, energy totals, system,
 adapter info, and boiler status.
 
+Energy totals are the exception to the priming publication: the plane is null
+until the energy merge store has accepted its first point (see
+[`energy-merge.md`](./energy-merge.md#null-before-the-first-accepted-point)),
+and the priming completion check does not wait for it. The controller
+discovery enqueues an energy refresh, so with a controller the plane becomes
+non-null once that refresh or an energy broadcast is accepted. For energy
+totals the 60-second requirement is therefore met only when a first energy
+point is accepted within that window. Without a discovered B524 root, as on a
+bus with a heat source and no system controller, no priming pass runs and the
+plane stays null.
+
 The normal steady-state pollers remain authoritative for complete values,
 freshness, removal, and downgrade behavior. For example, schedules may become
 non-null during startup before the heavier schedule read cycle fills detailed

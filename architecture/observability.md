@@ -157,6 +157,16 @@ discovery pass, when the root is found.
 | `semantic_regulator_state` | string | Current regulator absence state (UNKNOWN, PRESENT, ABSENCE_GRACE, ABSENT) |
 | `semantic_regulator_transitions_total` | map | Count of regulator state transitions, keyed by `"FROM->TO"` |
 
+**Proven — merged gateway behavior.** The `UNKNOWN` value, its transitions and
+the timing below are taken from the merged gateway changes
+[gateway #1524](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1524),
+[gateway #1525](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1525)
+and
+[gateway #1526](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1526),
+and from the gateway run sheet `docs/testing/site-without-controller-run-sheet.md`;
+the behavior on a physical installation without a controller is **Unknown**
+beyond that run sheet.
+
 The absence state starts at `UNKNOWN` (not yet evaluated). The first regulator
 recheck moves it to `PRESENT` when the regulator capability is `PRESENT` and to
 `ABSENCE_GRACE` otherwise, with the grace period measured from that recheck, so

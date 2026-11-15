@@ -231,8 +231,9 @@ type bus_observability_status {
 
 type bus_observability_startup {
   phase: String!
-  cache_epoch: Int!
-  live_epoch: Int!
+  last_updated_at: String
+  cache_epoch: String!
+  live_epoch: String!
   reason: String
 }
 
@@ -801,8 +802,11 @@ The semantic runtime distinguishes cache bootstrap from live updates during star
 - `bus_summary.status.startup { phase cache_epoch live_epoch reason }` exposes the
   machine-readable startup readiness surface used by proof-mode orchestration
   and Portal parity. Portal parity covers `phase`, `cache_epoch` and
-  `live_epoch` as frozen in the [Portal contract](./portal.md); `reason` is a
-  GraphQL and MCP field that the Portal startup block does not document.
+  `live_epoch` as frozen in the [Portal contract](./portal.md). That contract
+  does not list `reason`; the Portal bus observability body serves the same
+  startup block, so it carries `reason` when one applies and omits it otherwise.
+- `cache_epoch` and `live_epoch` are non-null decimal strings (for example
+  `"0"`), and `last_updated_at` is a nullable timestamp string.
 - `reason` (nullable `String`) is additive. It is
   `no_supported_heat_source_path` while the semantic poller has no supported
   heat-source data path: no B524 root and no boiler-class heat source, while
