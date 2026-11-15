@@ -1131,12 +1131,6 @@ mcp-inventory:start
 | eebus_v1_topology_get | operator_source | operator_source_enabled | operator source scope; eeBUS provider present | mcp/eebus_v1.go | implemented |
 | eebus_v1_topology_get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/eebus_v1.go | implemented |
 | eebus_v1_topology_get | ordinary | eebus_enabled | eeBUS provider present | mcp/eebus_v1.go | implemented |
-| helianthus_experimental_leaf_promotion_capture | operator | operator_composed | all composed ordinary and operator providers present | mcp/leaf_promotion_capture.go | implemented |
-| helianthus_experimental_leaf_promotion_capture | operator | operator_enabled | eeBUS provider, command router and capture providers present | mcp/leaf_promotion_capture.go | implemented |
-| helianthus_experimental_leaf_promotion_capture | operator | operator_promotion_only | leaf promotion capture provider present; eeBUS provider absent | mcp/leaf_promotion_capture.go | implemented |
-| helianthus_experimental_m8_source_state_get | operator | operator_composed | all composed ordinary and operator providers present | mcp/m8_source_state.go | implemented |
-| helianthus_experimental_m8_source_state_get | operator | operator_eebus_only | eeBUS provider present; command and capture providers absent | mcp/m8_source_state.go | implemented |
-| helianthus_experimental_m8_source_state_get | operator | operator_enabled | eeBUS provider, command router and capture providers present | mcp/m8_source_state.go | implemented |
 | helianthus_runtime_get | operator | operator_composed | all composed ordinary and operator providers present | mcp/runtime_control.go | implemented |
 | helianthus_runtime_get | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/runtime_control.go | implemented |
 | helianthus_runtime_get | ordinary | runtime_disabled | runtime service absent; eeBUS absent | mcp/runtime_control.go | implemented |
@@ -1157,6 +1151,12 @@ mcp-inventory:start
 | helianthus_runtime_stop | ordinary | ordinary_composed | all composed ordinary optional providers present | mcp/runtime_control.go | implemented |
 | helianthus_runtime_stop | ordinary | runtime_disabled | runtime service absent; eeBUS absent | mcp/runtime_control.go | implemented |
 | helianthus_runtime_stop | ordinary | runtime_enabled | runtime service present; eeBUS absent | mcp/runtime_control.go | implemented |
+| helianthus_v1_leaf_promotion_capture | operator | operator_composed | all composed ordinary and operator providers present | mcp/leaf_promotion_capture.go | implemented |
+| helianthus_v1_leaf_promotion_capture | operator | operator_enabled | eeBUS provider, command router and capture providers present | mcp/leaf_promotion_capture.go | implemented |
+| helianthus_v1_leaf_promotion_capture | operator | operator_promotion_only | leaf promotion capture provider present; eeBUS provider absent | mcp/leaf_promotion_capture.go | implemented |
+| helianthus_v1_source_state_get | operator | operator_composed | all composed ordinary and operator providers present | mcp/m8_source_state.go | implemented |
+| helianthus_v1_source_state_get | operator | operator_eebus_only | eeBUS provider present; command and capture providers absent | mcp/m8_source_state.go | implemented |
+| helianthus_v1_source_state_get | operator | operator_enabled | eeBUS provider, command router and capture providers present | mcp/m8_source_state.go | implemented |
 | helianthus_v1_synchronized_evidence_capture | operator | operator_composed | all composed ordinary and operator providers present | mcp/synchronized_evidence.go | implemented |
 | helianthus_v1_synchronized_evidence_capture | operator | operator_enabled | eeBUS provider, command router and capture providers present | mcp/synchronized_evidence.go | implemented |
 | helianthus_v1_synchronized_evidence_capture | operator | operator_capture_only | synchronized capture provider present; eeBUS provider absent | mcp/synchronized_evidence.go | implemented |
