@@ -204,9 +204,14 @@ planes non-null within the startup gate.
 ### Scheduling Without a System Controller
 
 **Proven — merged gateway behavior.** Cadence, suspension conditions and log
-marker below are taken from the merged gateway change and its run sheet; the
-behavior on a physical installation without a controller is **Unknown** beyond
-that run sheet.
+marker below are taken from the merged gateway changes
+[gateway #1524](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1524),
+[gateway #1525](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1525)
+and
+[gateway #1526](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1526),
+and from the gateway run sheet `docs/testing/site-without-controller-run-sheet.md`;
+the behavior on a physical installation without a controller is **Unknown**
+beyond that run sheet.
 
 On a bus with a heat source and no system controller, no B524 root is found and
 the state and configuration tasks run a fallback B524 root discovery pass on
@@ -284,7 +289,8 @@ Implementation note:
 ### Startup Reason Without a Supported Heat-Source Data Path
 
 **Proven — merged gateway behavior.** The reason, its evaluation and clearing
-and the timeout log line are taken from the merged gateway change.
+and the timeout log line are taken from the merged gateway change
+[gateway #1526](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1526).
 
 The startup block of the bus observability summary carries an additive
 `reason` next to the phase (GraphQL `bus_summary.status.startup.reason`, MCP
