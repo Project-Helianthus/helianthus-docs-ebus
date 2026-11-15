@@ -227,11 +227,24 @@ PROFILE_POINTS = {
 ATTRIBUTION_HEADING = "## Resource attribution of a multi-device chain"
 ATTRIBUTION_HEADER = (
     "| Occurrence class | Native models | Resource kind it would describe "
-    "| State | Reason |"
+    "| Mapping grade | Mapping source | State | Reason |"
 )
 WITHHELD_REASON = "MULTI_DEVICE_UNATTRIBUTED"
 # Occurrence class -> (native model IDs, resource kinds, state).
 # Required clauses of each reason are listed in REASON_CLAUSES.
+# Mapping grade per occurrence class, and the artifacts every source cites.
+EXPECTED_GRADE = {
+    "Inverter": "Proven",
+    "Meter": "Hypothesis",
+    "Storage control": "Hypothesis",
+    "Per-device repeat": "Unknown",
+}
+SOURCE_CLAUSES = {
+    "Inverter": ("`sunspec/models` pin", "element inventory of docs-semantic"),
+    "Meter": ("`sunspec/models` pin", "element inventory of docs-semantic"),
+    "Storage control": ("`sunspec/models` pin", "element inventory of docs-semantic"),
+    "Per-device repeat": ("no exact section", "element inventory names no resource kind"),
+}
 EXPECTED_ATTRIBUTION = {
     "Inverter": (
         ("101", "102", "103", "111", "112", "113"),
@@ -295,9 +308,9 @@ def attribution_rows(section: str) -> list[list[str]]:
 
 
 def row_errors(row: list[str]) -> list[str]:
-    if len(row) != 5:
+    if len(row) != 7:
         return [f"row width {row}"]
-    occurrence, models, kinds, state, reason = row
+    occurrence, models, kinds, grade, source, state, reason = row
     if occurrence not in EXPECTED_ATTRIBUTION:
         return []
     want_models, want_kinds, want_state = EXPECTED_ATTRIBUTION[occurrence]
@@ -310,6 +323,13 @@ def row_errors(row: list[str]) -> list[str]:
         errors.append(f"{occurrence}: kinds {got_kinds}")
     if state != want_state:
         errors.append(f"{occurrence}: state {state!r}")
+    if grade != EXPECTED_GRADE[occurrence]:
+        errors.append(f"{occurrence}: grade {grade!r}")
+    errors += [
+        f"{occurrence}: source lacks {clause!r}"
+        for clause in SOURCE_CLAUSES[occurrence]
+        if clause not in normalize(source)
+    ]
     errors += [
         f"{occurrence}: reason lacks {clause!r}"
         for clause in REASON_CLAUSES[occurrence]
@@ -389,23 +409,32 @@ def test_attribution_checker_rejects_a_change_of_any_row_field() -> None:
 
     for row in rows:
         line = "| " + " | ".join(row) + " |"
-        occurrence, models, kinds, state, reason = row
+        occurrence, models, kinds, grade, source, state, reason = row
         mutations = {
             "occurrence class": [f"{occurrence} occurrence", *row[1:]],
             "native models": [occurrence, models.replace("`", "", 2), *row[2:]],
-            "resource kind": [occurrence, models, kinds.replace("resource.", "resource.x", 1), state, reason],
+            "resource kind": [
+                occurrence, models, kinds.replace("resource.", "resource.x", 1), *row[3:]
+            ],
+            "mapping grade": [occurrence, models, kinds, "Proven" if grade != "Proven" else "Unknown", *row[4:]],
+            "mapping grade removed": [occurrence, models, kinds, "", *row[4:]],
+            "mapping source": [occurrence, models, kinds, grade, "Not stated.", state, reason],
             "state": [
                 occurrence,
                 models,
                 kinds,
+                grade,
+                source,
                 "unsupported" if state == "attributed" else "attributed",
                 reason,
             ],
-            "reason": [occurrence, models, kinds, state, "None."],
+            "reason": [occurrence, models, kinds, grade, source, state, "None."],
             "reason replaced by unrelated text": [
                 occurrence,
                 models,
                 kinds,
+                grade,
+                source,
                 state,
                 "The weather forecast for the coming week predicts mild temperatures.",
             ],
