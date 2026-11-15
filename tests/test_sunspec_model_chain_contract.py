@@ -231,6 +231,7 @@ ATTRIBUTION_HEADER = (
 )
 WITHHELD_REASON = "MULTI_DEVICE_UNATTRIBUTED"
 # Occurrence class -> (native model IDs, resource kinds, state).
+# Required clauses of each reason are listed in REASON_CLAUSES.
 EXPECTED_ATTRIBUTION = {
     "Inverter": (
         ("101", "102", "103", "111", "112", "113"),
@@ -247,6 +248,27 @@ EXPECTED_ATTRIBUTION = {
         ("1",),
         ("resource.inverter", "resource.meter", "resource.equipment"),
         "unsupported",
+    ),
+}
+REASON_CLAUSES = {
+    "Inverter": (
+        "Attributed only in a single-device chain",
+        "one-resource-per-unit rule",
+        "contains its phases by position",
+    ),
+    "Meter": (
+        "No decoder of this page admits a meter model",
+        "carries no identity of a meter",
+        "configured `measures` relation that is not defined for this family",
+    ),
+    "Storage control": (
+        "carries no identity of a battery",
+        "configured relation that is not defined for this family",
+        "outside the capability profile",
+    ),
+    "Per-device repeat": (
+        "position of a segment in the chain is an address, not an identity",
+        "lists no identification scheme for a device of a chain",
     ),
 }
 
@@ -272,6 +294,30 @@ def attribution_rows(section: str) -> list[list[str]]:
     return rows
 
 
+def row_errors(row: list[str]) -> list[str]:
+    if len(row) != 5:
+        return [f"row width {row}"]
+    occurrence, models, kinds, state, reason = row
+    if occurrence not in EXPECTED_ATTRIBUTION:
+        return []
+    want_models, want_kinds, want_state = EXPECTED_ATTRIBUTION[occurrence]
+    errors = []
+    got_models = tuple(re.findall(r"`(\d+)(?:/L\d+)?`", models))
+    if got_models != want_models:
+        errors.append(f"{occurrence}: models {got_models}")
+    got_kinds = tuple(re.findall(r"`(resource\.[a-z_]+)`", kinds))
+    if got_kinds != want_kinds:
+        errors.append(f"{occurrence}: kinds {got_kinds}")
+    if state != want_state:
+        errors.append(f"{occurrence}: state {state!r}")
+    errors += [
+        f"{occurrence}: reason lacks {clause!r}"
+        for clause in REASON_CLAUSES[occurrence]
+        if clause not in normalize(reason)
+    ]
+    return errors
+
+
 def attribution_errors(contract: str) -> list[str]:
     """Return every way the attribution table departs from the contract."""
     try:
@@ -283,23 +329,7 @@ def attribution_errors(contract: str) -> list[str]:
     if classes != list(EXPECTED_ATTRIBUTION):
         errors.append(f"occurrence classes {classes}")
     for row in rows:
-        if len(row) != 5:
-            errors.append(f"row width {row}")
-            continue
-        occurrence, models, kinds, state, reason = row
-        if occurrence not in EXPECTED_ATTRIBUTION:
-            continue
-        want_models, want_kinds, want_state = EXPECTED_ATTRIBUTION[occurrence]
-        got_models = tuple(re.findall(r"`(\d+)(?:/L\d+)?`", models))
-        if got_models != want_models:
-            errors.append(f"{occurrence}: models {got_models}")
-        got_kinds = tuple(re.findall(r"`(resource\.[a-z_]+)`", kinds))
-        if got_kinds != want_kinds:
-            errors.append(f"{occurrence}: kinds {got_kinds}")
-        if state != want_state:
-            errors.append(f"{occurrence}: state {state!r}")
-        if len(reason.split()) < 8:
-            errors.append(f"{occurrence}: reason {reason!r}")
+        errors += row_errors(row)
     return errors
 
 
@@ -339,6 +369,8 @@ def test_multi_device_chain_attribution_is_stated_per_occurrence_class() -> None
         "The native provider and the native surface proceed",
         "Attributed only in a single-device chain",
         "is not a catalog disposition",
+        "This segmentation rule is a **Hypothesis**",
+        "no exact section of it is pinned for the rule",
     ):
         assert required in section
     # The capability decision for a repeated Common occurrence is unchanged.
@@ -370,6 +402,13 @@ def test_attribution_checker_rejects_a_change_of_any_row_field() -> None:
                 reason,
             ],
             "reason": [occurrence, models, kinds, state, "None."],
+            "reason replaced by unrelated text": [
+                occurrence,
+                models,
+                kinds,
+                state,
+                "The weather forecast for the coming week predicts mild temperatures.",
+            ],
         }
         for field, cells in mutations.items():
             mutated = _mutate(contract, line, "| " + " | ".join(cells) + " |")

@@ -251,7 +251,13 @@ A **multi-device chain** is a terminal-verified chain whose first occurrence is
 Common Model `1` and which carries a further Common occurrence; a chain with
 exactly one Common occurrence is a single-device chain. Each Common occurrence
 starts the segment of one device, which runs up to the next Common occurrence
-or the end marker. The capability decision for such a chain stays
+or the end marker. This segmentation rule is a **Hypothesis**: it is the
+Helianthus reading of the Common-first rule above, in which a Common occurrence
+opens the model list of one device. The SunSpec Device Information Model
+Specification named in the source boundary is the reference, no exact section
+of it is pinned for the rule, and no retained wire evidence of a multi-device
+chain backs it yet, so the segment boundary is **Unknown** beyond the Common
+occurrence itself. The capability decision for such a chain stays
 `INVALID_CHAIN` under the Common exactly-once rule above; the table below
 states what each occurrence class would describe once it is published.
 
