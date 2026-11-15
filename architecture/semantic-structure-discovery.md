@@ -31,6 +31,7 @@ Companion references:
 - configuration gates: [`semantic-configuration-gates.md`](./semantic-configuration-gates.md)
 - mechanism/FSM map: [`semantic-structure-fsm-map.md`](./semantic-structure-fsm-map.md)
 - functional-module semantics: [`functional-modules.md`](./functional-modules.md)
+- relation and identity candidates: [`fixtures/structural-relation-candidates-v1.json`](./fixtures/structural-relation-candidates-v1.json)
 
 ## What Counts as a Structural Decision
 
@@ -133,6 +134,16 @@ These do not create families, but define how published entities relate to each o
 - `associatedCircuit`
 - `circuits[].managing_device`
 - `radio_devices[].slot_mode`
+
+Parenting is not left to consumers. Each attachment enters the common model as
+a relation candidate for a stated scope, as installer configuration, or with a
+stated reason that no candidate is offered, as the
+[relation-candidate fixture](./fixtures/structural-relation-candidates-v1.json)
+lists. The zone-to-circuit assignment stays unresolved until the specialist
+review records which zone register establishes it, and a controller-mediated
+device slot and the same unit's direct bus entry stay two views because they
+share no anchor key source. See
+[Relation and Identity Candidates for the Common Model](./b524-structural-decisions.md#relation-and-identity-candidates-for-the-common-model).
 
 ### 4. Family Gates
 
