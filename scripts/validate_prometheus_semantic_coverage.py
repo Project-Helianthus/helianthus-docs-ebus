@@ -75,6 +75,7 @@ active_reads_avoided_total | counter | family, freshness_profile | none
 ambiguous_total | counter | family, reason | none
 direct_apply_total | counter | family, freshness_profile | none
 ebus_active_echo_mismatch_subclass_total | counter | subclass | none
+ebus_adaptermux_active_arbitration_held | gauge | none | none
 ebus_adaptermux_escape_pair_verify_failures_total | counter | step | none
 ebus_adaptermux_foreign_initiator_releases_total | counter | none | none
 ebus_adaptermux_inter_write_drained_bytes_total | counter | none | none
@@ -324,7 +325,7 @@ def main() -> int:
     except (CheckError, OSError) as exc:
         print(f"Prometheus semantic coverage: {exc}")
         return 1
-    print("Prometheus semantic coverage passed: 32 bounded fields and 106 emitted metric families.")
+    print("Prometheus semantic coverage passed: 32 bounded fields and 107 emitted metric families.")
     return 0
 
 
