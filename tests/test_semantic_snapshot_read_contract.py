@@ -50,8 +50,10 @@ CLAUSES = (
     asset with several sources is readable when at least one of its sources
     counts.""",
     """When none counts, the entry is unavailable with
-    `semantic.read.reason.source_unavailable` if no source is admitted, otherwise
-    with `semantic.read.reason.publication_withheld`.""",
+    `semantic.read.reason.source_unavailable` if no source is admitted,
+    `semantic.read.reason.snapshot_unavailable` if an admitted source exists but no
+    source has an accepted publication, and otherwise with
+    `semantic.read.reason.publication_withheld`.""",
     """While a lifecycle control of
     any one source is still pending, the read gate of the whole asset stays closed
     with `semantic.read.reason.source_unavailable`; cached state never bypasses it.""",
@@ -268,10 +270,19 @@ def test_semantic_snapshot_read_rejects_causal_selection_weakening(old: str, new
     # A fenced source cannot count.
     ("(live, not fenced and not\nretired)", "(live or fenced, and not\nretired)"),
     # The two unavailable reasons cannot swap.
-    ("`semantic.read.reason.source_unavailable` if no source is admitted, otherwise\n"
-     "with `semantic.read.reason.publication_withheld`.",
-     "`semantic.read.reason.publication_withheld` if no source is admitted, otherwise\n"
-     "with `semantic.read.reason.source_unavailable`."),
+    ("`semantic.read.reason.source_unavailable` if no source is admitted,\n"
+     "`semantic.read.reason.snapshot_unavailable` if an admitted source exists but no\n"
+     "source has an accepted publication, and otherwise with\n"
+     "`semantic.read.reason.publication_withheld`.",
+     "`semantic.read.reason.publication_withheld` if no source is admitted,\n"
+     "`semantic.read.reason.snapshot_unavailable` if an admitted source exists but no\n"
+     "source has an accepted publication, and otherwise with\n"
+     "`semantic.read.reason.source_unavailable`."),
+    # A never-published admitted source keeps the one-source reason.
+    ("`semantic.read.reason.snapshot_unavailable` if an admitted source exists but no\n"
+     "source has an accepted publication",
+     "`semantic.read.reason.publication_withheld` if an admitted source exists but no\n"
+     "source has an accepted publication"),
     # A pending control of one source closes the whole asset.
     ("the read gate of the whole asset stays closed", "the read gate of that source alone stays closed"),
     # Each source's state stays visible.

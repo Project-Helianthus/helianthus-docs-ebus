@@ -7,7 +7,8 @@
   with a published, unfenced cursor of its current generation, and an asset
   with several sources is readable when at least one of its sources counts.
   Otherwise the entry is unavailable with `source_unavailable` when no source
-  is admitted and `publication_withheld` when one is; a pending lifecycle
+  is admitted, `snapshot_unavailable` when no source has an accepted
+  publication, and `publication_withheld` otherwise; a pending lifecycle
   control of any source keeps the whole asset closed. Each source's
   descriptor, cursors and fences stay visible, including a fenced or retired
   source, whose observations remain only as retained observations. Candidates

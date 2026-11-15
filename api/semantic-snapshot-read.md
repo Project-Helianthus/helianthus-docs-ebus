@@ -248,8 +248,10 @@ A source counts for the read when it is admitted (live, not fenced and not
 retired) and has a published, unfenced cursor of its current generation. An
 asset with several sources is readable when at least one of its sources
 counts. When none counts, the entry is unavailable with
-`semantic.read.reason.source_unavailable` if no source is admitted, otherwise
-with `semantic.read.reason.publication_withheld`. While a lifecycle control of
+`semantic.read.reason.source_unavailable` if no source is admitted,
+`semantic.read.reason.snapshot_unavailable` if an admitted source exists but no
+source has an accepted publication, and otherwise with
+`semantic.read.reason.publication_withheld`. While a lifecycle control of
 any one source is still pending, the read gate of the whole asset stays closed
 with `semantic.read.reason.source_unavailable`; cached state never bypasses it.
 The public-exposure check above still applies to the whole asset entry.
