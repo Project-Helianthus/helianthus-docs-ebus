@@ -203,6 +203,11 @@ planes non-null within the startup gate.
 
 ### Scheduling Without a System Controller
 
+**Proven — merged gateway behavior.** Cadence, suspension conditions and log
+marker below are taken from the merged gateway change and its run sheet; the
+behavior on a physical installation without a controller is **Unknown** beyond
+that run sheet.
+
 On a bus with a heat source and no system controller, no B524 root is found and
 the state and configuration tasks run a fallback B524 root discovery pass on
 their ticks. Once the regulator absence state (`semantic_regulator_state`, see
@@ -277,6 +282,9 @@ Implementation note:
 - `DEGRADED` does not block recovery; later live updates can still move runtime to warmup/live-ready.
 
 ### Startup Reason Without a Supported Heat-Source Data Path
+
+**Proven — merged gateway behavior.** The reason, its evaluation and clearing
+and the timeout log line are taken from the merged gateway change.
 
 The startup block of the bus observability summary carries an additive
 `reason` next to the phase (GraphQL `bus_summary.status.startup.reason`, MCP

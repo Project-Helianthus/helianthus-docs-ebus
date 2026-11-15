@@ -224,8 +224,16 @@ type bus_observability_status {
   capability: bus_observability_capability!
   bus_admission: bus_admission
   warmup: bus_observability_warmup!
+  startup: bus_observability_startup
   timing_quality: bus_observability_timing_quality!
   degraded: bus_observability_degraded!
+}
+
+type bus_observability_startup {
+  phase: String!
+  cache_epoch: Int!
+  live_epoch: Int!
+  reason: String
 }
 
 type bus_admission {
