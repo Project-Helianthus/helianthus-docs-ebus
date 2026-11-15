@@ -28,6 +28,11 @@
     "fixture": "architecture/fixtures/vaillant-semreg-thermal-map-v1.json",
     "qualified_binding_required": true
   },
+  "thermal_rows": [
+    "PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x0073",
+    "PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x004B",
+    "PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x0095"
+  ],
   "nonclaims": {
     "controller_or_firmware_tuple_qualified": false,
     "controller_family_range_qualified": false,

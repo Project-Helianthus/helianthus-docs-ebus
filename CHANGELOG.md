@@ -2,6 +2,33 @@
 
 ## Unreleased
 
+- The B524 thermal map fixture
+  `architecture/fixtures/vaillant-semreg-thermal-map-v1.json` and the
+  hot-water fixture `architecture/fixtures/dhw-setpoint-semreg-cutover-v1.json`
+  key each row by the native identity of its value
+  (`PB SB OP GG II RR`), never by a gateway GraphQL field. Each row names the
+  native resource it attaches to in native terms (the B524 semantic root's
+  system group, or the controller's native hot-water group), its relation
+  candidates by reference to
+  `architecture/fixtures/structural-relation-candidates-v1.json` or their
+  explicit absence with a reason, and a copy of the element inventory entry of
+  its target definition. Both temperature facts and the hot-water setpoint
+  fact are `unknown` with the reason `catalog.reason.subject_unresolved` and
+  no plane, so no row forms a FactKey, carries a role or resource in dimension
+  text, or places a thermal quantity on a common resource; native values keep
+  their native unit. The hot-water fixture records its service-identity gap
+  as an unresolved subject: both projection cases are `withheld` with that
+  reason and no loss. The controller qualification sidecar binds to the rows
+  by native key in its new `thermal_rows` member.
+  `scripts/validate_vaillant_semreg_thermal_map.py` checks both fixtures and
+  rejects a row attached by ordinal, a false join to a native resource that
+  does not hold the row's key, and a dangling endpoint (a relation candidate
+  naming a native resource the fixture does not list). The Go contract module
+  `tests/semreg_thermal_map_contract` pins a newer SemReg module and checks
+  every row's target and disposition against SemReg's element inventory.
+  Follow-ups: the thermal cutover pages and the energy merge page, the
+  Prometheus coverage page's thermal rows, and the gateway's thermal
+  publication.
 - The B524 structural decision catalog hands the controller's attachments to
   the common model as relation and identity candidates. The new fixture
   `architecture/fixtures/structural-relation-candidates-v1.json` lists each
