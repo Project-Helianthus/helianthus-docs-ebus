@@ -24,9 +24,12 @@ the common model.
 For the common model, the hand-off keeps each energy observation as its native
 source states it:
 
-- **Usage.** Heating, cooling and hot water stay three usages. The
+- **Usage.** Heating, cooling and hot water stay three usages.
+  **Hypothesis:** the
   [B516 usage selector](../protocols/vaillant/ebus-vaillant-b516-energy.md)
-  states them as `3`, `5` and `4`; a value whose usage selector is `0` (sum or
+  states them as `3`, `5` and `4`. The native page lists this
+  interpretation as a candidate that is not confirmed on the wire, so the
+  mapping stays a hypothesis until native evidence promotes it. A value whose usage selector is `0` (sum or
   unspecified) stays unspecified and is never split. A register total keeps
   the usage its register states: the `Hc` registers name heating and the `Hwc`
   registers hot water. Whether an `Hc` total includes cooling is **Unknown**,
