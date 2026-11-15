@@ -67,6 +67,11 @@ CLAUSES = (
     the disposition's single `reason`. For other outcomes retain the applicable
     owner reasons with the same lexical tie-break.""",
     """The STD-01 rule below takes precedence for affected eeBUS items.""",
+    """keeps `eebus-inbound` at `unknown` with reason `unknown_pending_normative_source`.""",
+    """recognizes an affected item by the exact `unknown_pending_normative_source` token in a
+    contributing candidate's `quality.reasons`;""",
+    """do not prefix or reinterpret `unknown_pending_normative_source` as an
+    API-owned reason.""",
     """Sort assets by `asset_id`, not request order. Preserve the kernel's canonical
     array orders: facts by canonical `FactKey` bytes; candidates by `candidate_id`;
     conflicts by `conflict_id`; bindings/instances by primary ID; source paths by
