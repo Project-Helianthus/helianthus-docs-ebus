@@ -4,7 +4,7 @@ opcode,group,register,name,previous_name,vaillant_friendly_name,vaillant_name_vr
 0x02,0x00,0x0003,frost_protection_delay_time,frost_protection_delay,Frost protection delay,,,,,FrostOverRideTime
 0x02,0x00,0x0004,preheating_time_maximum,max_preheating_time,Maximum time for pre heating,system_maximum_time_for_pre_heating,,,,
 0x02,0x00,0x0006,manual_cooling_time,manual_cooling_days,Cooling days for manual cooling,,system_cooling_days_for_manual_cooling,,,
-0x02,0x00,0x0007,unknown_11,system_off,System mode off,system_system_mode_off,system_system_mode_off,systemOff,,SysOff
+0x02,0x00,0x0007,off_enabled,system_off,System mode off,system_system_mode_off,system_system_mode_off,systemOff,,SysOff
 0x02,0x00,0x0008,cooling_enabled_at_holiday,cooling_while_holiday,Cooling while holiday,,,,,
 0x02,0x00,0x0009,automatic_cooling_enabled,automatic_cooling_enabled,Automatic cooling enabled,system_automatic_cooling_enabled,system_automatic_cooling_enabled,,,
 0x02,0x00,0x000A,cylinder_parallel_loading_enabled,system_cylinder_parallel_loading_allowed,Parallel tank loading,system_parallel_tank_loading,system_parallel_tank_loading,,,HwcParallelLoading

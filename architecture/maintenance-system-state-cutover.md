@@ -20,7 +20,7 @@ Readable data and printed FLAGS establish no writable support here.
 
 | Native observation | Exact selector and documented representation | Native semantic evidence |
 | --- | --- | --- |
-| Source-specific system switch | PB=0xB5, SB=0x24, OP=0x02, GG=0x00, II=0x00, RR=0x0007; u8, Boolean-shaped, no physical unit | **Unknown** polarity: the row's `0=off 1=on` conflicts with the candidate switch-off interpretation. The name `unknown_11` is provisional. A universal installation-off meaning is not proven. |
+| Source-specific system switch | PB=0xB5, SB=0x24, OP=0x02, GG=0x00, II=0x00, RR=0x0007; u8, Boolean-shaped, no physical unit | **Hypothesis** polarity: the observed Vaillant definition ("System mode off") and the candidate write both give 1 = the system is switched off; this is not confirmed on the wire. The catalog name `off_enabled` is final. A universal installation-off meaning is not proven. |
 | Source-coded maintenance | PB=0xB5, SB=0x24, OP=0x02, GG=0x00, II=0x00, RR=0x0096; u8, bool, no physical unit | The catalog records `maintenance_active`, ebusd `MaintenanceDue`, one-byte observation and FLAGS=0x01. **Hypothesis** for a family-qualified maintenance interpretation; exact due/active meaning and its relationship to diagnosis remain **Unknown** without correlated public evidence. |
 
 **Proven (source inspection only):** the

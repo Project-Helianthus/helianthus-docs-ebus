@@ -21,7 +21,7 @@ OP02_TUPLES = """00|0001|dhw_outdoor_bivalence_temperature_limit|system_dhw_biva
 00|0003|frost_protection_delay_time|frost_protection_delay|false
 00|0004|preheating_time_maximum|max_preheating_time|false
 00|0006|manual_cooling_time|manual_cooling_days|false
-00|0007|unknown_11|system_off|true
+00|0007|off_enabled|system_off|false
 00|0008|cooling_enabled_at_holiday|cooling_while_holiday|true
 00|0009|automatic_cooling_enabled|automatic_cooling_enabled|false
 00|000A|cylinder_parallel_loading_enabled|system_cylinder_parallel_loading_allowed|false
@@ -293,7 +293,7 @@ OP02_TUPLES = """00|0001|dhw_outdoor_bivalence_temperature_limit|system_dhw_biva
 02|001B|circuit_pump_unknown_8|circuit_pump_status|true
 02|001C|circuit_adaptive_heating_curve_offset|circuit_adaptive_heating_curve_offset|false
 02|001D|circuit_special_function_mode|circuit_dhw_quick_mode|true
-02|001E|circuit_state|circuit_status_circuit|true
+02|001E|circuit_state|circuit_status_circuit|false
 02|001F|cooling_circuit_outdoor_temperature_limit_minimum|circuit_minimum_outside_temperature_cooling|false
 02|0020|circuit_unknown_10|circuit_status_automatic_heating_cooling|true
 02|0021|circuit_mixer_position|circuit_mixer_position_percentage|false

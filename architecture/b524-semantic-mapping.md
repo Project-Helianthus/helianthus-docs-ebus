@@ -545,13 +545,13 @@ Category corrections applied from VRC Explorer FLAGS analysis and MCP validation
 | 0x03 | 0x0015 | cooling_zone_room_effective_temperature_setpoint | C | S | 0x01 | Computed output, read-only |
 | 0x03 | 0x001E | zone_quick_veto_end_clock_time | S | C | 0x03 | Writable (extend/set veto) |
 | 0x03 | 0x0024 | zone_quick_veto_end_date | S | C | 0x03 | Writable (extend/set veto) |
-| 0x00 | 0x0007 | unknown_11 | S | C | 0x03 | User-writable on/off switch |
+| 0x00 | 0x0007 | off_enabled | S | C | 0x03 | User-writable on/off switch |
 
 Wire type corrections from MCP validation (2026-03-05):
 
 | Group | RR | Name | Old Wire | New Wire | Evidence |
 |-------|-----|------|----------|----------|----------|
-| 0x00 | 0x0007 | unknown_11 | u16 | u8 | 1-byte response, FLAGS=0x03 |
+| 0x00 | 0x0007 | off_enabled | u16 | u8 | 1-byte response, FLAGS=0x03 |
 | 0x00 | 0x0014 | adaptive_heating_curve_enabled | u16 | u8 | 1-byte response, FLAGS=0x03 |
 | 0x00 | 0x0096 | maintenance_active | u16 | u8 | 1-byte response, FLAGS=0x01 |
 | 0x01 | 0x000D | dhw_special_function_mode | u16 | u8 | 1-byte response, FLAGS=0x03 |

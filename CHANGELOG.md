@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+- B524 `OP=0x02, GG=0x00, RR=0x0007` is named `off_enabled` (`previous_name`
+  `system_off`), final, with the observed Vaillant definition: 1 means that
+  the system is switched off. The register map value cell reads
+  `0=system on 1=system off`, and the catalog, correspondence, requester
+  matrix, name annotation, semantic mapping and system-off cutover pages use
+  the name. `OP=0x02, GG=0x02, RR=0x001E` (`circuit_state`) is final under the
+  same rule; its only open point was hardware confirmation of the observed
+  Vaillant definition. `architecture/naming.md` states that an observed
+  Vaillant definition names a register without confirmation on the wire, that
+  such a row is not provisional and that hardware qualification by device
+  owners does not block the name; it lists the nine remaining `unknown`
+  placeholders. `development/b524-provisional-name-evidence.md` lists 140 open
+  rows. No alias of the old name exists. The gateway follows the fixture
+  (Project-Helianthus/helianthus-ebusgateway#1483).
+
 - `protocols/vaillant/fixtures/b509-register-name-correspondence.csv` has
   `codec` and `scale` columns after `unit`. They hold what the boiler and heat
   pump register maps state for each row: the codec of the `Codec / scale`

@@ -16,22 +16,28 @@ maker-derived terms while their open points await evidence. Canonical names and
 
 The inclusion rule is every nonempty `open_question` in the
 [canonical OP02 CSV](../protocols/vaillant/fixtures/b524-op02-register-names.csv).
-It currently selects **142 of 368 rows**, each listed exactly once below:
-132 retain documented terms and 10 use pre-existing `unknown` placeholders.
+It currently selects **140 of 368 rows**, each listed exactly once below:
+131 retain documented terms and 9 use pre-existing `unknown` placeholders.
 Both subsets have explicit open questions; neither is silently excluded.
+A row whose only open point is wire confirmation of an observed Vaillant
+definition is final under the
+[naming policy](../architecture/naming.md#correspondence-annotations) and has no
+`open_question`, so it is not listed: `RR=0x0007` of GG=0x00 (`off_enabled`)
+and `RR=0x001E` of GG=0x02 (`circuit_state`).
 The supplied parent snapshot has a historical title count of 96, a body count
 of 99 and a truncated table. Relative to those counts the current inventory is
-46 and 43 rows larger respectively; these are count differences, not verified
-selector additions. All five complete selectors visible in the supplied excerpt
-remain present; its sixth selector line is truncated. A complete parent-list
+44 and 41 rows larger respectively; these are count differences, not verified
+selector additions. Of the five complete selectors visible in the supplied
+excerpt, any that is one of the two final rows above leaves this index and the
+others remain present; its sixth selector line is truncated. A complete parent-list
 snapshot is required to identify actual additions and removals. This index does
 not claim to reconcile the unseen parent rows.
 
 | Opcode | Group | Open rows |
 | --- | --- | ---: |
-| 0x02 | 0x00 | 108 |
+| 0x02 | 0x00 | 107 |
 | 0x02 | 0x01 | 5 |
-| 0x02 | 0x02 | 11 |
+| 0x02 | 0x02 | 10 |
 | 0x02 | 0x03 | 10 |
 | 0x02 | 0x04 | 2 |
 | 0x02 | 0x08 | 1 |
@@ -102,7 +108,6 @@ II context stays separate rather than merging instances or inventing them.
 
 | RR | Retained canonical name | II context (I) | Gap | Existing unresolved evidence (C; Unknown) |
 | --- | --- | --- | --- | --- |
-| 0x0007 | `unknown_11` | VRC700 family: 00; VRC720 family: 00 | P | Polarity unresolved, so no Boolean name is given: the catalog row gives `0=off 1=on` (1 = switched on), while the candidate write sets the switch-off with 01 and cancels it with 00 (1 = switched off), unconfirmed on the wire. |
 | 0x0008 | `cooling_enabled_at_holiday` | Unknown | M, P, V | Candidate interpretation, unconfirmed on the wire: 1 means that cooling is permitted during a holiday; the polarity is not established and no value table is documented. |
 | 0x000B | `solar_circuit_bleeding_time` | Unknown | M, V | Candidate interpretation, unconfirmed on the wire: a duration of the solar circuit bleeding; the value class and unit are not established. |
 | 0x000D | `solar_frost_protection_limit` | Unknown | M, V | Candidate interpretation, unconfirmed on the wire: a limit of the solar frost protection; the limited quantity and the representation are not established. |
@@ -234,7 +239,6 @@ II context stays separate rather than merging instances or inventing them.
 | 0x0019 | `circuit_external_demand_input` | Unknown | M, V | Candidate interpretation, unconfirmed on the wire: an external heat demand input of the circuit; the value class and the value table are not established. |
 | 0x001B | `circuit_pump_unknown_8` | Unknown | M, V | A raw two-byte value related to the circuit pump; value class and meaning are not established. |
 | 0x001D | `circuit_special_function_mode` | VRC700 family: dynamic; VRC720 family: dynamic | M, V | Hypothesis: candidate circuit special function mode and family enumeration; meaning and value table remain unconfirmed on the wire. |
-| 0x001E | `circuit_state` | VRC700 family: dynamic; VRC720 family: dynamic | M, V | Candidate interpretation, unconfirmed on the wire: an enumeration of the circuit state (0 standby, 1 heating, 2 cooling, 3 DHW); the assignment rests on observed naming and the hardware confirmation is pending. |
 | 0x0020 | `circuit_unknown_10` | Unknown | M | An observed one-byte raw value related to automatic heating and cooling; the meaning is not established. |
 
 ### OP=0x02, GG=0x03

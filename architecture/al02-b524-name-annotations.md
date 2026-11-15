@@ -48,7 +48,7 @@ Representative controls, not a complete dictionary:
 | OP | GG | RR | Canonical name | Legacy name / display alias | Unresolved |
 | --- | --- | --- | --- | --- | --- |
 | 02 | 00 | 0001 | dhw_outdoor_bivalence_temperature_limit | system_dhw_bivalence_point | false |
-| 02 | 00 | 0007 | unknown_11 | system_off | true |
+| 02 | 00 | 0007 | off_enabled | system_off | false |
 | 02 | 00 | 0009 | automatic_cooling_enabled | automatic_cooling_enabled | false |
 | 02 | 00 | 0016 | ventilation_operating_mode | system_ventilation_operating_mode | false |
 | 02 | 09 | 0002 | ventilation_operating_mode | ventilation_operating_mode | false |

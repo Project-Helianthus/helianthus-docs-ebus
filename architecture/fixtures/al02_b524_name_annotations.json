@@ -33,10 +33,10 @@
         "family": "unqualified",
         "variant": "unqualified"
       },
-      "canonical_name": "unknown_11",
+      "canonical_name": "off_enabled",
       "legacy_name": "system_off",
       "display_alias": null,
-      "unresolved": true
+      "unresolved": false
     },
     {
       "key": {
