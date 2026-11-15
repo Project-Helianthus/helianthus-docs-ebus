@@ -501,3 +501,80 @@ def test_each_identity_row_keeps_its_direct_view_status(row_id: str, status: str
         row(document, row_id)["direct_view"]["status"] = status
 
     assert any(f"{row_id}.direct_view.status" in error for error in errors_after(mutate))
+
+
+@pytest.mark.parametrize("row_id", sorted(VALIDATOR.REQUIRED_IDENTITY))
+@pytest.mark.parametrize(("source", "disposition"), [("native_token", "one_resource"),
+                                                     ("operator_label", "one_resource")])
+def test_each_identity_row_keeps_its_anchor_and_disposition(row_id: str, source: str, disposition: str) -> None:
+    def mutate(document: dict) -> None:
+        item = row(document, row_id)
+        item["shared_anchor_key_source"], item["disposition"] = source, disposition
+
+    errors = errors_after(mutate)
+    assert any(f"{row_id}.shared_anchor_key_source" in error for error in errors)
+    assert any(f"{row_id}.disposition" in error for error in errors)
+
+
+def drop_role(role: str):
+    def mutate(evidence: list) -> None:
+        evidence[:] = [item for item in evidence if item["role"] != role]
+    return mutate
+
+
+@pytest.mark.parametrize(
+    ("row_id", "change"),
+    [(MODULE_SLOT, lambda evidence: retarget(evidence, "RR=0x0002", "RR=0x9999")),
+     (MODULE_SLOT, drop_role("class_address")),
+     ("SRI-heat-source-slots", drop_role("firmware_version")),
+     ("SRI-room-unit-slots", drop_role("hardware_identifier")),
+     ("SRI-uncharacterized-slots", lambda evidence: evidence[1].update(role="presence", classification="attribute"))],
+)
+def test_each_identity_row_keeps_its_slot_view_evidence(row_id: str, change) -> None:
+    def mutate(document: dict) -> None:
+        change(row(document, row_id)["slot_view"]["identity_evidence"])
+
+    assert any(f"{row_id}.slot_view" in error for error in errors_after(mutate))
+
+
+def unrelated_zone_statement(item: dict) -> None:
+    statement = item["native_statements"][0]
+    statement["selector"] = statement["selector"].replace("RR=0x001C", "RR=0x0013")
+    statement["reading"] = "The zone states its room-unit binding as a raw value."
+
+
+@pytest.mark.parametrize(
+    ("row_id", "change"),
+    [("SRC-SD15-controller-zone", unrelated_zone_statement),
+     (MANAGING, lambda item: item["native_statements"][0].update(source="register_map")),
+     (MANAGING, lambda item: item["native_statements"][1].update(scope="PROTOCOL")),
+     (ZONE_ROOM, lambda item: item["native_statements"][0].update(reading="The zone names a circuit.")),
+     (ZONE_CIRCUIT, lambda item: item["native_statements"].pop()),
+     (ZONE_FALLBACK, lambda item: item["native_statements"].append(
+         {"selector": "OP=0x02 GG=0x03 II=zone RR=0x001C", "source": "register_map",
+          "reading": "The zone names its circuit.", "scope": "PROFILE"}))],
+)
+def test_each_row_keeps_its_catalogued_native_statements(row_id: str, change) -> None:
+    def mutate(document: dict) -> None:
+        change(row(document, row_id))
+
+    assert any(f"{row_id}.native_statements" in error for error in errors_after(mutate))
+
+
+def test_catalogued_statement_order_is_not_significant() -> None:
+    assert errors_after(lambda document: row(document, MANAGING)["native_statements"].reverse()) == []
+
+
+def test_published_rows_match_the_pinned_statements_and_slot_views() -> None:
+    document = load_fixture()
+    for item in document["attachments"]:
+        assert sorted((s["selector"], s["source"], s["scope"], s["reading"])
+                      for s in item["native_statements"]) == sorted(
+            VALIDATOR.REQUIRED_STATEMENTS[item["id"]]), item["id"]
+    assert {item["id"] for item in document["attachments"]} == set(VALIDATOR.REQUIRED_STATEMENTS)
+    for item in document["relayed_identity"]:
+        assert (item["shared_anchor_key_source"], item["disposition"]) == (
+            VALIDATOR.REQUIRED_IDENTITY_ANCHOR[item["id"]]), item["id"]
+        assert sorted((e["selector"], e["role"]) for e in item["slot_view"]["identity_evidence"]) == sorted(
+            VALIDATOR.REQUIRED_SLOT_VIEWS[item["id"]]), item["id"]
+    assert set(VALIDATOR.REQUIRED_SLOT_VIEWS) == set(VALIDATOR.REQUIRED_IDENTITY)

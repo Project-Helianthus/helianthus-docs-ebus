@@ -115,6 +115,84 @@ REQUIRED_IDENTITY = {
     "SRI-uncharacterized-slots": (("0x0E", "0x0F"), "not_established"),
 }
 RELAYING_END_RESOLUTION = "native"
+# Each catalogued relayed-identity row keeps its shared anchor key source and
+# disposition, and its slot view keeps its (selector, role) pairs.
+REQUIRED_IDENTITY_ANCHOR = {row_id: ("none", "two_views_unresolved") for row_id in REQUIRED_IDENTITY}
+
+
+def slot_view_pairs(groups: str, *extra: tuple) -> tuple:
+    slot = f"OP=0x06 GG={groups} II=slot"
+    return (
+        (slot, "instance_position"), (slot + " RR=0x0002", "class_address"),
+        (slot + " RR=0x0004", "firmware_version"),
+    ) + tuple((slot + " " + register, role) for register, role in extra)
+
+
+REQUIRED_SLOT_VIEWS = {
+    "SRI-functional-module-slot": slot_view_pairs("0x0C"),
+    "SRI-heat-source-slots": slot_view_pairs("0x01/0x02"),
+    "SRI-room-unit-slots": slot_view_pairs("0x09/0x0A", ("RR=0x0023", "hardware_identifier")),
+    "SRI-uncharacterized-slots": slot_view_pairs("0x0E/0x0F"),
+}
+# Each catalogued row keeps its native statements: (selector, source, scope,
+# reading) per statement, order not significant.
+REQUIRED_STATEMENTS = {
+    "SRC-SD05-zone-room-unit": (
+        (ZONE + " RR=0x0013", "decision_catalog", "PROTOCOL",
+         "The zone states its room-unit binding as a raw value: 0 none, 1 the controller's own unit, "
+         "2 and above a room-unit number."),
+    ),
+    "SRC-SD06-zone-to-circuit": (
+        (ZONE + " RR=0x0013", "decision_catalog", "LAB",
+         "SD-06 reads values 1 to 0x20 as a one-based circuit number and subtracts one; "
+         "the formula holds for the laboratory scope only."),
+        (ZONE + " RR=0x001C", "register_map", "PROFILE",
+         "The register map names this register zone_circuit_assignment: a raw one-byte index kept "
+         "without renumbering, with a signed reading in which -1 means not bound as a candidate."),
+    ),
+    "SRC-SD07-zone-to-circuit-fallback": (),
+    "SRC-SD09-circuit-managing-module": (
+        ("OP=0x02 GG=0x00 RR=0x0036", "decision_catalog", "LAB",
+         "The hydraulic scheme code is installer configuration reported by the controller."),
+        ("OP=0x02 GG=0x00 RR=0x002F", "decision_catalog", "PROFILE",
+         "The functional module configuration code is installer configuration whose meanings are "
+         "documented per controller family."),
+    ),
+    "SRC-SD10-connected-device-slot": (
+        (ALL_SLOTS + " RR=0x0001", "decision_catalog", "PROTOCOL",
+         "A connected slot is a device whose data the controller answers for under OP=0x06."),
+    ),
+    "SRC-SD10-inventory-device-slot": (
+        (MODULE + " RR=0x0001", "decision_catalog", "GATEWAY_POLICY",
+         "device_connected reads 0 while firmware or hardware identity stays retained in the slot."),
+    ),
+    "SRC-SD15-controller-zone": (
+        (ZONE + " RR=0x001C", "decision_catalog", "PROTOCOL",
+         "SD-02 marks a zone instance present when this register reads a value other than 0xFF."),
+    ),
+    "SRC-SD15-controller-circuit": (
+        (CIRCUIT + " RR=0x0002", "decision_catalog", "PROTOCOL",
+         "SD-08 keeps a circuit instance active when circuit_type reads a value other than an "
+         "inactive marker."),
+    ),
+    "SRC-SD15-module-solar-circuit": (
+        ("OP=0x02 GG=0x00 RR=0x002F", "decision_catalog", "PROFILE",
+         "The functional module configuration code selects whether the controller family shows a "
+         "solar circuit."),
+    ),
+    "SRC-SD15-module-cylinder": (
+        ("OP=0x02 GG=0x00 RR=0x002F", "decision_catalog", "PROFILE",
+         "The functional module configuration code selects how many solar cylinders the controller "
+         "family shows."),
+    ),
+    "SRC-FM-second-family-slot": (),
+    "SRC-FM-second-family-status": (
+        ("OP=0x02 GG=0x00 RR=0x0067", "register_map", "PROFILE",
+         "A raw module status register of the second module family."),
+        ("OP=0x02 GG=0x00 RR=0x0068", "register_map", "PROFILE",
+         "A second raw module status register of the same family."),
+    ),
+}
 DISPOSITIONS = {"relation_candidate", "configuration_only", "absent", "unresolved"}
 EVIDENCE_GRADES = {"Proven", "Hypothesis", "Unknown"}
 SCOPES = {"PROTOCOL", "PROFILE", "LAB", "GATEWAY_POLICY"}
@@ -369,6 +447,12 @@ def check_pinned_row(row: dict, errors: list) -> None:
         errors.append(f"{row_id}.validity_scope: the catalogue states {sorted(scopes)}")
     check_pinned_end(row["from"], source, f"{row_id}.from", errors, source_resolution)
     check_pinned_end(row["to"], target, f"{row_id}.to", errors, target_resolution)
+    statements = sorted(
+        (item["selector"], item["source"], item["scope"], item["reading"]) for item in row["native_statements"]
+    )
+    if statements != sorted(REQUIRED_STATEMENTS[row_id]):
+        errors.append(f"{row_id}.native_statements: differ from the catalogued selector, source, "
+                      "scope and reading of each statement")
 
 
 def check_pinned_identity(row: dict, errors: list) -> None:
@@ -383,6 +467,12 @@ def check_pinned_identity(row: dict, errors: list) -> None:
         errors.append(f"{row_id}.direct_view.status: the catalogue states {status}")
     check_pinned_end(row["relaying_end"], ROOT_END, f"{row_id}.relaying_end", errors, RELAYING_END_RESOLUTION)
     check_pinned_end(row["direct_view"], ("direct_bus_entry", DIRECT_END), f"{row_id}.direct_view", errors)
+    check_pinned_end(row["slot_view"], ("device_slot", REQUIRED_SLOT_VIEWS[row_id]), f"{row_id}.slot_view", errors)
+    anchor, disposition = REQUIRED_IDENTITY_ANCHOR[row_id]
+    if row["shared_anchor_key_source"] != anchor:
+        errors.append(f"{row_id}.shared_anchor_key_source: the catalogue states {anchor}")
+    if row["disposition"] != disposition:
+        errors.append(f"{row_id}.disposition: the catalogue states {disposition}")
 
 
 def errors_for(label: str, errors: list) -> bool:
