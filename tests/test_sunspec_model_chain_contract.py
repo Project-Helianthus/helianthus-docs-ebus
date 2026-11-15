@@ -208,21 +208,22 @@ DEFERRAL = (
     "Canonical field identity belongs to the common element inventory; this "
     "page keeps native model and point names only."
 )
+# Profile key -> (unit, native point in Models 103 and 113).
 PROFILE_POINTS = {
-    "inverter.ac.current.total": "A",
-    "inverter.ac.current.phase_a": "AphA",
-    "inverter.ac.current.phase_b": "AphB",
-    "inverter.ac.current.phase_c": "AphC",
-    "inverter.ac.voltage.phase_a": "PhVphA",
-    "inverter.ac.voltage.phase_b": "PhVphB",
-    "inverter.ac.voltage.phase_c": "PhVphC",
-    "inverter.ac.power.active": "W",
-    "inverter.ac.frequency": "Hz",
-    "inverter.ac.energy_lifetime": "WH",
-    "inverter.temperature.cabinet": "TmpCab",
-    "inverter.operating_state": "St",
-    "inverter.events.1": "Evt1",
-    "inverter.events.2": "Evt2",
+    "inverter.ac.current.total": ("A", "A"),
+    "inverter.ac.current.phase_a": ("A", "AphA"),
+    "inverter.ac.current.phase_b": ("A", "AphB"),
+    "inverter.ac.current.phase_c": ("A", "AphC"),
+    "inverter.ac.voltage.phase_a": ("V", "PhVphA"),
+    "inverter.ac.voltage.phase_b": ("V", "PhVphB"),
+    "inverter.ac.voltage.phase_c": ("V", "PhVphC"),
+    "inverter.ac.power.active": ("W", "W"),
+    "inverter.ac.frequency": ("Hz", "Hz"),
+    "inverter.ac.energy_lifetime": ("Wh", "WH"),
+    "inverter.temperature.cabinet": ("C", "TmpCab"),
+    "inverter.operating_state": ("none", "St"),
+    "inverter.events.1": ("none", "Evt1"),
+    "inverter.events.2": ("none", "Evt2"),
 }
 ATTRIBUTION_HEADING = "## Resource attribution of a multi-device chain"
 ATTRIBUTION_HEADER = (
@@ -230,7 +231,8 @@ ATTRIBUTION_HEADER = (
     "| Mapping grade | Mapping source | State | Reason |"
 )
 WITHHELD_REASON = "MULTI_DEVICE_UNATTRIBUTED"
-# Occurrence class -> (native model IDs, resource kinds, state).
+# Occurrence class -> (native model tokens, with the length where the page
+# pins one, resource kinds, state).
 # Required clauses of each reason are listed in REASON_CLAUSES.
 # Mapping grade per occurrence class, and the artifacts every source cites.
 EXPECTED_GRADE = {
@@ -256,7 +258,11 @@ EXPECTED_ATTRIBUTION = {
         ("resource.meter",),
         "unsupported",
     ),
-    "Storage control": (("124",), ("resource.battery", "resource.storage_system"), "unsupported"),
+    "Storage control": (
+        ("124/L24",),
+        ("resource.battery", "resource.storage_system"),
+        "unsupported",
+    ),
     "Per-device repeat": (
         ("1",),
         ("resource.inverter", "resource.meter", "resource.equipment"),
@@ -315,7 +321,7 @@ def row_errors(row: list[str]) -> list[str]:
         return []
     want_models, want_kinds, want_state = EXPECTED_ATTRIBUTION[occurrence]
     errors = []
-    got_models = tuple(re.findall(r"`(\d+)(?:/L\d+)?`", models))
+    got_models = tuple(re.findall(r"`(\d+(?:/L\d+)?)`", models))
     if got_models != want_models:
         errors.append(f"{occurrence}: models {got_models}")
     got_kinds = tuple(re.findall(r"`(resource\.[a-z_]+)`", kinds))
@@ -353,19 +359,35 @@ def attribution_errors(contract: str) -> list[str]:
     return errors
 
 
+def profile_point_errors(capability: str) -> list[str]:
+    """Return every way the profile-key table departs from the frozen rows."""
+    rows = re.findall(r"^\| `([^`]+)` \| `([^`]+)` \| `([^`]+)` \|$", capability, re.MULTILINE)
+    got = {key: (unit, point) for key, unit, point in rows}
+    if len(got) != len(rows):
+        return [f"duplicate profile keys {rows}"]
+    if got == PROFILE_POINTS:
+        return []
+    return [
+        f"{key}: {got.get(key)} != {PROFILE_POINTS.get(key)}"
+        for key in sorted(set(got) | set(PROFILE_POINTS))
+        if got.get(key) != PROFILE_POINTS.get(key)
+    ]
+
+
+def capability_section(contract: str) -> str:
+    return contract[contract.index("## Capability Profile") : contract.index("## Vendor Flavor")]
+
+
 def test_field_identity_is_deferred_to_the_common_element_inventory() -> None:
     contract = text(CHAIN_CONTRACT)
     normalized = normalize(contract)
-    capability = contract[
-        contract.index("## Capability Profile") : contract.index("## Vendor Flavor")
-    ]
+    capability = capability_section(contract)
 
     assert DEFERRAL in normalized
     assert ELEMENT_INVENTORY in contract
     assert "Canonical field ID" not in contract
     assert "| Profile key | Unit | Native point in Models 103 and 113 |" in capability
-    rows = re.findall(r"^\| `([^`]+)` \| `([^`]+)` \| `([^`]+)` \|$", capability, re.MULTILINE)
-    assert {key: point for key, _unit, point in rows} == PROFILE_POINTS
+    assert profile_point_errors(capability) == []
     for required in (
         "A profile key names a required fact inside this capability profile only",
         "it is not a field identifier",
@@ -445,3 +467,27 @@ def test_attribution_checker_rejects_a_change_of_any_row_field() -> None:
 
         dropped = _mutate(contract, line + "\n", "")
         assert attribution_errors(dropped), (occurrence, "row removed")
+
+
+def test_profile_point_checker_rejects_a_change_of_unit_or_native_point() -> None:
+    capability = capability_section(text(CHAIN_CONTRACT))
+    assert profile_point_errors(capability) == []
+
+    for key, (unit, point) in PROFILE_POINTS.items():
+        line = f"| `{key}` | `{unit}` | `{point}` |"
+        other_unit = "V" if unit != "V" else "Hz"
+        for field, replacement in (
+            ("unit", f"| `{key}` | `{other_unit}` | `{point}` |"),
+            ("native point", f"| `{key}` | `{unit}` | `{point}X` |"),
+        ):
+            mutated = _mutate(capability, line, replacement)
+            assert profile_point_errors(mutated), (key, field)
+        assert profile_point_errors(_mutate(capability, line + "\n", "")), (key, "row removed")
+
+
+def test_attribution_checker_rejects_a_changed_model_length() -> None:
+    contract = text(CHAIN_CONTRACT)
+    assert attribution_errors(contract) == []
+    for wrong in ("`124/L99`", "`124`"):
+        mutated = _mutate(contract, "| Storage control | `124/L24` |", f"| Storage control | {wrong} |")
+        assert attribution_errors(mutated), wrong
