@@ -9954,6 +9954,12 @@
       "constant_unit": "none"
     },
     {
+      "name": "ebus_adaptermux_active_arbitration_held",
+      "type": "gauge",
+      "labels": [],
+      "constant_unit": "none"
+    },
+    {
       "name": "ebus_adaptermux_escape_pair_verify_failures_total",
       "type": "counter",
       "labels": [
