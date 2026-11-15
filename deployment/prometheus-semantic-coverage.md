@@ -540,8 +540,13 @@ These labels are native locators, never a semantic resource identity. They do
 not join to a semantic `slot`, select no SemReg fact and supply no write
 authority. The rule against raw asset IDs, addresses, request bytes, serials,
 network endpoints, contributor identities and fingerprints as labels applies
-to native series too. Two held observations with the same label set withhold
-both points.
+to native series too. A label set belongs to one native identity for the
+lifetime of the scrape target: the first identity admitted to a label set keeps
+it, and a different native identity that maps to the same label set, whether
+held at the same time or observed after the first was evicted or expired, is
+withheld. Opcode, group and register stay out of band, so the label set alone
+cannot tell two identities apart; the lifetime reservation is what keeps their
+histories from merging in one series.
 
 ### Clear interpretation
 
@@ -575,9 +580,15 @@ clear interpretation is a naming and codec condition; evidence status
   was received. It is present while an observation of the point is held, fresh
   or stale, and absent when none is held.
 - No native sample carries an exposition timestamp.
-- At most 1,024 value series appear per scrape target. The gateway orders the
-  candidates by `protocol`, `device`, `point` and then numeric `index`, with
-  no index first; it emits the first 1,024 and omits the rest. An age series
+- At most 1,024 value series appear per scrape target, for the lifetime of the
+  target and not only per scrape. The gateway keeps a lifetime admission set of
+  label sets. It orders the candidates by `protocol`, `device`, `point` and then
+  numeric `index`, with no index first, and admits candidates in that order
+  until the set holds 1,024 label sets. An admitted label set stays admitted
+  and is never replaced by a later candidate, so arrival, expiry, eviction or a
+  registry or documentation change cannot raise the number of native series a
+  target has emitted above 1,024. A candidate outside the set is omitted and
+  counted. The set resets only when the scrape target restarts. An age series
   appears only for a point inside that selection.
   `helianthus_native_render_overflow` holds the number of value series omitted
   in the scrape, `0` when none.

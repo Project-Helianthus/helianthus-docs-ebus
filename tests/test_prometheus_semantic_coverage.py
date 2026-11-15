@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -309,6 +310,26 @@ def test_native_section_rejects_drift(old, new, message):
     assert text.count(old) == 1
     with pytest.raises(CHECKER.CheckError, match=message):
         CHECKER.validate(text.replace(old, new))
+
+
+@pytest.mark.parametrize("phrase", [
+    "A label set belongs to one native identity for the\nlifetime of the scrape target",
+    "lifetime admission set of label sets",
+    "never replaced by a later candidate",
+])
+def test_native_section_requires_lifetime_rules(phrase):
+    text = document()
+    assert " ".join(phrase.split()) in " ".join(text.split())
+    with pytest.raises(CHECKER.CheckError, match="lifetime rules"):
+        CHECKER.validate(_without_phrase(text, phrase))
+
+
+def _without_phrase(text, phrase):
+    words = phrase.split()
+    pattern = r"\s+".join(re.escape(word) for word in words)
+    result, count = re.subn(pattern, "removed", text, count=1)
+    assert count == 1
+    return result
 
 
 def test_native_section_accepts_row_order_and_spacing():

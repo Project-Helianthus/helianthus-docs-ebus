@@ -311,6 +311,13 @@ def _check_native_family(row: tuple[str, ...], emitted_names: set[str]) -> None:
         raise CheckError(f"native family needs exactly one constant SI unit: {name}")
 
 
+NATIVE_LIFETIME_RULES = (
+    "A label set belongs to one native identity for the lifetime of the scrape target",
+    "lifetime admission set of label sets",
+    "never replaced by a later candidate",
+)
+
+
 def _validate_native_points(text: str, emitted_names: set[str]) -> None:
     if text.count("## Native point coverage\n") != 1:
         raise CheckError("missing or duplicate native point coverage section")
@@ -331,6 +338,9 @@ def _validate_native_points(text: str, emitted_names: set[str]) -> None:
             ("Label", "Allowed domain"), ("---", "---")])
             or {row[0] for row in labels[2:]} != NATIVE_LABEL_KEYS):
         raise CheckError("native label keys or domains differ from the closed vocabulary")
+    flat = " ".join(native.split())
+    if any(rule not in flat for rule in NATIVE_LIFETIME_RULES):
+        raise CheckError("native label and series lifetime rules are missing")
 
 
 def validate(text: str, *, thermal_fixture: Path = THERMAL_FIXTURE) -> None:
