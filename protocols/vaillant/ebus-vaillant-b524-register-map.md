@@ -302,7 +302,7 @@ the instance domain remains unconfirmed. The notation
 | 0x0003 | frost_protection_delay_time | C | u16 | hrs | FrostOverRideTime | 0..12 step 1 | — | — | FLAGS=0x03 |
 | 0x0004 | preheating_time_maximum | C | u16 | min | — | 0..300 step 10 | — | — | FLAGS=0x03. † |
 | 0x0006 | manual_cooling_time | C | u16 | days | — | — | — | cooling_enabled? | **Dormant** when cooling not configured. Two-byte register where present. Vaillant name observed for the VRC700 family only; hardware confirmation pending. Candidate, unconfirmed on the wire: on the VRC700 family the count is written as `02 01 00 00 06 00 Vlo Vhi` (cancel `00 00`); the unit of the count is not established. † |
-| 0x0007 | unknown_11 | C | u8 | bool | — | — | `0=off 1=on` | — | FLAGS=0x03 (user RW). System on/off switch, not a sensor reading. Provisional name: the polarity is unresolved between this value table and the candidate write (01 sets the switch-off) |
+| 0x0007 | off_enabled | C | u8 | bool | — | — | `0=system on 1=system off` | — | FLAGS=0x03 (user RW). System on/off switch, not a sensor reading. The observed Vaillant definition ("System mode off") gives 1 = the system is switched off, as does the candidate write (01 sets the switch-off, 00 cancels it); the name is final, and wire confirmation is not required for it |
 | 0x0008 | cooling_enabled_at_holiday | C | u8 | bool | — | — | — | — | † |
 | 0x0009 | automatic_cooling_enabled | C | u8 | bool | — | — | `0=off 1=on` | — | FLAGS=0x02 (technical RW). Scan: 1 byte. † |
 | 0x000A | cylinder_parallel_loading_enabled | C | u16 | bool | HwcParallelLoading | — | →onoff | — | ebusd confirmed at `@ext(0xa,0)` |
@@ -1518,7 +1518,7 @@ defined in that section; neither value qualifies native write behavior.
 | Selector | Catalog name | Write |
 | --- | --- | --- |
 | `GG=0x00`, `RR=0x0001`, `0x0023`, `0x0026`, `0x0046` | `dhw_outdoor_bivalence_temperature_limit`, `heating_outdoor_bivalence_temperature_limit`, `heating_flow_temperature_setpoint_maximum_at_heat_pump_fault`, `dhw_flow_temperature_setpoint_maximum` | float32 little-endian |
-| `GG=0x00`, `RR=0x0007`, `0x0009`, `0x000A`, `0x0014` | `unknown_11`, `automatic_cooling_enabled`, `cylinder_parallel_loading_enabled`, `adaptive_heating_curve_enabled` | one byte (system off: 01 set, 00 cancel; the others 00 or 01); the width of `RR=0x000A` is unresolved (one or two bytes) |
+| `GG=0x00`, `RR=0x0007`, `0x0009`, `0x000A`, `0x0014` | `off_enabled`, `automatic_cooling_enabled`, `cylinder_parallel_loading_enabled`, `adaptive_heating_curve_enabled` | one byte (system off: 01 set, 00 cancel; the others 00 or 01); the width of `RR=0x000A` is unresolved (one or two bytes) |
 | `GG=0x00`, `RR=0x0036`, `0x002F` | `hydraulic_scheme_code`, `functional_module_configuration_code` | uint16 little-endian |
 | `GG=0x00`, `RR=0x00F9` (VRC720 family), `RR=0x0074` (VRC700 family) | `ventilation_boost_active`, `special_function_mode` | one byte 01 or 00 (ventilation boost) |
 | `GG=0x03`, `RR=0x0011` | `zone_enabled` | one byte 00 or 01 |

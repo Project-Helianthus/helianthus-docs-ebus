@@ -39,7 +39,7 @@ def change_cell(path, field, value):
     row = next(
         row for row in rows
         if (row["opcode"], row["group"], row["register"])
-        == ("0x02", "0x00", "0x0007")
+        == ("0x02", "0x00", "0x00AB")
     )
     row[field] = value
     with path.open("w", encoding="utf-8", newline="") as handle:
@@ -51,7 +51,7 @@ def change_cell(path, field, value):
 def test_b524_provisional_name_evidence_current_sources(checkout, capsys):
     run_check()
     output = capsys.readouterr().out
-    assert "Open rows: 142" in output
+    assert "Open rows: 140" in output
     assert "Missing: []" in output
     assert "Extra: []" in output
 
@@ -74,7 +74,7 @@ def test_b524_provisional_name_evidence_rejects_source_drift(checkout, path, fie
     ("before", "after"),
     [
         ("VRC700 family: 00; VRC720 family: 00", "Unknown"),
-        ("Polarity unresolved, so no Boolean name is given:", "Meaning is not established:"),
+        ("which switch position 1 denotes is not established", "the meaning is not established"),
         ("(functional-module family)", "(different family)"),
     ],
 )
@@ -87,11 +87,11 @@ def test_b524_provisional_name_evidence_rejects_index_drift(checkout, before, af
 @pytest.mark.parametrize(
     ("before", "after"),
     [
-        ("| P |", "| M |"),
+        ("| M, P |", "| M |"),
         ("| M, P, V |", "| M, V |"),
         ("| M, V, W |", "| M, V |"),
-        ("| P |", "| P, X |"),
-        ("| P |", "|  |"),
+        ("| M, P |", "| M, P, X |"),
+        ("| M, P |", "|  |"),
     ],
 )
 def test_b524_provisional_name_evidence_rejects_gap_drift(checkout, before, after):
@@ -102,13 +102,13 @@ def test_b524_provisional_name_evidence_rejects_gap_drift(checkout, before, afte
         run_check()
 
 
-@pytest.mark.parametrize("gap", ["X", "", "P, X", "P, "])
+@pytest.mark.parametrize("gap", ["X", "", "M, P, X", "M, P, "])
 def test_b524_provisional_name_evidence_rejects_invalid_taxonomy(checkout, gap):
     classifications = json.loads(CLASSIFICATIONS.read_text(encoding="utf-8"))
-    classifications[gap] = classifications.pop("P")
+    classifications[gap] = classifications.pop("M, P")
     CLASSIFICATIONS.write_text(json.dumps(classifications), encoding="utf-8")
     text = INDEX.read_text(encoding="utf-8")
-    INDEX.write_text(text.replace("| P |", f"| {gap} |", 1), encoding="utf-8")
+    INDEX.write_text(text.replace("| M, P |", f"| {gap} |", 1), encoding="utf-8")
     with pytest.raises(AssertionError, match="invalid gap classification"):
         run_check()
 
@@ -122,7 +122,7 @@ def test_b524_provisional_name_evidence_rejects_stale_gap(checkout, question):
     text = INDEX.read_text(encoding="utf-8")
     lines = text.splitlines(keepends=True)
     for i, line in enumerate(lines):
-        if line.startswith("| 0x0007 | `unknown_11` |"):
+        if line.startswith("| 0x00AB | `isolation_switch_active` |"):
             cells = line.split("|")
             cells[-2] = f" {question} "
             lines[i] = "|".join(cells)
@@ -139,11 +139,11 @@ def test_b524_provisional_name_evidence_rejects_stale_gap(checkout, question):
     [
         ("368 OP02 entries and 2 OP06 entries", "369 OP02 entries and 2 OP06 entries"),
         ("368 OP02 entries and 2 OP06 entries", "368 OP02 entries and 3 OP06 entries"),
-        ("142 of 368", "143 of 368"),
-        ("142 of 368", "142 of 369"),
-        ("132 retain documented terms", "133 retain documented terms"),
-        ("10 use pre-existing", "11 use pre-existing"),
-        ("| 0x02 | 0x00 | 108 |", "| 0x02 | 0x00 | 999 |"),
+        ("140 of 368", "141 of 368"),
+        ("140 of 368", "140 of 369"),
+        ("131 retain documented terms", "132 retain documented terms"),
+        ("9 use pre-existing", "10 use pre-existing"),
+        ("| 0x02 | 0x00 | 107 |", "| 0x02 | 0x00 | 999 |"),
         ("| 0x02 | 0x09 | 5 |\n", ""),
         ("| 0x02 | 0x09 | 5 |", "| 0x02 | 0x0A | 5 |"),
         ("| 0x02 | 0x09 | 5 |", "| 0x02 | 0x09 | 5 |\n| 0x02 | 0x09 | 5 |"),
@@ -159,7 +159,7 @@ def test_b524_provisional_name_evidence_rejects_summary_drift(checkout, before, 
 
 def test_b524_provisional_name_evidence_allows_presentation_changes(checkout):
     text = INDEX.read_text(encoding="utf-8")
-    text = text.replace("`0=off 1=on`", "0=off   1=on", 1)
+    text = text.replace("Family split: `RR=0x0071` is", "Family split:  RR=0x0071   is", 1)
     text = text.replace("| M, P, V |", "| `V`,  M, P |", 1)
     text = text.replace("VRC700 family: 00; VRC720 family: 00", "VRC720 family: 00; VRC700 family: 00", 1)
     INDEX.write_text(text, encoding="utf-8")
@@ -197,5 +197,40 @@ def test_b524_provisional_name_evidence_requires_circuit_mode_classification(che
     if mutation == "reclassify":
         classifications["M"].append(question)
     CLASSIFICATIONS.write_text(json.dumps(classifications), encoding="utf-8")
+    with pytest.raises(AssertionError):
+        run_check()
+
+
+FINAL_ROWS = {
+    ("0x02", "0x00", "0x0007"): ("off_enabled", "system_off"),
+    ("0x02", "0x02", "0x001E"): ("circuit_state", "circuit_status_circuit"),
+}
+
+
+def test_b524_provisional_name_evidence_final_rows_have_no_open_question():
+    with (ROOT / CANONICAL).open(encoding="utf-8", newline="") as handle:
+        rows = {
+            (row["opcode"], row["group"], row["register"]): row
+            for row in csv.DictReader(handle)
+        }
+    text = (ROOT / INDEX).read_text(encoding="utf-8")
+    for key, (name, previous) in FINAL_ROWS.items():
+        row = rows[key]
+        assert (row["name"], row["previous_name"], row["open_question"]) == (name, previous, "")
+        assert f"| {key[2]} | `{name}` |" not in text
+
+
+@pytest.mark.parametrize("key", sorted(FINAL_ROWS))
+def test_b524_provisional_name_evidence_rejects_reopened_final_row(checkout, key):
+    with CANONICAL.open(encoding="utf-8", newline="") as handle:
+        reader = csv.DictReader(handle)
+        columns = reader.fieldnames
+        rows = list(reader)
+    row = next(row for row in rows if (row["opcode"], row["group"], row["register"]) == key)
+    row["open_question"] = "Meaning is not established."
+    with CANONICAL.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=columns)
+        writer.writeheader()
+        writer.writerows(rows)
     with pytest.raises(AssertionError):
         run_check()

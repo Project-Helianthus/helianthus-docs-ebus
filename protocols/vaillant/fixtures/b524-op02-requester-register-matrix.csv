@@ -2,7 +2,7 @@ family,opcode,group,instance,register,name,previous_name,candidate_reply_value_b
 VRC720 family,0x02,0x00,00,0x0001,dhw_outdoor_bivalence_temperature_limit,system_dhw_bivalence_point,4,float32 LE,°C,
 VRC720 family,0x02,0x00,00,0x0002,continuous_heating_outdoor_temperature_limit,continuous_heating_limit,4,float32 LE,°C,
 VRC720 family,0x02,0x00,00,0x0004,preheating_time_maximum,max_preheating_time,2,uint16 LE,min,
-VRC720 family,0x02,0x00,00,0x0007,unknown_11,system_off,1,uint8,,0=False; 1=True
+VRC720 family,0x02,0x00,00,0x0007,off_enabled,system_off,1,uint8,,0=False; 1=True
 VRC720 family,0x02,0x00,00,0x0009,automatic_cooling_enabled,automatic_cooling_enabled,1,uint8,,0=no; 1=yes
 VRC720 family,0x02,0x00,00,0x000A,cylinder_parallel_loading_enabled,system_cylinder_parallel_loading_allowed,1 or 2,uint8 or uint16 LE,,0=no; 1=yes
 VRC720 family,0x02,0x00,00,0x000F,hybrid_control_mode,hybrid_control_strategy,2,uint16 LE,,0=triVAI; 1=BivalencePoint
@@ -111,7 +111,7 @@ VRC720 family,0x02,0x09,00,0x000E,ventilation_fan_speed_limit_maximum_at_night,v
 VRC700 family,0x02,0x00,00,0x0001,dhw_outdoor_bivalence_temperature_limit,system_dhw_bivalence_point,4,float32 LE,°C,
 VRC700 family,0x02,0x00,00,0x0002,continuous_heating_outdoor_temperature_limit,continuous_heating_limit,4,float32 LE,°C,
 VRC700 family,0x02,0x00,00,0x0006,manual_cooling_time,manual_cooling_days,2,uint16 LE,,
-VRC700 family,0x02,0x00,00,0x0007,unknown_11,system_off,1,uint8,,0=False; 1=True
+VRC700 family,0x02,0x00,00,0x0007,off_enabled,system_off,1,uint8,,0=False; 1=True
 VRC700 family,0x02,0x00,00,0x0009,automatic_cooling_enabled,automatic_cooling_enabled,1,uint8,,0=no; 1=yes
 VRC700 family,0x02,0x00,00,0x000A,cylinder_parallel_loading_enabled,system_cylinder_parallel_loading_allowed,1 or 2,uint8 or uint16 LE,,0=no; 1=yes
 VRC700 family,0x02,0x00,00,0x000F,hybrid_control_mode,hybrid_control_strategy,2,uint16 LE,,0=triVAI; 1=BivalencePoint
