@@ -446,3 +446,34 @@ def test_poll_page_states_its_bounds_and_the_owner_decision() -> None:
 def test_poll_page_is_listed_in_the_architecture_index() -> None:
     index = (ROOT / "architecture" / "index.md").read_text(encoding="utf-8")
     assert "(b509-heatpump-refrigerant-poll.md)" in index
+
+
+PROTOCOL_PAGE = VAILLANT / "ebus-vaillant-b509.md"
+FIXTURE_HEADING = "## Register name correspondence fixture"
+
+
+def _fixture_schema_rows() -> list[tuple[str, str]]:
+    lines = PROTOCOL_PAGE.read_text(encoding="utf-8").splitlines()
+    rows: list[tuple[str, str]] = []
+    for line in lines[lines.index(FIXTURE_HEADING) + 1 :]:
+        if line.startswith("## "):
+            break
+        if not line.startswith("| `"):
+            continue
+        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+        rows.append((cells[0].strip("`"), " ".join(" | ".join(cells[1:]).split())))
+    return rows
+
+
+def test_protocol_page_schema_table_lists_every_fixture_column_in_order() -> None:
+    assert [column for column, _ in _fixture_schema_rows()] == EXPECTED_COLUMNS
+
+
+def test_protocol_page_schema_defines_codec_and_scale() -> None:
+    meaning = dict(_fixture_schema_rows())
+    codec, scale = meaning["codec"], meaning["scale"]
+    assert "Empty when the map states no codec" in codec, codec
+    assert "multiplies the decoded value" in scale, scale
+    assert "states no factor" in scale and "unresolved" in scale, scale
+    for text in (codec, scale):
+        assert "boiler" in text and "heat pump" in text, text

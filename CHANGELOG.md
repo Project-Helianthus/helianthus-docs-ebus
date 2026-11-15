@@ -8,7 +8,9 @@
   column, or the `Type` column for the five-byte selectors, and the stated
   factor as a decimal multiplier (`SIN / 10` gives `0.1`; `0xE201` gives
   `100`). A row whose map states no codec, and the two operation rows, keep
-  both cells empty. Every name, unit and open question is unchanged.
+  both cells empty. Every name, unit and open question is unchanged. The
+  column table of `protocols/vaillant/ebus-vaillant-b509.md` defines both
+  columns and states that an empty scale is not an unresolved factor.
   `protocols/vaillant/ebus-vaillant-b509-heatpump-register-map.md` has a
   "Refrigerant and compressor numeric rows" section that lists the final
   numeric refrigerant and compressor rows of the `heat_pump` and
