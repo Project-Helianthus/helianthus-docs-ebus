@@ -315,7 +315,7 @@ def test_native_section_rejects_drift(old, new, message):
 @pytest.mark.parametrize("phrase", [
     "A label set belongs to one native identity for the\nlifetime of the scrape target",
     "lifetime admission set of label sets",
-    "never replaced by a later candidate",
+    "never replaced by another candidate",
 ])
 def test_native_section_requires_lifetime_rules(phrase):
     text = document()

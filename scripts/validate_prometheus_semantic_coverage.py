@@ -314,7 +314,7 @@ def _check_native_family(row: tuple[str, ...], emitted_names: set[str]) -> None:
 NATIVE_LIFETIME_RULES = (
     "A label set belongs to one native identity for the lifetime of the scrape target",
     "lifetime admission set of label sets",
-    "never replaced by a later candidate",
+    "never replaced by another candidate",
 )
 
 

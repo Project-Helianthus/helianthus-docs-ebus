@@ -585,7 +585,7 @@ clear interpretation is a naming and codec condition; evidence status
   label sets. It orders the candidates by `protocol`, `device`, `point` and then
   numeric `index`, with no index first, and admits candidates in that order
   until the set holds 1,024 label sets. An admitted label set stays admitted
-  and is never replaced by a later candidate, so arrival, expiry, eviction or a
+  and is never replaced by another candidate, so arrival, expiry, eviction or a
   registry or documentation change cannot raise the number of native series a
   target has emitted above 1,024. A candidate outside the set is omitted and
   counted. The set resets only when the scrape target restarts. An age series
