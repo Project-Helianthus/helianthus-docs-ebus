@@ -207,6 +207,11 @@ The drop decision applies only in `enforce`. In `shadow` the same decision is
 counted as a would-have-dropped byte and the byte is forwarded; the
 would-have-dropped counter and the drops-applied counter are kept apart.
 
+A SYN the filter withholds in `enforce` still counts for the multiplexer's
+ownership limits (the external idle gap, the ownership cap and the gateway
+ownership guard) while it stays withheld from sessions and the passive stream;
+see [post-arbitration recovery](../adapter-direct-multiplexer.md#post-arbitration-recovery).
+
 ## Escape decoder bound
 
 **Label: Implemented.**

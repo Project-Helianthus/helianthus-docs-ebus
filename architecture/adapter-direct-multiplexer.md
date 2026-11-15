@@ -175,8 +175,33 @@ tracker and the AA-injection classifier (see the
 [frame-atomic visibility design](adaptermux/frame-atomic-visibility.md#wire-phase-state-machine)). A fence is raised by
 cancellation, replacement or expiry of the selected bid before its result, an
 undeliverable STARTED, a STARTED naming a different address than the pending
-bid, a FAILED naming a foreign winner or a bit-arbitration artifact, and a START
-deadline expiry.
+bid, a FAILED naming a foreign winner or a bit-arbitration artifact, a START
+deadline expiry, the abandon watchdog's release of an external grant its client
+never used, and an ownership release at a SYN the classifier withholds.
+
+- **Abandon-watchdog release.** An external grant whose client sends nothing
+  within the 75 ms abandon deadline is released and fences selection until the
+  next SYN like a cancel, so both trackers are reset at that SYN and the
+  waiting bid is selected there; a quiet bus no longer stops idle SYN delivery
+  and arbitration until other traffic arrives. The watchdog decides under the
+  same lock that counts an accepted SEND: a SEND that passed its owner check
+  keeps its grant, and a SEND after the release is refused with a host error.
+  A STARTED that arrives with no pending request after such a release is
+  treated like a cancelled selection: it is counted in
+  `ActiveTxnSnapshot.UndeliverableStarted` and is not an out-of-step answer
+  (see [AD10](#ad10-connection-management)).
+- **Withheld SYN symbols.** The 250 ms external idle gap and the 10 s ownership
+  cap (the 1.5 s gateway ownership guard for the gateway's own grant) also
+  apply to SYN symbols the classifier withholds in enforce mode. Such a release
+  also fences selection until SYN, and the withheld SYN stays withheld from
+  sessions and the passive stream. An owner with wire activity inside the grace
+  keeps the bus, and an injected AA inside a live telegram is still withheld.
+  The release logs
+  `adaptermux: ownership released for session <id> remote=<addr> (classifier withheld SYN: idle gap <gap> >= grace <grace>)`
+  or the same line ending in `(classifier withheld SYN: maximum ownership <limit> reached)`.
+- **Off and shadow modes.** With the classifier off or in shadow mode nothing
+  is withheld, and the waiting bid is selected at the first SYN after a
+  watchdog release.
 
 Recovery is a small state machine. It is advanced only by the read loop, which
 is the single producer of the classifier; timers and cancellations only request
@@ -250,6 +275,21 @@ and the wire-silence grace before an idle SYN releases an external owner (250 ms
 A mux configuration embedded elsewhere that leaves the read timeout unset falls
 back to 200 ms; the gateway always supplies the flag value.
 
+A waiting external bid has no age limit, and no expiry, age field, option or
+timer bounds it. Only the gateway's own bid is bounded by its admission wait.
+While the mux and its upstream adapter connection stay up, a waiting external
+bid is withdrawn only by its client: a SYN cancel, a newer request of the same
+session with a different initiator, or the session closing. A repeat START
+with the same initiator replaces the waiting notification but keeps the queued
+bid, its position and its age. An adapter disconnect or reset, or mux shutdown,
+fails every pending bid regardless of its client. A bid whose client stopped
+waiting is still selected at its SYN boundary and costs one START request and
+one grant held for at most the abandon deadline (75 ms after STARTED reached
+the client); the abandon-watchdog release fences selection, and the next
+waiting bid gets its START request at the next SYN. While active arbitration
+is held for an out-of-step adapter (see [AD10](#ad10-connection-management)),
+no START request is written for a waiting bid.
+
 The fairness ratio, the external-start staleness budget, the post-external-release
 grace and the pending-start TTL no longer exist, neither as configuration
 fields nor as flags.
@@ -258,6 +298,9 @@ Evidence status: **Proven** as the gateway implementation contract described by
 [gateway issue #1402](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1402)
 and its code change in gateway
 [PR #1410](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/1410),
+and, for the abandon-watchdog fence, the withheld-SYN limits, the undeliverable
+STARTED count and the waiting-bid rules, by
+[gateway issue #1543](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1543),
 covered by synthetic unit fixtures. These are gateway scheduling rules built on the native
 START/STARTED/FAILED contract in [ENH](../protocols/enh.md#start--started--failed);
 they are not a native eBUS wire contract. Scanner latency and live-transport
@@ -284,10 +327,68 @@ When the adapter sends ENHResResetted:
 3. External sessions: broadcast ENHResResetted frame
 4. Wire phase tracker: reset to Idle
 
+An adapter RESETTED also ends a hold of active arbitration for an out-of-step
+adapter (see [AD10](#ad10-connection-management)).
+
 ### AD10: Connection Management
 
 Single ENH/ENS TCP connection with TCP_NODELAY + KeepAlive. Reconnection loop
 on disconnect with exponential backoff (1s initial, 30s cap).
+
+#### Out-of-step adapter
+
+The enhanced protocol does not tag answers. An adapter that runs one host
+command behind answers each START only when the next host write arrives, so
+the START deadline, the stale-answer barrier and the mismatch rule never
+converge with it. The mux detects this state from its START cycles:
+
+- **START cycle.** A cycle runs from one START request to the next. It is bad
+  when, before the next START request, a STARTED names another initiator than
+  the pending one, a stale-answer barrier armed for a deadline or a mismatched
+  STARTED gives up without its answer, or a STARTED arrives with nothing
+  pending, no barrier and no retired selection. Each cycle counts once.
+- **Detection.** Three consecutive bad START cycles, without an in-step answer
+  and without a completed transaction, are a detection. The run ends at a
+  completed transaction (a gateway transaction ending with `syn_terminator` or
+  `transaction_done`, or an external owner released at its terminal SYN), at an
+  answer the barrier consumed, and at every lifecycle boundary.
+- **Single link reset.** The first detection of an episode resets the adapter
+  link once: the mux closes its adapter connection, the read loop's reconnect
+  reopens it and repeats INIT; under the eBUS driver this replaces the driver
+  generation. The log shows
+  `adaptermux: adapter_out_of_step bad_start_cycles=3 action=link_reset`.
+- **Hold of active arbitration.** A further detection, while that reset is
+  spent, holds active arbitration with the reason `adapter_out_of_step` and
+  logs
+  `adaptermux: active_arbitration_hold state=set reason=adapter_out_of_step bad_start_cycles=3`.
+  During the hold selection is skipped and no START request is written;
+  external clients' START requests get no answer, and a gateway read ends at
+  its usual admission bound with an error naming the hold. Passive reception,
+  session delivery, ownership releases and lifecycle handling continue.
+- **End of the hold.** The hold ends only when the adapter reports a reset
+  (RESETTED), the link reconnects, or the mux closes, for example on a gateway
+  restart; the log shows
+  `adaptermux: active_arbitration_hold state=cleared trigger=adapter_reset|reconnect|close`.
+  There is no automatic retry of arbitration. The single link reset becomes
+  available again after the next completed transaction, in any driver
+  generation, because `AdapterStepMemory` carries it across generations.
+
+Until a detection the detector only observes and never adds a write: the link
+reset closes a connection and the hold only skips selection. Healthy, slow and
+contended adapters are not detected in the offline fixtures.
+
+Known limit: an adapter that is one command behind and answers FAILED instead
+of STARTED is not counted. Because answers are untagged, a lagging FAILED
+cannot be told apart from an ordinary lost arbitration, and counting it would
+hold arbitration on a healthy contended bus. Detection rests on STARTED answers
+that do not match the pending request or arrive with none pending.
+
+Evidence status: **Proven** as the gateway implementation contract of
+[gateway issue #1543](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1543),
+covered by synthetic offline fixtures. It is a gateway recovery rule built on
+the native START/STARTED/FAILED contract in
+[ENH](../protocols/enh.md#start--started--failed), not a native eBUS wire
+contract. Live-transport behaviour of the detection is **Unknown** here.
 
 ### AD11: Ownership Lifecycle and Duration Guard
 
@@ -316,10 +417,20 @@ Mux diagnostics expose these lifecycle counters in `ActiveTxnSnapshot`:
 | `InactiveReasonCounts` | Abnormal transaction endings counted by reason, including `abandoned_on_rebid` and `arbitration_collision`. |
 | `StaleActiveBytesDiscarded` | Stale active-path bytes discarded after a transaction finishes or fails, rather than carried into the next grant. |
 | `ForeignInitiatorReleases` | Gateway ownership releases caused by a foreign initiator byte. |
+| `ActiveArbitrationHoldReason` | The reason this mux holds active arbitration for (`adapter_out_of_step`), or empty when not held. |
+| `OutOfStepDetections` | Out-of-step detections of this mux (see [AD10](#ad10-connection-management)). |
+| `AdapterLinkResets` | Link resets this mux requested on a detection. |
+
+While active arbitration is held, the reason `adapter_out_of_step` also appears
+in `bus_summary.status.degraded.reasons` (GraphQL and MCP), and the gauge
+`ebus_adaptermux_active_arbitration_held` reads 1; it reads 0 when the hold is
+not set.
 
 Evidence status: **Proven** as the gateway implementation contract described by
 [gateway issue #1401](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1401)
-and its companion [PR #1407](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/1407).
+and its companion [PR #1407](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/1407),
+and, for the hold diagnostics (snapshot fields, degraded reason and gauge), by
+[gateway issue #1543](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1543).
 These are gateway ownership rules, not a native eBUS wire contract or a device
 family qualification claim. Live-equipment validation of this lifecycle is
 **Unknown** here.
