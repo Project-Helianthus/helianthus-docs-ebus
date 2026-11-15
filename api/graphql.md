@@ -224,8 +224,17 @@ type bus_observability_status {
   capability: bus_observability_capability!
   bus_admission: bus_admission
   warmup: bus_observability_warmup!
+  startup: bus_observability_startup
   timing_quality: bus_observability_timing_quality!
   degraded: bus_observability_degraded!
+}
+
+type bus_observability_startup {
+  phase: String!
+  last_updated_at: String
+  cache_epoch: String!
+  live_epoch: String!
+  reason: String
 }
 
 type bus_admission {
@@ -730,6 +739,14 @@ The architectural rationale and the full B524 evidence trail for structure/owner
 
 `energy_totals` is available directly on `query` and returns the same canonical energy aggregate exposed to MCP.
 
+`energy_totals` is null until the energy merge store has accepted its first
+point, instead of a projection of `0` values with provenance `none`. Energy is
+not persisted, so after every gateway restart it is null until the first
+accepted energy point. The MCP energy totals tool
+(`ebus_v1_semantic_energy_totals_get`) and the energy plane of the MCP semantic
+snapshot are null under the same rule. See
+[Null before the first accepted point](../architecture/energy-merge.md#null-before-the-first-accepted-point).
+
 Example:
 
 ```graphql
@@ -782,9 +799,25 @@ Address semantics:
 
 The semantic runtime distinguishes cache bootstrap from live updates during startup.
 
-- `bus_summary.status.startup { phase cache_epoch live_epoch }` exposes the
+- `bus_summary.status.startup { phase cache_epoch live_epoch reason }` exposes the
   machine-readable startup readiness surface used by proof-mode orchestration
-  and Portal parity.
+  and Portal parity. Portal parity covers `phase`, `cache_epoch` and
+  `live_epoch` as frozen in the [Portal contract](./portal.md). That contract
+  does not list `reason`; the Portal bus observability body serves the same
+  startup block, so it carries `reason` when one applies and omits it otherwise.
+- `cache_epoch` and `live_epoch` are non-null decimal strings (for example
+  `"0"`), and `last_updated_at` is a nullable timestamp string.
+- `reason` (nullable `String`) is additive. It is
+  `no_supported_heat_source_path` while the semantic poller has no supported
+  heat-source data path: no B524 root and no boiler-class heat source, while
+  the inventory holds a heat-pump-class identity, and the process has not
+  discovered a root before and the product catalog classifies no inventory
+  identity as a controller. Otherwise it is null, so existing outputs are
+  unchanged. The phase is unchanged by the reason; with the
+  reason set, the boot-live timeout still moves the phase to `DEGRADED`. MCP
+  `ebus_v1_bus_summary_get` carries the same value in `status.startup.reason`
+  and omits the field when no reason applies. See
+  [Startup reason](../architecture/startup-semantic-fsm.md#startup-reason-without-a-supported-heat-source-data-path).
 - Cache-backed semantic payload may be published first and treated as stale bootstrap data.
 - Runtime transitions through startup phases (`BOOT_INIT` → `CACHE_LOADED_STALE` → `LIVE_WARMUP` → `LIVE_READY`, with `DEGRADED` timeout fallback).
 - If `-boot-live-timeout` elapses before `LIVE_READY`, runtime enters `DEGRADED` until live epochs recover.
@@ -815,6 +848,7 @@ query {
         phase
         cache_epoch
         live_epoch
+        reason
       }
     }
   }

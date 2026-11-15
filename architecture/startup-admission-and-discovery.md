@@ -979,6 +979,45 @@ When exact source configuration is set:
 - `startup_source_selection_explicit_validate_only_total` increments for the
   admission cycle.
 
+<a id="exact-source-without-a-regulator-identity"></a>
+#### 7.4.1 Exact Source Without a Regulator Identity
+
+**Proven — merged gateway behavior.** The waiver, its conditions, the log line
+and the revalidator consequence below are taken from the merged gateway changes
+[gateway #1524](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1524),
+[gateway #1525](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1525)
+and
+[gateway #1526](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1526),
+and from the gateway run sheet `docs/testing/site-without-controller-run-sheet.md`;
+the behavior on a physical installation without a controller is **Unknown**
+beyond that run sheet.
+
+With an explicitly configured startup source on a source-selection-capable
+transport, the startup scan no longer requires a coherent B524 root when the
+root confirmation of a pass finds none and the product catalog classifies every
+Vaillant identity in the inventory as a non-controller. Active confirmation then
+decides: a device that answered the scan admits the source on that pass, and the
+scan logs `startup scan: root confirmation not required: inventory has no
+regulator identity; active confirmation=<bool>`.
+
+- Root confirmation is waived on the first pass whose inventory holds only
+  non-controller identities. On a bus with a heat source and no system
+  controller the explicit source is therefore admitted on the first pass,
+  without an admission failure and without a second pass.
+- A controller that answers nothing in that first pass gets no second startup
+  pass; it is found by semantic discovery, the background scan or passive
+  insertion.
+- The one consequence of the admission is that the passed probe starts the
+  runtime-state revalidator for the explicit source. It sends directed
+  identification reads (service `07 04`) to the cached runtime-state members,
+  one cycle at once and then every 15 minutes. No write and no address claim is
+  added.
+- An inventory with a regulator identity, or with a Vaillant identity that has
+  no readable serial or an uncatalogued part number, still requires root
+  confirmation.
+- Source-selection admission (the add-on default) and other transports are
+  unchanged.
+
 ### 7.5 Exact Source Validation Failure
 
 If exact source validation fails:

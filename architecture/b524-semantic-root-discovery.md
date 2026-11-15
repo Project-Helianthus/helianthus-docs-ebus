@@ -65,6 +65,36 @@ If no candidate target proves B524 capability:
 - B524 structural discovery does not run;
 - identity enrichment alone does not revive the semantic root.
 
+Re-detection cadence once the regulator is absent (gateway behaviour on a bus
+with a heat source and no system controller):
+
+- Each failed discovery pass logs `semantic_b524_root: … no coherent
+  responder`. Nothing runs as a tight loop.
+- Until the regulator absence state is `ABSENT`, a pass runs from the discovery
+  task and as a fallback from the semantic state and configuration tasks.
+- Once the absence state is `ABSENT` and this gateway process has never
+  discovered a B524 root, the state and configuration tasks no longer run their
+  fallback pass. Root discovery then runs only from the discovery task at the
+  configured discovery interval (10 minutes by default) and from event-driven
+  refreshes: a registry inventory change seen by the regulator recheck, passive
+  address insertion and passive promotion. The suspension logs
+  `semantic_discovery_fallback_suspended regulator_state=ABSENT
+  discovery_interval=<interval>` once each time it starts.
+- With the periodic discovery task disabled (a discovery interval of zero or
+  less) nothing is suspended.
+- A process that has discovered a root once keeps the per-minute recovery after
+  a failed discovery pass, because `ABSENT` alone does not mean that there is
+  no controller (a controller registered without a serial, with a part number
+  missing from the product data, or with the product data unavailable also
+  reaches it).
+- A controller that appears while `ABSENT` is found at once when the passive
+  layer inserts its address, at the next regulator recheck when the registry
+  gains its identity, and otherwise at the next discovery tick, within one
+  discovery interval.
+
+The scheduling rule is described in
+[`startup-semantic-fsm.md`](./startup-semantic-fsm.md#scheduling-without-a-system-controller).
+
 ## Startup Recovery Rule
 
 Startup recovery follows the same capability-first contract.
@@ -74,8 +104,22 @@ Startup recovery follows the same capability-first contract.
   are enrichment inputs, not root-discovery proof.
 - If narrowed/preloaded startup inventory still does not yield a coherent B524 root,
   gateway must perform one bounded full-range discovery retry before closing startup
-  scan.
+  scan, except in the admission without a regulator identity below: there active
+  confirmation decides on the pass that waives root confirmation, and on a bus
+  with a heat source and no system controller the explicit source is admitted
+  on that first pass, without a second pass.
 - If startup preload already yields a coherent B524 root, no broadened retry is needed.
+- Admission without a regulator identity: with an explicitly configured startup
+  source on a source-selection-capable transport, the startup scan no longer
+  requires a coherent B524 root when the root confirmation of a pass finds none
+  and the product catalog classifies every Vaillant identity in the inventory as
+  a non-controller. Active confirmation then decides, and the scan logs
+  `startup scan: root confirmation not required: inventory has no regulator
+  identity; active confirmation=<bool>`. An inventory with a regulator
+  identity, or with a Vaillant identity that has no readable serial or an
+  uncatalogued part number, still requires root confirmation. The admission
+  side is described in
+  [`startup-admission-and-discovery.md`](./startup-admission-and-discovery.md#exact-source-without-a-regulator-identity).
 
 This keeps startup behavior aligned with the semantic contract:
 

@@ -145,6 +145,12 @@ After each accepted merge, the store rebuilds a full `EnergyTotals` snapshot. Th
 
 Live readers are not served the cached copy. Every live resolver calls the provider's energy-totals accessor, which builds the snapshot from the store against the current gateway clock on each call, so the two-slot projection (see [Public Two-Slot Projection](#public-two-slot-projection)) is rebuilt on every live read. Captured MCP snapshots and GraphQL subscription events are the exceptions described there: they carry the projection as of capture or event time.
 
+### Null Before the First Accepted Point
+
+**Proven — merged gateway behavior.** The null publication, its scope and the refresh timing below are taken from the merged gateway changes [gateway #1524](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1524), [gateway #1525](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1525) and [gateway #1526](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1526), and from the gateway run sheet `docs/testing/site-without-controller-run-sheet.md`; the behavior on a physical installation without a controller is **Unknown** beyond that run sheet.
+
+GraphQL `energy_totals`, the MCP energy totals tool (`ebus_v1_semantic_energy_totals_get`) and the energy plane of the MCP semantic snapshot are null until the energy merge store has accepted its first point; no projection of `0` values with provenance `none` is published before it. From the first accepted point on, the per-slot projection, its `0`/`none` placeholders and its freshness metadata apply as described above, also after the store prunes points. Energy is not persisted, so after every gateway restart the plane is null until the first accepted energy point (the first energy refresh comes up to 5 minutes after start with the defaults). On a bus with a heat source and no system controller no B524 register is read and no energy point is ever accepted, so the plane stays null. Merge rules, provenance values and retention are unchanged.
+
 ## Thread Safety
 
 The `energyMergeStore` has its own `sync.RWMutex`, separate from the `LiveSemanticProvider.mu`. Lock ordering is:

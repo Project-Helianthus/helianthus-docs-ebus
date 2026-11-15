@@ -568,6 +568,20 @@ Current timing-quality values evidenced on the merged `GW-04` runtime are
 | `active` | `true` when degraded reasons are present. |
 | `reasons` | Bounded degraded-reason list. Current MCP output includes passive unavailability reasons and `dedup_degraded`. |
 
+`status.startup` fields (semantic startup block; same values as GraphQL
+`bus_summary.status.startup`):
+
+| Field | Meaning |
+| --- | --- |
+| `phase` | Current semantic startup phase (`BOOT_INIT`, `CACHE_LOADED_STALE`, `LIVE_WARMUP`, `LIVE_READY`, `DEGRADED`). |
+| `last_updated_at` | Time of the last semantic startup state update, as an RFC 3339 timestamp string. Omitted when the runtime has no update time; GraphQL returns null in that case. |
+| `cache_epoch` | Current cache epoch counter. |
+| `live_epoch` | Current live epoch counter. |
+| `reason` | Additive. `no_supported_heat_source_path` while the semantic poller has no supported heat-source data path: no B524 root and no boiler-class heat source, while the inventory holds a heat-pump-class identity, and the process has not discovered a root before and the product catalog classifies no inventory identity as a controller. Omitted when no reason applies, so existing outputs are unchanged. |
+
+See [Startup reason](../architecture/startup-semantic-fsm.md#startup-reason-without-a-supported-heat-source-data-path)
+for the evaluation and clearing rules.
+
 ### `ebus_v1_bus_messages_list`
 
 Returns a bounded slice of recent bus-message records from the observe-first
@@ -812,6 +826,11 @@ registration inventory. In particular, the adapter information tool is
   - `ebus_v1_semantic_zones_get`
   - `ebus_v1_semantic_dhw_get`
   - `ebus_v1_semantic_energy_totals_get`
+    - `data: null` until the energy merge store has accepted its first point;
+      energy is not persisted, so this holds after every gateway restart until
+      the first accepted energy point. The energy plane of
+      `ebus_v1_semantic_snapshot_get` follows the same rule, as does GraphQL
+      `energy_totals`.
   - `ebus_v1_semantic_boiler_status_get`
   - `ebus_v1_semantic_system_get`
   - `ebus_v1_semantic_system_set_config`
