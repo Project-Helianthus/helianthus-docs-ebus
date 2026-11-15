@@ -104,7 +104,10 @@ Startup recovery follows the same capability-first contract.
   are enrichment inputs, not root-discovery proof.
 - If narrowed/preloaded startup inventory still does not yield a coherent B524 root,
   gateway must perform one bounded full-range discovery retry before closing startup
-  scan.
+  scan, except in the admission without a regulator identity below: there active
+  confirmation decides on the pass that waives root confirmation, and on a bus
+  with a heat source and no system controller the explicit source is admitted
+  on that first pass, without a second pass.
 - If startup preload already yields a coherent B524 root, no broadened retry is needed.
 - Admission without a regulator identity: with an explicitly configured startup
   source on a source-selection-capable transport, the startup scan no longer
