@@ -73,7 +73,7 @@ HEAT_PUMP_CLASSES = ("heat_pump", "heat_pump_interface_unit")
 POLL_HEADING = "## Refrigerant and compressor numeric rows"
 POLL_PAGE = ROOT / "architecture" / "b509-heatpump-refrigerant-poll.md"
 POLL_SUBJECTS = ("refrigerant_", "compressor_")
-POLL_HEADER = ["Selector", "Operation", "Class", "Name", "Unit", "Evidence for use as a point"]
+POLL_HEADER = ["Selector", "Operation", "Class", "Name", "Unit", "Unresolved evidence"]
 
 
 def _rows(path: Path) -> list[dict[str, str]]:
@@ -410,7 +410,7 @@ def test_poll_covers_the_final_numeric_refrigerant_and_compressor_rows() -> None
 
 def test_poll_withholds_pressures_and_compressor_speed_until_their_evidence() -> None:
     for poll in _poll_rows():
-        evidence = poll["Evidence for use as a point"]
+        evidence = poll["Unresolved evidence"]
         if poll["Unit"] == "bar":
             assert "pressure reference" in evidence and "absolute or gauge" in evidence, poll
         elif poll["Name"] == "compressor_speed":
@@ -424,7 +424,18 @@ def test_protocol_page_carries_no_poll_behaviour() -> None:
     assert "Read-only refrigerant poll" not in text
     assert "refrigerant-poll" not in text, "the protocol page must not link to the poll page"
     section = _section_text(POLL_HEADING)
-    for forbidden in ("at least 60 seconds", "off by default", "scrape", "cycle", "Owner approval"):
+    for forbidden in (
+        "at least 60 seconds",
+        "off by default",
+        "scrape",
+        "cycle",
+        "Owner approval",
+        "withheld",
+        "fills it",
+        "usable as a point",
+        "use as a point",
+        "exported",
+    ):
         assert forbidden not in section, f"the protocol page states gateway behaviour: {forbidden}"
 
 
@@ -437,6 +448,7 @@ def test_poll_page_states_its_bounds_and_the_owner_decision() -> None:
         "off by default",
         "never starts, schedules or hastens a poll read",
         "stays withheld",
+        "no other selector fills it, even one with the same name",
         "Enabling the poll on an installation is the owner's decision at live testing.",
         "Nothing in this page authorizes a read on any installation or field bus.",
     ):

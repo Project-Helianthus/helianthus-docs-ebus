@@ -12,7 +12,7 @@ qualifies no row.
 
 The poll covers exactly the rows of the table in the section "Refrigerant and
 compressor numeric rows" of the register map. It sends no selector outside that
-table. Each selector keeps the evidence condition stated in that table.
+table. Each selector keeps the unresolved evidence stated in that table.
 
 ## Cycle
 
@@ -49,9 +49,10 @@ table. Each selector keeps the evidence condition stated in that table.
 Each read keeps its raw response bytes beside the decoded value. A point is
 exported only when its row has a final name, a unit, a codec in the
 correspondence fixture and a class that matches the identified target, and when
-the evidence named in the register map is stated: the pressure reference for the
-two refrigerant pressures, the unit for the compressor speed. A point without
-that evidence stays withheld: no value is exported for it. A failed read of one
+the evidence the register map names as unresolved is stated: the pressure
+reference for the two refrigerant pressures, the unit for the compressor speed.
+A point without that evidence stays withheld: no value is exported for it, and
+no other selector fills it, even one with the same name. A failed read of one
 selector leaves the other points of the cycle unchanged, and the point keeps its
 last-known-good observation with its age.
 

@@ -297,11 +297,10 @@ classes whose subject is the refrigerant or the compressor, whose canonical name
 is final and whose value class is numeric (a pressure, a temperature, a
 temperature difference, a speed, a duration or a count). A covered row is not a
 configuration value and has a unit and no open question in the correspondence
-fixture. The compressor speed is covered although its unit is unresolved; that
-unit is the evidence its use as a point needs.
+fixture. The compressor speed is covered although its unit is unresolved.
 
-| Selector | Operation | Class | Name | Unit | Evidence for use as a point |
-|----------|-----------|-------|------|------|-----------------------------|
+| Selector | Operation | Class | Name | Unit | Unresolved evidence |
+|----------|-----------|-------|------|------|---------------------|
 | `0x8D00` | `0D` | `heat_pump` | `refrigerant_superheat` | K | -- |
 | `0x8E00` | `0D` | `heat_pump` | `refrigerant_subcooling` | K | -- |
 | `0x1400` | `0D` | `heat_pump` | `refrigerant_high_pressure` | bar | The pressure reference, absolute or gauge |
@@ -327,24 +326,19 @@ Refrigerant and compressor rows that the list does not cover:
 - `54 02 00 A9 0E`: whether it denotes the same measurement as `0x8D00` is
   unresolved (Open Questions item 11).
 
-### Evidence for use as a point
+### Unresolved evidence
 
-A value of a row is usable as a point only when the row has a final name, a unit,
-a codec in the correspondence fixture and a class that matches the identified
-target (the two-byte registers on `heat_pump` identity `EHP00`, the five-byte
-selectors on `heat_pump_interface_unit` identities starting `HMU`; several ids
-of this map mean another quantity on a boiler at the same address, and
-`0x1400` is a boiler operating time there). The points below need one more
-item, named in the table above:
+The two-byte registers of the table are known only on the `heat_pump` identity
+`EHP00`, and the five-byte selectors on the `heat_pump_interface_unit`
+identities starting `HMU`. Several ids of this map mean another quantity on a
+boiler at the same address: `0x1400` is a boiler operating time there. The
+rows below lack one stated fact, named in the table above:
 
 - `refrigerant_high_pressure` (`0x1400` and `54 02 00 6A 09`) and
-  `refrigerant_low_pressure` (`0x1500`) need the pressure reference, absolute
-  or gauge, stated in their row.
-- `compressor_speed` (`54 02 00 0D 0A`) needs its unit, revolutions per minute
-  or per second (Open Questions item 10).
-
-A point without that evidence stays withheld: no other selector fills it, even
-one with the same name.
+  `refrigerant_low_pressure` (`0x1500`): the pressure reference, absolute or
+  gauge, is not stated.
+- `compressor_speed` (`54 02 00 0D 0A`): the unit, revolutions per minute or
+  per second, is unresolved (Open Questions item 10).
 
 ---
 
