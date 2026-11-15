@@ -295,6 +295,79 @@ def test_every_catalogued_attachment_row_is_required(row_id: str) -> None:
     assert any(row_id in error for error in errors_after(mutate))
 
 
+@pytest.mark.parametrize(
+    ("row_id", "disposition"),
+    [(CONNECTED, "absent"), ("SRC-SD15-controller-zone", "configuration_only"),
+     (ZONE_ROOM, "configuration_only"), (MANAGING, "absent"),
+     ("SRC-SD10-inventory-device-slot", "configuration_only"),
+     ("SRC-FM-second-family-slot", "configuration_only")],
+)
+def test_each_required_row_keeps_its_catalogued_disposition(row_id: str, disposition: str) -> None:
+    def mutate(document: dict) -> None:
+        item = row(document, row_id)
+        item["disposition"] = disposition
+        if not item["native_statements"]:
+            item["native_statements"] = copy.deepcopy(row(document, MANAGING)["native_statements"])
+
+    assert any(f"{row_id}.disposition" in error for error in errors_after(mutate))
+
+
+def test_published_rows_match_the_pinned_dispositions() -> None:
+    for item in load_fixture()["attachments"]:
+        assert item["disposition"] == VALIDATOR.REQUIRED_ROWS[item["id"]][0], item["id"]
+
+
+def test_an_uncatalogued_attachment_row_is_rejected() -> None:
+    def mutate(document: dict) -> None:
+        extra = copy.deepcopy(row(document, MANAGING))
+        extra["id"] = "SRC-SD09-second-managing-module"
+        document["attachments"].append(extra)
+
+    assert any("not a catalogued attachment row" in error for error in errors_after(mutate))
+
+
+def retarget(evidence: list, old: str, new: str) -> None:
+    for item in evidence:
+        item["selector"] = item["selector"].replace(old, new)
+
+
+@pytest.mark.parametrize(
+    ("row_id", "end", "old", "new"),
+    [(ZONE_ROOM, "from", "GG=0x03", "GG=0x04"), (ZONE_ROOM, "to", "GG=0x09/0x0A", "GG=0x0E/0x0F"),
+     (ZONE_CIRCUIT, "to", "GG=0x02", "GG=0x05"), (MANAGING, "to", "GG=0x0C", "GG=0x0B"),
+     ("SRC-SD15-module-cylinder", "to", "GG=0x05", "GG=0x03"),
+     ("SRC-SD15-controller-zone", "from", "PB=0xB5 SB=0x24", "PB=0xB5 SB=0x09"),
+     ("SRC-FM-second-family-status", "to", "RR=0x0067", "RR=0x0069")],
+)
+def test_endpoint_selectors_are_bound_to_each_row(row_id: str, end: str, old: str, new: str) -> None:
+    def mutate(document: dict) -> None:
+        retarget(row(document, row_id)[end]["identity_evidence"], old, new)
+
+    assert any(f"{row_id}.{end}" in error for error in errors_after(mutate))
+
+
+def test_endpoint_kind_and_role_are_bound_to_each_row() -> None:
+    def kind(document: dict) -> None:
+        row(document, ZONE_ROOM)["to"]["kind"] = "functional_module"
+
+    def role(document: dict) -> None:
+        row(document, ZONE_ROOM)["from"]["identity_evidence"][1].update(role="assignment_value")
+
+    assert any(f"{ZONE_ROOM}.to" in error for error in errors_after(kind))
+    assert any(f"{ZONE_ROOM}.from" in error for error in errors_after(role))
+
+
+@pytest.mark.parametrize(
+    ("view", "old", "new"),
+    [("relaying_end", "PB=0xB5 SB=0x24", "PB=0xB5 SB=0x09"), ("direct_view", "PB=0x07 SB=0x04", "PB=0x07 SB=0x05")],
+)
+def test_relayed_identity_ends_are_bound_to_their_native_sources(view: str, old: str, new: str) -> None:
+    def mutate(document: dict) -> None:
+        retarget(row(document, MODULE_SLOT)[view]["identity_evidence"], old, new)
+
+    assert any(f"{MODULE_SLOT}.{view}" in error for error in errors_after(mutate))
+
+
 def test_swapped_identity_groups_are_rejected() -> None:
     def mutate(document: dict) -> None:
         first, second = row(document, "SRI-functional-module-slot"), row(document, "SRI-room-unit-slots")

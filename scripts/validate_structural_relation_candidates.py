@@ -41,14 +41,50 @@ DIRECT_VIEW_KEYS = {"kind", "status", "identity_evidence"}
 REQUIRED_DECISIONS = (
     "SD-05", "SD-06", "SD-07", "SD-09", "SD-10", "SD-15", "functional-modules",
 )
-REQUIRED_ROW_IDS = {
-    "SRC-SD05-zone-room-unit", "SRC-SD06-zone-to-circuit",
-    "SRC-SD07-zone-to-circuit-fallback", "SRC-SD09-circuit-managing-module",
-    "SRC-SD10-connected-device-slot", "SRC-SD10-inventory-device-slot",
-    "SRC-SD15-controller-zone", "SRC-SD15-controller-circuit",
-    "SRC-SD15-module-solar-circuit", "SRC-SD15-module-cylinder",
-    "SRC-FM-second-family-slot", "SRC-FM-second-family-status",
+# Each catalogued row keeps the disposition its decision entry states and the
+# native identity of each end: endpoint kind and (selector, role) pairs.
+ROOT_END = ("b524_semantic_root", (("PB=0xB5 SB=0x24", "b524_capability"), ("ZZ", "bus_address")))
+DIRECT_END = (("PB=0x07 SB=0x04", "bus_identification"), ("ZZ", "bus_address"))
+ZONE = "OP=0x02 GG=0x03 II=zone"
+CIRCUIT = "OP=0x02 GG=0x02 II=circuit"
+MODULE = "OP=0x06 GG=0x0C II=slot"
+ALL_SLOTS = "OP=0x06 GG=0x01/0x02/0x09/0x0A/0x0C/0x0E/0x0F II=slot"
+ZONE_END = ("zone_instance", ((ZONE, "instance_position"),))
+CIRCUIT_END = ("circuit_instance", ((CIRCUIT, "instance_position"),))
+MODULE_END = ("functional_module", (
+    (MODULE, "instance_position"), (MODULE + " RR=0x0002", "class_address"),
+))
+REQUIRED_ROWS = {
+    "SRC-SD05-zone-room-unit": ("relation_candidate", ("zone_instance", (
+        (ZONE, "instance_position"), (ZONE + " RR=0x0013", "binding_value"),
+    )), ("device_slot", (("OP=0x06 GG=0x09/0x0A II=slot", "instance_position"),))),
+    "SRC-SD06-zone-to-circuit": ("unresolved", ZONE_END, CIRCUIT_END),
+    "SRC-SD07-zone-to-circuit-fallback": ("absent", ZONE_END, CIRCUIT_END),
+    "SRC-SD09-circuit-managing-module": ("configuration_only", CIRCUIT_END, MODULE_END),
+    "SRC-SD10-connected-device-slot": ("relation_candidate", ROOT_END, ("device_slot", (
+        (ALL_SLOTS, "instance_position"), (ALL_SLOTS + " RR=0x0001", "presence"),
+        (ALL_SLOTS + " RR=0x0002", "class_address"), (ALL_SLOTS + " RR=0x0004", "firmware_version"),
+        ("OP=0x06 GG=0x09/0x0A II=slot RR=0x0023", "hardware_identifier"),
+    ))),
+    "SRC-SD10-inventory-device-slot": ("absent", ROOT_END, ("device_slot", (
+        (MODULE, "instance_position"), (MODULE + " RR=0x0001", "presence"),
+        (MODULE + " RR=0x0004", "firmware_version"),
+    ))),
+    "SRC-SD15-controller-zone": ("relation_candidate", ROOT_END, ZONE_END),
+    "SRC-SD15-controller-circuit": ("relation_candidate", ROOT_END, ("circuit_instance", (
+        (CIRCUIT, "instance_position"), (CIRCUIT + " RR=0x0002", "presence"),
+    ))),
+    "SRC-SD15-module-solar-circuit": ("configuration_only", MODULE_END, (
+        "solar_circuit", (("OP=0x02 GG=0x04", "instance_position"),))),
+    "SRC-SD15-module-cylinder": ("configuration_only", MODULE_END, (
+        "cylinder_instance", (("OP=0x02 GG=0x05 II=cylinder", "instance_position"),))),
+    "SRC-FM-second-family-slot": ("absent", ROOT_END, (
+        "device_slot", (("OP=0x06 GG=0x0B II=slot", "instance_position"),))),
+    "SRC-FM-second-family-status": ("absent", ROOT_END, ("functional_module", (
+        ("OP=0x02 GG=0x00 RR=0x0067", "presence"), ("OP=0x02 GG=0x00 RR=0x0068", "presence"),
+    ))),
 }
+REQUIRED_ROW_IDS = set(REQUIRED_ROWS)
 DISPOSITIONS = {"relation_candidate", "configuration_only", "absent", "unresolved"}
 EVIDENCE_GRADES = {"Proven", "Hypothesis", "Unknown"}
 SCOPES = {"PROTOCOL", "PROFILE", "LAB", "GATEWAY_POLICY"}
@@ -270,6 +306,29 @@ def check_row(row, index: int, errors: list, pages: dict) -> None:
         check_text(row["pending_review"], f"{label}.pending_review", errors)
     if not errors_for(label, errors):
         check_disposition_rules(row, label, errors)
+        check_pinned_row(row, errors)
+
+
+def evidence_pairs(endpoint: dict) -> list:
+    return sorted((item["selector"], item["role"]) for item in endpoint["identity_evidence"])
+
+
+def check_pinned_end(endpoint: dict, expected: tuple, label: str, errors: list) -> None:
+    kind, pairs = expected
+    if endpoint["kind"] != kind or evidence_pairs(endpoint) != sorted(pairs):
+        errors.append(f"{label}: native identity differs from the catalogued {kind} end {sorted(pairs)}")
+
+
+def check_pinned_row(row: dict, errors: list) -> None:
+    row_id = row["id"]
+    if row_id not in REQUIRED_ROWS:
+        errors.append(f"{row_id}: not a catalogued attachment row")
+        return
+    disposition, source, target = REQUIRED_ROWS[row_id]
+    if row["disposition"] != disposition:
+        errors.append(f"{row_id}.disposition: the catalogue states {disposition}")
+    check_pinned_end(row["from"], source, f"{row_id}.from", errors)
+    check_pinned_end(row["to"], target, f"{row_id}.to", errors)
 
 
 def errors_for(label: str, errors: list) -> bool:
@@ -318,6 +377,9 @@ def check_identity_row(row, index: int, errors: list) -> None:
         errors.append(f"{label}: one resource needs a shared native token or operator label")
     if disposition == "two_views_unresolved" and source != "none":
         errors.append(f"{label}: a shared anchor key source resolves to one resource")
+    if not errors_for(label, errors):
+        check_pinned_end(row["relaying_end"], ROOT_END, f"{row['id']}.relaying_end", errors)
+        check_pinned_end(row["direct_view"], ("direct_bus_entry", DIRECT_END), f"{row['id']}.direct_view", errors)
 
 
 def check_group_binding(row: dict, label: str, errors: list) -> None:
