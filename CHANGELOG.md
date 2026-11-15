@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+- The SunSpec model-chain contract defers canonical field identity to the
+  common element inventory in docs-semantic and keeps native model and point
+  names only: the required facts of the three-phase monitoring profile are
+  profile keys with their native point, not field identifiers. A new section
+  defines a multi-device chain and states, for its inverter, meter, storage
+  control and per-device repeat occurrences, the resource kind each would
+  describe and whether it is attributed. Only the inverter of a single-device
+  chain is attributed; the semantic values of a multi-device chain are withheld
+  with the reason `MULTI_DEVICE_UNATTRIBUTED`, while the native provider and
+  native surface proceed. The sentence pins of
+  `tests/test_sunspec_model_chain_contract.py` move in place. Follow-up: the
+  gateway's SunSpec publication and its golden envelopes.
 - The Modbus multi-endpoint runtime page keeps the asset as the publication
   scope and follows the common identity rule in docs-semantic for what it
   publishes: one resource per unit, anchored on an operator label until the
