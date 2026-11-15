@@ -2,6 +2,28 @@
 
 ## Unreleased
 
+- `docs/platform/promoted-semantic-consumers-v1.md` and its manifest
+  `docs/platform/manifests/promoted-semantic-consumers-v1.json` map each
+  target object (`zones[id=zone-1]`, `zones[id=zone-2]`, `dhw`, `system`) to
+  one canonical resource in the new manifest member `resources`: the common
+  resource kind (`resource.zone`, `resource.thermal_system`, or not decided for
+  hot water, whose kind the element inventory holds as `unknown`), the
+  candidate sources from both protocols with the public document that holds
+  their native evidence, and the identity basis. An accepted basis is an
+  operator declaration with a shared parent and slot or a shared native anchor
+  key; an ordinal, a slot label, a name or an address is never one. Every
+  mapping is `unresolved` and not merged, and each of the eighteen leaf rows
+  carries that basis in `identity_basis`. `FILL_MISSING_ONLY` is the policy of
+  the eBUS-typed GraphQL target over the candidates of one resource, not the
+  internal merge. No leaf value or thermal quantity is placed on a common
+  resource. `tests/test_promoted_semantic_consumers_v1.py` rejects a leaf or
+  mapping without a recorded basis, a merge without an accepted basis, a
+  mapping without candidates from both protocols or without provenance, and
+  an undecided kind without its reason.
+  `api/eebus-northbound-integrator-reference.md` states the same rule for
+  integrators. Follow-ups: the gateway's replacement of its overlay and the
+  Home Assistant consumer identity.
+
 - Each of the twelve thermal cutover and disposition pages under
   `architecture/` has a "Native attachment" section. It names the native
   resource each value belongs to (the system group of the B524 semantic root,

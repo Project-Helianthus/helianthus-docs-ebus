@@ -56,6 +56,17 @@ claim runtime availability; capability discovery remains authoritative.
 - [Portal](./portal.md)
 - [Shared consumer boundary](./eebus-operator-admin.md)
 
+A promoted eeBUS value that the gateway presents in the eBUS-typed GraphQL
+`zones`, `dhw` or `system` objects is a candidate of the one canonical resource
+that object stands for, kept with its own binding and provenance. It reaches
+that object only when the resource's identity basis is an operator declaration
+(a shared parent and slot) or a shared native anchor key; a mapping without
+such a basis is `unresolved` and is not merged, and an integrator must not join
+the two protocols' views by ordinal, slot label or name. `FILL_MISSING_ONLY` is
+the policy of that GraphQL target over the candidates, not the gateway's
+internal merge. Which common resource kind a hot-water value describes is not
+decided; the element inventory holds that kind as `unknown`.
+
 ## Typed Gateway Boundary And Data Isolation
 
 Portal and Home Assistant are clients of the gateway's typed boundary. They do
