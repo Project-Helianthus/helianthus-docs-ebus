@@ -45,6 +45,33 @@ CLAUSES = (
     capability or a cached evaluation into a superficially consistent response.""",
     """An unwired provider fails the whole request with `UNAVAILABLE`, rather than
     fabricating empty snapshots.""",
+    """A source counts for the read when it is admitted (live, not fenced and not
+    retired) and has a published, unfenced cursor of its current generation. An
+    asset with several sources is readable when at least one of its sources
+    counts.""",
+    """When none counts, the entry is unavailable with
+    `semantic.read.reason.source_unavailable` if no source is admitted, otherwise
+    with `semantic.read.reason.publication_withheld`.""",
+    """While a lifecycle control of
+    any one source is still pending, the read gate of the whole asset stays closed
+    with `semantic.read.reason.source_unavailable`; cached state never bypasses it.""",
+    """Each source's state stays visible in the snapshot: its descriptor in
+    `sources` and its cursors and fences in `cursors` and `fences`, including a
+    fenced or retired source next to an admitted one.""",
+    """A fenced or retired source
+    does not remove the current facts of the other sources; its own observations
+    remain only as retained observations, never as current facts.""",
+    """Candidates of several sources coexist under one complete `FactKey`, each with
+    its own candidate ID, source path, quality and evidence. They are alternative
+    views of one quantity, not parts of it: a reader never adds, averages or
+    otherwise combines candidates of two sources into one value, and the
+    projection never reports such a combination as `exact`.""",
+    """A selection, when an existing policy supplies one, remains
+    presentation-only and never removes the other candidates.""",
+    """For an asset with one declared source, the result and its reasons are
+    identical to the rules above. Seeing a source, its cursor or its candidates
+    grants no control: it confers no route authority, capability admission or
+    operation admission over that source or the asset.""",
     """Preserve all reason codes in source quality. For `fact_unavailable`,
     `capability_unavailable` and `capability_unqualified`, first identify the exact
     source keys that causally withhold this item. Intersect native reasons across
@@ -233,6 +260,47 @@ def test_semantic_snapshot_read_rejects_causal_selection_weakening(old: str, new
     assert old in text
     with pytest.raises(AssertionError, match="Missing contract clause"):
         validate_contract(text.replace(old, new, 1))
+
+
+@pytest.mark.parametrize("old,new", (
+    # Availability: one counting source suffices, not every source.
+    ("readable when at least one of its sources", "readable when every one of its sources"),
+    # A fenced source cannot count.
+    ("(live, not fenced and not\nretired)", "(live or fenced, and not\nretired)"),
+    # The two unavailable reasons cannot swap.
+    ("`semantic.read.reason.source_unavailable` if no source is admitted, otherwise\n"
+     "with `semantic.read.reason.publication_withheld`.",
+     "`semantic.read.reason.publication_withheld` if no source is admitted, otherwise\n"
+     "with `semantic.read.reason.source_unavailable`."),
+    # A pending control of one source closes the whole asset.
+    ("the read gate of the whole asset stays closed", "the read gate of that source alone stays closed"),
+    # Each source's state stays visible.
+    ("Each source's state stays visible in the snapshot", "Only the admitted source's state stays visible in the snapshot"),
+    # Candidates of two sources are never added.
+    ("a reader never adds, averages or\notherwise combines", "a reader adds, averages or\notherwise combines"),
+    # A selection never removes the other candidates.
+    ("never removes the other candidates", "replaces the other candidates"),
+    # The one-source result is unchanged.
+    ("the result and its reasons are\nidentical to the rules above", "the result and its reasons are\nsimilar to the rules above"),
+    # Visibility grants no control.
+    ("grants no control: it confers no route authority", "grants control: it confers route authority"),
+))
+def test_semantic_snapshot_read_rejects_multi_source_weakening(old: str, new: str) -> None:
+    text = DOCUMENT.read_text(encoding="utf-8")
+    assert old in text
+    with pytest.raises(AssertionError, match="Missing contract clause"):
+        validate_contract(text.replace(old, new, 1))
+
+
+def test_semantic_snapshot_read_requires_multi_source_section() -> None:
+    text = DOCUMENT.read_text(encoding="utf-8")
+    heading = "\n### Assets with several sources\n"
+    assert text.count(heading) == 1
+    start = text.index(heading)
+    end = text.index("\n## ", start)
+    # Removing the section removes every multi-source clause.
+    with pytest.raises(AssertionError, match="Missing contract clause"):
+        validate_contract(text[:start] + text[end:])
 
 
 @pytest.mark.parametrize("source,target", tuple(MAPPINGS.items()))

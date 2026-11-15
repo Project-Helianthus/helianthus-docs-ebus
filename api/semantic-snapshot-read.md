@@ -237,6 +237,49 @@ is the source snapshot. Other public-safe asset entries remain readable. This
 conservative boundary avoids silently leaking an unsafe candidate through an
 otherwise withheld projection. It adds no consumer authorization mechanism.
 
+### Assets with several sources
+
+One asset can declare several sources, so that one unit reached through two
+native paths is one resource. The selection, the per-asset snapshot ID and
+revision vector and the bounds above apply unchanged; one snapshot holds the
+records of every source of the asset.
+
+A source counts for the read when it is admitted (live, not fenced and not
+retired) and has a published, unfenced cursor of its current generation. An
+asset with several sources is readable when at least one of its sources
+counts. When none counts, the entry is unavailable with
+`semantic.read.reason.source_unavailable` if no source is admitted, otherwise
+with `semantic.read.reason.publication_withheld`. While a lifecycle control of
+any one source is still pending, the read gate of the whole asset stays closed
+with `semantic.read.reason.source_unavailable`; cached state never bypasses it.
+The public-exposure check above still applies to the whole asset entry.
+
+Each source's state stays visible in the snapshot: its descriptor in
+`sources` and its cursors and fences in `cursors` and `fences`, including a
+fenced or retired source next to an admitted one. A fenced or retired source
+does not remove the current facts of the other sources; its own observations
+remain only as retained observations, never as current facts. There is no
+atomic change across sources, so one read can show a newer publication of one
+source beside an older one of another; each candidate's own times and
+evaluated freshness show this.
+
+Candidates of several sources coexist under one complete `FactKey`, each with
+its own candidate ID, source path, quality and evidence. They are alternative
+views of one quantity, not parts of it: a reader never adds, averages or
+otherwise combines candidates of two sources into one value, and the
+projection never reports such a combination as `exact`. Conflicts between them
+stay visible. A selection, when an existing policy supplies one, remains
+presentation-only and never removes the other candidates.
+
+For an asset with one declared source, the result and its reasons are
+identical to the rules above. Seeing a source, its cursor or its candidates
+grants no control: it confers no route authority, capability admission or
+operation admission over that source or the asset.
+
+The gateway work that implements this rule is tracked in
+[gateway #1539](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1539);
+publishing this section claims no runtime behavior.
+
 ## Scalars, presence and quality
 
 Use `Value.kind` as the discriminator. Exactly its matching member is present:
