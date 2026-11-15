@@ -2,6 +2,6 @@ module github.com/Project-Helianthus/helianthus-docs-ebus/tests/semreg_thermal_m
 
 go 1.22
 
-require github.com/Project-Helianthus/helianthus-semreg v0.0.0-20260907062636-e1d4c7092425
+require github.com/Project-Helianthus/helianthus-semreg v0.0.0-20261114200348-b182998cc41b
 
 require golang.org/x/text v0.22.0 // indirect

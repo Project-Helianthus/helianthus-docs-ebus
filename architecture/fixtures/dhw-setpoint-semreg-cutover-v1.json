@@ -1,105 +1,90 @@
 {
   "evidence_status": "Hypothesis",
   "scope": "synthetic_read_projection_contract",
-  "keys": [
+  "relation_candidates_fixture": "architecture/fixtures/structural-relation-candidates-v1.json",
+  "native_resources": [
     {
-      "pack_id": "helianthus.pack.thermal",
-      "pack_version": "1.0.0",
-      "fact_id": "thermal.setpoint.dhw_temperature",
-      "dimensions": [
-        {
-          "id": "thermal.dimension.dhw",
-          "value": {
-            "kind": "text",
-            "text": "dhw:alpha"
-          }
-        },
-        {
-          "id": "thermal.dimension.temperature",
-          "value": {
-            "kind": "text",
-            "text": "temperature:dhw_requested"
-          }
-        }
-      ]
-    },
-    {
-      "pack_id": "helianthus.pack.thermal",
-      "pack_version": "1.0.0",
-      "fact_id": "thermal.setpoint.dhw_temperature",
-      "dimensions": [
-        {
-          "id": "thermal.dimension.dhw",
-          "value": {
-            "kind": "text",
-            "text": "dhw:beta"
-          }
-        },
-        {
-          "id": "thermal.dimension.temperature",
-          "value": {
-            "kind": "text",
-            "text": "temperature:dhw_requested"
-          }
-        }
-      ]
+      "selector": "OP=0x02 GG=0x01 II=0x00",
+      "kind": "dhw_instance"
     }
   ],
-  "value": {
-    "kind": "quantity",
-    "quantity": {
-      "number": {
-        "coefficient": "5",
-        "exponent10": 1
+  "rows": [
+    {
+      "native_key": "PB=0xB5 SB=0x24 OP=0x02 GG=0x01 II=0x00 RR=0x0004",
+      "native_value": {
+        "wire_type": "f32_le",
+        "unit": "degC"
       },
-      "unit": "unit.celsius"
+      "native_resource": "OP=0x02 GG=0x01 II=0x00",
+      "relation_candidates": {
+        "refs": [],
+        "absence": "The structural relation candidates list no attachment of the controller's native hot-water group."
+      },
+      "target": {
+        "definition": {
+          "pack": {
+            "id": "helianthus.pack.thermal",
+            "version": "1.0.0"
+          },
+          "id": "thermal.setpoint.dhw_temperature_setpoint",
+          "version": "1.0.0"
+        },
+        "element_kind": "fact",
+        "disposition": "unknown",
+        "planes": [],
+        "reason": "catalog.reason.subject_unresolved"
+      },
+      "subject": {
+        "status": "unresolved",
+        "sources": [
+          "alpha",
+          "beta"
+        ]
+      }
     }
-  },
+  ],
   "projection_cases": [
     {
       "case": "two_services",
       "requested": [
         {
           "kind": "fact",
-          "item_id": "thermal.setpoint.dhw_temperature"
+          "item_id": "thermal.setpoint.dhw_temperature_setpoint"
         }
       ],
       "dispositions": [
         {
           "kind": "fact",
-          "item_id": "thermal.setpoint.dhw_temperature",
+          "item_id": "thermal.setpoint.dhw_temperature_setpoint",
           "outcome": "withheld",
           "source_keys": [],
-          "loss": [
-            "dhw_service_identity_unrepresentable"
-          ]
+          "loss": [],
+          "reason": "catalog.reason.subject_unresolved"
         }
       ],
-      "absent_services": []
+      "absent_sources": []
     },
     {
       "case": "partial_absence",
       "requested": [
         {
           "kind": "fact",
-          "item_id": "thermal.setpoint.dhw_temperature"
+          "item_id": "thermal.setpoint.dhw_temperature_setpoint"
         }
       ],
       "dispositions": [
         {
           "kind": "fact",
-          "item_id": "thermal.setpoint.dhw_temperature",
+          "item_id": "thermal.setpoint.dhw_temperature_setpoint",
           "outcome": "withheld",
           "source_keys": [],
-          "loss": [
-            "dhw_service_identity_unrepresentable"
-          ]
+          "loss": [],
+          "reason": "catalog.reason.subject_unresolved"
         }
       ],
-      "absent_services": [
-        "dhw:beta"
+      "absent_sources": [
+        "beta"
       ]
     }
-  ],
-  "current_pack_accepts_proposed_keys": false
+  ]
 }

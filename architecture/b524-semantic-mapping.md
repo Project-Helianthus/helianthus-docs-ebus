@@ -93,16 +93,17 @@ bus request. The rules are in [`../api/graphql.md`](../api/graphql.md) under
 
 This narrow, read-only mapping documents two B524 controller observations for a
 future qualified gateway binding. The linked typed index is the mechanically
-checked source for exact selectors, facts, dimensions, dispositions, loss,
-applicability, native distinctions, and non-claims. This text explains those
-boundaries without enabling a gateway surface.
+checked source for exact selectors, native keys, native resources, relation
+candidates, target definitions with their element inventory dispositions,
+dispositions, loss, applicability, native distinctions, and non-claims. This
+text explains those boundaries without enabling a gateway surface.
 
 Each row uses the complete native selector. `PB=0xB5`, `SB=0x24`, and
 `OP=0x02` identify a B524 local-controller read. `II=0x00` is the current
 `regulatorInstance` used by the gateway poller. A qualified runtime binding
 must retain its own asset, service, source, source epoch, driver generation,
 evidence reference, qualification, freshness, and semantic revision. Those
-identities are separate from the FactKey dimensions below.
+identities are separate from the row identity below.
 
 The `f32` little-endian decoding in this contract is limited to a request from
 the qualified initiator to controller destination `0x15`, followed by a value
@@ -111,18 +112,33 @@ is binding evidence and is not a hard-coded address in this public mapping. It
 does not generalize B524 float byte order: HMU destination `0x08` is
 big-endian and is not a substitute for these rows.
 
-| Legacy system field | Native read tuple | Native wire value / unit | SemReg field | Exact FactKey dimension | SemReg quantity unit | Disposition |
-| --- | --- | --- | --- | --- | --- | --- |
-| `state.outdoor_temperature` | `PB=0xB5, SB=0x24, OP=0x02, GG=0x00, II=0x00, RR=0x0073` | IEEE-754 `f32` little-endian / `degC` | `thermal.measurement.air_temperature` | `thermal.dimension.temperature=temperature:outdoor_air` | `unit.celsius` | **Exact, read-only candidate.** The value is an instantaneous outdoor-air observation when the qualified binding admits it. |
-| `state.flow_temperature` | `PB=0xB5, SB=0x24, OP=0x02, GG=0x00, II=0x00, RR=0x004B` | IEEE-754 `f32` little-endian / `degC` | `thermal.measurement.water_temperature` | `thermal.dimension.temperature=temperature:system_flow` | `unit.celsius` | **Exact, read-only candidate.** The value is the controller system-flow observation when the qualified binding admits it. |
-| `state.outdoor_temperature_avg24h` | `PB=0xB5, SB=0x24, OP=0x02, GG=0x00, II=0x00, RR=0x0095` | IEEE-754 `f32` little-endian / `degC`; rounded average updated every three hours | — | — | — | **Withheld.** It is a rolling aggregate, not an instantaneous `thermal.measurement.air_temperature` value. No aggregate/window fact is defined by this mapping. |
+| Native key | Native wire value / unit | Native resource | Relation candidates | Target definition | Element inventory | Gateway field | Disposition |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x0073` | IEEE-754 `f32` little-endian / `degC` | `b524_semantic_root`, system group `OP=0x02 GG=0x00 II=0x00` | None; absence stated | `thermal.measurement.air_temperature` | `unknown`, `catalog.reason.subject_unresolved`, no plane | `state.outdoor_temperature` | **Exact, read-only candidate.** The value is an instantaneous outdoor-air observation when the qualified binding admits it. |
+| `PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x004B` | IEEE-754 `f32` little-endian / `degC` | `b524_semantic_root`, system group `OP=0x02 GG=0x00 II=0x00` | None; absence stated | `thermal.measurement.water_temperature` | `unknown`, `catalog.reason.subject_unresolved`, no plane | `state.flow_temperature` | **Exact, read-only candidate.** The value is the controller system-flow observation when the qualified binding admits it. |
+| `PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x0095` | IEEE-754 `f32` little-endian / `degC`; rounded average updated every three hours | `b524_semantic_root`, system group `OP=0x02 GG=0x00 II=0x00` | None; absence stated | — | — | `state.outdoor_temperature_avg24h` | **Withheld.** It is a rolling aggregate, not an instantaneous `thermal.measurement.air_temperature` value. No aggregate/window fact is defined by this mapping. |
 
-`thermal.dimension.system` is **not** a FactKey dimension for either mapped
-temperature. The FactKeys are exactly
-`thermal.dimension.temperature=temperature:outdoor_air` and
-`thermal.dimension.temperature=temperature:system_flow`. The qualified asset
-and `thermal.service.system` identity are separate runtime service/binding
-metadata; neither is inferred from a public zone, GraphQL, or display ID.
+Each row is keyed by the native identity of its value. The gateway field is a
+member of the row, never its key. Each row attaches to the native resource
+`b524_semantic_root`, the B524 semantic root of the
+[structural relation candidates](./fixtures/structural-relation-candidates-v1.json),
+through its singleton system group. That fixture lists no attachment that
+carries these values to another native resource, so each row states the
+absence and its reason. A relation candidate reference names a row of that
+fixture; every endpoint it names must be a native resource the index lists,
+and one of them must be the row's own.
+
+The target definition of a mapped row copies its element inventory entry:
+both temperature facts are `unknown` with the reason
+`catalog.reason.subject_unresolved` and no plane, because which resource such
+a value describes is not decided. A row whose target is `unknown` stays so.
+This mapping forms no FactKey, carries no role or resource in dimension text,
+and places no thermal quantity on a common resource. The native value keeps
+its native unit. The qualified asset and `thermal.service.system` identity are
+separate runtime service/binding metadata; neither is inferred from a public
+zone, GraphQL, or display ID. The
+[controller qualification sidecar](./fixtures/vaillant-controller-qualification-v1.json)
+binds to these rows by native key in its `thermal_rows` member.
 
 The typed lifecycle vector preserves `received_at` and `receipt_monotonic` from
 the retained native observation. A caller supplies the separate delayed

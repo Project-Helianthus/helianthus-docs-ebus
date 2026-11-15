@@ -17,34 +17,44 @@
     "qualified_binding_required": true,
     "runtime_qualification_permitted": false
   },
+  "relation_candidates_fixture": "architecture/fixtures/structural-relation-candidates-v1.json",
+  "native_resources": [
+    {"selector": "OP=0x02 GG=0x00 II=0x00", "kind": "b524_semantic_root"}
+  ],
   "mappings": [
     {
+      "native_key": "PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x0073",
       "legacy_system_field": "state.outdoor_temperature",
       "native_selector": {"pb": "0xB5", "sb": "0x24", "operation": "0x02", "group": "0x00", "instance": "0x00", "register": "0x0073", "destination": "0x15", "controller_family": "BASV2/CTLV2/VRC720", "request_direction": "initiator_to_target", "value_direction": "target_to_initiator"},
       "native_value": {"wire_type": "f32_le", "unit": "degC"},
+      "native_resource": "OP=0x02 GG=0x00 II=0x00",
+      "relation_candidates": {"refs": [], "absence": "The value is a register of the controller's system group. No structural relation candidate carries it to another native resource."},
+      "target": {"definition": {"pack": {"id": "helianthus.pack.thermal", "version": "1.0.0"}, "id": "thermal.measurement.air_temperature", "version": "1.0.0"}, "element_kind": "fact", "disposition": "unknown", "planes": [], "reason": "catalog.reason.subject_unresolved"},
       "semreg_fact": "thermal.measurement.air_temperature",
-      "semreg_value": {"kind": "quantity", "unit": "unit.celsius"},
-      "dimensions": {"thermal.dimension.temperature": "temperature:outdoor_air"},
       "disposition": "exact",
       "loss": null
     },
     {
+      "native_key": "PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x004B",
       "legacy_system_field": "state.flow_temperature",
       "native_selector": {"pb": "0xB5", "sb": "0x24", "operation": "0x02", "group": "0x00", "instance": "0x00", "register": "0x004B", "destination": "0x15", "controller_family": "BASV2/CTLV2/VRC720", "request_direction": "initiator_to_target", "value_direction": "target_to_initiator"},
       "native_value": {"wire_type": "f32_le", "unit": "degC"},
+      "native_resource": "OP=0x02 GG=0x00 II=0x00",
+      "relation_candidates": {"refs": [], "absence": "The value is a register of the controller's system group. No structural relation candidate carries it to another native resource."},
+      "target": {"definition": {"pack": {"id": "helianthus.pack.thermal", "version": "1.0.0"}, "id": "thermal.measurement.water_temperature", "version": "1.0.0"}, "element_kind": "fact", "disposition": "unknown", "planes": [], "reason": "catalog.reason.subject_unresolved"},
       "semreg_fact": "thermal.measurement.water_temperature",
-      "semreg_value": {"kind": "quantity", "unit": "unit.celsius"},
-      "dimensions": {"thermal.dimension.temperature": "temperature:system_flow"},
       "disposition": "exact",
       "loss": null
     },
     {
+      "native_key": "PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x0095",
       "legacy_system_field": "state.outdoor_temperature_avg24h",
       "native_selector": {"pb": "0xB5", "sb": "0x24", "operation": "0x02", "group": "0x00", "instance": "0x00", "register": "0x0095", "destination": "0x15", "controller_family": "BASV2/CTLV2/VRC720", "request_direction": "initiator_to_target", "value_direction": "target_to_initiator"},
       "native_value": {"wire_type": "f32_le", "unit": "degC"},
+      "native_resource": "OP=0x02 GG=0x00 II=0x00",
+      "relation_candidates": {"refs": [], "absence": "The value is a register of the controller's system group. No structural relation candidate carries it to another native resource."},
+      "target": null,
       "semreg_fact": null,
-      "semreg_value": null,
-      "dimensions": null,
       "disposition": "withheld",
       "loss": "rolling_average_window_unrepresentable"
     }

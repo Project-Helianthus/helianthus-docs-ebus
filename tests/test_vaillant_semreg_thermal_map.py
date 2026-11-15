@@ -10,6 +10,8 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 INDEX = ROOT / "architecture/fixtures/vaillant-semreg-thermal-map-v1.json"
+STRUCTURAL = ROOT / "architecture/fixtures/structural-relation-candidates-v1.json"
+QUALIFICATION = ROOT / "architecture/fixtures/vaillant-controller-qualification-v1.json"
 SPEC = importlib.util.spec_from_file_location(
     "vaillant_semreg_thermal_map", ROOT / "scripts/validate_vaillant_semreg_thermal_map.py"
 )
@@ -17,21 +19,301 @@ assert SPEC is not None and SPEC.loader is not None
 CHECKER = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(CHECKER)
 
+SYSTEM_GROUP = "OP=0x02 GG=0x00 II=0x00"
+OUTDOOR = "PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x0073"
+FLOW = "PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x004B"
+AVERAGE = "PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x0095"
+
 
 def index() -> dict[str, object]:
     return json.loads(INDEX.read_text(encoding="utf-8"))
 
 
+def structural() -> dict[str, object]:
+    return json.loads(STRUCTURAL.read_text(encoding="utf-8"))
+
+
+def qualification() -> dict[str, object]:
+    return json.loads(QUALIFICATION.read_text(encoding="utf-8"))
+
+
+def rows_by_key(value: dict[str, object]) -> dict[str, dict[str, object]]:
+    return {row["native_key"]: row for row in value["mappings"]}  # type: ignore[index]
+
+
+def rejects(value: dict[str, object], **kwargs: object) -> None:
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_index(value, **kwargs)
+
+
 def test_accepts_current_typed_index() -> None:
     CHECKER.validate_index(index())
+    CHECKER.validate_index(index(), structural=structural(), qualification=qualification())
 
 
-def test_exact_rows_keep_native_and_semreg_units_and_delayed_evaluation_separate() -> None:
+def test_rows_are_keyed_by_the_native_identity_of_the_value() -> None:
     rows = index()["mappings"]  # type: ignore[index]
-    exact_rows = [row for row in rows if row["disposition"] == "exact"]  # type: ignore[index]
-    for row in exact_rows:
-        assert row["native_value"]["unit"] == "degC"  # type: ignore[index]
-        assert row["semreg_value"] == {"kind": "quantity", "unit": "unit.celsius"}  # type: ignore[index]
+    assert [row["native_key"] for row in rows] == [OUTDOOR, FLOW, AVERAGE]  # type: ignore[index]
+    for row in rows:  # type: ignore[union-attr]
+        selector = row["native_selector"]  # type: ignore[index]
+        assert row["native_key"] == (  # type: ignore[index]
+            f"PB={selector['pb']} SB={selector['sb']} OP={selector['operation']} "
+            f"GG={selector['group']} II={selector['instance']} RR={selector['register']}"
+        )
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    (
+        ("PB", "0xB6"), ("SB", "0x23"), ("OP", "0x06"),
+        ("GG", "0x01"), ("II", "0x01"), ("RR", "0x0074"),
+    ),
+)
+def test_rejects_a_native_key_that_differs_from_the_selector(field: str, value: str) -> None:
+    mutated = deepcopy(index())
+    row = mutated["mappings"][0]  # type: ignore[index]
+    parts = dict(part.split("=") for part in row["native_key"].split())  # type: ignore[index]
+    parts[field] = value
+    row["native_key"] = " ".join(f"{name}={parts[name]}" for name in ("PB", "SB", "OP", "GG", "II", "RR"))  # type: ignore[index]
+    rejects(mutated)
+
+
+def test_rejects_a_gateway_field_or_a_repeated_key_as_the_row_key() -> None:
+    mutated = deepcopy(index())
+    row = mutated["mappings"][0]  # type: ignore[index]
+    row["native_key"] = row["legacy_system_field"]  # type: ignore[index]
+    rejects(mutated)
+
+    mutated = deepcopy(index())
+    mutated["mappings"][1]["native_key"] = mutated["mappings"][0]["native_key"]  # type: ignore[index]
+    rejects(mutated)
+
+    mutated = deepcopy(index())
+    del mutated["mappings"][0]["native_key"]  # type: ignore[index]
+    rejects(mutated)
+
+
+def test_every_row_names_its_native_resource_in_native_terms() -> None:
+    value = index()
+    assert value["native_resources"] == [  # type: ignore[index]
+        {"selector": SYSTEM_GROUP, "kind": "b524_semantic_root"},
+    ]
+    for row in value["mappings"]:  # type: ignore[union-attr]
+        assert row["native_resource"] == SYSTEM_GROUP  # type: ignore[index]
+
+
+def test_rejects_a_row_attached_by_ordinal() -> None:
+    # False join: a position in a list is no native identity.
+    mutated = deepcopy(index())
+    mutated["mappings"][0]["native_resource"] = 0  # type: ignore[index]
+    rejects(mutated)
+
+    mutated = deepcopy(index())
+    mutated["mappings"][0]["native_resource"] = "0"  # type: ignore[index]
+    rejects(mutated)
+
+    sidecar = qualification()
+    sidecar["thermal_rows"] = [0, 1, 2]
+    rejects(index(), qualification=sidecar)
+
+
+@pytest.mark.parametrize(
+    ("selector", "kind"),
+    (
+        ("OP=0x06 GG=0x00 II=0x00", "b524_semantic_root"),
+        ("OP=0x02 GG=0x01 II=0x00", "b524_semantic_root"),
+        ("OP=0x02 GG=0x00 II=0x01", "b524_semantic_root"),
+        (SYSTEM_GROUP, "zone_instance"),
+    ),
+)
+def test_rejects_a_false_join_to_another_native_resource(selector: str, kind: str) -> None:
+    # Each field of the native resource is varied: operation, group, instance, kind.
+    mutated = deepcopy(index())
+    mutated["native_resources"] = [{"selector": selector, "kind": kind}]  # type: ignore[index]
+    for row in mutated["mappings"]:  # type: ignore[union-attr]
+        row["native_resource"] = selector  # type: ignore[index]
+    rejects(mutated)
+
+
+@pytest.mark.parametrize(
+    "selector", ("OP=0x06 GG=0x00 II=0x00", "OP=0x02 GG=0x01 II=0x00", "OP=0x02 GG=0x00 II=0x01"),
+)
+def test_false_join_rule_holds_without_the_closed_row_table(selector: str) -> None:
+    # The row's key is held by the system group; a resource with another
+    # operation, group or instance is a false join even when it is expected.
+    row = {"native_resource": selector, "relation_candidates": {"refs": [], "absence": "none"}}
+    resources = {selector: "b524_semantic_root"}
+    with pytest.raises(CHECKER.CheckError, match="false join"):
+        CHECKER.check_attachment(row, OUTDOOR, resources, (selector, "b524_semantic_root"), {}, "probe")
+    CHECKER.check_attachment(
+        {**row, "native_resource": SYSTEM_GROUP}, OUTDOOR, {SYSTEM_GROUP: "b524_semantic_root"},
+        (SYSTEM_GROUP, "b524_semantic_root"), {}, "probe",
+    )
+
+
+def test_rejects_a_listed_native_resource_that_nothing_uses() -> None:
+    mutated = deepcopy(index())
+    mutated["native_resources"].append(  # type: ignore[union-attr]
+        {"selector": "OP=0x02 GG=0x03 II=zone", "kind": "zone_instance"}
+    )
+    rejects(mutated)
+
+
+def test_rejects_a_native_resource_the_index_does_not_list() -> None:
+    mutated = deepcopy(index())
+    mutated["mappings"][0]["native_resource"] = "OP=0x02 GG=0x03 II=0x00"  # type: ignore[index]
+    rejects(mutated)
+
+    mutated = deepcopy(index())
+    mutated["native_resources"].append(deepcopy(mutated["native_resources"][0]))  # type: ignore[union-attr]
+    rejects(mutated)
+
+
+def test_relation_candidates_are_an_explicit_absence_for_every_row() -> None:
+    for row in index()["mappings"]:  # type: ignore[union-attr]
+        candidates = row["relation_candidates"]  # type: ignore[index]
+        assert candidates["refs"] == []
+        assert isinstance(candidates["absence"], str) and candidates["absence"]
+
+
+def with_zone_candidate(value: dict[str, object], *, list_zone: bool) -> dict[str, object]:
+    mutated = deepcopy(value)
+    if list_zone:
+        mutated["native_resources"].append(  # type: ignore[union-attr]
+            {"selector": "OP=0x02 GG=0x03 II=zone", "kind": "zone_instance"}
+        )
+    mutated["mappings"][0]["relation_candidates"] = {  # type: ignore[index]
+        "refs": ["SRC-SD15-controller-zone"], "absence": None,
+    }
+    return mutated
+
+
+def test_accepts_a_reference_whose_endpoints_the_index_lists() -> None:
+    CHECKER.validate_index(with_zone_candidate(index(), list_zone=True))
+
+
+def test_rejects_a_dangling_endpoint() -> None:
+    # The candidate names zone_instance, which no listed native resource is.
+    rejects(with_zone_candidate(index(), list_zone=False))
+
+
+def test_rejects_unknown_ordinal_or_unrelated_candidate_references() -> None:
+    mutated = with_zone_candidate(index(), list_zone=True)
+    mutated["mappings"][0]["relation_candidates"]["refs"] = ["SRC-not-listed"]  # type: ignore[index]
+    rejects(mutated)
+
+    mutated = with_zone_candidate(index(), list_zone=True)
+    mutated["mappings"][0]["relation_candidates"]["refs"] = [6]  # type: ignore[index]
+    rejects(mutated)
+
+    # Both endpoints listed, but neither is the row's own native resource.
+    mutated = with_zone_candidate(index(), list_zone=True)
+    mutated["native_resources"].append(  # type: ignore[union-attr]
+        {"selector": "OP=0x02 GG=0x02 II=circuit", "kind": "circuit_instance"}
+    )
+    mutated["mappings"][0]["relation_candidates"]["refs"] = ["SRC-SD06-zone-to-circuit"]  # type: ignore[index]
+    rejects(mutated)
+
+
+def test_rejects_both_or_neither_of_references_and_absence() -> None:
+    mutated = with_zone_candidate(index(), list_zone=True)
+    mutated["mappings"][0]["relation_candidates"]["absence"] = "also absent"  # type: ignore[index]
+    rejects(mutated)
+
+    mutated = deepcopy(index())
+    mutated["mappings"][0]["relation_candidates"]["absence"] = ""  # type: ignore[index]
+    rejects(mutated)
+
+    mutated = deepcopy(index())
+    del mutated["mappings"][0]["relation_candidates"]  # type: ignore[index]
+    rejects(mutated)
+
+
+def test_targets_copy_the_element_inventory_disposition() -> None:
+    rows = rows_by_key(index())
+    for key, fact in ((OUTDOOR, "thermal.measurement.air_temperature"), (FLOW, "thermal.measurement.water_temperature")):
+        assert rows[key]["target"] == {
+            "definition": {
+                "pack": {"id": "helianthus.pack.thermal", "version": "1.0.0"},
+                "id": fact, "version": "1.0.0",
+            },
+            "element_kind": "fact",
+            "disposition": "unknown",
+            "planes": [],
+            "reason": "catalog.reason.subject_unresolved",
+        }
+        assert rows[key]["semreg_fact"] == fact
+    assert rows[AVERAGE]["target"] is None
+    assert rows[AVERAGE]["semreg_fact"] is None
+
+
+@pytest.mark.parametrize(
+    ("path", "value"),
+    (
+        (("definition", "pack", "id"), "helianthus.pack.storage"),
+        (("definition", "pack", "version"), "1.1.0"),
+        (("definition", "id"), "thermal.measurement.outdoor_air_temperature"),
+        (("definition", "version"), "1.0.1"),
+        (("element_kind",), "dimension"),
+        (("disposition",), "member"),
+        (("planes",), ["control"]),
+        (("reason",), "catalog.reason.no_fact_or_relation"),
+    ),
+)
+def test_rejects_target_drift_in_every_member(path: tuple[str, ...], value: object) -> None:
+    mutated = deepcopy(index())
+    target = mutated["mappings"][1]["target"]  # type: ignore[index]
+    for part in path[:-1]:
+        target = target[part]  # type: ignore[index]
+    target[path[-1]] = value  # type: ignore[index]
+    rejects(mutated)
+
+
+def test_an_unknown_target_stays_unknown_and_places_no_quantity() -> None:
+    mutated = deepcopy(index())
+    target = mutated["mappings"][0]["target"]  # type: ignore[index]
+    target.update({"disposition": "member", "planes": ["control"], "reason": None})  # type: ignore[union-attr]
+    rejects(mutated)
+
+    mutated = deepcopy(index())
+    mutated["mappings"][2]["target"] = deepcopy(mutated["mappings"][0]["target"])  # type: ignore[index]
+    rejects(mutated)
+
+
+@pytest.mark.parametrize(
+    ("member", "value"),
+    (
+        ("dimensions", {"thermal.dimension.temperature": "temperature:system_flow"}),
+        ("dimensions", {"thermal.dimension.system": "temperature:outdoor_air"}),
+        ("semreg_value", {"kind": "quantity", "unit": "unit.kelvin"}),
+    ),
+)
+def test_rejects_role_grammar_or_a_semantic_value_on_a_row(member: str, value: object) -> None:
+    mutated = deepcopy(index())
+    mutated["mappings"][0][member] = value  # type: ignore[index]
+    rejects(mutated)
+
+
+def test_qualification_sidecar_binds_to_the_rows_by_native_key() -> None:
+    assert qualification()["thermal_rows"] == [OUTDOOR, FLOW, AVERAGE]
+
+    sidecar = qualification()
+    sidecar["thermal_rows"] = [OUTDOOR, FLOW]
+    rejects(index(), qualification=sidecar)
+
+    sidecar = qualification()
+    sidecar["thermal_rows"] = [OUTDOOR, FLOW, AVERAGE.replace("RR=0x0095", "RR=0x0096")]
+    rejects(index(), qualification=sidecar)
+
+    sidecar = qualification()
+    sidecar["thermal_rows"] = ["state.outdoor_temperature", "state.flow_temperature", "state.outdoor_temperature_avg24h"]
+    rejects(index(), qualification=sidecar)
+
+
+def test_native_rows_keep_native_units_and_delayed_evaluation_separate() -> None:
+    rows = index()["mappings"]  # type: ignore[index]
+    for row in rows:  # type: ignore[union-attr]
+        assert row["native_value"] == {"wire_type": "f32_le", "unit": "degC"}  # type: ignore[index]
 
     lifecycle = index()["lifecycle"]  # type: ignore[index]
     observation = lifecycle["retained_native_observation"]  # type: ignore[index]
@@ -54,55 +336,30 @@ def test_rejects_the_previous_flow_temperature_field() -> None:
     row = mutated["mappings"][1]  # type: ignore[index]
     assert row["legacy_system_field"] == "state.flow_temperature"  # type: ignore[index]
     row["legacy_system_field"] = "state.system_flow_temperature"  # type: ignore[index]
-    with pytest.raises(CHECKER.CheckError):
-        CHECKER.validate_index(mutated)
-
-
-def test_rejects_system_identity_as_temperature_dimension() -> None:
-    mutated = deepcopy(index())
-    row = mutated["mappings"][0]  # type: ignore[index]
-    row["dimensions"] = {"thermal.dimension.system": "temperature:outdoor_air"}  # type: ignore[index]
-    with pytest.raises(CHECKER.CheckError):
-        CHECKER.validate_index(mutated)
+    rejects(mutated)
 
 
 def test_rejects_operation_or_service_family_substitution() -> None:
     mutated = deepcopy(index())
     row = mutated["mappings"][1]  # type: ignore[index]
     row["native_selector"]["operation"] = "0x06"  # type: ignore[index]
-    with pytest.raises(CHECKER.CheckError):
-        CHECKER.validate_index(mutated)
+    rejects(mutated)
 
     mutated = deepcopy(index())
     mutated["native_distinctions"]["b509_substitutable_for_b524_rows"] = True  # type: ignore[index]
-    with pytest.raises(CHECKER.CheckError):
-        CHECKER.validate_index(mutated)
+    rejects(mutated)
 
 
 def test_rejects_type_unit_or_register_drift() -> None:
     mutated = deepcopy(index())
     row = mutated["mappings"][0]  # type: ignore[index]
     row["native_value"]["wire_type"] = "u16"  # type: ignore[index]
-    with pytest.raises(CHECKER.CheckError):
-        CHECKER.validate_index(mutated)
+    rejects(mutated)
 
     mutated = deepcopy(index())
     row = mutated["mappings"][0]  # type: ignore[index]
     row["native_value"]["unit"] = "unit.celsius"  # type: ignore[index]
-    with pytest.raises(CHECKER.CheckError):
-        CHECKER.validate_index(mutated)
-
-    mutated = deepcopy(index())
-    row = mutated["mappings"][0]  # type: ignore[index]
-    row["semreg_value"]["unit"] = "degC"  # type: ignore[index]
-    with pytest.raises(CHECKER.CheckError):
-        CHECKER.validate_index(mutated)
-
-    mutated = deepcopy(index())
-    row = mutated["mappings"][0]  # type: ignore[index]
-    del row["semreg_value"]["unit"]  # type: ignore[index]
-    with pytest.raises(CHECKER.CheckError):
-        CHECKER.validate_index(mutated)
+    rejects(mutated)
 
 
 @pytest.mark.parametrize(
@@ -118,44 +375,37 @@ def test_rejects_destination_family_or_direction_drift(field: str, value: str) -
     mutated = deepcopy(index())
     row = mutated["mappings"][0]  # type: ignore[index]
     row["native_selector"][field] = value  # type: ignore[index]
-    with pytest.raises(CHECKER.CheckError):
-        CHECKER.validate_index(mutated)
+    rejects(mutated)
 
     mutated = deepcopy(index())
     row = mutated["mappings"][2]  # type: ignore[index]
     row["native_selector"]["register"] = "0x0073"  # type: ignore[index]
-    with pytest.raises(CHECKER.CheckError):
-        CHECKER.validate_index(mutated)
+    rejects(mutated)
 
 
 def test_rejects_withheld_and_nonclaim_drift() -> None:
     mutated = deepcopy(index())
     row = mutated["mappings"][2]  # type: ignore[index]
     row["disposition"] = "exact"  # type: ignore[index]
-    with pytest.raises(CHECKER.CheckError):
-        CHECKER.validate_index(mutated)
+    rejects(mutated)
 
     mutated = deepcopy(index())
     mutated["nonclaims"]["write_route_established"] = True  # type: ignore[index]
-    with pytest.raises(CHECKER.CheckError):
-        CHECKER.validate_index(mutated)
+    rejects(mutated)
 
 
 def test_rejects_receipt_evaluation_boundary_or_freshness_drift() -> None:
     mutated = deepcopy(index())
     lifecycle = mutated["lifecycle"]  # type: ignore[index]
     lifecycle["caller_evaluation_context"]["evaluated_at"] = lifecycle["retained_native_observation"]["received_at"]  # type: ignore[index]
-    with pytest.raises(CHECKER.CheckError):
-        CHECKER.validate_index(mutated)
+    rejects(mutated)
 
     mutated = deepcopy(index())
     lifecycle = mutated["lifecycle"]  # type: ignore[index]
     lifecycle["evaluation_cannot_overwrite_receipt"] = False  # type: ignore[index]
-    with pytest.raises(CHECKER.CheckError):
-        CHECKER.validate_index(mutated)
+    rejects(mutated)
 
     mutated = deepcopy(index())
     lifecycle = mutated["lifecycle"]  # type: ignore[index]
     lifecycle["freshness_axis"] = "wall_clock"  # type: ignore[index]
-    with pytest.raises(CHECKER.CheckError):
-        CHECKER.validate_index(mutated)
+    rejects(mutated)
