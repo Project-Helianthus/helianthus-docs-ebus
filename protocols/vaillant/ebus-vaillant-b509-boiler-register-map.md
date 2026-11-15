@@ -8,6 +8,15 @@ This document records candidate direct BAI00 register semantics for `PB=0xB5`, `
 
 Each register carries a canonical `Name`: `snake_case`, describing the quantity, with unit, codec, scaling and access kept in separate fields and no API prefix. The `Legacy API path` column keeps the earlier API path as correspondence only; it is not a name. Vaillant and community ebusd names for every register are in the [register name correspondence fixture](fixtures/b509-register-name-correspondence.csv), described in the [protocol page](ebus-vaillant-b509.md#register-name-correspondence-fixture). Register ids are written as the two address bytes in wire order (see [Address byte order](ebus-vaillant-b509.md#address-byte-order)). A register is identified by target class, operation and complete selector; equal names never merge entries.
 
+The `codec` and `scale` columns of the fixture hold what the `Codec / scale`
+column of this map states for each register. The codec is the code span without
+its remark, and a divisor `/ N` gives the scale `1/N` as a decimal: `SIN / 10`
+gives codec `SIN` and scale `0.1`. The scale multiplies the decoded value. An
+empty scale means that this map states no factor beyond the codec; the candidate
+factor 100 of `0x2900` and `0x2300` is an open question, not a scale. The two
+operation rows `0x0D` and `0x0E` carry message markers, not a value codec, and
+keep both cells empty. Neither column qualifies a codec on the wire.
+
 ## Semantic Mapping
 
 ### Direct read candidates
