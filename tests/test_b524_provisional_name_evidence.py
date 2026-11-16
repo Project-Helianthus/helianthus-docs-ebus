@@ -234,3 +234,15 @@ def test_b524_provisional_name_evidence_rejects_reopened_final_row(checkout, key
         writer.writerows(rows)
     with pytest.raises(AssertionError):
         run_check()
+
+
+@pytest.mark.parametrize(
+    ("register", "name", "gap"),
+    [("0x007E", "fair_mode", "M, V"), ("0x009A", "green_iq_enabled", "M, P")],
+)
+def test_b524_provisional_name_evidence_feature_rows_keep_open_class(register, name, gap):
+    text = INDEX.read_text(encoding="utf-8")
+    assert any(
+        line.startswith(f"| {register} | `{name}` |") and f"| {gap} |" in line
+        for line in text.splitlines()
+    )

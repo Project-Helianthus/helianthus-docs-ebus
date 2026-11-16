@@ -151,7 +151,7 @@ II context stays separate rather than merging instances or inventing them.
 | 0x007B | `heating_zone_operating_mode` | Unknown | M, V | Representation is not established; the relation to `OP=0x02, GG=0x03, RR=0x0006` (same name) is not established. |
 | 0x007C | `cooling_zone_operating_mode` | Unknown | M, V | Representation is not established; the relation to `OP=0x02, GG=0x03, RR=0x0001` (same name) is not established. |
 | 0x007D | `home_screen_operating_mode` | Unknown | V | Representation is not established. |
-| 0x007E | `fair_mode` | Unknown | M | A float32 value; the meaning is not established. |
+| 0x007E | `fair_mode` | Unknown | M, V | A float32 value that fits neither an enumeration nor a Boolean; the value class and the meaning are not established. |
 | 0x007F | `screed_drying_time` | Unknown | M, V | Two readings, unresolved (candidate interpretations, unconfirmed on the wire): the elapsed duration of the screed drying in days, or the index of the current day in the screed drying programme; representation is not established. |
 | 0x0082 | `room_temperature_setpoint_at_holiday` | Unknown | M, V | Family split: `RR=0x0082` is attested on the VRC700 family and `RR=0x00F6` on the VRC720 family (candidate, unconfirmed on the wire); whether the two selectors carry the same quantity is not established. Representation of `RR=0x0082` is not established. |
 | 0x0083 | `bank_holiday_start_date` | Unknown | V | Representation is not established. |
@@ -172,7 +172,7 @@ II context stays separate rather than merging instances or inventing them.
 | 0x0096 | `maintenance_active` | Unknown | M | Two readings, unresolved (candidate interpretations, unconfirmed on the wire): 1 means that the device is in maintenance mode, or 1 means that maintenance is due; the semantic plane projects this selector as `state.maintenance_due`. |
 | 0x0097 | `eeprom_update_active` | Unknown | M, P, V | Candidate interpretation, unconfirmed on the wire: 1 means that an EEPROM update is in progress; no value table is documented and the polarity is not established. |
 | 0x0099 | `rtc_crystal_ok` | Unknown | M, P, V | Candidate interpretation, unconfirmed on the wire: 1 means that the real-time clock crystal is OK; the polarity and the representation are not established. |
-| 0x009A | `green_iq_enabled` | Unknown | M | A boolean value; the meaning is not established. |
+| 0x009A | `green_iq_enabled` | Unknown | M, P | A Boolean value; the polarity and the meaning are not established. |
 | 0x009C | `home_screen_headline` | Unknown | V | Representation is not established. |
 | 0x00A1 | `pv_surplus_enabled` | Unknown | M, P, V | Candidate interpretation, unconfirmed on the wire: 1 means that the use of a photovoltaic surplus is enabled; no value table is documented and the polarity is not established. |
 | 0x00A3 | `ventilation_time_program_active` | Unknown | M, V | Representation is not established; the relation to `OP=0x02, GG=0x09, RR=0x0003` (same name) is not established. |
