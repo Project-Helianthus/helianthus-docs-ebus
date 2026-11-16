@@ -86,6 +86,7 @@ error,object,An error.,
 event,attribute,A time-programme event.,
 external,attribute,External.,ext
 factor,predicate,A dimensionless quantity applied as a multiplier or slope.,
+fair,feature,"Feature, maker spelling Fair: meaning not established.",
 fan,subject,A fan.,
 fault,predicate,Health boolean: 1 means a problem.,
 fine,manner,A finer-resolution variant of a quantity.,
@@ -96,6 +97,7 @@ frost_protection,purpose|object|attribute|activity,Protection against frost.,
 fuel,attribute,Fuel.,gas|oil
 functional_module,subject,A functional extension module.,
 gradient,object,A rate of change.,
+green_iq,feature,"Feature, maker spelling green iQ: meaning not established.",
 hardware,attribute,Hardware.,
 headline,object,A headline text.,
 heat_generator,subject,An attached heat generator of any kind.,generator|heatgen
@@ -225,6 +227,7 @@ time_program,object|attribute,A time programme.,schedule|program
 time_program_day,attribute,One day of a time programme; not the rolling 24-hour period `daily`.,
 top,place,The top of a cylinder.,
 total,period,Lifetime accumulation.,sum|history
+tri_vai,feature,"Feature, maker spelling triVAI: value 0 of the hybrid control mode, beside the bivalence point; how it decides is not established.",
 type,predicate,Static enumeration: what kind of thing the subject is.,
 unknown,placeholder,Placeholder for a missing object and predicate.,
 up,attribute,Up.,

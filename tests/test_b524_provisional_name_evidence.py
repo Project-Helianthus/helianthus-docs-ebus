@@ -141,8 +141,8 @@ def test_b524_provisional_name_evidence_rejects_stale_gap(checkout, question):
         ("368 OP02 entries and 2 OP06 entries", "368 OP02 entries and 3 OP06 entries"),
         ("140 of 368", "141 of 368"),
         ("140 of 368", "140 of 369"),
-        ("131 retain documented terms", "132 retain documented terms"),
-        ("9 use pre-existing", "10 use pre-existing"),
+        ("134 retain documented terms", "135 retain documented terms"),
+        ("6 use pre-existing", "7 use pre-existing"),
         ("| 0x02 | 0x00 | 107 |", "| 0x02 | 0x00 | 999 |"),
         ("| 0x02 | 0x09 | 5 |\n", ""),
         ("| 0x02 | 0x09 | 5 |", "| 0x02 | 0x0A | 5 |"),
@@ -234,3 +234,15 @@ def test_b524_provisional_name_evidence_rejects_reopened_final_row(checkout, key
         writer.writerows(rows)
     with pytest.raises(AssertionError):
         run_check()
+
+
+@pytest.mark.parametrize(
+    ("register", "name", "gap"),
+    [("0x007E", "fair_mode", "M, V"), ("0x009A", "green_iq_enabled", "M, P")],
+)
+def test_b524_provisional_name_evidence_feature_rows_keep_open_class(register, name, gap):
+    text = INDEX.read_text(encoding="utf-8")
+    assert any(
+        line.startswith(f"| {register} | `{name}` |") and f"| {gap} |" in line
+        for line in text.splitlines()
+    )

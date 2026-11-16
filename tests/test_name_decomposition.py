@@ -84,6 +84,43 @@ class DecompositionTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.validate(value('mystery_enabled', [('mystery', 'feature'), ('enabled', 'predicate')], 'enabled'))
 
+    def test_feature_vocabulary_term_in_the_subject_slot(self):
+        for name, term, predicate in [('green_iq_enabled', 'green_iq', 'enabled'),
+                                      ('green_iq_active', 'green_iq', 'active'),
+                                      ('fair_mode', 'fair', 'mode')]:
+            with self.subTest(name=name):
+                self.validate(value(name, [(term, 'subject'), (predicate, 'predicate')], predicate))
+
+    def test_feature_vocabulary_term_in_the_object_slot(self):
+        self.validate(value('pump_green_iq_active', [('pump', 'subject'), ('green_iq', 'object'),
+            ('active', 'predicate')], 'active'))
+        self.validate(value('tri_vai_temperature', [('tri_vai', 'subject'),
+            ('temperature', 'object')], 'measured'))
+
+    def test_feature_vocabulary_term_keeps_its_term_in_a_provisional_name(self):
+        self.validate(value('tri_vai_unknown', [('tri_vai', 'subject'), ('unknown', 'placeholder')],
+            'unknown', status='provisional', current_spelling='tri_vai_unknown',
+            open_question='Meaning is not established.',
+            follow_up='Project-Helianthus/helianthus-docs-ebus#573'))
+
+    def test_feature_vocabulary_term_in_another_role_is_rejected(self):
+        for role in ['attribute', 'purpose', 'place', 'feature']:
+            with self.subTest(role=role), self.assertRaises(ValueError):
+                self.validate(value('green_iq_enabled', [('green_iq', role),
+                    ('enabled', 'predicate')], 'enabled'))
+
+    def test_feature_vocabulary_term_outside_a_native_register_name_is_rejected(self):
+        entry = value('helianthus_green_iq_active', [('green_iq', 'subject'), ('active', 'predicate')],
+            'active', kind='metric', prefix='helianthus', unit='ratio', unit_label='ratio')
+        with self.assertRaisesRegex(ValueError, 'native register name'):
+            self.validate(entry)
+
+    def test_product_or_model_name_is_rejected(self):
+        for name, term in [('acme720_enabled', 'acme720'), ('acme_enabled', 'acme'),
+                           ('greeniq_enabled', 'greeniq')]:
+            with self.subTest(name=name), self.assertRaises(ValueError):
+                self.validate(value(name, [(term, 'subject'), ('enabled', 'predicate')], 'enabled'))
+
     def test_structural_examples_are_snake_case_only(self):
         for spelling in ['source_id', 'get_status', 'observed_at']:
             self.validate(value(spelling, [], 'structural', kind='structural'))

@@ -43,7 +43,7 @@ opcode,group,register,name,previous_name,open_question
 0x02,0x00,0x0036,hydraulic_scheme_code,system_scheme,
 0x02,0x00,0x0038,cooling_start_temperature_limit,system_cooling_start_temperature,
 0x02,0x00,0x0039,water_pressure,system_water_pressure,
-0x02,0x00,0x003A,hybrid_unknown_2,tri_vai_calculation_result,A kelvin value of the hybrid control; the meaning is not established.
+0x02,0x00,0x003A,tri_vai_unknown,tri_vai_calculation_result,A kelvin value of the hybrid control; the meaning is not established.
 0x02,0x00,0x003C,solar_yield_total_reset_command,system_yield_solar_reset,
 0x02,0x00,0x003D,solar_yield_total,system_yield_solar_total,
 0x02,0x00,0x003E,environmental_yield_total,system_yield_environmental_total,
@@ -104,7 +104,7 @@ opcode,group,register,name,previous_name,open_question
 0x02,0x00,0x007B,heating_zone_operating_mode,operating_mode_heating_for_zone,"Representation is not established; the relation to `OP=0x02, GG=0x03, RR=0x0006` (same name) is not established."
 0x02,0x00,0x007C,cooling_zone_operating_mode,operating_mode_cooling_for_zone,"Representation is not established; the relation to `OP=0x02, GG=0x03, RR=0x0001` (same name) is not established."
 0x02,0x00,0x007D,home_screen_operating_mode,home_screen_operation_mode,Representation is not established.
-0x02,0x00,0x007E,unknown_3,fair_mode,A float32 value; the meaning is not established.
+0x02,0x00,0x007E,fair_mode,fair_mode,A float32 value that fits neither an enumeration nor a Boolean; the value class and the meaning are not established.
 0x02,0x00,0x007F,screed_drying_time,screed_drying_day,"Two readings, unresolved (candidate interpretations, unconfirmed on the wire): the elapsed duration of the screed drying in days, or the index of the current day in the screed drying programme; representation is not established."
 0x02,0x00,0x0080,cylinder_loading_start_offset,system_cylinder_loading_start_offset,
 0x02,0x00,0x0081,cylinder_loading_stop_offset,system_cylinder_loading_stop_offset,
@@ -132,7 +132,7 @@ opcode,group,register,name,previous_name,open_question
 0x02,0x00,0x0097,eeprom_update_active,eeprom_update_in_progress,"Candidate interpretation, unconfirmed on the wire: 1 means that an EEPROM update is in progress; no value table is documented and the polarity is not established."
 0x02,0x00,0x0098,boiler_reset_command,boiler_remote_reset,
 0x02,0x00,0x0099,rtc_crystal_ok,rtc_crystal_state,"Candidate interpretation, unconfirmed on the wire: 1 means that the real-time clock crystal is OK; the polarity and the representation are not established."
-0x02,0x00,0x009A,unknown_5,green_iq,A boolean value; the meaning is not established.
+0x02,0x00,0x009A,green_iq_enabled,green_iq,A Boolean value; the polarity and the meaning are not established.
 0x02,0x00,0x009B,time_program_reset_command,reset_to_default_time_program,
 0x02,0x00,0x009C,home_screen_headline,home_screen_headline,Representation is not established.
 0x02,0x00,0x009D,dhw_cylinder_top_temperature,system_cylinder_mss_dhw_top_temperature,

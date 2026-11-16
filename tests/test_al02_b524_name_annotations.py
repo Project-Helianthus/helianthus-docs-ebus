@@ -60,7 +60,7 @@ OP02_TUPLES = """00|0001|dhw_outdoor_bivalence_temperature_limit|system_dhw_biva
 00|0036|hydraulic_scheme_code|system_scheme|false
 00|0038|cooling_start_temperature_limit|system_cooling_start_temperature|false
 00|0039|water_pressure|system_water_pressure|false
-00|003A|hybrid_unknown_2|tri_vai_calculation_result|true
+00|003A|tri_vai_unknown|tri_vai_calculation_result|true
 00|003C|solar_yield_total_reset_command|system_yield_solar_reset|false
 00|003D|solar_yield_total|system_yield_solar_total|false
 00|003E|environmental_yield_total|system_yield_environmental_total|false
@@ -121,7 +121,7 @@ OP02_TUPLES = """00|0001|dhw_outdoor_bivalence_temperature_limit|system_dhw_biva
 00|007B|heating_zone_operating_mode|operating_mode_heating_for_zone|true
 00|007C|cooling_zone_operating_mode|operating_mode_cooling_for_zone|true
 00|007D|home_screen_operating_mode|home_screen_operation_mode|true
-00|007E|unknown_3|fair_mode|true
+00|007E|fair_mode|fair_mode|true
 00|007F|screed_drying_time|screed_drying_day|true
 00|0080|cylinder_loading_start_offset|system_cylinder_loading_start_offset|false
 00|0081|cylinder_loading_stop_offset|system_cylinder_loading_stop_offset|false
@@ -149,7 +149,7 @@ OP02_TUPLES = """00|0001|dhw_outdoor_bivalence_temperature_limit|system_dhw_biva
 00|0097|eeprom_update_active|eeprom_update_in_progress|true
 00|0098|boiler_reset_command|boiler_remote_reset|false
 00|0099|rtc_crystal_ok|rtc_crystal_state|true
-00|009A|unknown_5|green_iq|true
+00|009A|green_iq_enabled|green_iq|true
 00|009B|time_program_reset_command|reset_to_default_time_program|false
 00|009C|home_screen_headline|home_screen_headline|true
 00|009D|dhw_cylinder_top_temperature|system_cylinder_mss_dhw_top_temperature|false
@@ -452,7 +452,7 @@ class NameAnnotations(unittest.TestCase):
         self.assertEqual(set(identities), set(EXPECTED))
         op02 = [row for row in rows if row["key"]["opcode"] == 2]
         self.assertEqual(len(op02), 368)
-        self.assertEqual(sum(row["canonical_name"] != row["legacy_name"] for row in op02), 334)
+        self.assertEqual(sum(row["canonical_name"] != row["legacy_name"] for row in op02), 333)
         self.assertEqual(len(rows) - len(op02), 2)
 
     def package_matches(self, package):

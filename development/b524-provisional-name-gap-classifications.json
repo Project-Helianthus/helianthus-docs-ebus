@@ -1,7 +1,5 @@
 {
   "M": [
-    "A boolean value; the meaning is not established.",
-    "A float32 value; the meaning is not established.",
     "A kelvin value of the hybrid control; the meaning is not established.",
     "A kelvin value, present with cooling; the meaning is not established.",
     "An observed one-byte raw value related to automatic heating and cooling; the meaning is not established.",
@@ -25,6 +23,7 @@
     "Two readings, unresolved (candidate interpretations, unconfirmed on the wire): the state of a DHW circulation pump, or that external DHW is active."
   ],
   "M, P": [
+    "A Boolean value; the polarity and the meaning are not established.",
     "Candidate interpretation, unconfirmed on the wire: 1 means that the isolation switch is active; which switch position 1 denotes is not established.",
     "Candidate interpretation, unconfirmed on the wire: a one-byte switch for an external energy management, 1 = enabled and 0 = disabled; the meanings of 0 and 1 and the controller reaction are not established."
   ],
@@ -42,6 +41,7 @@
     "Candidate interpretation, unconfirmed on the wire: 1 means that the use of a photovoltaic surplus is enabled; no value table is documented and the polarity is not established."
   ],
   "M, V": [
+    "A float32 value that fits neither an enumeration nor a Boolean; the value class and the meaning are not established.",
     "Hypothesis: candidate circuit special function mode and family enumeration; meaning and value table remain unconfirmed on the wire.",
     "A raw two-byte value related to the circuit pump; value class and meaning are not established.",
     "Candidate interpretation, unconfirmed on the wire: 1 means that the DHW circuit is controlled by the system controller; no value table is documented.",
