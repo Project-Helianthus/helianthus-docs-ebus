@@ -341,7 +341,7 @@ the instance domain remains unconfirmed. The notation
 | 0x0036 | hydraulic_scheme_code | P | u16 | count | HydraulicScheme | — | — | — | 1..16 |
 | 0x0038 | cooling_start_temperature_limit | C | f32 | °C | — | — | — | — | 10..30 per TSP |
 | 0x0039 | water_pressure | S | f32 | bar | WaterPressure | — | — | — | Read-only |
-| 0x003A | hybrid_unknown_2 | C | f32 | K | — | — | — | — | -10..10 per TSP |
+| 0x003A | tri_vai_unknown | C | f32 | K | — | — | — | — | -10..10 per TSP. Provisional: the name keeps the feature term `tri_vai`; the rest waits for the meaning of the kelvin value. |
 | 0x003C | solar_yield_total_reset_command | C | u8 | — | — | — | — | — | FLAGS=0x03. Scan value: 0 |
 | 0x003D | solar_yield_total | E | u32 | kWh | SolarYieldTotal | — | — | fm5_config≤2 | |
 | 0x003E | environmental_yield_total | E | u32 | kWh | YieldTotal | — | — | — | |
@@ -403,7 +403,7 @@ the instance domain remains unconfirmed. The notation
 | 0x007B | heating_zone_operating_mode | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
 | 0x007C | cooling_zone_operating_mode | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
 | 0x007D | home_screen_operating_mode | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
-| 0x007E | unknown_3 | C | f32 | — | — | — | — | — | FLAGS=0x03. Scan value: 0.0 |
+| 0x007E | fair_mode | C | f32 | — | — | — | — | — | FLAGS=0x03. Observed value: 0.0. Provisional: the catalog decodes a float32, which fits neither `_enabled` (Boolean) nor `_mode` (enumeration). |
 | 0x007F | screed_drying_time | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
 | 0x0080 | cylinder_loading_start_offset | C | f32 | — | — | — | — | — | FLAGS=0x03. Scan value: 0.0. Constraint: -10..10 step 1. Possibly PV offset |
 | 0x0081 | cylinder_loading_stop_offset | P | f32 | K | — | — | — | — | † |
@@ -431,8 +431,8 @@ the instance domain remains unconfirmed. The notation
 | 0x0097 | eeprom_update_active | P | u8 | — | — | — | — | — | FLAGS=0x01. Scan value: 0. Near maintenance cluster |
 | 0x0098 | boiler_reset_command | C | u8 | — | — | — | — | — | FLAGS=0x03. Scan value: 0 |
 | 0x0099 | rtc_crystal_ok | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
-| 0x009A | unknown_5 | S | u16 | bool | — | — | — | — | |
-| 0x009B | time_program_reset_command | C | u8 | — | — | — | — | — | FLAGS=0x03. Scan value: 0. Near unknown_5 |
+| 0x009A | green_iq_enabled | S | u16 | bool | — | — | — | — | Provisional: a Boolean whose polarity is not established. |
+| 0x009B | time_program_reset_command | C | u8 | — | — | — | — | — | FLAGS=0x03. Observed value: 0. Near green_iq_enabled |
 | 0x009C | home_screen_headline | — | unknown | — | — | — | — | — | **Hypothesis:** operator-provided semantic name; representation and applicability require independent qualification. |
 | 0x009D | dhw_cylinder_top_temperature | S | f32 | °C | HwcStorageTempTop | — | — | — | Read-only |
 | 0x009E | dhw_cylinder_bottom_temperature | S | f32 | °C | HwcStorageTempBottom | — | — | — | Read-only |

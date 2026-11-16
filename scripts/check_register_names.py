@@ -11,7 +11,9 @@ in the order of the parts:
 
 A name fails when a token has no vocabulary entry, when a word is a forbidden
 synonym, when no role assignment follows that order, or when it has more than
-six words; the object of `time` has to carry the vocabulary role `activity` or
+six words; a term with the role `feature` (a function the maker names with
+a name of its own) takes the subject or the object slot only; the object of
+`time` has to carry the vocabulary role `activity` or
 `event`, a bound, period or manner needs an object or a predicate to qualify,
 and `average` needs a period before it. A command name
 `[target]_[action]_command` is checked with its target decomposed as a name of
@@ -60,6 +62,9 @@ ROLES = {
     # Class markers of an object: what a `time` can last or separate.
     "activity",
     "event",
+    # A function the maker names with a name of its own (architecture/naming.md,
+    # "Vocabulary"); the term takes the subject or the object slot.
+    "feature",
 }
 # The closed predicate list of architecture/naming.md.
 PREDICATES = {
@@ -71,6 +76,8 @@ PREDICATES = {
 # Compound predicate terms built on a predicate of the closed list.
 PREDICATE_COMPOUNDS = {"operating_mode": "mode"}
 ABBREVIATIONS = {"dhw", "pv", "rtc", "eeprom"}
+# The closed list of maker feature names; additions require explicit agreement.
+FEATURES = {"green_iq", "fair", "tri_vai"}
 MAX_WORDS = 6
 
 # Slot order. Attributes appear before the subject or before the object.
@@ -106,6 +113,7 @@ ROLE_SLOTS = {
     "bound": ["bound"],
     "period": ["period"],
     "manner": ["manner"],
+    "feature": ["subject", "object"],
 }
 # Trailing slots admitted by the predicate (architecture/naming.md, "Predicates"
 # and "Order of the parts"). A bound follows a measured value (no predicate) or
@@ -157,6 +165,16 @@ class Vocabulary:
         return sorted(terms, key=len, reverse=True)
 
 
+def _check_feature_role(token: str, token_roles: frozenset[str]) -> None:
+    """A feature term is on the closed list and has no other role."""
+    if "feature" not in token_roles:
+        return
+    if token not in FEATURES:
+        raise ValueError(f"vocabulary token {token!r} is not in the closed feature list")
+    if token_roles != {"feature"}:
+        raise ValueError(f"vocabulary token {token!r}: the feature role stands alone")
+
+
 def load_vocabulary(path: Path = VOCABULARY) -> Vocabulary:
     with path.open(encoding="utf-8", newline="") as handle:
         reader = csv.DictReader(handle)
@@ -177,6 +195,7 @@ def load_vocabulary(path: Path = VOCABULARY) -> Vocabulary:
             raise ValueError(f"vocabulary token {token!r} has unknown roles {sorted(unknown)}")
         if not row["definition"].strip():
             raise ValueError(f"vocabulary token {token!r} has no definition")
+        _check_feature_role(token, token_roles)
         roles[token] = token_roles
         for synonym in filter(None, row["forbidden_synonyms"].split("|")):
             if synonym in forbidden:
@@ -365,7 +384,7 @@ def decompose(name: str, vocabulary: Vocabulary, *, nested: bool = False) -> lis
         seen_term = False
         for word in condition:
             roles = vocabulary.roles.get(word, frozenset())
-            if not roles or roles & {"marker", "placeholder"} or word == "command":
+            if not roles or roles & {"marker", "placeholder", "feature"} or word == "command":
                 raise NameError_(f"{name}: {word!r} is not a vocabulary term for a condition")
             if roles != {"bound"}:
                 seen_term = True

@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+- `architecture/naming.md` gives a function the maker names with a name of its
+  own the vocabulary role `feature`: a closed list in the maker's spelling,
+  with a definition or "meaning not established", in the subject or object
+  slot of a native register name, with the predicate that the value class
+  gives. The ban on product names in a name covers device products and
+  models; a feature name is not a product name. The vocabulary lists
+  `green_iq`, `fair` and `tri_vai` with that role, and both name checks accept
+  such a term in the subject or object slot only and refuse a product or model
+  name. B524 `OP=0x02, GG=0x00` RR=0x009A is `green_iq_enabled` (provisional:
+  Boolean, polarity not established), RR=0x007E is `fair_mode` (provisional:
+  the catalog decodes a float32, which fits neither `_enabled` nor `_mode`)
+  and RR=0x003A is `tri_vai_unknown` (provisional: the rest of the name waits
+  for the meaning of its kelvin value). The catalog, correspondence fixture,
+  register map, name decomposition data and provisional-name evidence page use
+  the names; that page lists 134 open rows with documented terms and 6 with
+  indexed placeholders. No alias of the old names exists.
+
 - B524 `OP=0x02, GG=0x00, RR=0x0007` is named `off_enabled` (`previous_name`
   `system_off`), final, with the observed Vaillant definition: 1 means that
   the system is switched off. The register map value cell reads

@@ -17,7 +17,7 @@ maker-derived terms while their open points await evidence. Canonical names and
 The inclusion rule is every nonempty `open_question` in the
 [canonical OP02 CSV](../protocols/vaillant/fixtures/b524-op02-register-names.csv).
 It currently selects **140 of 368 rows**, each listed exactly once below:
-131 retain documented terms and 9 use pre-existing `unknown` placeholders.
+134 retain documented terms and 6 use pre-existing `unknown` placeholders.
 Both subsets have explicit open questions; neither is silently excluded.
 A row whose only open point is wire confirmation of an observed Vaillant
 definition is final under the
@@ -121,7 +121,7 @@ II context stays separate rather than merging instances or inventing them.
 | 0x0025 | `temporary_backup_heater_mode` | VRC700 family: 00; VRC720 family: 00 | M, V | Candidate interpretation, unconfirmed on the wire: an enumeration for a temporary permission of the backup heater; how it differs from the backup heater enumeration at RR=0x0024 is not established, and neither is the value table. |
 | 0x002F | `functional_module_configuration_code` | VRC700 family: 00; VRC720 family: 00 | M, V | Candidate interpretation, unconfirmed on the wire: a configuration code of a functional module kind (functional-module family); the code list is not established. |
 | 0x0031 | `language` | Unknown | V | Value class and encoding are not established. |
-| 0x003A | `hybrid_unknown_2` | Unknown | M | A kelvin value of the hybrid control; the meaning is not established. |
+| 0x003A | `tri_vai_unknown` | Unknown | M | A kelvin value of the hybrid control; the meaning is not established. |
 | 0x003F | `environmental_yield_total_reset_command` | Unknown | M, V | Candidate interpretation, unconfirmed on the wire: a command that resets the environmental yield total; representation and applicability are not established. |
 | 0x0040 | `ventilation_volatile_organic_compound_sensor_1` | Unknown | M, V | Representation is not established; the relation to `OP=0x02, GG=0x09, RR=0x0005` (same name) is not established. |
 | 0x0041 | `ventilation_volatile_organic_compound_sensor_2` | Unknown | M, V | Representation is not established; the relation to `OP=0x02, GG=0x09, RR=0x0006` (same name) is not established. |
@@ -151,7 +151,7 @@ II context stays separate rather than merging instances or inventing them.
 | 0x007B | `heating_zone_operating_mode` | Unknown | M, V | Representation is not established; the relation to `OP=0x02, GG=0x03, RR=0x0006` (same name) is not established. |
 | 0x007C | `cooling_zone_operating_mode` | Unknown | M, V | Representation is not established; the relation to `OP=0x02, GG=0x03, RR=0x0001` (same name) is not established. |
 | 0x007D | `home_screen_operating_mode` | Unknown | V | Representation is not established. |
-| 0x007E | `unknown_3` | Unknown | M | A float32 value; the meaning is not established. |
+| 0x007E | `fair_mode` | Unknown | M | A float32 value; the meaning is not established. |
 | 0x007F | `screed_drying_time` | Unknown | M, V | Two readings, unresolved (candidate interpretations, unconfirmed on the wire): the elapsed duration of the screed drying in days, or the index of the current day in the screed drying programme; representation is not established. |
 | 0x0082 | `room_temperature_setpoint_at_holiday` | Unknown | M, V | Family split: `RR=0x0082` is attested on the VRC700 family and `RR=0x00F6` on the VRC720 family (candidate, unconfirmed on the wire); whether the two selectors carry the same quantity is not established. Representation of `RR=0x0082` is not established. |
 | 0x0083 | `bank_holiday_start_date` | Unknown | V | Representation is not established. |
@@ -172,7 +172,7 @@ II context stays separate rather than merging instances or inventing them.
 | 0x0096 | `maintenance_active` | Unknown | M | Two readings, unresolved (candidate interpretations, unconfirmed on the wire): 1 means that the device is in maintenance mode, or 1 means that maintenance is due; the semantic plane projects this selector as `state.maintenance_due`. |
 | 0x0097 | `eeprom_update_active` | Unknown | M, P, V | Candidate interpretation, unconfirmed on the wire: 1 means that an EEPROM update is in progress; no value table is documented and the polarity is not established. |
 | 0x0099 | `rtc_crystal_ok` | Unknown | M, P, V | Candidate interpretation, unconfirmed on the wire: 1 means that the real-time clock crystal is OK; the polarity and the representation are not established. |
-| 0x009A | `unknown_5` | Unknown | M | A boolean value; the meaning is not established. |
+| 0x009A | `green_iq_enabled` | Unknown | M | A boolean value; the meaning is not established. |
 | 0x009C | `home_screen_headline` | Unknown | V | Representation is not established. |
 | 0x00A1 | `pv_surplus_enabled` | Unknown | M, P, V | Candidate interpretation, unconfirmed on the wire: 1 means that the use of a photovoltaic surplus is enabled; no value table is documented and the polarity is not established. |
 | 0x00A3 | `ventilation_time_program_active` | Unknown | M, V | Representation is not established; the relation to `OP=0x02, GG=0x09, RR=0x0003` (same name) is not established. |

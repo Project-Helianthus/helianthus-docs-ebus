@@ -92,6 +92,27 @@ def normalized_role(role: str) -> str:
     return role
 
 
+def check_composition(name: str, kind: str, parts: list, roles: dict,
+                      vocabulary: grammar.Vocabulary) -> None:
+    expected_roles = {role: [] for role in ROLES}
+    for term, role in parts:
+        normalized = normalized_role(role)
+        if normalized not in expected_roles:
+            raise ValueError(f'{name}: unknown role')
+        expected_roles[normalized].append(term)
+    if roles != expected_roles:
+        raise ValueError(f'{name}: role record differs from composition')
+    # A vocabulary term with the role `feature` (a function the maker names with
+    # a name of its own) stands in the subject or object slot of a native
+    # register name only. This is separate from the `features` map.
+    for term, role in parts:
+        if 'feature' in vocabulary.roles.get(term, frozenset()):
+            if kind != 'value':
+                raise ValueError(f'{name}: a feature term belongs to a native register name only')
+            if role not in {'subject', 'object'}:
+                raise ValueError(f'{name}: a feature term takes the subject or object slot')
+
+
 def validate_entry(entry: dict, vocabulary: grammar.Vocabulary, features: dict) -> None:
     name = entry['emitted']
     if not grammar.NAME.fullmatch(name):
@@ -124,14 +145,7 @@ def validate_entry(entry: dict, vocabulary: grammar.Vocabulary, features: dict) 
     if kind not in {'value', 'metric'}:
         raise ValueError(f'{name}: unknown kind')
     parts = entry['parts']
-    expected_roles = {role: [] for role in ROLES}
-    for term, role in parts:
-        normalized = normalized_role(role)
-        if normalized not in expected_roles:
-            raise ValueError(f'{name}: unknown role')
-        expected_roles[normalized].append(term)
-    if roles != expected_roles:
-        raise ValueError(f'{name}: role record differs from composition')
+    check_composition(name, kind, parts, roles, vocabulary)
     feature = roles['feature']
     plain_parts = [(term, role) for term, role in parts if role != 'feature']
     if feature:

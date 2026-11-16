@@ -1009,3 +1009,111 @@ def test_circuit_special_function_mode_contract():
     assert entry["open_question"].startswith("Hypothesis:")
     for family, enumeration in expected.items():
         assert f"| {family} | {enumeration} |" in page
+
+
+# Feature role: a function the maker names with a name of its own
+# (architecture/naming.md, "Vocabulary"). The list is closed.
+FEATURE_TERMS = {"green_iq": "green iQ", "fair": "Fair", "tri_vai": "triVAI"}
+
+
+def test_feature_role_is_the_closed_list(vocabulary: names.Vocabulary) -> None:
+    features = {token for token, roles in vocabulary.roles.items() if "feature" in roles}
+    assert features == set(FEATURE_TERMS) == names.FEATURES
+    rows = {row["token"]: row for row in _rows(names.VOCABULARY)}
+    for token, spelling in FEATURE_TERMS.items():
+        assert vocabulary.roles[token] == {"feature"}, token
+        assert rows[token]["definition"].startswith(f"Feature, maker spelling {spelling}: "), token
+
+
+@pytest.mark.parametrize(
+    ("name", "parts"),
+    [
+        ("green_iq_enabled", [("green_iq", "subject"), ("enabled", "predicate")]),
+        ("green_iq_active", [("green_iq", "subject"), ("active", "predicate")]),
+        ("fair_mode", [("fair", "subject"), ("mode", "predicate")]),
+        ("tri_vai_unknown", [("tri_vai", "subject"), ("unknown", "placeholder")]),
+        (
+            "pump_green_iq_active",
+            [("pump", "subject"), ("green_iq", "object"), ("active", "predicate")],
+        ),
+        ("tri_vai_temperature", [("tri_vai", "subject"), ("temperature", "object")]),
+    ],
+)
+def test_feature_term_takes_the_subject_or_object_slot(
+    vocabulary: names.Vocabulary, name: str, parts: list[tuple[str, str]]
+) -> None:
+    assert names.decompose(name, vocabulary) == parts
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "green_iq_pump_active",  # a feature is never an attribute before a subject
+        "green_iq_zone_enabled",  # nor an attribute before an object
+        "pump_active_at_green_iq",  # nor a term of a condition
+        "heating_mode_green_iq",  # nor a word after the predicate
+    ],
+)
+def test_feature_term_outside_the_subject_or_object_slot_fails(
+    vocabulary: names.Vocabulary, name: str
+) -> None:
+    with pytest.raises(names.NameError_):
+        names.decompose(name, vocabulary)
+
+
+@pytest.mark.parametrize(
+    "name", ["acme720_enabled", "acme_controller_mode", "greeniq_enabled", "trivai_unknown"]
+)
+def test_product_model_or_unlisted_feature_name_fails(
+    vocabulary: names.Vocabulary, name: str
+) -> None:
+    with pytest.raises(names.NameError_, match="has no vocabulary entry"):
+        names.decompose(name, vocabulary)
+
+
+@pytest.mark.parametrize(
+    ("old", "new", "message"),
+    [
+        # A product or model name added with the feature role is refused.
+        (
+            "\nzone,subject",
+            "\nacme,feature,Feature: a synthetic controller product.,\nzone,subject",
+            "closed feature list",
+        ),
+        # A feature term never shares its token with another role.
+        ("\ngreen_iq,feature,", "\ngreen_iq,feature|subject,", "feature role stands alone"),
+    ],
+)
+def test_vocabulary_keeps_the_feature_list_closed(
+    tmp_path: Path, old: str, new: str, message: str
+) -> None:
+    text = names.VOCABULARY.read_text(encoding="utf-8")
+    changed = text.replace(old, new, 1)
+    assert changed != text
+    path = tmp_path / "vocabulary.csv"
+    path.write_text(changed, encoding="utf-8")
+    with pytest.raises(ValueError, match=message):
+        names.load_vocabulary(path)
+
+
+def test_feature_rows_of_the_catalog() -> None:
+    expected = {
+        ("0x02", "0x00", "0x003A"): ("tri_vai_unknown", "tri_vai_calculation_result"),
+        ("0x02", "0x00", "0x007E"): ("fair_mode", "fair_mode"),
+        ("0x02", "0x00", "0x009A"): ("green_iq_enabled", "green_iq"),
+    }
+    renamed = {name for name, _ in expected.values()}
+    for fixture in ("b524-op02-register-names.csv", "b524-register-name-correspondence.csv"):
+        # Each name sits at its one (opcode, group, register) identity only.
+        found = {
+            (row["opcode"], row["group"], row["register"]): (row["name"], row["previous_name"])
+            for row in _rows(FIXTURES / fixture)
+            if row["name"] in renamed
+        }
+        assert found == expected, fixture
+    catalog = {
+        (row["opcode"], row["group"], row["register"]): row
+        for row in _rows(FIXTURES / "b524-op02-register-names.csv")
+    }
+    for key in expected:
+        assert catalog[key]["open_question"], key
