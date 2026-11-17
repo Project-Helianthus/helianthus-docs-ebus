@@ -112,7 +112,7 @@ raw evidence. No enum or sentinel meaning is invented here.
 ## Proposed Thermal disposition and loss
 
 The existing `helianthus.pack.thermal` defines
-`thermal.measurement.water_temperature`, unit `unit.celsius`, dimension
+`thermal.measurement.water_temperature`, unit `unit.celsius` (SI unit kelvin, degrees Celsius plus 273.15), dimension
 `thermal.dimension.temperature`, and numeric domain -100..200. This is a
 **Hypothesis** candidate for RR=0x0004 only after its water-temperature meaning
 and unit are qualified. The pack offers system, zone, circuit, DHW and

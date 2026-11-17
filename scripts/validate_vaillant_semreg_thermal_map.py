@@ -73,6 +73,37 @@ REQUIRED_NONCLAIMS = {
     "eebus_output_established", "matter_output_established",
     "hardware_qualification_established",
 }
+NATIVE_TEMPERATURE = {"wire_type": "f32_le", "unit": "degC"}
+MAPPED_TEMPERATURE = {
+    "wire_type": "f32_le",
+    "unit": "degC",
+    "si_unit": "kelvin",
+    "conversion": "degrees Celsius plus 273.15",
+}
+TEMPERATURE_SI = ("SI unit kelvin", "degrees Celsius plus 273.15")
+HUMIDITY_SI = ("SI unit a ratio", "percent divided by 100")
+# path, native-unit token, SI-unit statement, conversion statement
+PAGE_RULES = (
+    ("architecture/boiler-temperature-semreg-mapping.md", "unit.celsius", *TEMPERATURE_SI),
+    ("architecture/circuit-temperature-cutover.md", "unit.celsius", *TEMPERATURE_SI),
+    ("architecture/cylinder-temperature-cutover.md", "unit.celsius", *TEMPERATURE_SI),
+    ("architecture/dhw-measured-temperature-cutover.md", "unit.celsius", *TEMPERATURE_SI),
+    ("architecture/dhw-setpoint-semreg-cutover.md", "unit.celsius", *TEMPERATURE_SI),
+    ("architecture/solar-loop-temperature-cutover.md", "unit.celsius", *TEMPERATURE_SI),
+    ("architecture/zone-room-temperature-cutover.md", "unit.celsius", *TEMPERATURE_SI),
+    ("architecture/zone-setpoint-semreg-cutover.md", "unit.celsius", *TEMPERATURE_SI),
+    ("architecture/outdoor-temperature-semreg-cutover.md", "degC", *TEMPERATURE_SI),
+    ("api/semantic-snapshot-read.md", "unit.celsius", *TEMPERATURE_SI),
+    ("architecture/humidity-semreg-cutover.md", "unit.percent", *HUMIDITY_SI),
+)
+# A line that names a value with no mapped quantity must not state a conversion.
+UNMAPPED_ROWS = (
+    ("architecture/outdoor-temperature-semreg-cutover.md", "state.outdoor_temperature_avg24h", "273.15"),
+    ("architecture/circuit-temperature-cutover.md", "| `0x0007` |", "273.15"),
+    ("architecture/circuit-temperature-cutover.md", "| `0x0020` |", "273.15"),
+    ("architecture/boiler-temperature-semreg-mapping.md", "| Return: `ReturnTemperatureC`", "273.15"),
+    ("architecture/humidity-semreg-cutover.md", "| Configuration threshold |", "percent divided by 100"),
+)
 
 
 class CheckError(ValueError):
@@ -147,6 +178,59 @@ def native_resources(value: object, label: str) -> dict[str, str]:
             raise CheckError(f"{label}: native resource {selector!r} needs a kind")
         resources[selector] = resource["kind"]
     return resources
+
+
+def check_native_value(value: object, *, mapped: bool, label: str) -> None:
+    """A mapped row keeps the native unit and states the SI unit and the conversion."""
+    expected = MAPPED_TEMPERATURE if mapped else NATIVE_TEMPERATURE
+    if not isinstance(value, dict):
+        raise CheckError(f"{label}: native value must be an object")
+    require(value.get("wire_type"), "f32_le", f"{label}: wire_type")
+    require(value.get("unit"), "degC", f"{label}: native unit")
+    if not mapped:
+        require(set(value), set(NATIVE_TEMPERATURE), f"{label}: unmapped native value")
+        return
+    if "si_unit" not in value:
+        raise CheckError(f"{label}: mapped row lacks the SI unit")
+    if "conversion" not in value:
+        raise CheckError(f"{label}: mapped row lacks the conversion")
+    require(value.get("si_unit"), "kelvin", f"{label}: SI unit")
+    require(value.get("conversion"), MAPPED_TEMPERATURE["conversion"], f"{label}: conversion")
+    require(set(value), set(expected), f"{label}: native value")
+
+
+def check_handoff_page(path: str, text: str, native: str, si_unit: str, conversion: str) -> None:
+    if native not in text:
+        raise CheckError(f"{path}: mapped row lacks the native unit")
+    if si_unit not in text:
+        raise CheckError(f"{path}: mapped row lacks the SI unit")
+    if conversion not in text:
+        raise CheckError(f"{path}: mapped row lacks the conversion")
+
+
+def check_unmapped_line(path: str, text: str, marker: str, banned: str) -> None:
+    for line in text.splitlines():
+        if marker in line and banned in line:
+            raise CheckError(f"{path}: {marker} has no mapped quantity and states a conversion")
+
+
+def handoff_text(pages: dict[str, str] | None, path: str) -> str:
+    if pages is None:
+        return Path(path).read_text(encoding="utf-8")
+    text = pages.get(path)
+    if not isinstance(text, str):
+        raise CheckError(f"{path}: hand-off page is missing")
+    return text
+
+
+def check_handoff_pages(pages: dict[str, str] | None = None) -> None:
+    for path, native, si_unit, conversion in PAGE_RULES:
+        check_handoff_page(path, handoff_text(pages, path), native, si_unit, conversion)
+    seen: dict[str, str] = {}
+    for path, marker, banned in UNMAPPED_ROWS:
+        if path not in seen:
+            seen[path] = handoff_text(pages, path)
+        check_unmapped_line(path, seen[path], marker, banned)
 
 
 def check_native_key(row: dict[str, object], selector: dict[str, object], label: str) -> str:
@@ -225,7 +309,7 @@ def validate_row(
     if key not in EXPECTED_ROWS:
         raise CheckError(f"{key}: not a row of the closed three-row contract")
     legacy, _register, resource, kind, fact, disposition, loss = EXPECTED_ROWS[key]
-    require(row["native_value"], {"wire_type": "f32_le", "unit": "degC"}, f"{key}: native_value")
+    check_native_value(row["native_value"], mapped=fact is not None, label=key)
     require(row["legacy_system_field"], legacy, f"{key}: legacy_system_field")
     used = check_attachment(row, key, resources, (resource, kind), candidates, key)
     check_target(row["target"], fact, key)
@@ -337,7 +421,7 @@ def validate_dhw(data: object, *, structural: object = None) -> None:
         raise CheckError(f"hot water: row members must be exactly {sorted(DHW_ROW_KEYS)}")
     key = row["native_key"]
     require(key, DHW_KEY, "hot water: native_key")
-    require(row["native_value"], {"wire_type": "f32_le", "unit": "degC"}, "hot water: native_value")
+    check_native_value(row["native_value"], mapped=True, label="hot water")
     used = check_attachment(
         row, key, resources, (HOT_WATER_GROUP, "dhw_instance"), endpoint_kinds(structural), "hot water",
     )
@@ -366,6 +450,7 @@ def main() -> int:
     try:
         validate_index(load(INDEX))
         validate_dhw(load(DHW))
+        check_handoff_pages()
     except (OSError, json.JSONDecodeError, KeyError, TypeError, CheckError) as error:
         print(f"thermal SemReg mapping contract failed: {error}", file=sys.stderr)
         return 1

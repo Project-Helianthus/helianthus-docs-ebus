@@ -317,10 +317,19 @@ def test_qualification_sidecar_binds_to_the_rows_by_native_key() -> None:
     rejects(index(), qualification=sidecar)
 
 
+MAPPED_TEMPERATURE = {
+    "wire_type": "f32_le",
+    "unit": "degC",
+    "si_unit": "kelvin",
+    "conversion": "degrees Celsius plus 273.15",
+}
+
+
 def test_native_rows_keep_native_units_and_delayed_evaluation_separate() -> None:
-    rows = index()["mappings"]  # type: ignore[index]
-    for row in rows:  # type: ignore[union-attr]
-        assert row["native_value"] == {"wire_type": "f32_le", "unit": "degC"}  # type: ignore[index]
+    rows = rows_by_key(index())
+    for key in (OUTDOOR, FLOW):
+        assert rows[key]["native_value"] == MAPPED_TEMPERATURE
+    assert rows[AVERAGE]["native_value"] == {"wire_type": "f32_le", "unit": "degC"}
 
     lifecycle = index()["lifecycle"]  # type: ignore[index]
     observation = lifecycle["retained_native_observation"]  # type: ignore[index]
@@ -399,6 +408,72 @@ def test_rejects_withheld_and_nonclaim_drift() -> None:
     mutated = deepcopy(index())
     mutated["nonclaims"]["write_route_established"] = True  # type: ignore[index]
     rejects(mutated)
+
+
+@pytest.mark.parametrize("key", (OUTDOOR, FLOW))
+@pytest.mark.parametrize(
+    ("field", "value"),
+    (
+        ("wire_type", "u16"),
+        ("unit", "unit.celsius"),
+        ("unit", "kelvin"),
+        ("si_unit", None),
+        ("si_unit", "unit.celsius"),
+        ("conversion", None),
+        ("conversion", "degrees Celsius"),
+    ),
+)
+def test_mapped_temperature_rejects_each_field(key: str, field: str, value: object) -> None:
+    # wire_type: u16 replaces f32_le.
+    # unit: unit.celsius or kelvin replaces the native unit degC.
+    # si_unit: absent, or unit.celsius stated as the SI unit.
+    # conversion: absent, or degrees Celsius without plus 273.15.
+    mutated = deepcopy(index())
+    native = rows_by_key(mutated)[key]["native_value"]
+    if value is None:
+        del native[field]  # type: ignore[index]
+    else:
+        native[field] = value  # type: ignore[index]
+    rejects(mutated)
+
+
+def test_unmapped_average_keeps_the_native_unit_only() -> None:
+    mutated = deepcopy(index())
+    native = rows_by_key(mutated)[AVERAGE]["native_value"]
+    native["si_unit"] = "kelvin"  # type: ignore[index]
+    native["conversion"] = "degrees Celsius plus 273.15"  # type: ignore[index]
+    rejects(mutated)
+
+
+def handoff_pages() -> dict[str, str]:
+    return {path: (ROOT / path).read_text(encoding="utf-8") for path, *_rest in CHECKER.PAGE_RULES}
+
+
+def test_handoff_pages_state_the_native_unit_and_both_si_statements() -> None:
+    CHECKER.check_handoff_pages(handoff_pages())
+
+
+@pytest.mark.parametrize(("path", "native", "si_unit", "conversion"), CHECKER.PAGE_RULES)
+@pytest.mark.parametrize("field", ("native", "si_unit", "conversion"))
+def test_handoff_page_rejects_a_missing_statement(
+    path: str, native: str, si_unit: str, conversion: str, field: str,
+) -> None:
+    # native: the native-unit token is removed.
+    # si_unit: the SI-unit statement is removed.
+    # conversion: the conversion statement is removed.
+    pages = handoff_pages()
+    token = {"native": native, "si_unit": si_unit, "conversion": conversion}[field]
+    pages[path] = pages[path].replace(token, "omitted")
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.check_handoff_pages(pages)
+
+
+@pytest.mark.parametrize(("path", "marker", "banned"), CHECKER.UNMAPPED_ROWS)
+def test_unmapped_page_row_rejects_a_conversion(path: str, marker: str, banned: str) -> None:
+    pages = handoff_pages()
+    pages[path] = pages[path].replace(marker, marker + " " + banned, 1)
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.check_handoff_pages(pages)
 
 
 def test_rejects_receipt_evaluation_boundary_or_freshness_drift() -> None:

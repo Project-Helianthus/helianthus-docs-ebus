@@ -17,9 +17,10 @@ func TestDHWSetpointRowAgainstTheElementInventory(t *testing.T) {
 	}
 	var fixture struct {
 		Rows []struct {
-			NativeKey string `json:"native_key"`
-			Target    target `json:"target"`
-			Subject   struct {
+			NativeKey   string          `json:"native_key"`
+			NativeValue json.RawMessage `json:"native_value"`
+			Target      target          `json:"target"`
+			Subject     struct {
 				Status string `json:"status"`
 			} `json:"subject"`
 		} `json:"rows"`
@@ -36,6 +37,9 @@ func TestDHWSetpointRowAgainstTheElementInventory(t *testing.T) {
 		t.Fatal("expected one native hot-water row")
 	}
 	row := fixture.Rows[0]
+	if err := checkMappedTemperature(row.NativeValue); err != nil {
+		t.Fatalf("%s: %v", row.NativeKey, err)
+	}
 	catalog := loadInventory(t)
 	if err := checkTarget(catalog, row.Target); err != nil {
 		t.Fatalf("%s: %v", row.NativeKey, err)
@@ -68,4 +72,23 @@ func TestDHWSetpointRowAgainstTheElementInventory(t *testing.T) {
 			t.Fatalf("%s: withheld reason differs from the inventory reason %q", c.Case, entry.Reason)
 		}
 	}
+}
+
+func TestDHWMappedTemperatureRejectsEachField(t *testing.T) {
+	data, err := os.ReadFile("../../architecture/fixtures/dhw-setpoint-semreg-cutover-v1.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var fixture struct {
+		Rows []struct {
+			NativeValue json.RawMessage `json:"native_value"`
+		} `json:"rows"`
+	}
+	if err := json.Unmarshal(data, &fixture); err != nil {
+		t.Fatal(err)
+	}
+	if len(fixture.Rows) != 1 {
+		t.Fatal("expected one native hot-water row")
+	}
+	rejectEachMappedTemperatureField(t, fixture.Rows[0].NativeValue)
 }

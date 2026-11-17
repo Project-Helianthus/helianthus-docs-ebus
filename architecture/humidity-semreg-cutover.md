@@ -142,7 +142,8 @@ not disguised as an unchanged selected source.
 `thermal.measurement.humidity_relative` is an existing quantity in `unit.percent`
 with field dimension `thermal.dimension.ratio`, inclusive bounds 0 and 100
 (`bound("0",0)` and `bound("1",2)`). Use percent magnitude: 50 percent remains
-50, not 0.5. These are pack validation bounds, not device qualification.
+50, not 0.5. The native unit stays `unit.percent`. SI unit a ratio, percent divided by 100.
+These are pack validation bounds, not device qualification.
 
 | Native role | Native resource; service placement | Cutover disposition against the supplied pack evidence |
 |---|---|---|

@@ -28,6 +28,7 @@ CLAUSES = (
     "Bounds with no canonical definition are described as contextual losses, not fabricated requested items.",
     "a projection evaluation never changes receipt time.",
     "No consumer silently converts a missing target to zero or a limit to a target.",
+    "SI unit kelvin, degrees Celsius plus 273.15.",
 )
 
 
@@ -69,7 +70,12 @@ def test_dhw_row_is_keyed_by_native_identity_and_names_its_native_resource():
     [row] = data["rows"]
     assert row["native_key"] == NATIVE_KEY
     assert row["native_resource"] == HOT_WATER_GROUP
-    assert row["native_value"] == {"wire_type": "f32_le", "unit": "degC"}
+    assert row["native_value"] == {
+        "wire_type": "f32_le",
+        "unit": "degC",
+        "si_unit": "kelvin",
+        "conversion": "degrees Celsius plus 273.15",
+    }
     assert row["relation_candidates"]["refs"] == []
     assert row["relation_candidates"]["absence"]
     assert row["target"] == {
@@ -190,10 +196,29 @@ def test_dhw_rejects_projection_and_subject_drift(mutation):
     rejects(data)
 
 
-@pytest.mark.parametrize("unit", ("unit.celsius", "unit.kelvin"))
-def test_dhw_keeps_the_native_unit(unit):
+@pytest.mark.parametrize(
+    ("field", "value"),
+    (
+        ("wire_type", "u16"),
+        ("unit", "unit.celsius"),
+        ("unit", "kelvin"),
+        ("si_unit", None),
+        ("si_unit", "unit.celsius"),
+        ("conversion", None),
+        ("conversion", "degrees Celsius"),
+    ),
+)
+def test_dhw_mapped_row_states_si_unit_and_conversion(field, value):
+    # wire_type: u16 replaces f32_le.
+    # unit: unit.celsius or kelvin replaces the native unit degC.
+    # si_unit: absent, or unit.celsius stated as the SI unit.
+    # conversion: absent, or degrees Celsius without plus 273.15.
     data = fixture()
-    data["rows"][0]["native_value"]["unit"] = unit
+    native = data["rows"][0]["native_value"]
+    if value is None:
+        del native[field]
+    else:
+        native[field] = value
     rejects(data)
 
 

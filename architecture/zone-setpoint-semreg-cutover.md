@@ -116,7 +116,7 @@ families' comfort selectors cannot replace the zone holiday/manual rows.
 ## Proposed FactKey and service decision
 
 The existing pack defines `thermal.setpoint.temperature` as a quantity in
-`unit.celsius`, dimension `thermal.dimension.temperature`, with numeric bounds
+`unit.celsius` (SI unit kelvin, degrees Celsius plus 273.15), dimension `thermal.dimension.temperature`, with numeric bounds
 -50..150. It defines `thermal.service.zone` with service FactKey dimension
 `thermal.dimension.zone`, plus `thermal.capability.read.zone`.
 The service zone identity and the temperature field dimension are distinct.

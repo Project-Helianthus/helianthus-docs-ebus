@@ -32,9 +32,10 @@ type mappingIndex struct {
 }
 
 type mapping struct {
-	NativeKey  string  `json:"native_key"`
-	SemregFact *string `json:"semreg_fact"`
-	Target     *target `json:"target"`
+	NativeKey   string          `json:"native_key"`
+	NativeValue json.RawMessage `json:"native_value"`
+	SemregFact  *string         `json:"semreg_fact"`
+	Target      *target         `json:"target"`
 }
 
 // target is a row's copy of the element inventory entry of its target definition.
@@ -188,6 +189,122 @@ func TestDelayedEvaluationContextPreservesReceiptAndUsesElapsedMonotonic(t *test
 	}
 	if elapsed != "5000000000" {
 		t.Fatalf("elapsed monotonic = %s, want 5000000000", elapsed)
+	}
+}
+
+// checkMappedTemperature requires every field of a mapped temperature value.
+// wire_type stays f32_le, unit stays degC, si_unit is kelvin, and conversion
+// is degrees Celsius plus 273.15. A missing si_unit or conversion fails.
+func checkMappedTemperature(raw json.RawMessage) error {
+	if len(raw) == 0 || raw[0] != '{' {
+		return fmt.Errorf("native value must be an object")
+	}
+	var fields map[string]json.RawMessage
+	if err := json.Unmarshal(raw, &fields); err != nil {
+		return err
+	}
+	if _, ok := fields["si_unit"]; !ok {
+		return fmt.Errorf("mapped row lacks the SI unit")
+	}
+	if _, ok := fields["conversion"]; !ok {
+		return fmt.Errorf("mapped row lacks the conversion")
+	}
+	want := map[string]string{
+		"wire_type":  "f32_le",
+		"unit":       "degC",
+		"si_unit":    "kelvin",
+		"conversion": "degrees Celsius plus 273.15",
+	}
+	for name, value := range want {
+		var got string
+		if json.Unmarshal(fields[name], &got) != nil || got != value {
+			return fmt.Errorf("%s = %s, want %s", name, fields[name], value)
+		}
+	}
+	if len(fields) != len(want) {
+		return fmt.Errorf("native value members = %d, want %d", len(fields), len(want))
+	}
+	return nil
+}
+
+func checkUnmappedTemperature(raw json.RawMessage) error {
+	if len(raw) == 0 || raw[0] != '{' {
+		return fmt.Errorf("native value must be an object")
+	}
+	var fields map[string]json.RawMessage
+	if err := json.Unmarshal(raw, &fields); err != nil {
+		return err
+	}
+	if _, ok := fields["si_unit"]; ok {
+		return fmt.Errorf("unmapped row states an SI unit")
+	}
+	if _, ok := fields["conversion"]; ok {
+		return fmt.Errorf("unmapped row states a conversion")
+	}
+	var wireType, unit string
+	if json.Unmarshal(fields["wire_type"], &wireType) != nil || wireType != "f32_le" ||
+		json.Unmarshal(fields["unit"], &unit) != nil || unit != "degC" || len(fields) != 2 {
+		return fmt.Errorf("unmapped native value = %s", raw)
+	}
+	return nil
+}
+
+// rejectEachMappedTemperatureField varies wire_type, unit, si_unit and conversion.
+func rejectEachMappedTemperatureField(t *testing.T, raw json.RawMessage) {
+	t.Helper()
+	if err := checkMappedTemperature(raw); err != nil {
+		t.Fatal(err)
+	}
+	var current map[string]any
+	if err := json.Unmarshal(raw, &current); err != nil {
+		t.Fatal(err)
+	}
+	cases := []struct {
+		name   string
+		mutate func(map[string]any)
+	}{
+		{"wire_type u16", func(m map[string]any) { m["wire_type"] = "u16" }},
+		{"unit unit.celsius", func(m map[string]any) { m["unit"] = "unit.celsius" }},
+		{"unit kelvin", func(m map[string]any) { m["unit"] = "kelvin" }},
+		{"si_unit removed", func(m map[string]any) { delete(m, "si_unit") }},
+		{"si_unit unit.celsius", func(m map[string]any) { m["si_unit"] = "unit.celsius" }},
+		{"conversion removed", func(m map[string]any) { delete(m, "conversion") }},
+		{"conversion degrees Celsius", func(m map[string]any) { m["conversion"] = "degrees Celsius" }},
+	}
+	for _, tc := range cases {
+		mutated := map[string]any{}
+		for key, value := range current {
+			mutated[key] = value
+		}
+		tc.mutate(mutated)
+		encoded, err := json.Marshal(mutated)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := checkMappedTemperature(encoded); err == nil {
+			t.Errorf("%s drift is accepted", tc.name)
+		}
+	}
+}
+
+func TestMappedRowsStateSIUnitAndConversion(t *testing.T) {
+	index := loadIndex(t)
+	mapped := 0
+	for _, row := range index.Mappings {
+		if row.SemregFact == nil {
+			if err := checkUnmappedTemperature(row.NativeValue); err != nil {
+				t.Fatalf("%s: %v", row.NativeKey, err)
+			}
+			continue
+		}
+		mapped++
+		if err := checkMappedTemperature(row.NativeValue); err != nil {
+			t.Fatalf("%s: %v", row.NativeKey, err)
+		}
+		rejectEachMappedTemperatureField(t, row.NativeValue)
+	}
+	if mapped != 2 {
+		t.Fatalf("mapped rows = %d, want 2", mapped)
 	}
 }
 

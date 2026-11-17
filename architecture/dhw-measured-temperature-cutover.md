@@ -102,7 +102,7 @@ the new projection rather than changing the existing parser in this ticket.
 
 For a qualified little-endian f32 profile, decode exactly four value bytes
 after validated framing, preserve finite exact zero, and report °C as
-`unit.celsius`. Other byte orders require independent native qualification;
+`unit.celsius`. SI unit kelvin, degrees Celsius plus 273.15. Other byte orders require independent native qualification;
 do not try both and select the plausible number. Empty, short, over-length,
 non-finite and unsupported-profile observations cannot yield a new fact.
 This exact-width rule is proposed: the current helper accepts at least four
@@ -114,7 +114,7 @@ Candidate binding, **Hypothesis**, within existing `helianthus.pack.thermal`:
 | Component | Existing vocabulary / proposed use |
 | --- | --- |
 | Field | `thermal.measurement.water_temperature` |
-| Quantity unit and dimension | `unit.celsius`, `thermal.dimension.temperature` |
+| Quantity unit and dimension | `unit.celsius` (SI unit kelvin, degrees Celsius plus 273.15), `thermal.dimension.temperature` |
 | Service and service key dimension | `thermal.service.dhw`, `thermal.dimension.dhw` |
 | Read capability | Existing `thermal.capability.read.dhw`, subject to later binding qualification |
 | Concrete fact/service identity | **Withheld** until the qualified controller/DHW binding fixes the exact fact-key dimensions and values and proves collision-free identity. No new dimension value is invented here. |

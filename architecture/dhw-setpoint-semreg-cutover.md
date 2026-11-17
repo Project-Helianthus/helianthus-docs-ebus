@@ -120,6 +120,7 @@ source is the following. It is not the common model's placement, which the
   identity; read capability `thermal.capability.read.dhw` only when admitted.
   Values are quantities in `unit.celsius`, using exact decimal conversion of
   the decoded native value without silent rounding or clamping.
+  SI unit kelvin, degrees Celsius plus 273.15.
 
 This form carries a role and a resource in dimension text, which the common
 model does not accept.

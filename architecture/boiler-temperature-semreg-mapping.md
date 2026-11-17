@@ -102,7 +102,7 @@ state members `flow_temperature_c` / `return_temperature_c`, and GraphQL
 
 The Thermal pack source is SemReg `semreg/v1/packs/thermal/definitions.go`
 and `validator.go`: `thermal.measurement.water_temperature` is a quantity in
-`unit.celsius`, with exactly one typed-text FactKey dimension
+`unit.celsius` (SI unit kelvin, degrees Celsius plus 273.15), with exactly one typed-text FactKey dimension
 `thermal.dimension.temperature` and inclusive bounds `-100..200 °C`.
 Out-of-bounds input is `bounds_exceeded`; bounds are semantic validation, not
 a claim about a boiler's physical operating range. Asset, service, source,
