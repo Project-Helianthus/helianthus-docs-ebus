@@ -453,17 +453,39 @@ def test_handoff_pages_state_the_native_unit_and_both_si_statements() -> None:
     CHECKER.check_handoff_pages(handoff_pages())
 
 
-@pytest.mark.parametrize(("path", "native", "si_unit", "conversion"), CHECKER.PAGE_RULES)
+def _without_row_token(text: str, marker: str, token: str) -> str:
+    """Drop one statement from the marked row and keep it somewhere else on the page."""
+    lines = text.splitlines()
+    found = False
+    for index, line in enumerate(lines):
+        if marker not in line:
+            continue
+        if token not in line:
+            raise AssertionError(f"row {marker!r} has no {token!r}")
+        lines[index] = line.replace(token, "omitted")
+        found = True
+        break
+    if not found:
+        raise AssertionError(marker)
+    body = "\n".join(lines)
+    if token not in body:
+        body += f"\n\nunrelated mention of {token}\n"
+    return body
+
+
+@pytest.mark.parametrize(("path", "marker", "native", "si_unit", "conversion"), CHECKER.PAGE_RULES)
 @pytest.mark.parametrize("field", ("native", "si_unit", "conversion"))
 def test_handoff_page_rejects_a_missing_statement(
-    path: str, native: str, si_unit: str, conversion: str, field: str,
+    path: str, marker: str, native: str, si_unit: str, conversion: str, field: str,
 ) -> None:
-    # native: the native-unit token is removed.
-    # si_unit: the SI-unit statement is removed.
-    # conversion: the conversion statement is removed.
+    # native: the native-unit token is removed from this mapped row only.
+    # si_unit: the SI-unit statement is removed from this mapped row only.
+    # conversion: the conversion statement is removed from this mapped row only.
+    # Another occurrence remains on the page, so a whole-page search would pass.
     pages = handoff_pages()
     token = {"native": native, "si_unit": si_unit, "conversion": conversion}[field]
-    pages[path] = pages[path].replace(token, "omitted")
+    pages[path] = _without_row_token(pages[path], marker, token)
+    assert token in pages[path]
     with pytest.raises(CHECKER.CheckError):
         CHECKER.check_handoff_pages(pages)
 

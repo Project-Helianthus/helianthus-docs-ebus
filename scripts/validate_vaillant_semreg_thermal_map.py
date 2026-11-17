@@ -82,22 +82,51 @@ MAPPED_TEMPERATURE = {
 }
 TEMPERATURE_SI = ("SI unit kelvin", "degrees Celsius plus 273.15")
 HUMIDITY_SI = ("SI unit a ratio", "percent divided by 100")
-# path, native-unit token, SI-unit statement, conversion statement
+# path, mapped-row marker, native-unit token, SI-unit statement, conversion statement.
+# The marker matches one mapped row. All three statements must sit on that row.
 PAGE_RULES = (
-    ("architecture/boiler-temperature-semreg-mapping.md", "unit.celsius", *TEMPERATURE_SI),
-    ("architecture/circuit-temperature-cutover.md", "unit.celsius", *TEMPERATURE_SI),
-    ("architecture/cylinder-temperature-cutover.md", "unit.celsius", *TEMPERATURE_SI),
-    ("architecture/dhw-measured-temperature-cutover.md", "unit.celsius", *TEMPERATURE_SI),
-    ("architecture/dhw-setpoint-semreg-cutover.md", "unit.celsius", *TEMPERATURE_SI),
-    ("architecture/solar-loop-temperature-cutover.md", "unit.celsius", *TEMPERATURE_SI),
-    ("architecture/zone-room-temperature-cutover.md", "unit.celsius", *TEMPERATURE_SI),
-    ("architecture/zone-setpoint-semreg-cutover.md", "unit.celsius", *TEMPERATURE_SI),
-    ("architecture/outdoor-temperature-semreg-cutover.md", "degC", *TEMPERATURE_SI),
-    ("api/semantic-snapshot-read.md", "unit.celsius", *TEMPERATURE_SI),
-    ("architecture/humidity-semreg-cutover.md", "unit.percent", *HUMIDITY_SI),
+    ("architecture/b524-semantic-mapping.md",
+     "`PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x0073`", "degC", *TEMPERATURE_SI),
+    ("architecture/b524-semantic-mapping.md",
+     "`PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x004B`", "degC", *TEMPERATURE_SI),
+    ("architecture/boiler-temperature-semreg-mapping.md",
+     "| Flow: `FlowTemperatureC`", "unit.celsius", *TEMPERATURE_SI),
+    ("architecture/circuit-temperature-cutover.md",
+     "| `0x0008` |", "unit.celsius", *TEMPERATURE_SI),
+    ("architecture/cylinder-temperature-cutover.md",
+     "| `0x0004` |", "unit.celsius", *TEMPERATURE_SI),
+    ("architecture/dhw-measured-temperature-cutover.md",
+     "| `(0x02, 0x01, 0x00, 0x0005)` |", "unit.celsius", *TEMPERATURE_SI),
+    ("architecture/dhw-measured-temperature-cutover.md",
+     "| Quantity unit and dimension |", "unit.celsius", *TEMPERATURE_SI),
+    ("architecture/dhw-setpoint-semreg-cutover.md",
+     "| Controller requested DHW target |", "unit.celsius", *TEMPERATURE_SI),
+    ("architecture/humidity-semreg-cutover.md",
+     "| Controller-zone measurement |", "unit.percent", *HUMIDITY_SI),
+    ("architecture/humidity-semreg-cutover.md",
+     "| Remote-room measurement |", "unit.percent", *HUMIDITY_SI),
+    ("architecture/humidity-semreg-cutover.md",
+     "| Circuit measurement |", "unit.percent", *HUMIDITY_SI),
+    ("architecture/outdoor-temperature-semreg-cutover.md",
+     "| Instantaneous `state.outdoor_temperature` |", "degC", *TEMPERATURE_SI),
+    ("architecture/solar-loop-temperature-cutover.md",
+     "T defines `thermal.measurement.water_temperature` with", "unit.celsius", *TEMPERATURE_SI),
+    ("architecture/zone-room-temperature-cutover.md",
+     "| Current room temperature |", "unit.celsius", *TEMPERATURE_SI),
+    ("architecture/zone-room-temperature-cutover.md",
+     "| `helianthus.pack.thermal` / `thermal.measurement.air_temperature` /",
+     "unit.celsius", *TEMPERATURE_SI),
+    ("architecture/zone-setpoint-semreg-cutover.md",
+     "| Heating manual |", "unit.celsius", *TEMPERATURE_SI),
+    ("architecture/zone-setpoint-semreg-cutover.md",
+     "| Heating computed effective |", "unit.celsius", *TEMPERATURE_SI),
+    ("api/semantic-snapshot-read.md",
+     "| Thermal/HVAC / `helianthus.pack.thermal` |", "unit.celsius", *TEMPERATURE_SI),
 )
 # A line that names a value with no mapped quantity must not state a conversion.
 UNMAPPED_ROWS = (
+    ("architecture/b524-semantic-mapping.md",
+     "`PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x0095`", "273.15"),
     ("architecture/outdoor-temperature-semreg-cutover.md", "state.outdoor_temperature_avg24h", "273.15"),
     ("architecture/circuit-temperature-cutover.md", "| `0x0007` |", "273.15"),
     ("architecture/circuit-temperature-cutover.md", "| `0x0020` |", "273.15"),
@@ -199,12 +228,24 @@ def check_native_value(value: object, *, mapped: bool, label: str) -> None:
     require(set(value), set(expected), f"{label}: native value")
 
 
-def check_handoff_page(path: str, text: str, native: str, si_unit: str, conversion: str) -> None:
-    if native not in text:
+def mapped_row(path: str, text: str, marker: str) -> str:
+    """The one mapped row the marker names."""
+    rows = [line for line in text.splitlines() if marker in line]
+    if len(rows) != 1:
+        raise CheckError(f"{path}: mapped row {marker!r} appears {len(rows)} times")
+    return rows[0]
+
+
+def check_handoff_page(
+    path: str, text: str, marker: str, native: str, si_unit: str, conversion: str,
+) -> None:
+    """The native unit, the SI unit and the conversion sit on that mapped row."""
+    row = mapped_row(path, text, marker)
+    if native not in row:
         raise CheckError(f"{path}: mapped row lacks the native unit")
-    if si_unit not in text:
+    if si_unit not in row:
         raise CheckError(f"{path}: mapped row lacks the SI unit")
-    if conversion not in text:
+    if conversion not in row:
         raise CheckError(f"{path}: mapped row lacks the conversion")
 
 
@@ -224,9 +265,11 @@ def handoff_text(pages: dict[str, str] | None, path: str) -> str:
 
 
 def check_handoff_pages(pages: dict[str, str] | None = None) -> None:
-    for path, native, si_unit, conversion in PAGE_RULES:
-        check_handoff_page(path, handoff_text(pages, path), native, si_unit, conversion)
     seen: dict[str, str] = {}
+    for path, marker, native, si_unit, conversion in PAGE_RULES:
+        if path not in seen:
+            seen[path] = handoff_text(pages, path)
+        check_handoff_page(path, seen[path], marker, native, si_unit, conversion)
     for path, marker, banned in UNMAPPED_ROWS:
         if path not in seen:
             seen[path] = handoff_text(pages, path)

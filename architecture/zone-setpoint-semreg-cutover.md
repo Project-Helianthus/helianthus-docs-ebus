@@ -75,8 +75,8 @@ reference. OP=0x06 and other groups/instances never substitute implicitly.
 
 | Role | RR and catalog interpretation | Current legacy behavior | Proposed disposition |
 | --- | --- | --- | --- |
-| Heating manual | 0x0022, f32, °C catalog label | Primary `TargetTempC`; catalog gives 15..30 step 0.5 per ebusd | Read-only candidate only after exact role/binding qualification and representability decision below |
-| Heating computed effective | 0x0014, f32, °C, stable RO computed output | Fallback `TargetTempC`, despite constant name | Separate effective candidate; never relabel manual or advertise `set_temperature` |
+| Heating manual | 0x0022, f32, °C catalog label, `unit.celsius` (SI unit kelvin, degrees Celsius plus 273.15) | Primary `TargetTempC`; catalog gives 15..30 step 0.5 per ebusd | Read-only candidate only after exact role/binding qualification and representability decision below |
+| Heating computed effective | 0x0014, f32, °C, `unit.celsius` (SI unit kelvin, degrees Celsius plus 273.15), stable RO computed output | Fallback `TargetTempC`, despite constant name | Separate effective candidate; never relabel manual or advertise `set_temperature` |
 | Cooling manual | 0x0023, f32, °C; cooling applicability | Not read by the reviewed function | Withheld until independently qualified and role representable; 0x0002 cooling setpoint is another selector, not an alias |
 | Cooling computed effective | 0x0015, f32, °C, stable RO; cooling applicability | Not read by the reviewed function | Separate read-only candidate, withheld pending qualification/representation |
 | Quick-veto override | 0x0008, f32; unit unresolved | Separate `QuickVetoTempC`, with duration 0x0026 and end time/date 0x001E/0x0024 | Withheld: unit, applicability/expiry semantics and role representation need owner evidence |

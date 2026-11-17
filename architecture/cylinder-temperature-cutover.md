@@ -49,7 +49,7 @@ license to admit all instances. Do not substitute OP=0x06.
 
 | RR | Catalog name / candidate decoding | Current legacy consumer | Proposed disposition |
 | --- | --- | --- | --- |
-| `0x0004` | `solar_cylinder_bottom_temperature`; `f32`, candidate °C, historical hint -10..110 | `cylinder_temperature` → `cylinders[].temperatureC`; `[].index` derives from II | Only presence/measurement candidate in this slice; qualification and live per-instance evidence required |
+| `0x0004` | `solar_cylinder_bottom_temperature`; `f32`, candidate °C, historical hint -10..110 | `cylinder_temperature` → `cylinders[].temperatureC`; `[].index` derives from II | Only presence/measurement candidate in this slice, `unit.celsius` (SI unit kelvin, degrees Celsius plus 273.15); qualification and live per-instance evidence required |
 | `0x0001` | `solar_cylinder_temperature_limit_maximum`; `f32`, candidate °C, hint 0..99 | `cylinders[].maxSetpointC` | Context only; cannot create an instance; no Thermal setpoint or write projection |
 | `0x0002` | `solar_cylinder_start_temperature_difference_limit`; `f32`, candidate K, hint 2..25 | `cylinders[].chargeHysteresisC` | Context only; retain native identity and unit uncertainty, do not silently reinterpret as Celsius |
 | `0x0003` | `solar_cylinder_stop_temperature_difference_limit`; `f32`, candidate K, hint 1..20 | `cylinders[].chargeOffsetC` | Context only; legacy name differs from catalog meaning; no new semantic mapping |
