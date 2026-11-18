@@ -46,19 +46,46 @@ XR rows below reference these symbols explicitly. Implementations MAY expose the
 
 **Falsifiable:** Mock adapter that accepts TCP but never responds to INIT. Reconnect must fail within the configured deadline.
 
+## Session extension reservation
+
+Assigned native ENH command IDs stay INIT, SEND, START and INFO on the host side and RESETTED, RECEIVED, STARTED, INFO, FAILED, ERROR_EBUS and ERROR_HOST on the adapter side. This section reserves unused nibbles for a session extension. It is not an additional native assignment, and this page does not implement the mux.
+
+Response timing is Unknown.
+
+```text
+Session to mux:
+  0x4 = TARGET
+  0x5 = UNTARGET
+  0x6 = BEGIN
+  0x7 = STAGE
+  0x8 = COMMIT
+
+Mux to session:
+  0x4 = TARGETED
+  0x5 = UNTARGETED
+  0x6 = SLOT
+  0x7 = SLOT_END
+  0xD = TARGET_ERROR
+```
+
+Each reserved frame uses the encoded two-byte form. The short form is not used.
+A session that never sends TARGET sees an unchanged ENH stream.
+A TARGET sent to an adapter that has no extension receives the existing unknown-command error.
+An unreserved nibble is still an explicit protocol error.
+
 ## ENH Command Handling
 
 ### XR_ENH_UnknownCommand_ExplicitError_AdapterToHost
 
-**Invariant:** An encoded ENH response with an undefined command nibble (carried in `byte1` bits 5..2; defined response nibbles are 0x0-0x3, 0xA-0xC) is reported by the host as an explicit protocol error, not as a timeout or collision.
+**Invariant:** An encoded ENH response with an unreserved command nibble (carried in `byte1` bits 5..2) is reported by the host as an explicit protocol error, not as a timeout or collision. Assigned adapter replies remain 0x0-0x3 and 0xA-0xC. A mux-to-session nibble from an adapter that has no extension, including TARGETED, is that same existing error.
 
-**Falsifiable:** Inject `0xD0 0x80` (byte1=`11_0100_00`, byte2=`10_000000`, command nibble 0x4, data=0x00) into the adapter→host stream. Host MUST emit a transport error (e.g., `ErrUnknownENHCommand`), not a timeout.
+**Falsifiable:** Inject `0xD0 0x80` (byte1=`11_0100_00`, byte2=`10_000000`, command nibble 0x4, data=0x00) into the adapter→host stream of an adapter that has no extension. Host MUST emit a transport error (e.g., `ErrUnknownENHCommand`), not a timeout. Inject unreserved nibble 0x9 as `0xE4 0x80` on that stream. Host MUST emit the same kind of explicit protocol error.
 
 ### XR_ENH_UnknownCommand_ExplicitError_HostToAdapter
 
-**Invariant:** An encoded ENH request with an undefined command nibble (defined request nibbles are 0x0-0x3) MUST be rejected by the adapter with an explicit error signal, not silently dropped.
+**Invariant:** An encoded ENH request with an unreserved command nibble MUST be rejected by the adapter with an explicit error signal, not silently dropped. Assigned host commands remain 0x0-0x3. A TARGET sent straight to an adapter that has no extension receives that existing error.
 
-**Falsifiable:** Send encoded `0xD0 0x80` to the adapter as a request. Adapter MUST emit `ERROR_HOST` or `FAILED` (see [enh.md §Unknown Command Contract](../protocols/enh.md#unknown-command-contract) for variant handling); the host MUST NOT see a generic timeout.
+**Falsifiable:** Send encoded `0xD0 0x80` (command nibble 0x4) to an adapter that has no extension. Adapter MUST emit `ERROR_HOST` or `FAILED` (see [enh.md §Unknown Command Contract](../protocols/enh.md#unknown-command-contract) for variant handling); the host MUST NOT see a generic timeout. Send unreserved nibble 0x9 as `0xE4 0x80` to that adapter. The adapter MUST emit the same explicit error signal.
 
 ### XR_ENH_ParserReset_AfterReadTimeout
 
@@ -157,6 +184,6 @@ a lower-address client bypassing an older higher-address contender.
 | XR_UDP_LeaseTTL_CapRefresh_Bounded | [udp-plain.md §Ownership](../protocols/udp-plain.md#ownership-lease-ttl) | — | — | — | ✅ |
 
 **Notes:**
-- `XR_ENH_UnknownCommand_ExplicitError_AdapterToHost` was split from a single bidirectional invariant because proxy currently covers only the host→adapter direction. ebusgo's `transport_recovery` subcase expects silent discard on the adapter→host path; this is marked `⚠️ partial` until the live read path returns explicit errors.
+- `XR_ENH_UnknownCommand_ExplicitError_AdapterToHost` was split from a single bidirectional invariant because proxy currently covers only the host→adapter direction. ebusgo's `transport_recovery` subcase expects silent discard on the adapter→host path; this is marked `⚠️ partial` until the live read path returns explicit errors. Nibble 0x4 in that falsifiable step is the reserved TARGETED encoding sent to an adapter that has no extension, which still takes the existing error. An unreserved nibble takes the same error.
 - `⚠️ alias` entries indicate that the implementation has an equivalent test (same protocol behavior) under a local ID. Canonical same-name aliases are pending in those repos.
 - `N/A` entries are documented exemptions (e.g., VRC Explorer has no INFO cache, so the cache-invalidation invariant does not apply).
