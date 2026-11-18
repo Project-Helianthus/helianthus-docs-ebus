@@ -48,7 +48,8 @@ descriptor does not start.
 
 Health is the existing driver-manager snapshot: observed state, reason and
 the safety-quarantine flag. That snapshot remains the health read on the
-existing MCP and GraphQL surfaces. There is no second health API.
+existing MCP driver object. There is no lifecycle GraphQL API and no second
+health API.
 
 ## Boundary
 

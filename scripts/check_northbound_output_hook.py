@@ -25,6 +25,21 @@ REQUIREMENTS = json.loads(
 )
 
 
+def graphql_claims(sections: dict[str, list[str]]) -> list[str]:
+    """The lifecycle contract has no lifecycle GraphQL API.
+
+    Only a pinned paragraph may name GraphQL, so no added text can claim a
+    GraphQL health read.
+    """
+    pinned = {normalize(block) for blocks in REQUIREMENTS.values() for block in blocks}
+    return [
+        f"GraphQL health claim: {block[:80]}"
+        for blocks in sections.values()
+        for block in blocks
+        if "graphql" in block.lower() and block not in pinned
+    ]
+
+
 def validate(text: str) -> list[str]:
     sections: dict[str, list[str]] = {}
     current = None
@@ -37,6 +52,7 @@ def validate(text: str) -> list[str]:
             sections.setdefault(current, [])
         elif current is not None:
             sections[current].append(normalize(content))
+    errors.extend(graphql_claims(sections))
     for heading, blocks in REQUIREMENTS.items():
         present = sections.get(heading, [])
         for block in blocks:

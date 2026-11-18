@@ -11,7 +11,7 @@
   ],
   "Lifecycle and health": [
     "Start and stop are the existing driver-manager lifecycle. A disabled\ndescriptor does not start.",
-    "Health is the existing driver-manager snapshot: observed state, reason and\nthe safety-quarantine flag. That snapshot remains the health read on the\nexisting MCP and GraphQL surfaces. There is no second health API."
+    "Health is the existing driver-manager snapshot: observed state, reason and\nthe safety-quarantine flag. That snapshot remains the health read on the\nexisting MCP driver object. There is no lifecycle GraphQL API and no second\nhealth API."
   ],
   "Boundary": [
     "This page does not restate the lens rules and does not choose which devices\nare published."

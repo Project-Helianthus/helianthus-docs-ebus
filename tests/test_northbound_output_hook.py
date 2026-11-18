@@ -20,6 +20,7 @@ must reject that page. Fields and the wording change each case catches:
 - health reason: dropping reason from the snapshot
 - health flag: dropping the safety-quarantine flag
 - health surface: adding a second health API
+- health GraphQL: naming a lifecycle GraphQL read for the snapshot
 - lens: restating the lens rules
 - device choice: choosing which devices are published
 - provenance label: dropping Proven, naming a Hypothesis, or emptying Unknown
@@ -62,7 +63,9 @@ MUTATIONS = (
     ("health observed state", "observed state, reason and", "reason and"),
     ("health reason", "observed state, reason and", "observed state and"),
     ("health flag", "the safety-quarantine flag", "a fresh counter"),
-    ("health surface", "There is no second health API.", "A second health API reports liveness."),
+    ("health surface", "and no second\nhealth API.", "and a second\nhealth API reports liveness."),
+    ("health GraphQL", "There is no lifecycle GraphQL API", "GraphQL also reads that snapshot"),
+    ("health MCP read", "existing MCP driver object", "existing MCP and GraphQL surfaces"),
     ("lens", "does not restate the lens rules", "restates the lens rules"),
     ("device choice", "does not choose which devices\nare published", "chooses which devices\nare published"),
     ("provenance Proven", "**Proven** means a fact", "**Proven** names nothing"),
@@ -96,6 +99,15 @@ class NorthboundOutputHookTest(unittest.TestCase):
                 self.assertIn(before, TEXT)
                 self.assertEqual(TEXT.count(before), 1)
                 self.assertTrue(checker.validate(TEXT.replace(before, after)))
+
+    def test_added_graphql_health_claim(self) -> None:
+        for claim in (
+            "That snapshot is also the health read on GraphQL.",
+            "```text\nignored\n```\n\nA GraphQL query returns the observed state.",
+        ):
+            with self.subTest(claim=claim[:32]):
+                errors = checker.validate(TEXT + "\n" + claim + "\n")
+                self.assertTrue(any(e.startswith("GraphQL health claim") for e in errors))
 
     def test_rewrapping_stays_valid(self) -> None:
         changed = TEXT
