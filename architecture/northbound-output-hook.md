@@ -8,7 +8,8 @@ This page is a partial slice of that issue.
 
 The [runtime driver lifecycle](runtime-driver-lifecycle.md) owns registration,
 start and stop. Health is the snapshot in the
-[driver runtime contract](../api/driver-runtime-v1.md). **Proven** means a fact
+[G5 runtime lifecycle MCP contract](../api/mcp.md#g5-runtime-lifecycle-mcp-contract-d4).
+**Proven** means a fact
 already stated by those public contracts: an empty hook list is a valid
 registration, the reserved names fail as unimplemented, start and stop belong
 to the driver manager, and health is that manager's snapshot. **Hypothesis**

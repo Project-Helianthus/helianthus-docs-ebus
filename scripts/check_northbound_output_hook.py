@@ -53,6 +53,23 @@ def graphql_claims(sections: dict[str, list[str]]) -> list[str]:
     ]
 
 
+SUPERSEDED = "driver-runtime-v1.md"
+
+
+def superseded_citations(sections: dict[str, list[str]]) -> list[str]:
+    """Health authority is the MCP lifecycle contract.
+
+    The driver runtime API page is superseded historical material, so no
+    visible block may cite it as an authority for this page.
+    """
+    return [
+        f"superseded authority cited: {block[:80]}"
+        for blocks in sections.values()
+        for block in blocks
+        if SUPERSEDED in block
+    ]
+
+
 def validate(text: str) -> list[str]:
     sections: dict[str, list[str]] = {}
     current = None
@@ -66,6 +83,7 @@ def validate(text: str) -> list[str]:
         elif current is not None:
             sections[current].append(normalize(content))
     errors.extend(graphql_claims(sections))
+    errors.extend(superseded_citations(sections))
     for heading, blocks in REQUIREMENTS.items():
         present = sections.get(heading, [])
         for block in blocks:

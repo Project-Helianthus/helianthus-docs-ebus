@@ -25,6 +25,8 @@ must reject that page. Fields and the wording change each case catches:
 - reduced object: defining a separate reduced health object
 - health surface: adding a second health API
 - health GraphQL: naming a lifecycle GraphQL read for the snapshot
+- health authority: citing the superseded driver runtime API page instead of
+  the MCP lifecycle contract
 - lens: restating the lens rules
 - device choice: choosing which devices are published
 - provenance label: dropping Proven, naming a Hypothesis, or emptying Unknown
@@ -120,6 +122,20 @@ class NorthboundOutputHookTest(unittest.TestCase):
             with self.subTest(claim=claim[:32]):
                 errors = checker.validate(TEXT + "\n" + claim + "\n")
                 self.assertTrue(any(e.startswith("GraphQL health claim") for e in errors))
+
+    def test_health_authority_is_mcp_contract(self) -> None:
+        authority = "(../api/mcp.md#g5-runtime-lifecycle-mcp-contract-d4)"
+        self.assertEqual(TEXT.count(authority), 1)
+        self.assertNotIn(checker.SUPERSEDED, TEXT)
+        for claim in (
+            TEXT.replace(authority, "(../api/driver-runtime-v1.md)"),
+            TEXT + "\nSee the [driver API](../api/driver-runtime-v1.md).\n",
+        ):
+            with self.subTest(claim=claim[-48:]):
+                errors = checker.validate(claim)
+                self.assertTrue(
+                    any(e.startswith("superseded authority cited") for e in errors)
+                )
 
     def test_rewrapping_stays_valid(self) -> None:
         changed = TEXT
