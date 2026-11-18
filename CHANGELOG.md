@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+- `architecture/enh-ens-conformance-tests.md` reserves unused
+  session-extension nibbles beside the assigned host commands 0x0 to 0x3 and
+  the assigned adapter replies 0x0 to 0x3 and 0xA to 0xC. Session to mux: 0x4 TARGET, 0x5 UNTARGET, 0x6 BEGIN,
+  0x7 STAGE, 0x8 COMMIT. Mux to session: 0x4 TARGETED, 0x5 UNTARGETED, 0x6
+  SLOT, 0x7 SLOT_END, 0xD TARGET_ERROR. Each reserved frame uses the encoded
+  two-byte form; the short form is not used. A session that never sends
+  TARGET sees an unchanged ENH stream. An unreserved nibble is still an
+  explicit protocol error. A TARGET sent to an adapter with no extension
+  receives that existing unknown-command error. Response timing is Unknown.
+  The CC0 page `protocols/enh.md` lists only the reserved nibble values,
+  without extension names, and keeps them under its unknown-command error for
+  an adapter without the extension. The pages do not implement the mux.
+
 - `architecture/northbound-output-hook.md` states the northbound hook spelling
   `output` at hook version `1`; a missing or other version fails as
   unsupported. `architecture/runtime-driver-lifecycle.md` names that page as

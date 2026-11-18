@@ -62,6 +62,10 @@ Responses (adapter → host):
   0xC = ERROR_HOST
 ```
 
+## Unassigned command nibbles
+
+Native ENH assigns no command ID beyond the tables above. Host nibbles 0x4 to 0x8 and adapter nibbles 0x4 to 0x7 and 0xD are reserved for a non-native session extension. That extension is not part of this reference: its command names, its semantics and its rules are recorded outside the CC0 tree, in `architecture/enh-ens-conformance-tests.md`. A native implementation does not reuse these nibbles. On an adapter without the extension they remain undefined and take the [Unknown Command Contract](#unknown-command-contract) error, as does every other unassigned nibble.
+
 ## INIT / RESETTED
 
 `INIT` requests adapter initialization and feature negotiation:
@@ -217,7 +221,7 @@ In ENH transport terms, after the target sends ACK (0x00) for an i2i frame, the 
 
 ### Unknown Command Contract
 
-An ENH encoded command nibble (carried in the first encoded byte, `byte1` bits 5..2) that does not match any defined command ID (host: INIT=0x0, SEND=0x1, START=0x2, INFO=0x3; adapter: RESETTED=0x0, RECEIVED=0x1, STARTED=0x2, INFO=0x3, FAILED=0xA, ERROR_EBUS=0xB, ERROR_HOST=0xC) MUST be mapped to an explicit protocol error.
+An ENH encoded command nibble (carried in the first encoded byte, `byte1` bits 5..2) that does not match any assigned command ID (host: INIT=0x0, SEND=0x1, START=0x2, INFO=0x3; adapter: RESETTED=0x0, RECEIVED=0x1, STARTED=0x2, INFO=0x3, FAILED=0xA, ERROR_EBUS=0xB, ERROR_HOST=0xC) MUST be mapped to an explicit protocol error. A nibble reserved under [Unassigned command nibbles](#unassigned-command-nibbles) is not an assigned command ID, so an adapter without the extension maps it to this same error.
 
 Implementations MUST NOT:
 - Report an unknown command as a timeout or collision.
