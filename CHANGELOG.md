@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+- `api/semantic-operation-route.md` names the runtime intent owner. Only that
+  owner fills `expected_effect`, from the pack operation metadata and the
+  service resource of the requested capability instance, under rules AUT-2 and
+  RES-5 of the docs-semantic graph contract. The same owner sets the required
+  capability, a fresh intent id, the idempotency key, the causal context, the
+  authority of the calling surface, the deadline and a kernel retention of
+  8,192 admissions, with a fresh kernel when admission reports
+  `bounds_exceeded`. In-process northbound outputs call that router. Each
+  family registers its own executor. The return path states refusal,
+  acknowledgement, readback, an effect that cannot be determined, and the
+  lapse of a time-bounded limit. The route adds no authorization gate before
+  0.9, no receipt and no caller-visible idempotency key.
+
 - `architecture/enh-ens-conformance-tests.md` reserves unused
   session-extension nibbles beside the assigned host commands 0x0 to 0x3 and
   the assigned adapter replies 0x0 to 0x3 and 0xA to 0xC. Session to mux: 0x4 TARGET, 0x5 UNTARGET, 0x6 BEGIN,

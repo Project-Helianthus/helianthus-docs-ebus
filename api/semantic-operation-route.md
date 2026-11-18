@@ -148,14 +148,70 @@ the stock handler decoded.
    adds no retry, replay, reroute or write/read sequence. Native mandatory wire
    behavior remains with the existing qualified owner.
 
-The current kernel `Intent` also requires internal identity, authority evidence,
-causal context, deadline and replay bookkeeping. Those requirements remain owned
-by the existing runtime/kernel contract. This proposal does not expose an
-idempotency key, principal, authorization tier or G5 receipt; it adds no
-authorization gate before 0.9. It neither fabricates those internal fields nor
-relaxes kernel validation. An adapter that cannot construct a valid intent using
-its existing owner integration remains unwired and returns `UNAVAILABLE` with
-no-send. Resolving that integration is required before runtime acceptance.
+### Runtime intent owner
+
+1. Effect key. Only the owner fills `expected_effect`. The rule is the effect
+   rule the pack's operation metadata names for the requested operation. The
+   fact is that pack's id and version, the operation's argument field, and
+   exactly one dimension: the subject dimension the element catalog declares
+   for that field. The dimension's text value is the `ResourceID` of the
+   `resource` of the service instance that the requested capability instance
+   names, read from the owner's own current capture of the requested asset.
+   The operator is `equal`. The expected value is the request's one argument
+   value, unchanged. A capability instance, service instance or service
+   resource absent from that capture means the owner cannot construct the
+   intent: `UNAVAILABLE` with no-send. The caller never supplies an effect and
+   no effect is inferred from a label. The subject of the expected-effect fact
+   equals that resource under rule
+   [AUT-2](https://github.com/Project-Helianthus/helianthus-docs-semantic/blob/main/api/v1/graph.md#13-authority)
+   of the docs-semantic graph contract, and the dimension value is a
+   `ResourceID` of the dimension's kind under rule
+   [RES-5](https://github.com/Project-Helianthus/helianthus-docs-semantic/blob/main/api/v1/graph.md#68-rules).
+2. Required capability. The pack, definition id and version range come from
+   the same operation metadata, plus the request's capability instance. The
+   version range runs from the pack version to the next major version,
+   inclusive of the pack version and exclusive of the next major version.
+3. Identity and idempotency. Every request receives a fresh opaque intent id.
+   The GraphQL mutation takes no caller key and exposes no caller idempotency
+   key, so the owner gives each GraphQL request a fresh idempotency key and a
+   repeated request is a new intent. An in-process northbound output that
+   carries its own idempotency key, as the Matter feed intent does, has that
+   key used, prefixed by the output's driver id, so the kernel deduplicates
+   that output's own retry.
+4. Causal context. For the GraphQL mutation the owner creates the context
+   inside the gateway target: the path holds the gateway's target id, the hop
+   count is 1, the maximum hops are 8, first seen is at receipt, expiry is at
+   the request deadline, and the origin kind is `operator`. For an in-process
+   northbound output the origin kind is `automation` and the origin id is the
+   output's driver id. When that output carries an inbound causal context, as
+   the Matter feed intent does, the owner applies the kernel's ingress rule
+   (echo and budget checks, then the gateway target is appended) instead of
+   creating a context.
+5. Authority. Authority is an opaque evidence reference naming the calling
+   surface, either the GraphQL mutation or one composed northbound output by
+   its driver id. The resolver accepts exactly the surfaces composed in this
+   process. A configured output is active; no tier or receipt is added before
+   0.9, the route adds no authorization gate before 0.9, and the route adds no
+   condition of its own. The owner does not relax kernel validation.
+6. Deadline. The deadline is the earlier of the request budget and the
+   caller's own deadline.
+7. Retention. The route's kernel retains at most 8,192 admissions. When
+   admission fails with `bounds_exceeded`, the router replaces its kernel by a
+   fresh one as soon as every dispatched admission has its terminal record or
+   has passed its deadline, and admits the waiting request once on the fresh
+   kernel. No protection is lost, because every intent carries a fresh
+   idempotency key.
+8. In-process callers. A northbound output in the same process calls the same
+   router with the same closed request. It never selects an executor, adds no
+   retry and relays the result unchanged.
+9. Executors. One neutral owner serves every pack; each family has its own
+   executor. A qualified family owner registers its executor for the exact
+   binding and operation of a capability it publishes, and removes it when
+   that binding retires. The router reads the registration at dispatch time;
+   nothing else selects an executor. Deduplication is the kernel's idempotency
+   record plus the router's record of dispatched admissions. The generation
+   check is the executor's guard recheck immediately before the native send.
+10. Return path. For every operation, a refusal before any send is a request-level error or `failed` with `rejected` and `not_sent`. A protocol acknowledgement without confirming readback is `protocol_ack`. A confirming later read is `readback_confirmed`. A contradicting later read is `failed` with `conflict` or `no_effect`. A possible send whose effect cannot be determined is `unknown` and is never retried blindly. Expiration: when a native limit is time-bounded, such as a provisional limit or a revert timer, its lapse after the operation is a new observation of the effect fact at the next read. That lapse never rewrites the recorded outcome of the earlier operation, and an executor that renews such a limit states the renewal on its native page.
 
 ## Distinct results
 
