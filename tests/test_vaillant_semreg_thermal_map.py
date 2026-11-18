@@ -473,21 +473,56 @@ def _without_row_token(text: str, marker: str, token: str) -> str:
     return body
 
 
-@pytest.mark.parametrize(("path", "marker", "native", "si_unit", "conversion"), CHECKER.PAGE_RULES)
-@pytest.mark.parametrize("field", ("native", "si_unit", "conversion"))
-def test_handoff_page_rejects_a_missing_statement(
-    path: str, marker: str, native: str, si_unit: str, conversion: str, field: str,
-) -> None:
-    # native: the native-unit token is removed from this mapped row only.
+FIELDS = ("native", "semantic", "si_unit", "conversion")
+STATEMENT_CASES = [
+    pytest.param(path, marker, field, token, id=f"{path}:{marker}:{field}")
+    for path, marker, *tokens in CHECKER.PAGE_RULES
+    for field, token in zip(FIELDS, tokens)
+    if token is not None
+]
+
+
+@pytest.mark.parametrize(("path", "marker", "field", "token"), STATEMENT_CASES)
+def test_handoff_page_rejects_a_missing_statement(path: str, marker: str, field: str, token: str) -> None:
+    # native: the native-unit spelling is removed from this mapped row only.
+    # semantic: the SemReg unit identifier is removed from this mapped row only.
     # si_unit: the SI-unit statement is removed from this mapped row only.
     # conversion: the conversion statement is removed from this mapped row only.
     # Another occurrence remains on the page, so a whole-page search would pass.
     pages = handoff_pages()
-    token = {"native": native, "si_unit": si_unit, "conversion": conversion}[field]
     pages[path] = _without_row_token(pages[path], marker, token)
     assert token in pages[path]
     with pytest.raises(CHECKER.CheckError):
         CHECKER.check_handoff_pages(pages)
+
+
+def test_every_mapped_row_with_native_evidence_names_its_native_unit() -> None:
+    # The native-unit field is the native spelling, never a SemReg identifier.
+    natives = [native for _path, _marker, native, *_rest in CHECKER.PAGE_RULES if native is not None]
+    assert natives
+    assert all("unit." not in native for native in natives)
+    assert sum(native == "°C" for native in natives) == 8
+
+
+def test_heating_manual_row_without_native_celsius_fails() -> None:
+    # unit.celsius alone is the SemReg identifier. Dropping the native °C from
+    # the row fails even though the SemReg identifier stays.
+    pages = handoff_pages()
+    path = "architecture/zone-setpoint-semreg-cutover.md"
+    row = CHECKER.mapped_row(path, pages[path], "| Heating manual |")
+    stripped = row.replace("°C catalog label, ", "catalog label, ")
+    assert "°C" not in stripped and "unit.celsius" in stripped
+    pages[path] = pages[path].replace(row, stripped)
+    with pytest.raises(CHECKER.CheckError, match="native unit"):
+        CHECKER.check_handoff_pages(pages)
+
+
+def test_a_semreg_identifier_is_refused_as_the_native_unit() -> None:
+    page = "| Heating manual | 0x0022, f32, `unit.celsius` (SI unit kelvin, degrees Celsius plus 273.15) |\n"
+    with pytest.raises(CHECKER.CheckError, match="SemReg identifier"):
+        CHECKER.check_handoff_page(
+            "page.md", page, "| Heating manual |", "unit.celsius", None, *CHECKER.TEMPERATURE_SI,
+        )
 
 
 def _table_spans(text: str) -> list[tuple[int, int]]:

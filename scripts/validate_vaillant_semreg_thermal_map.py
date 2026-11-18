@@ -99,46 +99,53 @@ UNMAPPED_CONVERSIONS = tuple(re.compile(pattern) for pattern in (
     r"(?i)\bconver(?:t|ts|ted|ting|sion)\b",
     r"(?i)\bunit\.(?:one|dimensionless)\b",
 ))
-# path, mapped-row marker, native-unit token, SI-unit statement, conversion statement.
-# The marker matches one mapped row. All three statements must sit on that row.
+# path, mapped-row marker, native-unit spelling, SemReg unit identifier, SI-unit
+# statement, conversion statement. The marker matches one mapped row; every
+# statement that is not None must sit on that row. The native-unit spelling is
+# the unit of the native evidence on the row (`degC`, `°C`, wire percent), never
+# a SemReg identifier, so dropping the native unit fails even when the SemReg
+# identifier stays. It is None only on a row that states the SemReg target alone
+# and carries no native evidence.
+CELSIUS_NATIVE = "°C"
+CELSIUS_SEMANTIC = "unit.celsius"
 PAGE_RULES = (
     ("architecture/b524-semantic-mapping.md",
-     "`PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x0073`", "degC", *TEMPERATURE_SI),
+     "`PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x0073`", "degC", None, *TEMPERATURE_SI),
     ("architecture/b524-semantic-mapping.md",
-     "`PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x004B`", "degC", *TEMPERATURE_SI),
+     "`PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x004B`", "degC", None, *TEMPERATURE_SI),
     ("architecture/boiler-temperature-semreg-mapping.md",
-     "| Flow: `FlowTemperatureC`", "unit.celsius", *TEMPERATURE_SI),
+     "| Flow: `FlowTemperatureC`", CELSIUS_NATIVE, CELSIUS_SEMANTIC, *TEMPERATURE_SI),
     ("architecture/circuit-temperature-cutover.md",
-     "| `0x0008` |", "unit.celsius", *TEMPERATURE_SI),
+     "| `0x0008` |", CELSIUS_NATIVE, CELSIUS_SEMANTIC, *TEMPERATURE_SI),
     ("architecture/cylinder-temperature-cutover.md",
-     "| `0x0004` |", "unit.celsius", *TEMPERATURE_SI),
+     "| `0x0004` |", CELSIUS_NATIVE, CELSIUS_SEMANTIC, *TEMPERATURE_SI),
     ("architecture/dhw-measured-temperature-cutover.md",
-     "| `(0x02, 0x01, 0x00, 0x0005)` |", "unit.celsius", *TEMPERATURE_SI),
+     "| `(0x02, 0x01, 0x00, 0x0005)` |", CELSIUS_NATIVE, CELSIUS_SEMANTIC, *TEMPERATURE_SI),
     ("architecture/dhw-measured-temperature-cutover.md",
-     "| Quantity unit and dimension |", "unit.celsius", *TEMPERATURE_SI),
+     "| Quantity unit and dimension |", None, CELSIUS_SEMANTIC, *TEMPERATURE_SI),
     ("architecture/dhw-setpoint-semreg-cutover.md",
-     "| Controller requested DHW target |", "unit.celsius", *TEMPERATURE_SI),
+     "| Controller requested DHW target |", CELSIUS_NATIVE, CELSIUS_SEMANTIC, *TEMPERATURE_SI),
     ("architecture/humidity-semreg-cutover.md",
-     "| Controller-zone measurement |", HUMIDITY_NATIVE, *HUMIDITY_SI),
+     "| Controller-zone measurement |", HUMIDITY_NATIVE, HUMIDITY_SEMANTIC, *HUMIDITY_SI),
     ("architecture/humidity-semreg-cutover.md",
-     "| Remote-room measurement |", HUMIDITY_NATIVE, *HUMIDITY_SI),
+     "| Remote-room measurement |", HUMIDITY_NATIVE, HUMIDITY_SEMANTIC, *HUMIDITY_SI),
     ("architecture/humidity-semreg-cutover.md",
-     "| Circuit measurement |", HUMIDITY_NATIVE, *HUMIDITY_SI),
+     "| Circuit measurement |", HUMIDITY_NATIVE, HUMIDITY_SEMANTIC, *HUMIDITY_SI),
     ("architecture/outdoor-temperature-semreg-cutover.md",
-     "| Instantaneous `state.outdoor_temperature` |", "degC", *TEMPERATURE_SI),
+     "| Instantaneous `state.outdoor_temperature` |", "degC", None, *TEMPERATURE_SI),
     ("architecture/solar-loop-temperature-cutover.md",
-     "T defines `thermal.measurement.water_temperature` with", "unit.celsius", *TEMPERATURE_SI),
+     "T defines `thermal.measurement.water_temperature` with", None, CELSIUS_SEMANTIC, *TEMPERATURE_SI),
     ("architecture/zone-room-temperature-cutover.md",
-     "| Current room temperature |", "unit.celsius", *TEMPERATURE_SI),
+     "| Current room temperature |", CELSIUS_NATIVE, CELSIUS_SEMANTIC, *TEMPERATURE_SI),
     ("architecture/zone-room-temperature-cutover.md",
      "| `helianthus.pack.thermal` / `thermal.measurement.air_temperature` /",
-     "unit.celsius", *TEMPERATURE_SI),
+     None, CELSIUS_SEMANTIC, *TEMPERATURE_SI),
     ("architecture/zone-setpoint-semreg-cutover.md",
-     "| Heating manual |", "unit.celsius", *TEMPERATURE_SI),
+     "| Heating manual |", CELSIUS_NATIVE, CELSIUS_SEMANTIC, *TEMPERATURE_SI),
     ("architecture/zone-setpoint-semreg-cutover.md",
-     "| Heating computed effective |", "unit.celsius", *TEMPERATURE_SI),
+     "| Heating computed effective |", CELSIUS_NATIVE, CELSIUS_SEMANTIC, *TEMPERATURE_SI),
     ("api/semantic-snapshot-read.md",
-     "| Thermal/HVAC / `helianthus.pack.thermal` |", "unit.celsius", *TEMPERATURE_SI),
+     "| Thermal/HVAC / `helianthus.pack.thermal` |", None, CELSIUS_SEMANTIC, *TEMPERATURE_SI),
 )
 # A hand-off table is a table that holds a mapped row. A page that states its
 # mapped quantity in prose names, by header, the table that holds its withheld rows.
@@ -261,12 +268,19 @@ def check_humidity_separation(path: str, row: str) -> None:
 
 
 def check_handoff_page(
-    path: str, text: str, marker: str, native: str, si_unit: str, conversion: str,
+    path: str, text: str, marker: str, native: str | None, semantic: str | None,
+    si_unit: str, conversion: str,
 ) -> None:
-    """The native unit, the SI unit and the conversion sit on that mapped row."""
+    """The native unit, the SemReg unit, the SI unit and the conversion sit on that mapped row."""
+    if native is not None and "unit." in native:
+        raise CheckError(f"{path}: native unit {native!r} is a SemReg identifier, not native evidence")
+    if native is None and semantic is None:
+        raise CheckError(f"{path}: mapped row names neither a native unit nor a SemReg unit")
     row = mapped_row(path, text, marker)
-    if native not in row:
+    if native is not None and native not in row:
         raise CheckError(f"{path}: mapped row lacks the native unit")
+    if semantic is not None and semantic not in row:
+        raise CheckError(f"{path}: mapped row lacks the SemReg unit")
     if si_unit not in row:
         raise CheckError(f"{path}: mapped row lacks the SI unit")
     if conversion not in row:
@@ -343,10 +357,10 @@ def handoff_text(pages: dict[str, str] | None, path: str) -> str:
 
 def check_handoff_pages(pages: dict[str, str] | None = None) -> None:
     seen: dict[str, str] = {}
-    for path, marker, native, si_unit, conversion in PAGE_RULES:
+    for path, marker, native, semantic, si_unit, conversion in PAGE_RULES:
         if path not in seen:
             seen[path] = handoff_text(pages, path)
-        check_handoff_page(path, seen[path], marker, native, si_unit, conversion)
+        check_handoff_page(path, seen[path], marker, native, semantic, si_unit, conversion)
     for path, text in seen.items():
         for line in unmapped_handoff_rows(path, text):
             check_unmapped_line(path, line)
