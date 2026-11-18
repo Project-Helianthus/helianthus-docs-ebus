@@ -698,11 +698,15 @@ def test_every_derived_unmapped_row_rejects_a_conversion() -> None:
         " SI quantity",
         "; conversion applies",
         " `unit.one`",
+        " `unit.celsius`",
+        " `unit.percent`",
+        " `unit.watt`",
+        " `unit.dimensionless`",
     ),
 )
 def test_unmapped_row_rejects_alternate_si_wording(wording: str) -> None:
-    # Not only the canonical phrases: any SI unit or conversion wording on a row
-    # with no mapped quantity fails, on every derived unmapped row.
+    # Not only the canonical phrases: any SI unit, SemReg unit id or conversion
+    # wording on a row with no mapped quantity fails, on every derived unmapped row.
     pages = handoff_pages()
     for path, text in pages.items():
         for row in CHECKER.unmapped_handoff_rows(path, text):
@@ -710,6 +714,37 @@ def test_unmapped_row_rejects_alternate_si_wording(wording: str) -> None:
             mutated[path] = _suffix_line(text, row, wording)
             with pytest.raises(CHECKER.CheckError):
                 CHECKER.check_handoff_pages(mutated)
+
+
+def test_unmapped_cooling_row_rejects_a_semantic_unit_id() -> None:
+    # Cooling manual keeps the native °C. unit.celsius and unit.percent are
+    # SemReg unit ids, so either one on that withheld row fails.
+    pages = handoff_pages()
+    path = "architecture/zone-setpoint-semreg-cutover.md"
+    rows = [row for row in CHECKER.unmapped_handoff_rows(path, pages[path]) if "| Cooling manual |" in row]
+    assert len(rows) == 1
+    assert "unit." not in rows[0]
+    for suffix in (" `unit.celsius`", " `unit.percent`"):
+        mutated = dict(pages)
+        mutated[path] = _suffix_line(pages[path], rows[0], suffix)
+        with pytest.raises(CHECKER.CheckError):
+            CHECKER.check_handoff_pages(mutated)
+
+
+def test_snapshot_example_keeps_its_pack_unit_and_rejects_another() -> None:
+    # The storage example already names unit.percent as that pack's unit. That
+    # one id stays. Adding unit.celsius, or a second unit.percent, still fails.
+    pages = handoff_pages()
+    path = "api/semantic-snapshot-read.md"
+    rows = [row for row in CHECKER.unmapped_handoff_rows(path, pages[path]) if "helianthus.pack.storage" in row]
+    assert len(rows) == 1
+    assert rows[0].count("unit.percent") == 1
+    CHECKER.check_handoff_pages(pages)
+    for suffix in (" `unit.celsius`", " `unit.percent`"):
+        mutated = dict(pages)
+        mutated[path] = _suffix_line(pages[path], rows[0], suffix)
+        with pytest.raises(CHECKER.CheckError):
+            CHECKER.check_handoff_pages(mutated)
 
 
 def test_unmapped_cooling_row_rejects_converted_to_kelvin() -> None:

@@ -89,6 +89,8 @@ HUMIDITY_SEMANTIC = "`unit.percent`"
 # A hand-off table row with no mapped quantity keeps its native unit only. Any
 # SI-unit or conversion wording fails, not only the canonical phrases. A bare K
 # stays allowed: it is the native candidate unit of a temperature difference.
+# Every SemReg unit id fails too (`unit.celsius`, `unit.percent`, `unit.one`,
+# and any other `unit.<id>`).
 UNMAPPED_CONVERSIONS = tuple(re.compile(pattern) for pattern in (
     r"(?i)kelvin",
     r"(?i)\bratio\b",
@@ -97,8 +99,18 @@ UNMAPPED_CONVERSIONS = tuple(re.compile(pattern) for pattern in (
     r"(?i)divided by 100",
     r"\bSI\b",
     r"(?i)\bconver(?:t|ts|ted|ting|sion)\b",
-    r"(?i)\bunit\.(?:one|dimensionless)\b",
+    r"(?i)\bunit\.[a-z][a-z0-9_]*\b",
 ))
+# The semantic-snapshot example table shares its hand-off table with four
+# non-thermal rows. Each already states that pack's own unit id. That one id
+# stays; unit.celsius and any second id still fail. A withheld thermal row
+# matches none of these packs, so it may name no SemReg unit id at all.
+SNAPSHOT_PACK_UNITS = (
+    ("api/semantic-snapshot-read.md", "helianthus.pack.pv", "unit.watt"),
+    ("api/semantic-snapshot-read.md", "helianthus.pack.storage", "unit.percent"),
+    ("api/semantic-snapshot-read.md", "helianthus.pack.evse", "unit.watt"),
+    ("api/semantic-snapshot-read.md", "helianthus.pack.infrastructure", "unit.volt"),
+)
 # path, mapped-row marker, native-unit spelling, SemReg unit identifier, SI-unit
 # statement, conversion statement. The marker matches one mapped row; every
 # statement that is not None must sit on that row. The native-unit spelling is
@@ -340,9 +352,25 @@ def unmapped_handoff_rows(path: str, text: str) -> list[str]:
     return rows
 
 
+def without_stated_pack_unit(path: str, line: str) -> str:
+    """Drop the one pack unit id a non-thermal snapshot example already states.
+
+    Removing that single id leaves `unit.celsius`, `unit.percent` on any other
+    row, and a second id on the example row, for the SemReg-unit check to reject.
+    """
+    stated = [
+        unit for page, pack, unit in SNAPSHOT_PACK_UNITS
+        if page == path and re.search(rf"\b{re.escape(pack)}\b", line)
+    ]
+    if len(stated) != 1:
+        return line
+    return re.sub(rf"(?i)\b{re.escape(stated[0])}\b", "", line, count=1)
+
+
 def check_unmapped_line(path: str, line: str) -> None:
+    checked = without_stated_pack_unit(path, line)
     for banned in UNMAPPED_CONVERSIONS:
-        if banned.search(line):
+        if banned.search(checked):
             raise CheckError(f"{path}: a row with no mapped quantity states a conversion")
 
 
