@@ -650,6 +650,52 @@ def test_every_derived_unmapped_row_rejects_a_conversion() -> None:
     assert seen > len(CHECKER.PAGE_RULES)
 
 
+@pytest.mark.parametrize(
+    "wording",
+    (
+        "; converted to kelvin",
+        " `unit.kelvin`",
+        " Kelvin",
+        "; converts to a ratio",
+        " as a fraction",
+        " plus 273",
+        " value divided by 100",
+        " SI quantity",
+        "; conversion applies",
+        " `unit.one`",
+    ),
+)
+def test_unmapped_row_rejects_alternate_si_wording(wording: str) -> None:
+    # Not only the canonical phrases: any SI unit or conversion wording on a row
+    # with no mapped quantity fails, on every derived unmapped row.
+    pages = handoff_pages()
+    for path, text in pages.items():
+        for row in CHECKER.unmapped_handoff_rows(path, text):
+            mutated = dict(pages)
+            mutated[path] = _suffix_line(text, row, wording)
+            with pytest.raises(CHECKER.CheckError):
+                CHECKER.check_handoff_pages(mutated)
+
+
+def test_unmapped_cooling_row_rejects_converted_to_kelvin() -> None:
+    pages = handoff_pages()
+    path = "architecture/zone-setpoint-semreg-cutover.md"
+    rows = [row for row in CHECKER.unmapped_handoff_rows(path, pages[path]) if "| Cooling manual |" in row]
+    assert len(rows) == 1
+    pages[path] = pages[path].replace(rows[0], rows[0].replace("°C", "°C; converted to kelvin", 1))
+    assert pages[path] != handoff_pages()[path]
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.check_handoff_pages(pages)
+
+
+def test_unmapped_row_keeps_a_native_candidate_kelvin_difference() -> None:
+    # A bare K is the native candidate unit of a temperature difference, not a conversion.
+    pages = handoff_pages()
+    path = "architecture/cylinder-temperature-cutover.md"
+    assert any("candidate K" in row for row in CHECKER.unmapped_handoff_rows(path, pages[path]))
+    CHECKER.check_handoff_pages(pages)
+
+
 def test_humidity_native_unit_is_percent_not_the_semantic_target() -> None:
     # unit.percent alone is the SemReg quantity id. It does not satisfy the wire unit.
     pages = handoff_pages()

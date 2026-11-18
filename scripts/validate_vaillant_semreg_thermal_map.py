@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import re
 import sys
 
 
@@ -85,8 +86,19 @@ HUMIDITY_SI = ("SI unit a ratio", "percent divided by 100")
 # Wire unit on the humidity rows. It is not the SemReg quantity id `unit.percent`.
 HUMIDITY_NATIVE = "percent (`%`)"
 HUMIDITY_SEMANTIC = "`unit.percent`"
-# A hand-off table row with no mapped quantity keeps its native unit only.
-UNMAPPED_CONVERSIONS = ("273.15", "percent divided by 100", "SI unit")
+# A hand-off table row with no mapped quantity keeps its native unit only. Any
+# SI-unit or conversion wording fails, not only the canonical phrases. A bare K
+# stays allowed: it is the native candidate unit of a temperature difference.
+UNMAPPED_CONVERSIONS = tuple(re.compile(pattern) for pattern in (
+    r"(?i)kelvin",
+    r"(?i)\bratio\b",
+    r"(?i)\bfraction\b",
+    r"\b273(?:\.15)?\b",
+    r"(?i)divided by 100",
+    r"\bSI\b",
+    r"(?i)\bconver(?:t|ts|ted|ting|sion)\b",
+    r"(?i)\bunit\.(?:one|dimensionless)\b",
+))
 # path, mapped-row marker, native-unit token, SI-unit statement, conversion statement.
 # The marker matches one mapped row. All three statements must sit on that row.
 PAGE_RULES = (
@@ -316,7 +328,7 @@ def unmapped_handoff_rows(path: str, text: str) -> list[str]:
 
 def check_unmapped_line(path: str, line: str) -> None:
     for banned in UNMAPPED_CONVERSIONS:
-        if banned in line:
+        if banned.search(line):
             raise CheckError(f"{path}: a row with no mapped quantity states a conversion")
 
 
