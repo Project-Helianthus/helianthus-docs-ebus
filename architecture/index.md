@@ -161,6 +161,7 @@ pages keep the status statements in their own text.
 - [nm-discovery.md](nm-discovery.md)
 - [nm-model.md](nm-model.md)
 - [nm-participant-policy.md](nm-participant-policy.md)
+- [northbound-output-hook.md](northbound-output-hook.md)
 - [observability.md](observability.md)
 - [outdoor-temperature-semreg-cutover.md](outdoor-temperature-semreg-cutover.md)
 - [overview.md](overview.md)
