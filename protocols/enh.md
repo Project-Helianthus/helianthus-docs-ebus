@@ -62,32 +62,9 @@ Responses (adapter → host):
   0xC = ERROR_HOST
 ```
 
-## Session extension reservation
+## Unassigned command nibbles
 
-Assigned native ENH command IDs stay INIT, SEND, START and INFO on the host side and RESETTED, RECEIVED, STARTED, INFO, FAILED, ERROR_EBUS and ERROR_HOST on the adapter side. This section reserves unused nibbles for a session extension. It is not an additional native assignment, and this page does not implement the mux.
-
-Response timing is Unknown.
-
-```text
-Session to mux:
-  0x4 = TARGET
-  0x5 = UNTARGET
-  0x6 = BEGIN
-  0x7 = STAGE
-  0x8 = COMMIT
-
-Mux to session:
-  0x4 = TARGETED
-  0x5 = UNTARGETED
-  0x6 = SLOT
-  0x7 = SLOT_END
-  0xD = TARGET_ERROR
-```
-
-Each reserved frame uses the encoded two-byte form. The short form is not used.
-A session that never sends TARGET sees an unchanged ENH stream.
-A TARGET sent to an adapter that has no extension receives the existing unknown-command error.
-An unreserved nibble is still an explicit protocol error.
+Native ENH assigns no command ID beyond the tables above. Host nibbles 0x4 to 0x8 and adapter nibbles 0x4 to 0x7 and 0xD are reserved for a non-native session extension. That extension is not part of this reference: its command names, its semantics and its rules are recorded outside the CC0 tree, in `architecture/enh-ens-conformance-tests.md`. A native implementation does not reuse these nibbles. On an adapter without the extension they remain undefined and take the [Unknown Command Contract](#unknown-command-contract) error, as does every other unassigned nibble.
 
 ## INIT / RESETTED
 
@@ -244,7 +221,7 @@ In ENH transport terms, after the target sends ACK (0x00) for an i2i frame, the 
 
 ### Unknown Command Contract
 
-An ENH encoded command nibble (carried in the first encoded byte, `byte1` bits 5..2) that does not match any assigned command ID (host: INIT=0x0, SEND=0x1, START=0x2, INFO=0x3; adapter: RESETTED=0x0, RECEIVED=0x1, STARTED=0x2, INFO=0x3, FAILED=0xA, ERROR_EBUS=0xB, ERROR_HOST=0xC) and is not a reserved session-extension command on a path that uses the extension MUST be mapped to an explicit protocol error. An unreserved nibble, one that is neither assigned nor reserved, remains that error. A TARGET sent straight to an adapter that has no extension receives that existing error.
+An ENH encoded command nibble (carried in the first encoded byte, `byte1` bits 5..2) that does not match any assigned command ID (host: INIT=0x0, SEND=0x1, START=0x2, INFO=0x3; adapter: RESETTED=0x0, RECEIVED=0x1, STARTED=0x2, INFO=0x3, FAILED=0xA, ERROR_EBUS=0xB, ERROR_HOST=0xC) MUST be mapped to an explicit protocol error. A nibble reserved under [Unassigned command nibbles](#unassigned-command-nibbles) is not an assigned command ID, so an adapter without the extension maps it to this same error.
 
 Implementations MUST NOT:
 - Report an unknown command as a timeout or collision.

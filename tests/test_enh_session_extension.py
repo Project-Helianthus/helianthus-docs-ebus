@@ -20,10 +20,17 @@ rewritten to 0xD collides with TARGET_ERROR.
 Contract sentences are separate from that identity. Deleting one sentence
 fails the clause check. Inserting a response time fails the timing check.
 An extra unreserved nibble in the reservation block fails the assignment map.
+
+The names, directions and rules live only on the AGPL conformance page.
+The CC0 ENH reference under ``protocols/`` is implementation-neutral, so it
+carries the native assigned tables and a boundary note that lists only the
+reserved nibble values. Any extension name, a mux direction header or a note
+whose nibble values drift from the reserved rows fails the CC0 check.
 """
 
 from __future__ import annotations
 
+from importlib import util
 from pathlib import Path
 import re
 from typing import NamedTuple
@@ -32,10 +39,8 @@ import pytest
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGES = (
-    ROOT / "protocols" / "enh.md",
-    ROOT / "architecture" / "enh-ens-conformance-tests.md",
-)
+NATIVE_PAGE = ROOT / "protocols" / "enh.md"
+PAGES = (ROOT / "architecture" / "enh-ens-conformance-tests.md",)
 HEADER_OF = {
     "Requests (host → adapter):": "host",
     "Responses (adapter → host):": "adapter",
@@ -213,8 +218,10 @@ def evaluate(text: str, fallback: dict[str, dict[int, str]]) -> list[str]:
     return errors
 
 
-def fallback_assigned() -> dict[str, dict[int, str]]:
-    found, errors = parse(PAGES[0].read_text(encoding="utf-8"))
+def fallback_assigned(text: str | None = None) -> dict[str, dict[int, str]]:
+    if text is None:
+        text = NATIVE_PAGE.read_text(encoding="utf-8")
+    found, errors = parse(text)
     if errors:
         raise AssertionError(errors)
     return {"host": found["host"], "adapter": found["adapter"]}
@@ -241,7 +248,7 @@ def test_pages_accept_the_reservation() -> None:
             assert text.count(clause) == 1
 
 
-@pytest.mark.parametrize("page", PAGES, ids=("enh", "conformance"))
+@pytest.mark.parametrize("page", PAGES, ids=("conformance",))
 @pytest.mark.parametrize("row", ROWS, ids=[row.name for row in ROWS])
 def test_renamed_row_is_rejected(page: Path, row: Row) -> None:
     text = page.read_text(encoding="utf-8")
@@ -254,7 +261,7 @@ def test_renamed_row_is_rejected(page: Path, row: Row) -> None:
     assert not any(item.startswith("collision ") for item in got)
 
 
-@pytest.mark.parametrize("page", PAGES, ids=("enh", "conformance"))
+@pytest.mark.parametrize("page", PAGES, ids=("conformance",))
 @pytest.mark.parametrize("row", ROWS, ids=[row.name for row in ROWS])
 def test_reserved_nibble_collision_is_rejected(page: Path, row: Row) -> None:
     text = page.read_text(encoding="utf-8")
@@ -265,7 +272,7 @@ def test_reserved_nibble_collision_is_rejected(page: Path, row: Row) -> None:
     assert any(item.startswith(f"collision {row.direction} 0x0 ") for item in got)
 
 
-@pytest.mark.parametrize("page", PAGES, ids=("enh", "conformance"))
+@pytest.mark.parametrize("page", PAGES, ids=("conformance",))
 @pytest.mark.parametrize("row", ROWS, ids=[row.name for row in ROWS])
 def test_direction_move_is_rejected(page: Path, row: Row) -> None:
     text = page.read_text(encoding="utf-8")
@@ -278,21 +285,29 @@ def test_direction_move_is_rejected(page: Path, row: Row) -> None:
     )
 
 
-def test_assigned_host_nibble_collision_is_rejected() -> None:
-    text = PAGES[0].read_text(encoding="utf-8")
-    mutated = text.replace("  0x2 = START\n", "  0x4 = START\n", 1)
-    got = evaluate(mutated, fallback_assigned())
+def native_with(old: str, new: str) -> dict[str, dict[int, str]]:
+    text = NATIVE_PAGE.read_text(encoding="utf-8")
+    mutated = text.replace(old, new, 1)
+    assert mutated != text
+    found, _ = parse(mutated)
+    return {"host": found["host"], "adapter": found["adapter"]}
+
+
+@pytest.mark.parametrize("page", PAGES, ids=("conformance",))
+def test_assigned_host_nibble_collision_is_rejected(page: Path) -> None:
+    fallback = native_with("  0x2 = START\n", "  0x4 = START\n")
+    got = evaluate(page.read_text(encoding="utf-8"), fallback)
     assert any(item.startswith("collision session 0x4 ") for item in got)
 
 
-def test_assigned_adapter_nibble_collision_is_rejected() -> None:
-    text = PAGES[0].read_text(encoding="utf-8")
-    mutated = text.replace("  0xA = FAILED\n", "  0xD = FAILED\n", 1)
-    got = evaluate(mutated, fallback_assigned())
+@pytest.mark.parametrize("page", PAGES, ids=("conformance",))
+def test_assigned_adapter_nibble_collision_is_rejected(page: Path) -> None:
+    fallback = native_with("  0xA = FAILED\n", "  0xD = FAILED\n")
+    got = evaluate(page.read_text(encoding="utf-8"), fallback)
     assert any(item.startswith("collision mux 0xD ") for item in got)
 
 
-@pytest.mark.parametrize("page", PAGES, ids=("enh", "conformance"))
+@pytest.mark.parametrize("page", PAGES, ids=("conformance",))
 @pytest.mark.parametrize("clause", CLAUSES)
 def test_missing_clause_is_rejected(page: Path, clause: str) -> None:
     text = page.read_text(encoding="utf-8")
@@ -301,7 +316,7 @@ def test_missing_clause_is_rejected(page: Path, clause: str) -> None:
     assert "missing clause " + clause in got
 
 
-@pytest.mark.parametrize("page", PAGES, ids=("enh", "conformance"))
+@pytest.mark.parametrize("page", PAGES, ids=("conformance",))
 def test_response_time_is_rejected(page: Path) -> None:
     text = page.read_text(encoding="utf-8")
     mutated = text.replace(
@@ -312,9 +327,128 @@ def test_response_time_is_rejected(page: Path) -> None:
     assert "response time stated" in evaluate(mutated, fallback_assigned())
 
 
-@pytest.mark.parametrize("page", PAGES, ids=("enh", "conformance"))
+@pytest.mark.parametrize("page", PAGES, ids=("conformance",))
 def test_extra_unreserved_nibble_is_rejected(page: Path) -> None:
     text = page.read_text(encoding="utf-8")
     mutated = text.replace("Session to mux:\n", "Session to mux:\n  0x9 = EXTRA\n", 1)
     got = evaluate(mutated, fallback_assigned())
     assert any(item.startswith("assignment mismatch session:") for item in got)
+
+
+EXTENSION_NAME_RE = re.compile(
+    r"\b(?:" + "|".join(sorted({row.name for row in ROWS}, key=len, reverse=True)) + r")\b"
+)
+MUX_RE = re.compile(r"\bmux\b", re.IGNORECASE)
+BOUNDARY_HEADING = "## Unassigned command nibbles\n"
+BOUNDARY_RE = re.compile(
+    r"Host nibbles (0x[0-9A-F]) to (0x[0-9A-F]) and adapter nibbles "
+    r"(0x[0-9A-F]) to (0x[0-9A-F]) and (0x[0-9A-F]) are reserved for a "
+    r"non-native session extension\."
+)
+BOUNDARY_ERROR = (
+    "On an adapter without the extension they remain undefined and take the "
+    "[Unknown Command Contract](#unknown-command-contract) error"
+)
+
+
+def boundary_section(text: str) -> str:
+    start = text.find(BOUNDARY_HEADING)
+    if start < 0:
+        return ""
+    body = []
+    for line in text[start + len(BOUNDARY_HEADING):].splitlines(keepends=True):
+        if line.startswith("#"):
+            break
+        body.append(line)
+    return "".join(body)
+
+
+def cc0_problems(text: str) -> list[str]:
+    errors = []
+    for number, line in enumerate(text.splitlines(), 1):
+        if EXTENSION_NAME_RE.search(line):
+            errors.append(f"extension name in CC0 page line {number}")
+        if MUX_RE.search(line):
+            errors.append(f"mux text in CC0 page line {number}")
+    section = boundary_section(text)
+    if not section:
+        return errors + ["missing boundary note"]
+    match = BOUNDARY_RE.search(section)
+    if match is None:
+        return errors + ["missing reserved nibble values"]
+    host_lo, host_hi, adapter_lo, adapter_hi, adapter_extra = (
+        int(group, 16) for group in match.groups()
+    )
+    listed = {
+        "session": set(range(host_lo, host_hi + 1)),
+        "mux": set(range(adapter_lo, adapter_hi + 1)) | {adapter_extra},
+    }
+    for key, want in reserved_map().items():
+        if listed[key] != set(want):
+            errors.append(f"boundary nibble mismatch {key}")
+    if BOUNDARY_ERROR not in section:
+        errors.append("missing boundary unknown-command error")
+    return errors
+
+
+def boundary_checker():
+    spec = util.spec_from_file_location(
+        "check_public_domain_boundary",
+        ROOT / "scripts" / "check_public_domain_boundary.py",
+    )
+    assert spec is not None and spec.loader is not None
+    module = util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_cc0_page_carries_only_the_nibble_boundary() -> None:
+    text = NATIVE_PAGE.read_text(encoding="utf-8")
+    assert cc0_problems(text) == []
+    found, errors = parse(text)
+    assert errors == []
+    assert set(found) == {"host", "adapter"}
+
+
+def test_cc0_page_passes_the_public_domain_boundary() -> None:
+    errors = boundary_checker().violations(ROOT)
+    assert [item for item in errors if item.startswith("protocols/enh.md")] == []
+
+
+@pytest.mark.parametrize("row", ROWS, ids=[row.name for row in ROWS])
+def test_extension_name_in_cc0_page_is_rejected(row: Row) -> None:
+    text = NATIVE_PAGE.read_text(encoding="utf-8")
+    mutated = text.replace(BOUNDARY_HEADING, BOUNDARY_HEADING + row.name + "\n", 1)
+    assert mutated != text
+    assert any(item.startswith("extension name in CC0 page") for item in cc0_problems(mutated))
+
+
+@pytest.mark.parametrize("row", ROWS[:1] + ROWS[5:6], ids=("session", "mux"))
+def test_reservation_block_in_cc0_page_is_rejected(row: Row) -> None:
+    text = NATIVE_PAGE.read_text(encoding="utf-8")
+    block = "```text\n" + row.source_header + "\n" + row.line + "\n```\n"
+    mutated = text.replace(BOUNDARY_HEADING, BOUNDARY_HEADING + block, 1)
+    got = cc0_problems(mutated)
+    assert any(item.startswith("extension name in CC0 page") for item in got)
+    assert any(item.startswith("mux text in CC0 page") for item in got)
+
+
+@pytest.mark.parametrize(
+    ("old", "new", "key"),
+    (
+        ("0x4 to 0x8 and adapter", "0x4 to 0x9 and adapter", "session"),
+        ("0x4 to 0x7 and 0xD", "0x4 to 0x7 and 0xE", "mux"),
+    ),
+)
+def test_boundary_nibble_drift_is_rejected(old: str, new: str, key: str) -> None:
+    text = NATIVE_PAGE.read_text(encoding="utf-8")
+    mutated = text.replace(old, new, 1)
+    assert mutated != text
+    assert "boundary nibble mismatch " + key in cc0_problems(mutated)
+
+
+def test_boundary_unknown_command_error_is_required() -> None:
+    text = NATIVE_PAGE.read_text(encoding="utf-8")
+    mutated = text.replace(BOUNDARY_ERROR, "removed", 1)
+    assert mutated != text
+    assert "missing boundary unknown-command error" in cc0_problems(mutated)

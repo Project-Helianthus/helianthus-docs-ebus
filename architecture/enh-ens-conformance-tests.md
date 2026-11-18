@@ -48,7 +48,7 @@ XR rows below reference these symbols explicitly. Implementations MAY expose the
 
 ## Session extension reservation
 
-Assigned native ENH command IDs stay INIT, SEND, START and INFO on the host side and RESETTED, RECEIVED, STARTED, INFO, FAILED, ERROR_EBUS and ERROR_HOST on the adapter side. This section reserves unused nibbles for a session extension. It is not an additional native assignment, and this page does not implement the mux.
+Assigned native ENH command IDs stay INIT, SEND, START and INFO on the host side and RESETTED, RECEIVED, STARTED, INFO, FAILED, ERROR_EBUS and ERROR_HOST on the adapter side. This section reserves unused nibbles for a session extension. It is not an additional native assignment, and this page does not implement the mux. This page is the home of the extension's command names and rules. The CC0 [ENH reference](../protocols/enh.md#unassigned-command-nibbles) lists only the reserved nibble values, without names.
 
 Response timing is Unknown.
 
