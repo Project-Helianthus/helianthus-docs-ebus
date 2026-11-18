@@ -128,6 +128,12 @@ PAGE_RULES = (
     ("api/semantic-snapshot-read.md",
      "| Thermal/HVAC / `helianthus.pack.thermal` |", "unit.celsius", *TEMPERATURE_SI),
 )
+# A hand-off table is a table that holds a mapped row. A page that states its
+# mapped quantity in prose names, by header, the table that holds its withheld rows.
+WITHHELD_TABLE_HEADERS = (
+    ("architecture/solar-loop-temperature-cutover.md",
+     "| Observation | Native selector (OP/GG/II/RR) |"),
+)
 
 
 class CheckError(ValueError):
@@ -264,16 +270,47 @@ def is_table_separator(line: str) -> bool:
     return stripped.replace("|", "").replace(":", "").replace("-", "").strip() == ""
 
 
+def page_tables(text: str) -> list[list[str]]:
+    """Each run of consecutive pipe-prefixed lines on the page."""
+    tables: list[list[str]] = []
+    current: list[str] | None = None
+    for line in text.splitlines():
+        if line.strip().startswith("|"):
+            if current is None:
+                current = []
+                tables.append(current)
+            current.append(line)
+        else:
+            current = None
+    return tables
+
+
+def handoff_tables(path: str, text: str) -> list[list[str]]:
+    """The tables that hold a mapped row, and the withheld-row tables the page names."""
+    markers = tuple(marker for rule_path, marker, *_rest in PAGE_RULES if rule_path == path)
+    headers = tuple(header for rule_path, header in WITHHELD_TABLE_HEADERS if rule_path == path)
+    tables = page_tables(text)
+    for header in headers:
+        count = sum(1 for table in tables if table[0].strip().startswith(header))
+        if count != 1:
+            raise CheckError(f"{path}: withheld-row table {header!r} appears {count} times")
+    return [
+        table for table in tables
+        if any(marker in line for line in table for marker in markers)
+        or any(table[0].strip().startswith(header) for header in headers)
+    ]
+
+
 def unmapped_handoff_rows(path: str, text: str) -> list[str]:
-    """Every hand-off table row that does not carry a mapped quantity."""
+    """Every body row of a hand-off table that does not carry a mapped quantity."""
     markers = tuple(marker for rule_path, marker, *_rest in PAGE_RULES if rule_path == path)
     rows: list[str] = []
-    for line in text.splitlines():
-        if not line.strip().startswith("|") or is_table_separator(line):
-            continue
-        if any(marker in line for marker in markers):
-            continue
-        rows.append(line)
+    for table in handoff_tables(path, text):
+        body = table[2:] if len(table) > 1 and is_table_separator(table[1]) else table
+        for line in body:
+            if is_table_separator(line) or any(marker in line for marker in markers):
+                continue
+            rows.append(line)
     return rows
 
 

@@ -490,16 +490,51 @@ def test_handoff_page_rejects_a_missing_statement(
         CHECKER.check_handoff_pages(pages)
 
 
+def _table_spans(text: str) -> list[tuple[int, int]]:
+    """Start and end line index of each run of pipe-prefixed lines."""
+    lines = text.splitlines()
+    spans: list[tuple[int, int]] = []
+    start = None
+    for index, line in enumerate(lines + [""]):
+        is_row = line.strip().startswith("|")
+        if is_row and start is None:
+            start = index
+        elif not is_row and start is not None:
+            spans.append((start, index))
+            start = None
+    return spans
+
+
+def _handoff_spans(path: str, text: str) -> list[tuple[int, int]]:
+    lines = text.splitlines()
+    markers = tuple(marker for rule_path, marker, *_rest in CHECKER.PAGE_RULES if rule_path == path)
+    headers = tuple(header for rule_path, header in CHECKER.WITHHELD_TABLE_HEADERS if rule_path == path)
+    return [
+        (start, end) for start, end in _table_spans(text)
+        if any(marker in lines[index] for index in range(start, end) for marker in markers)
+        or any(lines[start].strip().startswith(header) for header in headers)
+    ]
+
+
 def _expected_unmapped_rows(path: str, text: str) -> list[str]:
+    lines = text.splitlines()
     markers = tuple(marker for rule_path, marker, *_rest in CHECKER.PAGE_RULES if rule_path == path)
     rows: list[str] = []
-    for line in text.splitlines():
-        if not line.strip().startswith("|") or CHECKER.is_table_separator(line):
-            continue
-        if any(marker in line for marker in markers):
-            continue
-        rows.append(line)
+    for start, end in _handoff_spans(path, text):
+        assert CHECKER.is_table_separator(lines[start + 1]), (path, lines[start])
+        for line in lines[start + 2:end]:
+            if not any(marker in line for marker in markers):
+                rows.append(line)
     return rows
+
+
+def _rows_outside_handoff_tables(path: str, text: str) -> list[str]:
+    lines = text.splitlines()
+    inside = {index for start, end in _handoff_spans(path, text) for index in range(start, end)}
+    return [
+        line for start, end in _table_spans(text) for index, line in enumerate(lines[start:end], start)
+        if index not in inside and not CHECKER.is_table_separator(line)
+    ]
 
 
 def _suffix_line(text: str, row: str, suffix: str) -> str:
@@ -511,10 +546,54 @@ def _suffix_line(text: str, row: str, suffix: str) -> str:
     raise AssertionError(row)
 
 
-def test_unmapped_rows_are_every_non_mapped_table_row() -> None:
+def test_unmapped_rows_are_every_non_mapped_body_row_of_a_handoff_table() -> None:
     pages = handoff_pages()
     for path, text in pages.items():
         assert CHECKER.unmapped_handoff_rows(path, text) == _expected_unmapped_rows(path, text)
+
+
+def test_every_page_has_a_handoff_table() -> None:
+    pages = handoff_pages()
+    for path, text in pages.items():
+        assert CHECKER.handoff_tables(path, text), path
+
+
+def test_rows_outside_the_handoff_tables_are_not_unmapped_rows() -> None:
+    # Unrelated tables on a hand-off page are outside this contract. A row there may
+    # name an SI unit or 273.15 without being read as a withheld hand-off row.
+    pages = handoff_pages()
+    outside = _rows_outside_handoff_tables(
+        "api/semantic-snapshot-read.md", pages["api/semantic-snapshot-read.md"],
+    )
+    assert len(outside) > 20
+    seen = 0
+    for path, text in pages.items():
+        for row in _rows_outside_handoff_tables(path, text):
+            seen += 1
+            assert row not in CHECKER.unmapped_handoff_rows(path, text)
+            mutated = dict(pages)
+            mutated[path] = _suffix_line(text, row, " SI unit kelvin, degrees Celsius plus 273.15")
+            CHECKER.check_handoff_pages(mutated)
+    assert seen > len(outside)
+
+
+def test_handoff_table_header_may_name_the_si_unit() -> None:
+    pages = handoff_pages()
+    for path, text in pages.items():
+        for start, _end in _handoff_spans(path, text):
+            header = text.splitlines()[start]
+            mutated = dict(pages)
+            mutated[path] = _suffix_line(text, header, " SI unit and conversion |")
+            CHECKER.check_handoff_pages(mutated)
+
+
+@pytest.mark.parametrize(("path", "header"), CHECKER.WITHHELD_TABLE_HEADERS)
+def test_a_missing_withheld_row_table_fails(path: str, header: str) -> None:
+    pages = handoff_pages()
+    assert header in pages[path]
+    pages[path] = pages[path].replace(header, "| Renamed |")
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.check_handoff_pages(pages)
 
 
 @pytest.mark.parametrize(
