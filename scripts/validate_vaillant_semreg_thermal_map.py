@@ -82,6 +82,11 @@ MAPPED_TEMPERATURE = {
 }
 TEMPERATURE_SI = ("SI unit kelvin", "degrees Celsius plus 273.15")
 HUMIDITY_SI = ("SI unit a ratio", "percent divided by 100")
+# Wire unit on the humidity rows. It is not the SemReg quantity id `unit.percent`.
+HUMIDITY_NATIVE = "percent (`%`)"
+HUMIDITY_SEMANTIC = "`unit.percent`"
+# A hand-off table row with no mapped quantity keeps its native unit only.
+UNMAPPED_CONVERSIONS = ("273.15", "percent divided by 100", "SI unit")
 # path, mapped-row marker, native-unit token, SI-unit statement, conversion statement.
 # The marker matches one mapped row. All three statements must sit on that row.
 PAGE_RULES = (
@@ -102,11 +107,11 @@ PAGE_RULES = (
     ("architecture/dhw-setpoint-semreg-cutover.md",
      "| Controller requested DHW target |", "unit.celsius", *TEMPERATURE_SI),
     ("architecture/humidity-semreg-cutover.md",
-     "| Controller-zone measurement |", "unit.percent", *HUMIDITY_SI),
+     "| Controller-zone measurement |", HUMIDITY_NATIVE, *HUMIDITY_SI),
     ("architecture/humidity-semreg-cutover.md",
-     "| Remote-room measurement |", "unit.percent", *HUMIDITY_SI),
+     "| Remote-room measurement |", HUMIDITY_NATIVE, *HUMIDITY_SI),
     ("architecture/humidity-semreg-cutover.md",
-     "| Circuit measurement |", "unit.percent", *HUMIDITY_SI),
+     "| Circuit measurement |", HUMIDITY_NATIVE, *HUMIDITY_SI),
     ("architecture/outdoor-temperature-semreg-cutover.md",
      "| Instantaneous `state.outdoor_temperature` |", "degC", *TEMPERATURE_SI),
     ("architecture/solar-loop-temperature-cutover.md",
@@ -122,16 +127,6 @@ PAGE_RULES = (
      "| Heating computed effective |", "unit.celsius", *TEMPERATURE_SI),
     ("api/semantic-snapshot-read.md",
      "| Thermal/HVAC / `helianthus.pack.thermal` |", "unit.celsius", *TEMPERATURE_SI),
-)
-# A line that names a value with no mapped quantity must not state a conversion.
-UNMAPPED_ROWS = (
-    ("architecture/b524-semantic-mapping.md",
-     "`PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x0095`", "273.15"),
-    ("architecture/outdoor-temperature-semreg-cutover.md", "state.outdoor_temperature_avg24h", "273.15"),
-    ("architecture/circuit-temperature-cutover.md", "| `0x0007` |", "273.15"),
-    ("architecture/circuit-temperature-cutover.md", "| `0x0020` |", "273.15"),
-    ("architecture/boiler-temperature-semreg-mapping.md", "| Return: `ReturnTemperatureC`", "273.15"),
-    ("architecture/humidity-semreg-cutover.md", "| Configuration threshold |", "percent divided by 100"),
 )
 
 
@@ -236,6 +231,17 @@ def mapped_row(path: str, text: str, marker: str) -> str:
     return rows[0]
 
 
+def check_humidity_separation(path: str, row: str) -> None:
+    """Wire percent, then the SemReg target `unit.percent`, then the ratio conversion."""
+    native_at = row.find(HUMIDITY_NATIVE)
+    semantic_at = row.find(HUMIDITY_SEMANTIC)
+    si_at = row.find(HUMIDITY_SI[0])
+    if semantic_at < 0 or not (native_at < semantic_at < si_at):
+        raise CheckError(
+            f"{path}: humidity row must state native percent, then the semantic target, then the conversion"
+        )
+
+
 def check_handoff_page(
     path: str, text: str, marker: str, native: str, si_unit: str, conversion: str,
 ) -> None:
@@ -247,12 +253,34 @@ def check_handoff_page(
         raise CheckError(f"{path}: mapped row lacks the SI unit")
     if conversion not in row:
         raise CheckError(f"{path}: mapped row lacks the conversion")
+    if native == HUMIDITY_NATIVE:
+        check_humidity_separation(path, row)
 
 
-def check_unmapped_line(path: str, text: str, marker: str, banned: str) -> None:
+def is_table_separator(line: str) -> bool:
+    stripped = line.strip()
+    if not stripped.startswith("|"):
+        return False
+    return stripped.replace("|", "").replace(":", "").replace("-", "").strip() == ""
+
+
+def unmapped_handoff_rows(path: str, text: str) -> list[str]:
+    """Every hand-off table row that does not carry a mapped quantity."""
+    markers = tuple(marker for rule_path, marker, *_rest in PAGE_RULES if rule_path == path)
+    rows: list[str] = []
     for line in text.splitlines():
-        if marker in line and banned in line:
-            raise CheckError(f"{path}: {marker} has no mapped quantity and states a conversion")
+        if not line.strip().startswith("|") or is_table_separator(line):
+            continue
+        if any(marker in line for marker in markers):
+            continue
+        rows.append(line)
+    return rows
+
+
+def check_unmapped_line(path: str, line: str) -> None:
+    for banned in UNMAPPED_CONVERSIONS:
+        if banned in line:
+            raise CheckError(f"{path}: a row with no mapped quantity states a conversion")
 
 
 def handoff_text(pages: dict[str, str] | None, path: str) -> str:
@@ -270,10 +298,9 @@ def check_handoff_pages(pages: dict[str, str] | None = None) -> None:
         if path not in seen:
             seen[path] = handoff_text(pages, path)
         check_handoff_page(path, seen[path], marker, native, si_unit, conversion)
-    for path, marker, banned in UNMAPPED_ROWS:
-        if path not in seen:
-            seen[path] = handoff_text(pages, path)
-        check_unmapped_line(path, seen[path], marker, banned)
+    for path, text in seen.items():
+        for line in unmapped_handoff_rows(path, text):
+            check_unmapped_line(path, line)
 
 
 def check_native_key(row: dict[str, object], selector: dict[str, object], label: str) -> str:

@@ -3,9 +3,10 @@
 ## Unreleased
 
 - Mapped temperature rows of the eBUS thermal hand-off keep the native unit
-  and state the SI unit kelvin, degrees Celsius plus 273.15. The humidity
-  row keeps `unit.percent` and states the SI unit as a ratio, percent
-  divided by 100. The statements are on the boiler, circuit, cylinder,
+  and state the SI unit kelvin, degrees Celsius plus 273.15. Humidity rows
+  keep the native unit percent and state `unit.percent` as the semantic
+  target, then the SI unit as a ratio, percent divided by 100. The
+  statements are on the boiler, circuit, cylinder,
   domestic-hot-water measured and setpoint, humidity, solar-loop, zone room,
   zone setpoint and outdoor-temperature pages, on the mapped rows of
   `architecture/b524-semantic-mapping.md`, on the thermal air-temperature row

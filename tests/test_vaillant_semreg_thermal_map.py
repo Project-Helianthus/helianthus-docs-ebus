@@ -490,12 +490,116 @@ def test_handoff_page_rejects_a_missing_statement(
         CHECKER.check_handoff_pages(pages)
 
 
-@pytest.mark.parametrize(("path", "marker", "banned"), CHECKER.UNMAPPED_ROWS)
-def test_unmapped_page_row_rejects_a_conversion(path: str, marker: str, banned: str) -> None:
+def _expected_unmapped_rows(path: str, text: str) -> list[str]:
+    markers = tuple(marker for rule_path, marker, *_rest in CHECKER.PAGE_RULES if rule_path == path)
+    rows: list[str] = []
+    for line in text.splitlines():
+        if not line.strip().startswith("|") or CHECKER.is_table_separator(line):
+            continue
+        if any(marker in line for marker in markers):
+            continue
+        rows.append(line)
+    return rows
+
+
+def _suffix_line(text: str, row: str, suffix: str) -> str:
+    lines = text.splitlines()
+    for index, line in enumerate(lines):
+        if line == row:
+            lines[index] = line + suffix
+            return "\n".join(lines)
+    raise AssertionError(row)
+
+
+def test_unmapped_rows_are_every_non_mapped_table_row() -> None:
     pages = handoff_pages()
-    pages[path] = pages[path].replace(marker, marker + " " + banned, 1)
+    for path, text in pages.items():
+        assert CHECKER.unmapped_handoff_rows(path, text) == _expected_unmapped_rows(path, text)
+
+
+@pytest.mark.parametrize(
+    ("path", "marker"),
+    (
+        ("architecture/zone-setpoint-semreg-cutover.md", "| Cooling manual |"),
+        ("architecture/zone-setpoint-semreg-cutover.md", "| Cooling computed effective |"),
+        ("architecture/zone-setpoint-semreg-cutover.md", "| Quick-veto override |"),
+        ("architecture/dhw-measured-temperature-cutover.md", "| `(0x02, 0x01, 0x00, 0x0004)` |"),
+        ("architecture/dhw-measured-temperature-cutover.md", "| `(0x02, 0x01, 0x00, 0x0008)` |"),
+        ("architecture/dhw-setpoint-semreg-cutover.md", "| DHW flow ceiling |"),
+        ("architecture/dhw-setpoint-semreg-cutover.md", "| Boiler-direct desired temperature candidate |"),
+        ("architecture/solar-loop-temperature-cutover.md", "| Collector candidate |"),
+        ("architecture/humidity-semreg-cutover.md", "| Configuration threshold |"),
+        ("architecture/b524-semantic-mapping.md", "`PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x0095`"),
+        ("architecture/outdoor-temperature-semreg-cutover.md", "state.outdoor_temperature_avg24h"),
+        ("architecture/circuit-temperature-cutover.md", "| `0x0007` |"),
+        ("architecture/circuit-temperature-cutover.md", "| `0x0020` |"),
+        ("architecture/boiler-temperature-semreg-mapping.md", "| Return: `ReturnTemperatureC`"),
+        ("architecture/cylinder-temperature-cutover.md", "| `0x0001` |"),
+    ),
+)
+def test_unmapped_page_row_rejects_a_conversion(path: str, marker: str) -> None:
+    # A withheld row is not on a fixed list. Deriving every non-mapped table row
+    # rejects a conversion added to that row, including one the list never named.
+    pages = handoff_pages()
+    rows = [row for row in CHECKER.unmapped_handoff_rows(path, pages[path]) if marker in row]
+    assert len(rows) == 1
+    pages[path] = _suffix_line(pages[path], rows[0], " degrees Celsius plus 273.15")
     with pytest.raises(CHECKER.CheckError):
         CHECKER.check_handoff_pages(pages)
+
+
+def test_unmapped_humidity_row_rejects_the_ratio_conversion() -> None:
+    pages = handoff_pages()
+    path = "architecture/humidity-semreg-cutover.md"
+    rows = [row for row in CHECKER.unmapped_handoff_rows(path, pages[path]) if "| Configuration threshold |" in row]
+    assert len(rows) == 1
+    pages[path] = _suffix_line(pages[path], rows[0], " percent divided by 100")
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.check_handoff_pages(pages)
+
+
+def test_every_derived_unmapped_row_rejects_a_conversion() -> None:
+    pages = handoff_pages()
+    seen = 0
+    for path, text in pages.items():
+        for row in CHECKER.unmapped_handoff_rows(path, text):
+            seen += 1
+            mutated = dict(pages)
+            mutated[path] = _suffix_line(text, row, " degrees Celsius plus 273.15")
+            with pytest.raises(CHECKER.CheckError):
+                CHECKER.check_handoff_pages(mutated)
+    assert seen > len(CHECKER.PAGE_RULES)
+
+
+def test_humidity_native_unit_is_percent_not_the_semantic_target() -> None:
+    # unit.percent alone is the SemReg quantity id. It does not satisfy the wire unit.
+    pages = handoff_pages()
+    path = "architecture/humidity-semreg-cutover.md"
+    pages[path] = pages[path].replace(
+        "Native unit percent (`%`). Semantic target `unit.percent`.",
+        "Native unit `unit.percent`.",
+    )
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.check_handoff_pages(pages)
+
+
+def test_humidity_semantic_target_precedes_the_conversion() -> None:
+    pages = handoff_pages()
+    path = "architecture/humidity-semreg-cutover.md"
+    pages[path] = pages[path].replace(
+        "Semantic target `unit.percent`. SI unit a ratio, percent divided by 100.",
+        "SI unit a ratio, percent divided by 100. Semantic target `unit.percent`.",
+    )
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.check_handoff_pages(pages)
+
+
+def test_humidity_page_keeps_the_wire_unit_apart_from_the_semantic_target() -> None:
+    text = (ROOT / "architecture/humidity-semreg-cutover.md").read_text(encoding="utf-8")
+    assert text.count("Native unit percent (`%`). Semantic target `unit.percent`.") == 3
+    assert "The native unit stays percent (`%`). The semantic target is `unit.percent`." in text
+    assert "The native unit stays `unit.percent`" not in text
+    assert "Native unit `unit.percent`" not in text
 
 
 def test_rejects_receipt_evaluation_boundary_or_freshness_drift() -> None:
