@@ -19,7 +19,8 @@ separate record.
 The runtime driver lifecycle states that the first host requires an empty hook
 set and that all hook declarations fail. This page narrows that rule for one
 name only: for the hook spelling `output` on a northbound descriptor, this page
-takes precedence over that rule. For every other hook name and every other
+takes precedence over that rule. The runtime driver lifecycle names this page
+as the one narrowing of that rule. For every other hook name and every other
 descriptor direction, that rule stands unchanged.
 
 ## Hook admission
@@ -27,6 +28,10 @@ descriptor direction, that rule stands unchanged.
 A northbound descriptor may register the hook spelling `output`. The only
 accepted non-empty hook list on that descriptor is the single name `output`.
 An empty hook list remains a valid registration.
+
+The `output` declaration carries hook version `1`, the only supported
+version. An `output` declaration with no version or with any other version
+fails as an unsupported version.
 
 The hook spelling `output` is accepted only on a northbound descriptor. The
 southbound eeBUS driver registers with an empty hook list, and that
@@ -46,8 +51,12 @@ Registering that descriptor does not by itself publish a fact.
 Start and stop are the existing driver-manager lifecycle. A disabled
 descriptor does not start.
 
-Health is the existing driver-manager snapshot: observed state, reason and
-the safety-quarantine flag. That snapshot remains the health read on the
+Health is read from the existing driver-manager snapshot. Its health
+indicators are observed state, reason and the safety-quarantine flag. They are
+members of the closed driver object in the
+[MCP read data](../api/mcp.md#read-and-mutation-data), which keeps every
+member that contract lists; this page defines no reduced object. That
+snapshot remains the health read on the
 existing MCP driver object. There is no lifecycle GraphQL API and no second
 health API.
 

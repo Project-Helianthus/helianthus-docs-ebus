@@ -70,6 +70,11 @@ implemented. Reserving a name is not accepting a nonfunctional control.
 Registration and common lifecycle control contain no protocol, vendor or family
 switch and perform no endpoint I/O or semantic declaration.
 
+The [northbound output hook](northbound-output-hook.md) is the one narrowing of
+the paragraph above: a northbound descriptor may declare the single hook name
+`output` at hook version `1`. Every other hook name, every other version of
+`output` and every other descriptor direction still fails as stated above.
+
 List/get read only the frozen registry and cached lifecycle state. List returns
 all configured drivers sorted bytewise by `DriverID`, independent of registration
 order. Entries and catalog revision come from one coherent read transaction;
