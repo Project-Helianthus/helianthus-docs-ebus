@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+- `architecture/northbound-output-hook.md` states the northbound hook spelling
+  `output` at hook version `1`; a missing or other version fails as
+  unsupported. `architecture/runtime-driver-lifecycle.md` names that page as
+  the one narrowing of its hook rule. An empty hook list stays a valid
+  registration, including the southbound eeBUS driver. Every other hook name
+  is refused: the reserved names `mcp`, `setup`, `portal`, `semantic` and
+  `evidence` fail as unimplemented, and any other name fails as unknown.
+  Registering the descriptor does not publish a fact. Start and stop stay the
+  driver-manager lifecycle, and a disabled descriptor does not start. Health
+  reads that manager's snapshot through observed state, reason and the
+  safety-quarantine flag, members of the full closed MCP driver object. The
+  page does not restate the lens rules and does not choose which devices are
+  published. `scripts/check_northbound_output_hook.py` pins those sentences.
+
 - Mapped temperature rows of the eBUS thermal hand-off keep the native unit
   and state the SI unit kelvin, degrees Celsius plus 273.15. Humidity rows
   keep the native unit percent and state `unit.percent` as the semantic

@@ -1,0 +1,27 @@
+{
+  "page": {
+    "Authority": [
+      "The [runtime driver lifecycle](runtime-driver-lifecycle.md) owns registration,\nstart and stop. Health is the snapshot in the\n[G5 runtime lifecycle MCP contract](../api/mcp.md#g5-runtime-lifecycle-mcp-contract-d4).\n**Proven** means a fact\nalready stated by those public contracts: an empty hook list is a valid\nregistration, the reserved names fail as unimplemented, start and stop belong\nto the driver manager, and health is that manager's snapshot. **Hypothesis**\nnames nothing on this page. **Unknown** names device publication and the lens\nrules, which stay with their owners. Qualification of a device family stays a\nseparate record.",
+      "The runtime driver lifecycle states that the first host requires an empty hook\nset and that all hook declarations fail. This page narrows that rule for one\nname only: for the hook spelling `output` on a northbound descriptor, this page\ntakes precedence over that rule. The runtime driver lifecycle names this page\nas the one narrowing of that rule. For every other hook name and every other\ndescriptor direction, that rule stands unchanged."
+    ],
+    "Hook admission": [
+      "A northbound descriptor may register the hook spelling `output`. The only\naccepted non-empty hook list on that descriptor is the single name `output`.\nAn empty hook list remains a valid registration.",
+      "The `output` declaration carries hook version `1`, the only supported\nversion. An `output` declaration with no version or with any other version\nfails as an unsupported version.",
+      "The hook spelling `output` is accepted only on a northbound descriptor. The\nsouthbound eeBUS driver registers with an empty hook list, and that\nregistration stays valid. Declaring `output` on a descriptor that is not\nnorthbound is refused.",
+      "The host refuses every hook name other than `output`. The reserved names\n`mcp`, `setup`, `portal`, `semantic` and `evidence` fail as unimplemented.\nAny name that is neither `output` nor one of those reserved names fails as\nunknown. A refused hook list admits nothing and leaves the previous registry\nand its last-known-good state unchanged.",
+      "Registering that descriptor does not by itself publish a fact."
+    ],
+    "Lifecycle and health": [
+      "Start and stop are the existing driver-manager lifecycle. A disabled\ndescriptor does not start.",
+      "Health is read from the existing driver-manager snapshot. Its health\nindicators are observed state, reason and the safety-quarantine flag. They are\nmembers of the closed driver object in the\n[MCP read data](../api/mcp.md#read-and-mutation-data), which keeps every\nmember that contract lists; this page defines no reduced object. That\nsnapshot remains the health read on the\nexisting MCP driver object. There is no lifecycle GraphQL API and no second\nhealth API."
+    ],
+    "Boundary": [
+      "This page does not restate the lens rules and does not choose which devices\nare published."
+    ]
+  },
+  "owner": {
+    "document": "architecture/runtime-driver-lifecycle.md",
+    "follows": "hook rejection and isolation",
+    "paragraph": "The [northbound output hook](northbound-output-hook.md) is the one narrowing of\nthe paragraph above: a northbound descriptor may declare the single hook name\n`output` at hook version `1`. Every other hook name, every other version of\n`output` and every other descriptor direction still fails as stated above."
+  }
+}
