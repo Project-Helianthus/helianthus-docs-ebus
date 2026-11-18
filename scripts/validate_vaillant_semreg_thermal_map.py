@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import re
 import sys
 
 
@@ -73,6 +74,97 @@ REQUIRED_NONCLAIMS = {
     "eebus_output_established", "matter_output_established",
     "hardware_qualification_established",
 }
+NATIVE_TEMPERATURE = {"wire_type": "f32_le", "unit": "degC"}
+MAPPED_TEMPERATURE = {
+    "wire_type": "f32_le",
+    "unit": "degC",
+    "si_unit": "kelvin",
+    "conversion": "degrees Celsius plus 273.15",
+}
+TEMPERATURE_SI = ("SI unit kelvin", "degrees Celsius plus 273.15")
+HUMIDITY_SI = ("SI unit a ratio", "percent divided by 100")
+# Wire unit on the humidity rows. It is not the SemReg quantity id `unit.percent`.
+HUMIDITY_NATIVE = "percent (`%`)"
+HUMIDITY_SEMANTIC = "`unit.percent`"
+# A hand-off table row with no mapped quantity keeps its native unit only. Any
+# SI-unit or conversion wording fails, not only the canonical phrases. A bare K
+# stays allowed: it is the native candidate unit of a temperature difference.
+# Every SemReg unit id fails too (`unit.celsius`, `unit.percent`, `unit.one`,
+# and any other `unit.<id>`).
+UNMAPPED_CONVERSIONS = tuple(re.compile(pattern) for pattern in (
+    r"(?i)kelvin",
+    r"(?i)\bratio\b",
+    r"(?i)\bfraction\b",
+    r"\b273(?:\.15)?\b",
+    r"(?i)divided by 100",
+    r"\bSI\b",
+    r"(?i)\bconver(?:t|ts|ted|ting|sion)\b",
+    r"(?i)\bunit\.[a-z][a-z0-9_]*\b",
+))
+# The semantic-snapshot example table shares its hand-off table with four
+# non-thermal rows. Each already states that pack's own unit id. That one id
+# stays; unit.celsius and any second id still fail. A withheld thermal row
+# matches none of these packs, so it may name no SemReg unit id at all.
+SNAPSHOT_PACK_UNITS = (
+    ("api/semantic-snapshot-read.md", "helianthus.pack.pv", "unit.watt"),
+    ("api/semantic-snapshot-read.md", "helianthus.pack.storage", "unit.percent"),
+    ("api/semantic-snapshot-read.md", "helianthus.pack.evse", "unit.watt"),
+    ("api/semantic-snapshot-read.md", "helianthus.pack.infrastructure", "unit.volt"),
+)
+# path, mapped-row marker, native-unit spelling, SemReg unit identifier, SI-unit
+# statement, conversion statement. The marker matches one mapped row; every
+# statement that is not None must sit on that row. The native-unit spelling is
+# the unit of the native evidence on the row (`degC`, `°C`, wire percent), never
+# a SemReg identifier, so dropping the native unit fails even when the SemReg
+# identifier stays. It is None only on a row that states the SemReg target alone
+# and carries no native evidence.
+CELSIUS_NATIVE = "°C"
+CELSIUS_SEMANTIC = "unit.celsius"
+PAGE_RULES = (
+    ("architecture/b524-semantic-mapping.md",
+     "`PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x0073`", "degC", None, *TEMPERATURE_SI),
+    ("architecture/b524-semantic-mapping.md",
+     "`PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x004B`", "degC", None, *TEMPERATURE_SI),
+    ("architecture/boiler-temperature-semreg-mapping.md",
+     "| Flow: `FlowTemperatureC`", CELSIUS_NATIVE, CELSIUS_SEMANTIC, *TEMPERATURE_SI),
+    ("architecture/circuit-temperature-cutover.md",
+     "| `0x0008` |", CELSIUS_NATIVE, CELSIUS_SEMANTIC, *TEMPERATURE_SI),
+    ("architecture/cylinder-temperature-cutover.md",
+     "| `0x0004` |", CELSIUS_NATIVE, CELSIUS_SEMANTIC, *TEMPERATURE_SI),
+    ("architecture/dhw-measured-temperature-cutover.md",
+     "| `(0x02, 0x01, 0x00, 0x0005)` |", CELSIUS_NATIVE, CELSIUS_SEMANTIC, *TEMPERATURE_SI),
+    ("architecture/dhw-measured-temperature-cutover.md",
+     "| Quantity unit and dimension |", None, CELSIUS_SEMANTIC, *TEMPERATURE_SI),
+    ("architecture/dhw-setpoint-semreg-cutover.md",
+     "| Controller requested DHW target |", CELSIUS_NATIVE, CELSIUS_SEMANTIC, *TEMPERATURE_SI),
+    ("architecture/humidity-semreg-cutover.md",
+     "| Controller-zone measurement |", HUMIDITY_NATIVE, HUMIDITY_SEMANTIC, *HUMIDITY_SI),
+    ("architecture/humidity-semreg-cutover.md",
+     "| Remote-room measurement |", HUMIDITY_NATIVE, HUMIDITY_SEMANTIC, *HUMIDITY_SI),
+    ("architecture/humidity-semreg-cutover.md",
+     "| Circuit measurement |", HUMIDITY_NATIVE, HUMIDITY_SEMANTIC, *HUMIDITY_SI),
+    ("architecture/outdoor-temperature-semreg-cutover.md",
+     "| Instantaneous `state.outdoor_temperature` |", "degC", None, *TEMPERATURE_SI),
+    ("architecture/solar-loop-temperature-cutover.md",
+     "T defines `thermal.measurement.water_temperature` with", None, CELSIUS_SEMANTIC, *TEMPERATURE_SI),
+    ("architecture/zone-room-temperature-cutover.md",
+     "| Current room temperature |", CELSIUS_NATIVE, CELSIUS_SEMANTIC, *TEMPERATURE_SI),
+    ("architecture/zone-room-temperature-cutover.md",
+     "| `helianthus.pack.thermal` / `thermal.measurement.air_temperature` /",
+     None, CELSIUS_SEMANTIC, *TEMPERATURE_SI),
+    ("architecture/zone-setpoint-semreg-cutover.md",
+     "| Heating manual |", CELSIUS_NATIVE, CELSIUS_SEMANTIC, *TEMPERATURE_SI),
+    ("architecture/zone-setpoint-semreg-cutover.md",
+     "| Heating computed effective |", CELSIUS_NATIVE, CELSIUS_SEMANTIC, *TEMPERATURE_SI),
+    ("api/semantic-snapshot-read.md",
+     "| Thermal/HVAC / `helianthus.pack.thermal` |", None, CELSIUS_SEMANTIC, *TEMPERATURE_SI),
+)
+# A hand-off table is a table that holds a mapped row. A page that states its
+# mapped quantity in prose names, by header, the table that holds its withheld rows.
+WITHHELD_TABLE_HEADERS = (
+    ("architecture/solar-loop-temperature-cutover.md",
+     "| Observation | Native selector (OP/GG/II/RR) |"),
+)
 
 
 class CheckError(ValueError):
@@ -147,6 +239,159 @@ def native_resources(value: object, label: str) -> dict[str, str]:
             raise CheckError(f"{label}: native resource {selector!r} needs a kind")
         resources[selector] = resource["kind"]
     return resources
+
+
+def check_native_value(value: object, *, mapped: bool, label: str) -> None:
+    """A mapped row keeps the native unit and states the SI unit and the conversion."""
+    expected = MAPPED_TEMPERATURE if mapped else NATIVE_TEMPERATURE
+    if not isinstance(value, dict):
+        raise CheckError(f"{label}: native value must be an object")
+    require(value.get("wire_type"), "f32_le", f"{label}: wire_type")
+    require(value.get("unit"), "degC", f"{label}: native unit")
+    if not mapped:
+        require(set(value), set(NATIVE_TEMPERATURE), f"{label}: unmapped native value")
+        return
+    if "si_unit" not in value:
+        raise CheckError(f"{label}: mapped row lacks the SI unit")
+    if "conversion" not in value:
+        raise CheckError(f"{label}: mapped row lacks the conversion")
+    require(value.get("si_unit"), "kelvin", f"{label}: SI unit")
+    require(value.get("conversion"), MAPPED_TEMPERATURE["conversion"], f"{label}: conversion")
+    require(set(value), set(expected), f"{label}: native value")
+
+
+def mapped_row(path: str, text: str, marker: str) -> str:
+    """The one mapped row the marker names."""
+    rows = [line for line in text.splitlines() if marker in line]
+    if len(rows) != 1:
+        raise CheckError(f"{path}: mapped row {marker!r} appears {len(rows)} times")
+    return rows[0]
+
+
+def check_humidity_separation(path: str, row: str) -> None:
+    """Wire percent, then the SemReg target `unit.percent`, then the ratio conversion."""
+    native_at = row.find(HUMIDITY_NATIVE)
+    semantic_at = row.find(HUMIDITY_SEMANTIC)
+    si_at = row.find(HUMIDITY_SI[0])
+    if semantic_at < 0 or not (native_at < semantic_at < si_at):
+        raise CheckError(
+            f"{path}: humidity row must state native percent, then the semantic target, then the conversion"
+        )
+
+
+def check_handoff_page(
+    path: str, text: str, marker: str, native: str | None, semantic: str | None,
+    si_unit: str, conversion: str,
+) -> None:
+    """The native unit, the SemReg unit, the SI unit and the conversion sit on that mapped row."""
+    if native is not None and "unit." in native:
+        raise CheckError(f"{path}: native unit {native!r} is a SemReg identifier, not native evidence")
+    if native is None and semantic is None:
+        raise CheckError(f"{path}: mapped row names neither a native unit nor a SemReg unit")
+    row = mapped_row(path, text, marker)
+    if native is not None and native not in row:
+        raise CheckError(f"{path}: mapped row lacks the native unit")
+    if semantic is not None and semantic not in row:
+        raise CheckError(f"{path}: mapped row lacks the SemReg unit")
+    if si_unit not in row:
+        raise CheckError(f"{path}: mapped row lacks the SI unit")
+    if conversion not in row:
+        raise CheckError(f"{path}: mapped row lacks the conversion")
+    if native == HUMIDITY_NATIVE:
+        check_humidity_separation(path, row)
+
+
+def is_table_separator(line: str) -> bool:
+    stripped = line.strip()
+    if not stripped.startswith("|"):
+        return False
+    return stripped.replace("|", "").replace(":", "").replace("-", "").strip() == ""
+
+
+def page_tables(text: str) -> list[list[str]]:
+    """Each run of consecutive pipe-prefixed lines on the page."""
+    tables: list[list[str]] = []
+    current: list[str] | None = None
+    for line in text.splitlines():
+        if line.strip().startswith("|"):
+            if current is None:
+                current = []
+                tables.append(current)
+            current.append(line)
+        else:
+            current = None
+    return tables
+
+
+def handoff_tables(path: str, text: str) -> list[list[str]]:
+    """The tables that hold a mapped row, and the withheld-row tables the page names."""
+    markers = tuple(marker for rule_path, marker, *_rest in PAGE_RULES if rule_path == path)
+    headers = tuple(header for rule_path, header in WITHHELD_TABLE_HEADERS if rule_path == path)
+    tables = page_tables(text)
+    for header in headers:
+        count = sum(1 for table in tables if table[0].strip().startswith(header))
+        if count != 1:
+            raise CheckError(f"{path}: withheld-row table {header!r} appears {count} times")
+    return [
+        table for table in tables
+        if any(marker in line for line in table for marker in markers)
+        or any(table[0].strip().startswith(header) for header in headers)
+    ]
+
+
+def unmapped_handoff_rows(path: str, text: str) -> list[str]:
+    """Every body row of a hand-off table that does not carry a mapped quantity."""
+    markers = tuple(marker for rule_path, marker, *_rest in PAGE_RULES if rule_path == path)
+    rows: list[str] = []
+    for table in handoff_tables(path, text):
+        body = table[2:] if len(table) > 1 and is_table_separator(table[1]) else table
+        for line in body:
+            if is_table_separator(line) or any(marker in line for marker in markers):
+                continue
+            rows.append(line)
+    return rows
+
+
+def without_stated_pack_unit(path: str, line: str) -> str:
+    """Drop the one pack unit id a non-thermal snapshot example already states.
+
+    Removing that single id leaves `unit.celsius`, `unit.percent` on any other
+    row, and a second id on the example row, for the SemReg-unit check to reject.
+    """
+    stated = [
+        unit for page, pack, unit in SNAPSHOT_PACK_UNITS
+        if page == path and re.search(rf"\b{re.escape(pack)}\b", line)
+    ]
+    if len(stated) != 1:
+        return line
+    return re.sub(rf"(?i)\b{re.escape(stated[0])}\b", "", line, count=1)
+
+
+def check_unmapped_line(path: str, line: str) -> None:
+    checked = without_stated_pack_unit(path, line)
+    for banned in UNMAPPED_CONVERSIONS:
+        if banned.search(checked):
+            raise CheckError(f"{path}: a row with no mapped quantity states a conversion")
+
+
+def handoff_text(pages: dict[str, str] | None, path: str) -> str:
+    if pages is None:
+        return Path(path).read_text(encoding="utf-8")
+    text = pages.get(path)
+    if not isinstance(text, str):
+        raise CheckError(f"{path}: hand-off page is missing")
+    return text
+
+
+def check_handoff_pages(pages: dict[str, str] | None = None) -> None:
+    seen: dict[str, str] = {}
+    for path, marker, native, semantic, si_unit, conversion in PAGE_RULES:
+        if path not in seen:
+            seen[path] = handoff_text(pages, path)
+        check_handoff_page(path, seen[path], marker, native, semantic, si_unit, conversion)
+    for path, text in seen.items():
+        for line in unmapped_handoff_rows(path, text):
+            check_unmapped_line(path, line)
 
 
 def check_native_key(row: dict[str, object], selector: dict[str, object], label: str) -> str:
@@ -225,7 +470,7 @@ def validate_row(
     if key not in EXPECTED_ROWS:
         raise CheckError(f"{key}: not a row of the closed three-row contract")
     legacy, _register, resource, kind, fact, disposition, loss = EXPECTED_ROWS[key]
-    require(row["native_value"], {"wire_type": "f32_le", "unit": "degC"}, f"{key}: native_value")
+    check_native_value(row["native_value"], mapped=fact is not None, label=key)
     require(row["legacy_system_field"], legacy, f"{key}: legacy_system_field")
     used = check_attachment(row, key, resources, (resource, kind), candidates, key)
     check_target(row["target"], fact, key)
@@ -337,7 +582,7 @@ def validate_dhw(data: object, *, structural: object = None) -> None:
         raise CheckError(f"hot water: row members must be exactly {sorted(DHW_ROW_KEYS)}")
     key = row["native_key"]
     require(key, DHW_KEY, "hot water: native_key")
-    require(row["native_value"], {"wire_type": "f32_le", "unit": "degC"}, "hot water: native_value")
+    check_native_value(row["native_value"], mapped=True, label="hot water")
     used = check_attachment(
         row, key, resources, (HOT_WATER_GROUP, "dhw_instance"), endpoint_kinds(structural), "hot water",
     )
@@ -366,6 +611,7 @@ def main() -> int:
     try:
         validate_index(load(INDEX))
         validate_dhw(load(DHW))
+        check_handoff_pages()
     except (OSError, json.JSONDecodeError, KeyError, TypeError, CheckError) as error:
         print(f"thermal SemReg mapping contract failed: {error}", file=sys.stderr)
         return 1

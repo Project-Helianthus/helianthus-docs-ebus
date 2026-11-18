@@ -142,13 +142,14 @@ not disguised as an unchanged selected source.
 `thermal.measurement.humidity_relative` is an existing quantity in `unit.percent`
 with field dimension `thermal.dimension.ratio`, inclusive bounds 0 and 100
 (`bound("0",0)` and `bound("1",2)`). Use percent magnitude: 50 percent remains
-50, not 0.5. These are pack validation bounds, not device qualification.
+50, not 0.5. The native unit stays percent (`%`). The semantic target is `unit.percent`. SI unit a ratio, percent divided by 100.
+These are pack validation bounds, not device qualification.
 
 | Native role | Native resource; service placement | Cutover disposition against the supplied pack evidence |
 |---|---|---|
-| Controller-zone measurement | Zone instance `OP=0x02 GG=0x03 II=zone`; no service placement is proposed | Candidate humidity field only. Withhold the complete FactKey and runtime publication until the subject is decided, the sensor role is evidenced and the per-zone/source binding is qualified. |
-| Remote-room measurement | Device slot `OP=0x06 GG=0x09/0x0A II=slot`; no service placement is proposed, also when a legacy fallback shows the value for a zone | Keep the remote identity even when projected into a zone. No dedicated remote-room service/binding is established here. Unassigned remote can remain native evidence but has no inferred zone service. Withhold unresolved FactKey or service. |
-| Circuit measurement | Circuit instance `OP=0x02 GG=0x02 II=circuit`; no service placement is proposed | Candidate humidity field only, with separate circuit sensor identity and the subject unresolved. Never reuse a zone key because values match. |
+| Controller-zone measurement | Zone instance `OP=0x02 GG=0x03 II=zone`; no service placement is proposed | Candidate humidity field only. Withhold the complete FactKey and runtime publication until the subject is decided, the sensor role is evidenced and the per-zone/source binding is qualified. Native unit percent (`%`). Semantic target `unit.percent`. SI unit a ratio, percent divided by 100. |
+| Remote-room measurement | Device slot `OP=0x06 GG=0x09/0x0A II=slot`; no service placement is proposed, also when a legacy fallback shows the value for a zone | Keep the remote identity even when projected into a zone. No dedicated remote-room service/binding is established here. Unassigned remote can remain native evidence but has no inferred zone service. Withhold unresolved FactKey or service. Native unit percent (`%`). Semantic target `unit.percent`. SI unit a ratio, percent divided by 100. |
+| Circuit measurement | Circuit instance `OP=0x02 GG=0x02 II=circuit`; no service placement is proposed | Candidate humidity field only, with separate circuit sensor identity and the subject unresolved. Never reuse a zone key because values match. Native unit percent (`%`). Semantic target `unit.percent`. SI unit a ratio, percent divided by 100. |
 | Configuration threshold | No matching humidity-threshold field or operation in `fields` / `operations` | Withhold universal projection: configuration threshold is unrepresentable by the measurement definition. Keep the native/legacy config value; do not repurpose demand level, a temperature setpoint or measured humidity. |
 
 No zone, circuit, slot or source dimension is inserted into the humidity

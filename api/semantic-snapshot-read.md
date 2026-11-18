@@ -632,7 +632,7 @@ zero examples do not qualify a family or prove a live reading:
 | PV/inverter / `helianthus.pack.pv` | `pv.ac.active_power` | `unit.watt` / `pv.dimension.phase` |
 | Storage/BMS / `helianthus.pack.storage` | `storage.state.soc` | `unit.percent` / `storage.dimension.pack` |
 | EVSE / `helianthus.pack.evse` | `evse.ac.active_power` | `unit.watt` / `evse.dimension.phase` |
-| Thermal/HVAC / `helianthus.pack.thermal` | `thermal.measurement.air_temperature` | `unit.celsius` / `thermal.dimension.temperature` |
+| Thermal/HVAC / `helianthus.pack.thermal` | `thermal.measurement.air_temperature` | `unit.celsius` (SI unit kelvin, degrees Celsius plus 273.15) / `thermal.dimension.temperature` |
 | Infrastructure / `helianthus.pack.infrastructure` | `infrastructure.ac.voltage` | `unit.volt` / `infrastructure.dimension.phase` |
 
 Their public contracts are

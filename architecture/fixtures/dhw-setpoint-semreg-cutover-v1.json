@@ -13,7 +13,9 @@
       "native_key": "PB=0xB5 SB=0x24 OP=0x02 GG=0x01 II=0x00 RR=0x0004",
       "native_value": {
         "wire_type": "f32_le",
-        "unit": "degC"
+        "unit": "degC",
+        "si_unit": "kelvin",
+        "conversion": "degrees Celsius plus 273.15"
       },
       "native_resource": "OP=0x02 GG=0x01 II=0x00",
       "relation_candidates": {

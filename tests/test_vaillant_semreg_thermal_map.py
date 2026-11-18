@@ -317,10 +317,19 @@ def test_qualification_sidecar_binds_to_the_rows_by_native_key() -> None:
     rejects(index(), qualification=sidecar)
 
 
+MAPPED_TEMPERATURE = {
+    "wire_type": "f32_le",
+    "unit": "degC",
+    "si_unit": "kelvin",
+    "conversion": "degrees Celsius plus 273.15",
+}
+
+
 def test_native_rows_keep_native_units_and_delayed_evaluation_separate() -> None:
-    rows = index()["mappings"]  # type: ignore[index]
-    for row in rows:  # type: ignore[union-attr]
-        assert row["native_value"] == {"wire_type": "f32_le", "unit": "degC"}  # type: ignore[index]
+    rows = rows_by_key(index())
+    for key in (OUTDOOR, FLOW):
+        assert rows[key]["native_value"] == MAPPED_TEMPERATURE
+    assert rows[AVERAGE]["native_value"] == {"wire_type": "f32_le", "unit": "degC"}
 
     lifecycle = index()["lifecycle"]  # type: ignore[index]
     observation = lifecycle["retained_native_observation"]  # type: ignore[index]
@@ -399,6 +408,393 @@ def test_rejects_withheld_and_nonclaim_drift() -> None:
     mutated = deepcopy(index())
     mutated["nonclaims"]["write_route_established"] = True  # type: ignore[index]
     rejects(mutated)
+
+
+@pytest.mark.parametrize("key", (OUTDOOR, FLOW))
+@pytest.mark.parametrize(
+    ("field", "value"),
+    (
+        ("wire_type", "u16"),
+        ("unit", "unit.celsius"),
+        ("unit", "kelvin"),
+        ("si_unit", None),
+        ("si_unit", "unit.celsius"),
+        ("conversion", None),
+        ("conversion", "degrees Celsius"),
+    ),
+)
+def test_mapped_temperature_rejects_each_field(key: str, field: str, value: object) -> None:
+    # wire_type: u16 replaces f32_le.
+    # unit: unit.celsius or kelvin replaces the native unit degC.
+    # si_unit: absent, or unit.celsius stated as the SI unit.
+    # conversion: absent, or degrees Celsius without plus 273.15.
+    mutated = deepcopy(index())
+    native = rows_by_key(mutated)[key]["native_value"]
+    if value is None:
+        del native[field]  # type: ignore[index]
+    else:
+        native[field] = value  # type: ignore[index]
+    rejects(mutated)
+
+
+def test_unmapped_average_keeps_the_native_unit_only() -> None:
+    mutated = deepcopy(index())
+    native = rows_by_key(mutated)[AVERAGE]["native_value"]
+    native["si_unit"] = "kelvin"  # type: ignore[index]
+    native["conversion"] = "degrees Celsius plus 273.15"  # type: ignore[index]
+    rejects(mutated)
+
+
+def handoff_pages() -> dict[str, str]:
+    return {path: (ROOT / path).read_text(encoding="utf-8") for path, *_rest in CHECKER.PAGE_RULES}
+
+
+def test_handoff_pages_state_the_native_unit_and_both_si_statements() -> None:
+    CHECKER.check_handoff_pages(handoff_pages())
+
+
+def _without_row_token(text: str, marker: str, token: str) -> str:
+    """Drop one statement from the marked row and keep it somewhere else on the page."""
+    lines = text.splitlines()
+    found = False
+    for index, line in enumerate(lines):
+        if marker not in line:
+            continue
+        if token not in line:
+            raise AssertionError(f"row {marker!r} has no {token!r}")
+        lines[index] = line.replace(token, "omitted")
+        found = True
+        break
+    if not found:
+        raise AssertionError(marker)
+    body = "\n".join(lines)
+    if token not in body:
+        body += f"\n\nunrelated mention of {token}\n"
+    return body
+
+
+FIELDS = ("native", "semantic", "si_unit", "conversion")
+STATEMENT_CASES = [
+    pytest.param(path, marker, field, token, id=f"{path}:{marker}:{field}")
+    for path, marker, *tokens in CHECKER.PAGE_RULES
+    for field, token in zip(FIELDS, tokens)
+    if token is not None
+]
+
+
+@pytest.mark.parametrize(("path", "marker", "field", "token"), STATEMENT_CASES)
+def test_handoff_page_rejects_a_missing_statement(path: str, marker: str, field: str, token: str) -> None:
+    # native: the native-unit spelling is removed from this mapped row only.
+    # semantic: the SemReg unit identifier is removed from this mapped row only.
+    # si_unit: the SI-unit statement is removed from this mapped row only.
+    # conversion: the conversion statement is removed from this mapped row only.
+    # Another occurrence remains on the page, so a whole-page search would pass.
+    pages = handoff_pages()
+    pages[path] = _without_row_token(pages[path], marker, token)
+    assert token in pages[path]
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.check_handoff_pages(pages)
+
+
+def test_every_mapped_row_with_native_evidence_names_its_native_unit() -> None:
+    # The native-unit field is the native spelling, never a SemReg identifier.
+    natives = [native for _path, _marker, native, *_rest in CHECKER.PAGE_RULES if native is not None]
+    assert natives
+    assert all("unit." not in native for native in natives)
+    assert sum(native == "°C" for native in natives) == 8
+
+
+def test_heating_manual_row_without_native_celsius_fails() -> None:
+    # unit.celsius alone is the SemReg identifier. Dropping the native °C from
+    # the row fails even though the SemReg identifier stays.
+    pages = handoff_pages()
+    path = "architecture/zone-setpoint-semreg-cutover.md"
+    row = CHECKER.mapped_row(path, pages[path], "| Heating manual |")
+    stripped = row.replace("°C catalog label, ", "catalog label, ")
+    assert "°C" not in stripped and "unit.celsius" in stripped
+    pages[path] = pages[path].replace(row, stripped)
+    with pytest.raises(CHECKER.CheckError, match="native unit"):
+        CHECKER.check_handoff_pages(pages)
+
+
+def test_a_semreg_identifier_is_refused_as_the_native_unit() -> None:
+    page = "| Heating manual | 0x0022, f32, `unit.celsius` (SI unit kelvin, degrees Celsius plus 273.15) |\n"
+    with pytest.raises(CHECKER.CheckError, match="SemReg identifier"):
+        CHECKER.check_handoff_page(
+            "page.md", page, "| Heating manual |", "unit.celsius", None, *CHECKER.TEMPERATURE_SI,
+        )
+
+
+def _table_spans(text: str) -> list[tuple[int, int]]:
+    """Start and end line index of each run of pipe-prefixed lines."""
+    lines = text.splitlines()
+    spans: list[tuple[int, int]] = []
+    start = None
+    for index, line in enumerate(lines + [""]):
+        is_row = line.strip().startswith("|")
+        if is_row and start is None:
+            start = index
+        elif not is_row and start is not None:
+            spans.append((start, index))
+            start = None
+    return spans
+
+
+def _handoff_spans(path: str, text: str) -> list[tuple[int, int]]:
+    lines = text.splitlines()
+    markers = tuple(marker for rule_path, marker, *_rest in CHECKER.PAGE_RULES if rule_path == path)
+    headers = tuple(header for rule_path, header in CHECKER.WITHHELD_TABLE_HEADERS if rule_path == path)
+    return [
+        (start, end) for start, end in _table_spans(text)
+        if any(marker in lines[index] for index in range(start, end) for marker in markers)
+        or any(lines[start].strip().startswith(header) for header in headers)
+    ]
+
+
+def _expected_unmapped_rows(path: str, text: str) -> list[str]:
+    lines = text.splitlines()
+    markers = tuple(marker for rule_path, marker, *_rest in CHECKER.PAGE_RULES if rule_path == path)
+    rows: list[str] = []
+    for start, end in _handoff_spans(path, text):
+        assert CHECKER.is_table_separator(lines[start + 1]), (path, lines[start])
+        for line in lines[start + 2:end]:
+            if not any(marker in line for marker in markers):
+                rows.append(line)
+    return rows
+
+
+def _rows_outside_handoff_tables(path: str, text: str) -> list[str]:
+    lines = text.splitlines()
+    inside = {index for start, end in _handoff_spans(path, text) for index in range(start, end)}
+    return [
+        line for start, end in _table_spans(text) for index, line in enumerate(lines[start:end], start)
+        if index not in inside and not CHECKER.is_table_separator(line)
+    ]
+
+
+def _suffix_line(text: str, row: str, suffix: str) -> str:
+    lines = text.splitlines()
+    for index, line in enumerate(lines):
+        if line == row:
+            lines[index] = line + suffix
+            return "\n".join(lines)
+    raise AssertionError(row)
+
+
+def test_unmapped_rows_are_every_non_mapped_body_row_of_a_handoff_table() -> None:
+    pages = handoff_pages()
+    for path, text in pages.items():
+        assert CHECKER.unmapped_handoff_rows(path, text) == _expected_unmapped_rows(path, text)
+
+
+def test_every_page_has_a_handoff_table() -> None:
+    pages = handoff_pages()
+    for path, text in pages.items():
+        assert CHECKER.handoff_tables(path, text), path
+
+
+def test_rows_outside_the_handoff_tables_are_not_unmapped_rows() -> None:
+    # Unrelated tables on a hand-off page are outside this contract. A row there may
+    # name an SI unit or 273.15 without being read as a withheld hand-off row.
+    pages = handoff_pages()
+    outside = _rows_outside_handoff_tables(
+        "api/semantic-snapshot-read.md", pages["api/semantic-snapshot-read.md"],
+    )
+    assert len(outside) > 20
+    seen = 0
+    for path, text in pages.items():
+        for row in _rows_outside_handoff_tables(path, text):
+            seen += 1
+            assert row not in CHECKER.unmapped_handoff_rows(path, text)
+            mutated = dict(pages)
+            mutated[path] = _suffix_line(text, row, " SI unit kelvin, degrees Celsius plus 273.15")
+            CHECKER.check_handoff_pages(mutated)
+    assert seen > len(outside)
+
+
+def test_handoff_table_header_may_name_the_si_unit() -> None:
+    pages = handoff_pages()
+    for path, text in pages.items():
+        for start, _end in _handoff_spans(path, text):
+            header = text.splitlines()[start]
+            mutated = dict(pages)
+            mutated[path] = _suffix_line(text, header, " SI unit and conversion |")
+            CHECKER.check_handoff_pages(mutated)
+
+
+@pytest.mark.parametrize(("path", "header"), CHECKER.WITHHELD_TABLE_HEADERS)
+def test_a_missing_withheld_row_table_fails(path: str, header: str) -> None:
+    pages = handoff_pages()
+    assert header in pages[path]
+    pages[path] = pages[path].replace(header, "| Renamed |")
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.check_handoff_pages(pages)
+
+
+@pytest.mark.parametrize(
+    ("path", "marker"),
+    (
+        ("architecture/zone-setpoint-semreg-cutover.md", "| Cooling manual |"),
+        ("architecture/zone-setpoint-semreg-cutover.md", "| Cooling computed effective |"),
+        ("architecture/zone-setpoint-semreg-cutover.md", "| Quick-veto override |"),
+        ("architecture/dhw-measured-temperature-cutover.md", "| `(0x02, 0x01, 0x00, 0x0004)` |"),
+        ("architecture/dhw-measured-temperature-cutover.md", "| `(0x02, 0x01, 0x00, 0x0008)` |"),
+        ("architecture/dhw-setpoint-semreg-cutover.md", "| DHW flow ceiling |"),
+        ("architecture/dhw-setpoint-semreg-cutover.md", "| Boiler-direct desired temperature candidate |"),
+        ("architecture/solar-loop-temperature-cutover.md", "| Collector candidate |"),
+        ("architecture/humidity-semreg-cutover.md", "| Configuration threshold |"),
+        ("architecture/b524-semantic-mapping.md", "`PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x0095`"),
+        ("architecture/outdoor-temperature-semreg-cutover.md", "state.outdoor_temperature_avg24h"),
+        ("architecture/circuit-temperature-cutover.md", "| `0x0007` |"),
+        ("architecture/circuit-temperature-cutover.md", "| `0x0020` |"),
+        ("architecture/boiler-temperature-semreg-mapping.md", "| Return: `ReturnTemperatureC`"),
+        ("architecture/cylinder-temperature-cutover.md", "| `0x0001` |"),
+    ),
+)
+def test_unmapped_page_row_rejects_a_conversion(path: str, marker: str) -> None:
+    # A withheld row is not on a fixed list. Deriving every non-mapped table row
+    # rejects a conversion added to that row, including one the list never named.
+    pages = handoff_pages()
+    rows = [row for row in CHECKER.unmapped_handoff_rows(path, pages[path]) if marker in row]
+    assert len(rows) == 1
+    pages[path] = _suffix_line(pages[path], rows[0], " degrees Celsius plus 273.15")
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.check_handoff_pages(pages)
+
+
+def test_unmapped_humidity_row_rejects_the_ratio_conversion() -> None:
+    pages = handoff_pages()
+    path = "architecture/humidity-semreg-cutover.md"
+    rows = [row for row in CHECKER.unmapped_handoff_rows(path, pages[path]) if "| Configuration threshold |" in row]
+    assert len(rows) == 1
+    pages[path] = _suffix_line(pages[path], rows[0], " percent divided by 100")
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.check_handoff_pages(pages)
+
+
+def test_every_derived_unmapped_row_rejects_a_conversion() -> None:
+    pages = handoff_pages()
+    seen = 0
+    for path, text in pages.items():
+        for row in CHECKER.unmapped_handoff_rows(path, text):
+            seen += 1
+            mutated = dict(pages)
+            mutated[path] = _suffix_line(text, row, " degrees Celsius plus 273.15")
+            with pytest.raises(CHECKER.CheckError):
+                CHECKER.check_handoff_pages(mutated)
+    assert seen > len(CHECKER.PAGE_RULES)
+
+
+@pytest.mark.parametrize(
+    "wording",
+    (
+        "; converted to kelvin",
+        " `unit.kelvin`",
+        " Kelvin",
+        "; converts to a ratio",
+        " as a fraction",
+        " plus 273",
+        " value divided by 100",
+        " SI quantity",
+        "; conversion applies",
+        " `unit.one`",
+        " `unit.celsius`",
+        " `unit.percent`",
+        " `unit.watt`",
+        " `unit.dimensionless`",
+    ),
+)
+def test_unmapped_row_rejects_alternate_si_wording(wording: str) -> None:
+    # Not only the canonical phrases: any SI unit, SemReg unit id or conversion
+    # wording on a row with no mapped quantity fails, on every derived unmapped row.
+    pages = handoff_pages()
+    for path, text in pages.items():
+        for row in CHECKER.unmapped_handoff_rows(path, text):
+            mutated = dict(pages)
+            mutated[path] = _suffix_line(text, row, wording)
+            with pytest.raises(CHECKER.CheckError):
+                CHECKER.check_handoff_pages(mutated)
+
+
+def test_unmapped_cooling_row_rejects_a_semantic_unit_id() -> None:
+    # Cooling manual keeps the native °C. unit.celsius and unit.percent are
+    # SemReg unit ids, so either one on that withheld row fails.
+    pages = handoff_pages()
+    path = "architecture/zone-setpoint-semreg-cutover.md"
+    rows = [row for row in CHECKER.unmapped_handoff_rows(path, pages[path]) if "| Cooling manual |" in row]
+    assert len(rows) == 1
+    assert "unit." not in rows[0]
+    for suffix in (" `unit.celsius`", " `unit.percent`"):
+        mutated = dict(pages)
+        mutated[path] = _suffix_line(pages[path], rows[0], suffix)
+        with pytest.raises(CHECKER.CheckError):
+            CHECKER.check_handoff_pages(mutated)
+
+
+def test_snapshot_example_keeps_its_pack_unit_and_rejects_another() -> None:
+    # The storage example already names unit.percent as that pack's unit. That
+    # one id stays. Adding unit.celsius, or a second unit.percent, still fails.
+    pages = handoff_pages()
+    path = "api/semantic-snapshot-read.md"
+    rows = [row for row in CHECKER.unmapped_handoff_rows(path, pages[path]) if "helianthus.pack.storage" in row]
+    assert len(rows) == 1
+    assert rows[0].count("unit.percent") == 1
+    CHECKER.check_handoff_pages(pages)
+    for suffix in (" `unit.celsius`", " `unit.percent`"):
+        mutated = dict(pages)
+        mutated[path] = _suffix_line(pages[path], rows[0], suffix)
+        with pytest.raises(CHECKER.CheckError):
+            CHECKER.check_handoff_pages(mutated)
+
+
+def test_unmapped_cooling_row_rejects_converted_to_kelvin() -> None:
+    pages = handoff_pages()
+    path = "architecture/zone-setpoint-semreg-cutover.md"
+    rows = [row for row in CHECKER.unmapped_handoff_rows(path, pages[path]) if "| Cooling manual |" in row]
+    assert len(rows) == 1
+    pages[path] = pages[path].replace(rows[0], rows[0].replace("°C", "°C; converted to kelvin", 1))
+    assert pages[path] != handoff_pages()[path]
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.check_handoff_pages(pages)
+
+
+def test_unmapped_row_keeps_a_native_candidate_kelvin_difference() -> None:
+    # A bare K is the native candidate unit of a temperature difference, not a conversion.
+    pages = handoff_pages()
+    path = "architecture/cylinder-temperature-cutover.md"
+    assert any("candidate K" in row for row in CHECKER.unmapped_handoff_rows(path, pages[path]))
+    CHECKER.check_handoff_pages(pages)
+
+
+def test_humidity_native_unit_is_percent_not_the_semantic_target() -> None:
+    # unit.percent alone is the SemReg quantity id. It does not satisfy the wire unit.
+    pages = handoff_pages()
+    path = "architecture/humidity-semreg-cutover.md"
+    pages[path] = pages[path].replace(
+        "Native unit percent (`%`). Semantic target `unit.percent`.",
+        "Native unit `unit.percent`.",
+    )
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.check_handoff_pages(pages)
+
+
+def test_humidity_semantic_target_precedes_the_conversion() -> None:
+    pages = handoff_pages()
+    path = "architecture/humidity-semreg-cutover.md"
+    pages[path] = pages[path].replace(
+        "Semantic target `unit.percent`. SI unit a ratio, percent divided by 100.",
+        "SI unit a ratio, percent divided by 100. Semantic target `unit.percent`.",
+    )
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.check_handoff_pages(pages)
+
+
+def test_humidity_page_keeps_the_wire_unit_apart_from_the_semantic_target() -> None:
+    text = (ROOT / "architecture/humidity-semreg-cutover.md").read_text(encoding="utf-8")
+    assert text.count("Native unit percent (`%`). Semantic target `unit.percent`.") == 3
+    assert "The native unit stays percent (`%`). The semantic target is `unit.percent`." in text
+    assert "The native unit stays `unit.percent`" not in text
+    assert "Native unit `unit.percent`" not in text
 
 
 def test_rejects_receipt_evaluation_boundary_or_freshness_drift() -> None:

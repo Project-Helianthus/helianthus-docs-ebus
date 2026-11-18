@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+- Mapped temperature rows of the eBUS thermal hand-off keep the native unit
+  and state the SI unit kelvin, degrees Celsius plus 273.15. Humidity rows
+  keep the native unit percent and state `unit.percent` as the semantic
+  target, then the SI unit as a ratio, percent divided by 100. The
+  statements are on the boiler, circuit, cylinder,
+  domestic-hot-water measured and setpoint, humidity, solar-loop, zone room,
+  zone setpoint and outdoor-temperature pages, on the mapped rows of
+  `architecture/b524-semantic-mapping.md`, on the thermal air-temperature row
+  of `api/semantic-snapshot-read.md`, and on the mapped rows of
+  `architecture/fixtures/vaillant-semreg-thermal-map-v1.json` and
+  `architecture/fixtures/dhw-setpoint-semreg-cutover-v1.json`. A row with no
+  mapped quantity keeps the native unit only. The thermal map contract
+  rejects a mapped row that lacks the SI unit or the conversion on that row.
+
 - `architecture/naming.md` gives a function the maker names with a name of its
   own the vocabulary role `feature`: a closed list in the maker's spelling,
   with a definition or "meaning not established", in the subject or object

@@ -95,7 +95,7 @@ from the last good observation. Readability and qualification do not imply writi
 
 ## Proposed existing-pack projection or withholding
 
-T defines `thermal.measurement.water_temperature` with `unit.celsius` and
+T defines `thermal.measurement.water_temperature` with `unit.celsius` (SI unit kelvin, degrees Celsius plus 273.15) and
 `thermal.dimension.temperature`; its decimal bounds are -100..200. Those are
 pack constraints, not a solar sensor's native range. T also defines
 `thermal.service.circuit` keyed by `thermal.dimension.circuit`, and
