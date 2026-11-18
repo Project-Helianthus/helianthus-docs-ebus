@@ -23,6 +23,10 @@ must reject that page. Fields and the wording change each case catches:
 - lens: restating the lens rules
 - device choice: choosing which devices are published
 - provenance label: dropping Proven, naming a Hypothesis, or emptying Unknown
+- precedence: letting the registration page's empty-hook rule win for `output`
+- precedence scope: widening the exception beyond the single name `output`
+- precedence remainder: lifting the empty-hook rule for other names or
+  directions
 """
 
 from __future__ import annotations
@@ -64,6 +68,9 @@ MUTATIONS = (
     ("provenance Proven", "**Proven** means a fact", "**Proven** names nothing"),
     ("provenance Hypothesis", "**Hypothesis**\nnames nothing on this page", "**Hypothesis**\nnames a second hook on this page"),
     ("provenance Unknown", "**Unknown** names device publication", "**Unknown** names nothing"),
+    ("precedence", "this page\ntakes precedence over that rule", "that rule\ntakes precedence over this page"),
+    ("precedence scope", "narrows that rule for one\nname only", "lifts that rule for every\nname"),
+    ("precedence remainder", "that rule stands unchanged", "that rule no longer applies"),
 )
 
 

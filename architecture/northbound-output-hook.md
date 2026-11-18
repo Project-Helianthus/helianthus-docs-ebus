@@ -16,6 +16,12 @@ names nothing on this page. **Unknown** names device publication and the lens
 rules, which stay with their owners. Qualification of a device family stays a
 separate record.
 
+The runtime driver lifecycle states that the first host requires an empty hook
+set and that all hook declarations fail. This page narrows that rule for one
+name only: for the hook spelling `output` on a northbound descriptor, this page
+takes precedence over that rule. For every other hook name and every other
+descriptor direction, that rule stands unchanged.
+
 ## Hook admission
 
 A northbound descriptor may register the hook spelling `output`. The only
