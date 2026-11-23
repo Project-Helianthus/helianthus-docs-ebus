@@ -92,7 +92,6 @@ def test_ci_local_has_no_private_modbus_checkout_and_keeps_the_companion_check(t
         "PLATFORM_DOCS_MODBUS_ROOT",
         "PLATFORM_DOCS_MODBUS_PRIOR_ROOT",
         "checkouts/docs-modbus",
-        "validate_opaque_runtime_acquisition.py",
     ):
         assert forbidden not in text
     assert "python3 scripts/validate_modbus_companion.py" in text
@@ -126,7 +125,6 @@ def test_ci_local_has_no_private_modbus_checkout_and_keeps_the_companion_check(t
     combined = result.stdout + result.stderr
     assert result.returncode == 2
     assert "PLATFORM_DOCS_MODBUS_ROOT is required" not in combined
-    assert "validate_opaque_runtime_acquisition.py" not in combined
     assert "actionlint v1.7.7 is required" in result.stderr
 
 

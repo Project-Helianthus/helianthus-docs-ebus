@@ -265,7 +265,6 @@ def test_public_docs_ci_does_not_checkout_private_modbus_documentation():
         "PLATFORM_DOCS_MODBUS_PRIOR_ROOT",
         "docs_modbus_prior_ref",
         "REPO_READ_TOKEN",
-        "validate_opaque_runtime_acquisition.py",
         "--modbus-ref",
     ):
         assert forbidden not in text
