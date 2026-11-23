@@ -14,6 +14,7 @@ class CheckError(Exception):
     """Raised when the canonical policy or a required public reference is invalid."""
 
 
+ROOT = pathlib.Path(__file__).resolve().parents[1]
 POLICY_PATH = pathlib.Path("architecture/regulator-qualified-identity-policy.json")
 HISTORICAL_POLICY_VERSION = 1
 CURRENT_POLICY_VERSION = 2
@@ -133,7 +134,10 @@ REQUIRED_DOCUMENT_REFERENCES = {
     pathlib.Path("architecture/atr/04-sn-merge-gate.md"): "[qualified-identity policy](../regulator-qualified-identity-policy.json)",
     pathlib.Path("architecture/atr/07-live-validation-acceptance.md"): "[qualified-identity policy](../regulator-qualified-identity-policy.json)",
     pathlib.Path("architecture/overview.md"): "[qualified-identity policy](./regulator-qualified-identity-policy.json)",
-    pathlib.Path("api/graphql.md"): "[qualified-identity policy](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/regulator-qualified-identity-policy.json)",
+    pathlib.Path("api/graphql.md"): (
+        "[qualified-identity policy](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/"
+        + "architecture/regulator-qualified-identity-policy.json)"
+    ),
 }
 REQUIRED_ATR_NORMATIVE_BLOCKS = {
     pathlib.Path("architecture/atr/01-address-table-model.md"),
@@ -578,16 +582,12 @@ def document_path(root: pathlib.Path, relative: pathlib.Path) -> pathlib.Path:
     path = root / relative
     if relative == pathlib.Path("api/graphql.md") and not path.is_file():
         raw = os.environ.get("PLATFORM_DOCS_ROOT")
-        docs = pathlib.Path(raw) if raw else None
-        if docs is None:
-            repo = pathlib.Path(__file__).resolve().parents[1]
-            for candidate in (repo / "checkouts" / "docs", repo / ".pytest_cache" / "platform-docs"):
-                if candidate.is_dir():
-                    docs = candidate
-                    break
-        if docs is None:
-            raise CheckError("api/graphql.md: PLATFORM_DOCS_ROOT is required")
-        return docs / relative
+        if raw:
+            return pathlib.Path(raw) / relative
+        candidate = ROOT / "checkouts" / "docs"
+        if candidate.is_dir():
+            return candidate / relative
+        raise CheckError("api/graphql.md: PLATFORM_DOCS_ROOT is required")
     return path
 
 

@@ -27,12 +27,6 @@
       "value": "private(?:-context)?/|private static analysis|restricted static.analysis|_work_[\\w-]+/|(?<![\\w/-])(?-i:[A-Z][A-Z0-9]*\\d[A-Z0-9]*[-_](?:[\\w-]*\\.md|(?:DEEP|ANALYSIS|NOTES)\\b))|(?-i:\\b[A-Z]{2,})-(?:B[0-9A-F]{3}|corrections|semantic|protocol|timer)[\\w-]*(?:\\.md|-)"
     }
   ],
-  "scripts/check_regulator_identity_contract.py": [
-    {
-      "assignment": "REQUIRED_DOCUMENT_REFERENCES",
-      "value": "[qualified-identity policy](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/regulator-qualified-identity-policy.json)"
-    }
-  ],
   "scripts/check_source_address_table_against_official_specs.py": [
     {
       "assignment": "TABLE_HEADER",

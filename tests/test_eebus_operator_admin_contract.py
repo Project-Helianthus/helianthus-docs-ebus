@@ -11,22 +11,22 @@ CONFIG_GATES = ROOT / "architecture" / "semantic-configuration-gates.md"
 HA = ROOT / "development" / "ha-integration.md"
 
 
-def _owner_root(env_name: str, checkout: str, cache: str) -> Path:
+def _owner_root(env_name: str, checkout: str) -> Path:
     raw = os.environ.get(env_name)
     if raw:
         return Path(raw)
-    for candidate in (ROOT / "checkouts" / checkout, ROOT / ".pytest_cache" / cache):
-        if candidate.is_dir():
-            return candidate
+    candidate = ROOT / "checkouts" / checkout
+    if candidate.is_dir():
+        return candidate
     raise OSError(f"{env_name} is required")
 
 
 def contract_page() -> Path:
-    return _owner_root("PLATFORM_DOCS_EEBUS_ROOT", "docs-eebus", "platform-eebus") / "api" / "eebus-operator-admin.md"
+    return _owner_root("PLATFORM_DOCS_EEBUS_ROOT", "docs-eebus") / "api" / "eebus-operator-admin.md"
 
 
 def docs_page(name: str) -> Path:
-    return _owner_root("PLATFORM_DOCS_ROOT", "docs", "platform-docs") / "api" / name
+    return _owner_root("PLATFORM_DOCS_ROOT", "docs") / "api" / name
 
 
 def _normalized(path: Path) -> str:

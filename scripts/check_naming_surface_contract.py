@@ -456,10 +456,9 @@ def validate_root(root: Path, gateway: Path | None = None) -> None:
     raw = os.environ.get("PLATFORM_DOCS_ROOT")
     docs = Path(raw) if raw else None
     if docs is None:
-        for candidate in (ROOT / "checkouts" / "docs", ROOT / ".pytest_cache" / "platform-docs"):
-            if candidate.is_dir():
-                docs = candidate
-                break
+        candidate = ROOT / "checkouts" / "docs"
+        if candidate.is_dir():
+            docs = candidate
     if docs is None:
         raise OSError("PLATFORM_DOCS_ROOT is required")
     validate_operation((docs / "api/semantic-operation-route.md").read_text(),

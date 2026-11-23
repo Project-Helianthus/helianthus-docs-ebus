@@ -224,10 +224,9 @@ def check(root: Path = ROOT) -> tuple[int, int]:
         raw = os.environ.get('PLATFORM_DOCS_ROOT')
         docs = Path(raw) if raw else None
         if docs is None:
-            for candidate in (ROOT / 'checkouts' / 'docs', ROOT / '.pytest_cache' / 'platform-docs'):
-                if candidate.is_dir():
-                    docs = candidate
-                    break
+            candidate = ROOT / 'checkouts' / 'docs'
+            if candidate.is_dir():
+                docs = candidate
         if docs is None:
             raise OSError('PLATFORM_DOCS_ROOT is required')
         naming_page = docs / CONTRACT

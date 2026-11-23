@@ -11,14 +11,16 @@ from graphql import GraphQLError, parse
 from markdown_it import MarkdownIt
 
 
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+
+
 def platform_docs_root() -> pathlib.Path:
     raw = os.environ.get("PLATFORM_DOCS_ROOT")
     if raw:
         return pathlib.Path(raw)
-    repo = pathlib.Path(__file__).resolve().parents[1]
-    for candidate in (repo / "checkouts" / "docs", repo / ".pytest_cache" / "platform-docs"):
-        if candidate.is_dir():
-            return candidate
+    candidate = ROOT / "checkouts" / "docs"
+    if candidate.is_dir():
+        return candidate
     raise OSError("PLATFORM_DOCS_ROOT is required")
 
 

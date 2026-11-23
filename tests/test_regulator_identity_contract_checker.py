@@ -49,10 +49,9 @@ def copy_contract_material(destination: pathlib.Path) -> None:
             raw = os.environ.get("PLATFORM_DOCS_ROOT")
             docs = pathlib.Path(raw) if raw else None
             if docs is None:
-                for candidate in (REPO_ROOT / "checkouts" / "docs", REPO_ROOT / ".pytest_cache" / "platform-docs"):
-                    if candidate.is_dir():
-                        docs = candidate
-                        break
+                candidate = REPO_ROOT / "checkouts" / "docs"
+                if candidate.is_dir():
+                    docs = candidate
             if docs is None:
                 raise OSError("PLATFORM_DOCS_ROOT is required")
             source = docs / relative

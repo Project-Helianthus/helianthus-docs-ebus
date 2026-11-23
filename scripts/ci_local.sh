@@ -5,57 +5,45 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"
 
 # Docs Checks passes these roots. A local run uses the same checkout paths.
+# An unset root fails. There is no second location.
 if [ -z "${PLATFORM_DOCS_ROOT:-}" ]; then
   if [ -d "${repo_root}/checkouts/docs" ]; then
     PLATFORM_DOCS_ROOT="${repo_root}/checkouts/docs"
-  elif [ -d "${repo_root}/.pytest_cache/platform-docs" ]; then
-    PLATFORM_DOCS_ROOT="${repo_root}/.pytest_cache/platform-docs"
-  fi
-  if [ -n "${PLATFORM_DOCS_ROOT:-}" ]; then
-    export PLATFORM_DOCS_ROOT
+  else
+    echo "PLATFORM_DOCS_ROOT is required" >&2
+    exit 1
   fi
 fi
+export PLATFORM_DOCS_ROOT
 if [ -z "${PLATFORM_DOCS_MODBUS_ROOT:-}" ]; then
   if [ -d "${repo_root}/checkouts/docs-modbus" ]; then
     PLATFORM_DOCS_MODBUS_ROOT="${repo_root}/checkouts/docs-modbus"
-  elif [ -d "${repo_root}/.pytest_cache/platform-modbus" ]; then
-    PLATFORM_DOCS_MODBUS_ROOT="${repo_root}/.pytest_cache/platform-modbus"
-  fi
-  if [ -n "${PLATFORM_DOCS_MODBUS_ROOT:-}" ]; then
-    export PLATFORM_DOCS_MODBUS_ROOT
+  else
+    echo "PLATFORM_DOCS_MODBUS_ROOT is required" >&2
+    exit 1
   fi
 fi
+export PLATFORM_DOCS_MODBUS_ROOT
 if [ -z "${PLATFORM_DOCS_EEBUS_ROOT:-}" ]; then
   if [ -d "${repo_root}/checkouts/docs-eebus" ]; then
     PLATFORM_DOCS_EEBUS_ROOT="${repo_root}/checkouts/docs-eebus"
-  elif [ -d "${repo_root}/.pytest_cache/platform-eebus" ]; then
-    PLATFORM_DOCS_EEBUS_ROOT="${repo_root}/.pytest_cache/platform-eebus"
-  fi
-  if [ -n "${PLATFORM_DOCS_EEBUS_ROOT:-}" ]; then
-    export PLATFORM_DOCS_EEBUS_ROOT
+  else
+    echo "PLATFORM_DOCS_EEBUS_ROOT is required" >&2
+    exit 1
   fi
 fi
-if [ -z "${PLATFORM_DOCS_PRIOR_ROOT:-}" ] && [ -d "${repo_root}/.pytest_cache/platform-docs" ]; then
-  PLATFORM_DOCS_PRIOR_ROOT="${repo_root}/.pytest_cache/platform-docs"
-  export PLATFORM_DOCS_PRIOR_ROOT
-fi
-if [ -z "${PLATFORM_DOCS_MODBUS_PRIOR_ROOT:-}" ] && [ -d "${repo_root}/.pytest_cache/platform-modbus-prior" ]; then
-  PLATFORM_DOCS_MODBUS_PRIOR_ROOT="${repo_root}/.pytest_cache/platform-modbus-prior"
+export PLATFORM_DOCS_EEBUS_ROOT
+if [ -z "${PLATFORM_DOCS_MODBUS_PRIOR_ROOT:-}" ] && [ -d "${repo_root}/checkouts/docs-modbus-prior" ]; then
+  PLATFORM_DOCS_MODBUS_PRIOR_ROOT="${repo_root}/checkouts/docs-modbus-prior"
   export PLATFORM_DOCS_MODBUS_PRIOR_ROOT
 fi
-if [ -z "${PLATFORM_DOCS_EEBUS_PRIOR_ROOT:-}" ] && [ -d "${repo_root}/.pytest_cache/platform-eebus" ]; then
-  PLATFORM_DOCS_EEBUS_PRIOR_ROOT="${repo_root}/.pytest_cache/platform-eebus"
-  export PLATFORM_DOCS_EEBUS_PRIOR_ROOT
-fi
-if [ -z "${PLATFORM_DOCS_EBUS_PIN_ROOT:-}" ] && [ -d "${repo_root}/.pytest_cache/platform-ebus-pin" ]; then
-  PLATFORM_DOCS_EBUS_PIN_ROOT="${repo_root}/.pytest_cache/platform-ebus-pin"
+if [ -z "${PLATFORM_DOCS_EBUS_PIN_ROOT:-}" ] && [ -d "${repo_root}/checkouts/docs-ebus-pin" ]; then
+  PLATFORM_DOCS_EBUS_PIN_ROOT="${repo_root}/checkouts/docs-ebus-pin"
   export PLATFORM_DOCS_EBUS_PIN_ROOT
 fi
 if [ -z "${DOCS_EBUS_PIN_ROOT:-}" ]; then
   if [ -e "${repo_root}/../docs-ebus-pin/.git" ]; then
     DOCS_EBUS_PIN_ROOT="${repo_root}/../docs-ebus-pin"
-  elif [ -e "${repo_root}/.pytest_cache/docs-ebus-pin/.git" ]; then
-    DOCS_EBUS_PIN_ROOT="${repo_root}/.pytest_cache/docs-ebus-pin"
   else
     DOCS_EBUS_PIN_ROOT="${repo_root}"
   fi
@@ -64,16 +52,10 @@ fi
 if [ -z "${HELIANTHUS_DOCS_EBUS_ROOT:-}" ]; then
   if [ -e "${repo_root}/../docs-ebus-pin/.git" ]; then
     HELIANTHUS_DOCS_EBUS_ROOT="${repo_root}/../docs-ebus-pin"
-  elif [ -e "${repo_root}/.pytest_cache/docs-ebus-pin/.git" ]; then
-    HELIANTHUS_DOCS_EBUS_ROOT="${repo_root}/.pytest_cache/docs-ebus-pin"
   else
     HELIANTHUS_DOCS_EBUS_ROOT="${repo_root}"
   fi
   export HELIANTHUS_DOCS_EBUS_ROOT
-fi
-if [ -z "${PLATFORM_DOCS_EBUS_PIN_PRIOR_ROOT:-}" ] && [ -d "${repo_root}/.pytest_cache/platform-ebus-pin" ]; then
-  PLATFORM_DOCS_EBUS_PIN_PRIOR_ROOT="${repo_root}/.pytest_cache/platform-ebus-pin"
-  export PLATFORM_DOCS_EBUS_PIN_PRIOR_ROOT
 fi
 
 platform_toolchain_mode="${PLATFORM_TOOLCHAIN_MODE:-supported}"
@@ -275,10 +257,9 @@ def eebus_scripts() -> pathlib.Path:
     raw = os.environ.get("PLATFORM_DOCS_EEBUS_ROOT")
     if raw:
         return pathlib.Path(raw) / "scripts"
-    repo = pathlib.Path.cwd()
-    for candidate in (repo / "checkouts" / "docs-eebus", repo / ".pytest_cache" / "platform-eebus"):
-        if (candidate / "scripts" / "validate_platform_contracts.py").is_file():
-            return candidate / "scripts"
+    candidate = pathlib.Path.cwd() / "checkouts" / "docs-eebus"
+    if (candidate / "scripts" / "validate_platform_contracts.py").is_file():
+        return candidate / "scripts"
     raise SystemExit("PLATFORM_DOCS_EEBUS_ROOT is required")
 
 sys.path.insert(0, str(eebus_scripts()))

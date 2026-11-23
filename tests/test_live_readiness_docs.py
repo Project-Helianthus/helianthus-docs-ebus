@@ -13,9 +13,9 @@ def graphql_page() -> Path:
     raw = os.environ.get("PLATFORM_DOCS_ROOT")
     if raw:
         return Path(raw) / "api/graphql.md"
-    for candidate in (ROOT / "checkouts" / "docs", ROOT / ".pytest_cache" / "platform-docs"):
-        if candidate.is_dir():
-            return candidate / "api/graphql.md"
+    candidate = ROOT / "checkouts" / "docs"
+    if candidate.is_dir():
+        return candidate / "api/graphql.md"
     raise OSError("PLATFORM_DOCS_ROOT is required")
 
 

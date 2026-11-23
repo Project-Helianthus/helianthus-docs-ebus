@@ -19,9 +19,9 @@ def docs_root() -> pathlib.Path:
     raw = os.environ.get("PLATFORM_DOCS_ROOT")
     if raw:
         return pathlib.Path(raw)
-    for candidate in (ROOT / "checkouts" / "docs", ROOT / ".pytest_cache" / "platform-docs"):
-        if candidate.is_dir():
-            return candidate
+    candidate = ROOT / "checkouts" / "docs"
+    if candidate.is_dir():
+        return candidate
     raise OSError("PLATFORM_DOCS_ROOT is required")
 
 
