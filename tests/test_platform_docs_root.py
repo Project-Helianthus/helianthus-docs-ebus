@@ -6,6 +6,7 @@ import importlib.util
 import os
 from pathlib import Path
 import subprocess
+import sys
 
 import pytest
 
@@ -134,3 +135,90 @@ def test_explicit_root_is_used(monkeypatch, tmp_path: Path):
     monkeypatch.setenv("PLATFORM_DOCS_ROOT", str(tmp_path))
     (tmp_path / ".pytest_cache" / "platform-docs").mkdir(parents=True)
     assert module.platform_docs_root() == tmp_path
+
+
+def _naming_help(env: dict[str, str]) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [sys.executable, str(ROOT / "scripts/check_naming_surface_contract.py"), "--help"],
+        cwd=ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=20,
+        check=False,
+    )
+
+
+def test_naming_checker_help_does_not_import_the_moved_mcp_module(tmp_path: Path):
+    docs = tmp_path / "docs"
+    (docs / "scripts").mkdir(parents=True)
+    (docs / "scripts" / "check_mcp_inventory.py").write_text(
+        "raise RuntimeError('mcp checker imported at startup')\n",
+        encoding="utf-8",
+    )
+    decoy = tmp_path / "decoy"
+    decoy.mkdir()
+    (decoy / "check_mcp_inventory.py").write_text(
+        "raise RuntimeError('decoy mcp checker imported')\n",
+        encoding="utf-8",
+    )
+    env = os.environ.copy()
+    env["PYTHONDONTWRITEBYTECODE"] = "1"
+    env["PYTHONPATH"] = str(decoy)
+    env.pop("PLATFORM_DOCS_ROOT", None)
+    unset = _naming_help(env)
+    assert unset.returncode == 0, unset.stderr
+    assert "ModuleNotFoundError" not in unset.stderr
+    assert "decoy mcp checker imported" not in unset.stderr
+    env["PLATFORM_DOCS_ROOT"] = str(docs)
+    pointed = _naming_help(env)
+    assert pointed.returncode == 0, pointed.stderr
+    assert "mcp checker imported at startup" not in pointed.stderr + pointed.stdout
+
+
+def test_naming_checker_loads_mcp_from_the_docs_checkout(monkeypatch, tmp_path: Path):
+    monkeypatch.setattr(sys, "dont_write_bytecode", True)
+    decoy = tmp_path / "decoy"
+    decoy.mkdir()
+    (decoy / "check_mcp_inventory.py").write_text(
+        "MARKER = 'decoy'\n"
+        "def documented_rows(text):\n"
+        "    raise AssertionError('decoy checker used')\n",
+        encoding="utf-8",
+    )
+    monkeypatch.syspath_prepend(str(decoy))
+    module = _load("naming_docs_mcp", "scripts/check_naming_surface_contract.py")
+    monkeypatch.delenv("PLATFORM_DOCS_ROOT", raising=False)
+    repo = tmp_path / "repo"
+    monkeypatch.setattr(module, "ROOT", repo)
+    with pytest.raises(OSError, match="PLATFORM_DOCS_ROOT is required"):
+        module._load_mcp_checker()
+    checkout = repo / "checkouts" / "docs"
+    (checkout / "scripts").mkdir(parents=True)
+    (checkout / "scripts" / "check_mcp_inventory.py").write_text(
+        "MARKER = 'checkout'\n"
+        "def documented_rows(text):\n"
+        "    return {}, [{'name': 'zone_room_temperature'}]\n"
+        "def unique_rows(rows, profiles):\n"
+        "    return {}\n"
+        "def validate(inventory, text):\n"
+        "    raise AssertionError('registration checker unused')\n",
+        encoding="utf-8",
+    )
+    loaded = module._load_mcp_checker()
+    assert loaded.MARKER == "checkout"
+    assert Path(loaded.__file__).resolve() == (checkout / "scripts" / "check_mcp_inventory.py").resolve()
+    module._validate_tool_names("tools", None)
+    empty = tmp_path / "empty"
+    empty.mkdir()
+    monkeypatch.setenv("PLATFORM_DOCS_ROOT", str(empty))
+    with pytest.raises(OSError, match="checker missing: scripts/check_mcp_inventory.py"):
+        module._load_mcp_checker()
+    explicit = tmp_path / "explicit"
+    (explicit / "scripts").mkdir(parents=True)
+    (explicit / "scripts" / "check_mcp_inventory.py").write_text(
+        "MARKER = 'explicit'\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("PLATFORM_DOCS_ROOT", str(explicit))
+    assert module._load_mcp_checker().MARKER == "explicit"

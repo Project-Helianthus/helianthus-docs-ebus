@@ -360,7 +360,12 @@ def expected_rows(args: argparse.Namespace, fixture: dict[str, Any]) -> tuple[li
     else:
         spec_dir = REPO_ROOT.parent / "docs"
 
-    if spec_dir.exists():
+    # An implicit sibling docs checkout may be the platform docs repository,
+    # which does not contain the official eBUS sources. Keep the fixture path
+    # in that case; an explicit or partial official source still fails closed.
+    if spec_dir.exists() and (
+        explicit or any((spec_dir / rel).exists() for rel in OFFICIAL_RELS)
+    ):
         return expected_rows_from_official(spec_dir, fixture), f"official:{spec_dir}"
     if explicit:
         raise CheckError(f"explicit official spec dir does not exist: {spec_dir}")
