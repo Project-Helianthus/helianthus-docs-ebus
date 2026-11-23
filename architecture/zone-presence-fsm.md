@@ -1,6 +1,6 @@
 # Zone Presence FSM (Anti-Flapping)
 
-This document defines how `helianthus-ebusgateway` decides whether a semantic zone is present.
+This document defines how `helianthus-gateway` decides whether a semantic zone is present.
 
 The goal is to avoid zone flapping when discovery reads alternate between success and transient failures.
 

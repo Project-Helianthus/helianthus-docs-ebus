@@ -34,9 +34,9 @@ This document now freezes:
   - generation/invalidation and degraded-shadow behavior
 
 Portal-specific watch-summary behavior remains outside this file and is frozen
-in [`../api/portal.md`](../api/portal.md) (`ISSUE-DOC-10`). The detailed
+in [`../api/portal.md`](https://github.com/Project-Helianthus/helianthus-docs/blob/main/api/portal.md) (`ISSUE-DOC-10`). The detailed
 GraphQL schema and nullability contract live in
-[`../api/graphql.md`](../api/graphql.md). The detailed shared watch-summary
+[`../api/graphql.md`](https://github.com/Project-Helianthus/helianthus-docs/blob/main/api/graphql.md). The detailed shared watch-summary
 contract lives in [`../api/watch-summary.md`](../api/watch-summary.md).
 
 ## Invariants
@@ -102,8 +102,8 @@ configuration or shadow update. Observe-first feature-flag normalization
 remains authoritative before policy evaluation.
 
 Gateway implementation tracking:
-[issue #982](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/982)
-and [PR #992](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/992).
+[issue #982](https://github.com/Project-Helianthus/helianthus-gateway/issues/982)
+and [PR #992](https://github.com/Project-Helianthus/helianthus-gateway/pull/992).
 These links and this documentation alone do not establish merge or runtime
 qualification; current GitHub state and merged gateway code establish
 implementation status.
@@ -164,7 +164,7 @@ GraphQL-specific invariants:
 - the current unwired runtime returns zero-value wrappers with `status: null`
   rather than treating these roots as missing semantic fields
 - detailed schema shape, field nullability, and encoding rules are frozen in
-  [`../api/graphql.md`](../api/graphql.md)
+  [`../api/graphql.md`](https://github.com/Project-Helianthus/helianthus-docs/blob/main/api/graphql.md)
 
 ## M5 Watch-Summary Public Surface
 
@@ -268,27 +268,27 @@ Shared architecture invariants:
 
 ## Evidence
 
-- Runtime implementation: [Project-Helianthus/helianthus-ebusgateway#376](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/376)
-- Merged PR: [Project-Helianthus/helianthus-ebusgateway#377](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/377)
+- Runtime implementation: [Project-Helianthus/helianthus-gateway#376](https://github.com/Project-Helianthus/helianthus-gateway/issues/376)
+- Merged PR: [Project-Helianthus/helianthus-gateway#377](https://github.com/Project-Helianthus/helianthus-gateway/pull/377)
 - Mainline commit on `main`: `3daf4beed9d6406f7af52869eea1c53ef14f2f62`
-- GraphQL runtime implementation: [Project-Helianthus/helianthus-ebusgateway#378](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/378)
-- Merged GraphQL PR: [Project-Helianthus/helianthus-ebusgateway#379](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/379)
+- GraphQL runtime implementation: [Project-Helianthus/helianthus-gateway#378](https://github.com/Project-Helianthus/helianthus-gateway/issues/378)
+- Merged GraphQL PR: [Project-Helianthus/helianthus-gateway#379](https://github.com/Project-Helianthus/helianthus-gateway/pull/379)
 - GraphQL mainline commit on `main`: `83e9c7b1ba927a282d87599269e91be817ff3582`
-- Watch-catalog architecture implementation: [Project-Helianthus/helianthus-ebusgateway#380](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/380)
-- Merged watch-catalog PR: [Project-Helianthus/helianthus-ebusgateway#381](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/381)
+- Watch-catalog architecture implementation: [Project-Helianthus/helianthus-gateway#380](https://github.com/Project-Helianthus/helianthus-gateway/issues/380)
+- Merged watch-catalog PR: [Project-Helianthus/helianthus-gateway#381](https://github.com/Project-Helianthus/helianthus-gateway/pull/381)
 - Watch-catalog mainline commit on `main`: `873c970459d1933ba50638df5e6fb349a6a9a3a2`
-- Shadow-cache architecture implementation: [Project-Helianthus/helianthus-ebusgateway#382](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/382)
-- Merged shadow-cache PR: [Project-Helianthus/helianthus-ebusgateway#385](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/385)
+- Shadow-cache architecture implementation: [Project-Helianthus/helianthus-gateway#382](https://github.com/Project-Helianthus/helianthus-gateway/issues/382)
+- Merged shadow-cache PR: [Project-Helianthus/helianthus-gateway#385](https://github.com/Project-Helianthus/helianthus-gateway/pull/385)
 - Shadow-cache mainline commit on `main`: `9e9e6904e0337812ffa87591a83ad6f4a5c0ea44`
-- Feature-flag architecture implementation: [Project-Helianthus/helianthus-ebusgateway#386](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/386)
-- Merged feature-flag PR: [Project-Helianthus/helianthus-ebusgateway#387](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/387)
+- Feature-flag architecture implementation: [Project-Helianthus/helianthus-gateway#386](https://github.com/Project-Helianthus/helianthus-gateway/issues/386)
+- Merged feature-flag PR: [Project-Helianthus/helianthus-gateway#387](https://github.com/Project-Helianthus/helianthus-gateway/pull/387)
 - Feature-flag mainline commit on `main`: `23e46011f3c57d08148cf3cdd51acd6958303f90`
-- Family-policy architecture implementation: [Project-Helianthus/helianthus-ebusgateway#388](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/388)
-- Merged family-policy PR: [Project-Helianthus/helianthus-ebusgateway#389](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/389)
+- Family-policy architecture implementation: [Project-Helianthus/helianthus-gateway#388](https://github.com/Project-Helianthus/helianthus-gateway/issues/388)
+- Merged family-policy PR: [Project-Helianthus/helianthus-gateway#389](https://github.com/Project-Helianthus/helianthus-gateway/pull/389)
 - Family-policy mainline commit on `main`: `db09bbae687912a16fbc9f0a2f3a5616b84931e8`
-- Scheduler/shadow integration implementation: [Project-Helianthus/helianthus-ebusgateway#391](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/391)
+- Scheduler/shadow integration implementation: [Project-Helianthus/helianthus-gateway#391](https://github.com/Project-Helianthus/helianthus-gateway/pull/391)
 - Scheduler/shadow mainline commit on `main`: `75ee6aa639bb44e8e859835293ae3912dc4d7b48`
-- Watch-summary surface implementation: [Project-Helianthus/helianthus-ebusgateway#393](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/393)
+- Watch-summary surface implementation: [Project-Helianthus/helianthus-gateway#393](https://github.com/Project-Helianthus/helianthus-gateway/pull/393)
 - Watch-summary mainline commit on `main`: `92b3576c9203bf5a02a45494e935041961044600`
 - Gateway workspace proof artifact (outside this docs repo; from a `Project-Helianthus/helianthus-ebusgateway` checkout):
   `helianthus-ebusgateway/results-matrix-ha/20260312T175648Z-pr377-gw04-26ee758-passive-p01-p06-recovery/index.json`
@@ -308,8 +308,8 @@ Shared architecture invariants:
   - [Project-Helianthus/helianthus-ebusgateway/cmd/gateway/bus_observability_provider.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/83e9c7b1ba927a282d87599269e91be817ff3582/cmd/gateway/bus_observability_provider.go)
   - [Project-Helianthus/helianthus-ebusgateway/cmd/gateway/graphql_bus_observability_integration_test.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/83e9c7b1ba927a282d87599269e91be817ff3582/cmd/gateway/graphql_bus_observability_integration_test.go)
 - Current-state docs references:
-  - [api/mcp.md](../api/mcp.md)
-  - [api/graphql.md](../api/graphql.md)
+  - [api/mcp.md](https://github.com/Project-Helianthus/helianthus-docs/blob/main/api/mcp.md)
+  - [api/graphql.md](https://github.com/Project-Helianthus/helianthus-docs/blob/main/api/graphql.md)
   - [api/watch-summary.md](../api/watch-summary.md)
   - [architecture/observability.md](./observability.md)
   - [development/smoke-matrix.md](../development/smoke-matrix.md)

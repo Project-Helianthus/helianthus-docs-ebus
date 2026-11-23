@@ -1,6 +1,6 @@
 # 88-Topology Smoke Matrix Runner
 
-This runbook documents the matrix runner from `helianthus-ebusgateway` (`cmd/matrix-runner`) used to plan/execute the full 88 topology combinations.
+This runbook documents the matrix runner from `helianthus-gateway` (`cmd/matrix-runner`) used to plan/execute the full 88 topology combinations.
 
 ## Matrix coverage
 
@@ -76,7 +76,7 @@ Optional expected-failure inputs:
 ### Full run recommendation
 
 This command describes the consolidated candidate session's last full `T01..T88` run, which kept `results/index.json` as its artifact and still needs the archived proxy for `T09..T88`.
-It is not a merge gate for new changes: transport/protocol merges use the applicable cells of the gateway [`adaptermux-v2` matrix](https://github.com/Project-Helianthus/helianthus-ebusgateway/tree/main/matrix).
+It is not a merge gate for new changes: transport/protocol merges use the applicable cells of the gateway [`adaptermux-v2` matrix](https://github.com/Project-Helianthus/helianthus-gateway/tree/main/matrix).
 The last run used:
 
 ```bash
@@ -190,13 +190,13 @@ Current factual references:
 - canonical end-to-end smoke order for the matrix `--smoke-command`:
   [`end-to-end-smoke.md`](./end-to-end-smoke.md)
 - runtime adversarial scenarios that remain outside the transport gate:
-  [`../architecture/adversarial-matrix.md`](../architecture/adversarial-matrix.md)
+  [`../architecture/adversarial-matrix.md`](https://github.com/Project-Helianthus/helianthus-docs/blob/main/architecture/adversarial-matrix.md)
 
 ## Proxy-Semantics Adjunct Gate (`PX01..PX12`)
 
 This section is historical. The adapter proxy repository is archived, and its
 `PX01..PX12` case set and runner are no longer a required merge gate. The
-gateway [`adaptermux-v2` matrix](https://github.com/Project-Helianthus/helianthus-ebusgateway/tree/main/matrix)
+gateway [`adaptermux-v2` matrix](https://github.com/Project-Helianthus/helianthus-gateway/tree/main/matrix)
 carries these cases as the cells `<transport>-PX01` to `<transport>-PX12` on
 every southbound transport; `PX09` to `PX11` are planned until the multiplexer
 has a local responder. The list below, the policy and the artifact shape

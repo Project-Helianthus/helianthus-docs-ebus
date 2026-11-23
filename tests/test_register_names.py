@@ -1012,7 +1012,7 @@ def test_circuit_special_function_mode_contract():
 
 
 # Feature role: a function the maker names with a name of its own
-# (architecture/naming.md, "Vocabulary"). The list is closed.
+# (https://github.com/Project-Helianthus/helianthus-docs/blob/main/architecture/naming.md, "Vocabulary"). The list is closed.
 FEATURE_TERMS = {"green_iq": "green iQ", "fair": "Fair", "tri_vai": "triVAI"}
 
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import pathlib
 import sys
 
@@ -132,7 +133,7 @@ REQUIRED_DOCUMENT_REFERENCES = {
     pathlib.Path("architecture/atr/04-sn-merge-gate.md"): "[qualified-identity policy](../regulator-qualified-identity-policy.json)",
     pathlib.Path("architecture/atr/07-live-validation-acceptance.md"): "[qualified-identity policy](../regulator-qualified-identity-policy.json)",
     pathlib.Path("architecture/overview.md"): "[qualified-identity policy](./regulator-qualified-identity-policy.json)",
-    pathlib.Path("api/graphql.md"): "[qualified-identity policy](../architecture/regulator-qualified-identity-policy.json)",
+    pathlib.Path("api/graphql.md"): "[qualified-identity policy](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/regulator-qualified-identity-policy.json)",
 }
 REQUIRED_ATR_NORMATIVE_BLOCKS = {
     pathlib.Path("architecture/atr/01-address-table-model.md"),
@@ -573,6 +574,23 @@ The registry-produced direct complete normalized `(Manufacturer, DeviceID, Seria
 <!-- qualified-identity-policy:atr07-acceptance:end {selector} -->"""
 
 
+def document_path(root: pathlib.Path, relative: pathlib.Path) -> pathlib.Path:
+    path = root / relative
+    if relative == pathlib.Path("api/graphql.md") and not path.is_file():
+        raw = os.environ.get("PLATFORM_DOCS_ROOT")
+        docs = pathlib.Path(raw) if raw else None
+        if docs is None:
+            repo = pathlib.Path(__file__).resolve().parents[1]
+            for candidate in (repo / "checkouts" / "docs", repo / ".pytest_cache" / "platform-docs"):
+                if candidate.is_dir():
+                    docs = candidate
+                    break
+        if docs is None:
+            raise CheckError("api/graphql.md: PLATFORM_DOCS_ROOT is required")
+        return docs / relative
+    return path
+
+
 def validate_documents(root: pathlib.Path) -> None:
     policy_path = root / POLICY_PATH
     try:
@@ -582,7 +600,7 @@ def validate_documents(root: pathlib.Path) -> None:
     validate_current_v2_policy(policy, policy_path)
 
     for relative, reference in REQUIRED_DOCUMENT_REFERENCES.items():
-        path = root / relative
+        path = document_path(root, relative)
         if reference not in path.read_text(encoding="utf-8"):
             raise CheckError(f"{path}: missing required canonical policy reference: {reference!r}")
 

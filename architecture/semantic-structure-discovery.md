@@ -1,6 +1,6 @@
 # Semantic Structure Discovery (B524)
 
-This page documents how `helianthus-ebusgateway` discovers **semantic structure** from Vaillant B524 and decides what semantic families and instances exist before publishing them.
+This page documents how `helianthus-gateway` discovers **semantic structure** from Vaillant B524 and decides what semantic families and instances exist before publishing them.
 
 This is intentionally different from:
 

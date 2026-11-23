@@ -36,7 +36,7 @@ Historical names in this table are documentary correspondence only; they are nev
 GraphQL does not expose `source_selection.mode`. Gateway GraphQL consumers that
 previously queried the removed `busAdmission` compatibility alias must query
 `bus_summary.status.bus_admission.source_selection` instead and use the fields
-defined in [`graphql.md`](./graphql.md), especially `state`, `outcome`,
+defined in [`graphql.md`](https://github.com/Project-Helianthus/helianthus-docs/blob/main/api/graphql.md), especially `state`, `outcome`,
 `selected_source`, `companion_target`, and `reason`.
 
 ## Consumer Rules

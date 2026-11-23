@@ -1,6 +1,6 @@
 # Device Dump Pipeline
 
-This document describes the **implemented** device dump pipeline in `helianthus-ebusgateway`. The pipeline is used to read register values from a target device and write **log** + **JSON** artifacts for later analysis.
+This document describes the **implemented** device dump pipeline in `helianthus-gateway`. The pipeline is used to read register values from a target device and write **log** + **JSON** artifacts for later analysis.
 
 ## Entry Point
 

@@ -7,9 +7,9 @@ qualification **unassessed**. Nothing is stable before Helianthus 1.0.
 
 This is a partial contract slice for docs-ebus #676, advancing
 [docs-ebus #250](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/250)
-and [gateway #476](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/476).
+and [gateway #476](https://github.com/Project-Helianthus/helianthus-gateway/issues/476).
 AD10 hardware acceptance remains at
-[gateway #1099](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1099).
+[gateway #1099](https://github.com/Project-Helianthus/helianthus-gateway/issues/1099).
 This page specifies comparison records, not a migration or capture procedure,
 runtime interface, profile admission, or parent closure.
 
@@ -36,8 +36,8 @@ The following are current documentary contracts, not newly executed evidence:
 | [Multiplexer architecture](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/adapter-direct-multiplexer.md) | Active/passive/external paths and reset clearing of pending work. | INFO retention conflicts with the native contract as noted by the index; the logical-byte wording is resolved by the wire-symbol contract. Historical live claims do not fill this comparison. |
 | [Native ENH](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/enh.md) | Physical SEND/RECEIVED bytes, escape handling, INIT timeout and INFO invalidation on RESETTED. | Implementation descriptions cannot override these wire rules. |
 | [Native ENS](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/ens.md) | Prefix/framing scope and separation from the data-only serial codec. | A data-only codec cannot supply missing ENH control events. |
-| [MCP](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/api/mcp.md) | Existing semantic tool inventory, deterministic envelopes, discovery provenance distinct from verification. | Does not define the comparison record proposed below. |
-| [GraphQL](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/api/graphql.md) | Current nullable semantic fields, startup state, incremental merge, retained DHW expiry, discovery provenance and route-specific initiator status. | Merged values alone do not expose complete per-field native receipt lineage or freshness. |
+| [MCP](https://github.com/Project-Helianthus/helianthus-docs/blob/main/api/mcp.md) | Existing semantic tool inventory, deterministic envelopes, discovery provenance distinct from verification. | Does not define the comparison record proposed below. |
+| [GraphQL](https://github.com/Project-Helianthus/helianthus-docs/blob/main/api/graphql.md) | Current nullable semantic fields, startup state, incremental merge, retained DHW expiry, discovery provenance and route-specific initiator status. | Merged values alone do not expose complete per-field native receipt lineage or freshness. |
 
 All record members and comparison decisions below are **proposed future work**
 for an offline evaluator. They are not added MCP or GraphQL fields. Source

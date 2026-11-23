@@ -37,18 +37,18 @@ Other pages keep the status statements in their own text.
 
 ## `protocols/modbus/`
 
-- [modbus/README.md](modbus/README.md)
-- [modbus/growatt-candidate-evidence-v1.md](modbus/growatt-candidate-evidence-v1.md)
-- [modbus/huawei-gateway-candidate-evidence-v1.md](modbus/huawei-gateway-candidate-evidence-v1.md)
+- [modbus/README.md](https://github.com/Project-Helianthus/helianthus-docs-modbus/blob/main/protocols/modbus/README.md)
+- [modbus/growatt-candidate-evidence-v1.md](https://github.com/Project-Helianthus/helianthus-docs-modbus/blob/main/protocols/modbus/growatt-candidate-evidence-v1.md)
+- [modbus/huawei-gateway-candidate-evidence-v1.md](https://github.com/Project-Helianthus/helianthus-docs-modbus/blob/main/protocols/modbus/huawei-gateway-candidate-evidence-v1.md)
 - [modbus/modbus-phase-one-wire-v1.md](modbus/modbus-phase-one-wire-v1.md)
 
 ## `protocols/sunspec/`
 
-- [sunspec/README.md](sunspec/README.md)
-- [sunspec/additional-model-evidence-v1.md](sunspec/additional-model-evidence-v1.md)
-- [sunspec/fronius-observed-flavor-v1-1.md](sunspec/fronius-observed-flavor-v1-1.md)
-- [sunspec/fronius-observed-flavor-v1.md](sunspec/fronius-observed-flavor-v1.md)
-- [sunspec/sunspec-model-chain-v1.md](sunspec/sunspec-model-chain-v1.md)
+- [sunspec/README.md](https://github.com/Project-Helianthus/helianthus-docs-modbus/blob/main/protocols/sunspec/README.md)
+- [sunspec/additional-model-evidence-v1.md](https://github.com/Project-Helianthus/helianthus-docs-modbus/blob/main/protocols/sunspec/additional-model-evidence-v1.md)
+- [sunspec/fronius-observed-flavor-v1-1.md](https://github.com/Project-Helianthus/helianthus-docs-modbus/blob/main/protocols/sunspec/fronius-observed-flavor-v1-1.md)
+- [sunspec/fronius-observed-flavor-v1.md](https://github.com/Project-Helianthus/helianthus-docs-modbus/blob/main/protocols/sunspec/fronius-observed-flavor-v1.md)
+- [sunspec/sunspec-model-chain-v1.md](https://github.com/Project-Helianthus/helianthus-docs-modbus/blob/main/protocols/sunspec/sunspec-model-chain-v1.md)
 
 ## `protocols/vaillant/`
 

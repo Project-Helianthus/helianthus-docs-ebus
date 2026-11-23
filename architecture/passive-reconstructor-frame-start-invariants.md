@@ -2,7 +2,7 @@
 
 This page documents the two invariants the passive transaction reconstructor enforces before it accepts a non-`SymbolSyn` byte as a new frame's source byte. Both invariants must hold; together they cover the two failure modes observed live on cruise-control deployments and provide complementary operator canaries for upstream byte-loss diagnosis.
 
-The invariants are implemented in `helianthus-ebusgateway/passive_transaction_reconstructor.go` (Project-Helianthus/helianthus-ebusgateway PR #585) and surface through the Prometheus exporter and the MCP/GraphQL `BusReconstructorAggregate`.
+The invariants are implemented in `helianthus-gateway/passive_transaction_reconstructor.go` (Project-Helianthus/helianthus-gateway PR #585) and surface through the Prometheus exporter and the MCP/GraphQL `BusReconstructorAggregate`.
 
 ## Invariants
 

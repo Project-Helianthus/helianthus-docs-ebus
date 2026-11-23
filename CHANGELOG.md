@@ -2,7 +2,9 @@
 
 ## Unreleased
 
-- `api/semantic-operation-route.md` names the runtime intent owner. Only that
+- helianthus-docs-ebus keeps the eBUS documentation and the runnable Modbus Trusted Revision closure. Protocol-neutral pages now live in helianthus-docs, Modbus and SunSpec pages in helianthus-docs-modbus, and eeBUS pages in helianthus-docs-eebus. Kept pages link those homes. The Modbus Trusted Revision check stays here.
+
+- `https://github.com/Project-Helianthus/helianthus-docs/blob/main/api/semantic-operation-route.md` names the runtime intent owner. Only that
   owner fills `expected_effect`, from the pack operation metadata and the
   service resource of the requested capability instance, under rules AUT-2 and
   RES-5 of the docs-semantic graph contract. The same owner sets the required
@@ -28,9 +30,9 @@
   without extension names, and keeps them under its unknown-command error for
   an adapter without the extension. The pages do not implement the mux.
 
-- `architecture/northbound-output-hook.md` states the northbound hook spelling
+- `https://github.com/Project-Helianthus/helianthus-docs/blob/main/architecture/northbound-output-hook.md` states the northbound hook spelling
   `output` at hook version `1`; a missing or other version fails as
-  unsupported. `architecture/runtime-driver-lifecycle.md` names that page as
+  unsupported. `https://github.com/Project-Helianthus/helianthus-docs/blob/main/architecture/runtime-driver-lifecycle.md` names that page as
   the one narrowing of its hook rule. An empty hook list stays a valid
   registration, including the southbound eeBUS driver. Every other hook name
   is refused: the reserved names `mcp`, `setup`, `portal`, `semantic` and
@@ -40,7 +42,7 @@
   reads that manager's snapshot through observed state, reason and the
   safety-quarantine flag, members of the full closed MCP driver object. The
   page does not restate the lens rules and does not choose which devices are
-  published. `scripts/check_northbound_output_hook.py` pins those sentences.
+  published. `https://github.com/Project-Helianthus/helianthus-docs/blob/main/scripts/check_northbound_output_hook.py` pins those sentences.
 
 - Mapped temperature rows of the eBUS thermal hand-off keep the native unit
   and state the SI unit kelvin, degrees Celsius plus 273.15. Humidity rows
@@ -50,13 +52,13 @@
   domestic-hot-water measured and setpoint, humidity, solar-loop, zone room,
   zone setpoint and outdoor-temperature pages, on the mapped rows of
   `architecture/b524-semantic-mapping.md`, on the thermal air-temperature row
-  of `api/semantic-snapshot-read.md`, and on the mapped rows of
+  of `https://github.com/Project-Helianthus/helianthus-docs/blob/main/api/semantic-snapshot-read.md`, and on the mapped rows of
   `architecture/fixtures/vaillant-semreg-thermal-map-v1.json` and
   `architecture/fixtures/dhw-setpoint-semreg-cutover-v1.json`. A row with no
   mapped quantity keeps the native unit only. The thermal map contract
   rejects a mapped row that lacks the SI unit or the conversion on that row.
 
-- `architecture/naming.md` gives a function the maker names with a name of its
+- `https://github.com/Project-Helianthus/helianthus-docs/blob/main/architecture/naming.md` gives a function the maker names with a name of its
   own the vocabulary role `feature`: a closed list in the maker's spelling,
   with a definition or "meaning not established", in the subject or object
   slot of a native register name, with the predicate that the value class
@@ -80,7 +82,7 @@
   matrix, name annotation, semantic mapping and system-off cutover pages use
   the name. `OP=0x02, GG=0x02, RR=0x001E` (`circuit_state`) is final under the
   same rule; its only open point was hardware confirmation of the observed
-  Vaillant definition. `architecture/naming.md` states that an observed
+  Vaillant definition. `https://github.com/Project-Helianthus/helianthus-docs/blob/main/architecture/naming.md` states that an observed
   Vaillant definition names a register without confirmation on the wire, that
   such a row is not provisional and that hardware qualification by device
   owners does not block the name; it lists the nine remaining `unknown`
@@ -113,7 +115,7 @@
   equal the map pages, that the table matches the fixture and that the poll
   page states its bounds.
 
-- `api/semantic-snapshot-read.md` has an "Assets with several sources"
+- `https://github.com/Project-Helianthus/helianthus-docs/blob/main/api/semantic-snapshot-read.md` has an "Assets with several sources"
   section. A source counts when it is admitted (live, not fenced, not retired)
   with a published, unfenced cursor of its current generation, and an asset
   with several sources is readable when at least one of its sources counts.
@@ -126,7 +128,7 @@
   of several sources coexist under one complete `FactKey` and a reader never
   adds or otherwise combines them into one value. The result for an asset with
   one source is unchanged, and seeing a source grants no control.
-  `tests/test_semantic_snapshot_read_contract.py` asserts each of these rules
+  `https://github.com/Project-Helianthus/helianthus-docs/blob/main/tests/test_semantic_snapshot_read_contract.py` asserts each of these rules
   and rejects a weakened wording of each. The request shape and the per-asset
   revision rule are unchanged. Follow-up: the gateway work under
   Project-Helianthus/helianthus-ebusgateway#1539.
@@ -147,7 +149,7 @@
   with the rest counted; and that the export is off by default. The family
   names are provisional with an open question on the `native` qualifier. The
   sentences on native identity outside labels, label exclusions and
-  unavailable facts now name the semantic series. `architecture/naming.md`,
+  unavailable facts now name the semantic series. `https://github.com/Project-Helianthus/helianthus-docs/blob/main/architecture/naming.md`,
   section Metrics, states the per-quantity native families, the `point` and
   `index` label keys and the SI constant unit.
   `scripts/validate_prometheus_semantic_coverage.py` checks both native
@@ -157,8 +159,8 @@
   each field of every native row, a second unit on one family and a forbidden
   label key. Follow-ups: the gateway renderer and the native registry catalog.
 
-- `docs/platform/promoted-semantic-consumers-v1.md` and its manifest
-  `docs/platform/manifests/promoted-semantic-consumers-v1.json` map each
+- `https://github.com/Project-Helianthus/helianthus-docs/blob/main/docs/platform/promoted-semantic-consumers-v1.md` and its manifest
+  `https://github.com/Project-Helianthus/helianthus-docs/blob/main/docs/platform/manifests/promoted-semantic-consumers-v1.json` map each
   target object (`zones[id=zone-1]`, `zones[id=zone-2]`, `dhw`, `system`) to
   one canonical resource in the new manifest member `resources`: the common
   resource kind (`resource.zone`, `resource.thermal_system`, or not decided for
@@ -171,11 +173,11 @@
   carries that basis in `identity_basis`. `FILL_MISSING_ONLY` is the policy of
   the eBUS-typed GraphQL target over the candidates of one resource, not the
   internal merge. No leaf value or thermal quantity is placed on a common
-  resource. `tests/test_promoted_semantic_consumers_v1.py` rejects a leaf or
+  resource. `https://github.com/Project-Helianthus/helianthus-docs/blob/main/tests/test_promoted_semantic_consumers_v1.py` rejects a leaf or
   mapping without a recorded basis, a merge without an accepted basis, a
   mapping without candidates from both protocols or without provenance, and
   an undecided kind without its reason.
-  `api/eebus-northbound-integrator-reference.md` states the same rule for
+  `https://github.com/Project-Helianthus/helianthus-docs-eebus/blob/main/api/eebus-northbound-integrator-reference.md` states the same rule for
   integrators. Follow-ups: the gateway's replacement of its overlay and the
   Home Assistant consumer identity.
 
@@ -253,7 +255,7 @@
   chain is attributed; the semantic values of a multi-device chain are withheld
   with the reason `MULTI_DEVICE_UNATTRIBUTED`, while the native provider and
   native surface proceed. The sentence pins of
-  `tests/test_sunspec_model_chain_contract.py` move in place. Follow-up: the
+  `https://github.com/Project-Helianthus/helianthus-docs-modbus/blob/main/tests/test_sunspec_model_chain_contract.py` move in place. Follow-up: the
   gateway's SunSpec publication and its golden envelopes.
 - The Modbus multi-endpoint runtime page keeps the asset as the publication
   scope and follows the common identity rule in docs-semantic for what it
@@ -267,12 +269,12 @@
   The Huawei candidate evidence page cites the stable child key of the native
   gateway contract in docs-modbus as the one native identity evidence of a
   child and drops the serial-digest allowance. The sentence pins of
-  `tests/test_modbus_v1_addon_runtime_contract.py` and
-  `tests/test_modbus_vendor_evidence_v1.py` move in place. Follow-ups: the
+  `https://github.com/Project-Helianthus/helianthus-docs-modbus/blob/main/tests/test_modbus_v1_addon_runtime_contract.py` and
+  `https://github.com/Project-Helianthus/helianthus-docs-modbus/blob/main/tests/test_modbus_vendor_evidence_v1.py` move in place. Follow-ups: the
   gateway allocator and its identity vectors in
   Project-Helianthus/helianthus-ebusgateway#1539, the mapping gate statements
   of the Huawei gateway families, and the `esn_digest` member of
-  `docs/platform/manifests/modbus-vendor-evidence-v1.json`.
+  `https://github.com/Project-Helianthus/helianthus-docs-modbus/blob/main/docs/platform/manifests/modbus-vendor-evidence-v1.json`.
 - Plane, projection and lens wording states its native meaning. The GraphQL,
   MCP and Portal API pages, the architectural decisions, the registry catalog
   capability page, the B524 mapping page (now titled "B524 MCP Semantic Plane

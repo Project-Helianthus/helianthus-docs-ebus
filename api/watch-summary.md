@@ -5,8 +5,8 @@
 The shared watch-summary surface below records the frozen `DOC-09` v1 shape and
 its historical M5 implementation evidence. The stricter B509/B524 passive
 policy below is normative. Gateway
-[issue #982](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/982)
-and [PR #992](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/992)
+[issue #982](https://github.com/Project-Helianthus/helianthus-gateway/issues/982)
+and [PR #992](https://github.com/Project-Helianthus/helianthus-gateway/pull/992)
 track its gateway implementation. These links and this documentation alone do
 not establish merge or runtime qualification; current GitHub state and merged
 gateway code establish implementation status.
@@ -14,9 +14,9 @@ gateway code establish implementation status.
 Freeze anchors:
 
 - Scheduler/shadow runtime semantics: mainline commit on `main` `75ee6aa639bb44e8e859835293ae3912dc4d7b48`
-  ([Project-Helianthus/helianthus-ebusgateway#391](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/391))
+  ([Project-Helianthus/helianthus-gateway#391](https://github.com/Project-Helianthus/helianthus-gateway/pull/391))
 - Watch-summary MCP/GraphQL surfaces: mainline commit on `main` `92b3576c9203bf5a02a45494e935041961044600`
-  ([Project-Helianthus/helianthus-ebusgateway#393](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/393))
+  ([Project-Helianthus/helianthus-gateway#393](https://github.com/Project-Helianthus/helianthus-gateway/pull/393))
 
 ## Frozen Ownership
 
@@ -24,7 +24,7 @@ Freeze anchors:
 | --- | --- | --- | --- | --- |
 | MCP | `ebus_v1_watch_summary_get` | `ISSUE-GW-11` | `ISSUE-DOC-09` | frozen |
 | GraphQL | `watch_summary` | `ISSUE-GW-11` | `ISSUE-DOC-09` | frozen |
-| Portal | see [`portal.md`](./portal.md) | `ISSUE-GW-14` | `ISSUE-DOC-10` | frozen in `portal.md` |
+| Portal | see [`portal.md`](https://github.com/Project-Helianthus/helianthus-docs/blob/main/api/portal.md) | `ISSUE-GW-14` | `ISSUE-DOC-10` | frozen in `portal.md` |
 
 ## Shared v1 Shape
 
@@ -153,7 +153,7 @@ the steady-state split is:
 | `discovery` | Discovery/identity refresh path. Names, structural indexes, and topology evidence live here. |
 
 This rule was made explicit after gateway issue
-Project-Helianthus/helianthus-ebusgateway#680: descriptor classification alone
+Project-Helianthus/helianthus-gateway#680: descriptor classification alone
 was insufficient when the execution loop still called slower selectors at
 state cadence.
 
@@ -242,8 +242,8 @@ shadow. Observe-first feature-flag normalization remains authoritative before
 policy evaluation.
 
 Gateway implementation tracking:
-[issue #982](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/982)
-and [PR #992](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/992).
+[issue #982](https://github.com/Project-Helianthus/helianthus-gateway/issues/982)
+and [PR #992](https://github.com/Project-Helianthus/helianthus-gateway/pull/992).
 These links and this documentation alone do not establish merge or runtime
 qualification; current GitHub state and merged gateway code establish
 implementation status.
@@ -252,12 +252,12 @@ implementation status.
 
 - Portal-specific watch-summary transport/endpoint/SSE semantics
 - UI bootstrap cadence and presentation-specific behavior
-- Any Portal-only contract wording (frozen in [`portal.md`](./portal.md))
+- Any Portal-only contract wording (frozen in [`portal.md`](https://github.com/Project-Helianthus/helianthus-docs/blob/main/api/portal.md))
 
 ## Evidence
 
-- Runtime scheduler/shadow integration PR: [Project-Helianthus/helianthus-ebusgateway#391](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/391)
-- Watch-summary surface PR: [Project-Helianthus/helianthus-ebusgateway#393](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/393)
+- Runtime scheduler/shadow integration PR: [Project-Helianthus/helianthus-gateway#391](https://github.com/Project-Helianthus/helianthus-gateway/pull/391)
+- Watch-summary surface PR: [Project-Helianthus/helianthus-gateway#393](https://github.com/Project-Helianthus/helianthus-gateway/pull/393)
 - Scheduler behavior + breaker/coalescing tests:
   [Project-Helianthus/helianthus-ebusgateway/semantic_read_scheduler.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576c9203bf5a02a45494e935041961044600/semantic_read_scheduler.go),
   [Project-Helianthus/helianthus-ebusgateway/semantic_read_scheduler_test.go](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/92b3576c9203bf5a02a45494e935041961044600/semantic_read_scheduler_test.go)
@@ -282,8 +282,8 @@ implementation status.
 
 ## Current Discovery Rule
 
-- [`mcp.md`](./mcp.md) documents only implemented MCP tools
-- [`graphql.md`](./graphql.md) documents only implemented GraphQL schema
-- [`portal.md`](./portal.md) documents only implemented Portal endpoints
-- [`portal.md`](./portal.md) owns the frozen Portal-specific watch-summary
+- [`mcp.md`](https://github.com/Project-Helianthus/helianthus-docs/blob/main/api/mcp.md) documents only implemented MCP tools
+- [`graphql.md`](https://github.com/Project-Helianthus/helianthus-docs/blob/main/api/graphql.md) documents only implemented GraphQL schema
+- [`portal.md`](https://github.com/Project-Helianthus/helianthus-docs/blob/main/api/portal.md) documents only implemented Portal endpoints
+- [`portal.md`](https://github.com/Project-Helianthus/helianthus-docs/blob/main/api/portal.md) owns the frozen Portal-specific watch-summary
   behavior

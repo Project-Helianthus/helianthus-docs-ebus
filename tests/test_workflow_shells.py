@@ -35,10 +35,9 @@ def actionlint_reference(request, tmp_path_factory):
 def test_current_workflow_run_steps_are_counted_bash_and_pass_shellcheck(tmp_path):
     workflows = sorted((ROOT / ".github/workflows").glob("*.y*ml"))
     extracted = list(lint.scripts(workflows))
-    original = [path for path in workflows if path.name in (
-        "docs-ci.yml", "platform-contracts-combined-ref.yml")]
-    assert len(list(lint.scripts(original))) == 21
-    assert len(extracted) == 27
+    original = [path for path in workflows if path.name == "docs-ci.yml"]
+    assert len(list(lint.scripts(original))) == 10
+    assert len(extracted) == 14
     assert all(dialect == "bash" for _, dialect, _ in extracted)
     assert all("${{" not in source for _, _, source in extracted)
     assert lint.shellcheck(workflows, tmp_path) == 0

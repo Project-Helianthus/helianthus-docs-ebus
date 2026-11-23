@@ -5,7 +5,7 @@ Helianthus 1.0. Companion to the
 [local responder registration contract](../api/ebus-local-responder.md), tracked by
 [docs issue #770](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/770)
 as a partial slice of
-[gateway issue #991](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/991).
+[gateway issue #991](https://github.com/Project-Helianthus/helianthus-gateway/issues/991).
 No worker, shared-memory implementation, mux responder or live transport is
 implemented by this document.
 
@@ -14,7 +14,7 @@ implemented by this document.
 The public [eBUS wire contract](../protocols/ebus-services/ebus-overview.md) owns
 native framing and phases. The registration companion owns exact identities,
 immutable plans, half-open deadlines and destination-time selection. The
-[bidirectional driver boundary](bidirectional-driver-registration.md) continues
+[bidirectional driver boundary](https://github.com/Project-Helianthus/helianthus-docs/blob/main/architecture/bidirectional-driver-registration.md) continues
 to own lifecycle and ordinary eBUS MCP/GraphQL compatibility. This page defines
 application transport, not native eBUS semantics; it belongs outside CC0 trees.
 

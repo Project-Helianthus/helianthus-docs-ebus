@@ -300,7 +300,7 @@ These static checks do not evaluate PromQL. PromQL evaluation, exporter tests, c
 evidence are separate acceptance work. Existing
 [adaptermux alert rules](prometheus-alerts.md) retain their source contracts.
 
-[bus-owner]: https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/bus_observability_store.go
+[bus-owner]: https://github.com/Project-Helianthus/helianthus-gateway/blob/main/bus_observability_store.go
 [thermal-owner]: https://github.com/Project-Helianthus/helianthus-semreg/blob/main/semreg/v1/packs/thermal/definitions.go
 [infrastructure-owner]: https://github.com/Project-Helianthus/helianthus-semreg/blob/main/semreg/v1/packs/infrastructure/definitions.go
 [native-b524]: ../protocols/vaillant/ebus-vaillant-b524.md
@@ -533,7 +533,7 @@ across a meter replacement or reset.
   a documented instance index has no `index` label.
 - `point` is the canonical register name, spelled as the owning documentation
   repository spells it under the
-  [register naming rules](../architecture/naming.md#register-and-field-names).
+  [register naming rules](https://github.com/Project-Helianthus/helianthus-docs/blob/main/architecture/naming.md#register-and-field-names).
   Raw bytes, selectors, opcodes and addresses are never a `point` value.
 - `unit` is the constant unit of the family from the table above.
 

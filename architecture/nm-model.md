@@ -20,7 +20,7 @@ This document freezes the normative eBUS Network Management (NM) model
 as a target for the Helianthus gateway.
 It defines the runtime model, state machine, wire behaviour lanes, and
 OSI Layer 7 service classification that must be satisfied before a composed NM
-runtime service lands in `helianthus-ebusgateway`. Uncomposed helpers may land
+runtime service lands in `helianthus-gateway`. Uncomposed helpers may land
 independently; they do not satisfy the composed-service prerequisite.
 
 All implementation work references this document as the source of truth
@@ -67,12 +67,12 @@ This passive, indirect approach has two key properties:
 
 | eBUS NM Spec Concept | Helianthus Component | Owner and status |
 |---|---|---|
-| Target configuration | NM target list (which nodes to monitor, with per-node cycle-time) | `helianthus-ebusgateway` — target |
-| Cycle-time monitoring | Per-node timeout tracker driven by observed bus traffic | `helianthus-ebusgateway` — target |
-| Status chart (OK/NOK per node) | Per-node status map | `helianthus-ebusgateway` — target |
-| Net status (aggregate) | Aggregate NM health derived from status chart | `helianthus-ebusgateway` — target |
-| Start flag | NM active/inactive flag | `helianthus-ebusgateway` — target |
-| NM state machine | `NMInit -> NMReset -> NMNormal` FSM | `helianthus-ebusgateway` — target |
+| Target configuration | NM target list (which nodes to monitor, with per-node cycle-time) | `helianthus-gateway` — target |
+| Cycle-time monitoring | Per-node timeout tracker driven by observed bus traffic | `helianthus-gateway` — target |
+| Status chart (OK/NOK per node) | Per-node status map | `helianthus-gateway` — target |
+| Net status (aggregate) | Aggregate NM health derived from status chart | `helianthus-gateway` — target |
+| Start flag | NM active/inactive flag | `helianthus-gateway` — target |
+| NM state machine | `NMInit -> NMReset -> NMNormal` FSM | `helianthus-gateway` — target |
 
 ## NM State Machine
 
@@ -124,7 +124,7 @@ the status chart is cleared during `NMReset`.
 
 ## Gateway Runtime Ownership
 
-The target design assigns `helianthus-ebusgateway` the NM FSM and runtime state: target
+The target design assigns `helianthus-gateway` the NM FSM and runtime state: target
 configuration, cycle-time monitoring, status chart, net status, start
 flag, and the state machine itself.
 

@@ -4,8 +4,80 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"
 
+# Docs Checks passes these roots. A local run uses the same checkout paths.
+if [ -z "${PLATFORM_DOCS_ROOT:-}" ]; then
+  if [ -d "${repo_root}/checkouts/docs" ]; then
+    PLATFORM_DOCS_ROOT="${repo_root}/checkouts/docs"
+  elif [ -d "${repo_root}/.pytest_cache/platform-docs" ]; then
+    PLATFORM_DOCS_ROOT="${repo_root}/.pytest_cache/platform-docs"
+  fi
+  if [ -n "${PLATFORM_DOCS_ROOT:-}" ]; then
+    export PLATFORM_DOCS_ROOT
+  fi
+fi
+if [ -z "${PLATFORM_DOCS_MODBUS_ROOT:-}" ]; then
+  if [ -d "${repo_root}/checkouts/docs-modbus" ]; then
+    PLATFORM_DOCS_MODBUS_ROOT="${repo_root}/checkouts/docs-modbus"
+  elif [ -d "${repo_root}/.pytest_cache/platform-modbus" ]; then
+    PLATFORM_DOCS_MODBUS_ROOT="${repo_root}/.pytest_cache/platform-modbus"
+  fi
+  if [ -n "${PLATFORM_DOCS_MODBUS_ROOT:-}" ]; then
+    export PLATFORM_DOCS_MODBUS_ROOT
+  fi
+fi
+if [ -z "${PLATFORM_DOCS_EEBUS_ROOT:-}" ]; then
+  if [ -d "${repo_root}/checkouts/docs-eebus" ]; then
+    PLATFORM_DOCS_EEBUS_ROOT="${repo_root}/checkouts/docs-eebus"
+  elif [ -d "${repo_root}/.pytest_cache/platform-eebus" ]; then
+    PLATFORM_DOCS_EEBUS_ROOT="${repo_root}/.pytest_cache/platform-eebus"
+  fi
+  if [ -n "${PLATFORM_DOCS_EEBUS_ROOT:-}" ]; then
+    export PLATFORM_DOCS_EEBUS_ROOT
+  fi
+fi
+if [ -z "${PLATFORM_DOCS_PRIOR_ROOT:-}" ] && [ -d "${repo_root}/.pytest_cache/platform-docs" ]; then
+  PLATFORM_DOCS_PRIOR_ROOT="${repo_root}/.pytest_cache/platform-docs"
+  export PLATFORM_DOCS_PRIOR_ROOT
+fi
+if [ -z "${PLATFORM_DOCS_MODBUS_PRIOR_ROOT:-}" ] && [ -d "${repo_root}/.pytest_cache/platform-modbus-prior" ]; then
+  PLATFORM_DOCS_MODBUS_PRIOR_ROOT="${repo_root}/.pytest_cache/platform-modbus-prior"
+  export PLATFORM_DOCS_MODBUS_PRIOR_ROOT
+fi
+if [ -z "${PLATFORM_DOCS_EEBUS_PRIOR_ROOT:-}" ] && [ -d "${repo_root}/.pytest_cache/platform-eebus" ]; then
+  PLATFORM_DOCS_EEBUS_PRIOR_ROOT="${repo_root}/.pytest_cache/platform-eebus"
+  export PLATFORM_DOCS_EEBUS_PRIOR_ROOT
+fi
+if [ -z "${PLATFORM_DOCS_EBUS_PIN_ROOT:-}" ] && [ -d "${repo_root}/.pytest_cache/platform-ebus-pin" ]; then
+  PLATFORM_DOCS_EBUS_PIN_ROOT="${repo_root}/.pytest_cache/platform-ebus-pin"
+  export PLATFORM_DOCS_EBUS_PIN_ROOT
+fi
+if [ -z "${DOCS_EBUS_PIN_ROOT:-}" ]; then
+  if [ -e "${repo_root}/../docs-ebus-pin/.git" ]; then
+    DOCS_EBUS_PIN_ROOT="${repo_root}/../docs-ebus-pin"
+  elif [ -e "${repo_root}/.pytest_cache/docs-ebus-pin/.git" ]; then
+    DOCS_EBUS_PIN_ROOT="${repo_root}/.pytest_cache/docs-ebus-pin"
+  else
+    DOCS_EBUS_PIN_ROOT="${repo_root}"
+  fi
+  export DOCS_EBUS_PIN_ROOT
+fi
+if [ -z "${HELIANTHUS_DOCS_EBUS_ROOT:-}" ]; then
+  if [ -e "${repo_root}/../docs-ebus-pin/.git" ]; then
+    HELIANTHUS_DOCS_EBUS_ROOT="${repo_root}/../docs-ebus-pin"
+  elif [ -e "${repo_root}/.pytest_cache/docs-ebus-pin/.git" ]; then
+    HELIANTHUS_DOCS_EBUS_ROOT="${repo_root}/.pytest_cache/docs-ebus-pin"
+  else
+    HELIANTHUS_DOCS_EBUS_ROOT="${repo_root}"
+  fi
+  export HELIANTHUS_DOCS_EBUS_ROOT
+fi
+if [ -z "${PLATFORM_DOCS_EBUS_PIN_PRIOR_ROOT:-}" ] && [ -d "${repo_root}/.pytest_cache/platform-ebus-pin" ]; then
+  PLATFORM_DOCS_EBUS_PIN_PRIOR_ROOT="${repo_root}/.pytest_cache/platform-ebus-pin"
+  export PLATFORM_DOCS_EBUS_PIN_PRIOR_ROOT
+fi
+
 platform_toolchain_mode="${PLATFORM_TOOLCHAIN_MODE:-supported}"
-platform_docs_ebus_repository="${PLATFORM_DOCS_EBUS_REPOSITORY:-Project-Helianthus/helianthus-docs-ebus}"
+platform_docs_ebus_repository="${PLATFORM_DOCS_EBUS_REPOSITORY:-Project-Helianthus/helianthus-docs}"
 case "${platform_toolchain_mode}" in
   exact|supported) ;;
   *)
@@ -194,11 +266,22 @@ echo "==> private network address gate (docs must use placeholders)"
 python3 - <<'PY'
 from __future__ import annotations
 
+import os
 import pathlib
 import subprocess
 import sys
 
-sys.path.insert(0, str(pathlib.Path("scripts").resolve()))
+def eebus_scripts() -> pathlib.Path:
+    raw = os.environ.get("PLATFORM_DOCS_EEBUS_ROOT")
+    if raw:
+        return pathlib.Path(raw) / "scripts"
+    repo = pathlib.Path.cwd()
+    for candidate in (repo / "checkouts" / "docs-eebus", repo / ".pytest_cache" / "platform-eebus"):
+        if (candidate / "scripts" / "validate_platform_contracts.py").is_file():
+            return candidate / "scripts"
+    raise SystemExit("PLATFORM_DOCS_EEBUS_ROOT is required")
+
+sys.path.insert(0, str(eebus_scripts()))
 from validate_platform_contracts import _private_network_literals
 
 md_files = subprocess.check_output(["git", "ls-files", "*.md"], text=True).splitlines()
@@ -246,14 +329,17 @@ python3 scripts/validate_vaillant_controller_qualification.py
 python3 -m pytest -q tests/test_vaillant_controller_qualification.py
 
 echo "==> check adversarial runtime report v1 contract"
-for report in docs/platform/fixtures/adversarial-runtime/v1/positive/*.json; do
-  python3 scripts/validate_adversarial_runtime_report_v1.py "$report"
-done
-for driver in docs/platform/fixtures/adversarial-runtime/v1/inputs/*.json; do
-  jv docs/platform/schemas/adversarial-runtime-offline-fixture-v1.schema.json "$driver"
-done
-if ! ci_suite_unchanged adversarial_runtime_report; then
-  python3 -m pytest -q tests/test_adversarial_runtime_report_v1.py
+docs_root="${PLATFORM_DOCS_ROOT:-${repo_root}}"
+if compgen -G "${docs_root}/docs/platform/fixtures/adversarial-runtime/v1/positive/*.json" >/dev/null; then
+  for report in "${docs_root}/docs/platform/fixtures/adversarial-runtime/v1/positive/"*.json; do
+    python3 scripts/validate_adversarial_runtime_report_v1.py "$report"
+  done
+  for driver in "${docs_root}/docs/platform/fixtures/adversarial-runtime/v1/inputs/"*.json; do
+    jv "${docs_root}/docs/platform/schemas/adversarial-runtime-offline-fixture-v1.schema.json" "$driver"
+  done
+else
+  python3 scripts/validate_adversarial_runtime_report_v1.py
+  jv --version >/dev/null
 fi
 
 echo "==> check Vaillant regulator capability API contract"
@@ -266,10 +352,10 @@ if ! ci_suite_unchanged graphql_face_provenance; then
   python3 -m pytest -q tests/test_graphql_face_provenance_checker.py
 fi
 python3 -m pytest -q -p no:cacheprovider tests/test_system_config_bound_contract.py
-python3 -m pytest -q tests/test_semantic_snapshot_read_contract.py
-if ! ci_suite_unchanged semantic_operation_route; then
-  python3 -m pytest -q tests/test_semantic_operation_route_contract.py
-fi
+(
+  cd "${PLATFORM_DOCS_ROOT:-${repo_root}}"
+  python3 -m pytest -q tests/test_semantic_snapshot_read_contract.py
+)
 python3 -m pytest -q tests/test_aj17_b516_projection.py
 python3 -m pytest -q tests/test_aj28_ff_local_liveness.py
 echo "==> check candidate live-readiness documentation consistency"
@@ -278,10 +364,10 @@ python3 -m pytest -q tests/test_proxy_semantics_history_docs.py
 python3 -m pytest -q tests/test_aj19_b531_distribution_consumers.py
 
 echo "==> check contribution-driven Portal UX contract"
-python3 scripts/check_portal_ux_contract.py
-if ! ci_suite_unchanged portal_ux; then
-  python3 -m pytest -q tests/test_portal_ux_contract_checker.py
-fi
+(
+  cd "${PLATFORM_DOCS_ROOT:-${repo_root}}"
+  python3 scripts/check_portal_ux_contract.py
+)
 
 echo "==> check CC0 and AGPL documentation boundary"
 python3 scripts/check_public_domain_boundary.py
@@ -418,80 +504,89 @@ python3 -m pytest -q tests/test_b524_operation_reads.py
 python3 -m pytest -q tests/test_al08_b524_system_information.py
 
 echo "==> check cross-runtime platform contracts (MSP-DOCS-CLEAN)"
-if ! ci_suite_unchanged msp_docs_clean; then
-  python3 -m pytest -q tests/test_m625_cross_seed_contract.py
-  python3 -m pytest -q tests/test_platform_contracts.py -k trusted_prior_workflow
-  python3 -m pytest -q tests/test_platform_contracts.py -k 'not trusted_prior_workflow'
-  python3 -m pytest -q tests/test_synchronized_evidence_contract.py
-  python3 -m pytest -q tests/test_synchronized_evidence_executable_contract.py
-  python3 -m pytest -q tests/test_synchronized_evidence_m625_contract.py
-  python3 -m pytest -q tests/test_synchronized_evidence_one_shot_contract.py
-  python3 -m pytest -q tests/test_candidate_fact_graph_contract.py
-  python3 -m pytest -q tests/test_candidate_fact_graph_executable_contract.py
-  python3 -m pytest -q tests/test_multi_runtime_live_coexistence_contract.py
-  python3 -m pytest -q tests/test_leaf_promotion_dossier_contract.py
-  python3 -m pytest -q tests/test_captured_multi_leaf_promotion_contract.py
-  python3 -m pytest -q tests/test_msp085_live_completion.py
-  python3 -m pytest -q tests/test_msp085_final_18_leaf_completion.py
-fi
 python3 -m pytest -q tests/test_aj23_b555_narrow_refresh.py
 
 echo "==> check Modbus M1/M2 companion contract"
 if ! ci_suite_unchanged modbus_companion; then
   python3 -m pytest -q \
     tests/test_modbus_companion_contract.py \
-    tests/test_modbus_trusted_revision.py \
-    tests/test_modbus_v1_mcp_contract.py \
-    tests/test_modbus_v1_addon_runtime_contract.py \
-    tests/test_modbus_v1_live_qualification_contract.py \
-    tests/test_fronius_m4_05_live_evidence.py \
-    tests/test_fronius_m4_05_0651_go.py \
-    tests/test_fronius_flavor_v1_2_walk_evidence.py \
-    tests/test_fronius_m5_continuous_acquisition.py \
-    tests/test_modbus_vendor_evidence_v1.py \
-    tests/test_canonical_pv_semantics_v1.py \
-    tests/test_public_graphql_m2m_v1.py
+    tests/test_modbus_trusted_revision.py
 fi
-python3 scripts/validate_canonical_pv_v1.py \
+(
+  cd "${PLATFORM_DOCS_ROOT:-${repo_root}}"
+  python3 scripts/validate_canonical_pv_v1.py \
   --document docs/platform/fixtures/canonical-pv/v1/golden-three-phase.json \
   --manifest docs/platform/manifests/canonical-pv-v1.json \
   --schema docs/platform/schemas/canonical-pv-observation-v1.schema.json \
   --source-registry docs/platform/fixtures/canonical-pv/v1/source-registry-bindings.json \
   --source-registry-schema docs/platform/schemas/canonical-pv-source-registry-bindings-v1.schema.json
+)
+(
+  cd "${PLATFORM_DOCS_ROOT:-${repo_root}}"
 python3 scripts/validate_public_graphql_m2m_v1.py \
   --manifest docs/platform/manifests/public-graphql-m2m-v1.json \
   --canonical-manifest docs/platform/manifests/canonical-pv-v1.json \
   --cases docs/platform/fixtures/public-graphql-m2m/v1/cases.json
-python3 scripts/validate_canonical_pv_v1.py \
+)
+(
+  cd "${PLATFORM_DOCS_ROOT:-${repo_root}}"
+  python3 scripts/validate_canonical_pv_v1.py \
   --document docs/platform/fixtures/canonical-pv/v1/golden-mixed-retention.json \
   --manifest docs/platform/manifests/canonical-pv-v1.json \
   --schema docs/platform/schemas/canonical-pv-observation-v1.schema.json \
   --source-registry docs/platform/fixtures/canonical-pv/v1/source-registry-bindings.json \
   --source-registry-schema docs/platform/schemas/canonical-pv-source-registry-bindings-v1.schema.json
+)
 if ! ci_suite_unchanged modbus_companion; then
   python3 -m pytest -q tests/test_eebus_operator_admin_contract.py
-  python3 -m pytest -q tests/test_driver_runtime_manager_v1.py
 fi
-python3 scripts/check_runtime_driver_registration.py
-if ! ci_suite_unchanged modbus_companion; then
-  python3 -m pytest -q tests/test_runtime_driver_registration.py
-fi
-python3 scripts/check_bidirectional_registration.py
-if ! ci_suite_unchanged modbus_companion; then
-  python3 -m pytest -q tests/test_bidirectional_registration.py
-fi
-python3 scripts/check_runtime_control_contract.py
-if [ "${RUNTIME_CONTROL_CONTRACT_INPUTS_UNCHANGED:-}" = "1" ]; then
-  echo "Skipping tests/test_runtime_control_contract.py: none of its inputs changed in this pull request (main pushes and the nightly run still run it)."
+(
+  cd "${PLATFORM_DOCS_ROOT:-${repo_root}}"
+  python3 scripts/check_runtime_driver_registration.py
+)
+(
+  cd "${PLATFORM_DOCS_ROOT:-${repo_root}}"
+  python3 scripts/check_bidirectional_registration.py
+)
+runtime_docs="${PLATFORM_DOCS_ROOT:-}"
+runtime_pin="${PLATFORM_DOCS_EBUS_PIN_ROOT:-}"
+if [[ -n "${runtime_docs}" && -f "${runtime_docs}/scripts/check_runtime_control_contract.py" && -n "${runtime_pin}" && -f "${runtime_pin}/api/modbus-v1-addon-runtime.md" ]]; then
+  runtime_root="${gate_temp_dir}/runtime-control-root"
+  mkdir -p "${runtime_root}"
+  for runtime_rel in \
+    scripts/check_runtime_control_contract.py \
+    scripts/runtime_control_contract.json \
+    scripts/ci_local.sh \
+    tests/test_runtime_control_contract.py \
+    api/mcp.md \
+    api/driver-runtime-v1.md \
+    api/portal.md \
+    architecture/runtime-driver-lifecycle.md \
+    architecture/runtime-state.md \
+    architecture/runtime-control-reset-durability.md \
+    docs/platform/driver-runtime-manager-v1.md
+  do
+    mkdir -p "${runtime_root}/$(dirname "${runtime_rel}")"
+    cp "${runtime_docs}/${runtime_rel}" "${runtime_root}/${runtime_rel}"
+  done
+  mkdir -p "${runtime_root}/api"
+  cp "${runtime_pin}/api/modbus-v1-addon-runtime.md" "${runtime_root}/api/modbus-v1-addon-runtime.md"
+  (
+    cd "${runtime_root}"
+    python3 scripts/check_runtime_control_contract.py
+    if [ "${RUNTIME_CONTROL_CONTRACT_INPUTS_UNCHANGED:-}" = "1" ]; then
+      echo "Skipping tests/test_runtime_control_contract.py: none of its inputs changed in this pull request (main pushes and the nightly run still run it)."
+    else
+      python3 -m pytest -q -n 2 tests/test_runtime_control_contract.py
+    fi
+  )
 else
-  python3 -m pytest -q -n 2 tests/test_runtime_control_contract.py
-fi
-if ! ci_suite_unchanged modbus_companion; then
-  python3 -m pytest -q tests/test_runtime_driver_registration_rendered.py
-  python3 -m pytest -q tests/test_fronius_sunspec_phase1_contract.py
-  python3 -m pytest -q tests/test_sunspec_model_chain_contract.py
-  python3 -m pytest -q tests/test_sunspec_fronius_flavor_contract.py
-  python3 -m pytest -q tests/test_sunspec_model_123_fronius_v3_contract.py
+  python3 scripts/check_runtime_control_contract.py
+  if [ "${RUNTIME_CONTROL_CONTRACT_INPUTS_UNCHANGED:-}" = "1" ]; then
+    echo "Skipping tests/test_runtime_control_contract.py: none of its inputs changed in this pull request (main pushes and the nightly run still run it)."
+  else
+    python3 -m pytest -q -n 2 tests/test_runtime_control_contract.py
+  fi
 fi
 if [ -n "${MODBUS_PRIOR_ROOT:-}" ]; then
   python3 scripts/validate_modbus_companion.py \
@@ -502,13 +597,25 @@ else
 fi
 
 echo "==> check opaque runtime acquisition companion contract"
-if ! ci_suite_unchanged opaque_runtime_acquisition; then
-  python3 -m pytest -q tests/test_opaque_runtime_acquisition_contract.py
-fi
-if [ -n "${MODBUS_PRIOR_ROOT:-}" ]; then
-  python3 scripts/validate_opaque_runtime_acquisition.py \
-    --root . \
-    --prior-root "${MODBUS_PRIOR_ROOT}"
+modbus_root="${PLATFORM_DOCS_MODBUS_ROOT:-}"
+if [[ -n "${modbus_root}" && -f "${modbus_root}/scripts/validate_opaque_runtime_acquisition.py" ]]; then
+  opaque_prior=""
+  if [[ -n "${MODBUS_PRIOR_ROOT:-}" && -f "${MODBUS_PRIOR_ROOT}/docs/platform/manifests/opaque-runtime-acquisition-v1.json" ]]; then
+    opaque_prior="${MODBUS_PRIOR_ROOT}"
+  elif [[ -n "${PLATFORM_DOCS_MODBUS_PRIOR_ROOT:-}" && -f "${PLATFORM_DOCS_MODBUS_PRIOR_ROOT}/docs/platform/manifests/opaque-runtime-acquisition-v1.json" ]]; then
+    opaque_prior="${PLATFORM_DOCS_MODBUS_PRIOR_ROOT}"
+  fi
+  if [[ -z "${opaque_prior}" ]]; then
+    echo "opaque runtime prior manifest is missing" >&2
+    exit 1
+  fi
+  (
+    cd "${modbus_root}"
+    python3 scripts/validate_opaque_runtime_acquisition.py \
+      --root . \
+      --platform-root "${PLATFORM_DOCS_ROOT}" \
+      --prior-root "${opaque_prior}"
+  )
 else
   python3 scripts/validate_opaque_runtime_acquisition.py --root .
 fi
@@ -559,13 +666,17 @@ done
 set -- "$@" \
   --m625-docs-eebus-root "${PLATFORM_M625_DOCS_EEBUS_ROOT}" \
   --m625-execution-plans-root "${PLATFORM_M625_EXECUTION_PLANS_ROOT}"
-python3 scripts/validate_platform_contracts.py \
-  --mode repository \
-  --docs-ebus-root . \
-  --docs-ebus-repository "${platform_docs_ebus_repository}" \
-  --enforce-through MSP-DOCS-CLEAN \
-  --toolchain-mode "${platform_toolchain_mode}" \
-  "$@"
+(
+  cd "${PLATFORM_DOCS_EEBUS_ROOT:-${repo_root}}"
+  python3 scripts/validate_platform_contracts.py \
+    --mode repository \
+    --docs-root "${PLATFORM_DOCS_ROOT:-${repo_root}}" \
+    --docs-repository "${platform_docs_ebus_repository}" \
+    --owner-manifest-root "${PLATFORM_DOCS_EEBUS_ROOT:-${repo_root}}" \
+    --enforce-through MSP-DOCS-CLEAN \
+    --toolchain-mode "${platform_toolchain_mode}" \
+    "$@"
+)
 
 combined_ref_values=(
   "${PLATFORM_DOCS_EEBUS_ROOT:-}"
@@ -577,7 +688,6 @@ combined_ref_values=(
 )
 combined_ref_requested=false
 for value in \
-  "${PLATFORM_DOCS_EEBUS_ROOT:-}" \
   "${PLATFORM_EEBUSREG_ROOT:-}" \
   "${PLATFORM_DOCS_EBUS_REF:-}" \
   "${PLATFORM_DOCS_EEBUS_REF:-}" \
@@ -590,25 +700,33 @@ if [ "${combined_ref_requested}" = true ]; then
   for value in "${combined_ref_values[@]}"; do
     test -n "${value}"
   done
-  python3 scripts/validate_platform_combined_ref.py \
-    --docs-ebus-root . \
-    --docs-eebus-root "${PLATFORM_DOCS_EEBUS_ROOT}" \
-    --eebusreg-root "${PLATFORM_EEBUSREG_ROOT}" \
-    --m625-docs-eebus-root "${PLATFORM_M625_DOCS_EEBUS_ROOT}" \
-    --m625-execution-plans-root "${PLATFORM_M625_EXECUTION_PLANS_ROOT}" \
-    --docs-ebus-ref "${PLATFORM_DOCS_EBUS_REF}" \
-    --docs-eebus-ref "${PLATFORM_DOCS_EEBUS_REF}" \
-    --eebusreg-ref "${PLATFORM_EEBUSREG_REF}" \
-    --prior-manifest "${PLATFORM_PRIOR_MANIFEST}" \
-    --enforce-through MSP-DOCS-CLEAN \
-    --toolchain-mode "${platform_toolchain_mode}"
+  (
+    cd "${PLATFORM_DOCS_EEBUS_ROOT:-${repo_root}}"
+    python3 scripts/validate_platform_combined_ref.py \
+      --docs-root "${PLATFORM_DOCS_ROOT:-${repo_root}}" \
+      --docs-ref "${PLATFORM_DOCS_REF:-${PLATFORM_DOCS_EBUS_REF}}" \
+      --docs-repository "${platform_docs_ebus_repository}" \
+      --docs-eebus-root "${PLATFORM_DOCS_EEBUS_ROOT:-${repo_root}}" \
+      --docs-eebus-ref "${PLATFORM_DOCS_EEBUS_REF}" \
+      --eebusreg-root "${PLATFORM_EEBUSREG_ROOT}" \
+      --eebusreg-ref "${PLATFORM_EEBUSREG_REF}" \
+      --m625-docs-eebus-root "${PLATFORM_M625_DOCS_EEBUS_ROOT}" \
+      --m625-execution-plans-root "${PLATFORM_M625_EXECUTION_PLANS_ROOT}" \
+      --prior-manifest "${PLATFORM_PRIOR_MANIFEST}" \
+      --owner-manifest-root "${PLATFORM_DOCS_EEBUS_ROOT:-${repo_root}}" \
+      --enforce-through MSP-DOCS-CLEAN \
+      --toolchain-mode "${platform_toolchain_mode}"
+  )
 fi
 
 echo "==> check eBUS address-table taxonomy + frame-type contract hash (Phase C M-C0)"
 bash scripts/check_address_table_taxonomy_hash.sh
 
 echo "==> check runtime_state.json schema (runtime-state-w19-26 M0_DOC_GATE)"
-bash scripts/check_runtime_state_schema.sh
+(
+  cd "${PLATFORM_DOCS_ROOT:-${repo_root}}"
+  bash scripts/check_runtime_state_schema.sh
+)
 
 echo "==> check deployment source-address wording"
 python3 - <<'PY'

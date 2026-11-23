@@ -124,8 +124,8 @@ observation, and the successful ACK owner path.
 The final functional commit was validated with:
 
 ```sh
-python3 -m pytest -q   tests/test_portal_ux_contract_checker.py   tests/test_vaillant_b503_milestone_checker.py
-python3 scripts/check_portal_ux_contract.py
+python3 -m pytest -q   https://github.com/Project-Helianthus/helianthus-docs/blob/main/tests/test_portal_ux_contract_checker.py   tests/test_vaillant_b503_milestone_checker.py
+python3 https://github.com/Project-Helianthus/helianthus-docs/blob/main/scripts/check_portal_ux_contract.py
 python3 scripts/check_vaillant_b503_milestones.py
 git diff --check
 PLATFORM_M625_DOCS_EEBUS_ROOT='<verified docs-eeBUS root>' PLATFORM_M625_EXECUTION_PLANS_ROOT='<verified execution-plans root>' ./scripts/ci_local.sh

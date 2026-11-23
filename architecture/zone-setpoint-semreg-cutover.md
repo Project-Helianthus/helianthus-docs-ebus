@@ -2,7 +2,7 @@
 
 This is the proposed, bounded gateway-to-SemReg acceptance contract for zone
 manual, computed effective, quick-veto override and holiday temperatures.
-It advances [gateway #952](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/952)
+It advances [gateway #952](https://github.com/Project-Helianthus/helianthus-gateway/issues/952)
 and [docs #700](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/700)
 without closing the parent. It is distinct from Matter source inventory and
 other temperature-field cutovers. Nothing here establishes stability before
@@ -24,7 +24,7 @@ move after review.
   `qualification`, `mappings`, `lifecycle`, `nonclaims`. It covers system
   outdoor/flow temperatures, not zones; its qualification is Unknown and
   `runtime_qualification_permitted` is false. It cannot qualify this slice.
-- [Gateway implementation](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/cmd/gateway/semantic_vaillant.go):
+- [Gateway implementation](https://github.com/Project-Helianthus/helianthus-gateway/blob/main/cmd/gateway/semantic_vaillant.go):
   zone constants, `localZones`, `refreshZoneSlowConfigFields`, `refreshConfig`,
   `publishZones`, `readB524ValueWithMaxAge`, `readB524Float32LE`,
   `resolveAssociatedCircuitInstance`, `deriveZoneModeAndPreset`.

@@ -3,7 +3,7 @@
 > License: AGPL-3.0. Proposed gateway-to-SemReg migration acceptance for
 > [docs-ebus #704](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/704).
 > This is one partial slice of
-> [gateway #952](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/952);
+> [gateway #952](https://github.com/Project-Helianthus/helianthus-gateway/issues/952);
 > it does not close the parent.
 
 This contract covers only the raw zone valve status and the legacy
@@ -217,5 +217,5 @@ write, deployment, transport behavior or hardware acceptance follows.
 [circuit-type]: https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/vaillant/ebus-vaillant-b524-register-map.md#mctype--circuit-type
 [semantic]: https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/b524-semantic-mapping.md
 [fixture]: https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/fixtures/vaillant-semreg-thermal-map-v1.json
-[gateway]: https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/cmd/gateway/semantic_vaillant.go
+[gateway]: https://github.com/Project-Helianthus/helianthus-gateway/blob/main/cmd/gateway/semantic_vaillant.go
 [pack]: https://github.com/Project-Helianthus/helianthus-semreg/blob/main/semreg/v1/packs/thermal/definitions.go

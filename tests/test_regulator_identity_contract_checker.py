@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib.util
 import hashlib
 import json
+import os
 import pathlib
 import shutil
 from copy import deepcopy
@@ -43,7 +44,19 @@ def copy_contract_material(destination: pathlib.Path) -> None:
     ):
         target = destination / relative
         target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(REPO_ROOT / relative, target)
+        source = REPO_ROOT / relative
+        if relative == pathlib.Path("api/graphql.md"):
+            raw = os.environ.get("PLATFORM_DOCS_ROOT")
+            docs = pathlib.Path(raw) if raw else None
+            if docs is None:
+                for candidate in (REPO_ROOT / "checkouts" / "docs", REPO_ROOT / ".pytest_cache" / "platform-docs"):
+                    if candidate.is_dir():
+                        docs = candidate
+                        break
+            if docs is None:
+                raise OSError("PLATFORM_DOCS_ROOT is required")
+            source = docs / relative
+        shutil.copy2(source, target)
 
 
 def read_policy(root: pathlib.Path) -> dict[str, object]:

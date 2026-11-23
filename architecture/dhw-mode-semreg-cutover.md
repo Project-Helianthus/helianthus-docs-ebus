@@ -3,7 +3,7 @@
 This is the bounded gateway-to-SemReg migration acceptance contract for
 [docs-ebus #697](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/697),
 as a partial north-south MCP/GraphQL contract.
-[Gateway #952](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/952)
+[Gateway #952](https://github.com/Project-Helianthus/helianthus-gateway/issues/952)
 owns only two system-temperature reads and excludes DHW migration. A successor
 gateway issue must own DHW implementation acceptance; its identity is **Unknown**
 here. This contract does not advance or close #952. It covers DHW operating mode,
@@ -16,7 +16,7 @@ not enable a binding. Nothing is stable before Helianthus 1.0.
 
 - [Native register map](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/vaillant/ebus-vaillant-b524-register-map.md): sections “GG=0x01 — Native Domestic Hot Water”, “opmode — Operation mode”, and “sfmode — Special function”. These are the public native contract first; candidate descriptions remain candidates.
 - [Legacy semantic mapping](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/b524-semantic-mapping.md): sections `ebus_v1_semantic_dhw_get`, `ebus_v1_semantic_boiler_status_get`, and “SemReg thermal v1 read-only Vaillant mapping”.
-- [Gateway implementation](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/cmd/gateway/semantic_vaillant.go): `refreshDHWSlowConfig`, `refreshDHW`, `cachedDHWDerivationInputs`, `readDhwUint16`, `readB524Uint16`, `deriveDhwModeAndPreset`, `derivePresetFromSpecialFunctionAndOpMode`, `normalizeSpecialFunctionToken`, `publishDHW`, `expireDHWIfStaleLocked`, `mergeBoilerDHWFieldsFromSnapshot`, and `decodeDhwMode`.
+- [Gateway implementation](https://github.com/Project-Helianthus/helianthus-gateway/blob/main/cmd/gateway/semantic_vaillant.go): `refreshDHWSlowConfig`, `refreshDHW`, `cachedDHWDerivationInputs`, `readDhwUint16`, `readB524Uint16`, `deriveDhwModeAndPreset`, `derivePresetFromSpecialFunctionAndOpMode`, `normalizeSpecialFunctionToken`, `publishDHW`, `expireDHWIfStaleLocked`, `mergeBoilerDHWFieldsFromSnapshot`, and `decodeDhwMode`.
 - [Thermal definitions](https://github.com/Project-Helianthus/helianthus-semreg/blob/main/semreg/v1/packs/thermal/definitions.go): `fields`, `dimensions`, `services`, `capabilities`, `operations`, and `Metadata`.
 - [Existing thermal mapping index](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/fixtures/vaillant-semreg-thermal-map-v1.json): `qualification`, `mappings`, `lifecycle`, and `nonclaims`. It covers temperatures, not these DHW inputs, and its unknown qualification does not authorize a DHW binding.
 

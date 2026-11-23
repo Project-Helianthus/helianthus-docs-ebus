@@ -453,8 +453,17 @@ def validate_root(root: Path, gateway: Path | None = None) -> None:
     setter_keys = None if gateway is None else load_setter_keys(gateway)
     validate_remaining_pages(root)
     validate_api_pages(root)
-    validate_operation((root / "api/semantic-operation-route.md").read_text(),
-                       (root / "tests/semantic_operation_route_contract.json").read_text())
+    raw = os.environ.get("PLATFORM_DOCS_ROOT")
+    docs = Path(raw) if raw else None
+    if docs is None:
+        for candidate in (ROOT / "checkouts" / "docs", ROOT / ".pytest_cache" / "platform-docs"):
+            if candidate.is_dir():
+                docs = candidate
+                break
+    if docs is None:
+        raise OSError("PLATFORM_DOCS_ROOT is required")
+    validate_operation((docs / "api/semantic-operation-route.md").read_text(),
+                       (docs / "tests/semantic_operation_route_contract.json").read_text())
     registration = None
     if gateway is not None:
         text = (gateway / "docs/mcp-tool-inventory.md").read_text()
@@ -465,8 +474,8 @@ def validate_root(root: Path, gateway: Path | None = None) -> None:
         actual = metrics.rows("\n".join("| " + line for line in metrics.RENDERER_ROWS.strip().splitlines()))
         if actual != expected:
             raise ValueError("metric emission parity differs")
-    validate((root / "api/graphql.md").read_text(),
-             (root / "api/mcp.md").read_text(),
+    validate((docs / "api/graphql.md").read_text(),
+             (docs / "api/mcp.md").read_text(),
              (root / metrics.DOCUMENT).read_text(), registration, setter_keys)
 
 
@@ -475,7 +484,7 @@ def main() -> int:
     parser.add_argument("--root", type=Path, default=ROOT)
     parser.add_argument("--gateway-root", type=Path)
     args = parser.parse_args()
-    supplied = args.root / ".tmp/references/ebusgateway"
+    supplied = args.root / ".tmp/references/gateway"
     gateway = args.gateway_root or (supplied if supplied.is_dir() else None)
     if gateway is None:
         print("Naming contract: UNVERIFIED without an offline emission reference", file=sys.stderr)

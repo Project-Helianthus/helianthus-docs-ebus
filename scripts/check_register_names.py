@@ -62,11 +62,11 @@ ROLES = {
     # Class markers of an object: what a `time` can last or separate.
     "activity",
     "event",
-    # A function the maker names with a name of its own (architecture/naming.md,
+    # A function the maker names with a name of its own (https://github.com/Project-Helianthus/helianthus-docs/blob/main/architecture/naming.md,
     # "Vocabulary"); the term takes the subject or the object slot.
     "feature",
 }
-# The closed predicate list of architecture/naming.md.
+# The closed predicate list of https://github.com/Project-Helianthus/helianthus-docs/blob/main/architecture/naming.md.
 PREDICATES = {
     "setpoint", "limit", "offset", "hysteresis", "active", "enabled", "demand",
     "connected", "ready", "available", "ok", "fault", "state", "status", "mode",
@@ -115,7 +115,7 @@ ROLE_SLOTS = {
     "manner": ["manner"],
     "feature": ["subject", "object"],
 }
-# Trailing slots admitted by the predicate (architecture/naming.md, "Predicates"
+# Trailing slots admitted by the predicate (https://github.com/Project-Helianthus/helianthus-docs/blob/main/architecture/naming.md, "Predicates"
 # and "Order of the parts"). A bound follows a measured value (no predicate) or
 # `setpoint`, `limit`, `offset`, `hysteresis`, `time`, `count`; a period follows
 # a measured value, a `count` or a `time`; a manner follows a measured value.
@@ -125,7 +125,7 @@ BOUND_PREDICATES = {None, "setpoint", "limit", "offset", "hysteresis", "time", "
 PERIOD_PREDICATES = {None, "count", "time"}
 MANNER_PREDICATES = {None}
 # Objects that are counted events or occurrences: `count` is "the number of
-# occurrences of the object event" (architecture/naming.md, "Predicates"); the
+# occurrences of the object event" (https://github.com/Project-Helianthus/helianthus-docs/blob/main/architecture/naming.md, "Predicates"); the
 # events of the Object row (`start`, `switch`), the vocabulary's `stop` event
 # and the time-programme `period`. Without an object, `count` is the number of
 # subjects and needs an explicit subject.
@@ -134,7 +134,7 @@ COUNTED_OBJECTS = {"start", "stop", "switch", "period"}
 TIMED_ROLES = frozenset({"activity", "event"})
 INDEX = re.compile(r"[1-9][0-9]*")
 # A part follows its object directly: date and clock-time parts
-# (architecture/naming.md) and the two halves of a text split across fields.
+# (https://github.com/Project-Helianthus/helianthus-docs/blob/main/architecture/naming.md) and the two halves of a text split across fields.
 TEXT_OBJECTS = {"name", "phone_number", "serial_number", "access_code"}
 PART_HOSTS = {
     "year": {"date"},
@@ -301,7 +301,7 @@ def _assign(
         ):
             return False
         # `remaining` is the time until the next occurrence or the end
-        # (architecture/naming.md, `time` row), so it only follows `time`.
+        # (https://github.com/Project-Helianthus/helianthus-docs/blob/main/architecture/naming.md, `time` row), so it only follows `time`.
         if "remaining" in words and predicate != "time":
             return False
         if "average" in words and "period" not in chosen:

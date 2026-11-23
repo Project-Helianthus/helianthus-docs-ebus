@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-MATRIX_LINK = "https://github.com/Project-Helianthus/helianthus-ebusgateway/tree/main/matrix"
+MATRIX_LINK = "https://github.com/Project-Helianthus/helianthus-gateway/tree/main/matrix"
 PAGES = (
     "architecture/proxy-wire-semantics.md",
     "development/contributing.md",

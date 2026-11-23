@@ -1,6 +1,6 @@
 # Observability Reference
 
-This page documents the runtime observability signals currently emitted by `helianthus-ebusgateway`.
+This page documents the runtime observability signals currently emitted by `helianthus-gateway`.
 
 ## HTTP Metrics Surface
 
@@ -62,8 +62,8 @@ This page documents the runtime observability signals currently emitted by `heli
 
 The merged M4 watch stack (`GW-06..GW-09`) introduces policy-carried passive
 adjudication behavior. B509/B524 gateway implementation tracking:
-[issue #982](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/982)
-and [PR #992](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/992).
+[issue #982](https://github.com/Project-Helianthus/helianthus-gateway/issues/982)
+and [PR #992](https://github.com/Project-Helianthus/helianthus-gateway/pull/992).
 These links and this documentation alone do not establish merge or runtime
 qualification; current GitHub state and merged gateway code establish
 implementation status. At architecture level:
@@ -161,10 +161,10 @@ discovery pass, when the root is found.
 
 **Proven — merged gateway behavior.** The `UNKNOWN` value, its transitions and
 the timing below are taken from the merged gateway changes
-[gateway #1524](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1524),
-[gateway #1525](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1525)
+[gateway #1524](https://github.com/Project-Helianthus/helianthus-gateway/issues/1524),
+[gateway #1525](https://github.com/Project-Helianthus/helianthus-gateway/issues/1525)
 and
-[gateway #1526](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1526),
+[gateway #1526](https://github.com/Project-Helianthus/helianthus-gateway/issues/1526),
 and from the gateway run sheet `docs/testing/site-without-controller-run-sheet.md`;
 the behavior on a physical installation without a controller is **Unknown**
 beyond that run sheet.
@@ -318,4 +318,4 @@ With the reason set, the boot-live timeout transition of
 - Energy merge: [`architecture/energy-merge.md`](./energy-merge.md)
 - Zone presence FSM: [`architecture/zone-presence-fsm.md`](./zone-presence-fsm.md)
 - DHW freshness: [`architecture/dhw-freshness-fsm.md`](./dhw-freshness-fsm.md)
-- Adversarial matrix: [`architecture/adversarial-matrix.md`](./adversarial-matrix.md)
+- Adversarial matrix: [`architecture/adversarial-matrix.md`](https://github.com/Project-Helianthus/helianthus-docs/blob/main/architecture/adversarial-matrix.md)

@@ -55,7 +55,7 @@ The detailed local target contract is defined in [`architecture/local-target-emu
 ## Operational implications
 
 - Proxy behavior changes that affect scheduling boundaries require doc-gate updates before merge.
-- The proxy-semantics subset (`PX01..PX12`) and its runner are historical. The gateway [`adaptermux-v2` matrix](https://github.com/Project-Helianthus/helianthus-ebusgateway/tree/main/matrix) carries each PX case as the cells `<transport>-PX01` to `<transport>-PX12` on every southbound transport; `PX09` to `PX11` are planned until the multiplexer has a local responder.
+- The proxy-semantics subset (`PX01..PX12`) and its runner are historical. The gateway [`adaptermux-v2` matrix](https://github.com/Project-Helianthus/helianthus-gateway/tree/main/matrix) carries each PX case as the cells `<transport>-PX01` to `<transport>-PX12` on every southbound transport; `PX09` to `PX11` are planned until the multiplexer has a local responder.
 - The `T01..T88` topologies describe the consolidated candidate session's last run, which still needs the proxy for `T09..T88`.
 - Hardware passive proof for strict timing claims remains deferred to the ESERA follow-up milestone and is non-blocking for current code milestones.
 

@@ -4,7 +4,7 @@
 > no producer, pack, API, fixture, write route or runtime behavior changes here.
 
 This is a partial contract slice advancing
-[ebusgateway#952](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/952).
+[gateway#952](https://github.com/Project-Helianthus/helianthus-gateway/issues/952).
 The parent remains open. All transitions below marked **proposed** are future
 work. Nothing described here is stable before the Helianthus 1.0 release.
 
@@ -18,7 +18,7 @@ Read the native contract before considering the implementation or pack:
 - **L:** [legacy semantic mapping](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/b524-semantic-mapping.md).
   The circuit table describes existing MCP paths; its separate system thermal
   mapping supplies lifecycle precedents, not qualification for circuits.
-- **G:** [gateway semantic poller](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/cmd/gateway/semantic_vaillant.go),
+- **G:** [gateway semantic poller](https://github.com/Project-Helianthus/helianthus-gateway/blob/main/cmd/gateway/semantic_vaillant.go),
   specifically `refreshCircuits`, `readB524Float32LE`,
   `mergeCircuitSnapshotNonDestructive`, `publishCircuits`, and
   `readDhwPseudoCircuitEvidence`. This proves implementation behavior only.

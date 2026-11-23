@@ -1,17 +1,32 @@
 from pathlib import Path
+import os
 
 
 ROOT = Path(__file__).resolve().parents[1]
-CONTRACT = ROOT / "api" / "eebus-operator-admin.md"
-PORTAL = ROOT / "api" / "portal.md"
 DECISIONS = ROOT / "architecture" / "decisions.md"
 B524 = ROOT / "architecture" / "b524-structural-decisions.md"
 B524_MAPPING = ROOT / "architecture" / "b524-semantic-mapping.md"
 FSM_MAP = ROOT / "architecture" / "semantic-structure-fsm-map.md"
 CONFIG_GATES = ROOT / "architecture" / "semantic-configuration-gates.md"
-GRAPHQL = ROOT / "api" / "graphql.md"
-MCP = ROOT / "api" / "mcp.md"
 HA = ROOT / "development" / "ha-integration.md"
+
+
+def _owner_root(env_name: str, checkout: str, cache: str) -> Path:
+    raw = os.environ.get(env_name)
+    if raw:
+        return Path(raw)
+    for candidate in (ROOT / "checkouts" / checkout, ROOT / ".pytest_cache" / cache):
+        if candidate.is_dir():
+            return candidate
+    raise OSError(f"{env_name} is required")
+
+
+def contract_page() -> Path:
+    return _owner_root("PLATFORM_DOCS_EEBUS_ROOT", "docs-eebus", "platform-eebus") / "api" / "eebus-operator-admin.md"
+
+
+def docs_page(name: str) -> Path:
+    return _owner_root("PLATFORM_DOCS_ROOT", "docs", "platform-docs") / "api" / name
 
 
 def _normalized(path: Path) -> str:
@@ -19,7 +34,7 @@ def _normalized(path: Path) -> str:
 
 
 def test_shared_operator_boundary_has_no_eebus_specific_authentication() -> None:
-    text = _normalized(CONTRACT)
+    text = _normalized(contract_page())
     for required in (
         "canonical protocol-specific contract remains exclusively in",
         "post-m9-operator-pairing-browsers-v1.md",
@@ -51,7 +66,7 @@ def test_shared_operator_boundary_has_no_eebus_specific_authentication() -> None
 
 
 def test_operator_admin_boundary_has_no_host_local_peer_enforcement() -> None:
-    text = _normalized(CONTRACT)
+    text = _normalized(contract_page())
     for required in (
         "does not enforce a host-local transport peer check",
         "Gateway #818 removed that check",
@@ -70,7 +85,7 @@ def test_operator_admin_boundary_has_no_host_local_peer_enforcement() -> None:
 
 
 def test_protocol_contract_is_linked_not_duplicated() -> None:
-    text = _normalized(CONTRACT)
+    text = _normalized(contract_page())
     for forbidden in (
         "/admin/eebus/v1/",
         "admin_boundary_unavailable",
@@ -91,7 +106,7 @@ def test_protocol_contract_is_linked_not_duplicated() -> None:
 
 
 def test_fm5_structural_mode_survives_transient_acquisition() -> None:
-    text = _normalized(CONTRACT)
+    text = _normalized(contract_page())
     for required in (
         "`INTERPRETED`, `GPIO_ONLY`, and `ABSENT`",
         "`fm5_semantic_degraded_reason`",
@@ -114,8 +129,8 @@ def test_fm5_structural_mode_survives_transient_acquisition() -> None:
 
 
 def test_version_has_one_runtime_build_source_and_portal_links_contract() -> None:
-    contract = _normalized(CONTRACT)
-    portal = _normalized(PORTAL)
+    contract = _normalized(contract_page())
+    portal = _normalized(docs_page("portal.md"))
     decisions = _normalized(DECISIONS)
     for required in (
         "single injected build-time release version",
@@ -124,7 +139,7 @@ def test_version_has_one_runtime_build_source_and_portal_links_contract() -> Non
         "startup fails closed for a release artifact whose injected version is empty or mismatched",
     ):
         assert required in contract
-    assert "[`eebus-operator-admin.md`](./eebus-operator-admin.md)" in portal
+    assert "[`eebus-operator-admin.md`](https://github.com/Project-Helianthus/helianthus-docs-eebus/blob/main/api/eebus-operator-admin.md)" in portal
     assert '"fm5_semantic_degraded_reason": null' in portal
     assert '"fm5_semantic_evidence_revision": "opaque-acquisition-revision"' in portal
     assert "ADR-028: Post-M9 operator boundary, FM5 degradation, and version authority" in decisions
@@ -172,8 +187,8 @@ def test_existing_fm5_authority_uses_the_provider_verdict() -> None:
 
 
 def test_mcp_graphql_and_ha_expose_one_fm5_verdict() -> None:
-    mcp = _normalized(MCP)
-    graphql = _normalized(GRAPHQL)
+    mcp = _normalized(docs_page("mcp.md"))
+    graphql = _normalized(docs_page("graphql.md"))
     ha = _normalized(HA)
     for required in (
         "`ebus_v1_semantic_fm5_interpretation_get`",
@@ -182,7 +197,7 @@ def test_mcp_graphql_and_ha_expose_one_fm5_verdict() -> None:
         "Its availability is stated only by the checked registration inventory above",
     ):
         assert required in mcp
-    implemented_mcp = MCP.read_text(encoding="utf-8").split(
+    implemented_mcp = docs_page("mcp.md").read_text(encoding="utf-8").split(
         "## Semantic Payload Notes", maxsplit=1
     )[0]
     # The checked registration inventory is a separate, machine-compared
@@ -225,8 +240,8 @@ def test_mcp_graphql_and_ha_expose_one_fm5_verdict() -> None:
 
 
 def test_portal_and_mcp_keep_pairing_and_cold_start_fail_closed() -> None:
-    portal = _normalized(PORTAL)
-    mcp = _normalized(MCP)
+    portal = _normalized(docs_page("portal.md"))
+    mcp = _normalized(docs_page("mcp.md"))
     for required in (
         "Home Assistant uses the same gateway-owned pairing boundary",
         "Portal and Home Assistant pairing remain functional",
@@ -242,8 +257,8 @@ def test_portal_and_mcp_keep_pairing_and_cold_start_fail_closed() -> None:
 
 
 def test_target_portal_fields_do_not_claim_current_availability() -> None:
-    contract = _normalized(CONTRACT)
-    portal = _normalized(PORTAL)
+    contract = _normalized(contract_page())
+    portal = _normalized(docs_page("portal.md"))
     assert "These additive surfaces are pending" in contract
     assert "post-M9 target field, pending gateway implementation" in portal
     assert "not claims about current runtime availability" in portal

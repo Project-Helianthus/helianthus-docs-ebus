@@ -2,7 +2,7 @@
 
 This is the proposed, read-only gateway-to-SemReg acceptance slice for
 [docs issue #699](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/699),
-advancing [gateway #952](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/952).
+advancing [gateway #952](https://github.com/Project-Helianthus/helianthus-gateway/issues/952).
 It covers only controller system-off and source-coded maintenance observations.
 It does not implement a projection or close the parent. Nothing is stable before
 Helianthus 1.0. This contract adds no authentication, authorization, principal,
@@ -27,7 +27,7 @@ Readable data and printed FLAGS establish no writable support here.
 [legacy mapping](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/b524-semantic-mapping.md),
 section `ebus_v1_semantic_system_get`, names `state.system_off` and
 `state.maintenance_due`. In the
-[gateway implementation](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/cmd/gateway/semantic_vaillant.go),
+[gateway implementation](https://github.com/Project-Helianthus/helianthus-gateway/blob/main/cmd/gateway/semantic_vaillant.go),
 `localRegulator`, `regulatorInstance`, `system_off`, `system_maintenance_due`,
 and `refreshSystem` select the tuples above. `readB524ValueWithMaxAge` uses the
 configured initiator source and current controller target, sends an
@@ -159,7 +159,7 @@ ordering deterministic under the existing envelope contract.
 
 Preserve `state.system_off` and `state.maintenance_due` compatibility until a
 separate downstream cutover implements and reviews their retention/removal.
-For the [shared semantic-snapshot records](../api/semantic-snapshot-read.md),
+For the [shared semantic-snapshot records](https://github.com/Project-Helianthus/helianthus-docs/blob/main/api/semantic-snapshot-read.md),
 MCP and GraphQL must express the same values, absence, provenance, freshness,
 qualification and loss decisions through the defined field-name mapping.
 The legacy GraphQL `system_state.system_off` and `system_state.maintenance_due`

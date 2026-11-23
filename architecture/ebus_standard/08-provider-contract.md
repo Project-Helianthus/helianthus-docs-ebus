@@ -120,7 +120,7 @@ The ABI snapshot protects the generic `ebus_standard` provider surface
 exported from `helianthus-ebusreg`. It does NOT replace:
 
 - The `M4B_read_decode_lock` envelope lock in
-  `helianthus-ebusgateway`.
+  `helianthus-gateway`.
 - The identity-key collision test on the catalog itself.
 - The namespace-isolation tests that prove Vaillant `0xB5` and
   `ebus_standard` do not contaminate each other.

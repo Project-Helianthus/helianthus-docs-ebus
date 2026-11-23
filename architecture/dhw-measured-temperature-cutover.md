@@ -2,7 +2,7 @@
 
 Status: proposed application migration contract, AGPL-3.0. This page is the
 bounded contract slice for docs-ebus #672, advancing
-[gateway #952](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/952).
+[gateway #952](https://github.com/Project-Helianthus/helianthus-gateway/issues/952).
 It neither implements cutover nor closes the parent. Nothing here is stable
 before Helianthus 1.0. All new admission and projection behavior below is future
 work; no current SemReg publication is claimed.
@@ -19,7 +19,7 @@ The public native contract comes first:
 - [Existing semantic mapping](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/b524-semantic-mapping.md):
   the DHW and boiler-status sections inventory legacy consumers; the system
   section distinguishes cylinder-top/bottom readings and bivalence bounds.
-- [Gateway semantic implementation](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/cmd/gateway/semantic_vaillant.go):
+- [Gateway semantic implementation](https://github.com/Project-Helianthus/helianthus-gateway/blob/main/cmd/gateway/semantic_vaillant.go):
   `localDHW`, `dhwInstance`, `refreshDHW`, `readDhwFloat`,
   `readB524Float32LE`, `parseB524ReadPayload`, `matchesB524ReplyInstance`,
   `expireDHWIfStaleLocked`, `publishDHW` and
@@ -45,7 +45,7 @@ address. OP02 and OP06 namespaces remain separate.
 
 | Tuple | Documented meaning and representation | Current consumer / disposition |
 | --- | --- | --- |
-| `(0x02, 0x01, 0x00, 0x0005)` | `dhw_temperature`, f32, °C, `unit.celsius` (SI unit kelvin, degrees Celsius plus 273.15); community name `HwcStorageTemp`; gated by RR0001 | `dhw_current_temp` → `CurrentTempC` → GraphQL [`dhw.current_temp_c`](../api/graphql.md) (queried as `dhw.current_temp_c`); documented MCP `ebus_v1_semantic_dhw_get` `current_temp_c`; controller mirror in boiler status `state.dhw_temperature_c`. Sole measured input in this contract. |
+| `(0x02, 0x01, 0x00, 0x0005)` | `dhw_temperature`, f32, °C, `unit.celsius` (SI unit kelvin, degrees Celsius plus 273.15); community name `HwcStorageTemp`; gated by RR0001 | `dhw_current_temp` → `CurrentTempC` → GraphQL [`dhw.current_temp_c`](https://github.com/Project-Helianthus/helianthus-docs/blob/main/api/graphql.md) (queried as `dhw.current_temp_c`); documented MCP `ebus_v1_semantic_dhw_get` `current_temp_c`; controller mirror in boiler status `state.dhw_temperature_c`. Sole measured input in this contract. |
 | `(0x02, 0x01, 0x00, 0x0001)` | Exact two-byte UIN nonzero establishes family-qualified presence; zero means not present; malformed/unmatched means unknown | Admission evidence only. The candidate circuit-type enum is not established by the presence test. No temperature fact. |
 | `(0x02, 0x01, 0x00, 0x0004)` | `dhw_temperature_setpoint`, f32, °C | Legacy `target_temp_c` / boiler `dhw_target_temperature_c`; excluded target, never a replacement for missing measured temperature. |
 | `(0x02, 0x01, 0x00, 0x0008)` | `dhw_flow_temperature_setpoint`, f32, °C | Excluded flow target; no new read or projection proposed. |

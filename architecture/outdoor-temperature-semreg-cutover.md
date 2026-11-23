@@ -22,7 +22,7 @@ The existing [semantic mapping](https://github.com/Project-Helianthus/helianthus
 and [typed Thermal map](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/fixtures/vaillant-semreg-thermal-map-v1.json)
 define the candidate mapping below, including the aggregate loss disposition.
 They document the current legacy MCP system fields, but describe the SemReg
-binding as future and qualified. The public [GraphQL contract](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/api/graphql.md)
+binding as future and qualified. The public [GraphQL contract](https://github.com/Project-Helianthus/helianthus-docs/blob/main/api/graphql.md)
 separately declares `system_state.outdoor_temperature` and
 `system_state.outdoor_temperature_avg24h` as nullable floats.
 

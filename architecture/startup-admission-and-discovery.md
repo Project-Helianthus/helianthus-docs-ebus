@@ -984,10 +984,10 @@ When exact source configuration is set:
 
 **Proven — merged gateway behavior.** The waiver, its conditions, the log line
 and the revalidator consequence below are taken from the merged gateway changes
-[gateway #1524](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1524),
-[gateway #1525](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1525)
+[gateway #1524](https://github.com/Project-Helianthus/helianthus-gateway/issues/1524),
+[gateway #1525](https://github.com/Project-Helianthus/helianthus-gateway/issues/1525)
 and
-[gateway #1526](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1526),
+[gateway #1526](https://github.com/Project-Helianthus/helianthus-gateway/issues/1526),
 and from the gateway run sheet `docs/testing/site-without-controller-run-sheet.md`;
 the behavior on a physical installation without a controller is **Unknown**
 beyond that run sheet.
@@ -1047,7 +1047,7 @@ The implementation MUST NOT:
 
 This section is the normative SAS M4 key-path listing for the source-selection
 artifact. The JSON schema file itself lives in
-`helianthus-ebusgateway` at
+`helianthus-gateway` at
 `docs/schemas/source-selection-artifact.schema.json`. This document authorizes
 the schema semantics and field
 set; it does not move schema-file authorship into this repository.

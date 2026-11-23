@@ -9,6 +9,7 @@ its target definition. The hot-water fixture is checked with the same rules.
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 import re
 import sys
@@ -376,6 +377,18 @@ def check_unmapped_line(path: str, line: str) -> None:
 
 def handoff_text(pages: dict[str, str] | None, path: str) -> str:
     if pages is None:
+        if path == "api/semantic-snapshot-read.md":
+            raw = os.environ.get("PLATFORM_DOCS_ROOT")
+            docs = Path(raw) if raw else None
+            if docs is None:
+                repo = Path(__file__).resolve().parents[1]
+                for candidate in (repo / "checkouts" / "docs", repo / ".pytest_cache" / "platform-docs"):
+                    if candidate.is_dir():
+                        docs = candidate
+                        break
+            if docs is None:
+                raise CheckError("PLATFORM_DOCS_ROOT is required")
+            return (docs / path).read_text(encoding="utf-8")
         return Path(path).read_text(encoding="utf-8")
     text = pages.get(path)
     if not isinstance(text, str):

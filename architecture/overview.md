@@ -1,8 +1,8 @@
 # Architecture Overview
 
-This repository documents the current, implemented architecture of the Helianthus eBUS ecosystem. `helianthus-ebusgo` and `helianthus-ebusreg` provide the transport, protocol, type system, registry, and vendor providers. `helianthus-ebusgateway` is the runnable runtime/API edge: it wires transport, bus, registry, router, and semantic providers into a gateway process and serves GraphQL (`/graphql`, `/graphql/subscriptions`), MCP (`/mcp`), the projection browser (`cfg.UIPath`, default `/ui`), and the Portal shell/API surface (`cfg.PortalPath`, default `/portal`, with versioned API under `cfg.PortalPath + "/api/v1"`, default `/portal/api/v1`).
+This repository documents the current, implemented architecture of the Helianthus eBUS ecosystem. `helianthus-ebusgo` and `helianthus-ebusreg` provide the transport, protocol, type system, registry, and vendor providers. `helianthus-gateway` is the runnable runtime/API edge: it wires transport, bus, registry, router, and semantic providers into a gateway process and serves GraphQL (`/graphql`, `/graphql/subscriptions`), MCP (`/mcp`), the projection browser (`cfg.UIPath`, default `/ui`), and the Portal shell/API surface (`cfg.PortalPath`, default `/portal`, with versioned API under `cfg.PortalPath + "/api/v1"`, default `/portal/api/v1`).
 
-Detailed API contracts live in [`api/graphql.md`](../api/graphql.md), [`api/mcp.md`](../api/mcp.md), and [`api/portal.md`](../api/portal.md).
+Detailed API contracts live in [`api/graphql.md`](https://github.com/Project-Helianthus/helianthus-docs/blob/main/api/graphql.md), [`api/mcp.md`](https://github.com/Project-Helianthus/helianthus-docs/blob/main/api/mcp.md), and [`api/portal.md`](https://github.com/Project-Helianthus/helianthus-docs/blob/main/api/portal.md).
 
 Canonical proxy wire-semantics scheduling decisions live in [`architecture/proxy-wire-semantics.md`](./proxy-wire-semantics.md).
 

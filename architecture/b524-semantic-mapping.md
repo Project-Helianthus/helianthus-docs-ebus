@@ -81,11 +81,11 @@ bound entirely and GraphQL returns `null`. Empty optional `reason` and
 writes through `ebus_v1_rpc_invoke` have no API qualifier and always apply the
 unmatched policy. Every numeric configuration write rejects `NaN` and
 positive or negative infinity before encoding, with `success: false` and no
-bus request. The rules are in [`../api/graphql.md`](../api/graphql.md) under
+bus request. The rules are in [`../api/graphql.md`](https://github.com/Project-Helianthus/helianthus-docs/blob/main/api/graphql.md) under
 "System Config Write Bounds".
 
 [gateway-bound-discovery]:
-  https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1034
+  https://github.com/Project-Helianthus/helianthus-gateway/issues/1034
 
 ## SemReg thermal v1 read-only Vaillant mapping
 
@@ -226,9 +226,9 @@ register map does not distinguish a pump status from a competing state
 enumeration reading. The qualification path is an on-state correlation against the circuit's own
 pump (the functional-module-managed circuit pump) and its native telegram in
 the planned smoke session; a boiler pump observation cannot qualify it. The correction is tracked in
-[helianthus-ebusgateway#1004](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1004)
+[helianthus-gateway#1004](https://github.com/Project-Helianthus/helianthus-gateway/issues/1004)
 and the boiler-side follow-up in
-[helianthus-ebusgateway#1012](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1012).
+[helianthus-gateway#1012](https://github.com/Project-Helianthus/helianthus-gateway/issues/1012).
 
 Consumer note:
 - `[].config.cooling_enabled` remains a gateway-level raw semantic field derived from `GG=0x02 RR=0x0006`.
@@ -305,9 +305,9 @@ surface. These controller observations are distinct from direct B509
 boiler-family data; their native meanings and evidence grades remain those of
 the [B524 register catalog](../protocols/vaillant/ebus-vaillant-b524-register-map.md#circuit-state-enum).
 The circuit-zero mirror removal tracked by
-[helianthus-ebusgateway#1012](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1012)
+[helianthus-gateway#1012](https://github.com/Project-Helianthus/helianthus-gateway/issues/1012)
 was delivered by
-[helianthus-ebusgateway#1353](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/1353).
+[helianthus-gateway#1353](https://github.com/Project-Helianthus/helianthus-gateway/pull/1353).
 
 The controller-mediated candidates `OP=0x06, GG=0x01/0x02, RR=0x0015` and
 `RR=0x0012` have unknown native reply layouts. They are **withheld from this

@@ -117,7 +117,7 @@ A stored dated window outside these positions is not part of the snapshot. A val
 
 ### Dated Month/Year Retention (Pending Companion)
 
-The following application behavior is **Proven in the supplied implementation/test artifact** for [gateway retention PR #1047](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/1047), the implementation companion to [gateway #1019](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1019). Merge status and an immutable accepted implementation revision are **Unknown** here; this note does not claim deployed or merged behavior.
+The following application behavior is **Proven in the supplied implementation/test artifact** for [gateway retention PR #1047](https://github.com/Project-Helianthus/helianthus-gateway/pull/1047), the implementation companion to [gateway #1019](https://github.com/Project-Helianthus/helianthus-gateway/issues/1019). Merge status and an immutable accepted implementation revision are **Unknown** here; this note does not claim deployed or merged behavior.
 
 For month and year points, retention uses the ingest reference date and the absolute window key within the same canonical channel, usage and period. An incoming month older than the previous calendar month, or a year older than the previous calendar year, is rejected without changing retained points or the revision, whether its source is register or broadcast. A late previous-window update still targets its own key; register-over-broadcast precedence continues to apply, including an older register ingest overriding a broadcast and a newer broadcast being unable to override a register.
 
@@ -125,7 +125,7 @@ After an accepted month/year write, obsolete points of that same canonical chann
 
 Across two month rollovers and New Year, refreshed selectors retain the current and previous absolute windows with the same public projection. Future-dated retained points survive clock rollback and become projectable again when the reference clock catches up. An accepted catch-up write prunes obsolete rollback history. Pruned history is no longer in the store and would require re-observation after a later rollback.
 
-This retention rule uses the existing process-calendar assumption described under [Broadcast Date Mapping](#broadcast-date-mapping). Calendar-zone resolution remains **Unknown**, tracked separately in [gateway #1022](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1022); this companion selects no calendar zone.
+This retention rule uses the existing process-calendar assumption described under [Broadcast Date Mapping](#broadcast-date-mapping). Calendar-zone resolution remains **Unknown**, tracked separately in [gateway #1022](https://github.com/Project-Helianthus/helianthus-gateway/issues/1022); this companion selects no calendar zone.
 
 ### Freshness and Persistence
 
@@ -198,7 +198,7 @@ Live readers are not served the cached copy. Every live resolver calls the provi
 
 ### Null Before the First Accepted Point
 
-**Proven — merged gateway behavior.** The null publication, its scope and the refresh timing below are taken from the merged gateway changes [gateway #1524](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1524), [gateway #1525](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1525) and [gateway #1526](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1526), and from the gateway run sheet `docs/testing/site-without-controller-run-sheet.md`; the behavior on a physical installation without a controller is **Unknown** beyond that run sheet.
+**Proven — merged gateway behavior.** The null publication, its scope and the refresh timing below are taken from the merged gateway changes [gateway #1524](https://github.com/Project-Helianthus/helianthus-gateway/issues/1524), [gateway #1525](https://github.com/Project-Helianthus/helianthus-gateway/issues/1525) and [gateway #1526](https://github.com/Project-Helianthus/helianthus-gateway/issues/1526), and from the gateway run sheet `docs/testing/site-without-controller-run-sheet.md`; the behavior on a physical installation without a controller is **Unknown** beyond that run sheet.
 
 GraphQL `energy_totals`, the MCP energy totals tool (`ebus_v1_semantic_energy_totals_get`) and the energy plane of the MCP semantic snapshot are null until the energy merge store has accepted its first point; no projection of `0` values with provenance `none` is published before it. From the first accepted point on, the per-slot projection, its `0`/`none` placeholders and its freshness metadata apply as described above, also after the store prunes points. Energy is not persisted, so after every gateway restart the plane is null until the first accepted energy point (the first energy refresh comes up to 5 minutes after start with the defaults). On a bus with a heat source and no system controller no B524 register is read; energy broadcasts remain an independent input, so a valid accepted energy broadcast makes the plane non-null without any register read; on such a bus with no accepted energy broadcast no energy point is accepted and the plane stays null. Merge rules, provenance values and retention are unchanged.
 

@@ -7,7 +7,7 @@ unqualified and off until a recorded run makes a requirement Proven for that
 profile.** This record is a
 partial slice of
 [docs issue #1132](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/1132).
-Refs [Project-Helianthus/helianthus-ebusgateway#991](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/991),
+Refs [Project-Helianthus/helianthus-gateway#991](https://github.com/Project-Helianthus/helianthus-gateway/issues/991),
 which remains open. Recording requirements or evidence does not authorize
 physical-backend activation, arming, deployment, device access, a bench run, a
 live write or a real-bus response.
