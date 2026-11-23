@@ -6,7 +6,7 @@
 > universal device definition. Nothing here establishes stability before
 > Helianthus 1.0.
 
-This slice advances [gateway #952](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/952)
+This slice advances [gateway #952](https://github.com/Project-Helianthus/helianthus-gateway/issues/952)
 and [docs #701](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/701).
 Observed DHW temperature and operating mode are excluded. This contract does
 not replace the broad Matter source inventory or earlier temperature contracts.
@@ -28,7 +28,7 @@ source equivalence by itself.
 - [Legacy mapping](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/b524-semantic-mapping.md):
   `ebus_v1_semantic_dhw_get`, `ebus_v1_semantic_boiler_status_get`,
   `ebus_v1_semantic_cylinders_get`, and the system mapping.
-- [Gateway implementation](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/cmd/gateway/semantic_vaillant.go):
+- [Gateway implementation](https://github.com/Project-Helianthus/helianthus-gateway/blob/main/cmd/gateway/semantic_vaillant.go):
   `refreshDHWSlowConfig`, `readDhwFloat`, `readB524Float32LE`,
   `expireDHWIfStaleLocked`, `publishDHW`, `refreshBoilerStatusTier`,
   `mergeBoilerDHWFieldsFromSnapshot`, `refreshBoilerStatusB509`,

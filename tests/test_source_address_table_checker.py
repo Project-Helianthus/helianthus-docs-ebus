@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import pathlib
+from types import SimpleNamespace
 
 import pytest
 
@@ -39,3 +40,25 @@ def test_source_address_table_mutation_canary() -> None:
     assert "field companion" in message
     assert "expected '0x76'" in message
     assert "got '0x77'" in message
+
+
+def test_implicit_platform_checkout_uses_fixture_without_official_sources(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: pathlib.Path
+) -> None:
+    checker = load_checker()
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "repo").mkdir()
+    monkeypatch.setattr(checker, "REPO_ROOT", tmp_path / "repo")
+    monkeypatch.delenv("HELIANTHUS_OFFICIAL_SPEC_DIR", raising=False)
+    fixture = checker.load_fixture()
+
+    rows, source = checker.expected_rows(
+        SimpleNamespace(fixture_only=False, spec_dir=None), fixture
+    )
+    assert source == "fixture"
+    assert rows == checker.expected_rows_from_fixture(fixture)
+
+    with pytest.raises(checker.CheckError, match="official spec file missing"):
+        checker.expected_rows(
+            SimpleNamespace(fixture_only=False, spec_dir=str(tmp_path / "docs")), fixture
+        )

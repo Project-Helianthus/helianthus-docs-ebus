@@ -99,8 +99,8 @@ def test_policy_rejects_feature_flag_normalization_omitted_from_one_document(
 def test_gateway_tracking_is_not_status_evidence() -> None:
     for text in texts():
         value = normalized(text)
-        assert "helianthus-ebusgateway/issues/982" in value
-        assert "helianthus-ebusgateway/pull/992" in value
+        assert "helianthus-gateway/issues/982" in value
+        assert "helianthus-gateway/pull/992" in value
         assert "documentation alone do not establish merge or runtime qualification" in value
         assert "current GitHub state and merged gateway code establish implementation status" in value
         assert "pending implementation evidence" not in value

@@ -5,6 +5,7 @@ architecture copy must agree with their policy window and profile narrowing.
 """
 
 from copy import deepcopy
+import os
 import json
 from pathlib import Path
 import re
@@ -25,8 +26,22 @@ CONTRACT["graphql_fields"] = {
 }
 
 
+def docs_root() -> Path:
+    raw = os.environ.get("PLATFORM_DOCS_ROOT")
+    if raw:
+        return Path(raw)
+    candidate = ROOT / "checkouts" / "docs"
+    if candidate.is_dir():
+        return candidate
+    raise OSError("PLATFORM_DOCS_ROOT is required")
+
+
 def pages():
-    return tuple((ROOT / name).read_text() for name in (
+    docs = docs_root()
+    def load(name):
+        base = docs if name in {"api/graphql.md", "api/mcp.md"} else ROOT
+        return (base / name).read_text()
+    return tuple(load(name) for name in (
         "api/graphql.md", "api/mcp.md", "architecture/b524-semantic-mapping.md"
     ))
 

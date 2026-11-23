@@ -553,7 +553,7 @@ design and isolated-hardware bench evidence.
 The GraphQL capability signal `vaillantCapabilities.b503` is the authoritative
 availability surface for HA and portal. It is defined here for doc-gate
 completeness; the authoritative schema lives in
-`helianthus-ebusgateway/graphql/schema`.
+`helianthus-gateway/graphql/schema`.
 
 ```graphql
 type VaillantCapabilities {
@@ -581,7 +581,7 @@ per §8.
 
 This section is the `M0b_DOC_DISPATCHER_BRIDGE` deliverable for execution-plans#19
 amendment-1 and is the doc-gate companion for `M6_DISPATCHER_BRIDGE`
-(helianthus-ebusgateway). It mirrors plan decisions AD16 (production raw-frame
+(helianthus-gateway). It mirrors plan decisions AD16 (production raw-frame
 dispatcher contract) and AD18 (capability-signal 8-state truth table +
 stale-epoch discipline) from the archived plan. Those plan
 chunks are archived design traceability. This current public document is the
@@ -803,12 +803,12 @@ completion test.
 | Milestone | Repo | Artefact |
 |---|---|---|
 | `M1_DECODER` | `helianthus-ebusgo` | `protocol/vaillant/b503` decoder package + invoke-safety enum |
-| `M2a_GATEWAY_MCP` | `helianthus-ebusgateway` | MCP tools `ebus_v1_vaillant_errors_get`, `ebus_v1_vaillant_errors_history_get`, `ebus_v1_vaillant_service_current_get`, `ebus_v1_vaillant_service_history_get`, `ebus_v1_vaillant_live_monitor_get` |
-| `M5_TRANSPORT_MATRIX` | `helianthus-ebusgateway` | `matrix/M6a-vaillant-b503.md` — adapter-direct + `ebusd_tcp` (+ `ebusd_serial` if lab-available) |
-| `M2b_GATEWAY_GRAPHQL` | `helianthus-ebusgateway` | GraphQL diagnostic read-only parity + `vaillantCapabilities.b503` signal and five-state `vaillantLiveMonitor` session status (`Idle` / `Enabling` / `Active` / `Refreshing` / `Disabled`); only the bounded session enable/disable action through the §6 FSM |
-| `M3_PORTAL` | `helianthus-ebusgateway` | Vaillant pane (errors / service / live-monitor diagnostic reads) plus Gateway-owned five-state live-monitor session strip (`Idle` / `Enabling` / `Active` / `Refreshing` / `Disabled`) and only the bounded session enable/disable action through the §6 FSM |
+| `M2a_GATEWAY_MCP` | `helianthus-gateway` | MCP tools `ebus_v1_vaillant_errors_get`, `ebus_v1_vaillant_errors_history_get`, `ebus_v1_vaillant_service_current_get`, `ebus_v1_vaillant_service_history_get`, `ebus_v1_vaillant_live_monitor_get` |
+| `M5_TRANSPORT_MATRIX` | `helianthus-gateway` | `matrix/M6a-vaillant-b503.md` — adapter-direct + `ebusd_tcp` (+ `ebusd_serial` if lab-available) |
+| `M2b_GATEWAY_GRAPHQL` | `helianthus-gateway` | GraphQL diagnostic read-only parity + `vaillantCapabilities.b503` signal and five-state `vaillantLiveMonitor` session status (`Idle` / `Enabling` / `Active` / `Refreshing` / `Disabled`); only the bounded session enable/disable action through the §6 FSM |
+| `M3_PORTAL` | `helianthus-gateway` | Vaillant pane (errors / service / live-monitor diagnostic reads) plus Gateway-owned five-state live-monitor session strip (`Idle` / `Enabling` / `Active` / `Refreshing` / `Disabled`) and only the bounded session enable/disable action through the §6 FSM |
 | `M4_HA` | `helianthus-ha-integration` | diagnostic sensor `boiler_active_error` + `error_history` attribute, capability-signal-gated |
-| `M6_DISPATCHER_BRIDGE` (amendment-1) | `helianthus-ebusgateway` | production `RawFrameDispatcher` replacing `b503StubDispatcher{}` injection in `cmd/gateway/vaillant_b503_wiring.go`; contract per §12 (PR ref: TBD) |
+| `M6_DISPATCHER_BRIDGE` (amendment-1) | `helianthus-gateway` | production `RawFrameDispatcher` replacing `b503StubDispatcher{}` injection in `cmd/gateway/vaillant_b503_wiring.go`; contract per §12 (PR ref: TBD) |
 
 Dependency DAG (plan AD09 + amendment-1):
 `M0 → M1 → M2a → M5 → M2b → {M3, M4} → M6 → {M7, M8}` with

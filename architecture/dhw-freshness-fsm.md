@@ -1,6 +1,6 @@
 # DHW Freshness Lifecycle (Durability + TTL Expiry)
 
-This document defines how `helianthus-ebusgateway` handles DHW semantic durability under transient failures.
+This document defines how `helianthus-gateway` handles DHW semantic durability under transient failures.
 
 Goal: keep valid last-known DHW values during short cache/transient gaps, but avoid indefinite stale-as-healthy publication.
 
@@ -57,4 +57,4 @@ Notes:
 ## Related
 
 - Startup FSM and source classification: [`startup-semantic-fsm.md`](./startup-semantic-fsm.md)
-- GraphQL runtime contract: [`../api/graphql.md`](../api/graphql.md#semantic-startup-runtime-contract)
+- GraphQL runtime contract: [`../api/graphql.md`](https://github.com/Project-Helianthus/helianthus-docs/blob/main/api/graphql.md#semantic-startup-runtime-contract)

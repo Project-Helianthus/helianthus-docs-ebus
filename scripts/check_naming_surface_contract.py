@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import os
 import json
 from pathlib import Path
@@ -10,20 +11,40 @@ import re
 import sys
 
 SCRIPT_ROOT = Path(__file__).resolve().parent
+ROOT = SCRIPT_ROOT.parent
 
 
-def _load_checkers():
+def platform_docs_root() -> Path:
+    raw = os.environ.get("PLATFORM_DOCS_ROOT")
+    if raw:
+        return Path(raw)
+    candidate = ROOT / "checkouts" / "docs"
+    if candidate.is_dir():
+        return candidate
+    raise OSError("PLATFORM_DOCS_ROOT is required")
+
+
+def _load_mcp_checker():
+    """Load the MCP inventory checker from the docs checkout that owns it."""
+    path = platform_docs_root() / "scripts" / "check_mcp_inventory.py"
+    if not path.is_file():
+        raise OSError("checker missing: scripts/check_mcp_inventory.py")
+    spec = importlib.util.spec_from_file_location("check_mcp_inventory", path)
+    if spec is None or spec.loader is None:
+        raise OSError("checker missing: scripts/check_mcp_inventory.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _load_metrics_checker():
     if str(SCRIPT_ROOT) not in sys.path:
         sys.path.insert(0, str(SCRIPT_ROOT))
-    import check_mcp_inventory as mcp
     import validate_prometheus_semantic_coverage as metrics
 
-    return mcp, metrics
+    return metrics
 
 
-mcp, metrics = _load_checkers()
-
-ROOT = SCRIPT_ROOT.parent
 # This unit has a different shape; spelling alone cannot establish parity.
 # Its six artifacts remain excluded under docs-ebus#1166.
 EXCLUSIONS = {
@@ -76,6 +97,7 @@ PREVIOUS_SYSTEM_FIELDS = (
 
 
 def _validate_tool_names(tools: str, registration) -> None:
+    mcp = _load_mcp_checker()
     profiles, rows = mcp.documented_rows(tools)
     mcp.unique_rows(rows, profiles)
     for row in rows:
@@ -305,7 +327,7 @@ def validate(graphql: str, tools: str, coverage: str, registration=None,
     reject_previous_system_fields((graphql, tools))
     _validate_setter_families(tools, graphql, setter_keys)
     _validate_qualifications(graphql, tools)
-    metrics.validate(coverage)
+    _load_metrics_checker().validate(coverage)
 
 
 
@@ -453,8 +475,10 @@ def validate_root(root: Path, gateway: Path | None = None) -> None:
     setter_keys = None if gateway is None else load_setter_keys(gateway)
     validate_remaining_pages(root)
     validate_api_pages(root)
-    validate_operation((root / "api/semantic-operation-route.md").read_text(),
-                       (root / "tests/semantic_operation_route_contract.json").read_text())
+    docs = platform_docs_root()
+    metrics = _load_metrics_checker()
+    validate_operation((docs / "api/semantic-operation-route.md").read_text(),
+                       (docs / "tests/semantic_operation_route_contract.json").read_text())
     registration = None
     if gateway is not None:
         text = (gateway / "docs/mcp-tool-inventory.md").read_text()
@@ -465,8 +489,8 @@ def validate_root(root: Path, gateway: Path | None = None) -> None:
         actual = metrics.rows("\n".join("| " + line for line in metrics.RENDERER_ROWS.strip().splitlines()))
         if actual != expected:
             raise ValueError("metric emission parity differs")
-    validate((root / "api/graphql.md").read_text(),
-             (root / "api/mcp.md").read_text(),
+    validate((docs / "api/graphql.md").read_text(),
+             (docs / "api/mcp.md").read_text(),
              (root / metrics.DOCUMENT).read_text(), registration, setter_keys)
 
 
@@ -475,7 +499,7 @@ def main() -> int:
     parser.add_argument("--root", type=Path, default=ROOT)
     parser.add_argument("--gateway-root", type=Path)
     args = parser.parse_args()
-    supplied = args.root / ".tmp/references/ebusgateway"
+    supplied = args.root / ".tmp/references/gateway"
     gateway = args.gateway_root or (supplied if supplied.is_dir() else None)
     if gateway is None:
         print("Naming contract: UNVERIFIED without an offline emission reference", file=sys.stderr)

@@ -73,7 +73,7 @@ from acquisition success, freshness, admission, and binding qualification.
 | Universal pressure fact | No pressure fact, quantity unit contract, role dimension, validation bounds or qualified pressure mapping is defined by the supplied Thermal map. | Leave these undefined. Invent no pack ID, fact name, dimension key/value, numeric bound, or conversion route. An existing temperature fact cannot carry pressure. |
 | Universal projection | No accepted pressure semantic definition plus qualified mapping is available in this slice. | Withhold the pressure fact and its universal consumer projection. Record the disposition independently of a retained native value; emit no fabricated zero, temperature fact, or boiler substitute. |
 
-The [GraphQL contract](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/api/graphql.md)
+The [GraphQL contract](https://github.com/Project-Helianthus/helianthus-docs/blob/main/api/graphql.md)
 also distinguishes `system_state.water_pressure` from
 `boiler_state.water_pressure_bar`. Their presence is API correspondence, not native
 equivalence. Existing MCP envelopes and GraphQL fields remain unchanged. Future

@@ -1,7 +1,7 @@
 # Solar-loop temperature identity and cutover loss
 
 This is a bounded, proposed migration contract for issue #675. It advances
-[the north-south flow parent](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/952)
+[the north-south flow parent](https://github.com/Project-Helianthus/helianthus-gateway/issues/952)
 as a partial contract slice; it neither implements publication nor satisfies or
 closes the parent. Nothing here is stable before the Helianthus 1.0 release.
 
@@ -19,7 +19,7 @@ route or API. Every requirement described as proposed below is future work.
   independently confirmed semantics. Catalog ranges are historical probe hints.
 - **L — legacy public contract:** [B524 semantic mapping](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/b524-semantic-mapping.md),
   `ebus_v1_semantic_solar_get` and `ebus_v1_semantic_cylinders_get`.
-- **G — corroborating implementation:** [gateway semantic reader](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/cmd/gateway/semantic_vaillant.go),
+- **G — corroborating implementation:** [gateway semantic reader](https://github.com/Project-Helianthus/helianthus-gateway/blob/main/cmd/gateway/semantic_vaillant.go),
   solar selector constants, `readSolarSnapshot`, `readCylinderSnapshots`,
   `decodeB524Float32FromRaw`, `readB524ValueWithMaxAge`, `commitFM5Acquisition`,
   `applyFM5Acquisition`, non-destructive merges and `publishFM5Semantic`.

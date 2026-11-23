@@ -130,7 +130,7 @@ can use them.
 ## Startup Source-Selection Boundary
 
 `helianthus-ebusgo` owns the reusable `SourceAddressSelector` mechanics and
-the static table constants. `helianthus-ebusgateway` owns startup
+the static table constants. `helianthus-gateway` owns startup
 source-selection validation: active probe, retry/quarantine, persistence
 metadata, operator recovery surfaces, and source-selection status.
 `helianthus-ebusreg` remains source-selection-agnostic and consumes only the

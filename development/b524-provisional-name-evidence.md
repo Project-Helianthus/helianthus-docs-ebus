@@ -8,7 +8,7 @@ The [native B524 contract](../protocols/vaillant/ebus-vaillant-b524.md)
 establishes the selector fields and the separation of local OP02 and mediated
 OP06. Read it before interpreting this index. The
 [register catalog](../protocols/vaillant/ebus-vaillant-b524-register-map.md)
-and its [naming policy](../architecture/naming.md#unknown-meaning) retain
+and its [naming policy](https://github.com/Project-Helianthus/helianthus-docs/blob/main/architecture/naming.md#unknown-meaning) retain
 maker-derived terms while their open points await evidence. Canonical names and
 `previous_name` remain owned by those sources.
 
@@ -21,7 +21,7 @@ It currently selects **140 of 368 rows**, each listed exactly once below:
 Both subsets have explicit open questions; neither is silently excluded.
 A row whose only open point is wire confirmation of an observed Vaillant
 definition is final under the
-[naming policy](../architecture/naming.md#correspondence-annotations) and has no
+[naming policy](https://github.com/Project-Helianthus/helianthus-docs/blob/main/architecture/naming.md#correspondence-annotations) and has no
 `open_question`, so it is not listed: `RR=0x0007` of GG=0x00 (`off_enabled`)
 and `RR=0x001E` of GG=0x02 (`circuit_state`).
 The supplied parent snapshot has a historical title count of 96, a body count

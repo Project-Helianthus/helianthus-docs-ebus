@@ -3,7 +3,7 @@
 Status: **Hypothesis** — proposed software contract, tracked by
 [docs issue #770](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/770).
 This is a partial slice of
-[gateway issue #991](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/991);
+[gateway issue #991](https://github.com/Project-Helianthus/helianthus-gateway/issues/991);
 the parent remains open. This page delivers no mux responder, endpoint or
 real-bus transmit path. Interfaces remain pre-stable until Helianthus 1.0.
 
@@ -19,7 +19,7 @@ those public contracts, not physical qualification. Proposed behavior below is
 fault containment are **Unknown**. Evidence labels do not confer qualification,
 freshness, readiness or authority.
 
-The [bidirectional driver boundary](../architecture/bidirectional-driver-registration.md)
+The [bidirectional driver boundary](https://github.com/Project-Helianthus/helianthus-docs/blob/main/architecture/bidirectional-driver-registration.md)
 continues to own driver lifecycle and source/sink separation. The
 [offline worker contract](../architecture/local-worker-transport.md) owns local
 message transport and safe reclamation. Registration grants neither source

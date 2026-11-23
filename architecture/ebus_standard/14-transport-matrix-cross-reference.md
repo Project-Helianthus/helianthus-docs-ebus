@@ -9,7 +9,7 @@ Gateway anchor commit: `686dfaf0` (helianthus-ebusgateway#514, merged 2026-04-19
 ## Purpose
 
 The M6a transport matrix artifact is maintained in
-`helianthus-ebusgateway` as the authoritative live-bus conformance record
+`helianthus-gateway` as the authoritative live-bus conformance record
 for the `ebus_standard` L7 namespace. This chapter exists so operators
 discovering `ebus_standard` via docs-ebus can locate the matrix without
 having to infer its repository of origin.
@@ -23,7 +23,7 @@ linked artifact is resolved in favour of the artifact.
 The canonical transport matrix artifact lives at:
 
 ```
-helianthus-ebusgateway/matrix/M6a-transport-matrix.md
+helianthus-gateway/matrix/M6a-transport-matrix.md
 ```
 
 Anchor commit at time of this chapter's lock: `686dfaf0`

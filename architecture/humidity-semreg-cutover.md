@@ -4,7 +4,7 @@ This AGPL-3.0 architecture contract covers controller-zone, remote-room and
 circuit relative-humidity observations, and the separate maximum-room-humidity
 configuration threshold. It is the bounded migration acceptance slice for
 [docs issue #698](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/698),
-advancing [gateway #952](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/952)
+advancing [gateway #952](https://github.com/Project-Helianthus/helianthus-gateway/issues/952)
 and Project #2 without closing the parent. It is distinct from the broad Matter
 source inventory and temperature cutovers. Nothing here is stable before
 Helianthus 1.0. This page specifies proposed acceptance, not an implemented cutover.
@@ -261,6 +261,6 @@ acceptance remain separate from this page's manual contract review.
 
 [native]: https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/vaillant/ebus-vaillant-b524-register-map.md
 [mapping]: https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/b524-semantic-mapping.md
-[gateway]: https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/cmd/gateway/semantic_vaillant.go
+[gateway]: https://github.com/Project-Helianthus/helianthus-gateway/blob/main/cmd/gateway/semantic_vaillant.go
 [thermal]: https://github.com/Project-Helianthus/helianthus-semreg/blob/main/semreg/v1/packs/thermal/definitions.go
 [fixture]: https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/fixtures/vaillant-semreg-thermal-map-v1.json

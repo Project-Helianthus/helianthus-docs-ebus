@@ -6,7 +6,7 @@
 
 This slice covers B524 `OP=0x02, GG=0x03` room-temperature observations and
 their separately evidenced sensor-binding identity. It advances
-`helianthus-ebusgateway#952` without completing its north-south flow or closing
+`helianthus-gateway#952` without completing its north-south flow or closing
 the parent. Effective, manual, comfort and other setpoints, control operations,
 humidity, M14/M15 boiler temperatures, W27 outdoor/aggregate work and W30
 pressure are excluded. No producer, pack definition, shared mapping, fixture,
@@ -25,7 +25,7 @@ The public native contract comes first:
   `ebus_v1_semantic_zones_get` names `[].state.current_temp_c`; the existing
   SemReg thermal mapping section covers system observations, not this zone
   cutover. Its receipt/evaluation separation is useful lifecycle precedent.
-- [Gateway semantic poller](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/cmd/gateway/semantic_vaillant.go):
+- [Gateway semantic poller](https://github.com/Project-Helianthus/helianthus-gateway/blob/main/cmd/gateway/semantic_vaillant.go):
   `refreshState`, `refreshZoneDiscovery`, `refreshZoneSlowConfigFields`,
   `publishZones`, `mappedRadioRoomStateForZoneLocked`,
   `inferRadioRoomMappingForZoneLocked`, `cacheZonesLocked` and

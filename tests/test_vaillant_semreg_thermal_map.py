@@ -3,6 +3,7 @@ from __future__ import annotations
 from copy import deepcopy
 import importlib.util
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -445,8 +446,22 @@ def test_unmapped_average_keeps_the_native_unit_only() -> None:
     rejects(mutated)
 
 
+def docs_root() -> Path:
+    raw = os.environ.get("PLATFORM_DOCS_ROOT")
+    if raw:
+        return Path(raw)
+    candidate = ROOT / "checkouts" / "docs"
+    if candidate.is_dir():
+        return candidate
+    raise OSError("PLATFORM_DOCS_ROOT is required")
+
+
 def handoff_pages() -> dict[str, str]:
-    return {path: (ROOT / path).read_text(encoding="utf-8") for path, *_rest in CHECKER.PAGE_RULES}
+    docs = docs_root()
+    def load(path: str) -> str:
+        base = docs if path == "api/semantic-snapshot-read.md" else ROOT
+        return (base / path).read_text(encoding="utf-8")
+    return {path: load(path) for path, *_rest in CHECKER.PAGE_RULES}
 
 
 def test_handoff_pages_state_the_native_unit_and_both_si_statements() -> None:

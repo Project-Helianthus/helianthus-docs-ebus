@@ -20,22 +20,22 @@ help:
 	@echo "  ci-local            Run full local CI suite (scripts/ci_local.sh)"
 
 validate-schemas:
-	@bash scripts/check_runtime_state_schema.sh
+	@cd "$${PLATFORM_DOCS_ROOT}" && bash scripts/check_runtime_state_schema.sh
 
 validate-platform-contracts:
-	@python3 -m pytest -q tests/test_platform_contracts.py
-	@python3 scripts/validate_platform_contracts.py --mode repository --docs-ebus-root . --enforce-through MSP-DOCS-CLEAN --toolchain-mode "$(PLATFORM_TOOLCHAIN_MODE)"
+	@cd "$${PLATFORM_DOCS_EEBUS_ROOT}" && python3 -m pytest -q tests/test_platform_contracts.py
+	@cd "$${PLATFORM_DOCS_EEBUS_ROOT}" && python3 scripts/validate_platform_contracts.py --mode repository --docs-root "$${PLATFORM_DOCS_ROOT}" --docs-repository "$${PLATFORM_DOCS_EBUS_REPOSITORY}" --owner-manifest-root "$${PLATFORM_DOCS_EEBUS_ROOT}" --enforce-through MSP-DOCS-CLEAN --toolchain-mode "$(PLATFORM_TOOLCHAIN_MODE)"
 
 validate-platform-combined-ref:
 	@test -n "$(DOCS_EEBUS_ROOT)" && test -n "$(EEBUSREG_ROOT)"
-	@test -n "$(DOCS_EBUS_REF)" && test -n "$(DOCS_EEBUS_REF)" && test -n "$(EEBUSREG_REF)"
+	@test -n "$(DOCS_REF)" && test -n "$(DOCS_EEBUS_REF)" && test -n "$(EEBUSREG_REF)"
 	@test -n "$(PRIOR_MANIFEST)" && test -n "$(ENFORCE_THROUGH)"
-	@python3 scripts/validate_platform_combined_ref.py --docs-ebus-root . --docs-eebus-root "$(DOCS_EEBUS_ROOT)" --eebusreg-root "$(EEBUSREG_ROOT)" --docs-ebus-ref "$(DOCS_EBUS_REF)" --docs-eebus-ref "$(DOCS_EEBUS_REF)" --eebusreg-ref "$(EEBUSREG_REF)" --prior-manifest "$(PRIOR_MANIFEST)" --enforce-through "$(ENFORCE_THROUGH)" --toolchain-mode "$(PLATFORM_TOOLCHAIN_MODE)"
+	@cd "$${PLATFORM_DOCS_EEBUS_ROOT}" && python3 scripts/validate_platform_combined_ref.py --docs-root "$${PLATFORM_DOCS_ROOT}" --docs-eebus-root "$(DOCS_EEBUS_ROOT)" --eebusreg-root "$(EEBUSREG_ROOT)" --docs-ref "$(DOCS_REF)" --docs-eebus-ref "$(DOCS_EEBUS_REF)" --eebusreg-ref "$(EEBUSREG_REF)" --prior-manifest "$(PRIOR_MANIFEST)" --enforce-through "$(ENFORCE_THROUGH)" --toolchain-mode "$(PLATFORM_TOOLCHAIN_MODE)"
 
 validate-platform-expiry:
 	@test -n "$(EVALUATED_AT)" || (echo "EVALUATED_AT is required" >&2; exit 2)
 	@test -n "$(EVALUATION_SOURCE)" || (echo "EVALUATION_SOURCE is required" >&2; exit 2)
-	@python3 scripts/validate_platform_contracts.py --mode main-expiry --docs-ebus-root . --evaluated-at "$(EVALUATED_AT)" --evaluation-source "$(EVALUATION_SOURCE)" --enforce-through MSP-DOCS-CLEAN --toolchain-mode "$(PLATFORM_TOOLCHAIN_MODE)"
+	@cd "$${PLATFORM_DOCS_EEBUS_ROOT}" && python3 scripts/validate_platform_contracts.py --mode main-expiry --docs-root "$${PLATFORM_DOCS_ROOT}" --evaluated-at "$(EVALUATED_AT)" --evaluation-source "$(EVALUATION_SOURCE)" --enforce-through MSP-DOCS-CLEAN --toolchain-mode "$(PLATFORM_TOOLCHAIN_MODE)"
 
 ci-local:
 	@bash scripts/ci_local.sh

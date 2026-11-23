@@ -2,6 +2,7 @@
 """Validate the current GraphQL and MCP device-face provenance contract."""
 from __future__ import annotations
 
+import os
 import pathlib
 import re
 import sys
@@ -10,8 +11,27 @@ from graphql import GraphQLError, parse
 from markdown_it import MarkdownIt
 
 
-DOC = pathlib.Path("api/graphql.md")
-MCP = pathlib.Path("api/mcp.md")
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+
+
+def platform_docs_root() -> pathlib.Path:
+    raw = os.environ.get("PLATFORM_DOCS_ROOT")
+    if raw:
+        return pathlib.Path(raw)
+    candidate = ROOT / "checkouts" / "docs"
+    if candidate.is_dir():
+        return candidate
+    raise OSError("PLATFORM_DOCS_ROOT is required")
+
+
+def graphql_doc() -> pathlib.Path:
+    return platform_docs_root() / "api/graphql.md"
+
+
+def mcp_doc() -> pathlib.Path:
+    return platform_docs_root() / "api/mcp.md"
+
+
 ATR = pathlib.Path("architecture/atr/07-live-validation-acceptance.md")
 HEADING = "### Current Device Face Discovery Provenance"
 SOURCES = ("static_seed", "passive_observed", "active_confirmed")
@@ -715,8 +735,8 @@ def validate_mcp_text(text: str) -> None:
 
 def main() -> int:
     try:
-        validate_text(DOC.read_text(encoding="utf-8"), ATR.read_text(encoding="utf-8"))
-        validate_mcp_text(MCP.read_text(encoding="utf-8"))
+        validate_text(graphql_doc().read_text(encoding="utf-8"), ATR.read_text(encoding="utf-8"))
+        validate_mcp_text(mcp_doc().read_text(encoding="utf-8"))
     except CheckError as error:
         print(f"graphql_face_provenance_error: {error}", file=sys.stderr)
         return 1

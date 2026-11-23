@@ -21,7 +21,7 @@ probe-centric scanning with multi-source passive evidence fusion plus
 bounded active confirmation.
 
 This must be frozen before any NM runtime implementation lands in
-`helianthus-ebusgateway`, because the NM state machine depends on a
+`helianthus-gateway`, because the NM state machine depends on a
 populated target configuration, and target configuration depends on
 discovery having promoted devices through the evidence pipeline.
 

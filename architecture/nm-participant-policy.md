@@ -20,7 +20,7 @@ This document freezes the numeric bus-load bounds, transport capability
 expectations, and local participant behavior that govern Helianthus NM
 runtime compliance. It is the third and final M0 normative document and
 must be satisfied before any NM runtime code that originates bus traffic
-lands in `helianthus-ebusgateway`.
+lands in `helianthus-gateway`.
 
 Implementation work references this document for local address-pair
 authority, transport blindness semantics, broadcast gating rules, and the

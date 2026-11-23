@@ -1,7 +1,7 @@
 # Circuit topology and cooling capability cutover
 
 This is the proposed, bounded gateway-to-SemReg acceptance contract for
-helianthus-docs-ebus issue #702, advancing helianthus-ebusgateway#952 and
+helianthus-docs-ebus issue #702, advancing helianthus-gateway#952 and
 Project #2. It covers circuit type, cooling-enabled configuration and read-service
 presence. Temperatures, pump state, writes and downstream integration are outside
 acceptance. It does not close the parent. Nothing here is stable before
@@ -15,7 +15,7 @@ Read the public native contract before applying the proposed binding:
 | --- | --- | --- |
 | [B524 register catalog](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/protocols/vaillant/ebus-vaillant-b524-register-map.md) | “GG=0x02 — Circuits”, “mctype — Circuit type”, “Enumerations that differ by family”, unresolved names near the end | Native documentation contract; profile-scoped observations, candidate labels and unresolved evidence retain their stated limits. |
 | [Legacy semantic mapping](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/b524-semantic-mapping.md) | `ebus_v1_semantic_circuits_get`, ownership note and consumer note; “SemReg thermal v1 read-only Vaillant mapping” | Application mapping, not native wire proof. |
-| [Gateway implementation](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/cmd/gateway/semantic_vaillant.go) | `refreshCircuits`, `readDhwPseudoCircuitEvidence`, `readDhwPseudoCircuitTemperatureEvidence`, `newDhwPseudoCircuitSnapshot`, `isDhwPseudoCircuitTemperatureEvidence`, `allCircuitRefreshInstances`, `circuitRefreshInstancesLocked`, `mergeCircuitSnapshotNonDestructive`, `publishCircuits`, `decodeHeatingCircuitTypeToken`, `decodeUint16Bool`, `readB524Uint16`, `deriveCircuitManagingDevice`, `decodeCircuitType` | **Proven as source behavior** in the reviewed implementation; not proof of installed topology or native semantics. |
+| [Gateway implementation](https://github.com/Project-Helianthus/helianthus-gateway/blob/main/cmd/gateway/semantic_vaillant.go) | `refreshCircuits`, `readDhwPseudoCircuitEvidence`, `readDhwPseudoCircuitTemperatureEvidence`, `newDhwPseudoCircuitSnapshot`, `isDhwPseudoCircuitTemperatureEvidence`, `allCircuitRefreshInstances`, `circuitRefreshInstancesLocked`, `mergeCircuitSnapshotNonDestructive`, `publishCircuits`, `decodeHeatingCircuitTypeToken`, `decodeUint16Bool`, `readB524Uint16`, `deriveCircuitManagingDevice`, `decodeCircuitType` | **Proven as source behavior** in the reviewed implementation; not proof of installed topology or native semantics. |
 | [Thermal definitions](https://github.com/Project-Helianthus/helianthus-semreg/blob/main/semreg/v1/packs/thermal/definitions.go) | `fields`, `dimensions`, `services`, `capabilities`, `Metadata` | **Proven as pack vocabulary**: circuit/DHW services and read capabilities exist; circuit type, cooling-enabled and managing-module fields do not. |
 | [Existing typed thermal mapping](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/fixtures/vaillant-semreg-thermal-map-v1.json) | `qualification`, `mappings`, `lifecycle`, `nonclaims` | Two temperature candidates only; qualification is Unknown and runtime qualification is not permitted by that fixture. It supplies neither topology qualification nor new circuit facts. |
 

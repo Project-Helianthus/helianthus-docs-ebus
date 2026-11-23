@@ -8,7 +8,7 @@ This runbook defines the canonical smoke topology and execution order across gat
 flowchart LR
   HA[Home Assistant]
   ADDON[helianthus-ha-addon]
-  GATEWAY[helianthus-ebusgateway]
+  GATEWAY[helianthus-gateway]
   EBUSD[ebusd tcp endpoint]
   INTEGRATION[helianthus-ha-integration]
 
@@ -23,7 +23,7 @@ flowchart LR
 
 Run in order and stop on first failure:
 
-1. **Gateway smoke** (`helianthus-ebusgateway`, issue [#85](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/85)).
+1. **Gateway smoke** (`helianthus-gateway`, issue [#85](https://github.com/Project-Helianthus/helianthus-gateway/issues/85)).
 2. **Add-on smoke** (`helianthus-ha-addon`, issue [#24](https://github.com/Project-Helianthus/helianthus-ha-addon/issues/24)).
 3. **HA integration smoke** (`helianthus-ha-integration`, issue [#52](https://github.com/Project-Helianthus/helianthus-ha-integration/issues/52)).
 
@@ -37,8 +37,8 @@ Run in order and stop on first failure:
 
 ## Repo-specific runbooks
 
-- Gateway smoke runbook: `helianthus-ebusgateway` README smoke section
-  https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/README.md#smoke-test-context-and-limits
+- Gateway smoke runbook: `helianthus-gateway` README smoke section
+  https://github.com/Project-Helianthus/helianthus-gateway/blob/main/README.md#smoke-test-context-and-limits
 - Add-on smoke runbook: `helianthus-ha-addon/SMOKE_RUNBOOK.md`
   https://github.com/Project-Helianthus/helianthus-ha-addon/blob/main/SMOKE_RUNBOOK.md
 - Integration smoke runbook: `helianthus-ha-integration` README smoke section
@@ -81,4 +81,4 @@ Related validation surfaces:
 
 - topology matrix runner: [`smoke-matrix.md`](./smoke-matrix.md)
 - runtime adversarial scenarios:
-  [`../architecture/adversarial-matrix.md`](../architecture/adversarial-matrix.md)
+  [`../architecture/adversarial-matrix.md`](https://github.com/Project-Helianthus/helianthus-docs/blob/main/architecture/adversarial-matrix.md)

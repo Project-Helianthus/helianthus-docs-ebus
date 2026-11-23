@@ -295,12 +295,12 @@ grace and the pending-start TTL no longer exist, neither as configuration
 fields nor as flags.
 
 Evidence status: **Proven** as the gateway implementation contract described by
-[gateway issue #1402](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1402)
+[gateway issue #1402](https://github.com/Project-Helianthus/helianthus-gateway/issues/1402)
 and its code change in gateway
-[PR #1410](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/1410),
+[PR #1410](https://github.com/Project-Helianthus/helianthus-gateway/pull/1410),
 and, for the abandon-watchdog fence, the withheld-SYN limits, the undeliverable
 STARTED count and the waiting-bid rules, by
-[gateway issue #1543](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1543),
+[gateway issue #1543](https://github.com/Project-Helianthus/helianthus-gateway/issues/1543),
 covered by synthetic unit fixtures. These are gateway scheduling rules built on the native
 START/STARTED/FAILED contract in [ENH](../protocols/enh.md#start--started--failed);
 they are not a native eBUS wire contract. Scanner latency and live-transport
@@ -384,7 +384,7 @@ hold arbitration on a healthy contended bus. Detection rests on STARTED answers
 that do not match the pending request or arrive with none pending.
 
 Evidence status: **Proven** as the gateway implementation contract of
-[gateway issue #1543](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1543),
+[gateway issue #1543](https://github.com/Project-Helianthus/helianthus-gateway/issues/1543),
 covered by synthetic offline fixtures. It is a gateway recovery rule built on
 the native START/STARTED/FAILED contract in
 [ENH](../protocols/enh.md#start--started--failed), not a native eBUS wire
@@ -427,10 +427,10 @@ in `bus_summary.status.degraded.reasons` (GraphQL and MCP), and the gauge
 not set.
 
 Evidence status: **Proven** as the gateway implementation contract described by
-[gateway issue #1401](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1401)
-and its companion [PR #1407](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/1407),
+[gateway issue #1401](https://github.com/Project-Helianthus/helianthus-gateway/issues/1401)
+and its companion [PR #1407](https://github.com/Project-Helianthus/helianthus-gateway/pull/1407),
 and, for the hold diagnostics (snapshot fields, degraded reason and gauge), by
-[gateway issue #1543](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1543).
+[gateway issue #1543](https://github.com/Project-Helianthus/helianthus-gateway/issues/1543).
 These are gateway ownership rules, not a native eBUS wire contract or a device
 family qualification claim. Live-equipment validation of this lifecycle is
 **Unknown** here.

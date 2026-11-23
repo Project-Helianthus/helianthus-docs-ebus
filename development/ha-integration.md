@@ -139,7 +139,7 @@ Optional HA helper bindings can drive schedule mode:
 
 Home Assistant consumes the gateway-owned eeBUS operator projection from the
 boundary defined in
-[`../api/eebus-operator-admin.md`](../api/eebus-operator-admin.md). It provides
+[`../api/eebus-operator-admin.md`](https://github.com/Project-Helianthus/helianthus-docs-eebus/blob/main/api/eebus-operator-admin.md). It provides
 a native pairing flow without an eeBUS-specific credential or reauthentication
 step and submits only the closed typed actions owned by the gateway. It never
 changes the generic Home Assistant authentication or lifecycle, which remain

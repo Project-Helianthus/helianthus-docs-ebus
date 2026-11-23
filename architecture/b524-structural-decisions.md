@@ -4,7 +4,7 @@
 > Legacy role mapping (for cross-referencing older materials): `master` → `initiator`, `slave` → `target`. Helianthus documentation uses `initiator`/`target`.
 <!-- legacy-role-mapping:end -->
 
-This page documents the **implemented structural decisions** in `helianthus-ebusgateway` for B524-backed semantic discovery.
+This page documents the **implemented structural decisions** in `helianthus-gateway` for B524-backed semantic discovery.
 
 Each entry records:
 
@@ -248,7 +248,7 @@ This document is authoritative for Phase 1 structural discovery and complements,
 | Scope of validity | `GATEWAY_POLICY` for the current decision tree; `PROFILE` for the documented VR71 configuration meanings; unvalidated controller tuples remain `UNKNOWN` |
 | Evaluation rule | The provider returns one mode/reason/revision verdict, but structural mode and acquisition health are independent. Fresh coherent identity plus an interpretable configuration establishes `INTERPRETED`; fresh coherent identity plus a known unsupported configuration establishes `GPIO_ONLY`; fresh coherent absence establishes `ABSENT`. A transient acquisition failure does not produce a new structural classification, so the previous coherent `INTERPRETED` mode remains unchanged. |
 | Coherence / linearization rule | Relevant device-registry identity mutations advance a monotonic observation generation. The provider's final registry-generation comparison and semantic verdict commit execute in one registry read critical section, so a registry writer linearizes either before both operations or after both operations. A generation mismatch records `INCOHERENT_ACQUISITION` against retained state and does not commit a structural verdict from a detached registry snapshot. |
-| Fallback / unknown behavior | The provider emits `GPIO_ONLY` only from fresh coherent `CONFIGURATION_NOT_INTERPRETABLE` evidence. Failed controller, configuration, solar, or cylinder acquisition retains the previous coherent structural mode and values without refreshing them. Before the first coherent classification, incomplete evidence leaves the structural verdict unpublished rather than inventing `GPIO_ONLY` or `ABSENT`. The full closed reason and precedence contract is [`../api/eebus-operator-admin.md#fm5-behavioral-verdict`](../api/eebus-operator-admin.md#fm5-behavioral-verdict). |
+| Fallback / unknown behavior | The provider emits `GPIO_ONLY` only from fresh coherent `CONFIGURATION_NOT_INTERPRETABLE` evidence. Failed controller, configuration, solar, or cylinder acquisition retains the previous coherent structural mode and values without refreshing them. Before the first coherent classification, incomplete evidence leaves the structural verdict unpublished rather than inventing `GPIO_ONLY` or `ABSENT`. The full closed reason and precedence contract is [`../api/eebus-operator-admin.md#fm5-behavioral-verdict`](https://github.com/Project-Helianthus/helianthus-docs-eebus/blob/main/api/eebus-operator-admin.md#fm5-behavioral-verdict). |
 | Published effect | Controls `fm5_semantic_mode`, `fm5SemanticDegradedReason`, `fm5SemanticEvidenceRevision`, and gates publication of `solar`, `cylinders`, and FM5-backed circuit ownership. |
 | Evidence status | `PROVEN` for the implemented decision tree, `UNKNOWN` for unvalidated controller tuples |
 | Code anchors | `refreshFM5Semantic()`, provider-owned verdict derivation, `publishFM5Semantic()` |

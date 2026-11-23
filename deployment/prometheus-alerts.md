@@ -2,7 +2,7 @@
 
 This document is the operations-side reference for Prometheus alert rules
 that the operator deployment manifest MUST include alongside the
-helianthus-ebusgateway image. The gateway itself only exposes counters;
+helianthus-gateway image. The gateway itself only exposes counters;
 the *alerting decisions* — including any cross-counter or
 mode-conditioned predicates — live in the Prometheus rules file shipped
 with the deployment.
@@ -98,7 +98,7 @@ groups:
   of classifier mode. The Go code does NOT consult the classifier mode
   (no cross-repo coupling).
 - The alert rule does the gating via the `helianthus_adaptermux_classifier_mode`
-  gauge (exported by `helianthus-ebusgateway/internal/adaptermux` —
+  gauge (exported by `helianthus-gateway/internal/adaptermux` —
   scheduled for Phase 3 of the frame-atomic-visibility rollout). Until
   Phase 3 lands, deploy with the second clause commented out; the alert
   will trip on ANY round-9 fire, which is conservative and
@@ -193,7 +193,7 @@ correctness.
 
 **Counter source:** `helianthus_v8_shadow_would_have_dropped_total`
 — exported by
-`helianthus-ebusgateway/internal/adaptermux/v8classifier.Classifier.ShadowWouldHaveDroppedTotal()`.
+`helianthus-gateway/internal/adaptermux/v8classifier.Classifier.ShadowWouldHaveDroppedTotal()`.
 The counter mirrors `fsmDropAaInjectionTotal` ONLY when the runtime
 mode is `shadow`; it stays at 0 in `off` and `enforce`. Each
 increment is a byte the v8 classifier would have filtered from

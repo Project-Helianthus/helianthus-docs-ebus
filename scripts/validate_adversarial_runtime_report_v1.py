@@ -15,13 +15,26 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SCHEMA = ROOT / "docs/platform/schemas/adversarial-runtime-report-v1.schema.json"
+
+
+def platform_docs_root() -> Path:
+    raw = os.environ.get("PLATFORM_DOCS_ROOT")
+    if raw:
+        return Path(raw)
+    candidate = ROOT / "checkouts" / "docs"
+    if candidate.is_dir():
+        return candidate
+    raise OSError("PLATFORM_DOCS_ROOT is required")
+
+
+DOCS = platform_docs_root()
+SCHEMA = DOCS / "docs/platform/schemas/adversarial-runtime-report-v1.schema.json"
 SCHEMA_ID = "https://raw.githubusercontent.com/Project-Helianthus/helianthus-docs-ebus/main/docs/platform/schemas/adversarial-runtime-report-v1.schema.json"
 SUITE_ID = "helianthus.adversarial.ADV01-04"
-FIXTURE_MANIFEST = ROOT / "docs/platform/fixtures/adversarial-runtime/v1/fixture-input-manifest.json"
-CANONICAL_POSITIVE_ROOT = ROOT / "docs/platform/fixtures/adversarial-runtime/v1/positive"
+FIXTURE_MANIFEST = DOCS / "docs/platform/fixtures/adversarial-runtime/v1/fixture-input-manifest.json"
+CANONICAL_POSITIVE_ROOT = DOCS / "docs/platform/fixtures/adversarial-runtime/v1/positive"
 CANONICAL_POSITIVE_PATHS = frozenset((CANONICAL_POSITIVE_ROOT / f"{name}.json").resolve() for name in ("evaluated-fail", "execution-error", "infrastructure-block", "offline-all-pass"))
-FIXTURE_SCHEMA = ROOT / "docs/platform/schemas/adversarial-runtime-offline-fixture-v1.schema.json"
+FIXTURE_SCHEMA = DOCS / "docs/platform/schemas/adversarial-runtime-offline-fixture-v1.schema.json"
 FIXTURE_SCHEMA_ID = "https://raw.githubusercontent.com/Project-Helianthus/helianthus-docs-ebus/main/docs/platform/schemas/adversarial-runtime-offline-fixture-v1.schema.json"
 MAX_BYTES = 1024 * 1024
 MAX_FIXTURE_BYTES = 4 * 1024 * 1024

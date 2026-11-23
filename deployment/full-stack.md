@@ -7,7 +7,7 @@
 ## What Exists
 
 - `helianthus-ebusgo` and `helianthus-ebusreg` build and include unit tests.
-- `helianthus-ebusgateway` builds as a Go module and serves:
+- `helianthus-gateway` builds as a Go module and serves:
   - GraphQL queries/mutations: `/graphql`
   - GraphQL subscriptions (SSE/WS): `/graphql/subscriptions`
   - Projection snapshot endpoint: `/snapshot`

@@ -154,7 +154,7 @@ proxy-backed ENS family; this worksheet does not execute its canary phases.
 The `PX01..PX12` case set and runner of the proxy are historical; the
 [proxy adjunct](smoke-matrix.md#proxy-semantics-adjunct-gate-px01px12) (historical)
 lists them. Each PX case is now carried by the gateway
-[`adaptermux-v2` matrix](https://github.com/Project-Helianthus/helianthus-ebusgateway/tree/main/matrix)
+[`adaptermux-v2` matrix](https://github.com/Project-Helianthus/helianthus-gateway/tree/main/matrix)
 as the cells `<transport>-PX01` to `<transport>-PX12` on every southbound
 transport; `PX09` to `PX11` are planned until the multiplexer has a local
 responder. No XR implementation status,

@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -218,7 +219,18 @@ def check(root: Path = ROOT) -> tuple[int, int]:
         validate_entry(entry, vocabulary, data['features'])
         entries[key] = entry['emitted']
     actual = {(MAP, key): name for key, name in extract_registers((root / MAP).read_text()).items()}
-    actual.update({(CONTRACT, name): name for name in documented_examples((root / CONTRACT).read_text())})
+    naming_page = root / CONTRACT
+    if not naming_page.is_file():
+        raw = os.environ.get('PLATFORM_DOCS_ROOT')
+        docs = Path(raw) if raw else None
+        if docs is None:
+            candidate = ROOT / 'checkouts' / 'docs'
+            if candidate.is_dir():
+                docs = candidate
+        if docs is None:
+            raise OSError('PLATFORM_DOCS_ROOT is required')
+        naming_page = docs / CONTRACT
+    actual.update({(CONTRACT, name): name for name in documented_examples(naming_page.read_text())})
     if entries != actual:
         missing = len(actual.keys() - entries.keys())
         unknown = len(entries.keys() - actual.keys())

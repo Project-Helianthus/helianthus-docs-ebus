@@ -1,6 +1,6 @@
 # Semantic Startup FSM
 
-This page documents the startup behavior for semantic data publication in `helianthus-ebusgateway`.
+This page documents the startup behavior for semantic data publication in `helianthus-gateway`.
 
 Goal: publish deterministic semantic data during startup without pretending cached values are live.
 
@@ -218,10 +218,10 @@ planes non-null within the startup gate.
 
 **Proven — merged gateway behavior.** Cadence, suspension conditions and log
 marker below are taken from the merged gateway changes
-[gateway #1524](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1524),
-[gateway #1525](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1525)
+[gateway #1524](https://github.com/Project-Helianthus/helianthus-gateway/issues/1524),
+[gateway #1525](https://github.com/Project-Helianthus/helianthus-gateway/issues/1525)
 and
-[gateway #1526](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1526),
+[gateway #1526](https://github.com/Project-Helianthus/helianthus-gateway/issues/1526),
 and from the gateway run sheet `docs/testing/site-without-controller-run-sheet.md`;
 the behavior on a physical installation without a controller is **Unknown**
 beyond that run sheet.
@@ -303,7 +303,7 @@ Implementation note:
 
 **Proven — merged gateway behavior.** The reason, its evaluation and clearing
 and the timeout log line are taken from the merged gateway change
-[gateway #1526](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1526).
+[gateway #1526](https://github.com/Project-Helianthus/helianthus-gateway/issues/1526).
 
 The startup block of the bus observability summary carries an additive
 `reason` next to the phase (GraphQL `bus_summary.status.startup.reason`, MCP
@@ -337,7 +337,7 @@ markers are listed in [`observability.md`](./observability.md#semantic-lifecycle
 
 ## API and Runtime Cross-Links
 
-- GraphQL runtime notes: [`api/graphql.md`](../api/graphql.md#semantic-startup-runtime-contract)
+- GraphQL runtime notes: [`api/graphql.md`](https://github.com/Project-Helianthus/helianthus-docs/blob/main/api/graphql.md#semantic-startup-runtime-contract)
 - Runtime and wiring context: [`architecture/overview.md`](./overview.md#semantic-startup-runtime)
 - Semantic read breaker behavior for B524 polling: [`architecture/semantic-read-circuit-breaker.md`](./semantic-read-circuit-breaker.md)
 - Zone presence hysteresis state machine: [`architecture/zone-presence-fsm.md`](./zone-presence-fsm.md)

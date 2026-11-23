@@ -29,7 +29,7 @@ fixed-source contract.
 ## Purpose
 
 This chapter freezes the gateway source-byte invariant for live
-`ebus_v1_rpc_invoke` traffic produced by `helianthus-ebusgateway` during
+`ebus_v1_rpc_invoke` traffic produced by `helianthus-gateway` during
 `M4_GATEWAY_MCP`.
 
 The canonical plan states:
@@ -50,14 +50,14 @@ Every gateway-originated `ebus_v1_rpc_invoke` frame MUST use source byte
 
 This invariant is a **gateway-internal** constraint. It does not change
 the public `rpc.invoke` wire shape documented in
-[`api/mcp.md`](../../api/mcp.md) ("RPC Method Reference"), where
+[`api/mcp.md`](https://github.com/Project-Helianthus/helianthus-docs/blob/main/api/mcp.md) ("RPC Method Reference"), where
 `source` is defined as a caller-provided required parameter of
 `ebus_v1_rpc_invoke`. The `source` parameter continues to exist in the
 API exactly as documented.
 
 The invariant narrows caller behaviour along two axes:
 
-1. **Gateway as caller.** When `helianthus-ebusgateway` itself invokes
+1. **Gateway as caller.** When `helianthus-gateway` itself invokes
    `ebus_v1_rpc_invoke` from its own code paths (for example NM
    broadcasts, provider dispatch, internal semantic probes, or any
    other gateway-originated live traffic), the gateway's code MUST set

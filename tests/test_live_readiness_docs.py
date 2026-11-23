@@ -1,12 +1,24 @@
 """Enforce candidate readiness documentation consistency, not runtime conformance."""
 from pathlib import Path
+import os
 import re
 
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 DOC = ROOT / "architecture/startup-semantic-fsm.md"
-API_DOC = ROOT / "api/graphql.md"
+
+
+def graphql_page() -> Path:
+    raw = os.environ.get("PLATFORM_DOCS_ROOT")
+    if raw:
+        return Path(raw) / "api/graphql.md"
+    candidate = ROOT / "checkouts" / "docs"
+    if candidate.is_dir():
+        return candidate / "api/graphql.md"
+    raise OSError("PLATFORM_DOCS_ROOT is required")
+
+
 PAIRS = {
     "Zones": ("zonePublished", "zoneLiveSeen"),
     "DHW": ("dhwPublished", "dhwLiveSeen"),
@@ -53,12 +65,12 @@ def contract(doc, api_doc):
 
 
 def test_live_readiness_document_consistency():
-    contract(DOC.read_text(), API_DOC.read_text())
+    contract(DOC.read_text(), graphql_page().read_text())
 
 
 @pytest.mark.parametrize("phrase", PROSE)
 def test_live_readiness_architecture_mutations(phrase):
-    doc, api_doc = DOC.read_text(), API_DOC.read_text()
+    doc, api_doc = DOC.read_text(), graphql_page().read_text()
     contract(doc, api_doc)
     with pytest.raises(AssertionError):
         contract(doc.replace(phrase, "x"), api_doc)
@@ -66,7 +78,7 @@ def test_live_readiness_architecture_mutations(phrase):
 
 @pytest.mark.parametrize("phrase", API_PROSE)
 def test_live_readiness_api_mutations(phrase):
-    doc, api_doc = DOC.read_text(), API_DOC.read_text()
+    doc, api_doc = DOC.read_text(), graphql_page().read_text()
     contract(doc, api_doc)
     # Match normalized whitespace so wrapped Markdown is mutated too.
     with pytest.raises(AssertionError):
@@ -75,7 +87,7 @@ def test_live_readiness_api_mutations(phrase):
 
 @pytest.mark.parametrize("domain", PAIRS)
 def test_live_readiness_domain_mutations(domain):
-    doc, api_doc = DOC.read_text(), API_DOC.read_text()
+    doc, api_doc = DOC.read_text(), graphql_page().read_text()
     published, live = PAIRS[domain]
     row = f"| {domain} | `{published}` | `{live}` |"
     contract(doc, api_doc)

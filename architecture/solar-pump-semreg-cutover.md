@@ -2,7 +2,7 @@
 
 This is the proposed, read-only migration acceptance contract for solar-loop
 pump-active, operating-hours and starts observations. It is a partial slice of
-[gateway #952](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/952)
+[gateway #952](https://github.com/Project-Helianthus/helianthus-gateway/issues/952)
 and implements the documentation scope of
 [docs-ebus #703](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/703).
 It does not implement the cutover or close the parent. Solar temperature
@@ -26,7 +26,7 @@ The public native contract comes first:
   its applicability and ownership remain **Unknown** for this slice.
 - [B524 semantic mapping, `ebus_v1_semantic_solar_get`](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/b524-semantic-mapping.md)
   describes the FM5 non-null empty/retained-object compatibility behavior.
-- [Gateway `semantic_vaillant.go`](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/cmd/gateway/semantic_vaillant.go),
+- [Gateway `semantic_vaillant.go`](https://github.com/Project-Helianthus/helianthus-gateway/blob/main/cmd/gateway/semantic_vaillant.go),
   specifically `localSolar`, `solarInstance`, `readSolarSnapshot`,
   `decodeB524BoolFromRaw`, `decodeB524Uint32FromRaw`,
   `mergeSolarSnapshotNonDestructive`, `refreshFM5Semantic`,

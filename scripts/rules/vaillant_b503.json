@@ -148,7 +148,7 @@
     "reason": "Preserve the existing m2b graphql contract obligation.",
     "value": [
       "`M2b_GATEWAY_GRAPHQL`",
-      "`helianthus-ebusgateway`",
+      "`helianthus-gateway`",
       "GraphQL diagnostic read-only parity + `vaillantCapabilities.b503` signal and five-state `vaillantLiveMonitor` session status (`Idle` / `Enabling` / `Active` / `Refreshing` / `Disabled`); only the bounded session enable/disable action through the §6 FSM"
     ]
   },
@@ -157,7 +157,7 @@
     "reason": "Preserve the existing m3 portal contract obligation.",
     "value": [
       "`M3_PORTAL`",
-      "`helianthus-ebusgateway`",
+      "`helianthus-gateway`",
       "Vaillant pane (errors / service / live-monitor diagnostic reads) plus Gateway-owned five-state live-monitor session strip (`Idle` / `Enabling` / `Active` / `Refreshing` / `Disabled`) and only the bounded session enable/disable action through the §6 FSM"
     ]
   },
@@ -626,12 +626,12 @@
     "value": [
       [
         "`M2b_GATEWAY_GRAPHQL`",
-        "`helianthus-ebusgateway`",
+        "`helianthus-gateway`",
         "GraphQL read-only parity + `vaillantCapabilities.b503` signal"
       ],
       [
         "`M3_PORTAL`",
-        "`helianthus-ebusgateway`",
+        "`helianthus-gateway`",
         "Vaillant pane (errors / service / live-monitor tabs, read-only)"
       ]
     ]

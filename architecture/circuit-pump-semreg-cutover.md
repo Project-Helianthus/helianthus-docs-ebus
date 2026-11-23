@@ -3,7 +3,7 @@
 This is the canonical, proposed gateway-to-SemReg cutover acceptance contract
 for circuit pump status, operating hours and starts in the Vaillant controller
 and functional-module families. It is a bounded read-only slice of
-[gateway north-south work](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/952),
+[gateway north-south work](https://github.com/Project-Helianthus/helianthus-gateway/issues/952),
 tracked by [documentation issue 695](https://github.com/Project-Helianthus/helianthus-docs-ebus/issues/695).
 It does not close the parent, implement downstream integration, or replace a
 broad Matter source inventory or temperature-field contract. Nothing here is a
@@ -34,13 +34,13 @@ qualification, freshness and admission: even a successful raw read cannot
 supply the missing qualification.
 
 Implementation sources are
-[`semantic_vaillant.go`](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/cmd/gateway/semantic_vaillant.go)
+[`semantic_vaillant.go`](https://github.com/Project-Helianthus/helianthus-gateway/blob/main/cmd/gateway/semantic_vaillant.go)
 (`localCircuits`, `refreshCircuits`, `publishCircuits`,
 `mergeCircuitSnapshotNonDestructive`, the read/decoder helpers named below),
 the Thermal pack's
 [`definitions.go`](https://github.com/Project-Helianthus/helianthus-semreg/blob/main/semreg/v1/packs/thermal/definitions.go)
 (`fields`, `dimensions`, `services`, `capabilities`, `Metadata`), and
-[boiler pump evidence](https://github.com/Project-Helianthus/helianthus-ebusgateway/blob/main/docs/boiler-pump-provenance.md).
+[boiler pump evidence](https://github.com/Project-Helianthus/helianthus-gateway/blob/main/docs/boiler-pump-provenance.md).
 The existing
 [typed thermal mapping](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/fixtures/vaillant-semreg-thermal-map-v1.json)
 contains temperature mappings and their qualification/lifecycle boundary; it

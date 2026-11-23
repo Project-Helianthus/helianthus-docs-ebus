@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import os
 import pathlib
 import re
 
@@ -14,15 +15,25 @@ CHECKER = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(CHECKER)
 
 
+def docs_root() -> pathlib.Path:
+    raw = os.environ.get("PLATFORM_DOCS_ROOT")
+    if raw:
+        return pathlib.Path(raw)
+    candidate = ROOT / "checkouts" / "docs"
+    if candidate.is_dir():
+        return candidate
+    raise OSError("PLATFORM_DOCS_ROOT is required")
+
+
 def texts() -> tuple[str, str]:
     return (
-        (ROOT / "api/graphql.md").read_text(encoding="utf-8"),
+        (docs_root() / "api/graphql.md").read_text(encoding="utf-8"),
         (ROOT / "architecture/atr/07-live-validation-acceptance.md").read_text(encoding="utf-8"),
     )
 
 
 def mcp_text() -> str:
-    return (ROOT / "api/mcp.md").read_text(encoding="utf-8")
+    return (docs_root() / "api/mcp.md").read_text(encoding="utf-8")
 
 
 def rejects(doc_old: str | None = None, doc_new: str = "", atr_old: str | None = None, atr_new: str = "") -> None:

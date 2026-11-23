@@ -29,8 +29,8 @@ Each section opens with one of four implementation labels:
 either form, describe mechanisms present in the gateway and the library. The
 evidence is the implementation and its synthetic tests, for session output
 delivery the change in gateway
-[issue #1403](https://github.com/Project-Helianthus/helianthus-ebusgateway/issues/1403)
-and [PR #1406](https://github.com/Project-Helianthus/helianthus-ebusgateway/pull/1406);
+[issue #1403](https://github.com/Project-Helianthus/helianthus-gateway/issues/1403)
+and [PR #1406](https://github.com/Project-Helianthus/helianthus-gateway/pull/1406);
 it is not a device observation.
 **Unknown:** native symbol timing, and qualification of any mode on live
 equipment. This page adds no live claim.

@@ -242,7 +242,7 @@ gateway and external sessions alike, as described in
 Descriptor classification and execution cadence are both normative. A B524
 selector classified as `config`, `discovery`, or `state_slow` must not be
 called from the 1-minute state loop simply because scheduler caching exists.
-Gateway issue Project-Helianthus/helianthus-ebusgateway#680 closed the
+Gateway issue Project-Helianthus/helianthus-gateway#680 closed the
 regression where zone/DHW target, operation-mode, humidity, mapping, and
 holiday/quick-veto selectors were classified correctly but still invoked at
 state cadence.
@@ -508,7 +508,7 @@ transient acquisition prerequisite failed. Portal could also display a stale
 hard-coded gateway version instead of the add-on release version.
 
 **Decision:** Adopt the shared contract in
-[`../api/eebus-operator-admin.md`](../api/eebus-operator-admin.md):
+[`../api/eebus-operator-admin.md`](https://github.com/Project-Helianthus/helianthus-docs-eebus/blob/main/api/eebus-operator-admin.md):
 
 - all pairing reads/actions use the gateway-owned typed boundary without a
   separate eeBUS login, session, cookie, CSRF token, credential, or reauth flow;

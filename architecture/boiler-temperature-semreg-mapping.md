@@ -177,7 +177,7 @@ their reasons in raw/quality evidence, never clamp them (which would hide range
 loss). If an eligible retained fact is emitted, its projection determines the
 disposition;
 use `withheld` only when the requested item is not projected. The
-[snapshot projection accounting contract](../api/semantic-snapshot-read.md#projection-accounting-and-deterministic-order)
+[snapshot projection accounting contract](https://github.com/Project-Helianthus/helianthus-docs/blob/main/api/semantic-snapshot-read.md#projection-accounting-and-deterministic-order)
 requires one disposition per `(kind,item_id)`, collecting all matching complete
 FactKeys in `source_keys`. Flow and any future return value would share
 `thermal.measurement.water_temperature`; an absent return cannot add a separate
@@ -253,7 +253,7 @@ the rejected sample produces no fact or refresh. Freshness remains evaluated
 from that original receipt, never from this failed acquisition. If no eligible
 prior observation exists, the result is withheld; if its deadline has expired,
 the explicit expiry row applies. The [snapshot projection accounting
-contract](../api/semantic-snapshot-read.md#projection-accounting-and-deterministic-order)
+contract](https://github.com/Project-Helianthus/helianthus-docs/blob/main/api/semantic-snapshot-read.md#projection-accounting-and-deterministic-order)
 requires exactly one disposition per requested `(kind,item_id)`, with all
 matching complete FactKeys in `source_keys`. An emitted retained fact is copied
 intact on `target:semantic-snapshot-read`, with outcome `exact` and `loss: []`;

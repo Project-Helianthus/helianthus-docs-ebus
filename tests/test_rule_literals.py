@@ -12,6 +12,13 @@ def test_repository_literal_ratchet():
     assert CHECKER.check() == []
 
 
+def test_regulator_identity_adds_no_literal_baseline_entry():
+    import json
+    baseline = json.loads((ROOT / "scripts/rules/literal_baseline.json").read_text(encoding="utf-8"))
+    assert "scripts/check_regulator_identity_contract.py" not in baseline
+    assert CHECKER.check() == []
+
+
 def test_module_assignment_forms():
     for source in ['VALUE = {value!r}', 'VALUE: str = {value!r}', 'VALUE = ({value!r},)']:
         assert not CHECKER.literals(source.format(value='a' * 120))

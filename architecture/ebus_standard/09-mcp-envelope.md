@@ -8,7 +8,7 @@ Canonical SHA-256: 9e0a29bb76d99f551904b05749e322aafd3972621858aa6d1acbe49b9ef37
 ## Purpose
 
 This chapter defines the envelope contract for the first-delivery
-`ebus_standard` MCP surfaces in `helianthus-ebusgateway`.
+`ebus_standard` MCP surfaces in `helianthus-gateway`.
 
 The canonical plan requires the following first-delivery MCP surfaces:
 
@@ -50,7 +50,7 @@ This rule aligns with, and does not depart from, the existing envelope
 baseline documented in
 [`architecture/mcp-first-development.md`](../mcp-first-development.md)
 ("MCP Contract Baseline") which lists `error` as "null or structured",
-and in [`api/mcp.md`](../../api/mcp.md) ("Shared Request and Envelope
+and in [`api/mcp.md`](https://github.com/Project-Helianthus/helianthus-docs/blob/main/api/mcp.md) ("Shared Request and Envelope
 Rules") which enumerates `error` as part of the standard envelope.
 Those documents remain the canonical baseline for the wire contract;
 this chapter tightens emission discipline for the `ebus_standard`
