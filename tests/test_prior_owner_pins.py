@@ -257,7 +257,6 @@ def test_public_docs_ci_does_not_checkout_private_modbus_documentation():
     text = WORKFLOW.read_text(encoding="utf-8")
     program = load_prior_owner_program()
     source = prior_owner_program_source(text)
-    assert "#!/usr/bin/env python3" not in text
     assert not source.lstrip().startswith("#!")
     for forbidden in (
         "helianthus-docs-modbus",

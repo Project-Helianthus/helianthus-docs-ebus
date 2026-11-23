@@ -112,7 +112,7 @@ def test_ci_local_has_no_private_modbus_checkout_and_keeps_the_companion_check(t
         env.pop(key, None)
     env["PLATFORM_DOCS_ROOT"] = str(docs)
     env["PLATFORM_DOCS_EEBUS_ROOT"] = str(eebus)
-    env["PATH"] = "/usr/bin:/bin"
+    env["PATH"] = os.defpath
     result = subprocess.run(
         ["bash", str(ROOT / "scripts/ci_local.sh")],
         cwd=ROOT,
