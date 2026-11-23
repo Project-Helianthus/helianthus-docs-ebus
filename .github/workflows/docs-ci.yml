@@ -218,7 +218,169 @@ jobs:
             test "$(git -C checkouts/docs-ebus rev-parse HEAD)" = "${PUSH_SHA}"
             prior_workflow="checkouts/docs-ebus/.github/workflows/docs-ci.yml"
           fi
-          python3 checkouts/docs-ebus/tests/test_prior_owner_pins.py \
+          # This program is the prior-owner resolver. Docs Checks runs it
+          # from this step, not from a test module.
+          cat > "${RUNNER_TEMP}/prior_owner_pins.py" <<'PRIOR_OWNER_PINS'
+          #!/usr/bin/env python3
+          """Prior owner revisions recorded by the trusted base workflow.
+
+          Docs CI runs this program. Candidate checkouts keep the pins in the head
+          workflow. A pull request's prior checkouts use the revisions that workflow
+          recorded at the trusted base. On the first split that base has no companion
+          checkout, so the eeBUS prior is its recorded docs_eebus_ref and the other
+          owners stay empty for the pre-split tree. A nightly or push run reads the
+          candidate workflow, which is the same-head pair.
+          """
+
+          from __future__ import annotations
+
+          import argparse
+          import re
+          import subprocess
+          import sys
+          from pathlib import Path
+
+          SHA = re.compile(r"^[0-9a-f]{40}$")
+          CHECKOUT_REFS = {
+              "checkouts/docs": "docs_prior_ref",
+              "checkouts/docs-modbus": "docs_modbus_prior_ref",
+              "checkouts/docs-eebus": "docs_eebus_prior_ref",
+              "checkouts/docs-ebus-pin": "docs_ebus_pin_prior_ref",
+          }
+          OUTPUT_KEYS = (
+              "docs_prior_ref",
+              "docs_modbus_prior_ref",
+              "docs_eebus_prior_ref",
+              "docs_ebus_pin_prior_ref",
+          )
+          PRIOR_CHECKOUTS = {
+              "docs_prior_ref": "checkouts/docs-prior",
+              "docs_modbus_prior_ref": "checkouts/docs-modbus-prior",
+              "docs_eebus_prior_ref": "checkouts/docs-eebus-prior",
+              "docs_ebus_pin_prior_ref": "checkouts/docs-ebus-pin-prior",
+          }
+          RUNTIME_RELATIVE_PATHS = (
+              "api/mcp.md",
+              "api/driver-runtime-v1.md",
+              "api/portal.md",
+              "architecture/runtime-driver-lifecycle.md",
+              "architecture/runtime-state.md",
+              "architecture/runtime-control-reset-durability.md",
+              "docs/platform/driver-runtime-manager-v1.md",
+              "scripts/check_runtime_control_contract.py",
+              "scripts/runtime_control_contract.json",
+              "tests/test_runtime_control_contract.py",
+              "scripts/ci_local.sh",
+          )
+          PIN_RELATIVE_PATHS = ("api/modbus-v1-addon-runtime.md",)
+
+          def recorded_prior_refs(workflow_text: str) -> dict[str, str]:
+              """Return prior refs from checkout pins, then the pre-split eeBUS input."""
+              refs = {key: "" for key in OUTPUT_KEYS}
+              pending: dict[str, str] = {}
+              in_with = False
+
+              def consume() -> None:
+                  path = pending.get("path", "")
+                  ref = pending.get("ref", "")
+                  output = CHECKOUT_REFS.get(path)
+                  if output and SHA.fullmatch(ref):
+                      refs[output] = ref
+
+              for line in workflow_text.splitlines():
+                  if re.match(r"^\s*- (?:name|uses):", line):
+                      consume()
+                      pending = {}
+                      in_with = False
+                      continue
+                  if re.match(r"^\s+with:\s*$", line):
+                      in_with = True
+                      continue
+                  if not in_with:
+                      continue
+                  match = re.match(r"^\s+(repository|ref|path):\s+(\S+)\s*$", line)
+                  if match:
+                      pending[match.group(1)] = match.group(2)
+              consume()
+              if not refs["docs_eebus_prior_ref"]:
+                  legacy = re.search(r"(?m)^\s*docs_eebus_ref:\s+([0-9a-f]{40})\s*$", workflow_text)
+                  if legacy:
+                      refs["docs_eebus_prior_ref"] = legacy.group(1)
+              return refs
+
+
+          def verify_prior_heads(workspace: Path, refs: dict[str, str]) -> None:
+              """Fail unless each recorded prior checkout is that exact revision."""
+              for key, relative in PRIOR_CHECKOUTS.items():
+                  recorded = refs.get(key, "")
+                  if not recorded:
+                      continue
+                  checkout = workspace / relative
+                  if not checkout.is_dir():
+                      raise SystemExit(f"{relative} prior checkout is missing")
+                  head = subprocess.check_output(
+                      ["git", "-C", str(checkout), "rev-parse", "--verify", "HEAD"],
+                      text=True,
+                  ).strip()
+                  if head != recorded:
+                      raise SystemExit(f"{relative} prior HEAD does not match the trusted base pin")
+
+
+          def materialize_pre_split(source: Path, dest: Path, kind: str) -> None:
+              """Copy pre-split operands. A missing file is a failed prior, not an empty pass."""
+              paths = RUNTIME_RELATIVE_PATHS if kind == "runtime" else PIN_RELATIVE_PATHS
+              for relative in paths:
+                  src = source / relative
+                  if src.is_symlink() or not src.is_file():
+                      raise SystemExit(f"historical operand missing: {relative}")
+                  target = dest / relative
+                  target.parent.mkdir(parents=True, exist_ok=True)
+                  target.write_bytes(src.read_bytes())
+
+
+          def main(argv: list[str] | None = None) -> int:
+              parser = argparse.ArgumentParser(description=__doc__)
+              parser.add_argument("--base-workflow", type=Path)
+              parser.add_argument("--github-output", type=Path)
+              parser.add_argument("--verify-prior-heads", action="store_true")
+              parser.add_argument("--workspace", type=Path)
+              parser.add_argument("--docs-ref", default="")
+              parser.add_argument("--modbus-ref", default="")
+              parser.add_argument("--eebus-ref", default="")
+              parser.add_argument("--ebus-pin-ref", default="")
+              parser.add_argument("--materialize-pre-split", choices=("runtime", "pin"))
+              parser.add_argument("--source", type=Path)
+              parser.add_argument("--dest", type=Path)
+              args = parser.parse_args(argv)
+              if args.base_workflow is not None:
+                  if args.github_output is None:
+                      raise SystemExit("--github-output is required")
+                  refs = recorded_prior_refs(args.base_workflow.read_text(encoding="utf-8"))
+                  with args.github_output.open("a", encoding="utf-8") as handle:
+                      for key in OUTPUT_KEYS:
+                          handle.write(f"{key}={refs[key]}\n")
+              if args.verify_prior_heads:
+                  if args.workspace is None:
+                      raise SystemExit("--workspace is required")
+                  verify_prior_heads(
+                      args.workspace,
+                      {
+                          "docs_prior_ref": args.docs_ref,
+                          "docs_modbus_prior_ref": args.modbus_ref,
+                          "docs_eebus_prior_ref": args.eebus_ref,
+                          "docs_ebus_pin_prior_ref": args.ebus_pin_ref,
+                      },
+                  )
+              if args.materialize_pre_split:
+                  if args.source is None or args.dest is None:
+                      raise SystemExit("--source and --dest are required")
+                  materialize_pre_split(args.source, args.dest, args.materialize_pre_split)
+              return 0
+
+          if __name__ == "__main__":
+              sys.exit(main())
+          PRIOR_OWNER_PINS
+          python3 "${RUNNER_TEMP}/prior_owner_pins.py" \
             --base-workflow "${prior_workflow}" \
             --github-output "${GITHUB_OUTPUT}"
 
@@ -271,7 +433,7 @@ jobs:
           PRIOR_EBUS_PIN_REF: ${{ steps.prior_owners.outputs.docs_ebus_pin_prior_ref }}
         run: |
           set -euo pipefail
-          python3 checkouts/docs-ebus/tests/test_prior_owner_pins.py \
+          python3 "${RUNNER_TEMP}/prior_owner_pins.py" \
             --verify-prior-heads \
             --workspace "${GITHUB_WORKSPACE}" \
             --docs-ref "${PRIOR_DOCS_REF}" \
@@ -279,13 +441,13 @@ jobs:
             --eebus-ref "${PRIOR_EEBUS_REF}" \
             --ebus-pin-ref "${PRIOR_EBUS_PIN_REF}"
           if [[ -z "${PRIOR_DOCS_REF}" ]]; then
-            python3 checkouts/docs-ebus/tests/test_prior_owner_pins.py \
+            python3 "${RUNNER_TEMP}/prior_owner_pins.py" \
               --materialize-pre-split runtime \
               --source "${GITHUB_WORKSPACE}/checkouts/docs-ebus-base" \
               --dest "${GITHUB_WORKSPACE}/checkouts/docs-prior"
           fi
           if [[ -z "${PRIOR_EBUS_PIN_REF}" ]]; then
-            python3 checkouts/docs-ebus/tests/test_prior_owner_pins.py \
+            python3 "${RUNNER_TEMP}/prior_owner_pins.py" \
               --materialize-pre-split pin \
               --source "${GITHUB_WORKSPACE}/checkouts/docs-ebus-base" \
               --dest "${GITHUB_WORKSPACE}/checkouts/docs-ebus-pin-prior"
