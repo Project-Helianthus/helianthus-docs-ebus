@@ -139,7 +139,7 @@ def test_first_split_uses_the_base_eebus_input_and_leaves_other_owners_empty():
     refs = recorded_prior_refs(workflow)
     assert refs["docs_eebus_prior_ref"] == LEGACY
     assert refs["docs_prior_ref"] == ""
-    assert refs["docs_modbus_prior_ref"] == ""
+    assert "docs_modbus_prior_ref" not in refs
     assert refs["docs_ebus_pin_prior_ref"] == ""
 
 
@@ -176,7 +176,7 @@ def test_main_writes_recorded_refs_to_github_output(tmp_path: Path):
     assert status == 0
     written = output.read_text(encoding="utf-8")
     assert f"docs_prior_ref={RECORDED}\n" in written
-    assert "docs_modbus_prior_ref=\n" in written
+    assert "docs_modbus_prior_ref" not in written
     assert "docs_eebus_prior_ref=\n" in written
     assert "docs_ebus_pin_prior_ref=\n" in written
 
@@ -251,6 +251,42 @@ def test_verify_prior_head_rejects_a_different_revision(tmp_path: Path):
 
 def test_empty_prior_ref_skips_the_head_check(tmp_path: Path):
     load_prior_owner_program()["verify_prior_heads"](tmp_path, {"docs_prior_ref": ""})
+
+
+def test_public_docs_ci_does_not_checkout_private_modbus_documentation():
+    text = WORKFLOW.read_text(encoding="utf-8")
+    program = load_prior_owner_program()
+    source = prior_owner_program_source(text)
+    assert "#!/usr/bin/env python3" not in text
+    assert not source.lstrip().startswith("#!")
+    for forbidden in (
+        "helianthus-docs-modbus",
+        "checkouts/docs-modbus",
+        "PLATFORM_DOCS_MODBUS_ROOT",
+        "PLATFORM_DOCS_MODBUS_PRIOR_ROOT",
+        "docs_modbus_prior_ref",
+        "REPO_READ_TOKEN",
+        "validate_opaque_runtime_acquisition.py",
+        "--modbus-ref",
+    ):
+        assert forbidden not in text
+    assert program["OUTPUT_KEYS"] == (
+        "docs_prior_ref",
+        "docs_eebus_prior_ref",
+        "docs_ebus_pin_prior_ref",
+    )
+    assert "repository: Project-Helianthus/helianthus-docs\n" in text
+    assert "repository: Project-Helianthus/helianthus-docs-eebus\n" in text
+    assert "path: checkouts/docs-eebus\n" in text
+    assert "path: checkouts/docs-eebus-prior\n" in text
+    assert "run: ./scripts/ci_local.sh\n" in text
+    assert ".github/workflows/modbus-trusted-revision.yml" in text
+    assert ".github/workflows/modbus-trusted-revision-pr.yml" in text
+    for workflow_name in (
+        ".github/workflows/modbus-trusted-revision.yml",
+        ".github/workflows/modbus-trusted-revision-pr.yml",
+    ):
+        assert "Modbus Trusted Revision" in (ROOT / workflow_name).read_text(encoding="utf-8")
 
 
 def test_workflow_prior_refs_come_from_the_trusted_base():

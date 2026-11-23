@@ -15,15 +15,6 @@ if [ -z "${PLATFORM_DOCS_ROOT:-}" ]; then
   fi
 fi
 export PLATFORM_DOCS_ROOT
-if [ -z "${PLATFORM_DOCS_MODBUS_ROOT:-}" ]; then
-  if [ -d "${repo_root}/checkouts/docs-modbus" ]; then
-    PLATFORM_DOCS_MODBUS_ROOT="${repo_root}/checkouts/docs-modbus"
-  else
-    echo "PLATFORM_DOCS_MODBUS_ROOT is required" >&2
-    exit 1
-  fi
-fi
-export PLATFORM_DOCS_MODBUS_ROOT
 if [ -z "${PLATFORM_DOCS_EEBUS_ROOT:-}" ]; then
   if [ -d "${repo_root}/checkouts/docs-eebus" ]; then
     PLATFORM_DOCS_EEBUS_ROOT="${repo_root}/checkouts/docs-eebus"
@@ -33,10 +24,6 @@ if [ -z "${PLATFORM_DOCS_EEBUS_ROOT:-}" ]; then
   fi
 fi
 export PLATFORM_DOCS_EEBUS_ROOT
-if [ -z "${PLATFORM_DOCS_MODBUS_PRIOR_ROOT:-}" ] && [ -d "${repo_root}/checkouts/docs-modbus-prior" ]; then
-  PLATFORM_DOCS_MODBUS_PRIOR_ROOT="${repo_root}/checkouts/docs-modbus-prior"
-  export PLATFORM_DOCS_MODBUS_PRIOR_ROOT
-fi
 if [ -z "${PLATFORM_DOCS_EBUS_PIN_ROOT:-}" ] && [ -d "${repo_root}/checkouts/docs-ebus-pin" ]; then
   PLATFORM_DOCS_EBUS_PIN_ROOT="${repo_root}/checkouts/docs-ebus-pin"
   export PLATFORM_DOCS_EBUS_PIN_ROOT
@@ -575,30 +562,6 @@ if [ -n "${MODBUS_PRIOR_ROOT:-}" ]; then
     --prior-root "${MODBUS_PRIOR_ROOT}"
 else
   python3 scripts/validate_modbus_companion.py --root .
-fi
-
-echo "==> check opaque runtime acquisition companion contract"
-modbus_root="${PLATFORM_DOCS_MODBUS_ROOT:-}"
-if [[ -n "${modbus_root}" && -f "${modbus_root}/scripts/validate_opaque_runtime_acquisition.py" ]]; then
-  opaque_prior=""
-  if [[ -n "${MODBUS_PRIOR_ROOT:-}" && -f "${MODBUS_PRIOR_ROOT}/docs/platform/manifests/opaque-runtime-acquisition-v1.json" ]]; then
-    opaque_prior="${MODBUS_PRIOR_ROOT}"
-  elif [[ -n "${PLATFORM_DOCS_MODBUS_PRIOR_ROOT:-}" && -f "${PLATFORM_DOCS_MODBUS_PRIOR_ROOT}/docs/platform/manifests/opaque-runtime-acquisition-v1.json" ]]; then
-    opaque_prior="${PLATFORM_DOCS_MODBUS_PRIOR_ROOT}"
-  fi
-  if [[ -z "${opaque_prior}" ]]; then
-    echo "opaque runtime prior manifest is missing" >&2
-    exit 1
-  fi
-  (
-    cd "${modbus_root}"
-    python3 scripts/validate_opaque_runtime_acquisition.py \
-      --root . \
-      --platform-root "${PLATFORM_DOCS_ROOT}" \
-      --prior-root "${opaque_prior}"
-  )
-else
-  python3 scripts/validate_opaque_runtime_acquisition.py --root .
 fi
 
 echo "==> run every other tests/test_*.py file (automatic discovery)"

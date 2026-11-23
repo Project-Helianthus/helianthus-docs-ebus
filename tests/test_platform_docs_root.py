@@ -68,7 +68,7 @@ def test_owner_root_rejects_pytest_cache(monkeypatch, tmp_path: Path):
 
 def test_ci_local_unset_root_fails_closed():
     env = os.environ.copy()
-    for key in ("PLATFORM_DOCS_ROOT", "PLATFORM_DOCS_MODBUS_ROOT", "PLATFORM_DOCS_EEBUS_ROOT"):
+    for key in ("PLATFORM_DOCS_ROOT", "PLATFORM_DOCS_EEBUS_ROOT"):
         env.pop(key, None)
     env["PATH"] = os.environ.get("PATH", "")
     result = subprocess.run(
@@ -83,6 +83,50 @@ def test_ci_local_unset_root_fails_closed():
     assert result.returncode == 1
     assert "PLATFORM_DOCS_ROOT is required" in result.stderr
     assert ".pytest_cache" not in result.stderr
+
+
+def test_ci_local_has_no_private_modbus_checkout_and_keeps_the_companion_check(tmp_path: Path):
+    text = (ROOT / "scripts/ci_local.sh").read_text(encoding="utf-8")
+    for forbidden in (
+        "PLATFORM_DOCS_MODBUS_ROOT",
+        "PLATFORM_DOCS_MODBUS_PRIOR_ROOT",
+        "checkouts/docs-modbus",
+        "validate_opaque_runtime_acquisition.py",
+    ):
+        assert forbidden not in text
+    assert "python3 scripts/validate_modbus_companion.py" in text
+    assert "tests/test_modbus_trusted_revision.py" in text
+    assert "PLATFORM_DOCS_ROOT" in text
+    assert "PLATFORM_DOCS_EEBUS_ROOT" in text
+    docs = tmp_path / "docs"
+    eebus = tmp_path / "docs-eebus"
+    docs.mkdir()
+    eebus.mkdir()
+    env = os.environ.copy()
+    for key in (
+        "PLATFORM_DOCS_ROOT",
+        "PLATFORM_DOCS_EEBUS_ROOT",
+        "PLATFORM_DOCS_MODBUS_ROOT",
+        "PLATFORM_DOCS_MODBUS_PRIOR_ROOT",
+    ):
+        env.pop(key, None)
+    env["PLATFORM_DOCS_ROOT"] = str(docs)
+    env["PLATFORM_DOCS_EEBUS_ROOT"] = str(eebus)
+    env["PATH"] = "/usr/bin:/bin"
+    result = subprocess.run(
+        ["bash", str(ROOT / "scripts/ci_local.sh")],
+        cwd=ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=20,
+        check=False,
+    )
+    combined = result.stdout + result.stderr
+    assert result.returncode == 2
+    assert "PLATFORM_DOCS_MODBUS_ROOT is required" not in combined
+    assert "validate_opaque_runtime_acquisition.py" not in combined
+    assert "actionlint v1.7.7 is required" in result.stderr
 
 
 def test_explicit_root_is_used(monkeypatch, tmp_path: Path):
