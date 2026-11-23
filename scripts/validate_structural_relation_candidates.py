@@ -26,7 +26,10 @@ TOP_KEYS = {"schema", "decision_catalog", "attachments", "relayed_identity"}
 ROW_KEYS = {
     "id", "decisions", "attachment", "published_field", "from", "to",
     "evidence_grade", "validity_scope", "disposition", "native_statements",
-    "reason", "pending_review",
+    "reason", "pending_review", "relations",
+}
+RELATION_KEYS = {
+    "id", "from_kind", "to_kind", "basis_class", "basis_selectors", "verification_level",
 }
 ENDPOINT_KEYS = {"kind", "identity_evidence", "resolution"}
 EVIDENCE_KEYS = {"selector", "role", "classification"}
@@ -58,7 +61,7 @@ REQUIRED_ROWS = {
     "SRC-SD05-zone-room-unit": ("relation_candidate", ("zone_instance", (
         (ZONE, "instance_position"), (ZONE + " RR=0x0013", "binding_value"),
     )), ("device_slot", (("OP=0x06 GG=0x09/0x0A II=slot", "instance_position"),))),
-    "SRC-SD06-zone-to-circuit": ("unresolved", ZONE_END, CIRCUIT_END),
+    "SRC-SD06-zone-to-circuit": ("relation_candidate", ZONE_END, CIRCUIT_END),
     "SRC-SD07-zone-to-circuit-fallback": ("absent", ZONE_END, CIRCUIT_END),
     "SRC-SD09-circuit-managing-module": ("configuration_only", CIRCUIT_END, MODULE_END),
     "SRC-SD10-connected-device-slot": ("relation_candidate", ROOT_END, ("device_slot", (
@@ -91,7 +94,7 @@ REQUIRED_ROW_FACTS = {
     "SRC-SD05-zone-room-unit": (
         "zones[].config.roomTemperatureZoneMapping", "native", "gateway_policy", "Proven", ("PROTOCOL",)),
     "SRC-SD06-zone-to-circuit": (
-        "zones[].config.associatedCircuit", "native", "unresolved", "Unknown", ("LAB", "PROFILE")),
+        "zones[].config.associatedCircuit", "native", "unresolved", "Hypothesis", ("PROFILE",)),
     "SRC-SD07-zone-to-circuit-fallback": (
         "zones[].config.associatedCircuit", "native", "gateway_policy", "Unknown", ("GATEWAY_POLICY",)),
     "SRC-SD09-circuit-managing-module": (
@@ -192,6 +195,50 @@ REQUIRED_STATEMENTS = {
         ("OP=0x02 GG=0x00 RR=0x0068", "register_map", "PROFILE",
          "A second raw module status register of the same family."),
     ),
+}
+def _relation(identifier, source, target, basis, selectors, level="specification"):
+    return {
+        "id": identifier,
+        "from_kind": source,
+        "to_kind": target,
+        "basis_class": basis,
+        "basis_selectors": list(selectors),
+        "verification_level": level,
+    }
+
+
+_ASSIGNMENT = ("OP=0x02 GG=0x03 II=zone RR=0x001C",)
+_INSTALLER = ("OP=0x02 GG=0x00 RR=0x0036", "OP=0x02 GG=0x00 RR=0x002F")
+_PRESENCE = ("OP=0x06 GG=0x01/0x02/0x09/0x0A/0x0C/0x0E/0x0F II=slot RR=0x0001",)
+_NAMESPACE = ("PB=0xB5 SB=0x24",)
+_SYSTEM_MEMBER = _relation(
+    "thermal.relation.system_member", "thermal_system", "b524_semantic_root", "namespace", _NAMESPACE)
+_CONTROL = _relation(
+    "relation.thermal_control", "b524_semantic_root", "thermal_system", "namespace", _NAMESPACE)
+REQUIRED_RELATIONS = {
+    "SRC-SD05-zone-room-unit": [],
+    "SRC-SD06-zone-to-circuit": [_relation(
+        "thermal.relation.fluid_supply", "circuit_instance", "zone_instance", "native_register", _ASSIGNMENT)],
+    "SRC-SD07-zone-to-circuit-fallback": [],
+    "SRC-SD09-circuit-managing-module": [_relation(
+        "relation.thermal_control", "functional_module", "circuit_instance", "native_register", _INSTALLER)],
+    "SRC-SD10-connected-device-slot": [_relation(
+        "relation.relays", "b524_semantic_root", "device_slot", "native_register", _PRESENCE)],
+    "SRC-SD10-inventory-device-slot": [],
+    "SRC-SD15-controller-zone": [_SYSTEM_MEMBER, _CONTROL],
+    "SRC-SD15-controller-circuit": [_SYSTEM_MEMBER, _CONTROL],
+    "SRC-SD15-module-solar-circuit": [],
+    "SRC-SD15-module-cylinder": [_relation(
+        "thermal.relation.system_member", "cylinder_instance", "thermal_system", "separate_statement",
+        ("OP=0x02 GG=0x00 RR=0x002F",))],
+    "SRC-FM-second-family-slot": [],
+    "SRC-FM-second-family-status": [],
+}
+RETAINED_UNPUBLISHED = {
+    "SRC-SD05-zone-room-unit",
+    "SRC-SD15-module-solar-circuit",
+    "SRC-FM-second-family-slot",
+    "SRC-FM-second-family-status",
 }
 DISPOSITIONS = {"relation_candidate", "configuration_only", "absent", "unresolved"}
 EVIDENCE_GRADES = {"Proven", "Hypothesis", "Unknown"}
@@ -453,6 +500,42 @@ def check_pinned_row(row: dict, errors: list) -> None:
     if statements != sorted(REQUIRED_STATEMENTS[row_id]):
         errors.append(f"{row_id}.native_statements: differ from the catalogued selector, source, "
                       "scope and reading of each statement")
+    check_relations(row, errors)
+
+
+def relation_view(item: dict) -> tuple:
+    return (
+        item.get("id"), item.get("from_kind"), item.get("to_kind"), item.get("basis_class"),
+        tuple(item.get("basis_selectors") or ()), item.get("verification_level"),
+    )
+
+
+def check_relations(row: dict, errors: list) -> None:
+    row_id = row.get("id")
+    relations = row.get("relations")
+    label = f"{row_id}.relations"
+    if not isinstance(relations, list):
+        errors.append(f"{label}: must be a list")
+        return
+    for item in relations:
+        if not isinstance(item, dict) or set(item) != RELATION_KEYS:
+            errors.append(f"{label}: each statement uses the closed relation fields")
+            return
+        if item["basis_class"] == "gate_rule":
+            errors.append(f"{label}: gate_rule is not a basis without a named protocol gate")
+        if item["verification_level"] not in {"specification", "tested_on_hardware"}:
+            errors.append(f"{label}: verification level is specification or tested_on_hardware")
+        if not isinstance(item["basis_selectors"], list) or not item["basis_selectors"]:
+            errors.append(f"{label}: a relation names its basis selectors")
+    if row_id in RETAINED_UNPUBLISHED and relations:
+        errors.append(f"{label}: the retained disposition publishes no relation")
+    if row_id == "SRC-SD15-module-cylinder" and any(
+            item.get("id") == "thermal.relation.fluid_supply" for item in relations if isinstance(item, dict)):
+        errors.append(f"{label}: module address plus RR002F is not a supply edge")
+    expected = [relation_view(item) for item in REQUIRED_RELATIONS.get(row_id, [])]
+    actual = [relation_view(item) for item in relations if isinstance(item, dict)]
+    if actual != expected:
+        errors.append(f"{label}: differ from the catalogued relation statements")
 
 
 def check_pinned_identity(row: dict, errors: list) -> None:
@@ -481,18 +564,27 @@ def errors_for(label: str, errors: list) -> bool:
 
 def check_zone_to_circuit(rows: list, errors: list) -> None:
     matching = [row for row in rows if isinstance(row, dict) and row.get("attachment") == ZONE_TO_CIRCUIT]
-    unresolved = []
+    published = []
     for row in matching:
-        if row.get("disposition") not in {"unresolved", "absent"}:
-            errors.append(f"{row.get('id')}: the zone-to-circuit assignment stays unresolved")
-        if row.get("disposition") == "unresolved":
-            unresolved.append(row)
+        if row.get("id") == "SRC-SD07-zone-to-circuit-fallback":
+            if row.get("relations") or row.get("disposition") != "absent":
+                errors.append(f"{row.get('id')}: zone index taken as circuit index is not a basis")
+            continue
+        if row.get("disposition") == "relation_candidate":
+            published.append(row)
     named = [
         {item.get("selector") for item in row.get("native_statements", []) if isinstance(item, dict)}
-        for row in unresolved
+        for row in published
     ]
     if not any(ZONE_CIRCUIT_SELECTORS <= selectors for selectors in named):
-        errors.append("zone_to_circuit: one unresolved row names both native statements")
+        errors.append("zone_to_circuit: the published row keeps both native statements")
+    for row in published:
+        selectors = []
+        for item in row.get("relations") or []:
+            if isinstance(item, dict):
+                selectors.extend(item.get("basis_selectors") or [])
+        if selectors != ["OP=0x02 GG=0x03 II=zone RR=0x001C"]:
+            errors.append(f"{row.get('id')}: the basis is the circuit-assignment register")
 
 
 def check_identity_row(row, index: int, errors: list) -> None:

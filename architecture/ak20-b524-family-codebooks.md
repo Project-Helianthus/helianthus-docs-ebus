@@ -8,7 +8,7 @@ inherit OP02 labels. Family selection is explicit; there is no auto-detection.
 The [synthetic fixture](fixtures/ak20_b524_family_codebooks.json) records the
 finite representation, not observations or physical qualification.
 
-Hypothesis: all seven codebooks use OP02 and the candidate family tokens
+Hypothesis: all listed codebooks use OP02 and the candidate family tokens
 `controller-700` and `controller-720`. The following complete finite tables
 use decimal raw codes. Unlisted codes remain unlabelled with Unknown meaning.
 Each `raw:label` pair retains the unsigned raw code; signed8 alone interprets
@@ -17,7 +17,9 @@ raw 255 (`FF`) as candidate -1/unbound. No unrelated u16 sign extension occurs.
 | Group | Register | Instance scope | Alternative | controller-700 | controller-720 |
 | --- | --- | --- | --- | --- | --- |
 | 01 | 0003 | 00 | u16 | 0:off,1:automatic,2:day | 0:off,1:time-controlled,2:manual |
+| 01 | 000D | 00 | u8 | 0:cancel,6:start a one-time DHW load | 0:cancel,6:start a one-time DHW load |
 | 02 | 0002 | dynamic | u16 | 0:deactivated,1:heating,2:fixed-flow,3:DHW,4:return-flow,5:pool | 0:deactivated,1:heating,2:fixed-flow,3:DHW,4:return-flow |
+| 02 | 001D | dynamic | u8 | 0:no quick mode,2:party,4:one-day holiday,5:one-day bank holiday,6:cylinder boost,255:no action needed | 0:no quick mode,6:one-time cylinder loading,255:no action needed |
 | 03 | 0001 | dynamic | u16 | 0:off,1:automatic,2:day | 0:off,1:time-controlled,2:manual |
 | 03 | 0006 | dynamic | u16 | 0:off,1:automatic,2:day,3:setback | 0:off,1:time-controlled,2:manual |
 | 03 | 0013 | dynamic | u16 | 0:none,1:central,2:remote-circuit-one,3:remote-circuit-two,4:remote-circuit-three,5:remote-circuit-four,6:remote-circuit-five,7:remote-circuit-six,8:remote-circuit-seven,9:remote-circuit-eight | 0:none,1:central,2:remote-circuit-one,3:remote-circuit-two,4:remote-circuit-three,5:remote-circuit-four |
@@ -75,7 +77,8 @@ Empty or omitted string axes cannot act as wildcards.
 Proven representation: each row has an `ab30_` ID, the complete identity,
 `enumeration` fields/relations, Hypothesis candidate grade, Proven representation
 grade, explicit Unknown metadata and retained raw form. The finite area contains
-16 rows, including both RR001B widths for each family. AK19 embeds its JSON in
+20 rows, including both RR001B widths for each family and the circuit and
+hot-water special-function rows. AK19 embeds its JSON in
 its Go file, validates identity uniqueness and returns independent deep byte
 copies on every call. A mutation to any returned row or entries buffer cannot
 affect a later result. Existing catalog/provider APIs and routability remain

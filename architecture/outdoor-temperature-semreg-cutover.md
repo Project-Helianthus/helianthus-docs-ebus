@@ -28,15 +28,16 @@ separately declares `system_state.outdoor_temperature` and
 
 **Proven — document agreement:** these public contracts distinguish the two
 selectors and exclude the aggregate from the instantaneous fact.
-**Hypothesis — application to a target:** the exact read-only candidate still
-requires its qualified runtime binding. **Unknown — current qualification:**
-the [qualification evidence-gap record](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/fixtures/vaillant-controller-qualification-v1.json)
-has `evidence_status=Unknown` and `qualified_use_permitted=false`; the typed
-map has `runtime_qualification_permitted=false`. No admitted SemReg outdoor
-observation follows from those artifacts today. Proven/Hypothesis/Unknown are
-evidence conclusions, separate from runtime qualification, acquisition,
-validity, freshness and admission. The conditional qualified cases below are
-requirements for future acceptance, not new qualification or runtime proof.
+**Hypothesis — application to a target:** the exact read-only candidate is
+declared by the controller rule for the device-id and product-number pairs whose
+register matrix row lists `RR=0x0073` (and `RR=0x0095` for the average), as the
+[controller qualification](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/vaillant-controller-qualification-v1.md)
+states, with the hardware test level recorded beside it. The
+[qualification record](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/fixtures/vaillant-controller-qualification-v1.json)
+and the typed map carry that declaration. Proven/Hypothesis/Unknown are
+evidence conclusions, separate from acquisition, validity, freshness and
+admission. The cases below keep the codec, range, presence and freshness rules
+of this page.
 
 ## Native attachment
 

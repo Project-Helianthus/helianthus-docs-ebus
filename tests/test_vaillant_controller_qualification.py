@@ -9,7 +9,10 @@ import pytest
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SPEC = importlib.util.spec_from_file_location("vaillant_controller_qualification", ROOT / "scripts/validate_vaillant_controller_qualification.py")
+SPEC = importlib.util.spec_from_file_location(
+    "vaillant_controller_qualification",
+    ROOT / "scripts/validate_vaillant_controller_qualification.py",
+)
 assert SPEC is not None and SPEC.loader is not None
 CHECKER = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(CHECKER)
@@ -23,9 +26,106 @@ def thermal() -> dict[str, object]:
     return json.loads((ROOT / "architecture/fixtures/vaillant-semreg-thermal-map-v1.json").read_text())
 
 
-def test_accepts_unknown_evidence_gap() -> None:
+def test_record_matches_the_decision() -> None:
     CHECKER.validate_fixture(fixture(), thermal())
     assert b"](" not in CHECKER.receipt_bytes()
+    record = fixture()
+    assert record["scope"] == "native_controller_qualification"
+    assert record["revision"] == "vaillant-controller-qualification-evidence-gap/v1"
+    assert record["qualified_use_permitted"] is True
+    assert "write_or_operation_authority" not in json.dumps(record)
+    pairs = [(row[0], row[1]) for row in CHECKER.load_crosswalk()]
+    identities = record["identities"]
+    assert [(item["device_id"], item["product_number"]) for item in identities] == pairs
+    assert {item["level"] for item in identities} == {"declared"}
+    labels = {row[3] for row in CHECKER.load_crosswalk()}
+    assert labels.isdisjoint(set(CHECKER._walk_strings(record)))
+
+
+def test_each_identity_field_rejects_its_mutation() -> None:
+    # device_id: a substituted id is not the crosswalk pair.
+    # product_number: a substituted number is not the crosswalk pair.
+    # level: tested_on_hardware without a record path is refused.
+    # evidence_grade: a grade other than the crosswalk Hypothesis grade is refused.
+    candidate = deepcopy(fixture())
+    candidate["identities"][0]["device_id"] = "ZZZ00"  # type: ignore[index]
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_fixture(candidate, thermal())
+
+    candidate = deepcopy(fixture())
+    candidate["identities"][0]["product_number"] = "0000"  # type: ignore[index]
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_fixture(candidate, thermal())
+
+    candidate = deepcopy(fixture())
+    candidate["identities"][0]["evidence_grade"] = "Proven"  # type: ignore[index]
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_fixture(candidate, thermal())
+
+    candidate = deepcopy(fixture())
+    candidate["identities"][0]["level"] = "tested_on_hardware"  # type: ignore[index]
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_fixture(candidate, thermal())
+    candidate["hardware_test_record"] = "architecture/fixtures/vaillant-controller-qualification-v1.json"
+    CHECKER.validate_fixture(candidate, thermal())
+
+
+def test_pair_missing_or_added_to_the_crosswalk_fails(monkeypatch: pytest.MonkeyPatch) -> None:
+    rows = CHECKER.load_crosswalk()
+    monkeypatch.setattr(CHECKER, "load_crosswalk", lambda: rows[:-1])
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_fixture(fixture(), thermal())
+
+    added = rows + [[rows[0][0], "0000", rows[0][2], rows[0][3]]]
+    monkeypatch.setattr(CHECKER, "load_crosswalk", lambda: added)
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_fixture(fixture(), thermal())
+
+
+def test_unlisted_matrix_row_and_unknown_family_fail() -> None:
+    candidate = deepcopy(fixture())
+    extra = deepcopy(candidate["declared_rows"][0])  # type: ignore[index]
+    extra["register"] = "0x0096"
+    candidate["declared_rows"].append(extra)  # type: ignore[index]
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_fixture(candidate, thermal())
+
+    unknown = next(item for item in candidate["vectors"] if item["id"] == "unknown_family")  # type: ignore[union-attr]
+    got = CHECKER._run_vector(unknown)
+    assert got["outcome"] == "unknown"
+    unknown["expect"] = {"outcome": "qualified"}
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_fixture(candidate, thermal())
+
+
+def test_tampered_digest_fails() -> None:
+    candidate = deepcopy(fixture())
+    candidate["sources"]["crosswalk_sha256"] = "0" * 64  # type: ignore[index]
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_fixture(candidate, thermal())
+
+
+def test_qualified_use_permitted_stays_true_while_declared() -> None:
+    candidate = deepcopy(fixture())
+    candidate["qualified_use_permitted"] = False
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_fixture(candidate, thermal())
+
+
+def test_product_line_name_is_not_a_key() -> None:
+    candidate = deepcopy(fixture())
+    label = CHECKER.load_crosswalk()[0][3]
+    candidate["write_permission"] = str(candidate["write_permission"]) + " " + label
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_fixture(candidate, thermal())
+
+
+def test_vector_that_contradicts_the_rule_fails() -> None:
+    candidate = deepcopy(fixture())
+    success = next(item for item in candidate["vectors"] if item["id"] == "exact_success_70000")  # type: ignore[union-attr]
+    success["expect"] = {"outcome": "unknown"}
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_fixture(candidate, thermal())
 
 
 @pytest.mark.parametrize(
@@ -67,30 +167,13 @@ def test_rejects_receipt_provenance_or_sidecar_substitution(monkeypatch: pytest.
         CHECKER.validate_fixture(fixture(), thermal())
 
 
-def test_rejects_claiming_direct_evidence_or_runtime_authority() -> None:
-    candidate = deepcopy(fixture())
-    candidate["evidence_status"] = "Proven"  # type: ignore[index]
-    with pytest.raises(CHECKER.CheckError):
-        CHECKER.validate_fixture(candidate, thermal())
-
-    candidate = deepcopy(fixture())
-    candidate["qualified_use_permitted"] = True  # type: ignore[index]
-    with pytest.raises(CHECKER.CheckError):
-        CHECKER.validate_fixture(candidate, thermal())
-
-    candidate = deepcopy(fixture())
-    candidate["direct_identification_evidence"] = {"invented": True}  # type: ignore[index]
-    with pytest.raises(CHECKER.CheckError):
-        CHECKER.validate_fixture(candidate, thermal())
-
-
-def test_rejects_transition_or_thermal_binding_ambiguity() -> None:
+def test_transition_action_stays_atomic() -> None:
     candidate = deepcopy(fixture())
     candidate["transition_contract"]["valid_direct_conflicting_observation"] = "reject_without_mutation"  # type: ignore[index]
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_fixture(candidate, thermal())
 
     changed_thermal = deepcopy(thermal())
-    changed_thermal["qualification"]["runtime_qualification_permitted"] = True  # type: ignore[index]
+    changed_thermal["qualification"]["runtime_qualification_permitted"] = False  # type: ignore[index]
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_fixture(fixture(), changed_thermal)

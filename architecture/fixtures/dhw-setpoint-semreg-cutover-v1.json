@@ -88,5 +88,13 @@
         "beta"
       ]
     }
-  ]
+  ],
+  "target_domain": {
+    "grade": "Hypothesis",
+    "documented_range_celsius": {
+      "minimum": 35,
+      "maximum": 70
+    },
+    "precedence": "The B524 description-record MIN and MAX apply where that query exists and the device answers. Where the query exists and the device returns no reply or no result, the limits stay unknown and the documented range is not substituted. The documented range applies only where no query exists."
+  }
 }

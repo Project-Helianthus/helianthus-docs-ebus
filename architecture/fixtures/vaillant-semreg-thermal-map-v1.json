@@ -2,34 +2,73 @@
   "schema_version": 1,
   "contract_id": "helianthus.docs.ebus.b524-semreg-thermal/v1",
   "scope": "read_only_candidate_mapping",
-  "pack": {"id": "helianthus.pack.thermal", "version": "1.0.0"},
+  "pack": {
+    "id": "helianthus.pack.thermal",
+    "version": "1.0.0"
+  },
   "applicability": {
     "qualified_binding_required": true,
-    "generalizes_to_other_controllers": false,
-    "generalizes_to_other_products": false,
-    "generalizes_to_other_firmware": false
+    "generalizes_to_other_controllers": "The rule covers every device-id and product-number pair the identification descriptor matches in the crosswalk.",
+    "generalizes_to_other_products": "A product number is bytes 8-9, BCD, least-significant byte first. An unlisted pair is unknown.",
+    "generalizes_to_other_firmware": "The software version is recorded beside the result and does not restrict the pair."
   },
   "qualification": {
     "contract_id": "helianthus.docs.ebus.vaillant-controller-qualification/v1",
     "revision": "vaillant-controller-qualification-evidence-gap/v1",
     "fixture": "architecture/fixtures/vaillant-controller-qualification-v1.json",
-    "evidence_status": "Unknown",
+    "level": "declared",
     "qualified_binding_required": true,
-    "runtime_qualification_permitted": false
+    "runtime_qualification_permitted": true,
+    "hardware_test_record": null
   },
   "relation_candidates_fixture": "architecture/fixtures/structural-relation-candidates-v1.json",
   "native_resources": [
-    {"selector": "OP=0x02 GG=0x00 II=0x00", "kind": "b524_semantic_root"}
+    {
+      "selector": "OP=0x02 GG=0x00 II=0x00",
+      "kind": "b524_semantic_root"
+    }
   ],
   "mappings": [
     {
       "native_key": "PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x0073",
       "legacy_system_field": "state.outdoor_temperature",
-      "native_selector": {"pb": "0xB5", "sb": "0x24", "operation": "0x02", "group": "0x00", "instance": "0x00", "register": "0x0073", "destination": "0x15", "controller_family": "BASV2/CTLV2/VRC720", "request_direction": "initiator_to_target", "value_direction": "target_to_initiator"},
-      "native_value": {"wire_type": "f32_le", "unit": "degC", "si_unit": "kelvin", "conversion": "degrees Celsius plus 273.15"},
+      "native_selector": {
+        "pb": "0xB5",
+        "sb": "0x24",
+        "operation": "0x02",
+        "group": "0x00",
+        "instance": "0x00",
+        "register": "0x0073",
+        "destination": "0x15",
+        "controller_family": "70000/72000/B7V00/BASS0/BASS2/BASS3/BASV0/BASV2/BASV3/CTLS0/CTLS2/CTLS3/CTLV0/CTLV2/CTLV3/CTLX0/EMM00",
+        "request_direction": "initiator_to_target",
+        "value_direction": "target_to_initiator"
+      },
+      "native_value": {
+        "wire_type": "f32_le",
+        "unit": "degC",
+        "si_unit": "kelvin",
+        "conversion": "degrees Celsius plus 273.15"
+      },
       "native_resource": "OP=0x02 GG=0x00 II=0x00",
-      "relation_candidates": {"refs": [], "absence": "The value is a register of the controller's system group. No structural relation candidate carries it to another native resource."},
-      "target": {"definition": {"pack": {"id": "helianthus.pack.thermal", "version": "1.0.0"}, "id": "thermal.measurement.air_temperature", "version": "1.0.0"}, "element_kind": "fact", "disposition": "unknown", "planes": [], "reason": "catalog.reason.subject_unresolved"},
+      "relation_candidates": {
+        "refs": [],
+        "absence": "The value is a register of the controller's system group. No structural relation candidate carries it to another native resource."
+      },
+      "target": {
+        "definition": {
+          "pack": {
+            "id": "helianthus.pack.thermal",
+            "version": "1.0.0"
+          },
+          "id": "thermal.measurement.air_temperature",
+          "version": "1.0.0"
+        },
+        "element_kind": "fact",
+        "disposition": "unknown",
+        "planes": [],
+        "reason": "catalog.reason.subject_unresolved"
+      },
       "semreg_fact": "thermal.measurement.air_temperature",
       "disposition": "exact",
       "loss": null
@@ -37,11 +76,43 @@
     {
       "native_key": "PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x004B",
       "legacy_system_field": "state.flow_temperature",
-      "native_selector": {"pb": "0xB5", "sb": "0x24", "operation": "0x02", "group": "0x00", "instance": "0x00", "register": "0x004B", "destination": "0x15", "controller_family": "BASV2/CTLV2/VRC720", "request_direction": "initiator_to_target", "value_direction": "target_to_initiator"},
-      "native_value": {"wire_type": "f32_le", "unit": "degC", "si_unit": "kelvin", "conversion": "degrees Celsius plus 273.15"},
+      "native_selector": {
+        "pb": "0xB5",
+        "sb": "0x24",
+        "operation": "0x02",
+        "group": "0x00",
+        "instance": "0x00",
+        "register": "0x004B",
+        "destination": "0x15",
+        "controller_family": "70000/72000/B7V00/BASS0/BASS2/BASS3/BASV0/BASV2/BASV3/CTLS0/CTLS2/CTLS3/CTLV0/CTLV2/CTLV3/CTLX0/EMM00",
+        "request_direction": "initiator_to_target",
+        "value_direction": "target_to_initiator"
+      },
+      "native_value": {
+        "wire_type": "f32_le",
+        "unit": "degC",
+        "si_unit": "kelvin",
+        "conversion": "degrees Celsius plus 273.15"
+      },
       "native_resource": "OP=0x02 GG=0x00 II=0x00",
-      "relation_candidates": {"refs": [], "absence": "The value is a register of the controller's system group. No structural relation candidate carries it to another native resource."},
-      "target": {"definition": {"pack": {"id": "helianthus.pack.thermal", "version": "1.0.0"}, "id": "thermal.measurement.water_temperature", "version": "1.0.0"}, "element_kind": "fact", "disposition": "unknown", "planes": [], "reason": "catalog.reason.subject_unresolved"},
+      "relation_candidates": {
+        "refs": [],
+        "absence": "The value is a register of the controller's system group. No structural relation candidate carries it to another native resource."
+      },
+      "target": {
+        "definition": {
+          "pack": {
+            "id": "helianthus.pack.thermal",
+            "version": "1.0.0"
+          },
+          "id": "thermal.measurement.water_temperature",
+          "version": "1.0.0"
+        },
+        "element_kind": "fact",
+        "disposition": "unknown",
+        "planes": [],
+        "reason": "catalog.reason.subject_unresolved"
+      },
       "semreg_fact": "thermal.measurement.water_temperature",
       "disposition": "exact",
       "loss": null
@@ -49,10 +120,27 @@
     {
       "native_key": "PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x0095",
       "legacy_system_field": "state.outdoor_temperature_avg24h",
-      "native_selector": {"pb": "0xB5", "sb": "0x24", "operation": "0x02", "group": "0x00", "instance": "0x00", "register": "0x0095", "destination": "0x15", "controller_family": "BASV2/CTLV2/VRC720", "request_direction": "initiator_to_target", "value_direction": "target_to_initiator"},
-      "native_value": {"wire_type": "f32_le", "unit": "degC"},
+      "native_selector": {
+        "pb": "0xB5",
+        "sb": "0x24",
+        "operation": "0x02",
+        "group": "0x00",
+        "instance": "0x00",
+        "register": "0x0095",
+        "destination": "0x15",
+        "controller_family": "70000/72000/B7V00/BASS0/BASS2/BASS3/BASV0/BASV2/BASV3/CTLS0/CTLS2/CTLS3/CTLV0/CTLV2/CTLV3/CTLX0/EMM00",
+        "request_direction": "initiator_to_target",
+        "value_direction": "target_to_initiator"
+      },
+      "native_value": {
+        "wire_type": "f32_le",
+        "unit": "degC"
+      },
       "native_resource": "OP=0x02 GG=0x00 II=0x00",
-      "relation_candidates": {"refs": [], "absence": "The value is a register of the controller's system group. No structural relation candidate carries it to another native resource."},
+      "relation_candidates": {
+        "refs": [],
+        "absence": "The value is a register of the controller's system group. No structural relation candidate carries it to another native resource."
+      },
       "target": null,
       "semreg_fact": null,
       "disposition": "withheld",
@@ -65,24 +153,63 @@
   },
   "lifecycle": {
     "retained_native_observation": {
-      "received_at": {"unix_nanoseconds": "1720000000000000000", "clock_id": "clock.utc", "uncertainty_ns": "1000000"},
-      "receipt_monotonic": {"clock_epoch_id": "clock-epoch:gateway-1", "nanoseconds": "1000000000"}
+      "received_at": {
+        "unix_nanoseconds": "1720000000000000000",
+        "clock_id": "clock.utc",
+        "uncertainty_ns": "1000000"
+      },
+      "receipt_monotonic": {
+        "clock_epoch_id": "clock-epoch:gateway-1",
+        "nanoseconds": "1000000000"
+      }
     },
     "caller_evaluation_context": {
-      "evaluated_at": {"unix_nanoseconds": "1720000005000000000", "clock_id": "clock.utc", "uncertainty_ns": "1000000"},
-      "evaluate_monotonic": {"clock_epoch_id": "clock-epoch:gateway-1", "nanoseconds": "6000000000"}
+      "evaluated_at": {
+        "unix_nanoseconds": "1720000005000000000",
+        "clock_id": "clock.utc",
+        "uncertainty_ns": "1000000"
+      },
+      "evaluate_monotonic": {
+        "clock_epoch_id": "clock-epoch:gateway-1",
+        "nanoseconds": "6000000000"
+      }
     },
     "evaluation_cannot_overwrite_receipt": true,
     "freshness_axis": "elapsed_monotonic"
   },
   "nonclaims": {
-    "write_route_established": false,
-    "operation_authority_established": false,
     "topology_established": false,
     "full_portal_descriptor_established": false,
     "prometheus_output_established": false,
     "eebus_output_established": false,
     "matter_output_established": false,
     "hardware_qualification_established": false
+  },
+  "write_routes": {
+    "zone_setpoint": "architecture/zone-setpoint-semreg-cutover.md",
+    "zone_mode": "architecture/zone-mode-semreg-cutover.md",
+    "hot_water_setpoint": "architecture/dhw-setpoint-semreg-cutover.md",
+    "hot_water_mode": "architecture/dhw-mode-semreg-cutover.md",
+    "system_mode": "architecture/b524-semantic-mapping.md"
+  },
+  "boiler_target": {
+    "manufacturer": "0xB5",
+    "device_id_prefix": "BAI",
+    "heat_pump_device_id": "EHP00",
+    "heat_pump_prefix": "HMU",
+    "level": "declared",
+    "hardware_test_record": null,
+    "evidence_grade": "Hypothesis",
+    "device_type_gate": "protocols/vaillant/ebus-vaillant-b509.md",
+    "flow_row": {
+      "service": "B509",
+      "opcode": "0x0D",
+      "selector": "18 00",
+      "encoding": "DATA2c",
+      "semreg_element": "thermal.measurement.heat_generator_flow_temperature",
+      "evidence_grade": "Hypothesis",
+      "qualified_binding_required": false,
+      "page": "architecture/boiler-temperature-semreg-mapping.md"
+    }
   }
 }

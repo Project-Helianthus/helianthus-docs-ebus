@@ -2,21 +2,12 @@
   "schema_version": 1,
   "contract_id": "helianthus.docs.ebus.vaillant-controller-qualification/v1",
   "revision": "vaillant-controller-qualification-evidence-gap/v1",
-  "scope": "native_read_only_qualification_evidence_gap",
-  "evidence_status": "Unknown",
-  "qualified_use_permitted": false,
-  "direct_identification_evidence": null,
+  "scope": "native_controller_qualification",
+  "qualified_use_permitted": true,
   "context_receipt": {
     "path": "architecture/fixtures/vaillant-controller-context-receipt-v1.json",
     "sha256": "45c49efa12526add9d6f1a975c37b9a159cf081b0925cca9476193c244d58f0a",
     "sha256_path": "architecture/fixtures/vaillant-controller-context-receipt-v1.sha256"
-  },
-  "required_for_future_qualification": {
-    "direct_identification": {"primary": "0x07", "secondary": "0x04"},
-    "same_exact_address_request_and_response": true,
-    "raw_members": ["manufacturer", "device_id", "software_version", "hardware_version"],
-    "complete_current_identity_witness": ["manufacturer", "device_id", "serial_number"],
-    "immutable_public_artifact_reference_and_digest": true
   },
   "transition_contract": {
     "malformed_or_incomplete_input": "reject_without_mutation",
@@ -33,10 +24,1005 @@
     "PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x004B",
     "PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x0095"
   ],
+  "identification": {
+    "primary": "0x07",
+    "secondary": "0x04",
+    "length": 10,
+    "manufacturer": "0xB5",
+    "device_id_bytes": "1-5",
+    "software_version_bytes": "6-7",
+    "product_number_bytes": "8-9",
+    "product_number_encoding": "bcd_least_significant_byte_first"
+  },
+  "evidence_grades": {
+    "identification_layout": "Proven",
+    "product_number_reading": "Hypothesis",
+    "crosswalk_pair": "Hypothesis"
+  },
+  "level": "declared",
+  "hardware_test_record": null,
+  "identities": [
+    {
+      "device_id": "70000",
+      "product_number": "0141",
+      "level": "declared",
+      "evidence_grade": "Hypothesis"
+    },
+    {
+      "device_id": "70000",
+      "product_number": "0155",
+      "level": "declared",
+      "evidence_grade": "Hypothesis"
+    },
+    {
+      "device_id": "70000",
+      "product_number": "015A",
+      "level": "declared",
+      "evidence_grade": "Hypothesis"
+    },
+    {
+      "device_id": "70000",
+      "product_number": "016C",
+      "level": "declared",
+      "evidence_grade": "Hypothesis"
+    },
+    {
+      "device_id": "70000",
+      "product_number": "0171",
+      "level": "declared",
+      "evidence_grade": "Hypothesis"
+    },
+    {
+      "device_id": "70000",
+      "product_number": "01D8",
+      "level": "declared",
+      "evidence_grade": "Hypothesis"
+    },
+    {
+      "device_id": "72000",
+      "product_number": "0179",
+      "level": "declared",
+      "evidence_grade": "Hypothesis"
+    },
+    {
+      "device_id": "B7V00",
+      "product_number": "0163",
+      "level": "declared",
+      "evidence_grade": "Hypothesis"
+    },
+    {
+      "device_id": "BASS0",
+      "product_number": "0184",
+      "level": "declared",
+      "evidence_grade": "Hypothesis"
+    },
+    {
+      "device_id": "BASS0",
+      "product_number": "0193",
+      "level": "declared",
+      "evidence_grade": "Hypothesis"
+    },
+    {
+      "device_id": "BASS2",
+      "product_number": "01A1",
+      "level": "declared",
+      "evidence_grade": "Hypothesis"
+    },
+    {
+      "device_id": "BASS2",
+      "product_number": "01CF",
+      "level": "declared",
+      "evidence_grade": "Hypothesis"
+    },
+    {
+      "device_id": "BASS3",
+      "product_number": "01B0",
+      "level": "declared",
+      "evidence_grade": "Hypothesis"
+    },
+    {
+      "device_id": "BASS3",
+      "product_number": "01BB",
+      "level": "declared",
+      "evidence_grade": "Hypothesis"
+    },
+    {
+      "device_id": "BASS3",
+      "product_number": "01D0",
+      "level": "declared",
+      "evidence_grade": "Hypothesis"
+    },
+    {
+      "device_id": "BASS3",
+      "product_number": "01D9",
+      "level": "declared",
+      "evidence_grade": "Hypothesis"
+    },
+    {
+      "device_id": "BASV0",
+      "product_number": "0184",
+      "level": "declared",
+      "evidence_grade": "Hypothesis"
+    },
+    {
+      "device_id": "BASV0",
+      "product_number": "0193",
+      "level": "declared",
+      "evidence_grade": "Hypothesis"
+    },
+    {
+      "device_id": "BASV2",
+      "product_number": "01A1",
+      "level": "declared",
+      "evidence_grade": "Hypothesis"
+    },
+    {
+      "device_id": "BASV2",
+      "product_number": "01CF",
+      "level": "declared",
+      "evidence_grade": "Hypothesis"
+    },
+    {
+      "device_id": "BASV3",
+      "product_number": "01B0",
+      "level": "declared",
+      "evidence_grade": "Hypothesis"
+    },
+    {
+      "device_id": "BASV3",
+      "product_number": "01BB",
+      "level": "declared",
+      "evidence_grade": "Hypothesis"
+    },
+    {
+      "device_id": "BASV3",
+      "product_number": "01D0",
+      "level": "declared",
+      "evidence_grade": "Hypothesis"
+    },
+    {
+      "device_id": "BASV3",
+      "product_number": "01D9",
+      "level": "declared",
+      "evidence_grade": "Hypothesis"
+    },
+    {
+      "device_id": "CTLS0",
+      "product_number": "0188",
+      "level": "declared",
+      "evidence_grade": "Hypothesis"
+    },
+    {
+      "device_id": "CTLS0",
+      "product_number": "0189",
+      "level": "declared",
+      "evidence_grade": "Hypothesis"
+    },
+    {
+      "device_id": "CTLS2",
+      "product_number": "019D",
+      "level": "declared",
+      "evidence_grade": "Hypothesis"
+    },
+    {
+      "device_id": "CTLS3",
+      "product_number": "01AF",
+      "level": "declared",
+      "evidence_grade": "Hypothesis"
+    },
+    {
+      "device_id": "CTLS3",
+      "product_number": "01B6",
+      "level": "declared",
+      "evidence_grade": "Hypothesis"
+    },
+    {
+      "device_id": "CTLS3",
+      "product_number": "01E1",
+      "level": "declared",
+      "evidence_grade": "Hypothesis"
+    },
+    {
+      "device_id": "CTLV0",
+      "product_number": "0187",
+      "level": "declared",
+      "evidence_grade": "Hypothesis"
+    },
+    {
+      "device_id": "CTLV2",
+      "product_number": "019B",
+      "level": "declared",
+      "evidence_grade": "Hypothesis"
+    },
+    {
+      "device_id": "CTLV3",
+      "product_number": "01AE",
+      "level": "declared",
+      "evidence_grade": "Hypothesis"
+    },
+    {
+      "device_id": "CTLV3",
+      "product_number": "01B5",
+      "level": "declared",
+      "evidence_grade": "Hypothesis"
+    },
+    {
+      "device_id": "CTLV3",
+      "product_number": "01DC",
+      "level": "declared",
+      "evidence_grade": "Hypothesis"
+    },
+    {
+      "device_id": "CTLV3",
+      "product_number": "01E0",
+      "level": "declared",
+      "evidence_grade": "Hypothesis"
+    },
+    {
+      "device_id": "CTLX0",
+      "product_number": "0194",
+      "level": "declared",
+      "evidence_grade": "Hypothesis"
+    },
+    {
+      "device_id": "EMM00",
+      "product_number": "0181",
+      "level": "declared",
+      "evidence_grade": "Hypothesis"
+    }
+  ],
+  "declared_rows": [
+    {
+      "group": "0x00",
+      "register": "0x0073",
+      "page": "architecture/outdoor-temperature-semreg-cutover.md",
+      "semreg_element": "thermal.measurement.air_temperature",
+      "evidence_grade": "Hypothesis",
+      "unknown_fact": null,
+      "device_ids": [
+        "70000",
+        "72000",
+        "B7V00",
+        "BASS0",
+        "BASS2",
+        "BASS3",
+        "BASV0",
+        "BASV2",
+        "BASV3",
+        "CTLS0",
+        "CTLS2",
+        "CTLS3",
+        "CTLV0",
+        "CTLV2",
+        "CTLV3",
+        "CTLX0",
+        "EMM00"
+      ],
+      "level": "declared",
+      "hardware_test_record": null
+    },
+    {
+      "group": "0x00",
+      "register": "0x004B",
+      "page": "architecture/b524-semantic-mapping.md",
+      "semreg_element": "thermal.measurement.water_temperature",
+      "evidence_grade": "Hypothesis",
+      "unknown_fact": null,
+      "device_ids": [
+        "70000",
+        "72000",
+        "B7V00",
+        "BASS0",
+        "BASS2",
+        "BASS3",
+        "BASV0",
+        "BASV2",
+        "BASV3",
+        "CTLS0",
+        "CTLS2",
+        "CTLS3",
+        "CTLV0",
+        "CTLV2",
+        "CTLV3",
+        "CTLX0",
+        "EMM00"
+      ],
+      "level": "declared",
+      "hardware_test_record": null
+    },
+    {
+      "group": "0x00",
+      "register": "0x0095",
+      "page": "architecture/outdoor-temperature-semreg-cutover.md",
+      "semreg_element": null,
+      "evidence_grade": "Hypothesis",
+      "unknown_fact": "rolling average has no SemReg element",
+      "device_ids": [
+        "70000",
+        "72000",
+        "B7V00",
+        "BASS0",
+        "BASS2",
+        "BASS3",
+        "BASV0",
+        "BASV2",
+        "BASV3",
+        "CTLS0",
+        "CTLS2",
+        "CTLS3",
+        "CTLV0",
+        "CTLV2",
+        "CTLV3",
+        "CTLX0",
+        "EMM00"
+      ],
+      "level": "declared",
+      "hardware_test_record": null
+    },
+    {
+      "group": "0x00",
+      "register": "0x0039",
+      "page": "architecture/system-pressure-semreg-disposition.md",
+      "semreg_element": null,
+      "evidence_grade": "Hypothesis",
+      "unknown_fact": "system pressure has no admitted SemReg element on this page",
+      "device_ids": [
+        "70000",
+        "72000",
+        "B7V00",
+        "BASS0",
+        "BASS2",
+        "BASS3",
+        "BASV0",
+        "BASV2",
+        "BASV3",
+        "CTLS0",
+        "CTLS2",
+        "CTLS3",
+        "CTLV0",
+        "CTLV2",
+        "CTLV3",
+        "CTLX0",
+        "EMM00"
+      ],
+      "level": "declared",
+      "hardware_test_record": null
+    },
+    {
+      "group": "0x00",
+      "register": "0x0007",
+      "page": "architecture/maintenance-system-state-cutover.md",
+      "semreg_element": null,
+      "evidence_grade": "Hypothesis",
+      "unknown_fact": "system switch is not a mode fact",
+      "device_ids": [
+        "70000",
+        "72000",
+        "B7V00",
+        "BASS0",
+        "BASS2",
+        "BASS3",
+        "BASV0",
+        "BASV2",
+        "BASV3",
+        "CTLS0",
+        "CTLS2",
+        "CTLS3",
+        "CTLV0",
+        "CTLV2",
+        "CTLV3",
+        "CTLX0",
+        "EMM00"
+      ],
+      "level": "declared",
+      "hardware_test_record": null
+    },
+    {
+      "group": "0x01",
+      "register": "0x0003",
+      "page": "architecture/dhw-mode-semreg-cutover.md",
+      "semreg_element": null,
+      "evidence_grade": "Hypothesis",
+      "unknown_fact": "hot-water mode element is not named",
+      "device_ids": [
+        "70000",
+        "72000",
+        "B7V00",
+        "BASS0",
+        "BASS2",
+        "BASS3",
+        "BASV0",
+        "BASV2",
+        "BASV3",
+        "CTLS0",
+        "CTLS2",
+        "CTLS3",
+        "CTLV0",
+        "CTLV2",
+        "CTLV3",
+        "CTLX0",
+        "EMM00"
+      ],
+      "level": "declared",
+      "hardware_test_record": null
+    },
+    {
+      "group": "0x01",
+      "register": "0x0004",
+      "page": "architecture/dhw-setpoint-semreg-cutover.md",
+      "semreg_element": "thermal.setpoint.dhw_temperature_setpoint",
+      "evidence_grade": "Proven",
+      "unknown_fact": null,
+      "device_ids": [
+        "70000",
+        "72000",
+        "B7V00",
+        "BASS0",
+        "BASS2",
+        "BASS3",
+        "BASV0",
+        "BASV2",
+        "BASV3",
+        "CTLS0",
+        "CTLS2",
+        "CTLS3",
+        "CTLV0",
+        "CTLV2",
+        "CTLV3",
+        "CTLX0",
+        "EMM00"
+      ],
+      "level": "declared",
+      "hardware_test_record": null
+    },
+    {
+      "group": "0x01",
+      "register": "0x0005",
+      "page": "architecture/dhw-measured-temperature-cutover.md",
+      "semreg_element": "thermal.measurement.water_temperature",
+      "evidence_grade": "Hypothesis",
+      "unknown_fact": null,
+      "device_ids": [
+        "70000",
+        "72000",
+        "B7V00",
+        "BASS0",
+        "BASS2",
+        "BASS3",
+        "BASV0",
+        "BASV2",
+        "BASV3",
+        "CTLS0",
+        "CTLS2",
+        "CTLS3",
+        "CTLV0",
+        "CTLV2",
+        "CTLV3",
+        "CTLX0",
+        "EMM00"
+      ],
+      "level": "declared",
+      "hardware_test_record": null
+    },
+    {
+      "group": "0x02",
+      "register": "0x0006",
+      "page": "architecture/circuit-capability-semreg-cutover.md",
+      "semreg_element": null,
+      "evidence_grade": "Hypothesis",
+      "unknown_fact": "circuit cooling enabled has no SemReg element",
+      "device_ids": [
+        "70000",
+        "72000",
+        "B7V00",
+        "BASS0",
+        "BASS2",
+        "BASS3",
+        "BASV0",
+        "BASV2",
+        "BASV3",
+        "CTLS0",
+        "CTLS2",
+        "CTLS3",
+        "CTLV0",
+        "CTLV2",
+        "CTLV3",
+        "CTLX0",
+        "EMM00"
+      ],
+      "level": "declared",
+      "hardware_test_record": null
+    },
+    {
+      "group": "0x02",
+      "register": "0x0008",
+      "page": "architecture/circuit-temperature-cutover.md",
+      "semreg_element": "thermal.measurement.water_temperature",
+      "evidence_grade": "Hypothesis",
+      "unknown_fact": null,
+      "device_ids": [
+        "70000",
+        "72000",
+        "B7V00",
+        "BASS0",
+        "BASS2",
+        "BASS3",
+        "BASV0",
+        "BASV2",
+        "BASV3",
+        "CTLS0",
+        "CTLS2",
+        "CTLS3",
+        "CTLV0",
+        "CTLV2",
+        "CTLV3",
+        "CTLX0",
+        "EMM00"
+      ],
+      "level": "declared",
+      "hardware_test_record": null
+    },
+    {
+      "group": "0x02",
+      "register": "0x001D",
+      "page": "architecture/b524-semantic-mapping.md",
+      "semreg_element": null,
+      "evidence_grade": "Hypothesis",
+      "unknown_fact": "circuit special function mode has no SemReg element",
+      "device_ids": [
+        "70000",
+        "72000",
+        "B7V00",
+        "BASS0",
+        "BASS2",
+        "BASS3",
+        "BASV0",
+        "BASV2",
+        "BASV3",
+        "CTLS0",
+        "CTLS2",
+        "CTLS3",
+        "CTLV0",
+        "CTLV2",
+        "CTLV3",
+        "CTLX0",
+        "EMM00"
+      ],
+      "level": "declared",
+      "hardware_test_record": null
+    },
+    {
+      "group": "0x03",
+      "register": "0x0006",
+      "page": "architecture/zone-mode-semreg-cutover.md",
+      "semreg_element": null,
+      "evidence_grade": "Hypothesis",
+      "unknown_fact": "zone mode element is not named",
+      "device_ids": [
+        "70000",
+        "72000",
+        "B7V00",
+        "BASS0",
+        "BASS2",
+        "BASS3",
+        "BASV0",
+        "BASV2",
+        "BASV3",
+        "CTLS0",
+        "CTLS2",
+        "CTLS3",
+        "CTLV0",
+        "CTLV2",
+        "CTLV3",
+        "CTLX0",
+        "EMM00"
+      ],
+      "level": "declared",
+      "hardware_test_record": null
+    },
+    {
+      "group": "0x03",
+      "register": "0x000F",
+      "page": "architecture/zone-room-temperature-cutover.md",
+      "semreg_element": "thermal.measurement.air_temperature",
+      "evidence_grade": "Hypothesis",
+      "unknown_fact": null,
+      "device_ids": [
+        "70000",
+        "72000",
+        "B7V00",
+        "BASS0",
+        "BASS2",
+        "BASS3",
+        "BASV0",
+        "BASV2",
+        "BASV3",
+        "CTLS0",
+        "CTLS2",
+        "CTLS3",
+        "CTLV0",
+        "CTLV2",
+        "CTLV3",
+        "CTLX0",
+        "EMM00"
+      ],
+      "level": "declared",
+      "hardware_test_record": null
+    },
+    {
+      "group": "0x03",
+      "register": "0x0014",
+      "page": "architecture/zone-setpoint-semreg-cutover.md",
+      "semreg_element": null,
+      "evidence_grade": "Hypothesis",
+      "unknown_fact": "heating computed effective is a separate value",
+      "device_ids": [
+        "70000",
+        "72000",
+        "B7V00",
+        "BASS0",
+        "BASS2",
+        "BASS3",
+        "BASV0",
+        "BASV2",
+        "BASV3",
+        "CTLS0",
+        "CTLS2",
+        "CTLS3",
+        "CTLV0",
+        "CTLV2",
+        "CTLV3",
+        "CTLX0",
+        "EMM00"
+      ],
+      "level": "declared",
+      "hardware_test_record": null
+    },
+    {
+      "group": "0x03",
+      "register": "0x0022",
+      "page": "architecture/zone-setpoint-semreg-cutover.md",
+      "semreg_element": "thermal.setpoint.temperature_setpoint",
+      "evidence_grade": "Hypothesis",
+      "unknown_fact": null,
+      "device_ids": [
+        "72000",
+        "BASS0",
+        "BASS2",
+        "BASS3",
+        "BASV0",
+        "BASV2",
+        "BASV3",
+        "CTLS0",
+        "CTLS2",
+        "CTLS3",
+        "CTLV0",
+        "CTLV2",
+        "CTLV3",
+        "CTLX0",
+        "EMM00"
+      ],
+      "level": "declared",
+      "hardware_test_record": null
+    },
+    {
+      "group": "0x03",
+      "register": "0x0028",
+      "page": "architecture/humidity-semreg-cutover.md",
+      "semreg_element": "thermal.measurement.humidity",
+      "evidence_grade": "Hypothesis",
+      "unknown_fact": null,
+      "device_ids": [
+        "70000",
+        "72000",
+        "B7V00",
+        "BASS0",
+        "BASS2",
+        "BASS3",
+        "BASV0",
+        "BASV2",
+        "BASV3",
+        "CTLS0",
+        "CTLS2",
+        "CTLS3",
+        "CTLV0",
+        "CTLV2",
+        "CTLV3",
+        "CTLX0",
+        "EMM00"
+      ],
+      "level": "declared",
+      "hardware_test_record": null
+    }
+  ],
+  "boiler_target": {
+    "manufacturer": "0xB5",
+    "device_id_prefix": "BAI",
+    "heat_pump_device_id": "EHP00",
+    "heat_pump_prefix": "HMU",
+    "level": "declared",
+    "hardware_test_record": null,
+    "evidence_grade": "Hypothesis",
+    "device_type_gate": "protocols/vaillant/ebus-vaillant-b509.md",
+    "flow_row": {
+      "service": "B509",
+      "opcode": "0x0D",
+      "selector": "18 00",
+      "encoding": "DATA2c",
+      "semreg_element": "thermal.measurement.heat_generator_flow_temperature",
+      "evidence_grade": "Hypothesis",
+      "qualified_binding_required": false,
+      "page": "architecture/boiler-temperature-semreg-mapping.md"
+    }
+  },
+  "vectors": [
+    {
+      "id": "exact_success_70000",
+      "class": "controller",
+      "request_address": "0x15",
+      "response_address": "0x15",
+      "payload_hex": "B5373030303001232103",
+      "group": "0x00",
+      "register": "0x0073",
+      "current": null,
+      "expect": {
+        "outcome": "qualified",
+        "device_id": "70000",
+        "product_number": "0141",
+        "software_version": "0123",
+        "level": "declared"
+      }
+    },
+    {
+      "id": "exact_success_72000",
+      "class": "controller",
+      "request_address": "0x15",
+      "response_address": "0x15",
+      "payload_hex": "B5373230303004567703",
+      "group": "0x00",
+      "register": "0x004B",
+      "current": null,
+      "expect": {
+        "outcome": "qualified",
+        "device_id": "72000",
+        "product_number": "0179",
+        "software_version": "0456",
+        "level": "declared"
+      }
+    },
+    {
+      "id": "unlisted_pair",
+      "class": "controller",
+      "request_address": "0x15",
+      "response_address": "0x15",
+      "payload_hex": "B5373030303001230100",
+      "group": "0x00",
+      "register": "0x0073",
+      "current": null,
+      "expect": {
+        "outcome": "unknown",
+        "reason": "unlisted_pair",
+        "device_id": "70000",
+        "product_number": "0001"
+      }
+    },
+    {
+      "id": "unknown_family",
+      "class": "controller",
+      "request_address": "0x15",
+      "response_address": "0x15",
+      "payload_hex": "B55A5A5A303001232103",
+      "group": "0x00",
+      "register": "0x0073",
+      "current": null,
+      "expect": {
+        "outcome": "unknown",
+        "reason": "unlisted_pair",
+        "device_id": "ZZZ00"
+      }
+    },
+    {
+      "id": "other_manufacturer",
+      "class": "controller",
+      "request_address": "0x15",
+      "response_address": "0x15",
+      "payload_hex": "08373030303001232103",
+      "group": "0x00",
+      "register": "0x0073",
+      "current": null,
+      "expect": {
+        "outcome": "unknown",
+        "reason": "other_manufacturer"
+      }
+    },
+    {
+      "id": "truncated_payload",
+      "class": "controller",
+      "request_address": "0x15",
+      "response_address": "0x15",
+      "payload_hex": "B53730303030012321",
+      "group": "0x00",
+      "register": "0x0073",
+      "current": null,
+      "expect": {
+        "outcome": "reject_without_mutation",
+        "reason": "incomplete"
+      }
+    },
+    {
+      "id": "overlong_payload",
+      "class": "controller",
+      "request_address": "0x15",
+      "response_address": "0x15",
+      "payload_hex": "B537303030300123210300",
+      "group": "0x00",
+      "register": "0x0073",
+      "current": null,
+      "expect": {
+        "outcome": "reject_without_mutation",
+        "reason": "incomplete"
+      }
+    },
+    {
+      "id": "invalid_bcd_product_number",
+      "class": "controller",
+      "request_address": "0x15",
+      "response_address": "0x15",
+      "payload_hex": "B5373030303001230A03",
+      "group": "0x00",
+      "register": "0x0073",
+      "current": null,
+      "expect": {
+        "outcome": "reject_without_mutation",
+        "reason": "invalid_bcd"
+      }
+    },
+    {
+      "id": "replacement_ff",
+      "class": "controller",
+      "request_address": "0x15",
+      "response_address": "0x15",
+      "payload_hex": "B537303030300123FF03",
+      "group": "0x00",
+      "register": "0x0073",
+      "current": null,
+      "expect": {
+        "outcome": "unknown",
+        "reason": "ff_replacement"
+      }
+    },
+    {
+      "id": "address_mismatch",
+      "class": "controller",
+      "request_address": "0x15",
+      "response_address": "0x16",
+      "payload_hex": "B5373030303001232103",
+      "group": "0x00",
+      "register": "0x0073",
+      "current": null,
+      "expect": {
+        "outcome": "reject_without_mutation",
+        "reason": "address_mismatch"
+      }
+    },
+    {
+      "id": "conflicting_direct_observation",
+      "class": "controller",
+      "request_address": "0x15",
+      "response_address": "0x15",
+      "payload_hex": "B5373230303004567703",
+      "group": "0x00",
+      "register": "0x004B",
+      "current": {
+        "address": "0x15",
+        "device_id": "70000",
+        "product_number": "0141"
+      },
+      "expect": {
+        "outcome": "retire_current_qualification_atomically",
+        "device_id": "72000",
+        "product_number": "0179"
+      }
+    },
+    {
+      "id": "sparse_matching_refresh_70000",
+      "class": "controller",
+      "request_address": "0x15",
+      "response_address": "0x15",
+      "payload_hex": "B5373030303001232103",
+      "group": "0x00",
+      "register": "0x0073",
+      "current": {
+        "address": "0x15",
+        "device_id": "70000",
+        "product_number": "0141"
+      },
+      "expect": {
+        "outcome": "may_retain_existing_direct_proof",
+        "device_id": "70000",
+        "product_number": "0141"
+      }
+    },
+    {
+      "id": "unlisted_row_70000",
+      "class": "controller",
+      "request_address": "0x15",
+      "response_address": "0x15",
+      "payload_hex": "B5373030303001232103",
+      "group": "0x00",
+      "register": "0x0096",
+      "current": null,
+      "expect": {
+        "outcome": "unknown",
+        "reason": "register_not_listed",
+        "device_id": "70000",
+        "product_number": "0141"
+      }
+    },
+    {
+      "id": "declared_boiler_BAI00",
+      "class": "boiler",
+      "payload_hex": "B5424149303001230000",
+      "selector": "18 00",
+      "expect": {
+        "outcome": "publish",
+        "device_id": "BAI00",
+        "semreg_element": "thermal.measurement.heat_generator_flow_temperature",
+        "qualified_binding_required": "false",
+        "level": "declared"
+      }
+    },
+    {
+      "id": "heat_pump_EHP00",
+      "class": "boiler",
+      "payload_hex": "B5454850303001230000",
+      "selector": "18 00",
+      "expect": {
+        "outcome": "reject_heat_pump_collision",
+        "device_id": "EHP00"
+      }
+    },
+    {
+      "id": "heat_pump_HMU00",
+      "class": "boiler",
+      "payload_hex": "B5484D55303001230000",
+      "selector": "18 00",
+      "expect": {
+        "outcome": "reject_heat_pump_collision",
+        "device_id": "HMU00"
+      }
+    },
+    {
+      "id": "boiler_other_manufacturer",
+      "class": "boiler",
+      "payload_hex": "08424149303001230000",
+      "selector": "18 00",
+      "expect": {
+        "outcome": "unknown",
+        "reason": "other_manufacturer"
+      }
+    },
+    {
+      "id": "boiler_malformed",
+      "class": "boiler",
+      "payload_hex": "B54241493030012300",
+      "selector": "18 00",
+      "expect": {
+        "outcome": "reject_without_mutation",
+        "reason": "incomplete"
+      }
+    }
+  ],
+  "sources": {
+    "crosswalk": "tests/fixtures/vaillant_regulator_identity_crosswalk_v1.json",
+    "register_matrix": "protocols/vaillant/fixtures/b524-op02-requester-register-matrix.csv",
+    "crosswalk_sha256": "80b66e660d3b4c6266880fecfa011711731231b7ee67c0d48a94b26450d3458a",
+    "register_matrix_sha256": "5fd371803362904d453444e588d37a0c371b01dd7ef08a79c314f2fa837d8499"
+  },
   "nonclaims": {
     "controller_or_firmware_tuple_qualified": false,
     "controller_family_range_qualified": false,
-    "write_or_operation_authority": false,
     "live_or_physical_qualification": false
-  }
+  },
+  "write_permission": "Write operations of these rows follow the access flag the device reports for each register. This record grants or withholds none."
 }

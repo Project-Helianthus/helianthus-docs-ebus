@@ -19,9 +19,16 @@ TYPES = ('string', 'string', 'uint8', '*uint8', '*uint8', 'string', 'string',
 MODES = ('0:off,1:automatic,2:day', '0:off,1:time-controlled,2:manual')
 QUICK = ('0:no-quick-mode,1:ventilation-boost,3:party,4:quick-veto,5:one-day-holiday,6:one-day-bank-holiday,7:holiday,8:bank-holiday,10:system-off',
          '0:no-special-function,1:ventilation-boost,4:quick-veto,7:holiday,10:system-off')
+DHW_SPECIAL = ('0:cancel,6:start a one-time DHW load',) * 2
+CIRCUIT_SPECIAL = (
+    '0:no quick mode,2:party,4:one-day holiday,5:one-day bank holiday,6:cylinder boost,255:no action needed',
+    '0:no quick mode,6:one-time cylinder loading,255:no action needed',
+)
 TABLES = (
     (1, 3, '00', 'u16', *MODES),
+    (1, 13, '00', 'u8', *DHW_SPECIAL),
     (2, 2, 'dynamic', 'u16', '0:deactivated,1:heating,2:fixed-flow,3:DHW,4:return-flow,5:pool', '0:deactivated,1:heating,2:fixed-flow,3:DHW,4:return-flow'),
+    (2, 29, 'dynamic', 'u8', *CIRCUIT_SPECIAL),
     (3, 1, 'dynamic', 'u16', *MODES),
     (3, 6, 'dynamic', 'u16', MODES[0]+',3:setback', MODES[1]),
     (3, 19, 'dynamic', 'u16', '0:none,1:central,2:remote-circuit-one,3:remote-circuit-two,4:remote-circuit-three,5:remote-circuit-four,6:remote-circuit-five,7:remote-circuit-six,8:remote-circuit-seven,9:remote-circuit-eight', '0:none,1:central,2:remote-circuit-one,3:remote-circuit-two,4:remote-circuit-three,5:remote-circuit-four'),
@@ -112,7 +119,7 @@ class FamilyCodebooks(unittest.TestCase):
         self.assertEqual(self.fixture['service'], 'B524')
         self.assertEqual(self.fixture['provenance'], 'synthetic')
         self.assertEqual(self.rows, expected_rows())
-        self.assertEqual(len({r['id'] for r in self.rows}), 16)
+        self.assertEqual(len({r['id'] for r in self.rows}), 20)
 
     def test_page_tables_independent(self):
         actual = [line for line in self.page.splitlines() if line.startswith('| 0')]
@@ -200,7 +207,8 @@ class FamilyCodebooks(unittest.TestCase):
                                    expected=None, grade='Unknown'), cases)
 
     def test_all_eleven_axes_alone_with_valid_decoys(self):
-        control = self.rows[1]
+        control = self.rows[2]
+        self.assertEqual(control['key'], key('controller-700'))
         variants = dict(family='unknown-family', variant='other', primary=0,
                         secondary=0, operation=6, direction='write', field='other',
                         alternative='none', group=0, instance_scope='00', register=0)

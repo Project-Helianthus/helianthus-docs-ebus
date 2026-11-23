@@ -142,6 +142,7 @@ pages keep the status statements in their own text.
 - [circuit-capability-semreg-cutover.md](circuit-capability-semreg-cutover.md)
 - [circuit-pump-semreg-cutover.md](circuit-pump-semreg-cutover.md)
 - [circuit-temperature-cutover.md](circuit-temperature-cutover.md)
+- [config-setter-mutation-surface.md](config-setter-mutation-surface.md)
 - [cylinder-temperature-cutover.md](cylinder-temperature-cutover.md)
 - [decisions.md](decisions.md)
 - [dhw-freshness-fsm.md](dhw-freshness-fsm.md)

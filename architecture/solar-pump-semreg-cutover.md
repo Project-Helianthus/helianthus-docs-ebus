@@ -95,9 +95,10 @@ neither defines a solar pump or a source-specific counter. A generic circuit
 service does not establish that a solar loop is a heating circuit.
 The existing
 [thermal mapping fixture](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/fixtures/vaillant-semreg-thermal-map-v1.json)
-contains system temperatures and a withheld rolling average, not these pump
-observations. Its qualification block reports `Unknown` and does not permit
-runtime qualification; it supplies no solar qualification or mapping.
+covers the rows the controller rule declares for the families the register
+matrix lists, with the grade and hardware test level recorded beside them. The
+pump-active and operating-hours registers have no row in it and no SemReg
+element, so it supplies no solar mapping for them.
 
 | Requested legacy observation | Proposed SemReg FactKey / service | Qualification and disposition | Consumer loss |
 | --- | --- | --- | --- |

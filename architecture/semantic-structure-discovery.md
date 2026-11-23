@@ -139,10 +139,11 @@ Parenting is not left to consumers. Each attachment enters the common model as
 a relation candidate for a stated scope, as installer configuration, or with a
 stated reason that no candidate is offered, as the
 [relation-candidate fixture](./fixtures/structural-relation-candidates-v1.json)
-lists. The zone-to-circuit assignment stays unresolved until the specialist
-review records which zone register establishes it, and a controller-mediated
-device slot and the same unit's direct bus entry stay two views because they
-share no anchor key source. See
+lists. The zone-to-circuit assignment is a supply relation whose basis is the
+zone's circuit-assignment register `GG=0x03 RR=0x001C`, recorded with the
+verification level `specification`. A controller-mediated device slot and the
+same unit's direct bus entry stay two views because they share no anchor key
+source. See
 [Relation and Identity Candidates for the Common Model](./b524-structural-decisions.md#relation-and-identity-candidates-for-the-common-model).
 
 ### 4. Family Gates

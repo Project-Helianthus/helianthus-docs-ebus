@@ -15,15 +15,17 @@ DOCUMENT = Path("deployment/prometheus-semantic-coverage.md")
 SEMANTIC_ROWS = """
 thermal.action.state | helianthus_thermal_action_state | enum: idle=0, heating=1, cooling=2, dhw=3, ventilating=4
 thermal.demand.level | helianthus_thermal_demand_ratio | ratio; percent / 100
-thermal.measurement.air_temperature | helianthus_thermal_air_temperature | Celsius; identity
+thermal.measurement.air_temperature | helianthus_thermal_air_temperature | Kelvin; identity
+thermal.measurement.circuit_flow_temperature | helianthus_thermal_circuit_flow_temperature_kelvin | Kelvin; identity
+thermal.measurement.dhw_temperature | helianthus_thermal_dhw_temperature_kelvin | Kelvin; identity
 thermal.measurement.flow_rate | helianthus_thermal_flow_cubic_meters_per_second | m³/s; litre/minute / 60,000
+thermal.measurement.heat_generator_flow_temperature | helianthus_thermal_heat_generator_flow_temperature_kelvin | Kelvin; identity
 thermal.measurement.humidity | helianthus_thermal_relative_humidity_ratio | ratio; percent / 100
-thermal.measurement.power | helianthus_thermal_power_watts | watts; preserve sign
-thermal.measurement.water_temperature | helianthus_thermal_water_temperature_celsius | Celsius; identity
+thermal.measurement.thermal_power | helianthus_thermal_power_watts | watts; preserve sign
 thermal.mode.system | helianthus_thermal_system_mode | enum: off=0, auto=1, heat=2, cool=3
 thermal.mode.zone | helianthus_thermal_zone_mode | enum: off=0, auto=1, comfort=2, eco=3
-thermal.setpoint.dhw_temperature_setpoint | helianthus_thermal_dhw_setpoint_celsius | Celsius; identity; read-only observation
-thermal.setpoint.temperature_setpoint | helianthus_thermal_temperature_setpoint | Celsius; identity; read-only observation
+thermal.setpoint.dhw_temperature_setpoint | helianthus_thermal_dhw_setpoint_kelvin | Kelvin; identity; read-only observation
+thermal.setpoint.temperature_setpoint | helianthus_thermal_temperature_setpoint | Kelvin; identity; read-only observation
 thermal.status.fault | helianthus_thermal_fault_present | boolean: clear=0, present=1
 thermal.status.operation | helianthus_thermal_operation_active | boolean: idle=0, active=1
 infrastructure.ac.active_power | helianthus_infrastructure_ac_active_power_watts | watts; preserve sign
@@ -147,31 +149,48 @@ helianthus_infrastructure_import_active_power_watts | gauge | slot | none
 helianthus_infrastructure_import_reactive_power_vars | gauge | slot | none
 helianthus_infrastructure_interlock_active | gauge | slot | none
 helianthus_infrastructure_ready | gauge | slot | none
+helianthus_native_temperature | gauge | protocol, device, index, point, unit, driver_instance | kelvin
+helianthus_native_temperature_difference | gauge | protocol, device, index, point, unit, driver_instance | kelvin
+helianthus_native_pressure | gauge | protocol, device, index, point, unit, driver_instance | pascals
+helianthus_native_volume_flow | gauge | protocol, device, index, point, unit, driver_instance | cubic_meters_per_second
+helianthus_native_energy | gauge | protocol, device, index, point, unit, driver_instance | joules
+helianthus_native_power | gauge | protocol, device, index, point, unit, driver_instance | watts
+helianthus_native_time | gauge | protocol, device, index, point, unit, driver_instance | seconds
+helianthus_native_ratio | gauge | protocol, device, index, point, unit, driver_instance | ratio
+helianthus_native_count | gauge | protocol, device, index, point, unit, driver_instance | count
+helianthus_native_rotational_speed | gauge | protocol, device, index, point, unit, driver_instance | hertz
+helianthus_native_frequency | gauge | protocol, device, index, point, unit, driver_instance | hertz
+helianthus_native_current | gauge | protocol, device, index, point, unit, driver_instance | amperes
+helianthus_native_voltage | gauge | protocol, device, index, point, unit, driver_instance | volts
+helianthus_native_point_age | gauge | protocol, device, index, point, unit, driver_instance | seconds
+helianthus_native_render_overflow | gauge | none | none
 helianthus_payload_aa_auto_syn_absorbed_total | counter | none | none
 helianthus_payload_aa_auto_syn_drain_exhausted_total | counter | none | none
 helianthus_payload_aa_auto_syn_recovered_total | counter | none | none
 helianthus_round9_absorb_entered_total | counter | none | none
-helianthus_semantic_evidence_age | gauge | connector, dimension, domain, fact_id, pack, unit | seconds
-helianthus_semantic_fact_state | gauge | availability, connector, dimension, domain, fact_id, freshness, pack, promotion, qualification, quality | none
-helianthus_semantic_fact_value | gauge | connector, dimension, domain, fact_id, pack, unit | none
+helianthus_semantic_evidence_age | gauge | connector, dimension, fact, pack, resource, resource_kind, unit | seconds
+helianthus_semantic_fact_state | gauge | availability, connector, dimension, fact, freshness, pack, promotion, qualification, quality, resource, resource_kind | none
+helianthus_semantic_fact_value | gauge | connector, dimension, fact, pack, resource, resource_kind, unit | none
 helianthus_semantic_field_available | gauge | domain, field, slot | none
-helianthus_semantic_open_conflicts | gauge | connector, dimension, domain, fact_id, pack | none
+helianthus_semantic_open_conflicts | gauge | connector, dimension, fact, pack, resource, resource_kind | none
 helianthus_semantic_projection_available | gauge | domain | none
 helianthus_semantic_projection_item | gauge | domain, item, outcome | none
 helianthus_semantic_projection_loss | gauge | domain, item, loss_kind | none
 helianthus_semantic_render_overflow | gauge | none | none
 helianthus_thermal_action_state | gauge | slot | none
-helianthus_thermal_air_temperature | gauge | slot, unit | celsius
+helianthus_thermal_air_temperature | gauge | slot, unit | kelvin
+helianthus_thermal_circuit_flow_temperature_kelvin | gauge | slot | none
 helianthus_thermal_demand_ratio | gauge | slot | none
-helianthus_thermal_dhw_setpoint_celsius | gauge | slot | none
+helianthus_thermal_dhw_setpoint_kelvin | gauge | slot | none
+helianthus_thermal_dhw_temperature_kelvin | gauge | slot | none
 helianthus_thermal_fault_present | gauge | slot | none
 helianthus_thermal_flow_cubic_meters_per_second | gauge | slot | none
+helianthus_thermal_heat_generator_flow_temperature_kelvin | gauge | slot | none
 helianthus_thermal_operation_active | gauge | slot | none
 helianthus_thermal_power_watts | gauge | slot | none
 helianthus_thermal_relative_humidity_ratio | gauge | slot | none
-helianthus_thermal_temperature_setpoint | gauge | slot, unit | celsius
+helianthus_thermal_temperature_setpoint | gauge | slot, unit | kelvin
 helianthus_thermal_system_mode | gauge | slot | none
-helianthus_thermal_water_temperature_celsius | gauge | slot | none
 helianthus_thermal_zone_mode | gauge | slot | none
 helianthus_transport_runtime_status | gauge | outcome, protocol, reason, state | none
 helianthus_v8_shadow_would_have_dropped_total | counter | none | none
@@ -179,34 +198,35 @@ missed_due_to_transport_limitations_total | counter | family, freshness_profile,
 passive_hits_total | counter | family, freshness_profile | none
 """
 
-# Reviewed Target native point families: name, type, quantity, constant unit,
-# labels and status. None of them is emitted.
+# Emitted native point families: name, type, quantity, constant unit, labels
+# and status. Each tuple agrees with the emitted table.
 NATIVE_ROWS = """
-helianthus_native_temperature | gauge | temperature | kelvin | device, index, point, protocol, unit | Target
-helianthus_native_temperature_difference | gauge | temperature difference | kelvin | device, index, point, protocol, unit | Target
-helianthus_native_pressure | gauge | pressure | pascals | device, index, point, protocol, unit | Target
-helianthus_native_volume_flow | gauge | volume flow | cubic_meters_per_second | device, index, point, protocol, unit | Target
-helianthus_native_energy | gauge | energy | joules | device, index, point, protocol, unit | Target
-helianthus_native_power | gauge | power | watts | device, index, point, protocol, unit | Target
-helianthus_native_time | gauge | time | seconds | device, index, point, protocol, unit | Target
-helianthus_native_ratio | gauge | ratio | ratio | device, index, point, protocol, unit | Target
-helianthus_native_count | gauge | count | count | device, index, point, protocol, unit | Target
-helianthus_native_rotational_speed | gauge | rotational speed | hertz | device, index, point, protocol, unit | Target
-helianthus_native_frequency | gauge | frequency | hertz | device, index, point, protocol, unit | Target
-helianthus_native_current | gauge | electric current | amperes | device, index, point, protocol, unit | Target
-helianthus_native_voltage | gauge | voltage | volts | device, index, point, protocol, unit | Target
-helianthus_native_point_age | gauge | age of the held observation | seconds | device, index, point, protocol, unit | Target
-helianthus_native_render_overflow | gauge | value series omitted by the budget | none | none | Target
+helianthus_native_temperature | gauge | temperature | kelvin | protocol, device, index, point, unit, driver_instance | emitted
+helianthus_native_temperature_difference | gauge | temperature difference | kelvin | protocol, device, index, point, unit, driver_instance | emitted
+helianthus_native_pressure | gauge | pressure | pascals | protocol, device, index, point, unit, driver_instance | emitted
+helianthus_native_volume_flow | gauge | volume flow | cubic_meters_per_second | protocol, device, index, point, unit, driver_instance | emitted
+helianthus_native_energy | gauge | energy | joules | protocol, device, index, point, unit, driver_instance | emitted
+helianthus_native_power | gauge | power | watts | protocol, device, index, point, unit, driver_instance | emitted
+helianthus_native_time | gauge | time | seconds | protocol, device, index, point, unit, driver_instance | emitted
+helianthus_native_ratio | gauge | ratio | ratio | protocol, device, index, point, unit, driver_instance | emitted
+helianthus_native_count | gauge | count | count | protocol, device, index, point, unit, driver_instance | emitted
+helianthus_native_rotational_speed | gauge | rotational speed | hertz | protocol, device, index, point, unit, driver_instance | emitted
+helianthus_native_frequency | gauge | frequency | hertz | protocol, device, index, point, unit, driver_instance | emitted
+helianthus_native_current | gauge | electric current | amperes | protocol, device, index, point, unit, driver_instance | emitted
+helianthus_native_voltage | gauge | voltage | volts | protocol, device, index, point, unit, driver_instance | emitted
+helianthus_native_point_age | gauge | age of the held observation | seconds | protocol, device, index, point, unit, driver_instance | emitted
+helianthus_native_render_overflow | gauge | value series omitted in the scrape | none | none | emitted
 """
 # Closed native label keys and their documented domains.
 NATIVE_LABEL_ROWS = """
-protocol | ebus, modbus, eebus
+protocol | ebus, modbus, eebus, can
 device | documented_device_class
 index | documented_instance_index
 point | canonical_register_name
 unit | family_constant_unit
+driver_instance | stable_instance_component
 """
-NATIVE_LABEL_KEYS = frozenset({"protocol", "device", "index", "point", "unit"})
+NATIVE_LABEL_KEYS = frozenset({"protocol", "device", "index", "point", "unit", "driver_instance"})
 SI_UNITS = frozenset({"kelvin", "pascals", "cubic_meters_per_second", "joules", "watts",
                       "seconds", "ratio", "count", "hertz", "amperes", "volts"})
 NATIVE_NAME = re.compile(r"helianthus_native_[a-z]+(?:_[a-z]+)*")
@@ -295,33 +315,36 @@ def table(text: str) -> list[tuple[str, ...]]:
     return rows("\n".join("| " + line for line in text.strip().splitlines()))
 
 
-def _check_native_family(row: tuple[str, ...], emitted_names: set[str]) -> None:
+def _check_native_family(row: tuple[str, ...], emitted: dict[str, tuple[str, ...]]) -> None:
     name, kind, _quantity, unit, labels, status = row
-    if name in emitted_names:
-        raise CheckError(f"native family is also emitted: {name}")
     if not NATIVE_NAME.fullmatch(name) or name.endswith("_total") or any(
             name.endswith("_" + suffix) for suffix in SI_UNITS - {"ratio", "count"}):
         raise CheckError(f"invalid native family name: {name}")
-    if kind != "gauge" or status != "Target":
-        raise CheckError(f"native family must be a Target gauge: {name}")
+    if kind != "gauge" or status != "emitted":
+        raise CheckError(f"native family must be an emitted gauge: {name}")
     keys = [] if labels == "none" else labels.split(", ")
     if len(keys) != len(set(keys)) or not set(keys) <= NATIVE_LABEL_KEYS:
         raise CheckError(f"forbidden native label key: {name}")
+    if labels != "none" and "driver_instance" not in keys:
+        raise CheckError(f"native family drops driver_instance: {name}")
     if ("unit" in keys) != (unit in SI_UNITS) or ("unit" not in keys and unit != "none"):
         raise CheckError(f"native family needs exactly one constant SI unit: {name}")
+    match = emitted.get(name)
+    if match is None:
+        raise CheckError(f"native family is not a member of the emitted table: {name}")
+    if match != (name, kind, labels, unit):
+        raise CheckError(f"native family tuple differs from the emitted table: {name}")
 
 
 NATIVE_LIFETIME_RULES = (
     "A label set belongs to one native identity for the lifetime of the scrape target",
-    "lifetime admission set of value series, each keyed by its family name together with its label set",
-    "until the set holds 1,024 value series",
-    "never replaced by another candidate",
 )
-# A label set can appear under two families that share a unit, so a budget
-# counted in label sets would let one target emit more than 1,024 series.
-NATIVE_BUDGET_FORBIDDEN = (
-    "admission set of label sets",
-    "holds 1,024 label sets",
+NATIVE_INDEX_RULE = (
+    "A row without a documented instance index has no `index` label."
+)
+OLD_ADMISSION_SENTENCE = (
+    "lifetime admission set of value series, each keyed by its family name "
+    "together with its label set"
 )
 # The unit rule covers the value and age families only; the overflow family
 # carries neither labels nor a unit.
@@ -331,21 +354,21 @@ NATIVE_UNIT_RULES = (
 )
 
 
-def _validate_native_points(text: str, emitted_names: set[str]) -> None:
-    if text.count("## Native point coverage\n") != 1:
-        raise CheckError("missing or duplicate native point coverage section")
-    native = text.split("## Native point coverage\n", 1)[1]
+def _validate_native_family_table(native: str, emitted: dict[str, tuple[str, ...]]) -> None:
     families = rows(section(native, "### Native families\n", "### Native labels\n"))
     if (families[:2] != [NATIVE_FAMILY_HEADER, ("---",) * 6]
             or any(len(row) != 6 for row in families[2:])):
         raise CheckError("native family table header or row shape differs")
     for row in families[2:]:
-        _check_native_family(row, emitted_names)
+        _check_native_family(row, emitted)
     names = [row[0] for row in families[2:]]
     if len(names) != len(set(names)):
         raise CheckError("native family has more than one row or unit")
     if Counter(families[2:]) != Counter(table(NATIVE_ROWS)):
-        raise CheckError("native families differ from the reviewed Target rows")
+        raise CheckError("native families differ from the reviewed emitted rows")
+
+
+def _validate_native_labels_and_rules(native: str) -> None:
     labels = rows(section(native, "### Native labels\n", "### Clear interpretation\n"))
     if (Counter(labels) != Counter(table(NATIVE_LABEL_ROWS) + [
             ("Label", "Allowed domain"), ("---", "---")])
@@ -354,11 +377,21 @@ def _validate_native_points(text: str, emitted_names: set[str]) -> None:
     flat = " ".join(native.split())
     if any(rule not in flat for rule in NATIVE_LIFETIME_RULES):
         raise CheckError("native label and series lifetime rules are missing")
-    if any(phrase in flat for phrase in NATIVE_BUDGET_FORBIDDEN):
-        raise CheckError("native series budget must count value series, not label sets")
+    if NATIVE_INDEX_RULE not in flat:
+        raise CheckError("native index rule is missing")
+    if OLD_ADMISSION_SENTENCE in flat or "1,024 value series" in flat:
+        raise CheckError("native section still carries the old admission-set sentence")
     if (any(rule not in flat for rule in NATIVE_UNIT_RULES)
             or "Each family has exactly one constant unit" in normalized(native)):
         raise CheckError("native unit rule must exempt the label-free overflow family")
+
+
+def _validate_native_points(text: str, emitted: dict[str, tuple[str, ...]]) -> None:
+    if text.count("## Native point coverage\n") != 1:
+        raise CheckError("missing or duplicate native point coverage section")
+    native = text.split("## Native point coverage\n", 1)[1]
+    _validate_native_family_table(native, emitted)
+    _validate_native_labels_and_rules(native)
 
 
 def validate(text: str, *, thermal_fixture: Path = THERMAL_FIXTURE) -> None:
@@ -385,11 +418,11 @@ def validate(text: str, *, thermal_fixture: Path = THERMAL_FIXTURE) -> None:
             raise CheckError(f"fields under the wrong domain heading: {domain}")
     fields = [row[0] for row in expected]
     names = [row[1] for row in expected]
-    if (len(set(fields)) != 32 or len(set(names)) != 32
-            or sum(field.startswith("thermal.") for field in fields) != 13
+    if (len(set(fields)) != 34 or len(set(names)) != 34
+            or sum(field.startswith("thermal.") for field in fields) != 15
             or sum(field.startswith("infrastructure.") for field in fields) != 19
-            or len(fields) * 16 * 2 != 1024):
-        raise CheckError("invalid reviewed field count or per-target series budget")
+            or len(fields) * 16 * 2 != 1088):
+        raise CheckError("invalid reviewed field count or legacy configured-slot estimate")
     transport = section(text, "## Transport coverage\n", "## Semantic coverage and units\n")
     actual_transport = rows(transport)
     expected_transport = rows("\n".join("| " + line for line in TRANSPORT_ROWS.strip().splitlines()))
@@ -407,7 +440,7 @@ def validate(text: str, *, thermal_fixture: Path = THERMAL_FIXTURE) -> None:
             ("Series group", "Label", "Allowed domain"), ("---", "---", "---")]):
         raise CheckError("structured label domains differ from the contract")
     _validate_thermal_dispositions(text, thermal_fixture)
-    _validate_native_points(text, {row[0] for row in expected_emitted})
+    _validate_native_points(text, {row[0]: row for row in expected_emitted})
     blocks = re.findall(r"^```yaml\n(.*?)^```$", text, re.MULTILINE | re.DOTALL)
     if len(blocks) != 1:
         raise CheckError("expected one alert YAML block")
@@ -429,8 +462,8 @@ def main() -> int:
     except (CheckError, OSError) as exc:
         print(f"Prometheus semantic coverage: {exc}")
         return 1
-    print("Prometheus semantic coverage passed: 32 bounded fields, 107 emitted metric "
-          "families and 15 Target native families.")
+    print("Prometheus semantic coverage passed: 34 bounded fields, 124 emitted metric "
+          "families and 15 emitted native families.")
     return 0
 
 

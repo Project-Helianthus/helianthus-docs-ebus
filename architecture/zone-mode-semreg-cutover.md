@@ -284,6 +284,18 @@ requires existing admission; preset remains withheld throughout.
 | Two sources disagree auto/off for same qualified key | No arbitration in helper | Preserve both; withhold new projection until existing policy resolves conflict. |
 | One qualified auto fact projects; another source/zone lacks mode | Per-source absence is distinct from shared item | One projected definition disposition; attach separate loss, never overwrite with withheld. |
 
+## Write route
+
+The zone mode write uses `GG=0x03` `RR=0x0006`, `PB=0xB5 SB=0x24 OP=0x02`, at the instance that is the zone's native position, the selector `development/ha-integration.md` documents for the existing write.
+
+The native value is the register's documented enumeration. No temperature conversion applies.
+
+The admitted range is the enumeration the device reports for that register in its B524 description record where that query exists and the device answers it. The register-map values apply only where no query exists. Where the query exists but the device returns no reply or no result, the limits stay unknown and the documented values are not substituted.
+
+Acknowledgement is the target's response to the initiator-to-target telegram (eBUS data link layer V1.3.1). Readback is one read of `RR=0x0006` in the same lifecycle generation after the response.
+
+The capability is published where the device declares `RR=0x0006` writable through the B524 access flag. A zone whose device declares no such writable key has no capability for this key, and its service states that it has none. The operation is EE04's inventory entry for this selector.
+
 ## Acceptance boundary and remaining evidence
 
 Manual review must trace each selector and source claim to the sections above,

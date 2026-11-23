@@ -21,9 +21,10 @@ move after review.
 - [B524 semantic mapping](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/b524-semantic-mapping.md):
   `ebus_v1_semantic_zones_get` and “SemReg thermal v1 read-only Vaillant mapping”.
 - [Existing typed thermal mapping](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/fixtures/vaillant-semreg-thermal-map-v1.json):
-  `qualification`, `mappings`, `lifecycle`, `nonclaims`. It covers system
-  outdoor/flow temperatures, not zones; its qualification is Unknown and
-  `runtime_qualification_permitted` is false. It cannot qualify this slice.
+  `qualification`, `mappings`, `lifecycle`, `nonclaims`. The thermal map covers
+  the rows the controller rule declares for the device-id and product-number
+  pairs whose register matrix lists the register. This page's `RR=0x0022` row
+  is declared for those pairs, grade Hypothesis, hardware test level `declared`.
 - [Gateway implementation](https://github.com/Project-Helianthus/helianthus-gateway/blob/main/cmd/gateway/semantic_vaillant.go):
   zone constants, `localZones`, `refreshZoneSlowConfigFields`, `refreshConfig`,
   `publishZones`, `readB524ValueWithMaxAge`, `readB524Float32LE`,
@@ -59,9 +60,9 @@ effective roles below, including RO effective values. Correlated behavior for
 a target family/installation is still required for admission. The catalog's
 Open questions explicitly leave quick-veto and holiday units and date codecs
 unestablished, despite °C/time labels in rows. Family mode-code conflicts and
-special-function interpretation remain unresolved. UI modes, C categories,
-flags and candidate write bytes do not qualify writes. These gaps must remain
-visible alongside each candidate, rather than becoming Proven through code.
+special-function interpretation remain open. The permission to write is the
+B524 access bit the device reports. These open points stay visible alongside
+each candidate, rather than becoming Proven through code.
 
 ## Native selectors and retained provenance
 
@@ -75,8 +76,8 @@ reference. OP=0x06 and other groups/instances never substitute implicitly.
 
 | Role | RR and catalog interpretation | Current legacy behavior | Proposed disposition |
 | --- | --- | --- | --- |
-| Heating manual | 0x0022, f32, °C catalog label, `unit.celsius` (SI unit kelvin, degrees Celsius plus 273.15) | Primary `TargetTempC`; catalog gives 15..30 step 0.5 per ebusd | Read-only candidate only after exact role/binding qualification and representability decision below |
-| Heating computed effective | 0x0014, f32, °C, `unit.celsius` (SI unit kelvin, degrees Celsius plus 273.15), stable RO computed output | Fallback `TargetTempC`, despite constant name | Separate effective candidate; never relabel manual or advertise `set_temperature` |
+| Heating manual | 0x0022, f32, °C catalog label, `unit.celsius` (SI unit kelvin, degrees Celsius plus 273.15) | Primary `TargetTempC`; catalog gives 15..30 step 0.5 per ebusd | Declared by the controller rule for the device-id and product-number pairs whose register matrix lists RR=0x0022. Grade Hypothesis. Hardware test level `declared`. Written by `thermal.operation.set_temperature`. |
+| Heating computed effective | 0x0014, f32, °C, `unit.celsius` (SI unit kelvin, degrees Celsius plus 273.15), access is the B524 access bit the device reports for RR=0x0014 | Fallback `TargetTempC`, despite constant name | Separate value; never relabel the manual role. The RR=0x0022 route does not advertise `set_temperature` for this selector. This selector gets a write operation where the device declares it writable. |
 | Cooling manual | 0x0023, f32, °C; cooling applicability | Not read by the reviewed function | Withheld until independently qualified and role representable; 0x0002 cooling setpoint is another selector, not an alias |
 | Cooling computed effective | 0x0015, f32, °C, stable RO; cooling applicability | Not read by the reviewed function | Separate read-only candidate, withheld pending qualification/representation |
 | Quick-veto override | 0x0008, f32; unit unresolved | Separate `QuickVetoTempC`, with duration 0x0026 and end time/date 0x001E/0x0024 | Withheld: unit, applicability/expiry semantics and role representation need owner evidence |
@@ -106,12 +107,10 @@ families' comfort selectors cannot replace the zone holiday/manual rows.
   `SRC-SD07-zone-to-circuit-fallback` (`absent`), so no candidate joins a zone
   setpoint to a circuit instance, and the raw assignment `RR=0x001C` stays
   native evidence.
-- **Element inventory.** The target `thermal.setpoint.temperature_setpoint` is
-  `unknown` with the reason `catalog.reason.subject_unresolved` and no plane.
-  `thermal.operation.set_temperature` and its effect rule are `unknown` with
-  the reason `catalog.reason.argument_unresolved`;
-  `thermal.capability.set_temperature` is `member` in the control plane. The
-  common subject of a zone setpoint is not decided; this page proposes none.
+- **Element inventory.** `thermal.setpoint.temperature_setpoint`,
+  `thermal.operation.set_temperature` and its effect rule are `member`.
+  The field's subject dimension is `thermal.dimension.zone` (kind
+  `resource.zone`). The fact-key dimension is that of `thermal.service.zone`.
 
 ## Proposed FactKey and service decision
 
@@ -224,11 +223,29 @@ Source-specific equivalence requires matching native meaning, selector scope,
 unit/codec, asset and zone service, semantic revision and lifecycle treatment,
 not only equal Celsius values. RR=0x0022 to a qualified manual-only key can be
 conditionally lossless for that read. RR=0x0014 to that key is a role loss;
-RR=0x0014 to its own approved effective key can preserve a read but loses any
-legacy implication of writability. Neither effective selector advertises
-`set_temperature`, its capability, operation or effect. Quick-veto/holiday
+RR=0x0014 to its own approved effective key can preserve a read; its write is
+the separate operation of the write route section, not the `RR=0x0022`
+`set_temperature` operation. Quick-veto/holiday
 flattening loses interval/activation meaning; cooling-to-heating flattening
 loses thermal role. Those losses block equivalence, not native evidence retention.
+
+## Write route of the zone temperature operation
+
+`thermal.operation.set_temperature` on a zone resource writes `RR=0x0022` (heating manual) of group `0x03`, `PB=0xB5 SB=0x24 OP=0x02`, at the instance that is the zone's native position under the controller.
+
+The argument is kelvin. The native value is f32 little-endian degrees Celsius, equal to kelvin minus 273.15.
+
+The admitted range is the MIN and MAX the device reports for that register in its B524 description record where that query exists and the device answers it. The range the B524 register-map page documents for that row applies only where no query exists for the register. Where the query exists but the device returns no reply or no result, the limits stay unknown and the documented range is not substituted. No range comes from anywhere else. A value outside the published range is refused and nothing is sent on the bus.
+
+One write per operation. The route adds no retry of its own. eBUS link-layer behaviour is unchanged.
+
+Acknowledgement is the target's response to the initiator-to-target telegram (eBUS data link layer V1.3.1). Readback is one read of `RR=0x0022` in the same lifecycle generation after the response, published as the zone's `thermal.setpoint.temperature_setpoint`. It confirms or contradicts the expected effect.
+
+`thermal.capability.set_temperature` is published on the service of every zone whose controller declares that zone's `RR=0x0022` writable through the B524 access flag. A zone whose device declares no such writable key has nothing to write, so it has no `set_temperature` capability and its service states that it has none. The write goes to the owner of the setting, the heating-manual selector. The effect key is the zone resource.
+
+`RR=0x0014` (heating computed effective) is a separate value. It gets a write operation where the device declares it writable, and the write of `RR=0x0014` that the existing zone write path in `development/ha-integration.md` performs keeps an operation in the driver.
+
+This section is the contract of the write route of `thermal.operation.set_temperature`.
 
 ## Acceptance boundary
 
@@ -236,13 +253,10 @@ Manual source/claim, transition, loss, synthetic-case and link-path review is
 the contract gate. Readability is not semantic validation, runtime proof or
 hardware acceptance. Downstream work must resolve owner representation choices,
 qualify family-specific native semantics and units, and demonstrate compatibility
-and MCP/GraphQL parity before replacing legacy projections. Cutover also requires
-a reviewed route, write-authority and compatibility decision for Home Assistant
-`set_temperature`: the [documented zone write path](../development/ha-integration.md#zone-writes-group-0x03)
-lists both RR=0x0022 and RR=0x0014. Resolve that consumer's behavior explicitly
-before cutover; RR=0x0014 remains a read-only effective value, and this contract
-qualifies neither selector for writes. This prose introduces no fixture, schema
-or validator, no new transport behavior and no writable support.
+and MCP/GraphQL parity before replacing legacy projections. The permission to
+write is the B524 access bit the device reports. `RR=0x0022` is written by the
+route above and `RR=0x0014` by its separate operation where the device declares
+it writable. The `RR=0x0022` route alone carries `set_temperature`.
 Independent review, committed-head gates and hardware acceptance remain separate.
 
 The emitted `target_temp_c` is provisional and non-compliant with the value grammar: which manual or effective heating or cooling role does the selected value represent?
