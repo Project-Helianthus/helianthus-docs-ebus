@@ -186,6 +186,12 @@ free-form labels. All rows use the gauge lifecycle and `slot` bound above.
 | `thermal.status.fault` | `helianthus_thermal_fault_present` | boolean: clear=0, present=1 |
 | `thermal.status.operation` | `helianthus_thermal_operation_active` | boolean: idle=0, active=1 |
 
+The controller's system outdoor and system flow observations map to
+`thermal.measurement.outdoor_air_temperature` and
+`thermal.measurement.system_flow_temperature` in SemReg. The frozen renderer
+has no series for those two elements. This 34-field roster does not relabel
+them as zone air or heat-generator flow to claim Prometheus output.
+
 Enum numbers encode exactly the pack symbols with the corresponding field
 prefix; they are categories, never ordinal severity or unknown sentinels.
 No unlisted symbol maps to 0. Setpoint visibility supplies no write authority.
@@ -233,8 +239,8 @@ requiring separate acceptance.
 
 | semreg_fact |
 | --- |
-| `thermal.measurement.air_temperature` |
-| `thermal.measurement.water_temperature` |
+| `thermal.measurement.outdoor_air_temperature` |
+| `thermal.measurement.system_flow_temperature` |
 
 ### Withheld associations
 

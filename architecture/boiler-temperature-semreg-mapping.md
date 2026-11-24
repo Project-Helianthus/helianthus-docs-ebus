@@ -127,8 +127,11 @@ qualified-binding condition. Heat-pump class targets stay excluded.
 | SemReg element | Subject | SI conversion | Evidence grade | Publisher |
 | --- | --- | --- | --- | --- |
 | `thermal.measurement.heat_generator_flow_temperature` | boiler flow, B509 `OP=0x0D` selector `18 00` (`0x1800`) `DATA2c` | kelvin = degrees Celsius plus 273.15 | Hypothesis | `ebusreg` |
-| `thermal.measurement.air_temperature` | system outdoor air `GG=0x00 RR=0x0073`; zone room `GG=0x03 RR=0x000F` | kelvin = degrees Celsius plus 273.15 | Hypothesis | `ebusreg` |
-| `thermal.measurement.water_temperature` | system flow `GG=0x00 RR=0x004B`; circuit flow `GG=0x02 RR=0x0008`; hot-water measured `GG=0x01 RR=0x0005` | kelvin = degrees Celsius plus 273.15 | Hypothesis | `ebusreg` |
+| `thermal.measurement.outdoor_air_temperature` | system outdoor air `GG=0x00 RR=0x0073` | kelvin = degrees Celsius plus 273.15 | Hypothesis | `ebusreg` |
+| `thermal.measurement.air_temperature` | zone room `GG=0x03 RR=0x000F` | kelvin = degrees Celsius plus 273.15 | Hypothesis | `ebusreg` |
+| `thermal.measurement.system_flow_temperature` | system flow `GG=0x00 RR=0x004B` | kelvin = degrees Celsius plus 273.15 | Hypothesis | `ebusreg` |
+| `thermal.measurement.circuit_flow_temperature` | circuit flow `GG=0x02 RR=0x0008` | kelvin = degrees Celsius plus 273.15 | Hypothesis | `ebusreg` |
+| `thermal.measurement.dhw_temperature` | hot-water measured `GG=0x01 RR=0x0005` | kelvin = degrees Celsius plus 273.15 | Hypothesis | `ebusreg` |
 | `thermal.setpoint.dhw_temperature_setpoint` | hot water `GG=0x01 II=0x00 RR=0x0004` | kelvin = degrees Celsius plus 273.15 | Proven | `ebusreg` |
 | `thermal.setpoint.temperature_setpoint` | zone `GG=0x03 RR=0x0022` | kelvin = degrees Celsius plus 273.15 | Hypothesis | `ebusreg` |
 | `thermal.measurement.humidity` | zone `GG=0x03 RR=0x0028` | ratio = percent divided by 100 | Hypothesis | `ebusreg` |
@@ -193,7 +196,7 @@ use `withheld` only when the requested item is not projected. The
 [snapshot projection accounting contract](https://github.com/Project-Helianthus/helianthus-docs/blob/main/api/semantic-snapshot-read.md#projection-accounting-and-deterministic-order)
 requires one disposition per `(kind,item_id)`, collecting all matching complete
 FactKeys in `source_keys`. Flow and any future return value would share
-`thermal.measurement.water_temperature`; an absent return cannot add a separate
+`thermal.measurement.heat_generator_flow_temperature`; an absent return cannot add a separate
 disposition or make the shared item withheld when flow is projected. Return's
 qualification remains `unknown`; its missing-source reason describes only the
 legacy-field absence outside this report. No return fact is emitted, including

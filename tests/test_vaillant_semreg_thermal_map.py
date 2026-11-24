@@ -239,7 +239,7 @@ def test_rejects_both_or_neither_of_references_and_absence() -> None:
 
 def test_targets_copy_the_element_inventory_disposition() -> None:
     rows = rows_by_key(index())
-    for key, fact in ((OUTDOOR, "thermal.measurement.air_temperature"), (FLOW, "thermal.measurement.water_temperature")):
+    for key, fact in ((OUTDOOR, "thermal.measurement.outdoor_air_temperature"), (FLOW, "thermal.measurement.system_flow_temperature")):
         assert rows[key]["target"] == {
             "definition": {
                 "pack": {"id": "helianthus.pack.thermal", "version": "1.0.0"},
@@ -260,7 +260,7 @@ def test_targets_copy_the_element_inventory_disposition() -> None:
     (
         (("definition", "pack", "id"), "helianthus.pack.storage"),
         (("definition", "pack", "version"), "1.1.0"),
-        (("definition", "id"), "thermal.measurement.outdoor_air_temperature"),
+        (("definition", "id"), "thermal.measurement.air_temperature"),
         (("definition", "version"), "1.0.1"),
         (("element_kind",), "dimension"),
         (("disposition",), "member"),

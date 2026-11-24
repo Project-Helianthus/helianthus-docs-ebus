@@ -177,3 +177,21 @@ def test_transition_action_stays_atomic() -> None:
     changed_thermal["qualification"]["runtime_qualification_permitted"] = False  # type: ignore[index]
     with pytest.raises(CHECKER.CheckError):
         CHECKER.validate_fixture(fixture(), changed_thermal)
+
+
+def test_declared_thermal_elements_keep_their_subjects() -> None:
+    # The public Thermal pack assigns outdoor air and system flow to the
+    # thermal system, room air to a zone, circuit flow to a circuit, hot-water
+    # measured temperature to DHW and boiler flow to a heat generator.
+    expected = {
+        ("0x00", "0x0073"): "thermal.measurement.outdoor_air_temperature",
+        ("0x00", "0x004B"): "thermal.measurement.system_flow_temperature",
+        ("0x01", "0x0005"): "thermal.measurement.dhw_temperature",
+        ("0x02", "0x0008"): "thermal.measurement.circuit_flow_temperature",
+        ("0x03", "0x000F"): "thermal.measurement.air_temperature",
+    }
+    rows = {(row[0], row[1]): row[3] for row in CHECKER.DECLARED_PAGE_ROWS}
+    assert {key: rows[key] for key in expected} == expected
+    declared = {(row["group"], row["register"]): row["semreg_element"] for row in fixture()["declared_rows"]}  # type: ignore[index]
+    assert {key: declared[key] for key in expected} == expected
+    assert CHECKER.BOILER_TARGET["flow_row"]["semreg_element"] == "thermal.measurement.heat_generator_flow_temperature"

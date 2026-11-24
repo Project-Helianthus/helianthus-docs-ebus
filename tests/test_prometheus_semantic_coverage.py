@@ -126,11 +126,11 @@ def test_prometheus_semantic_coverage_rejects_label_rows(operation: str) -> None
 
 
 @pytest.mark.parametrize(("old", "new"), [
-    ("| `thermal.measurement.air_temperature` |\n",
+    ("| `thermal.measurement.outdoor_air_temperature` |\n",
      "| `thermal.measurement.power` |\n"),
-    ("| `thermal.measurement.air_temperature` |\n", ""),
-    ("| `thermal.measurement.air_temperature` |\n",
-     "| `thermal.measurement.air_temperature` |\n" * 2),
+    ("| `thermal.measurement.outdoor_air_temperature` |\n", ""),
+    ("| `thermal.measurement.outdoor_air_temperature` |\n",
+     "| `thermal.measurement.outdoor_air_temperature` |\n" * 2),
     ("| `state.outdoor_temperature_avg24h` | `rolling_average_window_unrepresentable` |\n", ""),
     ("| `state.outdoor_temperature_avg24h` | `rolling_average_window_unrepresentable` |\n",
      "| `state.outdoor_temperature_avg24h` |\n"),
@@ -168,7 +168,7 @@ def test_prometheus_semantic_coverage_derives_dispositions_from_source(tmp_path:
     # Matching source and structured claim changes pass, proving there is no
     # independent list of exact facts or withheld associations in the checker.
     if mutation == "exact":
-        CHECKER.validate(document().replace("| `thermal.measurement.air_temperature` |\n",
+        CHECKER.validate(document().replace("| `thermal.measurement.outdoor_air_temperature` |\n",
                                           "| `thermal.measurement.power` |\n"),
                          thermal_fixture=source)
 

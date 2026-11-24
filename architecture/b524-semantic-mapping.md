@@ -91,8 +91,11 @@ bus request. The rules are in [`../api/graphql.md`](https://github.com/Project-H
 
 | SemReg element | Subject | SI conversion | Evidence grade | Publisher |
 | --- | --- | --- | --- | --- |
-| `thermal.measurement.air_temperature` | system outdoor air, `GG=0x00 RR=0x0073`; zone room, `GG=0x03 RR=0x000F` | kelvin = degrees Celsius plus 273.15 | Hypothesis | `ebusreg` |
-| `thermal.measurement.water_temperature` | system flow `GG=0x00 RR=0x004B`; circuit flow `GG=0x02 RR=0x0008`; hot-water measured `GG=0x01 RR=0x0005` | kelvin = degrees Celsius plus 273.15 | Hypothesis | `ebusreg` |
+| `thermal.measurement.outdoor_air_temperature` | system outdoor air, `GG=0x00 RR=0x0073` | kelvin = degrees Celsius plus 273.15 | Hypothesis | `ebusreg` |
+| `thermal.measurement.air_temperature` | zone room, `GG=0x03 RR=0x000F` | kelvin = degrees Celsius plus 273.15 | Hypothesis | `ebusreg` |
+| `thermal.measurement.system_flow_temperature` | system flow `GG=0x00 RR=0x004B` | kelvin = degrees Celsius plus 273.15 | Hypothesis | `ebusreg` |
+| `thermal.measurement.circuit_flow_temperature` | circuit flow `GG=0x02 RR=0x0008` | kelvin = degrees Celsius plus 273.15 | Hypothesis | `ebusreg` |
+| `thermal.measurement.dhw_temperature` | hot-water measured `GG=0x01 RR=0x0005` | kelvin = degrees Celsius plus 273.15 | Hypothesis | `ebusreg` |
 | `thermal.setpoint.dhw_temperature_setpoint` | hot water, `GG=0x01 II=0x00 RR=0x0004` | kelvin = degrees Celsius plus 273.15 | Proven | `ebusreg` |
 | `thermal.setpoint.temperature_setpoint` | zone, `GG=0x03 RR=0x0022` | kelvin = degrees Celsius plus 273.15 | Hypothesis | `ebusreg` |
 | `thermal.measurement.humidity` | zone, `GG=0x03 RR=0x0028` | ratio = percent divided by 100 | Hypothesis | `ebusreg` |
@@ -141,8 +144,8 @@ big-endian and is not a substitute for these rows.
 
 | Native key | Native wire value / unit | Native resource | Relation candidates | Target definition | Element inventory | Gateway field | Disposition |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x0073` | IEEE-754 `f32` little-endian / `degC`. SI unit kelvin, degrees Celsius plus 273.15 | `b524_semantic_root`, system group `OP=0x02 GG=0x00 II=0x00` | None; absence stated | `thermal.measurement.air_temperature` | `member` | `state.outdoor_temperature` | **Declared.** Publisher `ebusreg`. Grade Hypothesis. Hardware test level `declared`. |
-| `PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x004B` | IEEE-754 `f32` little-endian / `degC`. SI unit kelvin, degrees Celsius plus 273.15 | `b524_semantic_root`, system group `OP=0x02 GG=0x00 II=0x00` | None; absence stated | `thermal.measurement.water_temperature` | `member` | `state.flow_temperature` | **Declared.** Publisher `ebusreg`. Grade Hypothesis. Hardware test level `declared`. |
+| `PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x0073` | IEEE-754 `f32` little-endian / `degC`. SI unit kelvin, degrees Celsius plus 273.15 | `b524_semantic_root`, system group `OP=0x02 GG=0x00 II=0x00` | None; absence stated | `thermal.measurement.outdoor_air_temperature` | `member` | `state.outdoor_temperature` | **Declared.** Publisher `ebusreg`. Grade Hypothesis. Hardware test level `declared`. |
+| `PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x004B` | IEEE-754 `f32` little-endian / `degC`. SI unit kelvin, degrees Celsius plus 273.15 | `b524_semantic_root`, system group `OP=0x02 GG=0x00 II=0x00` | None; absence stated | `thermal.measurement.system_flow_temperature` | `member` | `state.flow_temperature` | **Declared.** Publisher `ebusreg`. Grade Hypothesis. Hardware test level `declared`. |
 | `PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x0095` | IEEE-754 `f32` little-endian / `degC`; rounded average updated every three hours | `b524_semantic_root`, system group `OP=0x02 GG=0x00 II=0x00` | None; absence stated | — | — | `state.outdoor_temperature_avg24h` | **Withheld.** It is a rolling aggregate, not an instantaneous `thermal.measurement.air_temperature` value. No aggregate/window fact is defined by this mapping. |
 
 Each row is keyed by the native identity of its value. The gateway field is a
@@ -316,7 +319,7 @@ its native identity remains controller system flow, not qualified B509 boiler
 flow or boiler return. The legacy mirror's retention/removal is a downstream
 cutover decision. No return fact is emitted and no separate return projection
 disposition is added. Flow and return share
-`thermal.measurement.water_temperature`, with one disposition per requested
+`thermal.measurement.heat_generator_flow_temperature`, with one disposition per requested
 `(kind,item_id)`; absent return cannot make that item `withheld` when flow is
 projected. Return qualification remains `unknown`, and its missing-source reason
 describes legacy-field absence outside projection accounting; no return source

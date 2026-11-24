@@ -80,16 +80,16 @@ NONCLAIMS = {
 IDENTITY_KEYS = {"device_id", "product_number", "level", "evidence_grade"}
 # group, register, page, semreg element or None, grade, unknown fact or None
 DECLARED_PAGE_ROWS = (
-    ("0x00", "0x0073", "architecture/outdoor-temperature-semreg-cutover.md", "thermal.measurement.air_temperature", "Hypothesis", None),
-    ("0x00", "0x004B", "architecture/b524-semantic-mapping.md", "thermal.measurement.water_temperature", "Hypothesis", None),
+    ("0x00", "0x0073", "architecture/outdoor-temperature-semreg-cutover.md", "thermal.measurement.outdoor_air_temperature", "Hypothesis", None),
+    ("0x00", "0x004B", "architecture/b524-semantic-mapping.md", "thermal.measurement.system_flow_temperature", "Hypothesis", None),
     ("0x00", "0x0095", "architecture/outdoor-temperature-semreg-cutover.md", None, "Hypothesis", "rolling average has no SemReg element"),
     ("0x00", "0x0039", "architecture/system-pressure-semreg-disposition.md", None, "Hypothesis", "system pressure has no admitted SemReg element on this page"),
     ("0x00", "0x0007", "architecture/maintenance-system-state-cutover.md", None, "Hypothesis", "system switch is not a mode fact"),
     ("0x01", "0x0003", "architecture/dhw-mode-semreg-cutover.md", None, "Hypothesis", "hot-water mode element is not named"),
     ("0x01", "0x0004", "architecture/dhw-setpoint-semreg-cutover.md", "thermal.setpoint.dhw_temperature_setpoint", "Proven", None),
-    ("0x01", "0x0005", "architecture/dhw-measured-temperature-cutover.md", "thermal.measurement.water_temperature", "Hypothesis", None),
+    ("0x01", "0x0005", "architecture/dhw-measured-temperature-cutover.md", "thermal.measurement.dhw_temperature", "Hypothesis", None),
     ("0x02", "0x0006", "architecture/circuit-capability-semreg-cutover.md", None, "Hypothesis", "circuit cooling enabled has no SemReg element"),
-    ("0x02", "0x0008", "architecture/circuit-temperature-cutover.md", "thermal.measurement.water_temperature", "Hypothesis", None),
+    ("0x02", "0x0008", "architecture/circuit-temperature-cutover.md", "thermal.measurement.circuit_flow_temperature", "Hypothesis", None),
     ("0x02", "0x001D", "architecture/b524-semantic-mapping.md", None, "Hypothesis", "circuit special function mode has no SemReg element"),
     ("0x03", "0x0006", "architecture/zone-mode-semreg-cutover.md", None, "Hypothesis", "zone mode element is not named"),
     ("0x03", "0x000F", "architecture/zone-room-temperature-cutover.md", "thermal.measurement.air_temperature", "Hypothesis", None),

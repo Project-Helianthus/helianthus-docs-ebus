@@ -61,7 +61,7 @@
             "id": "helianthus.pack.thermal",
             "version": "1.0.0"
           },
-          "id": "thermal.measurement.air_temperature",
+          "id": "thermal.measurement.outdoor_air_temperature",
           "version": "1.0.0"
         },
         "element_kind": "fact",
@@ -69,7 +69,7 @@
         "planes": [],
         "reason": "catalog.reason.subject_unresolved"
       },
-      "semreg_fact": "thermal.measurement.air_temperature",
+      "semreg_fact": "thermal.measurement.outdoor_air_temperature",
       "disposition": "exact",
       "loss": null
     },
@@ -105,7 +105,7 @@
             "id": "helianthus.pack.thermal",
             "version": "1.0.0"
           },
-          "id": "thermal.measurement.water_temperature",
+          "id": "thermal.measurement.system_flow_temperature",
           "version": "1.0.0"
         },
         "element_kind": "fact",
@@ -113,7 +113,7 @@
         "planes": [],
         "reason": "catalog.reason.subject_unresolved"
       },
-      "semreg_fact": "thermal.measurement.water_temperature",
+      "semreg_fact": "thermal.measurement.system_flow_temperature",
       "disposition": "exact",
       "loss": null
     },

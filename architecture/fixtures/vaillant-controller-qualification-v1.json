@@ -276,7 +276,7 @@
       "group": "0x00",
       "register": "0x0073",
       "page": "architecture/outdoor-temperature-semreg-cutover.md",
-      "semreg_element": "thermal.measurement.air_temperature",
+      "semreg_element": "thermal.measurement.outdoor_air_temperature",
       "evidence_grade": "Hypothesis",
       "unknown_fact": null,
       "device_ids": [
@@ -305,7 +305,7 @@
       "group": "0x00",
       "register": "0x004B",
       "page": "architecture/b524-semantic-mapping.md",
-      "semreg_element": "thermal.measurement.water_temperature",
+      "semreg_element": "thermal.measurement.system_flow_temperature",
       "evidence_grade": "Hypothesis",
       "unknown_fact": null,
       "device_ids": [
@@ -479,7 +479,7 @@
       "group": "0x01",
       "register": "0x0005",
       "page": "architecture/dhw-measured-temperature-cutover.md",
-      "semreg_element": "thermal.measurement.water_temperature",
+      "semreg_element": "thermal.measurement.dhw_temperature",
       "evidence_grade": "Hypothesis",
       "unknown_fact": null,
       "device_ids": [
@@ -537,7 +537,7 @@
       "group": "0x02",
       "register": "0x0008",
       "page": "architecture/circuit-temperature-cutover.md",
-      "semreg_element": "thermal.measurement.water_temperature",
+      "semreg_element": "thermal.measurement.circuit_flow_temperature",
       "evidence_grade": "Hypothesis",
       "unknown_fact": null,
       "device_ids": [

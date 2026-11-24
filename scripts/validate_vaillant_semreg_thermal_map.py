@@ -42,11 +42,11 @@ def unresolved_fact(fact: str) -> dict[str, object]:
 EXPECTED_ROWS = {
     "PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x0073": (
         "state.outdoor_temperature", "0x0073", SYSTEM_GROUP, "b524_semantic_root",
-        "thermal.measurement.air_temperature", "exact", None,
+        "thermal.measurement.outdoor_air_temperature", "exact", None,
     ),
     "PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x004B": (
         "state.flow_temperature", "0x004B", SYSTEM_GROUP, "b524_semantic_root",
-        "thermal.measurement.water_temperature", "exact", None,
+        "thermal.measurement.system_flow_temperature", "exact", None,
     ),
     "PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x0095": (
         "state.outdoor_temperature_avg24h", "0x0095", SYSTEM_GROUP, "b524_semantic_root",
