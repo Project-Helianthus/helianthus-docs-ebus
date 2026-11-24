@@ -20,6 +20,7 @@ func TestDHWSetpointRowAgainstTheElementInventory(t *testing.T) {
 			NativeKey   string          `json:"native_key"`
 			NativeValue json.RawMessage `json:"native_value"`
 			Target      target          `json:"target"`
+			EbusMapping ebusMapping     `json:"ebus_mapping"`
 			Subject     struct {
 				Status string `json:"status"`
 			} `json:"subject"`
@@ -44,9 +45,15 @@ func TestDHWSetpointRowAgainstTheElementInventory(t *testing.T) {
 	if err := checkTarget(catalog, row.Target); err != nil {
 		t.Fatalf("%s: %v", row.NativeKey, err)
 	}
+	if err := checkEbusMapping(row.EbusMapping, row.Target.Definition.ID); err != nil {
+		t.Fatalf("%s: %v", row.NativeKey, err)
+	}
 	entry, _ := catalog.PackEntry(row.Target.Definition)
-	if row.Subject.Status != string(graph.SubjectUnresolved) || entry.Fact.Subject.Status != graph.SubjectUnresolved {
-		t.Fatalf("%s: the service identity gap is an unresolved subject, got %q", row.NativeKey, row.Subject.Status)
+	if entry.Fact == nil || entry.Fact.Subject.Status != graph.SubjectResolved || entry.Reason != "" {
+		t.Fatalf("%s: catalog subject is resolved and the member entry has no reason", row.NativeKey)
+	}
+	if row.Subject.Status != string(graph.SubjectUnresolved) {
+		t.Fatalf("%s: the synthetic service identity stays unresolved, got %q", row.NativeKey, row.Subject.Status)
 	}
 	if len(fixture.ProjectionCases) != 2 {
 		t.Fatal("expected the two-service and partial-absence cases")
@@ -68,8 +75,11 @@ func TestDHWSetpointRowAgainstTheElementInventory(t *testing.T) {
 		if len(disposition.Loss) != 0 {
 			t.Fatalf("%s: the service identity gap is not a projection loss", c.Case)
 		}
-		if disposition.Reason == nil || *disposition.Reason != entry.Reason {
-			t.Fatalf("%s: withheld reason differs from the inventory reason %q", c.Case, entry.Reason)
+		if disposition.Reason == nil || *disposition.Reason != unresolvedNativeRelation || *disposition.Reason == entry.Reason {
+			t.Fatalf("%s: withheld reason %v was copied from the catalog entry %q", c.Case, disposition.Reason, entry.Reason)
+		}
+		if disposition.Relations != nil || disposition.Resources != nil {
+			t.Fatalf("%s: withheld projection names a resource or a relation", c.Case)
 		}
 	}
 }

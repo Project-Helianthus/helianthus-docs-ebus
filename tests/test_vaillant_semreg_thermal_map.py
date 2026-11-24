@@ -240,18 +240,25 @@ def test_rejects_both_or_neither_of_references_and_absence() -> None:
 def test_targets_copy_the_element_inventory_disposition() -> None:
     rows = rows_by_key(index())
     for key, fact in ((OUTDOOR, "thermal.measurement.outdoor_air_temperature"), (FLOW, "thermal.measurement.system_flow_temperature")):
-        assert rows[key]["target"] == {
-            "definition": {
-                "pack": {"id": "helianthus.pack.thermal", "version": "1.0.0"},
-                "id": fact, "version": "1.0.0",
-            },
-            "element_kind": "fact",
-            "disposition": "unknown",
-            "planes": [],
-            "reason": "catalog.reason.subject_unresolved",
-        }
+        assert rows[key]["target"] == CHECKER.CATALOG_FACTS[fact]
+        assert rows[key]["ebus_mapping"] == CHECKER.ebus_mapping(fact)
         assert rows[key]["semreg_fact"] == fact
+        assert "relations" not in rows[key]["ebus_mapping"]["projection"]  # type: ignore[index]
+        assert "resources" not in rows[key]["ebus_mapping"]["projection"]  # type: ignore[index]
+    outdoor = rows[OUTDOOR]["target"]
+    flow = rows[FLOW]["target"]
+    assert outdoor["disposition"] == "member"  # type: ignore[index]
+    assert outdoor["planes"] == ["control"]  # type: ignore[index]
+    assert outdoor["reason"] is None  # type: ignore[index]
+    assert outdoor["subject"]["dimension"]["id"] == "thermal.dimension.system"  # type: ignore[index]
+    assert outdoor["subject"]["kind"] == "resource.thermal_system"  # type: ignore[index]
+    assert flow["planes"] == ["energy", "hydraulic"]  # type: ignore[index]
+    assert flow["subject"]["dimension"]["id"] == "thermal.dimension.system"  # type: ignore[index]
+    assert flow["subject"]["kind"] == "resource.thermal_system"  # type: ignore[index]
+    assert rows[OUTDOOR]["ebus_mapping"]["native_relation"]["status"] == "unresolved"  # type: ignore[index]
+    assert rows[OUTDOOR]["ebus_mapping"]["projection"]["outcome"] == "withheld"  # type: ignore[index]
     assert rows[AVERAGE]["target"] is None
+    assert rows[AVERAGE]["ebus_mapping"] is None
     assert rows[AVERAGE]["semreg_fact"] is None
 
 
@@ -263,9 +270,13 @@ def test_targets_copy_the_element_inventory_disposition() -> None:
         (("definition", "id"), "thermal.measurement.air_temperature"),
         (("definition", "version"), "1.0.1"),
         (("element_kind",), "dimension"),
-        (("disposition",), "member"),
+        (("disposition",), "unknown"),
         (("planes",), ["control"]),
         (("reason",), "catalog.reason.no_fact_or_relation"),
+        (("subject", "status"), "unresolved"),
+        (("subject", "dimension", "id"), "thermal.dimension.zone"),
+        (("subject", "kind"), "resource.zone"),
+        (("subject", "dimension", "owner", "kind"), "core"),
     ),
 )
 def test_rejects_target_drift_in_every_member(path: tuple[str, ...], value: object) -> None:
@@ -280,11 +291,25 @@ def test_rejects_target_drift_in_every_member(path: tuple[str, ...], value: obje
 def test_an_unknown_target_stays_unknown_and_places_no_quantity() -> None:
     mutated = deepcopy(index())
     target = mutated["mappings"][0]["target"]  # type: ignore[index]
-    target.update({"disposition": "member", "planes": ["control"], "reason": None})  # type: ignore[union-attr]
+    target.update({"disposition": "unknown", "planes": [], "reason": "catalog.reason.subject_unresolved"})  # type: ignore[union-attr]
+    target["subject"] = None  # type: ignore[index]
+    rejects(mutated)
+
+    mutated = deepcopy(index())
+    mutated["mappings"][0]["ebus_mapping"]["native_relation"]["status"] = "resolved"  # type: ignore[index]
+    rejects(mutated)
+
+    mutated = deepcopy(index())
+    mutated["mappings"][0]["ebus_mapping"]["projection"]["outcome"] = "exact"  # type: ignore[index]
+    rejects(mutated)
+
+    mutated = deepcopy(index())
+    mutated["mappings"][0]["ebus_mapping"]["projection"]["relations"] = []  # type: ignore[index]
     rejects(mutated)
 
     mutated = deepcopy(index())
     mutated["mappings"][2]["target"] = deepcopy(mutated["mappings"][0]["target"])  # type: ignore[index]
+    mutated["mappings"][2]["ebus_mapping"] = deepcopy(mutated["mappings"][0]["ebus_mapping"])  # type: ignore[index]
     rejects(mutated)
 
 

@@ -144,8 +144,8 @@ big-endian and is not a substitute for these rows.
 
 | Native key | Native wire value / unit | Native resource | Relation candidates | Target definition | Element inventory | Gateway field | Disposition |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x0073` | IEEE-754 `f32` little-endian / `degC`. SI unit kelvin, degrees Celsius plus 273.15 | `b524_semantic_root`, system group `OP=0x02 GG=0x00 II=0x00` | None; absence stated | `thermal.measurement.outdoor_air_temperature` | `member` | `state.outdoor_temperature` | **Declared.** Publisher `ebusreg`. Grade Hypothesis. Hardware test level `declared`. |
-| `PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x004B` | IEEE-754 `f32` little-endian / `degC`. SI unit kelvin, degrees Celsius plus 273.15 | `b524_semantic_root`, system group `OP=0x02 GG=0x00 II=0x00` | None; absence stated | `thermal.measurement.system_flow_temperature` | `member` | `state.flow_temperature` | **Declared.** Publisher `ebusreg`. Grade Hypothesis. Hardware test level `declared`. |
+| `PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x0073` | IEEE-754 `f32` little-endian / `degC`. SI unit kelvin, degrees Celsius plus 273.15 | `b524_semantic_root`, system group `OP=0x02 GG=0x00 II=0x00` | None; absence stated | `thermal.measurement.outdoor_air_temperature` | `member`; plane `control`; resource dimension `thermal.dimension.system` (`resource.thermal_system`); no catalog reason | `state.outdoor_temperature` | **Declared.** Publisher `ebusreg`. Grade Hypothesis. Hardware test level `declared`. |
+| `PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x004B` | IEEE-754 `f32` little-endian / `degC`. SI unit kelvin, degrees Celsius plus 273.15 | `b524_semantic_root`, system group `OP=0x02 GG=0x00 II=0x00` | None; absence stated | `thermal.measurement.system_flow_temperature` | `member`; planes `energy` and `hydraulic`; resource dimension `thermal.dimension.system` (`resource.thermal_system`); no catalog reason | `state.flow_temperature` | **Declared.** Publisher `ebusreg`. Grade Hypothesis. Hardware test level `declared`. |
 | `PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x0095` | IEEE-754 `f32` little-endian / `degC`; rounded average updated every three hours | `b524_semantic_root`, system group `OP=0x02 GG=0x00 II=0x00` | None; absence stated | — | — | `state.outdoor_temperature_avg24h` | **Withheld.** It is a rolling aggregate, not an instantaneous `thermal.measurement.air_temperature` value. No aggregate/window fact is defined by this mapping. |
 
 Each row is keyed by the native identity of its value. The gateway field is a
@@ -162,6 +162,12 @@ The outdoor and system-flow rows are declared for the device-id and
 product-number pairs whose register matrix lists the register. Publisher
 `ebusreg`. Grade Hypothesis. Hardware test level `declared`.
 The rolling-average row has no SemReg element; that fact is unknown.
+The element-inventory column is the SemReg catalog copy. Each of those two
+rows also has an eBUS mapping: the native relation stays unresolved, reason
+`catalog.reason.subject_unresolved`, and the fact projection is withheld with
+that reason, no source key and no loss. The mapping names no relation
+instance and no resource. Catalog membership does not attach the controller
+register to the thermal-system resource.
 This mapping forms no extra FactKey axis, carries no role in dimension text,
 and places no thermal quantity on a common resource. The native value keeps
 its native unit. The qualified asset and `thermal.service.system` identity are

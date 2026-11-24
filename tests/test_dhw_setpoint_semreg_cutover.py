@@ -78,16 +78,17 @@ def test_dhw_row_is_keyed_by_native_identity_and_names_its_native_resource():
     }
     assert row["relation_candidates"]["refs"] == []
     assert row["relation_candidates"]["absence"]
-    assert row["target"] == {
-        "definition": {
-            "pack": {"id": "helianthus.pack.thermal", "version": "1.0.0"},
-            "id": FACT, "version": "1.0.0",
-        },
-        "element_kind": "fact",
-        "disposition": "unknown",
-        "planes": [],
-        "reason": "catalog.reason.subject_unresolved",
-    }
+    assert row["target"] == CHECKER.CATALOG_FACTS[FACT]
+    assert row["target"]["disposition"] == "member"
+    assert row["target"]["planes"] == ["control"]
+    assert row["target"]["reason"] is None
+    assert row["target"]["subject"]["status"] == "resolved"
+    assert row["target"]["subject"]["dimension"]["id"] == "thermal.dimension.dhw"
+    assert row["target"]["subject"]["kind"] == "resource.domestic_hot_water"
+    assert row["ebus_mapping"] == CHECKER.ebus_mapping(FACT)
+    assert row["ebus_mapping"]["native_relation"]["status"] == "unresolved"
+    assert "relations" not in row["ebus_mapping"]["projection"]
+    assert "resources" not in row["ebus_mapping"]["projection"]
 
 
 def test_service_identity_gap_is_an_unresolved_subject_not_a_projection_loss():
@@ -97,7 +98,9 @@ def test_service_identity_gap_is_an_unresolved_subject_not_a_projection_loss():
     for case in data["projection_cases"]:
         for disposition in case["dispositions"]:
             assert disposition["loss"] == []
-            assert disposition["reason"] == row["target"]["reason"]
+            assert disposition["reason"] == row["ebus_mapping"]["projection"]["reason"]
+            assert row["target"]["reason"] is None
+            assert disposition["reason"] != row["target"]["reason"]
 
 
 @pytest.mark.parametrize(
@@ -124,9 +127,12 @@ def test_dhw_rejects_native_key_drift(field, value):
         (("definition", "id"), PAGE_FACT),
         (("definition", "version"), "1.0.1"),
         (("element_kind",), "dimension"),
-        (("disposition",), "member"),
-        (("planes",), ["control"]),
+        (("disposition",), "unknown"),
+        (("planes",), ["energy"]),
         (("reason",), "catalog.reason.no_fact_or_relation"),
+        (("subject", "status"), "unresolved"),
+        (("subject", "dimension", "id"), "thermal.dimension.temperature"),
+        (("subject", "kind"), "resource.zone"),
     ),
 )
 def test_dhw_rejects_target_drift_in_every_member(path, value):
