@@ -69,11 +69,14 @@ age; a failed maintenance read must not erase a valid independent switch value.
 
 The existing
 [read-only mapping fixture](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/fixtures/vaillant-semreg-thermal-map-v1.json)
-covers temperature candidates only. Its qualification revision
-`vaillant-controller-qualification-evidence-gap/v1` has evidence status `Unknown`
-and `runtime_qualification_permitted=false`. It qualifies neither field here.
-A future binding needs its own selector-correlated public evidence revision;
-reusing the temperature revision or a display label cannot admit these values.
+covers the rows the controller rule declares for the families the register
+matrix lists. The rule is stated in the
+[controller qualification](vaillant-controller-qualification-v1.md). The
+maintenance and system-state registers of this page are declared by that rule for
+the families whose register matrix row lists them, with the evidence grade and
+the hardware test level recorded beside them. Where no public page states a fact
+of a register, such as its unit or reference, that fact is `Unknown` and this
+page names it. A display label alone is not a register identity.
 
 ## Native attachment
 

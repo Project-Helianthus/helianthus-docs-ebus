@@ -334,12 +334,6 @@
       "count": 11
     },
     {
-      "path": "scripts/validate_vaillant_semreg_thermal_map.py",
-      "symbol": "validate_index",
-      "rule": "C901",
-      "count": 11
-    },
-    {
       "path": "tests/test_ab07_aq07_b503_control_fields.py",
       "symbol": "Ab07Aq07Test.test_TestAb07Aq07_absent_operation_is_unknown:test_TestAb07Aq07_absent_operation_is_unknown",
       "rule": "N802",

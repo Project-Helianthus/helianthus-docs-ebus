@@ -1,7 +1,7 @@
 # Bounded transport and semantic Prometheus coverage
 
 This is the deployment contract for the remaining baud-observation and
-Thermal/HVAC and Infrastructure exports, and for the optional
+Thermal/HVAC and Infrastructure exports, and for the
 [native point export](#native-point-coverage). **Target** names below reserve a
 bounded projection; they do not claim an implemented collector, qualified
 binding, live measurement, or release acceptance. Existing transport names
@@ -25,13 +25,16 @@ then the [semantic mapping][thermal-map] and its
 labels of the semantic series. Never substitute OP02 and OP06 or infer writes from reads. For other
 protocols, their corresponding public native documentation and admitted
 source owner must establish the mapping first; this page defines no native
-Modbus, eeBUS or CAN behavior.
+Modbus or eeBUS behavior. A documented native CAN point is eligible under the
+same acquisition, qualification and SI rules.
 
 Evidence conclusions remain `Proven`, `Hypothesis` or `Unknown`, separately
-from qualification, freshness and export implementation. In particular the
-[controller qualification gap][qualification] is `Unknown`, and the thermal
-candidate index forbids runtime qualification and does not establish
-Prometheus output. The two exact candidate rows are not live series.
+from qualification, freshness and export implementation. The thermal map covers
+the rows the controller (or boiler) rule declares for the families the register
+matrix lists. The qualification is declared per family from the documentation
+pages ([controller qualification][qualification]), with the hardware test level
+recorded beside it, and it does not establish Prometheus output. The two exact
+candidate rows are not live series.
 An exact mapping disposition does not mean a qualified device.
 
 ## Bounded label and admission contract
@@ -67,14 +70,19 @@ domain heading in the semantic tables; it does not form a cross product.
   reset alone does not separate historical time series.
 - `helianthus_semantic_field_available` additionally has `domain` from
   `thermal`, `infrastructure` and `field` from exactly the corresponding
-  field column below. Only configured tuples exist. Thus each of the 32
-  fields has at most 16 value and 16 availability series: at most 1024
-  semantic series per scrape target for the exporter label set, without a
-  domain/field cross product. Deployment-wide, the semantic bound is
-  `T × 1024`, where `T` counts distinct retained target-label combinations,
+  field column below. Only configured tuples exist. The configured-slot example
+  in this section is the legacy selection, whose slot validation accepts 0
+  through 15 per domain. For exactly that legacy selection, each of the 34
+  fields has at most 16 value and 16 availability series: an upper estimate of
+  1,088 semantic series per scrape target for the exporter label set, without a
+  domain/field cross product. The legacy deployment example is
+  `T × 1,088`, where `T` counts distinct retained target-label combinations,
   including `job`, `instance` and any other relabeled target labels. Multiple
-  collectors and changes to those combinations multiply the budget; capacity
-  acceptance must bound `T` over the retention period. The baud target budget reserves two per target; only availability is emitted. Existing bus series retain their own bounded
+  collectors and changes to those combinations multiply that example; capacity
+  acceptance must bound `T` over the retention period. The composed scrape takes
+  every resource of the served cut. This arithmetic is a static check of the
+  legacy roster and example. It does not apply to admission or to the semantic
+  or native scrape. The baud target budget reserves two per target; only availability is emitted. Existing bus series retain their own bounded
   source-owner budgets.
 - In semantic series, do not export raw asset IDs, addresses, locators, request bytes, serials,
   network endpoints, contributor identities, capture times or fingerprints
@@ -164,17 +172,25 @@ free-form labels. All rows use the gauge lifecycle and `slot` bound above.
 |---|---|---|
 | `thermal.action.state` | `helianthus_thermal_action_state` | enum: idle=0, heating=1, cooling=2, dhw=3, ventilating=4 |
 | `thermal.demand.level` | `helianthus_thermal_demand_ratio` | ratio; percent / 100 |
-| `thermal.measurement.air_temperature` | `helianthus_thermal_air_temperature` | Celsius; identity |
+| `thermal.measurement.air_temperature` | `helianthus_thermal_air_temperature` | Kelvin; identity |
+| `thermal.measurement.circuit_flow_temperature` | `helianthus_thermal_circuit_flow_temperature_kelvin` | Kelvin; identity |
+| `thermal.measurement.dhw_temperature` | `helianthus_thermal_dhw_temperature_kelvin` | Kelvin; identity |
 | `thermal.measurement.flow_rate` | `helianthus_thermal_flow_cubic_meters_per_second` | m³/s; litre/minute / 60,000 |
+| `thermal.measurement.heat_generator_flow_temperature` | `helianthus_thermal_heat_generator_flow_temperature_kelvin` | Kelvin; identity |
 | `thermal.measurement.humidity` | `helianthus_thermal_relative_humidity_ratio` | ratio; percent / 100 |
-| `thermal.measurement.power` | `helianthus_thermal_power_watts` | watts; preserve sign |
-| `thermal.measurement.water_temperature` | `helianthus_thermal_water_temperature_celsius` | Celsius; identity |
+| `thermal.measurement.thermal_power` | `helianthus_thermal_power_watts` | watts; preserve sign |
 | `thermal.mode.system` | `helianthus_thermal_system_mode` | enum: off=0, auto=1, heat=2, cool=3 |
 | `thermal.mode.zone` | `helianthus_thermal_zone_mode` | enum: off=0, auto=1, comfort=2, eco=3 |
-| `thermal.setpoint.dhw_temperature_setpoint` | `helianthus_thermal_dhw_setpoint_celsius` | Celsius; identity; read-only observation |
-| `thermal.setpoint.temperature_setpoint` | `helianthus_thermal_temperature_setpoint` | Celsius; identity; read-only observation |
+| `thermal.setpoint.dhw_temperature_setpoint` | `helianthus_thermal_dhw_setpoint_kelvin` | Kelvin; identity; read-only observation |
+| `thermal.setpoint.temperature_setpoint` | `helianthus_thermal_temperature_setpoint` | Kelvin; identity; read-only observation |
 | `thermal.status.fault` | `helianthus_thermal_fault_present` | boolean: clear=0, present=1 |
 | `thermal.status.operation` | `helianthus_thermal_operation_active` | boolean: idle=0, active=1 |
+
+The controller's system outdoor and system flow observations map to
+`thermal.measurement.outdoor_air_temperature` and
+`thermal.measurement.system_flow_temperature` in SemReg. The frozen renderer
+has no series for those two elements. This 34-field roster does not relabel
+them as zone air or heat-generator flow to claim Prometheus output.
 
 Enum numbers encode exactly the pack symbols with the corresponding field
 prefix; they are categories, never ordinal severity or unknown sentinels.
@@ -223,8 +239,8 @@ requiring separate acceptance.
 
 | semreg_fact |
 | --- |
-| `thermal.measurement.air_temperature` |
-| `thermal.measurement.water_temperature` |
+| `thermal.measurement.outdoor_air_temperature` |
+| `thermal.measurement.system_flow_temperature` |
 
 ### Withheld associations
 
@@ -311,11 +327,11 @@ evidence are separate acceptance work. Existing
 ## Emitted metric names
 
 Proven means renderer support, independently of qualification. This table covers
-all 107 custom families; enablement and omission conditions still apply. Expvar-only
+all 124 custom families; enablement and omission conditions still apply. Expvar-only
 values are outside Prometheus exposition. No library-emitted exception is established
-for these custom families. The bounded naming map changes only the three series
-with a constant unit below. Numeric scales, signs and conversions remain unchanged,
-including seconds, Celsius, percent divided by 100, litre/minute divided by 60,000
+for these custom families. Constant-unit series are the rows whose Constant unit
+cell is not `none`. Numeric scales, signs and conversions remain unchanged,
+including seconds, kelvin, percent divided by 100, litre/minute divided by 60,000
 and kWh multiplied by 3,600,000. Counter names retain `_total`.
 
 A constant unit admits exactly one value per family, adds no series multiplier,
@@ -402,31 +418,48 @@ last-known-good state remain required.
 | `helianthus_infrastructure_import_reactive_power_vars` | `gauge` | `slot` | `none` |
 | `helianthus_infrastructure_interlock_active` | `gauge` | `slot` | `none` |
 | `helianthus_infrastructure_ready` | `gauge` | `slot` | `none` |
+| `helianthus_native_temperature` | `gauge` | `protocol, device, index, point, unit, driver_instance` | `kelvin` |
+| `helianthus_native_temperature_difference` | `gauge` | `protocol, device, index, point, unit, driver_instance` | `kelvin` |
+| `helianthus_native_pressure` | `gauge` | `protocol, device, index, point, unit, driver_instance` | `pascals` |
+| `helianthus_native_volume_flow` | `gauge` | `protocol, device, index, point, unit, driver_instance` | `cubic_meters_per_second` |
+| `helianthus_native_energy` | `gauge` | `protocol, device, index, point, unit, driver_instance` | `joules` |
+| `helianthus_native_power` | `gauge` | `protocol, device, index, point, unit, driver_instance` | `watts` |
+| `helianthus_native_time` | `gauge` | `protocol, device, index, point, unit, driver_instance` | `seconds` |
+| `helianthus_native_ratio` | `gauge` | `protocol, device, index, point, unit, driver_instance` | `ratio` |
+| `helianthus_native_count` | `gauge` | `protocol, device, index, point, unit, driver_instance` | `count` |
+| `helianthus_native_rotational_speed` | `gauge` | `protocol, device, index, point, unit, driver_instance` | `hertz` |
+| `helianthus_native_frequency` | `gauge` | `protocol, device, index, point, unit, driver_instance` | `hertz` |
+| `helianthus_native_current` | `gauge` | `protocol, device, index, point, unit, driver_instance` | `amperes` |
+| `helianthus_native_voltage` | `gauge` | `protocol, device, index, point, unit, driver_instance` | `volts` |
+| `helianthus_native_point_age` | `gauge` | `protocol, device, index, point, unit, driver_instance` | `seconds` |
+| `helianthus_native_render_overflow` | `gauge` | `none` | `none` |
 | `helianthus_payload_aa_auto_syn_absorbed_total` | `counter` | `none` | `none` |
 | `helianthus_payload_aa_auto_syn_drain_exhausted_total` | `counter` | `none` | `none` |
 | `helianthus_payload_aa_auto_syn_recovered_total` | `counter` | `none` | `none` |
 | `helianthus_round9_absorb_entered_total` | `counter` | `none` | `none` |
-| `helianthus_semantic_evidence_age` | `gauge` | `connector, dimension, domain, fact_id, pack, unit` | `seconds` |
-| `helianthus_semantic_fact_state` | `gauge` | `availability, connector, dimension, domain, fact_id, freshness, pack, promotion, qualification, quality` | `none` |
-| `helianthus_semantic_fact_value` | `gauge` | `connector, dimension, domain, fact_id, pack, unit` | `none` |
+| `helianthus_semantic_evidence_age` | `gauge` | `connector, dimension, fact, pack, resource, resource_kind, unit` | `seconds` |
+| `helianthus_semantic_fact_state` | `gauge` | `availability, connector, dimension, fact, freshness, pack, promotion, qualification, quality, resource, resource_kind` | `none` |
+| `helianthus_semantic_fact_value` | `gauge` | `connector, dimension, fact, pack, resource, resource_kind, unit` | `none` |
 | `helianthus_semantic_field_available` | `gauge` | `domain, field, slot` | `none` |
-| `helianthus_semantic_open_conflicts` | `gauge` | `connector, dimension, domain, fact_id, pack` | `none` |
+| `helianthus_semantic_open_conflicts` | `gauge` | `connector, dimension, fact, pack, resource, resource_kind` | `none` |
 | `helianthus_semantic_projection_available` | `gauge` | `domain` | `none` |
 | `helianthus_semantic_projection_item` | `gauge` | `domain, item, outcome` | `none` |
 | `helianthus_semantic_projection_loss` | `gauge` | `domain, item, loss_kind` | `none` |
 | `helianthus_semantic_render_overflow` | `gauge` | `none` | `none` |
 | `helianthus_thermal_action_state` | `gauge` | `slot` | `none` |
-| `helianthus_thermal_air_temperature` | `gauge` | `slot, unit` | `celsius` |
+| `helianthus_thermal_air_temperature` | `gauge` | `slot, unit` | `kelvin` |
+| `helianthus_thermal_circuit_flow_temperature_kelvin` | `gauge` | `slot` | `none` |
 | `helianthus_thermal_demand_ratio` | `gauge` | `slot` | `none` |
-| `helianthus_thermal_dhw_setpoint_celsius` | `gauge` | `slot` | `none` |
+| `helianthus_thermal_dhw_setpoint_kelvin` | `gauge` | `slot` | `none` |
+| `helianthus_thermal_dhw_temperature_kelvin` | `gauge` | `slot` | `none` |
 | `helianthus_thermal_fault_present` | `gauge` | `slot` | `none` |
 | `helianthus_thermal_flow_cubic_meters_per_second` | `gauge` | `slot` | `none` |
+| `helianthus_thermal_heat_generator_flow_temperature_kelvin` | `gauge` | `slot` | `none` |
 | `helianthus_thermal_operation_active` | `gauge` | `slot` | `none` |
 | `helianthus_thermal_power_watts` | `gauge` | `slot` | `none` |
 | `helianthus_thermal_relative_humidity_ratio` | `gauge` | `slot` | `none` |
-| `helianthus_thermal_temperature_setpoint` | `gauge` | `slot, unit` | `celsius` |
+| `helianthus_thermal_temperature_setpoint` | `gauge` | `slot, unit` | `kelvin` |
 | `helianthus_thermal_system_mode` | `gauge` | `slot` | `none` |
-| `helianthus_thermal_water_temperature_celsius` | `gauge` | `slot` | `none` |
 | `helianthus_thermal_zone_mode` | `gauge` | `slot` | `none` |
 | `helianthus_transport_runtime_status` | `gauge` | `outcome, protocol, reason, state` | `none` |
 | `helianthus_v8_shadow_would_have_dropped_total` | `counter` | `none` | `none` |
@@ -455,18 +488,24 @@ constraints. Other unchanged names retain their recorded meaning.
 - `helianthus_infrastructure_export_reactive_power_vars`: provisional; unit-label adoption is unresolved.
 - `helianthus_infrastructure_import_active_power_watts`: provisional; unit-label adoption is unresolved.
 - `helianthus_infrastructure_import_reactive_power_vars`: provisional; unit-label adoption is unresolved.
-- `helianthus_thermal_dhw_setpoint_celsius`: provisional; unit-label adoption is unresolved.
 - `helianthus_thermal_flow_cubic_meters_per_second`: provisional; unit-label adoption is unresolved.
 - `helianthus_thermal_power_watts`: provisional; unit-label adoption is unresolved.
-- `helianthus_thermal_water_temperature_celsius`: provisional; unit-label adoption is unresolved.
+
+The frozen comparison records 107 emitted families against 109 existing supported
+families. Those two operands stay outside the live inventory of 124. The frozen
+public table recorded `helianthus_thermal_dhw_setpoint_celsius` with labels
+`slot` and constant unit `none`, and `helianthus_thermal_water_temperature_celsius`
+with labels `slot` and constant unit `none`. Those two names are not members of
+the live emitted table.
 
 ## Native point coverage
 
-This section reserves the optional export of native register values whose
-interpretation is clear, including registers that SemReg does not publish.
-Every row is **Target**: no renderer emits these names, none of them is in the
-emitted table above, and the 107 emitted families are unchanged. The family
-names are provisional. Open question: does the register-name vocabulary admit
+This section states the export of native register values whose interpretation
+is clear, including registers that SemReg does not publish. The native families
+are emitted always, and this page states no switch. Every native family is a
+member of the emitted table above, and its tuple (series, type, labels,
+constant unit) equals the one in the native-families table. The family names
+are provisional. Open question: does the register-name vocabulary admit
 `native` as a qualifier in a metric name? Until it is settled, each name below
 keeps its spelling and stays provisional.
 
@@ -480,21 +519,21 @@ semantic resource, a qualified binding or a write path.
 
 | Series | Type | Quantity | Constant unit | Labels | Status |
 | --- | --- | --- | --- | --- | --- |
-| `helianthus_native_temperature` | `gauge` | temperature | `kelvin` | `device, index, point, protocol, unit` | `Target` |
-| `helianthus_native_temperature_difference` | `gauge` | temperature difference | `kelvin` | `device, index, point, protocol, unit` | `Target` |
-| `helianthus_native_pressure` | `gauge` | pressure | `pascals` | `device, index, point, protocol, unit` | `Target` |
-| `helianthus_native_volume_flow` | `gauge` | volume flow | `cubic_meters_per_second` | `device, index, point, protocol, unit` | `Target` |
-| `helianthus_native_energy` | `gauge` | energy | `joules` | `device, index, point, protocol, unit` | `Target` |
-| `helianthus_native_power` | `gauge` | power | `watts` | `device, index, point, protocol, unit` | `Target` |
-| `helianthus_native_time` | `gauge` | time | `seconds` | `device, index, point, protocol, unit` | `Target` |
-| `helianthus_native_ratio` | `gauge` | ratio | `ratio` | `device, index, point, protocol, unit` | `Target` |
-| `helianthus_native_count` | `gauge` | count | `count` | `device, index, point, protocol, unit` | `Target` |
-| `helianthus_native_rotational_speed` | `gauge` | rotational speed | `hertz` | `device, index, point, protocol, unit` | `Target` |
-| `helianthus_native_frequency` | `gauge` | frequency | `hertz` | `device, index, point, protocol, unit` | `Target` |
-| `helianthus_native_current` | `gauge` | electric current | `amperes` | `device, index, point, protocol, unit` | `Target` |
-| `helianthus_native_voltage` | `gauge` | voltage | `volts` | `device, index, point, protocol, unit` | `Target` |
-| `helianthus_native_point_age` | `gauge` | age of the held observation | `seconds` | `device, index, point, protocol, unit` | `Target` |
-| `helianthus_native_render_overflow` | `gauge` | value series omitted by the budget | `none` | `none` | `Target` |
+| `helianthus_native_temperature` | `gauge` | temperature | `kelvin` | `protocol, device, index, point, unit, driver_instance` | `emitted` |
+| `helianthus_native_temperature_difference` | `gauge` | temperature difference | `kelvin` | `protocol, device, index, point, unit, driver_instance` | `emitted` |
+| `helianthus_native_pressure` | `gauge` | pressure | `pascals` | `protocol, device, index, point, unit, driver_instance` | `emitted` |
+| `helianthus_native_volume_flow` | `gauge` | volume flow | `cubic_meters_per_second` | `protocol, device, index, point, unit, driver_instance` | `emitted` |
+| `helianthus_native_energy` | `gauge` | energy | `joules` | `protocol, device, index, point, unit, driver_instance` | `emitted` |
+| `helianthus_native_power` | `gauge` | power | `watts` | `protocol, device, index, point, unit, driver_instance` | `emitted` |
+| `helianthus_native_time` | `gauge` | time | `seconds` | `protocol, device, index, point, unit, driver_instance` | `emitted` |
+| `helianthus_native_ratio` | `gauge` | ratio | `ratio` | `protocol, device, index, point, unit, driver_instance` | `emitted` |
+| `helianthus_native_count` | `gauge` | count | `count` | `protocol, device, index, point, unit, driver_instance` | `emitted` |
+| `helianthus_native_rotational_speed` | `gauge` | rotational speed | `hertz` | `protocol, device, index, point, unit, driver_instance` | `emitted` |
+| `helianthus_native_frequency` | `gauge` | frequency | `hertz` | `protocol, device, index, point, unit, driver_instance` | `emitted` |
+| `helianthus_native_current` | `gauge` | electric current | `amperes` | `protocol, device, index, point, unit, driver_instance` | `emitted` |
+| `helianthus_native_voltage` | `gauge` | voltage | `volts` | `protocol, device, index, point, unit, driver_instance` | `emitted` |
+| `helianthus_native_point_age` | `gauge` | age of the held observation | `seconds` | `protocol, device, index, point, unit, driver_instance` | `emitted` |
+| `helianthus_native_render_overflow` | `gauge` | value series omitted in the scrape | `none` | `none` | `emitted` |
 
 Each value family and the age family has exactly one constant `unit` label
 value, and it is SI. `helianthus_native_render_overflow` has no labels and no
@@ -516,14 +555,16 @@ across a meter replacement or reset.
 
 | Label | Allowed domain |
 | --- | --- |
-| `protocol` | `ebus, modbus, eebus` |
+| `protocol` | `ebus, modbus, eebus, can` |
 | `device` | `documented_device_class` |
 | `index` | `documented_instance_index` |
 | `point` | `canonical_register_name` |
 | `unit` | `family_constant_unit` |
+| `driver_instance` | `stable_instance_component` |
 
 - `protocol` names the protocol whose public native documentation owns the
-  point. CAN has no admitted native acquisition seam and no value here.
+  point. The domain is `ebus`, `modbus`, `eebus` and `can`. A documented native
+  CAN point is eligible under the same acquisition, qualification and SI rules.
 - `device` is the device class written in the point's row of that
   documentation, in snake_case. It is never an address, serial, hash, model,
   product name or operator label.
@@ -536,6 +577,12 @@ across a meter replacement or reset.
   [register naming rules](https://github.com/Project-Helianthus/helianthus-docs/blob/main/architecture/naming.md#register-and-field-names).
   Raw bytes, selectors, opcodes and addresses are never a `point` value.
 - `unit` is the constant unit of the family from the table above.
+- `driver_instance` is the stable Instance component supplied by the driver
+  namespace. It is never a bus address, serial, user or site string, or a
+  discovery ordinal. Native value and age series carry it. A point without a
+  documented instance index carries `protocol`, `device`, `point`, `unit` and
+  `driver_instance`, and no `index` label. None is fabricated: not empty, not
+  `0`, and not an ordinal.
 
 These labels are native locators, never a semantic resource identity. They do
 not join to a semantic `slot`, select no SemReg fact and supply no write
@@ -581,28 +628,17 @@ clear interpretation is a naming and codec condition; evidence status
   was received. It is present while an observation of the point is held, fresh
   or stale, and absent when none is held.
 - No native sample carries an exposition timestamp.
-- At most 1,024 value series appear per scrape target, for the lifetime of the
-  target and not only per scrape. The gateway keeps a lifetime admission set of
-  value series, each keyed by its family name together with its label set, so
-  one label set under two families, such as `temperature` and
-  `temperature_difference` or `rotational_speed` and `frequency`, takes two
-  entries. It orders the candidates by family name, `protocol`, `device`,
-  `point` and then numeric `index`, with no index first, and admits candidates
-  in that order until the set holds 1,024 value series. An admitted value
-  series stays admitted and is never replaced by another candidate, so arrival,
-  expiry, eviction or a registry or documentation change that moves a point to
-  another family cannot raise the number of native value series a target has
-  emitted above 1,024. A candidate outside the set is omitted and
-  counted. The set resets only when the scrape target restarts. An age series
-  appears only for a point inside that selection.
-  `helianthus_native_render_overflow` holds the number of value series omitted
+- Native value series and ages are emitted for every valid point, the 1025th
+  of a scrape target included, with no count limit. The emission itself is
+  proved by the composed scrape.
+- `helianthus_native_render_overflow` holds the number of value series omitted
   in the scrape, `0` when none.
-- The native export is off by default. When it is off, no family of this
-  section appears in the exposition, the overflow and age gauges included.
-  Turning it on or off changes no semantic family.
+- The native families are emitted always, and this page states no switch.
 - An invalid unit, an unknown device class or a label collision withholds the
   affected point. Valid siblings and their last-known-good provenance remain.
 
 The validator checks the two tables of this section: the family name pattern,
 one constant SI unit per family, the closed label keys and their domains, and
-that no native family is also an emitted family.
+that every native family is a member of the emitted table and that its tuple
+(series, type, labels, constant unit) equals the one in the native-families
+table.

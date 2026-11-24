@@ -217,6 +217,18 @@ instance, register, codec/profile and receipt epoch/sequence. Collapsing any
 of these can misattribute a target or admit stale/foreign evidence. This is a
 reasoned review checklist, not an executed mutation claim.
 
+## Write route
+
+The hot-water setpoint write uses `GG=0x01` `II=0x00` `RR=0x0004`, `PB=0xB5 SB=0x24 OP=0x02`, the selector `development/ha-integration.md` documents for the existing write.
+
+The argument is kelvin. The native value is the register's documented degrees Celsius encoding, equal to kelvin minus 273.15.
+
+The admitted range is the MIN and MAX the device reports for that register in its B524 description record where that query exists and the device answers it. The range the B524 register-map page documents for that row applies only where no query exists. Where the query exists but the device returns no reply or no result, the limits stay unknown and the documented range is not substituted.
+
+Acknowledgement is the target's response to the initiator-to-target telegram (eBUS data link layer V1.3.1). Readback is one read of `RR=0x0004` in the same lifecycle generation after the response, published as `thermal.setpoint.dhw_temperature_setpoint`.
+
+The capability is published where the device declares `RR=0x0004` writable through the B524 access flag. A device that declares no such writable key has no capability for this key, and its service states that it has none. The operation is EE04's inventory entry for this selector.
+
 ## Acceptance boundary
 
 Manual review must trace every selector, unit, legacy function, proposed

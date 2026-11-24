@@ -33,7 +33,7 @@ not a qualified cylinder binding.
 | --- | --- | --- |
 | Catalog names, candidate units and ranges below exist | **Proven** as documentation contents | Not native qualification |
 | Gateway reads GG=0x05 and gates published entries on a non-null decoded temperature | **Proven** as inspected implementation behavior | Not proof of physical presence or current freshness |
-| RR=0x0004 measures cylinder water temperature in Celsius; catalog name identifies a bottom sensor | **Hypothesis** from value matching | Withhold semantic qualification until correlated native evidence supports the exact source/profile/instance |
+| RR=0x0004 measures cylinder water temperature in Celsius; catalog name identifies a bottom sensor | **Hypothesis** from value matching | Declared by the controller rule for the families whose register matrix lists this register, with grade Hypothesis and the hardware test level recorded beside it; the exact source, profile and instance rules of this page stay |
 | Applicability, field existence, unit, range and physical identity for an unqualified profile or instance | **Unknown** | Fail closed; no inferred Celsius quantity or cylinder |
 
 Evidence status, qualification and runtime admission are separate axes. A

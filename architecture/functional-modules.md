@@ -368,8 +368,11 @@ states, for the common model, which functional-module attachments are
 observable natively and which are not:
 
 - `circuits[].managing_device` is `configuration_only`: no register states
-  which module manages a circuit, and the ownership follows installer
-  configuration codes for one validated tuple (row
+  which module manages a circuit. The `relation.thermal_control` statement
+  from the module's equipment resource to the thermal circuit takes the
+  installer-configuration tuple (`GG=0x00 RR=0x0036` and `RR=0x002F`) as its
+  basis, a tuple that does not assign the module leaves the relation unknown,
+  and the slot class address only interprets the module end (row
   `SRC-SD09-circuit-managing-module`).
 - `OP=0x06, GG=0x0B` carries a presentation name only, so no relation
   candidate is offered for its slots (row `SRC-FM-second-family-slot`).
@@ -378,7 +381,7 @@ observable natively and which are not:
   `SRC-FM-second-family-status`).
 - An `OP=0x06, GG=0x0C` slot and the directly identified module share no
   anchor key source. The slot's class address equals the module's bus address
-  only as a laboratory correlation, and an address is never an identity, so
+  only as a correlation that interprets the slot, and an address is never an identity, so
   the two views stay two with the disposition `two_views_unresolved` (row
   `SRI-functional-module-slot`).
 

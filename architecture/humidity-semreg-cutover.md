@@ -25,8 +25,9 @@ field associations. The [gateway source][gateway] proves implementation behavior
 only. The [Thermal definitions][thermal], tables `fields`, `services`,
 `capabilities` and function `Metadata`, establish available definitions, not a
 native source binding. The [existing thermal fixture][fixture], `qualification`
-and `mappings`, is temperature-only and explicitly disallows runtime
-qualification under its evidence-gap revision; it supplies no humidity binding.
+and `mappings`, covers the rows the controller rule declares for the families
+the register matrix lists, with the grade and hardware test level recorded
+beside them; it has no humidity row and supplies no humidity binding.
 
 - **Proven:** the cited public catalog records the selectors, types, units and
   sensor descriptions below; source inspection establishes the code paths

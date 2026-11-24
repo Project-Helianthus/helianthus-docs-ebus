@@ -119,6 +119,14 @@ ATTACHMENT_FIELD_MUTATIONS = [
     ("native_statements", lambda item: item.__setitem__("native_statements", [])),
     ("reason", lambda item: item.__setitem__("reason", "")),
     ("pending_review", lambda item: item.__setitem__("pending_review", "review it")),
+    ("relations.id", lambda item: item["relations"][0].__setitem__("id", "thermal.relation.fluid_supply")),
+    ("relations.from_kind", lambda item: item["relations"][0].__setitem__("from_kind", "zone_instance")),
+    ("relations.to_kind", lambda item: item["relations"][0].__setitem__("to_kind", "zone_instance")),
+    ("relations.basis_class", lambda item: item["relations"][0].__setitem__("basis_class", "gate_rule")),
+    ("relations.basis_selectors", lambda item: item["relations"][0].__setitem__(
+        "basis_selectors", ["OP=0x06 GG=0x0C II=slot RR=0x0002"])),
+    ("relations.verification_level", lambda item: item["relations"][0].__setitem__(
+        "verification_level", "laboratory")),
 ]
 
 
@@ -152,17 +160,24 @@ def test_relayed_identity_identifiers_are_unique() -> None:
     assert any("repeat" in error for error in errors_after(clash))
 
 
-def test_zone_to_circuit_stays_unresolved_with_both_native_statements() -> None:
-    selectors = {item["selector"] for item in row(load_fixture(), ZONE_CIRCUIT)["native_statements"]}
+def test_zone_to_circuit_publishes_fluid_supply_from_the_assignment_register() -> None:
+    item = row(load_fixture(), ZONE_CIRCUIT)
+    selectors = {statement["selector"] for statement in item["native_statements"]}
     assert VALIDATOR.ZONE_CIRCUIT_SELECTORS <= selectors
+    assert item["relations"][0]["id"] == "thermal.relation.fluid_supply"
+    assert item["relations"][0]["basis_selectors"] == ["OP=0x02 GG=0x03 II=zone RR=0x001C"]
     assert errors_after(lambda document: row(document, ZONE_CIRCUIT).__setitem__(
-        "disposition", "relation_candidate"))
+        "disposition", "unresolved"))
     assert errors_after(lambda document: row(document, ZONE_FALLBACK).__setitem__(
         "disposition", "relation_candidate"))
     assert errors_after(lambda document: row(document, ZONE_CIRCUIT).__setitem__(
         "evidence_grade", "Proven"))
     assert errors_after(lambda document: row(document, ZONE_CIRCUIT).__setitem__(
-        "pending_review", None))
+        "pending_review", "review it"))
+    assert errors_after(lambda document: row(document, ZONE_CIRCUIT)["relations"][0].__setitem__(
+        "basis_class", "gate_rule"))
+    assert errors_after(lambda document: row(document, ZONE_CIRCUIT)["relations"][0].__setitem__(
+        "basis_selectors", ["OP=0x02 GG=0x03 II=zone RR=0x0013"]))
     for selector in VALIDATOR.ZONE_CIRCUIT_SELECTORS:
         def drop(document: dict, selector: str = selector) -> None:
             item = row(document, ZONE_CIRCUIT)

@@ -28,15 +28,16 @@ separately declares `system_state.outdoor_temperature` and
 
 **Proven — document agreement:** these public contracts distinguish the two
 selectors and exclude the aggregate from the instantaneous fact.
-**Hypothesis — application to a target:** the exact read-only candidate still
-requires its qualified runtime binding. **Unknown — current qualification:**
-the [qualification evidence-gap record](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/fixtures/vaillant-controller-qualification-v1.json)
-has `evidence_status=Unknown` and `qualified_use_permitted=false`; the typed
-map has `runtime_qualification_permitted=false`. No admitted SemReg outdoor
-observation follows from those artifacts today. Proven/Hypothesis/Unknown are
-evidence conclusions, separate from runtime qualification, acquisition,
-validity, freshness and admission. The conditional qualified cases below are
-requirements for future acceptance, not new qualification or runtime proof.
+**Hypothesis — application to a target:** the exact read-only candidate is
+declared by the controller rule for the device-id and product-number pairs whose
+register matrix row lists `RR=0x0073` (and `RR=0x0095` for the average), as the
+[controller qualification](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/vaillant-controller-qualification-v1.md)
+states, with the hardware test level recorded beside it. The
+[qualification record](https://github.com/Project-Helianthus/helianthus-docs-ebus/blob/main/architecture/fixtures/vaillant-controller-qualification-v1.json)
+and the typed map carry that declaration. Proven/Hypothesis/Unknown are
+evidence conclusions, separate from acquisition, validity, freshness and
+admission. The cases below keep the codec, range, presence and freshness rules
+of this page.
 
 ## Native attachment
 
@@ -51,7 +52,7 @@ requirements for future acceptance, not new qualification or runtime proof.
   list no attachment that carries these values to another native resource, and
   each row of the typed map states that absence.
 - **Element inventory.** The instantaneous target
-  `thermal.measurement.air_temperature` is `unknown` with the reason
+  `thermal.measurement.outdoor_air_temperature` is `unknown` with the reason
   `catalog.reason.subject_unresolved` and no plane. The aggregate has no
   target. The common subject of the outdoor value is not decided; this page
   proposes none.
@@ -60,7 +61,7 @@ requirements for future acceptance, not new qualification or runtime proof.
 
 | Field | Existing native contract | Proposed cutover result |
 | --- | --- | --- |
-| Instantaneous `state.outdoor_temperature` | Controller family of the typed Thermal map; `PB=0xB5`, `SB=0x24`, `OP=0x02`, `GG=0x00`, `II=0x00`, `RR=0x0073`, destination `0x15`; qualified initiator to target request, target to the same initiator value reply; profile-scoped IEEE-754 `f32` little-endian, `degC`. SI unit kelvin, degrees Celsius plus 273.15 | Target `thermal.measurement.air_temperature`, element inventory `unknown` (see [Native attachment](#native-attachment)); no FactKey, role or dimension text is formed. Read-only exact numeric candidate, admitted only after the subject is decided and existing binding and lifecycle requirements succeed |
+| Instantaneous `state.outdoor_temperature` | Controller family of the typed Thermal map; `PB=0xB5`, `SB=0x24`, `OP=0x02`, `GG=0x00`, `II=0x00`, `RR=0x0073`, destination `0x15`; qualified initiator to target request, target to the same initiator value reply; profile-scoped IEEE-754 `f32` little-endian, `degC`. SI unit kelvin, degrees Celsius plus 273.15 | Target `thermal.measurement.outdoor_air_temperature`, element inventory `unknown` (see [Native attachment](#native-attachment)); no FactKey, role or dimension text is formed. Read-only exact numeric candidate, admitted only after the subject is decided and existing binding and lifecycle requirements succeed |
 | Aggregate `state.outdoor_temperature_avg24h` | Same service, operation, group, instance, destination, family and directions, but `RR=0x0095`; `f32` little-endian, `degC`; rounded rolling average | No SemReg fact, value or dimensions; existing disposition `withheld`, loss `rolling_average_window_unrepresentable` |
 
 The initiator address is binding evidence, not a constant selected here.

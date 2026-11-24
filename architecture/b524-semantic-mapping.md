@@ -87,6 +87,35 @@ bus request. The rules are in [`../api/graphql.md`](https://github.com/Project-H
 [gateway-bound-discovery]:
   https://github.com/Project-Helianthus/helianthus-gateway/issues/1034
 
+## SemReg publication
+
+| SemReg element | Subject | SI conversion | Evidence grade | Publisher |
+| --- | --- | --- | --- | --- |
+| `thermal.measurement.outdoor_air_temperature` | system outdoor air, `GG=0x00 RR=0x0073` | kelvin = degrees Celsius plus 273.15 | Hypothesis | `ebusreg` |
+| `thermal.measurement.air_temperature` | zone room, `GG=0x03 RR=0x000F` | kelvin = degrees Celsius plus 273.15 | Hypothesis | `ebusreg` |
+| `thermal.measurement.system_flow_temperature` | system flow `GG=0x00 RR=0x004B` | kelvin = degrees Celsius plus 273.15 | Hypothesis | `ebusreg` |
+| `thermal.measurement.circuit_flow_temperature` | circuit flow `GG=0x02 RR=0x0008` | kelvin = degrees Celsius plus 273.15 | Hypothesis | `ebusreg` |
+| `thermal.measurement.dhw_temperature` | hot-water measured `GG=0x01 RR=0x0005` | kelvin = degrees Celsius plus 273.15 | Hypothesis | `ebusreg` |
+| `thermal.setpoint.dhw_temperature_setpoint` | hot water, `GG=0x01 II=0x00 RR=0x0004` | kelvin = degrees Celsius plus 273.15 | Proven | `ebusreg` |
+| `thermal.setpoint.temperature_setpoint` | zone, `GG=0x03 RR=0x0022` | kelvin = degrees Celsius plus 273.15 | Hypothesis | `ebusreg` |
+| `thermal.measurement.humidity` | zone, `GG=0x03 RR=0x0028` | ratio = percent divided by 100 | Hypothesis | `ebusreg` |
+| `thermal.measurement.heat_generator_flow_temperature` | boiler flow, B509 `OP=0x0D` selector `18 00` `DATA2c` | kelvin = degrees Celsius plus 273.15 | Hypothesis | `ebusreg` |
+
+Native values that have no SemReg element yet, and the element each would need:
+
+- `GG=0x00 RR=0x0095` rolling average. It would need an aggregate temperature element. The fact is unknown.
+- `GG=0x00 RR=0x0039` system pressure. It would need a pressure element. The fact is unknown.
+- `GG=0x00 RR=0x0007` system switch. It would need a mode element. The fact is unknown.
+- `GG=0x01 RR=0x0003` hot-water mode. It would need a hot-water mode element. The fact is unknown.
+- `GG=0x02 RR=0x0006` circuit cooling enabled. It would need a cooling-capability element. The fact is unknown.
+- `GG=0x02 RR=0x001D` circuit special function mode. It would need a circuit special-function element. The fact is unknown.
+- `GG=0x03 RR=0x0006` zone mode. It would need a zone mode element. The fact is unknown.
+- `GG=0x03 RR=0x0014` heating computed effective. It would need a separate effective-setpoint element. The fact is unknown.
+
+## Write route
+
+The B524 register map names no system-mode register. The write route of system mode is an open point: no selector is declared on this page. No documented range is substituted for an unnamed register. The capability is published only where the device declares a system-mode key writable through the B524 access flag. Acknowledgement, when a selector is named, is the target's response to the initiator-to-target telegram. Readback is not established while the register stays unnamed. The operation is EE04's.
+
 ## SemReg thermal v1 read-only Vaillant mapping
 
 **Contract revision:** [`helianthus.docs.ebus.b524-semreg-thermal/v1`](./fixtures/vaillant-semreg-thermal-map-v1.json).
@@ -107,15 +136,16 @@ identities are separate from the row identity below.
 
 The `f32` little-endian decoding in this contract is limited to a request from
 the qualified initiator to controller destination `0x15`, followed by a value
-from target to initiator, for the VRC720 family. The initiator QQ
+from target to initiator, for the device-id pairs the register matrix lists
+for these rows. The initiator QQ
 is binding evidence and is not a hard-coded address in this public mapping. It
 does not generalize B524 float byte order: HMU destination `0x08` is
 big-endian and is not a substitute for these rows.
 
 | Native key | Native wire value / unit | Native resource | Relation candidates | Target definition | Element inventory | Gateway field | Disposition |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x0073` | IEEE-754 `f32` little-endian / `degC`. SI unit kelvin, degrees Celsius plus 273.15 | `b524_semantic_root`, system group `OP=0x02 GG=0x00 II=0x00` | None; absence stated | `thermal.measurement.air_temperature` | `unknown`, `catalog.reason.subject_unresolved`, no plane | `state.outdoor_temperature` | **Exact, read-only candidate.** The value is an instantaneous outdoor-air observation when the qualified binding admits it. |
-| `PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x004B` | IEEE-754 `f32` little-endian / `degC`. SI unit kelvin, degrees Celsius plus 273.15 | `b524_semantic_root`, system group `OP=0x02 GG=0x00 II=0x00` | None; absence stated | `thermal.measurement.water_temperature` | `unknown`, `catalog.reason.subject_unresolved`, no plane | `state.flow_temperature` | **Exact, read-only candidate.** The value is the controller system-flow observation when the qualified binding admits it. |
+| `PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x0073` | IEEE-754 `f32` little-endian / `degC`. SI unit kelvin, degrees Celsius plus 273.15 | `b524_semantic_root`, system group `OP=0x02 GG=0x00 II=0x00` | None; absence stated | `thermal.measurement.outdoor_air_temperature` | `member` | `state.outdoor_temperature` | **Declared.** Publisher `ebusreg`. Grade Hypothesis. Hardware test level `declared`. |
+| `PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x004B` | IEEE-754 `f32` little-endian / `degC`. SI unit kelvin, degrees Celsius plus 273.15 | `b524_semantic_root`, system group `OP=0x02 GG=0x00 II=0x00` | None; absence stated | `thermal.measurement.system_flow_temperature` | `member` | `state.flow_temperature` | **Declared.** Publisher `ebusreg`. Grade Hypothesis. Hardware test level `declared`. |
 | `PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x0095` | IEEE-754 `f32` little-endian / `degC`; rounded average updated every three hours | `b524_semantic_root`, system group `OP=0x02 GG=0x00 II=0x00` | None; absence stated | — | — | `state.outdoor_temperature_avg24h` | **Withheld.** It is a rolling aggregate, not an instantaneous `thermal.measurement.air_temperature` value. No aggregate/window fact is defined by this mapping. |
 
 Each row is keyed by the native identity of its value. The gateway field is a
@@ -128,11 +158,11 @@ absence and its reason. A relation candidate reference names a row of that
 fixture; every endpoint it names must be a native resource the index lists,
 and one of them must be the row's own.
 
-The target definition of a mapped row copies its element inventory entry:
-both temperature facts are `unknown` with the reason
-`catalog.reason.subject_unresolved` and no plane, because which resource such
-a value describes is not decided. A row whose target is `unknown` stays so.
-This mapping forms no FactKey, carries no role or resource in dimension text,
+The outdoor and system-flow rows are declared for the device-id and
+product-number pairs whose register matrix lists the register. Publisher
+`ebusreg`. Grade Hypothesis. Hardware test level `declared`.
+The rolling-average row has no SemReg element; that fact is unknown.
+This mapping forms no extra FactKey axis, carries no role in dimension text,
 and places no thermal quantity on a common resource. The native value keeps
 its native unit. The qualified asset and `thermal.service.system` identity are
 separate runtime service/binding metadata; neither is inferred from a public
@@ -289,7 +319,7 @@ its native identity remains controller system flow, not qualified B509 boiler
 flow or boiler return. The legacy mirror's retention/removal is a downstream
 cutover decision. No return fact is emitted and no separate return projection
 disposition is added. Flow and return share
-`thermal.measurement.water_temperature`, with one disposition per requested
+`thermal.measurement.heat_generator_flow_temperature`, with one disposition per requested
 `(kind,item_id)`; absent return cannot make that item `withheld` when flow is
 projected. Return qualification remains `unknown`, and its missing-source reason
 describes legacy-field absence outside projection accounting; no return source

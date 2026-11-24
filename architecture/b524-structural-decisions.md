@@ -156,7 +156,7 @@ This document is authoritative for Phase 1 structural discovery and complements,
 | Fallback / unknown behavior | If the current derivation does not yield a usable circuit instance, control passes to SD-07. |
 | Published effect | `associatedCircuit` becomes explicit without consumer-side re-derivation when the current lab-backed formula applies |
 | Evidence status | `PROVEN` |
-| Common-model candidate | `zone_to_circuit`, from a zone instance to a circuit instance: `unresolved`, `Unknown`. Two native statements differ: this entry reads `GG=0x03 RR=0x0013` with an offset under `LAB` scope, and SD-07 falls back to the same number, while the register map names `GG=0x03 RR=0x001C` (`zone_circuit_assignment`) as the assignment, a raw index without renumbering. `RR=0x0013` is also the SD-05 room-unit binding. The specialist review of the native owner records which register establishes the assignment; no relation candidate is admitted before it. Row `SRC-SD06-zone-to-circuit` of the [relation-candidate fixture](./fixtures/structural-relation-candidates-v1.json). |
+| Common-model candidate | `zone_to_circuit`, from a zone instance to a circuit instance: `relation_candidate`, `Hypothesis`, `PROFILE`, verification level `specification`. The relation is `thermal.relation.fluid_supply` from the thermal circuit to the zone, and its basis is the register the register map names as the assignment, `GG=0x03 RR=0x001C` (`zone_circuit_assignment`), a raw index without renumbering. `RR=0x0013` is also the SD-05 room-unit binding and is no basis; the offset formula above is a gateway reading of that register and is no basis either. Row `SRC-SD06-zone-to-circuit` of the [relation-candidate fixture](./fixtures/structural-relation-candidates-v1.json). |
 | Code anchors | `refreshState()`, `resolveAssociatedCircuitInstance()`, `publishZones()` |
 
 ## B524-SD-07 — Zone-to-Circuit Fallback
@@ -212,7 +212,7 @@ This document is authoritative for Phase 1 structural discovery and complements,
 | Fallback / unknown behavior | Gateway intentionally does not guess another owner for unproven topologies. A documented profile such as `moduleConfigurationVR71 = 3` ("3x mixer circuit") still implies VR 71 circuit ownership in regulator documentation, but the current implementation emits `UNKNOWN` because ownership is presently coupled to `fm5_semantic_mode == INTERPRETED`. This is a known implementation gap, not an evidence-free topology. |
 | Published effect | GraphQL/MCP/Portal expose explicit per-circuit ownership; HA can parent circuits without global threshold heuristics |
 | Evidence status | `PROVEN` for the current live tuple, `UNKNOWN` for all other tuples |
-| Common-model candidate | `circuit_managing_module`, from a circuit instance to a functional module: `configuration_only`, `Proven`, `LAB` and `PROFILE`. No register states which module manages a circuit; ownership follows installer configuration codes, and every other tuple stays unknown with no absence stated. The module end is reached through a slot class address, which selects an interpretation and is never an identity. Row `SRC-SD09-circuit-managing-module` of the [relation-candidate fixture](./fixtures/structural-relation-candidates-v1.json). |
+| Common-model candidate | `circuit_managing_module`, from a circuit instance to a functional module: `configuration_only`, `Proven`, `LAB` and `PROFILE`, verification level `specification`. The relation is `relation.thermal_control` from the module's equipment resource to the thermal circuit, and its basis is the installer-configuration tuple (`GG=0x00 RR=0x0036` and `GG=0x00 RR=0x002F`). A tuple that does not assign the module to the circuit leaves the relation unknown, with no absence stated. The module end is reached through a slot class address, which only interprets the module end and is never the basis or an identity. Row `SRC-SD09-circuit-managing-module` of the [relation-candidate fixture](./fixtures/structural-relation-candidates-v1.json). |
 | Code anchors | `refreshSystem()`, `deriveCircuitManagingDevice()`, `publishCircuits()` |
 
 ## B524-SD-10 — Radio Device Inclusion and `slot_mode`
@@ -231,7 +231,7 @@ This document is authoritative for Phase 1 structural discovery and complements,
 | Fallback / unknown behavior | `hasRemoteIdentityEvidence()` accepts non-empty firmware or non-zero/non-`0xFFFF` hardware as identity evidence, which is stronger than pure connection state but still heuristic as a “real device” proof. Group-to-device-type assignments used by consumers should be read through the B524 register map, where those mappings are explicitly qualified as current-lab correlations rather than standalone protocol specification. |
 | Published effect | `radioDevices[]` contains both active remotes and inventory-evidenced FM5-related accessories. The parent of a controller-mediated device belongs to the common model, which takes the relay from the controller to each connected slot as a relation candidate; consumers read that parent from the common model and do not resolve it themselves |
 | Evidence status | `PROVEN` for connected slots, `HEURISTIC` for inventory inclusion |
-| Common-model candidate | `controller_relays_device_slot`, from the B524 semantic root to a device slot: `relation_candidate`, `Proven`, `PROTOCOL` for a connected slot (row `SRC-SD10-connected-device-slot`); `absent` for a disconnected slot kept as inventory, which is gateway policy (row `SRC-SD10-inventory-device-slot`). A slot and the same unit's direct bus entry share no anchor key source: the slot carries a slot number local to the controller, a class address, a firmware version and, in the room-unit groups, a raw hardware identifier, and the direct entry's identification reply carries no documented unit token. Both views therefore stay two, with the disposition `two_views_unresolved`, until a unit token or an operator declaration joins them; an equal address value is never an identity basis (rows `SRI-functional-module-slot`, `SRI-heat-source-slots`, `SRI-room-unit-slots` and `SRI-uncharacterized-slots` of the [relation-candidate fixture](./fixtures/structural-relation-candidates-v1.json)). |
+| Common-model candidate | `controller_relays_device_slot`, from the B524 semantic root to a device slot: `relation_candidate`, `Proven`, `PROTOCOL`, verification level `specification`, for a connected slot, which carries `relation.relays` with the presence selector `RR=0x0001` reading connected as its basis (row `SRC-SD10-connected-device-slot`); `absent`, with no relation published, for a disconnected slot kept as inventory, which is gateway policy (row `SRC-SD10-inventory-device-slot`). A slot and the same unit's direct bus entry share no anchor key source: the slot carries a slot number local to the controller, a class address, a firmware version and, in the room-unit groups, a raw hardware identifier, and the direct entry's identification reply carries no documented unit token. Both views therefore stay two, with the disposition `two_views_unresolved`, until a unit token or an operator declaration joins them; an equal address value is never an identity basis (rows `SRI-functional-module-slot`, `SRI-heat-source-slots`, `SRI-room-unit-slots` and `SRI-uncharacterized-slots` of the [relation-candidate fixture](./fixtures/structural-relation-candidates-v1.json)). |
 | Code anchors | `refreshDeviceSlots()`, `discoverDeviceSlots()`, `hasRemoteIdentityEvidence()`, `publishRadioDevices()` |
 
 ## B524-SD-11 — FM5 Semantic Mode
@@ -323,7 +323,7 @@ This document is authoritative for Phase 1 structural discovery and complements,
 | Fallback / unknown behavior | Parent and child trees belong to the common model. Each structure-bearing field enters it as a relation candidate for a stated scope, as configuration, or with a stated reason that no candidate is offered; an attachment without such a row stays unknown there, never "none". Consumers read the trees from the common model and build none of their own |
 | Published effect | GraphQL/MCP/Portal keep exposing the fields above unchanged; the parent-child hierarchy that consumers such as HA show comes from the common model, not from local thresholds or consumer-side trees |
 | Evidence status | `COMPOSITE` |
-| Common-model candidate | The zone and circuit instances exist only inside the controller's B524 namespace, with instance numbers local to it: `relation_candidate`, `Proven`, `PROTOCOL` (rows `SRC-SD15-controller-zone` and `SRC-SD15-controller-circuit`). The solar circuit and the cylinders follow the installer's module configuration code, and no register attaches them to a module unit: `configuration_only`, `PROFILE` (rows `SRC-SD15-module-solar-circuit` and `SRC-SD15-module-cylinder`). The constituent attachments keep the rows of their own entries. Whether a common relation or an anchor parent records each candidate is the common model's decision; this catalog proposes no relation definition. See the [relation-candidate fixture](./fixtures/structural-relation-candidates-v1.json). |
+| Common-model candidate | The zone and circuit instances exist only inside the controller's B524 namespace, with instance numbers local to it: `relation_candidate`, `Proven`, `PROTOCOL`, verification level `specification` (rows `SRC-SD15-controller-zone` and `SRC-SD15-controller-circuit`): each states `thermal.relation.system_member` from the thermal system and `relation.thermal_control` from the controller to the thermal system, with the controller's B524 namespace as the basis. The solar circuit and the cylinders follow the installer's module configuration code, and no register attaches them to a module unit: `configuration_only`, `PROFILE` (rows `SRC-SD15-module-solar-circuit` and `SRC-SD15-module-cylinder`). The solar row publishes no relation, so the module and the solar circuit stay separate. The cylinder row keeps the configured cylinder slot and the system membership that a separate statement supports, and publishes no `thermal.relation.fluid_supply`: the module class address with the presence and cardinality of `GG=0x00 RR=0x002F` assigns no generator to a cylinder. The constituent attachments keep the rows of their own entries. See the [relation-candidate fixture](./fixtures/structural-relation-candidates-v1.json). |
 | Code anchors | `publishZones()`, `publishCircuits()`, `publishRadioDevices()`, `publishFM5Semantic()` |
 
 ## Relation and Identity Candidates for the Common Model
@@ -333,7 +333,13 @@ answers, as the native owner, the questions the common model asks of each
 attachment above and of the functional-module page. Each row names the two
 endpoint kinds in native terms, the native identity evidence of each end and
 how each piece of it is classified, the evidence grade (`Proven`,
-`Hypothesis` or `Unknown`), the validity scope, and one disposition:
+`Hypothesis` or `Unknown`), the validity scope, one disposition, and the
+relation statements it carries. Each relation statement names the common
+relation definition, the kinds of both ends, the basis class (`gate_rule` only
+where a named protocol gate establishes the relation), the native selectors of
+the basis and a verification level, `specification` or `tested_on_hardware`
+where a page records such a result. The level is recorded and never conditions
+the statement:
 
 | Disposition | Meaning |
 | --- | --- |
@@ -350,8 +356,8 @@ raw hardware identifiers are attributes. No native unit token is documented
 for any controller-mediated slot, so a slot and the same unit's direct bus
 entry remain two views with the disposition `two_views_unresolved`.
 
-The rows place no quantity on any endpoint and propose no common relation
-definition. `python3 scripts/validate_structural_relation_candidates.py`
+The rows place no quantity on any endpoint. Relation identifiers are SemReg
+structure; a row names one and defines none. `python3 scripts/validate_structural_relation_candidates.py`
 checks the row shape, the closed vocabularies, the coverage of SD-05, SD-06,
 SD-07, SD-09, SD-10, SD-15 and the functional-module page, and that each row
 is cited in its entry.

@@ -35,9 +35,9 @@ The [semantic mapping, zones section][semantic] establishes the legacy zones
 surface, but its Zone Mode Derivation discussion is about mode and preset,
 not proof of `deriveZoneHvacAction`. In particular, its cooling-enabled input
 must not be attributed to the action function. The [thermal mapping fixture][fixture]
-contains only temperature mappings and explicitly disallows runtime
-qualification under its evidence-gap profile. It supplies no qualified
-valve/action binding.
+covers the rows the controller rule declares for the families the register
+matrix lists, with the grade and hardware test level recorded beside them. It
+has no valve or action row, so it supplies no valve/action binding.
 
 Evidence grade (`Proven`, `Hypothesis`, `Unknown`), qualification, acquisition
 success, freshness and admission are separate axes. A readable code or a

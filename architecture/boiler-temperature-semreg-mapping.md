@@ -93,10 +93,9 @@ state members `flow_temperature_c` / `return_temperature_c`, and GraphQL
   the correspondence between a slot and a direct bus entry unresolved
   (`two_views_unresolved`), so no candidate joins the boiler's B509 value to a
   controller slot, to the system group or to a circuit.
-- **Element inventory.** The flow target `thermal.measurement.water_temperature`
-  is `unknown` with the reason `catalog.reason.subject_unresolved` and no
-  plane. The common subject of this value is not decided; this page proposes
-  none. Return has no target.
+- **Element inventory.** The flow target
+  `thermal.measurement.heat_generator_flow_temperature` is `member`.
+  The subject is the boiler. Return has no target; that fact is unknown.
 
 ## Two-field mapping and qualification
 
@@ -112,15 +111,32 @@ separate from that role dimension, following the
 
 | Existing boiler field | Native source and evidence | Required qualification | Proposed Thermal mapping / current disposition |
 | --- | --- | --- | --- |
-| Flow: `FlowTemperatureC` | B509 `PB=0xB5, SB=0x09, OP=0x0D`, complete selector `18 00`; initiator-to-qualified-boiler-target request, target-to-initiator reply; `DATA2c`, °C. Native meaning **Hypothesis**; software source **Proven**. | Exact current boiler-class target identity through the native product-ID gate, bound to the actual routing target, service, operation, complete selector, response shape and codec. Family-prefix or bus-address matching alone is insufficient. No qualifying boiler-target artifact/rule exists today: runtime qualification `unknown`, field withheld. | Candidate target `thermal.measurement.water_temperature`, `unit.celsius` (SI unit kelvin, degrees Celsius plus 273.15), whose element inventory entry is `unknown` (see [Native attachment](#native-attachment)). No FactKey, role or dimension text is proposed. Exact numeric mapping only after the subject is decided, qualification and validity/freshness admission; no fact emitted today. Missing qualification has proposed reason `reason.boiler_temperature.qualification_unknown`. |
-| Return: `ReturnTemperatureC` | No accepted native source, selector, codec or source unit; evidence **Unknown**. Legacy C suffix is not source evidence. | A future exact boiler-target product identity, native return selector, response shape, codec and unit must be evidenced and qualified independently. None exists: runtime qualification `unknown`, field withheld. | Legacy field absent; no fact emitted and no separate projection disposition. No return role, dimension text or FactKey is reserved. Proposed missing-source reason `reason.boiler_temperature.return_source_unknown` describes this legacy-field absence outside projection accounting; it must not be replaced by a guessed temperature. |
+| Flow: `FlowTemperatureC` | B509 `PB=0xB5, SB=0x09, OP=0x0D`, complete selector `18 00`; initiator-to-boiler-target request, target-to-initiator reply; `DATA2c`, °C. Native meaning **Hypothesis**; software source **Proven**. | Declared boiler target: manufacturer `0xB5` and a boiler-class device ID the B509 device-type gate names, at the address it answers on. Hardware test level `declared`. Heat-pump class targets are not boiler targets. | Published element `thermal.measurement.heat_generator_flow_temperature`, `unit.celsius` (SI unit kelvin, degrees Celsius plus 273.15). A valid routed boiler B509 `0x1800` DATA2c reply publishes this element with no qualified-binding condition. Publisher `ebusreg`. |
+| Return: `ReturnTemperatureC` | No accepted native source, selector, codec or source unit; evidence **Unknown**. Legacy C suffix is not source evidence. | No accepted native return selector, response shape, codec or unit is named. The fact stays unknown. | No SemReg element. The element it would need is a boiler return temperature. None is declared. |
 
 Reason codes here are proposed mapping diagnostics for downstream adoption,
 not a claim that the producer or a reason registry already implements them.
-The [controller qualification evidence gap](vaillant-controller-qualification-v1.md)
-also has `qualified_use_permitted=false`; it cannot qualify a boiler target.
-This page does not create the missing qualification rule, transfer controller
-qualification to a boiler, or invent an identity witness.
+The [controller qualification](vaillant-controller-qualification-v1.md)
+declares the boiler target separately from the controller pairs. A valid
+routed boiler reply at selector `18 00` (`0x1800`) DATA2c feeds
+`thermal.measurement.heat_generator_flow_temperature` with no
+qualified-binding condition. Heat-pump class targets stay excluded.
+
+## SemReg publication
+
+| SemReg element | Subject | SI conversion | Evidence grade | Publisher |
+| --- | --- | --- | --- | --- |
+| `thermal.measurement.heat_generator_flow_temperature` | boiler flow, B509 `OP=0x0D` selector `18 00` (`0x1800`) `DATA2c` | kelvin = degrees Celsius plus 273.15 | Hypothesis | `ebusreg` |
+| `thermal.measurement.outdoor_air_temperature` | system outdoor air `GG=0x00 RR=0x0073` | kelvin = degrees Celsius plus 273.15 | Hypothesis | `ebusreg` |
+| `thermal.measurement.air_temperature` | zone room `GG=0x03 RR=0x000F` | kelvin = degrees Celsius plus 273.15 | Hypothesis | `ebusreg` |
+| `thermal.measurement.system_flow_temperature` | system flow `GG=0x00 RR=0x004B` | kelvin = degrees Celsius plus 273.15 | Hypothesis | `ebusreg` |
+| `thermal.measurement.circuit_flow_temperature` | circuit flow `GG=0x02 RR=0x0008` | kelvin = degrees Celsius plus 273.15 | Hypothesis | `ebusreg` |
+| `thermal.measurement.dhw_temperature` | hot-water measured `GG=0x01 RR=0x0005` | kelvin = degrees Celsius plus 273.15 | Hypothesis | `ebusreg` |
+| `thermal.setpoint.dhw_temperature_setpoint` | hot water `GG=0x01 II=0x00 RR=0x0004` | kelvin = degrees Celsius plus 273.15 | Proven | `ebusreg` |
+| `thermal.setpoint.temperature_setpoint` | zone `GG=0x03 RR=0x0022` | kelvin = degrees Celsius plus 273.15 | Hypothesis | `ebusreg` |
+| `thermal.measurement.humidity` | zone `GG=0x03 RR=0x0028` | ratio = percent divided by 100 | Hypothesis | `ebusreg` |
+
+Native values with no SemReg element yet: system pressure `GG=0x00 RR=0x0039` would need a pressure element; the system switch `GG=0x00 RR=0x0007` would need a mode element; hot-water mode `GG=0x01 RR=0x0003` would need a mode element; circuit cooling `GG=0x02 RR=0x0006` would need a capability element; circuit special function `GG=0x02 RR=0x001D` would need a special-function element; zone mode `GG=0x03 RR=0x0006` would need a mode element; heating computed effective `GG=0x03 RR=0x0014` would need a separate effective-setpoint element; the rolling average `GG=0x00 RR=0x0095` would need an aggregate element; boiler return has no selector and would need a return-temperature element. Each of those facts is unknown.
 
 ## Value, retention, freshness and loss rules
 
@@ -180,7 +196,7 @@ use `withheld` only when the requested item is not projected. The
 [snapshot projection accounting contract](https://github.com/Project-Helianthus/helianthus-docs/blob/main/api/semantic-snapshot-read.md#projection-accounting-and-deterministic-order)
 requires one disposition per `(kind,item_id)`, collecting all matching complete
 FactKeys in `source_keys`. Flow and any future return value would share
-`thermal.measurement.water_temperature`; an absent return cannot add a separate
+`thermal.measurement.heat_generator_flow_temperature`; an absent return cannot add a separate
 disposition or make the shared item withheld when flow is projected. Return's
 qualification remains `unknown`; its missing-source reason describes only the
 legacy-field absence outside this report. No return fact is emitted, including
@@ -226,11 +242,11 @@ producer test.
 
 | Case | Existing behavior | Required new behavior / equivalence boundary |
 | --- | --- | --- |
-| Normal B509 flow read, including valid zero | Decoded flow reaches the legacy pointer. | With exact qualification, accepted policy and valid fresh bytes, identical Celsius and flow identity. Today qualification is missing, so publication is withheld. |
+| Normal B509 flow read, including valid zero | Decoded flow reaches the legacy pointer. | With exact qualification, accepted policy and valid fresh bytes, identical Celsius and flow identity. A valid routed boiler reply publishes the element with no qualified-binding condition. |
 | Partial update | Missing flow preserves the old pointer; return becomes nil on merge. | Retain only independently qualified flow with original receipt/evidence until expiry; return stays withheld. Other successes cannot refresh flow age. |
 | B509 failure, no usable mirror | Flow can remain last-known indefinitely. | No flow update; retain only eligible prior observation, then withdraw on expiry. No default or new source. |
 | Replacement `00 80` | Decoder can publish `-2048 °C`. | No update; withhold invalid sample, retain only eligible prior evidence until expiry. Intentional difference. |
-| No exact qualification | Prefix-selected target can supply legacy flow. | Qualification `unknown`; no flow or return fact. Intentional difference. |
+| Target that is no declared boiler target | Prefix-selected target can supply legacy flow. | The target is not a boiler target; no flow fact. The return fact stays unknown. Intentional difference. |
 | B524 system-flow mirror | Age-bounded mirror can supply flow when B509 supplies no value; B509 wins within the tick. | Intentional difference: no mirror admitted as boiler flow. Only an eligible qualified B509 last-known-good observation may be retained; otherwise flow is withheld. Retain/remove disposition of the old mirror on the legacy surface remains open for M15 / #952. |
 | Cache restoration / restart | Flow and historical return can be restored without source proof; plane reports cache. | Value-only legacy cache cannot admit either field; never reset age or promote qualification/freshness. Proven retained observations require identity and clock/policy reevaluation. |
 | Return on live merge | Forced nil; no producer. | No accepted source, no fact, reserved role unpublished, explicit missing-source reason. Equivalent absence, with the cache difference above. |
@@ -276,7 +292,7 @@ separate projection disposition and remains only in raw/quality evidence.
 | F read failure or omitted field in partial update | Old pointer can persist indefinitely | No new value; retain F independently of other fields | Original F freshness; no refresh | Retained flow `50 °C` |
 | F retention deadline expires after a failed read | Old pointer has no field expiry | Withdraw F; keep native evidence separately | Expired under original policy | Flow withheld; no scalar |
 | F loses qualification or conflicts with current target identity | Legacy family heuristic does not establish exact qualification | Withhold immediately; prior F cannot remain admitted | No fresh promotion; original receipt unchanged | Flow withheld despite an unexpired prior value |
-| F `20 03`, no exact qualification or accepted policy (current situation) | Can decode `50 °C` | No admitted value; legacy value cannot seed retention | No admitted fresh observation; policy remains Unknown | Flow withheld; qualification `unknown` when exact qualification is missing |
+| F `20 03` on a valid routed boiler reply | Can decode `50 °C` | Admitted as flow with no qualified-binding condition | Fresh observation with its original receipt | Flow published |
 | B524 `(OP=0x02, GG=0x00, II=0x00, RR=0x004B)`, synthetic f32 `00 00 48 42` (`50 °C`), no eligible F | Age-bounded controller mirror can supply boiler flow | No F update or F retention seed; preserve distinct system-flow evidence | Mirror age does not refresh F | Boiler flow withheld; intentional mirror exclusion |
 | Value-only cache restore, flow `50 °C` and historical return `40 °C` | Can restore both pointers before merge clears return | Admit neither; no native proof or eligible retention seed | Unknown; restore cannot restamp receipt | Both fields withheld |
 | Return, no accepted source or bytes | Nil on live merge | No value and no last-known-good observation | Unknown; no native receipt | No separate disposition or emitted return fact; qualification `unknown`; legacy-field absence reason `reason.boiler_temperature.return_source_unknown` outside projection accounting |

@@ -218,7 +218,7 @@
       "path": "architecture/ak20-b524-family-codebooks.md",
       "previous_path": "architecture/ak20_b524_family_codebooks.md",
       "status": "candidate",
-      "basis": "Hypothesis: all seven codebooks use OP02 and the candidate family tokens"
+      "basis": "Hypothesis: all listed codebooks use OP02 and the candidate family tokens"
     },
     {
       "path": "architecture/ak22-b524-component-selectors-api.md",

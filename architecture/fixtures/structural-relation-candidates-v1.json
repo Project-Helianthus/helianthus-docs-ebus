@@ -51,7 +51,8 @@
         }
       ],
       "reason": "The binding is a native zone value for the zone end. The step from the value to one OP=0x06 slot instance (1 to GG=0x09, 2 and above to GG=0x0A at value minus one) is gateway policy, so the room-unit end stays a gateway-policy resolution. The room-unit side value OP=0x06 GG=0x09/0x0A RR=0x0025 corroborates the binding and is no gate.",
-      "pending_review": null
+      "pending_review": null,
+      "relations": []
     },
     {
       "id": "SRC-SD06-zone-to-circuit",
@@ -83,12 +84,11 @@
         ],
         "resolution": "unresolved"
       },
-      "evidence_grade": "Unknown",
+      "evidence_grade": "Hypothesis",
       "validity_scope": [
-        "LAB",
         "PROFILE"
       ],
-      "disposition": "unresolved",
+      "disposition": "relation_candidate",
       "native_statements": [
         {
           "selector": "OP=0x02 GG=0x03 II=zone RR=0x0013",
@@ -103,8 +103,20 @@
           "scope": "PROFILE"
         }
       ],
-      "reason": "The two native statements name different registers, and RR=0x0013 is also the room-unit binding of SD-05; no relation candidate is offered while they differ.",
-      "pending_review": "The specialist review of the native owner records which register establishes the zone-to-circuit assignment; no relation candidate is admitted before it."
+      "reason": "The zone's circuit-assignment register RR=0x001C is the basis of the supply relation from the thermal circuit to the zone. RR=0x0013 is also the room-unit binding of SD-05 and is no basis here.",
+      "pending_review": null,
+      "relations": [
+        {
+          "id": "thermal.relation.fluid_supply",
+          "from_kind": "circuit_instance",
+          "to_kind": "zone_instance",
+          "basis_class": "native_register",
+          "basis_selectors": [
+            "OP=0x02 GG=0x03 II=zone RR=0x001C"
+          ],
+          "verification_level": "specification"
+        }
+      ]
     },
     {
       "id": "SRC-SD07-zone-to-circuit-fallback",
@@ -142,8 +154,9 @@
       ],
       "disposition": "absent",
       "native_statements": [],
-      "reason": "The fallback to the zone's own instance number is gateway policy. Equal instance numbers are never a relation basis, so the fallback offers no candidate.",
-      "pending_review": null
+      "reason": "The fallback to the zone's own instance number is gateway policy. Equal instance numbers are never a relation basis, so the fallback offers no candidate. When the circuit-assignment register yields no circuit, the relation is unknown.",
+      "pending_review": null,
+      "relations": []
     },
     {
       "id": "SRC-SD09-circuit-managing-module",
@@ -201,8 +214,21 @@
           "scope": "PROFILE"
         }
       ],
-      "reason": "No register states which module manages a circuit. The gateway derives ownership from installer configuration codes for one validated tuple; every other tuple stays unknown, and no absence is stated for it. The module end is reached through a slot class address, which selects an interpretation and is never an identity.",
-      "pending_review": null
+      "reason": "The control relation from the module's equipment resource to the thermal circuit takes the installer-configuration tuple (RR=0x0036 and RR=0x002F) as its basis. A tuple that does not assign the module to the circuit leaves the relation unknown, and no absence is stated for it. The module end is reached through a slot class address, which only interprets the module end and is never the basis or an identity.",
+      "pending_review": null,
+      "relations": [
+        {
+          "id": "relation.thermal_control",
+          "from_kind": "functional_module",
+          "to_kind": "circuit_instance",
+          "basis_class": "native_register",
+          "basis_selectors": [
+            "OP=0x02 GG=0x00 RR=0x0036",
+            "OP=0x02 GG=0x00 RR=0x002F"
+          ],
+          "verification_level": "specification"
+        }
+      ]
     },
     {
       "id": "SRC-SD10-connected-device-slot",
@@ -274,7 +300,19 @@
         }
       ],
       "reason": "The controller relays the data of the device in a connected slot. The slot number is local to the controller and is no unit identity; see the relayed-identity rows for the same unit's direct bus entry.",
-      "pending_review": null
+      "pending_review": null,
+      "relations": [
+        {
+          "id": "relation.relays",
+          "from_kind": "b524_semantic_root",
+          "to_kind": "device_slot",
+          "basis_class": "native_register",
+          "basis_selectors": [
+            "OP=0x06 GG=0x01/0x02/0x09/0x0A/0x0C/0x0E/0x0F II=slot RR=0x0001"
+          ],
+          "verification_level": "specification"
+        }
+      ]
     },
     {
       "id": "SRC-SD10-inventory-device-slot",
@@ -334,7 +372,8 @@
         }
       ],
       "reason": "A disconnected slot with retained identity is no relay that the controller is performing; listing it with slot_mode inventory is gateway policy and offers no candidate.",
-      "pending_review": null
+      "pending_review": null,
+      "relations": []
     },
     {
       "id": "SRC-SD15-controller-zone",
@@ -383,8 +422,30 @@
           "scope": "PROTOCOL"
         }
       ],
-      "reason": "A zone instance exists only inside the controller's B524 namespace, and its instance number is local to that controller. Whether the common model records this as the zone's parent or as a relation is its decision.",
-      "pending_review": null
+      "reason": "A zone instance exists only inside the controller's B524 namespace, and its instance number is local to that controller. The common model states the namespace as the system membership and the control relation of the controller.",
+      "pending_review": null,
+      "relations": [
+        {
+          "id": "thermal.relation.system_member",
+          "from_kind": "thermal_system",
+          "to_kind": "b524_semantic_root",
+          "basis_class": "namespace",
+          "basis_selectors": [
+            "PB=0xB5 SB=0x24"
+          ],
+          "verification_level": "specification"
+        },
+        {
+          "id": "relation.thermal_control",
+          "from_kind": "b524_semantic_root",
+          "to_kind": "thermal_system",
+          "basis_class": "namespace",
+          "basis_selectors": [
+            "PB=0xB5 SB=0x24"
+          ],
+          "verification_level": "specification"
+        }
+      ]
     },
     {
       "id": "SRC-SD15-controller-circuit",
@@ -438,8 +499,30 @@
           "scope": "PROTOCOL"
         }
       ],
-      "reason": "A circuit instance exists only inside the controller's B524 namespace, and its instance number is local to that controller. Whether the common model records this as the circuit's parent or as a relation is its decision.",
-      "pending_review": null
+      "reason": "A circuit instance exists only inside the controller's B524 namespace, and its instance number is local to that controller. The common model states the namespace as the system membership and the control relation of the controller.",
+      "pending_review": null,
+      "relations": [
+        {
+          "id": "thermal.relation.system_member",
+          "from_kind": "thermal_system",
+          "to_kind": "b524_semantic_root",
+          "basis_class": "namespace",
+          "basis_selectors": [
+            "PB=0xB5 SB=0x24"
+          ],
+          "verification_level": "specification"
+        },
+        {
+          "id": "relation.thermal_control",
+          "from_kind": "b524_semantic_root",
+          "to_kind": "thermal_system",
+          "basis_class": "namespace",
+          "basis_selectors": [
+            "PB=0xB5 SB=0x24"
+          ],
+          "verification_level": "specification"
+        }
+      ]
     },
     {
       "id": "SRC-SD15-module-solar-circuit",
@@ -488,8 +571,9 @@
           "scope": "PROFILE"
         }
       ],
-      "reason": "The solar circuit appears only for some installer configuration codes; no register attaches it to a module unit.",
-      "pending_review": null
+      "reason": "The solar circuit appears only for some installer configuration codes; no register attaches it to a module unit. The module and the solar circuit stay separate and no relation is published.",
+      "pending_review": null,
+      "relations": []
     },
     {
       "id": "SRC-SD15-module-cylinder",
@@ -538,8 +622,20 @@
           "scope": "PROFILE"
         }
       ],
-      "reason": "Cylinders appear only for some installer configuration codes; no register attaches a cylinder to a module unit.",
-      "pending_review": null
+      "reason": "Cylinders appear only for some installer configuration codes; no register attaches a cylinder to a module unit. The configured cylinder and its own thermal system keep the system membership that a separate statement supports. The module class address interprets the slot and RR=0x002F supplies configured cylinder presence and cardinality; neither assigns a generator to the cylinder, so no supply edge is published.",
+      "pending_review": null,
+      "relations": [
+        {
+          "id": "thermal.relation.system_member",
+          "from_kind": "cylinder_instance",
+          "to_kind": "thermal_system",
+          "basis_class": "separate_statement",
+          "basis_selectors": [
+            "OP=0x02 GG=0x00 RR=0x002F"
+          ],
+          "verification_level": "specification"
+        }
+      ]
     },
     {
       "id": "SRC-FM-second-family-slot",
@@ -581,8 +677,9 @@
       ],
       "disposition": "absent",
       "native_statements": [],
-      "reason": "OP=0x06 GG=0x0B carries a presentation name only: no slot bounds, register layout or unit identity is established, so no candidate is offered.",
-      "pending_review": null
+      "reason": "OP=0x06 GG=0x0B carries a presentation name only: no slot bounds, register layout or unit identity is established, so no candidate is offered. The presentation name is a hint only.",
+      "pending_review": null,
+      "relations": []
     },
     {
       "id": "SRC-FM-second-family-status",
@@ -643,7 +740,8 @@
         }
       ],
       "reason": "The status registers state no attachment of a module of the second family to a circuit, a zone or a slot.",
-      "pending_review": null
+      "pending_review": null,
+      "relations": []
     }
   ],
   "relayed_identity": [

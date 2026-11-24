@@ -239,7 +239,7 @@ def test_rejects_both_or_neither_of_references_and_absence() -> None:
 
 def test_targets_copy_the_element_inventory_disposition() -> None:
     rows = rows_by_key(index())
-    for key, fact in ((OUTDOOR, "thermal.measurement.air_temperature"), (FLOW, "thermal.measurement.water_temperature")):
+    for key, fact in ((OUTDOOR, "thermal.measurement.outdoor_air_temperature"), (FLOW, "thermal.measurement.system_flow_temperature")):
         assert rows[key]["target"] == {
             "definition": {
                 "pack": {"id": "helianthus.pack.thermal", "version": "1.0.0"},
@@ -260,7 +260,7 @@ def test_targets_copy_the_element_inventory_disposition() -> None:
     (
         (("definition", "pack", "id"), "helianthus.pack.storage"),
         (("definition", "pack", "version"), "1.1.0"),
-        (("definition", "id"), "thermal.measurement.outdoor_air_temperature"),
+        (("definition", "id"), "thermal.measurement.air_temperature"),
         (("definition", "version"), "1.0.1"),
         (("element_kind",), "dimension"),
         (("disposition",), "member"),
@@ -400,6 +400,20 @@ def test_rejects_destination_family_or_direction_drift(field: str, value: str) -
     rejects(mutated)
 
 
+def test_boiler_flow_publishes_without_a_binding_and_rejects_a_heat_pump() -> None:
+    CHECKER.check_boiler_publication("boiler", False)
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.check_boiler_publication("heat_pump", False)
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.check_boiler_publication("boiler", True)
+    mutated = deepcopy(index())
+    mutated["boiler_target"]["flow_row"]["qualified_binding_required"] = True  # type: ignore[index]
+    with pytest.raises(CHECKER.CheckError):
+        CHECKER.validate_index(mutated, structural=structural(), qualification=qualification())
+    CHECKER.validate_index(index(), structural=structural(), qualification=qualification())
+    CHECKER.validate_dhw(json.loads((ROOT / "architecture/fixtures/dhw-setpoint-semreg-cutover-v1.json").read_text()))
+
+
 def test_rejects_withheld_and_nonclaim_drift() -> None:
     mutated = deepcopy(index())
     row = mutated["mappings"][2]  # type: ignore[index]
@@ -407,8 +421,12 @@ def test_rejects_withheld_and_nonclaim_drift() -> None:
     rejects(mutated)
 
     mutated = deepcopy(index())
-    mutated["nonclaims"]["write_route_established"] = True  # type: ignore[index]
+    mutated["nonclaims"]["topology_established"] = True  # type: ignore[index]
     rejects(mutated)
+
+    mutated = deepcopy(index())
+    mutated["nonclaims"]["hardware_qualification_established"] = True  # type: ignore[index]
+    CHECKER.validate_index(mutated, structural=structural(), qualification=qualification())
 
 
 @pytest.mark.parametrize("key", (OUTDOOR, FLOW))

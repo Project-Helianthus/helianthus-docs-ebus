@@ -39,10 +39,10 @@ The authoritative rule-by-rule source remains the decision catalog:
 | Zone instance gate | `SD-02`, `SD-03` | `GG=0x03 RR=0x001C` + zone presence FSM | Zone instance becomes present/absent | `PROTOCOL` for direct probe path; `GATEWAY_POLICY` for hysteresis/fallback |
 | Zone naming gate | `SD-04` | `GG=0x03 RR=0x0016/0x0017/0x0018` | Zone name becomes explicit or falls back | Mixed `PROTOCOL` + `GATEWAY_POLICY` |
 | Zone room-sensor mapping gate | `SD-05` | `GG=0x03 RR=0x0013` | `room_temperature_zone_mapping` becomes available | `PROTOCOL` |
-| Zone-to-circuit derivation gate | `SD-06` | `GG=0x03 RR=0x0013` + current lab-backed `value - 1` derivation | `associated_circuit` becomes explicit from raw mapping value | `LAB` |
+| Zone-to-circuit derivation gate | `SD-06` | `GG=0x03 RR=0x001C` (`zone_circuit_assignment`); the `value - 1` reading of `GG=0x03 RR=0x0013` is no basis | `associated_circuit` becomes explicit from the assignment register; relation `thermal.relation.fluid_supply`, verification level `specification` | `PROFILE` |
 | Zone-to-circuit fallback gate | `SD-07` | outcome of `SD-06` | `associated_circuit` remains populated via fallback-to-zone-instance | `GATEWAY_POLICY` |
 | Circuit instance gate | `SD-08` | `GG=0x02 RR=0x0002` | Circuit active/inactive | `PROTOCOL` |
-| Circuit ownership gate | `SD-09` | `hydraulic_scheme_code`, `functional_module_configuration_code`, `fm5_semantic_mode` | `managing_device` explicit or `UNKNOWN` | Mixed `LAB` / `PROFILE` / `UNKNOWN` |
+| Circuit ownership gate | `SD-09` | `hydraulic_scheme_code`, `functional_module_configuration_code`, `fm5_semantic_mode` | `managing_device` explicit from the installer-configuration tuple, or `UNKNOWN` for a tuple that does not assign the module | Mixed `LAB` / `PROFILE` |
 | Device slot inclusion gate | `SD-10` | `GG=0x09/0x0A/0x0C/0x0E/0x0F` OP=0x06 `device_connected` (RR=0x0001); GG=0x0C also admits `slot_mode=inventory` when identity evidence exists | Remote device slot published | Mixed `PROTOCOL` + `GATEWAY_POLICY` |
 | FM5 interpretation gate | `SD-11` | VR71 config + radio/FM5 evidence + solar/cylinder readability | `fm5_semantic_mode` | Mixed `GATEWAY_POLICY` + `PROFILE` |
 | Solar family gate | `SD-12` | FM5 mode/reason/revision verdict + `GG=0x04` readability | `solar` created/updated, retained unchanged on transient degradation, or structurally withdrawn | Mixed `GATEWAY_POLICY` + `PROFILE` |

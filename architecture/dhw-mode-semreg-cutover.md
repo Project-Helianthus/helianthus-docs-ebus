@@ -186,6 +186,18 @@ none grants a binding merely by supplying valid bytes.
 | Conflicting candidates | Two candidates for one service disagree, including one raw-equal value with different provenance | Preserve both; equality alone is not equivalence. No qualified arbitration means withholding the affected candidate. A boiler mirror and controller source are not independent votes. |
 | Shared-definition accounting | Independent qualified source projects requested `thermal.status.operation`; DHW operation is absent | Exactly one projected disposition for the requested definition; native DHW loss remains separate. With no qualified projecting source, exactly one withheld disposition. |
 
+## Write route
+
+The hot-water mode write uses `GG=0x01` `II=0x00` `RR=0x0003`, `PB=0xB5 SB=0x24 OP=0x02`, the selector `development/ha-integration.md` documents for the existing write.
+
+The native value is the register's documented enumeration. No temperature conversion applies.
+
+The admitted range is the enumeration the device reports for that register in its B524 description record where that query exists and the device answers it. The register-map values apply only where no query exists. Where the query exists but the device returns no reply or no result, the limits stay unknown and the documented values are not substituted.
+
+Acknowledgement is the target's response to the initiator-to-target telegram (eBUS data link layer V1.3.1). Readback is one read of `RR=0x0003` in the same lifecycle generation after the response.
+
+The capability is published where the device declares `RR=0x0003` writable through the B524 access flag. A device that declares no such writable key has no capability for this key, and its service states that it has none. The operation is EE04's inventory entry for this selector.
+
 ## Acceptance boundary and remaining evidence
 
 Manual review must cover each source claim, transition, loss row, synthetic case

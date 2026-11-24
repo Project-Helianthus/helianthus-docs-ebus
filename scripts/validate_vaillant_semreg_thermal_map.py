@@ -8,6 +8,7 @@ its target definition. The hot-water fixture is checked with the same rules.
 """
 from __future__ import annotations
 
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -41,11 +42,11 @@ def unresolved_fact(fact: str) -> dict[str, object]:
 EXPECTED_ROWS = {
     "PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x0073": (
         "state.outdoor_temperature", "0x0073", SYSTEM_GROUP, "b524_semantic_root",
-        "thermal.measurement.air_temperature", "exact", None,
+        "thermal.measurement.outdoor_air_temperature", "exact", None,
     ),
     "PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x004B": (
         "state.flow_temperature", "0x004B", SYSTEM_GROUP, "b524_semantic_root",
-        "thermal.measurement.water_temperature", "exact", None,
+        "thermal.measurement.system_flow_temperature", "exact", None,
     ),
     "PB=0xB5 SB=0x24 OP=0x02 GG=0x00 II=0x00 RR=0x0095": (
         "state.outdoor_temperature_avg24h", "0x0095", SYSTEM_GROUP, "b524_semantic_root",
@@ -63,14 +64,23 @@ DHW_FACT = "thermal.setpoint.dhw_temperature_setpoint"
 DHW_KEY = "PB=0xB5 SB=0x24 OP=0x02 GG=0x01 II=0x00 RR=0x0004"
 DHW_TOP_KEYS = {
     "evidence_status", "scope", "relation_candidates_fixture", "native_resources", "rows",
-    "projection_cases",
+    "projection_cases", "target_domain",
+}
+DHW_TARGET_DOMAIN = {
+    "grade": "Hypothesis",
+    "documented_range_celsius": {"minimum": 35, "maximum": 70},
+    "precedence": (
+        "The B524 description-record MIN and MAX apply where that query exists and the device answers. "
+        "Where the query exists and the device returns no reply or no result, the limits stay unknown "
+        "and the documented range is not substituted. The documented range applies only where no query exists."
+    ),
 }
 DHW_ROW_KEYS = {
     "native_key", "native_value", "native_resource", "relation_candidates", "target", "subject",
 }
 DHW_SOURCES = ["alpha", "beta"]
 REQUIRED_NONCLAIMS = {
-    "write_route_established", "operation_authority_established", "topology_established",
+    "topology_established",
     "full_portal_descriptor_established", "prometheus_output_established",
     "eebus_output_established", "matter_output_established",
     "hardware_qualification_established",
@@ -179,6 +189,27 @@ def require(value: object, expected: object, label: str) -> None:
 
 def load(path: Path) -> object:
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def qualification_rules():
+    path = Path(__file__).resolve().parent / "validate_vaillant_controller_qualification.py"
+    spec = importlib.util.spec_from_file_location("vaillant_controller_qualification_rules", path)
+    if spec is None or spec.loader is None:
+        raise CheckError("controller qualification module")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def check_boiler_publication(target_class: str, qualified_binding_required: bool) -> None:
+    """A routed boiler flow row publishes with no binding gate. A heat pump does not."""
+    if target_class == "boiler":
+        if qualified_binding_required:
+            raise CheckError("boiler flow row qualified_binding_required stays false")
+        return
+    if target_class == "heat_pump":
+        raise CheckError("the same selector on a heat-pump target is not a boiler publication")
+    raise CheckError("not a declared boiler target")
 
 
 def selector_parts(selector: object, label: str) -> dict[str, str]:
@@ -498,39 +529,37 @@ def check_sidecar(qualification: dict[str, object], keys: list[str]) -> None:
     require(bound, keys, "qualification sidecar thermal_rows")
 
 
-def validate_index(index: object, *, structural: object = None, qualification: object = None) -> None:
-    if structural is None:
-        structural = load(STRUCTURAL)
-    if qualification is None:
-        qualification = load(QUALIFICATION)
-    if not isinstance(index, dict):
-        raise CheckError("index must be an object")
-    if not isinstance(qualification, dict):
-        raise CheckError("qualification sidecar must be an object")
+def _validate_index_contract(index: dict[str, object], qualification: dict[str, object]) -> None:
     require(index.get("schema_version"), 1, "schema_version")
     require(index.get("contract_id"), "helianthus.docs.ebus.b524-semreg-thermal/v1", "contract_id")
     require(index.get("scope"), "read_only_candidate_mapping", "scope")
     require(index.get("pack"), PACK, "pack")
     require(index.get("relation_candidates_fixture"), str(STRUCTURAL), "relation_candidates_fixture")
 
+    rules = qualification_rules()
     applicability = index.get("applicability")
     if not isinstance(applicability, dict):
         raise CheckError("applicability must be an object")
-    require(applicability, {
-        "qualified_binding_required": True,
-        "generalizes_to_other_controllers": False,
-        "generalizes_to_other_products": False,
-        "generalizes_to_other_firmware": False,
-    }, "applicability")
+    require(applicability, rules.GENERALIZES, "applicability")
     require(index.get("qualification"), {
         "contract_id": "helianthus.docs.ebus.vaillant-controller-qualification/v1",
         "revision": "vaillant-controller-qualification-evidence-gap/v1",
         "fixture": "architecture/fixtures/vaillant-controller-qualification-v1.json",
-        "evidence_status": "Unknown",
+        "level": "declared",
         "qualified_binding_required": True,
-        "runtime_qualification_permitted": False,
+        "runtime_qualification_permitted": True,
+        "hardware_test_record": None,
     }, "qualification")
+    require(index.get("write_routes"), rules.WRITE_ROUTES, "write_routes")
+    require(index.get("boiler_target"), rules.BOILER_TARGET, "boiler_target")
+    flow = index["boiler_target"]["flow_row"]
+    check_boiler_publication("boiler", bool(flow["qualified_binding_required"]))
 
+
+def _validate_index_mappings(
+    index: dict[str, object], structural: object, qualification: dict[str, object],
+) -> None:
+    rules = qualification_rules()
     resources = native_resources(index.get("native_resources"), "thermal map")
     candidates = endpoint_kinds(structural)
     mappings = index.get("mappings")
@@ -547,17 +576,25 @@ def validate_index(index: object, *, structural: object = None, qualification: o
         require(row["native_selector"], {
             "pb": "0xB5", "sb": "0x24", "operation": "0x02", "group": "0x00",
             "instance": "0x00", "register": EXPECTED_ROWS[key][1],
-            "destination": "0x15", "controller_family": "BASV2/CTLV2/VRC720",
+            "destination": "0x15",
+            "controller_family": rules.controller_family("0x00", EXPECTED_ROWS[key][1]),
             "request_direction": "initiator_to_target", "value_direction": "target_to_initiator",
         }, f"{key}: native_selector")
     check_unused_resources(resources, used, "thermal map")
     check_sidecar(qualification, keys)
 
+
+def _validate_index_boundaries(index: dict[str, object]) -> None:
     nonclaims = index.get("nonclaims")
     if not isinstance(nonclaims, dict) or set(nonclaims) != REQUIRED_NONCLAIMS:
         raise CheckError("nonclaims must contain the closed public-boundary inventory")
-    if any(value is not False for value in nonclaims.values()):
-        raise CheckError("all nonclaims must remain false")
+    for name, claim in nonclaims.items():
+        if name == "hardware_qualification_established":
+            if not isinstance(claim, bool):
+                raise CheckError("hardware_qualification_established records whether a public test record exists")
+            continue
+        if claim is not False:
+            raise CheckError("nonclaim drifted")
     require(index.get("native_distinctions"), {
         "op06_gg00_rr0015_substitutable_for_system_flow": False,
         "b509_substitutable_for_b524_rows": False,
@@ -576,11 +613,26 @@ def validate_index(index: object, *, structural: object = None, qualification: o
     }, "lifecycle")
 
 
+def validate_index(index: object, *, structural: object = None, qualification: object = None) -> None:
+    if structural is None:
+        structural = load(STRUCTURAL)
+    if qualification is None:
+        qualification = load(QUALIFICATION)
+    if not isinstance(index, dict):
+        raise CheckError("index must be an object")
+    if not isinstance(qualification, dict):
+        raise CheckError("qualification sidecar must be an object")
+    _validate_index_contract(index, qualification)
+    _validate_index_mappings(index, structural, qualification)
+    _validate_index_boundaries(index)
+
+
 def validate_dhw(data: object, *, structural: object = None) -> None:
     if structural is None:
         structural = load(STRUCTURAL)
     if not isinstance(data, dict) or set(data) != DHW_TOP_KEYS:
         raise CheckError(f"hot-water fixture members must be exactly {sorted(DHW_TOP_KEYS)}")
+    require(data.get("target_domain"), DHW_TARGET_DOMAIN, "hot water: target_domain")
     require(data["evidence_status"], "Hypothesis", "hot water: evidence_status")
     require(data["scope"], "synthetic_read_projection_contract", "hot water: scope")
     require(data["relation_candidates_fixture"], str(STRUCTURAL), "hot water: relation_candidates_fixture")
