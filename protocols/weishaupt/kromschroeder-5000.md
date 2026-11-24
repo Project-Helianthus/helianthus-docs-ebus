@@ -21,7 +21,7 @@
   - [3.3 Wire Format](#33-wire-format)
   - [3.4 Device Address Table](#34-device-address-table)
   - [3.5 Selected RAM Registers](#35-selected-ram-registers)
-- [4. Secondary Channel (0902/0903)](#4-secondary-channel-09020903)
+- [4. Passive secondary messages (0902/0903)](#4-passive-secondary-messages-09020903)
 - [5. PBSB 500A (Unknown Role)](#5-pbsb-500a-unknown-role)
 - [6. PB=0x50 Disambiguation](#6-pb0x50-disambiguation)
 - [7. Protocol relevance](#7-protocol-relevance)
@@ -198,15 +198,13 @@ Representative subset from `0000360.tsp` (the shared register include file). Ful
 
 ---
 
-## 4. Secondary Channel (0902/0903)
+## 4. Passive secondary messages (0902/0903)
 
-- **PB=0x09**, SB=0x02 (read) and SB=0x03 (write)
-- Defined in `reg09_inc.tsp` (read, 297 registers) and `reg0903_inc.tsp` (write, 297 registers)
-- Same register count as the main 5000/5001 include files (`reg_inc.tsp` / `reg50_inc.tsp`), indicating the same register set exposed on a secondary access channel
+**TypeSpec declaration, not wire proof:** The cited [`_templates.tsp`](https://github.com/aghulas/ebusd-configuration/blob/90c509ddbd494f8efab546a609bc195aba8ed991/src/kromschroeder/_templates.tsp) marks both PB=0x09/SB=0x02 (`sregr`) and PB=0x09/SB=0x03 (`sregw`) with `@passive`. The latter also carries `@write()`: it describes a write observed on the bus, not an active request template.
 
-**Inference:** bc1/bc2 burner controllers at 0x08/0x18 may use 0902/0903 while controller modules (ka at 0x15, em1--em3 at 0x50--0x52) use 5000/5001. Alternatively, 0902/0903 may be a diagnostic access channel vs the operational 5000/5001.
+The [`reg09_inc.tsp`](https://github.com/aghulas/ebusd-configuration/blob/90c509ddbd494f8efab546a609bc195aba8ed991/src/kromschroeder/reg09_inc.tsp) and [`reg0903_inc.tsp`](https://github.com/aghulas/ebusd-configuration/blob/90c509ddbd494f8efab546a609bc195aba8ed991/src/kromschroeder/reg0903_inc.tsp) lists contain 297 register declarations each. Their equal count does not establish the same wire layout or the devices that originate these messages.
 
-**Evidence:** File existence of `reg0903_inc.tsp` and `reg09_inc.tsp` in aghulas fork with matching 297-register counts; [aghulas fork root](https://github.com/aghulas/ebusd-configuration/blob/90c509ddbd494f8efab546a609bc195aba8ed991/)
+**Unknown:** No raw frame or active request layout is established by these sources. The possible device assignments and payload interpretation remain unverified; the register declarations are retained as evidence without inferring a transmitted request format.
 
 ---
 
@@ -259,5 +257,5 @@ See also: [`wolf-protocols.md`](../wolf/wolf-protocols.md) for the Wolf side of 
 |---------|------|------|---------|-----|
 | 5000/5001 RAM access + registers | aghulas | 0000360.tsp | 19--3500+ | [link](https://github.com/aghulas/ebusd-configuration/blob/90c509ddbd494f8efab546a609bc195aba8ed991/src/kromschroeder/0000360.tsp) |
 | Device addresses bc1/bc2/ka/fs1/em1-em3/sc | aghulas | 08..bc1.tsp etc. | -- | [link](https://github.com/aghulas/ebusd-configuration/blob/90c509ddbd494f8efab546a609bc195aba8ed991/src/kromschroeder/08..bc1.tsp) |
-| 0902/0903 include files (297 regs each) | aghulas | reg0903_inc.tsp | -- | [link](https://github.com/aghulas/ebusd-configuration/blob/90c509ddbd494f8efab546a609bc195aba8ed991/) |
+| 0902/0903 passive templates and register lists | aghulas | _templates.tsp, reg09_inc.tsp, reg0903_inc.tsp | -- | [pinned source](https://github.com/aghulas/ebusd-configuration/blob/90c509ddbd494f8efab546a609bc195aba8ed991/src/kromschroeder/_templates.tsp) |
 | Weishaupt f6..sc.csv (558 rows) | aghulas | f6..sc.csv | 1+ | [link](https://github.com/aghulas/ebusd-configuration/blob/90c509ddbd494f8efab546a609bc195aba8ed991/src/kromschroeder/tsp-output/%40ebusd/ebus-typespec/weishaupt/f6..sc.csv) |
