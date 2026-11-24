@@ -52,16 +52,21 @@ of this page.
   list no attachment that carries these values to another native resource, and
   each row of the typed map states that absence.
 - **Element inventory.** The instantaneous target
-  `thermal.measurement.outdoor_air_temperature` is `unknown` with the reason
-  `catalog.reason.subject_unresolved` and no plane. The aggregate has no
-  target. The common subject of the outdoor value is not decided; this page
-  proposes none.
+  `thermal.measurement.outdoor_air_temperature` is a pack fact member on
+  plane `control`, with resolved resource dimension `thermal.dimension.system`
+  (`resource.thermal_system`) and no catalog reason. That copy is the SemReg
+  definition. It does not attach register `RR=0x0073` to the thermal-system
+  resource.
+- **eBUS mapping.** The native relation stays unresolved, reason
+  `catalog.reason.subject_unresolved`. The fact projection is withheld with
+  that reason, no source key and no loss. It names no relation instance and
+  no resource. The aggregate has no target and no eBUS mapping.
 
 ## Exact mapping and source join
 
 | Field | Existing native contract | Proposed cutover result |
 | --- | --- | --- |
-| Instantaneous `state.outdoor_temperature` | Controller family of the typed Thermal map; `PB=0xB5`, `SB=0x24`, `OP=0x02`, `GG=0x00`, `II=0x00`, `RR=0x0073`, destination `0x15`; qualified initiator to target request, target to the same initiator value reply; profile-scoped IEEE-754 `f32` little-endian, `degC`. SI unit kelvin, degrees Celsius plus 273.15 | Target `thermal.measurement.outdoor_air_temperature`, element inventory `unknown` (see [Native attachment](#native-attachment)); no FactKey, role or dimension text is formed. Read-only exact numeric candidate, admitted only after the subject is decided and existing binding and lifecycle requirements succeed |
+| Instantaneous `state.outdoor_temperature` | Controller family of the typed Thermal map; `PB=0xB5`, `SB=0x24`, `OP=0x02`, `GG=0x00`, `II=0x00`, `RR=0x0073`, destination `0x15`; qualified initiator to target request, target to the same initiator value reply; profile-scoped IEEE-754 `f32` little-endian, `degC`. SI unit kelvin, degrees Celsius plus 273.15 | Target `thermal.measurement.outdoor_air_temperature`, element inventory `member` on plane `control` with resolved resource dimension `thermal.dimension.system` (see [Native attachment](#native-attachment)). The eBUS native relation is unresolved and the fact projection is withheld. No FactKey, role or dimension text is formed. Read-only exact numeric candidate, admitted only after that native relation is decided and existing binding and lifecycle requirements succeed |
 | Aggregate `state.outdoor_temperature_avg24h` | Same service, operation, group, instance, destination, family and directions, but `RR=0x0095`; `f32` little-endian, `degC`; rounded rolling average | No SemReg fact, value or dimensions; existing disposition `withheld`, loss `rolling_average_window_unrepresentable` |
 
 The initiator address is binding evidence, not a constant selected here.

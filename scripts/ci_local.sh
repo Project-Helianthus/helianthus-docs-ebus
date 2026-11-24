@@ -289,7 +289,7 @@ python3 -m pytest -q tests/test_vaillant_semreg_thermal_map.py
 python3 -m pytest -q tests/test_dhw_setpoint_semreg_cutover.py
 (
   cd tests/semreg_thermal_map_contract
-  GOWORK=off go test -mod=readonly ./...
+  GOWORK=off go test -count=1 -mod=readonly ./...
 )
 
 echo "==> check Vaillant controller qualification contract"

@@ -100,10 +100,16 @@ DHW target mirror has the same check.
   functional module by configuration only and does not reach the hot-water
   group.
 - **Element inventory.** The target `thermal.setpoint.dhw_temperature_setpoint`
-  is `unknown` with the reason `catalog.reason.subject_unresolved` and no
-  plane. The common subject of this value is not decided; this page proposes
-  none. The service-identity gap of the two synthetic sources alpha and beta is
-  this unresolved subject, not a projection loss.
+  is a pack fact member on plane `control`, with resolved resource dimension
+  `thermal.dimension.dhw` (`resource.domestic_hot_water`) and no catalog
+  reason. That copy is the SemReg definition. It does not attach register
+  `RR=0x0004` to a domestic-hot-water resource.
+- **eBUS mapping.** The native relation stays unresolved, reason
+  `catalog.reason.subject_unresolved`. The fact projection is withheld with
+  that reason, no source key and no loss. It names no relation instance and
+  no resource. The service-identity gap of the two synthetic sources alpha and
+  beta remains an unresolved subject on the row, not a projection loss and
+  not the catalog subject.
 
 ## Proposed canonical binding and explicit losses
 
@@ -126,16 +132,20 @@ This form carries a role and a resource in dimension text, which the common
 model does not accept.
 
 This is a **Hypothesis** for migration acceptance, not a new definition or a
-claim that these sources are qualified today. The current pack can express a
-DHW requested temperature with only `thermal.dimension.temperature`, with
+claim that these sources are qualified today. The current pack does not express
+a DHW requested temperature with only `thermal.dimension.temperature`. Its
+resolved resource dimension is `thermal.dimension.dhw`, with
 numeric bounds -50..150 °C; those pack bounds
 are representation limits, not equipment safety limits. The source binding
 must establish requested role, unit, profile, service owner, native domain and
-freshness. The current Thermal validator rejects the proposed additional
-`thermal.dimension.dhw` on this fact. **Proven** implementation constraint:
-this two-dimension binding is not currently representable. Withhold it with
-the reason `catalog.reason.subject_unresolved` and no projection loss until
-the common model decides the subject. Removing the service
+freshness. The catalog subject dimension is already decided: `thermal.dimension.dhw`.
+The current Thermal validator rejects the proposed additional
+`thermal.dimension.dhw` on this fact. That rejection is the second dimension
+stacked beside the resolved resource dimension.
+**Proven** implementation constraint:
+this two-dimension binding is not currently representable. Withhold the eBUS
+projection with the reason `catalog.reason.subject_unresolved` and no
+projection loss while the native relation is unresolved. Removing the service
 dimension merely to pass validation would lose identity. All `exact` results
 below are conditional acceptance requirements after that blocker is resolved;
 the current fixture expects one aggregate `withheld` disposition, with that

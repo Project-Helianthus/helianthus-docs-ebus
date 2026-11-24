@@ -32,9 +32,40 @@
           "version": "1.0.0"
         },
         "element_kind": "fact",
-        "disposition": "unknown",
-        "planes": [],
-        "reason": "catalog.reason.subject_unresolved"
+        "disposition": "member",
+        "planes": [
+          "control"
+        ],
+        "reason": null,
+        "subject": {
+          "status": "resolved",
+          "dimension": {
+            "owner": {
+              "kind": "pack",
+              "pack": {
+                "id": "helianthus.pack.thermal",
+                "version": "1.0.0"
+              }
+            },
+            "id": "thermal.dimension.dhw",
+            "version": "1.0.0"
+          },
+          "kind": "resource.domestic_hot_water"
+        }
+      },
+      "ebus_mapping": {
+        "native_relation": {
+          "status": "unresolved",
+          "reason": "catalog.reason.subject_unresolved"
+        },
+        "projection": {
+          "kind": "fact",
+          "item_id": "thermal.setpoint.dhw_temperature_setpoint",
+          "outcome": "withheld",
+          "source_keys": [],
+          "loss": [],
+          "reason": "catalog.reason.subject_unresolved"
+        }
       },
       "subject": {
         "status": "unresolved",

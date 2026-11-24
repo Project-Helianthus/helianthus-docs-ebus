@@ -1,4 +1,4 @@
-github.com/Project-Helianthus/helianthus-semreg v0.0.0-20261114200348-b182998cc41b h1:tCl8X5Gqci7B24qVN7xplkltHbPGG6yrcuh8WZJdeDI=
-github.com/Project-Helianthus/helianthus-semreg v0.0.0-20261114200348-b182998cc41b/go.mod h1:Nk9VAXLA7iJBXbWPRL6s5+DWqc2OJkUzg8zdlDdUdes=
+github.com/Project-Helianthus/helianthus-semreg v0.0.0-20261122101703-41d1402c2daf h1:/llWQHZxJaUfykk2MDJbPYgNxLaQrcLfHJoL99eroak=
+github.com/Project-Helianthus/helianthus-semreg v0.0.0-20261122101703-41d1402c2daf/go.mod h1:Nk9VAXLA7iJBXbWPRL6s5+DWqc2OJkUzg8zdlDdUdes=
 golang.org/x/text v0.22.0 h1:bofq7m3/HAFvbF51jz3Q9wLg3jkvSPuiZu/pD1XwgtM=
 golang.org/x/text v0.22.0/go.mod h1:YRoo4H8PVmsu+E3Ou7cqLVH8oXWIHVoX0jqUWALQhfY=

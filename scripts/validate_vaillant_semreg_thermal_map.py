@@ -2,9 +2,11 @@
 """Validate the typed Vaillant B524-to-SemReg thermal mapping index.
 
 Each row is keyed by the native identity of its value, names the native
-resource it attaches to, its relation candidates in the structural candidates
-fixture or their explicit absence, and the element inventory disposition of
-its target definition. The hot-water fixture is checked with the same rules.
+resource it attaches to, and its relation candidates in the structural
+candidates fixture or their explicit absence. A mapped row copies the SemReg
+element-inventory definition, including its resolved resource dimension, and
+keeps the unresolved eBUS native relation and withheld projection in a
+separate eBUS mapping. The hot-water fixture is checked with the same rules.
 """
 from __future__ import annotations
 
@@ -27,14 +29,62 @@ HOT_WATER_GROUP = "OP=0x02 GG=0x01 II=0x00"
 UNRESOLVED_SUBJECT = "catalog.reason.subject_unresolved"
 
 
-def unresolved_fact(fact: str) -> dict[str, object]:
-    """The element inventory entry of a thermal fact whose subject is unresolved."""
+def dimension_ref(dimension: str) -> dict[str, object]:
+    """Pack element reference of one resolved resource dimension."""
+    return {
+        "owner": {"kind": "pack", "pack": dict(PACK)},
+        "id": dimension,
+        "version": "1.0.0",
+    }
+
+
+def catalog_fact(fact: str, planes: list[str], dimension: str, kind: str) -> dict[str, object]:
+    """Element-inventory fields of one pack fact, copied from SemReg 41d1402c2daf."""
     return {
         "definition": {"pack": dict(PACK), "id": fact, "version": "1.0.0"},
         "element_kind": "fact",
-        "disposition": "unknown",
-        "planes": [],
-        "reason": UNRESOLVED_SUBJECT,
+        "disposition": "member",
+        "planes": list(planes),
+        "reason": None,
+        "subject": {
+            "status": "resolved",
+            "dimension": dimension_ref(dimension),
+            "kind": kind,
+        },
+    }
+
+
+# SemReg 41d1402c2daf042dfffdf2bccdee3664c5a3b100. System flow is energy and
+# hydraulic; outdoor air and the DHW setpoint are control. Each subject is a
+# resolved resource dimension. None of these entries carries a catalog reason.
+CATALOG_FACTS = {
+    "thermal.measurement.outdoor_air_temperature": catalog_fact(
+        "thermal.measurement.outdoor_air_temperature", ["control"],
+        "thermal.dimension.system", "resource.thermal_system",
+    ),
+    "thermal.measurement.system_flow_temperature": catalog_fact(
+        "thermal.measurement.system_flow_temperature", ["energy", "hydraulic"],
+        "thermal.dimension.system", "resource.thermal_system",
+    ),
+    "thermal.setpoint.dhw_temperature_setpoint": catalog_fact(
+        "thermal.setpoint.dhw_temperature_setpoint", ["control"],
+        "thermal.dimension.dhw", "resource.domestic_hot_water",
+    ),
+}
+
+
+def ebus_mapping(fact: str) -> dict[str, object]:
+    """Unresolved native relation and withheld projection. No relation instance."""
+    return {
+        "native_relation": {"status": "unresolved", "reason": UNRESOLVED_SUBJECT},
+        "projection": {
+            "kind": "fact",
+            "item_id": fact,
+            "outcome": "withheld",
+            "source_keys": [],
+            "loss": [],
+            "reason": UNRESOLVED_SUBJECT,
+        },
     }
 
 
@@ -55,9 +105,15 @@ EXPECTED_ROWS = {
 }
 ROW_KEYS = {
     "native_key", "legacy_system_field", "native_selector", "native_value", "native_resource",
-    "relation_candidates", "target", "semreg_fact", "disposition", "loss",
+    "relation_candidates", "target", "ebus_mapping", "semreg_fact", "disposition", "loss",
 }
-TARGET_KEYS = {"definition", "element_kind", "disposition", "planes", "reason"}
+TARGET_KEYS = {"definition", "element_kind", "disposition", "planes", "reason", "subject"}
+SUBJECT_KEYS = {"status", "dimension", "kind"}
+DIMENSION_KEYS = {"owner", "id", "version"}
+OWNER_KEYS = {"kind", "pack"}
+EBUS_KEYS = {"native_relation", "projection"}
+NATIVE_RELATION_KEYS = {"status", "reason"}
+PROJECTION_KEYS = {"kind", "item_id", "outcome", "source_keys", "loss", "reason"}
 RESOURCE_KEYS = {"selector", "kind"}
 CANDIDATE_KEYS = {"refs", "absence"}
 DHW_FACT = "thermal.setpoint.dhw_temperature_setpoint"
@@ -76,7 +132,8 @@ DHW_TARGET_DOMAIN = {
     ),
 }
 DHW_ROW_KEYS = {
-    "native_key", "native_value", "native_resource", "relation_candidates", "target", "subject",
+    "native_key", "native_value", "native_resource", "relation_candidates", "target",
+    "ebus_mapping", "subject",
 }
 DHW_SOURCES = ["alpha", "beta"]
 REQUIRED_NONCLAIMS = {
@@ -485,13 +542,31 @@ def check_relation_candidates(
     return used
 
 
+def check_closed_object(value: object, keys: set[str], label: str) -> dict[str, object]:
+    if not isinstance(value, dict) or set(value) != keys:
+        raise CheckError(f"{label} has exactly {sorted(keys)}")
+    return value
+
+
 def check_target(target: object, fact: str | None, label: str) -> None:
     if fact is None:
         require(target, None, f"{label}: target")
         return
-    if not isinstance(target, dict) or set(target) != TARGET_KEYS:
-        raise CheckError(f"{label}: target has exactly {sorted(TARGET_KEYS)}")
-    require(target, unresolved_fact(fact), f"{label}: target copied from the element inventory")
+    copied = check_closed_object(target, TARGET_KEYS, f"{label}: target")
+    subject = check_closed_object(copied.get("subject"), SUBJECT_KEYS, f"{label}: target subject")
+    dimension = check_closed_object(subject.get("dimension"), DIMENSION_KEYS, f"{label}: resource dimension")
+    check_closed_object(dimension.get("owner"), OWNER_KEYS, f"{label}: resource dimension owner")
+    require(target, CATALOG_FACTS[fact], f"{label}: target copied from the element inventory")
+
+
+def check_ebus_mapping(mapping: object, fact: str | None, label: str) -> None:
+    if fact is None:
+        require(mapping, None, f"{label}: ebus_mapping")
+        return
+    copied = check_closed_object(mapping, EBUS_KEYS, f"{label}: ebus_mapping")
+    check_closed_object(copied.get("native_relation"), NATIVE_RELATION_KEYS, f"{label}: native relation")
+    check_closed_object(copied.get("projection"), PROJECTION_KEYS, f"{label}: withheld projection")
+    require(mapping, ebus_mapping(fact), f"{label}: eBUS mapping")
 
 
 def check_unused_resources(resources: dict[str, str], used: set[str], label: str) -> None:
@@ -516,6 +591,7 @@ def validate_row(
     require(row["legacy_system_field"], legacy, f"{key}: legacy_system_field")
     used = check_attachment(row, key, resources, (resource, kind), candidates, key)
     check_target(row["target"], fact, key)
+    check_ebus_mapping(row["ebus_mapping"], fact, key)
     require(row["semreg_fact"], fact, f"{key}: semreg_fact")
     require(row["disposition"], disposition, f"{key}: disposition")
     require(row["loss"], loss, f"{key}: loss")
@@ -651,6 +727,7 @@ def validate_dhw(data: object, *, structural: object = None) -> None:
     )
     check_unused_resources(resources, used, "hot water")
     check_target(row["target"], DHW_FACT, "hot water")
+    check_ebus_mapping(row["ebus_mapping"], DHW_FACT, "hot water")
     require(row["subject"], {"status": "unresolved", "sources": DHW_SOURCES}, "hot water: unresolved subject")
 
     cases = data["projection_cases"]

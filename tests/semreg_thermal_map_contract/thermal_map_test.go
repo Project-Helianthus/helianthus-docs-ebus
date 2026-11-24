@@ -12,9 +12,14 @@ import (
 
 	semreg "github.com/Project-Helianthus/helianthus-semreg/semreg/v1"
 	"github.com/Project-Helianthus/helianthus-semreg/semreg/v1/graph"
+	"github.com/Project-Helianthus/helianthus-semreg/semreg/v1/projection"
 )
 
 const semregModule = "github.com/Project-Helianthus/helianthus-semreg"
+
+// unresolvedNativeRelation is the preserved eBUS attachment reason. It is not
+// the reason of a SemReg catalog entry: the pinned member facts have none.
+const unresolvedNativeRelation = semreg.DefinitionID("catalog.reason.subject_unresolved")
 
 type mappingIndex struct {
 	Pack      semreg.PackRef `json:"pack"`
@@ -36,15 +41,46 @@ type mapping struct {
 	NativeValue json.RawMessage `json:"native_value"`
 	SemregFact  *string         `json:"semreg_fact"`
 	Target      *target         `json:"target"`
+	EbusMapping *ebusMapping    `json:"ebus_mapping"`
 }
 
-// target is a row's copy of the element inventory entry of its target definition.
+// elementRef is the pack owner, identifier and version of a catalog reference.
+type elementRef struct {
+	Owner struct {
+		Kind string         `json:"kind"`
+		Pack semreg.PackRef `json:"pack"`
+	} `json:"owner"`
+	ID      semreg.DefinitionID    `json:"id"`
+	Version semreg.SemanticVersion `json:"version"`
+}
+
+// factSubject is the subject copied from a fact's catalog attributes.
+type factSubject struct {
+	Status             string      `json:"status"`
+	Dimension          *elementRef `json:"dimension"`
+	Kind               string      `json:"kind"`
+	QualifierDimension *elementRef `json:"qualifier_dimension"`
+}
+
+// target is a row's copy of the element-inventory definition of its fact.
+// It is not the eBUS native attachment.
 type target struct {
 	Definition  semreg.DefinitionRef `json:"definition"`
 	ElementKind string               `json:"element_kind"`
 	Disposition string               `json:"disposition"`
 	Planes      []string             `json:"planes"`
 	Reason      *string              `json:"reason"`
+	Subject     *factSubject         `json:"subject"`
+}
+
+// ebusMapping keeps the unresolved native relation and the withheld projection
+// apart from the catalog copy. It names no relation instance and no resource.
+type ebusMapping struct {
+	NativeRelation struct {
+		Status string               `json:"status"`
+		Reason *semreg.DefinitionID `json:"reason"`
+	} `json:"native_relation"`
+	Projection projection.ProjectionDisposition `json:"projection"`
 }
 
 // loadInventory reads the element inventory bytes from the pinned SemReg
@@ -70,7 +106,7 @@ func loadInventory(t *testing.T) *graph.Catalog {
 }
 
 // checkTarget compares a row's target with the element inventory entry of its
-// definition, member by member.
+// definition, member by member, including the resolved resource dimension.
 func checkTarget(catalog *graph.Catalog, row target) error {
 	entry, ok := catalog.PackEntry(row.Definition)
 	if !ok {
@@ -96,10 +132,79 @@ func checkTarget(catalog *graph.Catalog, row target) error {
 	if string(entry.Reason) != reason || (row.Reason != nil && reason == "") {
 		return fmt.Errorf("%s: reason %q, inventory %q", row.Definition.ID, reason, entry.Reason)
 	}
-	if entry.ElementKind == graph.KindFact && entry.Disposition == graph.DispositionUnknown {
-		if entry.Fact == nil || entry.Fact.Subject.Status != graph.SubjectUnresolved {
-			return fmt.Errorf("%s: an unknown fact row needs an unresolved subject in the inventory", row.Definition.ID)
-		}
+	if entry.ElementKind != graph.KindFact {
+		return fmt.Errorf("%s: element kind %q, want a fact", row.Definition.ID, entry.ElementKind)
+	}
+	if err := checkSubject(entry, row); err != nil {
+		return err
+	}
+	return nil
+}
+
+// checkSubject compares the copied fact subject with the inventory subject.
+func checkSubject(entry graph.Element, row target) error {
+	if entry.Fact == nil {
+		return fmt.Errorf("%s: inventory fact attributes are absent", row.Definition.ID)
+	}
+	subject := entry.Fact.Subject
+	if row.Subject == nil {
+		return fmt.Errorf("%s: target omits the inventory subject", row.Definition.ID)
+	}
+	if string(subject.Status) != row.Subject.Status {
+		return fmt.Errorf("%s: subject status %q, inventory %q", row.Definition.ID, row.Subject.Status, subject.Status)
+	}
+	if !sameElementRef(row.Subject.Dimension, subject.Dimension) {
+		return fmt.Errorf("%s: resource dimension differs from the inventory", row.Definition.ID)
+	}
+	if row.Subject.Kind != string(subject.Kind) {
+		return fmt.Errorf("%s: resource kind %q, inventory %q", row.Definition.ID, row.Subject.Kind, subject.Kind)
+	}
+	if !sameElementRef(row.Subject.QualifierDimension, subject.QualifierDimension) {
+		return fmt.Errorf("%s: qualifier dimension differs from the inventory", row.Definition.ID)
+	}
+	if subject.Status != graph.SubjectResolved || subject.Dimension == nil {
+		return fmt.Errorf("%s: inventory subject %q is not a resolved resource dimension", row.Definition.ID, subject.Status)
+	}
+	return nil
+}
+
+func sameElementRef(got *elementRef, want *graph.ElementRef) bool {
+	if (got == nil) != (want == nil) {
+		return false
+	}
+	if got == nil {
+		return true
+	}
+	return got.Owner.Kind == string(want.Owner.Kind) && got.Owner.Pack == want.Owner.Pack && got.ID == want.ID && got.Version == want.Version
+}
+
+// checkEbusMapping requires an unresolved native relation and a withheld
+// projection that names neither a relation instance nor a resource.
+func checkEbusMapping(mapping ebusMapping, fact semreg.DefinitionID) error {
+	if mapping.NativeRelation.Status != "unresolved" {
+		return fmt.Errorf("native relation status %q, want unresolved", mapping.NativeRelation.Status)
+	}
+	if mapping.NativeRelation.Reason == nil || *mapping.NativeRelation.Reason != unresolvedNativeRelation {
+		return fmt.Errorf("native relation reason %v, want %s", mapping.NativeRelation.Reason, unresolvedNativeRelation)
+	}
+	if err := mapping.NativeRelation.Reason.Validate(); err != nil {
+		return fmt.Errorf("native relation reason: %v", err)
+	}
+	if err := mapping.Projection.Validate(); err != nil {
+		return fmt.Errorf("projection: %v", err)
+	}
+	disposition := mapping.Projection
+	if disposition.Kind != projection.ItemFact || disposition.ItemID != fact {
+		return fmt.Errorf("projection names another item")
+	}
+	if disposition.Outcome != projection.ProjectionWithheld || len(disposition.SourceKeys) != 0 || len(disposition.Loss) != 0 {
+		return fmt.Errorf("unresolved native relation withholds the projection with no source key and no loss")
+	}
+	if disposition.Reason == nil || *disposition.Reason != *mapping.NativeRelation.Reason {
+		return fmt.Errorf("projection reason differs from the native relation reason")
+	}
+	if disposition.Relations != nil || disposition.Resources != nil {
+		return fmt.Errorf("withheld projection names a resource or a relation")
 	}
 	return nil
 }
@@ -110,8 +215,8 @@ func TestThermalRowTargetsMatchTheElementInventory(t *testing.T) {
 	withTarget := 0
 	for _, row := range index.Mappings {
 		if row.Target == nil {
-			if row.SemregFact != nil {
-				t.Fatalf("%s names a fact without a target", row.NativeKey)
+			if row.SemregFact != nil || row.EbusMapping != nil {
+				t.Fatalf("%s names a fact or an eBUS mapping without a target", row.NativeKey)
 			}
 			continue
 		}
@@ -119,14 +224,20 @@ func TestThermalRowTargetsMatchTheElementInventory(t *testing.T) {
 		if row.SemregFact == nil || semreg.DefinitionID(*row.SemregFact) != row.Target.Definition.ID {
 			t.Fatalf("%s: semreg_fact differs from the target definition", row.NativeKey)
 		}
+		if row.EbusMapping == nil {
+			t.Fatalf("%s: catalog copy has no separate eBUS mapping", row.NativeKey)
+		}
 		if row.Target.Definition.Pack != index.Pack {
 			t.Fatalf("%s: target pack %v, index pack %v", row.NativeKey, row.Target.Definition.Pack, index.Pack)
 		}
 		if err := checkTarget(catalog, *row.Target); err != nil {
 			t.Fatalf("%s: %v", row.NativeKey, err)
 		}
-		if row.Target.Disposition != string(graph.DispositionUnknown) {
-			t.Fatalf("%s: this mapping places no thermal quantity, so its target stays unknown", row.NativeKey)
+		if err := checkEbusMapping(*row.EbusMapping, row.Target.Definition.ID); err != nil {
+			t.Fatalf("%s: %v", row.NativeKey, err)
+		}
+		if row.Target.Disposition == string(graph.DispositionUnknown) {
+			t.Fatalf("%s: catalog copy must not stand in for the unresolved native relation", row.NativeKey)
 		}
 	}
 	if withTarget != 2 {
@@ -141,25 +252,52 @@ func TestTargetDriftInEveryMemberIsRejected(t *testing.T) {
 		t.Fatal(err)
 	}
 	other := "catalog.reason.no_fact_or_relation"
+	empty := ""
 	for name, mutate := range map[string]func(*target){
-		"pack id":      func(r *target) { r.Definition.Pack.ID = "helianthus.pack.storage" },
-		"pack version": func(r *target) { r.Definition.Pack.Version = "1.1.0" },
-		"id":           func(r *target) { r.Definition.ID = "thermal.measurement.outdoor_air_temperature" },
-		"version":      func(r *target) { r.Definition.Version = "1.0.1" },
-		"element kind": func(r *target) { r.ElementKind = "dimension" },
-		"disposition":  func(r *target) { r.Disposition = "member" },
-		"planes":       func(r *target) { r.Planes = []string{"control"} },
-		"no planes":    func(r *target) { r.Planes = nil },
-		"reason":       func(r *target) { r.Reason = &other },
-		"no reason":    func(r *target) { r.Reason = nil },
+		"pack id":        func(r *target) { r.Definition.Pack.ID = "helianthus.pack.storage" },
+		"pack version":   func(r *target) { r.Definition.Pack.Version = "1.1.0" },
+		"id":             func(r *target) { r.Definition.ID = "thermal.measurement.outdoor_air_temperature" },
+		"version":        func(r *target) { r.Definition.Version = "1.0.1" },
+		"element kind":   func(r *target) { r.ElementKind = "dimension" },
+		"disposition":    func(r *target) { r.Disposition = "unknown" },
+		"planes":         func(r *target) { r.Planes = []string{"control"} },
+		"no planes":      func(r *target) { r.Planes = nil },
+		"reason":         func(r *target) { r.Reason = &other },
+		"empty reason":   func(r *target) { r.Reason = &empty },
+		"no subject":     func(r *target) { r.Subject = nil },
+		"subject status": func(r *target) { r.Subject.Status = "unresolved" },
+		"dimension":      func(r *target) { r.Subject.Dimension.ID = "thermal.dimension.zone" },
+		"resource kind":  func(r *target) { r.Subject.Kind = "resource.zone" },
+		"qualifier": func(r *target) {
+			qualifier := *r.Subject.Dimension
+			qualifier.ID = "thermal.dimension.temperature"
+			r.Subject.QualifierDimension = &qualifier
+		},
 	} {
 		mutated := row
 		mutated.Planes = slices.Clone(row.Planes)
+		mutated.Subject = cloneSubject(row.Subject)
 		mutate(&mutated)
 		if err := checkTarget(catalog, mutated); err == nil {
 			t.Errorf("%s drift is accepted", name)
 		}
 	}
+}
+
+func cloneSubject(subject *factSubject) *factSubject {
+	if subject == nil {
+		return nil
+	}
+	copied := *subject
+	if subject.Dimension != nil {
+		dimension := *subject.Dimension
+		copied.Dimension = &dimension
+	}
+	if subject.QualifierDimension != nil {
+		qualifier := *subject.QualifierDimension
+		copied.QualifierDimension = &qualifier
+	}
+	return &copied
 }
 
 func TestDelayedEvaluationContextPreservesReceiptAndUsesElapsedMonotonic(t *testing.T) {

@@ -65,9 +65,40 @@
           "version": "1.0.0"
         },
         "element_kind": "fact",
-        "disposition": "unknown",
-        "planes": [],
-        "reason": "catalog.reason.subject_unresolved"
+        "disposition": "member",
+        "planes": [
+          "control"
+        ],
+        "reason": null,
+        "subject": {
+          "status": "resolved",
+          "dimension": {
+            "owner": {
+              "kind": "pack",
+              "pack": {
+                "id": "helianthus.pack.thermal",
+                "version": "1.0.0"
+              }
+            },
+            "id": "thermal.dimension.system",
+            "version": "1.0.0"
+          },
+          "kind": "resource.thermal_system"
+        }
+      },
+      "ebus_mapping": {
+        "native_relation": {
+          "status": "unresolved",
+          "reason": "catalog.reason.subject_unresolved"
+        },
+        "projection": {
+          "kind": "fact",
+          "item_id": "thermal.measurement.outdoor_air_temperature",
+          "outcome": "withheld",
+          "source_keys": [],
+          "loss": [],
+          "reason": "catalog.reason.subject_unresolved"
+        }
       },
       "semreg_fact": "thermal.measurement.outdoor_air_temperature",
       "disposition": "exact",
@@ -109,9 +140,41 @@
           "version": "1.0.0"
         },
         "element_kind": "fact",
-        "disposition": "unknown",
-        "planes": [],
-        "reason": "catalog.reason.subject_unresolved"
+        "disposition": "member",
+        "planes": [
+          "energy",
+          "hydraulic"
+        ],
+        "reason": null,
+        "subject": {
+          "status": "resolved",
+          "dimension": {
+            "owner": {
+              "kind": "pack",
+              "pack": {
+                "id": "helianthus.pack.thermal",
+                "version": "1.0.0"
+              }
+            },
+            "id": "thermal.dimension.system",
+            "version": "1.0.0"
+          },
+          "kind": "resource.thermal_system"
+        }
+      },
+      "ebus_mapping": {
+        "native_relation": {
+          "status": "unresolved",
+          "reason": "catalog.reason.subject_unresolved"
+        },
+        "projection": {
+          "kind": "fact",
+          "item_id": "thermal.measurement.system_flow_temperature",
+          "outcome": "withheld",
+          "source_keys": [],
+          "loss": [],
+          "reason": "catalog.reason.subject_unresolved"
+        }
       },
       "semreg_fact": "thermal.measurement.system_flow_temperature",
       "disposition": "exact",
@@ -142,6 +205,7 @@
         "absence": "The value is a register of the controller's system group. No structural relation candidate carries it to another native resource."
       },
       "target": null,
+      "ebus_mapping": null,
       "semreg_fact": null,
       "disposition": "withheld",
       "loss": "rolling_average_window_unrepresentable"
