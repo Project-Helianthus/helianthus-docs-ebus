@@ -13,6 +13,8 @@ import re
 import subprocess
 from pathlib import Path
 
+import yaml
+
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / ".github/workflows/docs-ci.yml"
 CANDIDATE = "a" * 40
@@ -253,15 +255,27 @@ def test_empty_prior_ref_skips_the_head_check(tmp_path: Path):
     load_prior_owner_program()["verify_prior_heads"](tmp_path, {"docs_prior_ref": ""})
 
 
-def test_public_docs_ci_does_not_checkout_private_modbus_documentation():
+def test_public_docs_ci_checks_out_the_pinned_modbus_companion():
     text = WORKFLOW.read_text(encoding="utf-8")
     program = load_prior_owner_program()
     source = prior_owner_program_source(text)
     assert not source.lstrip().startswith("#!")
+    steps = {step["name"]: step for step in yaml.safe_load(text)["jobs"]["markdown-checks"]["steps"]}
+    run = steps["Run local docs CI"]
+    assert run["working-directory"] == "checkouts/docs-ebus"
+    assert run["env"]["PLATFORM_DOCS_MODBUS_ROOT"] == ""
+    local_gate = (ROOT / "scripts/ci_local.sh").read_text(encoding="utf-8")
+    pin = re.search(r"^docs_modbus_ref=(\S+)$", local_gate, re.M)
+    assert pin is not None and program["SHA"].fullmatch(pin[1])
+    assert 'PLATFORM_DOCS_MODBUS_ROOT="${gate_temp_dir}/checkouts/docs-modbus"' in local_gate
+    assert 'env -i "PATH=${PATH}" GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_TERMINAL_PROMPT=0 git' in local_gate
+    assert (
+        '"${public_git[@]}" -C "${PLATFORM_DOCS_MODBUS_ROOT}" fetch --depth 1 \\\n'
+        '    https://github.com/Project-Helianthus/helianthus-docs-modbus.git "${docs_modbus_ref}"'
+    ) in local_gate
+    assert '"${public_git[@]}" -C "${PLATFORM_DOCS_MODBUS_ROOT}" checkout --detach FETCH_HEAD' in local_gate
+    assert 'rev-parse --verify HEAD)" != "${docs_modbus_ref}"' in local_gate
     for forbidden in (
-        "helianthus-docs-modbus",
-        "checkouts/docs-modbus",
-        "PLATFORM_DOCS_MODBUS_ROOT",
         "PLATFORM_DOCS_MODBUS_PRIOR_ROOT",
         "docs_modbus_prior_ref",
         "REPO_READ_TOKEN",

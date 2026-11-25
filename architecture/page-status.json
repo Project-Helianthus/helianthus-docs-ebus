@@ -1,6 +1,6 @@
 {
   "table": "Status of the documentation pages renamed to lowercase kebab-case file names",
-  "scope": "Each row is one renamed page. The status keeps the page's own claim and the basis quotes the page sentence that carries it; a rename never changes a status. The earlier name is documentary only and is never read as a fallback. Pages outside this table keep their own status statements and are not graded here.",
+  "scope": "Each row is one renamed page. The status keeps the page's own claim and the basis quotes the page sentence that carries it; a rename never changes a status. The earlier name is documentary only and is never read as a fallback. Pages outside this table keep their own status statements and are not graded here. The Modbus foundation profile contract's link to ./modbus-multivendor-boundaries.md remains a known unresolved link because the linking page is frozen and the target lives in helianthus-docs-modbus.",
   "statuses": [
     "implemented",
     "accepted contract",
