@@ -24,6 +24,16 @@ if [ -z "${PLATFORM_DOCS_EEBUS_ROOT:-}" ]; then
   fi
 fi
 export PLATFORM_DOCS_EEBUS_ROOT
+if [ -z "${PLATFORM_DOCS_MODBUS_ROOT:-}" ] && [ -d "${repo_root}/checkouts/docs-modbus" ]; then
+  PLATFORM_DOCS_MODBUS_ROOT="${repo_root}/checkouts/docs-modbus"
+fi
+if [ -n "${PLATFORM_DOCS_MODBUS_ROOT:-}" ]; then
+  if [ ! -d "${PLATFORM_DOCS_MODBUS_ROOT}" ]; then
+    echo "PLATFORM_DOCS_MODBUS_ROOT is required: the specified public Modbus checkout is missing." >&2
+    exit 1
+  fi
+  PLATFORM_DOCS_MODBUS_ROOT="$(cd "${PLATFORM_DOCS_MODBUS_ROOT}" && pwd -P)"
+fi
 if [ -z "${PLATFORM_DOCS_EBUS_PIN_ROOT:-}" ] && [ -d "${repo_root}/checkouts/docs-ebus-pin" ]; then
   PLATFORM_DOCS_EBUS_PIN_ROOT="${repo_root}/checkouts/docs-ebus-pin"
   export PLATFORM_DOCS_EBUS_PIN_ROOT
@@ -107,6 +117,30 @@ install_workflow_cleanup_trap EXIT ''
 install_workflow_cleanup_trap INT 'exit 130'
 install_workflow_cleanup_trap TERM 'exit 143'
 echo "Workflow lint artifacts: ${gate_temp_dir} (removed on exit)"
+
+# This pin is shared by hosted Docs Checks and the local entry point.
+docs_modbus_ref=e9d0471ccc7bd0cb82e2552e630ebaae5436d867
+# Ignore inherited Git configuration and credentials on the public fetch.
+public_git=(env -i "PATH=${PATH}" GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_TERMINAL_PROMPT=0 git)
+if [ -z "${PLATFORM_DOCS_MODBUS_ROOT:-}" ]; then
+  echo "==> stage the pinned public helianthus-docs-modbus companion"
+  PLATFORM_DOCS_MODBUS_ROOT="${gate_temp_dir}/checkouts/docs-modbus"
+  mkdir -p "${gate_temp_dir}/checkouts"
+  "${public_git[@]}" init --template='' "${PLATFORM_DOCS_MODBUS_ROOT}"
+  "${public_git[@]}" -C "${PLATFORM_DOCS_MODBUS_ROOT}" fetch --depth 1 \
+    https://github.com/Project-Helianthus/helianthus-docs-modbus.git "${docs_modbus_ref}" || {
+    fetch_status=$?
+    echo "Could not fetch the pinned public helianthus-docs-modbus checkout." >&2
+    exit "$fetch_status"
+  }
+  "${public_git[@]}" -C "${PLATFORM_DOCS_MODBUS_ROOT}" checkout --detach FETCH_HEAD
+fi
+if [ "$("${public_git[@]}" -C "${PLATFORM_DOCS_MODBUS_ROOT}" rev-parse --verify HEAD)" != "${docs_modbus_ref}" ]; then
+  echo "PLATFORM_DOCS_MODBUS_ROOT must be at the public Modbus revision pinned in Docs CI." >&2
+  exit 1
+fi
+export PLATFORM_DOCS_MODBUS_ROOT
+
 workflow_lint_status=0
 echo "==> actionlint (60-second limit; embedded ShellCheck disabled)"
 python3 scripts/check_workflow_shells.py actionlint || workflow_lint_status=$?
@@ -563,6 +597,22 @@ if [ -n "${MODBUS_PRIOR_ROOT:-}" ]; then
 else
   python3 scripts/validate_modbus_companion.py --root .
 fi
+
+echo "==> check public Modbus companion references and runtime contracts"
+(
+  HELIANTHUS_DOCS_ROOT="$(cd "${PLATFORM_DOCS_ROOT}" && pwd -P)"
+  export HELIANTHUS_DOCS_ROOT
+  cd "${PLATFORM_DOCS_MODBUS_ROOT}"
+  boundary="docs/platform/modbus-multivendor-boundaries.md"
+  if [ ! -f "${boundary}" ] || [ -L "${boundary}" ]; then
+    echo "Public Modbus companion is missing the boundary page: ${boundary}" >&2
+    exit 1
+  fi
+  python3 -m pytest -q -p no:cacheprovider \
+    tests/test_modbus_v1_mcp_contract.py \
+    tests/test_modbus_v1_addon_runtime_contract.py \
+    tests/test_modbus_v1_live_qualification_contract.py
+)
 
 echo "==> run every other tests/test_*.py file (automatic discovery)"
 # New test files need no line in this script. A file whose basename appears

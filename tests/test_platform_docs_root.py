@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib.util
 import os
 from pathlib import Path
+import re
 import subprocess
 import sys
 
@@ -86,14 +87,11 @@ def test_ci_local_unset_root_fails_closed():
     assert ".pytest_cache" not in result.stderr
 
 
-def test_ci_local_has_no_private_modbus_checkout_and_keeps_the_companion_check(tmp_path: Path):
+def test_ci_local_requires_the_public_modbus_checkout_and_keeps_the_companion_check(tmp_path: Path):
     text = (ROOT / "scripts/ci_local.sh").read_text(encoding="utf-8")
-    for forbidden in (
-        "PLATFORM_DOCS_MODBUS_ROOT",
-        "PLATFORM_DOCS_MODBUS_PRIOR_ROOT",
-        "checkouts/docs-modbus",
-    ):
-        assert forbidden not in text
+    assert 'PLATFORM_DOCS_MODBUS_ROOT="${repo_root}/checkouts/docs-modbus"' in text
+    assert 'cd "${PLATFORM_DOCS_MODBUS_ROOT}"' in text
+    assert "PLATFORM_DOCS_MODBUS_PRIOR_ROOT" not in text
     assert "python3 scripts/validate_modbus_companion.py" in text
     assert "tests/test_modbus_trusted_revision.py" in text
     assert "PLATFORM_DOCS_ROOT" in text
@@ -113,19 +111,107 @@ def test_ci_local_has_no_private_modbus_checkout_and_keeps_the_companion_check(t
     env["PLATFORM_DOCS_ROOT"] = str(docs)
     env["PLATFORM_DOCS_EEBUS_ROOT"] = str(eebus)
     env["PATH"] = os.defpath
+    modbus = tmp_path / "docs-modbus"
+    env["PLATFORM_DOCS_MODBUS_ROOT"] = str(modbus)
+    command = ["bash", str(ROOT / "scripts/ci_local.sh")]
+    missing = subprocess.run(command, cwd=ROOT, env=env, capture_output=True, text=True, timeout=20, check=False)
+    assert missing.returncode == 1
+    assert "PLATFORM_DOCS_MODBUS_ROOT is required" in missing.stderr
+
+    modbus.mkdir()
+    result = subprocess.run(command, cwd=ROOT, env=env, capture_output=True, text=True, timeout=20, check=False)
+    combined = result.stdout + result.stderr
+    assert result.returncode == 2
+    assert "PLATFORM_DOCS_MODBUS_ROOT is required" not in combined
+    assert "actionlint v1.7.7 is required" in result.stderr
+
+
+@pytest.mark.parametrize(("case", "status"), [("pinned", 71), ("wrong-head", 1), ("missing", 69)])
+def test_modbus_staging_without_a_preconfigured_root(tmp_path: Path, case: str, status: int):
+    gate = ROOT / "scripts/ci_local.sh"
+    pin = re.search(r"^docs_modbus_ref=([0-9a-f]{40})$", gate.read_text(encoding="utf-8"), re.M)
+    assert pin is not None
+    fake_git = tmp_path / "git"
+    other_head = ("0" if pin[1][0] != "0" else "1") + pin[1][1:]
+    fake_git.write_text(
+        r'''#!/bin/bash
+set -eu
+[ "${GIT_CONFIG_NOSYSTEM}:${GIT_CONFIG_GLOBAL}:${GIT_TERMINAL_PROMPT}" = "1:/dev/null:0" ]
+[ "${GIT_CONFIG_COUNT-unset}" = unset ]
+if [ "$1" = init ] && [ "$2" = --template= ]; then
+  mkdir "$3"
+  exit
+fi
+[ "$1" = -C ] || exit 89
+case "$2" in
+  "${0%/*}"/docs-ebus-ci.*/checkouts/docs-modbus) ;;
+  *) exit 89 ;;
+esac
+cd "$2"
+shift 2
+case "$*" in
+  "fetch --depth 1 https://github.com/Project-Helianthus/helianthus-docs-modbus.git @PIN@")
+    [ @CASE@ != missing ] || exit 69
+    echo fetched > fetched
+    ;;
+  "checkout --detach FETCH_HEAD")
+    [ -f fetched ]
+    echo detached > detached
+    echo 'synthetic checkout'
+    ;;
+  "rev-parse --verify HEAD")
+    [ -f detached ]
+    echo @HEAD@
+    ;;
+  *) exit 89 ;;
+esac
+'''.replace("@PIN@", pin[1]).replace("@CASE@", case).replace("@HEAD@", other_head if case == "wrong-head" else pin[1]),
+        encoding="utf-8",
+    )
+    fake_git.chmod(0o755)
+    lint_stub = tmp_path / "lint-stub.bash"
+    lint_stub.write_text(
+        r'''actionlint() { :; }
+        shellcheck() { :; }
+        jv() { echo 'github.com/santhosh-tekuri/jsonschema/cmd/jv v0.7.0'; }
+        python3() {
+          case "$*" in
+            'scripts/check_workflow_shells.py actionlint-version') echo v1.7.7 ;;
+            'scripts/check_workflow_shells.py actionlint')
+              printenv PLATFORM_DOCS_MODBUS_ROOT
+              return 71
+              ;;
+            'scripts/check_workflow_shells.py shellcheck --temp-dir '*) ;;
+            *) return 89 ;;
+          esac
+        }
+        ''', encoding="utf-8",
+    )
     result = subprocess.run(
-        ["bash", str(ROOT / "scripts/ci_local.sh")],
-        cwd=ROOT,
-        env=env,
+        ["/bin/bash", str(gate)],
+        cwd=tmp_path,
+        env={
+            "PATH": f"{tmp_path}:{os.defpath}",
+            "BASH_ENV": str(lint_stub),
+            "TMPDIR": str(tmp_path),
+            "PLATFORM_DOCS_ROOT": str(tmp_path),
+            "PLATFORM_DOCS_EEBUS_ROOT": str(tmp_path),
+            "GIT_CONFIG_COUNT": "0",
+        },
         capture_output=True,
         text=True,
         timeout=20,
         check=False,
     )
-    combined = result.stdout + result.stderr
-    assert result.returncode == 2
-    assert "PLATFORM_DOCS_MODBUS_ROOT is required" not in combined
-    assert "actionlint v1.7.7 is required" in result.stderr
+    assert result.returncode == status, result.stdout + result.stderr
+    if case == "pinned":
+        assert any(line.startswith(f"{tmp_path}/docs-ebus-ci.") and line.endswith("/checkouts/docs-modbus")
+                   for line in result.stdout.splitlines())
+    if case == "wrong-head":
+        assert "must be at the public Modbus revision pinned in Docs CI" in result.stderr
+    if case == "missing":
+        assert "Could not fetch the pinned public helianthus-docs-modbus checkout." in result.stderr
+        assert "synthetic checkout" not in result.stdout
 
 
 def test_explicit_root_is_used(monkeypatch, tmp_path: Path):

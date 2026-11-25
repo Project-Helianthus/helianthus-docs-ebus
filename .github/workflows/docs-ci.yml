@@ -537,6 +537,8 @@ jobs:
           PLATFORM_DOCS_EBUS_REPOSITORY: Project-Helianthus/helianthus-docs
           PLATFORM_DOCS_ROOT: ${{ github.workspace }}/checkouts/docs
           PLATFORM_DOCS_EEBUS_ROOT: ${{ github.workspace }}/checkouts/docs-eebus
+          # ci_local.sh stages the pinned public Modbus companion for hosted and local runs.
+          PLATFORM_DOCS_MODBUS_ROOT: ''
           PLATFORM_DOCS_PRIOR_ROOT: ${{ github.workspace }}/checkouts/docs-prior
           PLATFORM_DOCS_EEBUS_PRIOR_ROOT: ${{ github.workspace }}/checkouts/docs-eebus-prior
           PLATFORM_DOCS_EBUS_PIN_ROOT: ${{ github.workspace }}/checkouts/docs-ebus-pin
